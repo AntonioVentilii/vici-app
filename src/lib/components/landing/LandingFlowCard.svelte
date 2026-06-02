@@ -51,7 +51,7 @@
 			<span
 				style="font-family:var(--font-mono); font-size:var(--t-10); color:#FF8A7A; text-transform:uppercase; letter-spacing:var(--tracking-allcaps); font-weight:600;"
 			>
-				{minority}% agree · 2× XP
+				{minority}% agree · 2× VXP
 			</span>
 		</div>
 	{/if}

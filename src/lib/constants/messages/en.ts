@@ -139,7 +139,7 @@ export const enMessages = {
 	'achievement.top_decile.detail':
 		'Hold a position in the top 10% of the global leaderboard for seven consecutive days. Your standing is checked once a day; miss the cutoff and the streak resets.',
 	'achievement.top_decile.name': 'Top 10% global',
-	'achievement.toast.message': '{name} unlocked · +{xp} XP',
+	'achievement.toast.message': '{name} unlocked · +{xp} VXP',
 	'achievement.toast.title': 'Achievement unlocked',
 	'flow.entry.deck_eyebrow': 'Today’s deck',
 	'flow.entry.line.crowd': 'Reading the crowd.',
@@ -771,9 +771,9 @@ export const enMessages = {
 	'flow.invite.toast_copy_failed': 'Copy failed',
 	'flow.invite.toast_invite_copied': 'Invite copied',
 	'flow.lede':
-		'A deck of real questions. Swipe right if you believe it. Left if you don’t. Every call earns XP. Every miss teaches you.',
+		'A deck of real questions. Swipe right if you believe it. Left if you don’t. Every call earns VXP. Every miss teaches you.',
 	'flow.list_01': 'One swipe. No second-guessing.',
-	'flow.list_02': 'XP lands the moment you swipe.',
+	'flow.list_02': 'VXP lands the moment you swipe.',
 	'flow.list_03': 'Streaks that pressure you back.',
 	'flow.list_04': 'Insights surface when you flip the card.',
 	'flow.loading.aria': 'Reading the crowd',

@@ -139,7 +139,7 @@ export const frMessages = {
 	'achievement.top_decile.detail':
 		'Maintiens une position dans le top 10% du classement mondial pendant sept jours consécutifs. Ton rang est vérifié une fois par jour ; si tu passes sous le seuil, la série repart de zéro.',
 	'achievement.top_decile.name': 'Top 10% mondial',
-	'achievement.toast.message': '{name} débloqué · +{xp} XP',
+	'achievement.toast.message': '{name} débloqué · +{xp} VXP',
 	'achievement.toast.title': 'Succès débloqué',
 	'flow.entry.deck_eyebrow': 'Le deck du jour',
 	'flow.entry.line.crowd': 'Je lis la foule.',
@@ -789,9 +789,9 @@ export const frMessages = {
 	'flow.invite.toast_copy_failed': 'Échec de la copie',
 	'flow.invite.toast_invite_copied': 'Invitation copiée',
 	'flow.lede':
-		'Un paquet de vraies questions. Swipez à droite si vous y croyez. À gauche sinon. Chaque pronostic gagne de l’XP. Chaque erreur vous apprend.',
+		'Un paquet de vraies questions. Swipez à droite si vous y croyez. À gauche sinon. Chaque pronostic gagne du VXP. Chaque erreur vous apprend.',
 	'flow.list_01': 'Un swipe. Sans hésiter.',
-	'flow.list_02': 'L’XP arrive au moment du swipe.',
+	'flow.list_02': 'Le VXP arrive au moment du swipe.',
 	'flow.list_03': 'Des séries qui vous rappellent à l’ordre.',
 	'flow.list_04': 'Les clés apparaissent quand vous retournez la carte.',
 	'flow.loading.aria': 'Je lis le tableau',

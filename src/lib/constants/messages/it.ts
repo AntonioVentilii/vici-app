@@ -139,7 +139,7 @@ export const itMessages = {
 	'achievement.top_decile.detail':
 		'Mantieni una posizione nel top 10% della classifica globale per sette giorni consecutivi. La tua posizione viene verificata una volta al giorno; se scendi sotto la soglia, la serie riparte da zero.',
 	'achievement.top_decile.name': 'Top 10% globale',
-	'achievement.toast.message': '{name} sbloccato · +{xp} XP',
+	'achievement.toast.message': '{name} sbloccato · +{xp} VXP',
 	'achievement.toast.title': 'Obiettivo sbloccato',
 	'flow.entry.deck_eyebrow': 'Il mazzo di oggi',
 	'flow.entry.line.crowd': 'Leggo la folla.',
@@ -782,9 +782,9 @@ export const itMessages = {
 	'flow.invite.toast_copy_failed': 'Copia fallita',
 	'flow.invite.toast_invite_copied': 'Invito copiato',
 	'flow.lede':
-		'Un mazzo di domande vere. Scorri a destra se ci credi, a sinistra se no. Ogni previsione vale XP. Ogni errore ti insegna qualcosa.',
+		'Un mazzo di domande vere. Scorri a destra se ci credi, a sinistra se no. Ogni previsione vale VXP. Ogni errore ti insegna qualcosa.',
 	'flow.list_01': 'Uno swipe. Niente ripensamenti.',
-	'flow.list_02': 'L’XP arriva nell’istante dello swipe.',
+	'flow.list_02': 'Il VXP arriva nell’istante dello swipe.',
 	'flow.list_03': 'Le serie ti chiamano indietro.',
 	'flow.list_04': 'Gli insight si vedono quando giri la carta.',
 	'flow.loading.aria': 'Leggo il tavolo',

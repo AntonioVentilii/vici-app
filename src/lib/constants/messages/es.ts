@@ -139,7 +139,7 @@ export const esMessages = {
 	'achievement.top_decile.detail':
 		'Mantén una posición en el top 10% de la clasificación global durante siete días consecutivos. Tu posición se comprueba una vez al día; si bajas del umbral, la racha se reinicia.',
 	'achievement.top_decile.name': 'Top 10% global',
-	'achievement.toast.message': '{name} desbloqueado · +{xp} XP',
+	'achievement.toast.message': '{name} desbloqueado · +{xp} VXP',
 	'achievement.toast.title': 'Logro desbloqueado',
 	'flow.entry.deck_eyebrow': 'La baraja de hoy',
 	'flow.entry.line.crowd': 'Leyendo a la multitud.',
@@ -782,9 +782,9 @@ export const esMessages = {
 	'flow.invite.toast_copy_failed': 'Fallo al copiar',
 	'flow.invite.toast_invite_copied': 'Invitación copiada',
 	'flow.lede':
-		'Una baraja de preguntas reales. Desliza a la derecha si lo crees. A la izquierda si no. Cada predicción gana XP. Cada error te enseña.',
+		'Una baraja de preguntas reales. Desliza a la derecha si lo crees. A la izquierda si no. Cada predicción gana VXP. Cada error te enseña.',
 	'flow.list_01': 'Un deslizamiento. Sin dudar.',
-	'flow.list_02': 'El XP cae en el momento del gesto.',
+	'flow.list_02': 'El VXP cae en el momento del gesto.',
 	'flow.list_03': 'Rachas que te traen de vuelta.',
 	'flow.list_04': 'Los datos clave aparecen al girar la tarjeta.',
 	'flow.loading.aria': 'Leyendo el tablero',

@@ -135,7 +135,7 @@ export const zhCnMessages = {
 	'achievement.top_decile.detail':
 		'连续七天保持在全球排行榜前 10% 的位置。你的排名每天检查一次；若跌出门槛，连续记录将重置。',
 	'achievement.top_decile.name': '全球前 10%',
-	'achievement.toast.message': '已解锁 {name} · +{xp} XP',
+	'achievement.toast.message': '已解锁 {name} · +{xp} VXP',
 	'achievement.toast.title': '成就解锁',
 	'flow.entry.deck_eyebrow': '今日牌组',
 	'flow.entry.line.crowd': '解读人群。',
@@ -742,9 +742,10 @@ export const zhCnMessages = {
 	'flow.invite.toast_code_copied': '邀请码已复制',
 	'flow.invite.toast_copy_failed': '复制失败',
 	'flow.invite.toast_invite_copied': '邀请已复制',
-	'flow.lede': '一叠真实的问题。相信就右滑,不信就左滑。每一次判断都赢得 XP。每一次失误都让你成长。',
+	'flow.lede':
+		'一叠真实的问题。相信就右滑,不信就左滑。每一次判断都赢得 VXP。每一次失误都让你成长。',
 	'flow.list_01': '一次滑动,绝不犹豫。',
-	'flow.list_02': '滑动瞬间获得 XP。',
+	'flow.list_02': '滑动瞬间获得 VXP。',
 	'flow.list_03': '连胜让你不愿停下。',
 	'flow.list_04': '翻转卡片即见洞察。',
 	'flow.loading.aria': '正在解读全局',

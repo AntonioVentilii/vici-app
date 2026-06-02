@@ -139,7 +139,7 @@ export const deMessages = {
 	'achievement.top_decile.detail':
 		'Halte sieben Tage in Folge eine Position in den Top 10% der globalen Rangliste. Dein Stand wird einmal täglich geprüft; verfehlst du die Schwelle, beginnt die Serie von vorne.',
 	'achievement.top_decile.name': 'Top 10% global',
-	'achievement.toast.message': '{name} freigeschaltet · +{xp} XP',
+	'achievement.toast.message': '{name} freigeschaltet · +{xp} VXP',
 	'achievement.toast.title': 'Erfolg freigeschaltet',
 	'flow.entry.deck_eyebrow': 'Das heutige Deck',
 	'flow.entry.line.crowd': 'Die Menge lesen.',
@@ -785,9 +785,9 @@ export const deMessages = {
 	'flow.invite.toast_copy_failed': 'Kopieren fehlgeschlagen',
 	'flow.invite.toast_invite_copied': 'Einladung kopiert',
 	'flow.lede':
-		'Ein Stapel echter Fragen. Swipe nach rechts, wenn du dran glaubst. Nach links, wenn nicht. Jeder Call bringt XP. Jeder Daneben-Tipp lehrt dich.',
+		'Ein Stapel echter Fragen. Swipe nach rechts, wenn du dran glaubst. Nach links, wenn nicht. Jeder Call bringt VXP. Jeder Daneben-Tipp lehrt dich.',
 	'flow.list_01': 'Ein Swipe. Kein Zögern.',
-	'flow.list_02': 'XP landet im selben Moment.',
+	'flow.list_02': 'VXP landet im selben Moment.',
 	'flow.list_03': 'Streaks, die dich zurückholen.',
 	'flow.list_04': 'Erkenntnisse erscheinen, wenn du die Karte drehst.',
 	'flow.loading.aria': 'Lese das Feld',
