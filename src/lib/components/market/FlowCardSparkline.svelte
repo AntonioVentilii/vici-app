@@ -70,7 +70,7 @@
 
 	// One dot per day on the sparkline. Multiple events landing on the
 	// same day (production data, unlike the curated 1-per-day test data
-	// the design source assumes) would otherwise stack on the same X
+	// we render against) would otherwise stack on the same X
 	// coordinate and read as a black blob. Group by day, keep the first
 	// event's metadata for the dot itself, and track the extras count so
 	// the marker can carry a `+N` badge when needed.
