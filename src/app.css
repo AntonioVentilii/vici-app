@@ -90,11 +90,11 @@
 	/* Signals */
 	--yes: #4fd3a1;
 	--yes-deep: #2ba178;
-	--yes-wash: rgba(79, 211, 161, 0.12);
+	--yes-wash: color-mix(in srgb, var(--yes) 12%, transparent);
 
 	--no: #ff6b6b;
 	--no-deep: #d04444;
-	--no-wash: rgba(255, 107, 107, 0.12);
+	--no-wash: color-mix(in srgb, var(--no) 12%, transparent);
 
 	--hold: #6b9fff;
 	--hold-deep: #3f73d6;
@@ -2291,10 +2291,10 @@ a.title-action::after {
 	font-weight: 700;
 }
 .swipe-hint .eyebrow.no {
-	color: rgba(255, 107, 107, 0.7);
+	color: color-mix(in srgb, var(--no) 70%, transparent);
 }
 .swipe-hint .eyebrow.yes {
-	color: rgba(79, 211, 161, 0.7);
+	color: color-mix(in srgb, var(--yes) 70%, transparent);
 }
 .swipe-hint .eyebrow.mute {
 	color: var(--text-muted);
@@ -2425,11 +2425,11 @@ a.title-action::after {
 }
 .flow-coach-center.is-no .flow-coach-accent {
 	color: var(--no);
-	background: rgba(255, 107, 107, 0.14);
+	background: color-mix(in srgb, var(--no) 14%, transparent);
 }
 .flow-coach-center.is-yes .flow-coach-accent {
 	color: var(--yes);
-	background: rgba(79, 211, 161, 0.14);
+	background: color-mix(in srgb, var(--yes) 14%, transparent);
 }
 .flow-coach-center.is-skip .flow-coach-accent {
 	color: var(--color-accent);
@@ -3390,10 +3390,18 @@ a.title-action::after {
 	transition: opacity 100ms linear;
 }
 .ob-edge.yes {
-	background: linear-gradient(270deg, rgba(79, 211, 161, 0.55), transparent 55%);
+	background: linear-gradient(
+		270deg,
+		color-mix(in srgb, var(--yes) 55%, transparent),
+		transparent 55%
+	);
 }
 .ob-edge.no {
-	background: linear-gradient(90deg, rgba(255, 107, 107, 0.55), transparent 55%);
+	background: linear-gradient(
+		90deg,
+		color-mix(in srgb, var(--no) 55%, transparent),
+		transparent 55%
+	);
 }
 
 /* Swipe stamps. */
@@ -4042,7 +4050,7 @@ a.title-action::after {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	background: rgba(79, 211, 161, 0.12);
+	background: color-mix(in srgb, var(--yes) 12%, transparent);
 	color: var(--yes);
 	margin-bottom: 4px;
 }
@@ -5350,7 +5358,7 @@ a.title-action::after {
 	z-index: 0;
 	background: radial-gradient(
 		circle,
-		rgba(79, 211, 161, 0.3) 0%,
+		color-mix(in srgb, var(--yes) 30%, transparent) 0%,
 		rgba(226, 184, 66, 0.1) 38%,
 		transparent 68%
 	);
@@ -5404,7 +5412,7 @@ a.title-action::after {
 	width: 2px;
 	border-radius: 2px;
 	background: var(--yes);
-	box-shadow: 0 0 8px rgba(79, 211, 161, 0.6);
+	box-shadow: 0 0 8px color-mix(in srgb, var(--yes) 60%, transparent);
 	transform-origin: top;
 	animation: reso-rail-in 360ms var(--ease-vici) both;
 	animation-delay: calc(220ms + var(--ri, 0) * 120ms);
@@ -5957,13 +5965,13 @@ a.title-action::after {
 }
 .ob2-avail.ok {
 	color: var(--yes);
-	background: rgba(79, 211, 161, 0.08);
-	border: 1px solid rgba(79, 211, 161, 0.2);
+	background: color-mix(in srgb, var(--yes) 8%, transparent);
+	border: 1px solid color-mix(in srgb, var(--yes) 20%, transparent);
 }
 .ob2-avail.no {
 	color: var(--no);
-	background: rgba(255, 107, 107, 0.08);
-	border: 1px solid rgba(255, 107, 107, 0.2);
+	background: color-mix(in srgb, var(--no) 8%, transparent);
+	border: 1px solid color-mix(in srgb, var(--no) 20%, transparent);
 }
 
 .ob2-affil-preview {
@@ -6179,8 +6187,12 @@ a.title-action::after {
 	align-items: center;
 	gap: 8px;
 	padding: 9px 11px;
-	background: linear-gradient(90deg, rgba(79, 211, 161, 0.1), rgba(79, 211, 161, 0.04));
-	border: 1px solid rgba(79, 211, 161, 0.3);
+	background: linear-gradient(
+		90deg,
+		color-mix(in srgb, var(--yes) 10%, transparent),
+		color-mix(in srgb, var(--yes) 4%, transparent)
+	);
+	border: 1px solid color-mix(in srgb, var(--yes) 30%, transparent);
 	border-radius: 10px;
 	font-size: var(--text-sub);
 	line-height: 1.4;
