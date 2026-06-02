@@ -4,7 +4,7 @@
 	import { onMount, type Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import InfiniteScroll from '$lib/components/ui/InfiniteScroll.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
@@ -54,7 +54,7 @@
 	 * real crypto send / receive / history surfaces.
 	 *
 	 * Layout
-	 * - `MobileAppBar` with back → /profile, title "Wallet", and a
+	 * - `ScreenHeader` with back → /profile, title "Wallet", and a
 	 *   History icon on the right that focuses the activity list.
 	 * - Hero card (centered): VXP eyebrow → 48px VXP balance → weekly
 	 *   delta line in laurel / no-red → Open Flow + Back-a-call pill
@@ -443,8 +443,7 @@
 {/snippet}
 
 <div class="wallet-page">
-	<MobileAppBar
-		align="center"
+	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'wallet.back.label' }),
 			onBack: () => goBack(resolve(AppPath.Profile))

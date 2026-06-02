@@ -24,7 +24,10 @@
 	 * `right` snippet hosts edge actions (notifications, settings, …).
 	 */
 	interface Props {
-		title: string;
+		/** Page title. Omit it for back-only bars whose title lives in an
+		 *  editorial hero below the bar (detail surfaces); the heading
+		 *  element is then skipped so there is no empty `<h1>`. */
+		title?: string;
 		variant?: 'section' | 'editorial';
 		/** Editorial-only: a brand-accent fragment appended to `title`
 		 *  (e.g. "Veni · Vidi ·" + accent "Vici"). Ignored for `section`. */
@@ -59,14 +62,16 @@
 			</button>
 		{/if}
 
-		{#if variant === 'editorial'}
+		{#if title !== undefined && variant === 'editorial'}
 			<h1 class="screen-header-title is-editorial">
 				<span class="serif-italic">{title}</span>{#if accent}<span class="screen-header-accent"
 						>{accent}</span
 					>{/if}
 			</h1>
-		{:else}
+		{:else if title !== undefined}
 			<h1 class="screen-header-title is-section">{title}</h1>
+		{:else}
+			<span class="screen-header-spacer" aria-hidden="true"></span>
 		{/if}
 
 		{#if right}
@@ -105,6 +110,14 @@
 		width: 36px;
 		height: 36px;
 		padding: 0;
+	}
+
+	/* Fills the bar when there is no title (back-only bars whose title
+	   lives in an editorial hero below) so a trailing `right` action stays
+	   flush to the edge. */
+	.screen-header-spacer {
+		flex: 1;
+		min-width: 0;
 	}
 
 	.screen-header-title {

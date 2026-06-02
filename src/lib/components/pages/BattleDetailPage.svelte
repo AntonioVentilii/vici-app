@@ -3,7 +3,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { isMarketTag, MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
@@ -245,8 +245,7 @@
 </script>
 
 <div class="battle-detail">
-	<MobileAppBar
-		align="left"
+	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'battle.detail.back' }),
 			onBack: backToInbox

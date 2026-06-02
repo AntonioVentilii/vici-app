@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte/icons';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import type { AchievementTier } from '$lib/constants/achievements.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -128,8 +128,7 @@
 </script>
 
 <div class="album-page">
-	<MobileAppBar
-		align="center"
+	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'album.back' }),
 			onBack: () => goBack(resolve(AppPath.Profile))

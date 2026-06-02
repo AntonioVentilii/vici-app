@@ -4,7 +4,7 @@
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import MarketDetailChartCard from '$lib/components/market/MarketDetailChartCard.svelte';
 	import MarketDetailCtaBar from '$lib/components/market/MarketDetailCtaBar.svelte';
 	import MarketDetailLivePill from '$lib/components/market/MarketDetailLivePill.svelte';
@@ -388,7 +388,7 @@
 			/>
 		{/snippet}
 
-		<MobileAppBar
+		<ScreenHeader
 			back={{
 				label: t({ locale: $localeStore, key: 'market.detail.back_to_markets' }),
 				onBack: () => goBack(resolve(AppPath.Home))

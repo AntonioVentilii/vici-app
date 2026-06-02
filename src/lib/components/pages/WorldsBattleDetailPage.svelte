@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 	import {
@@ -171,8 +171,7 @@
 </script>
 
 <div class="worlds-battle">
-	<MobileAppBar
-		align="left"
+	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'worlds.battle.back' }),
 			onBack: () => goBack(`${resolve(AppPath.Arena)}/worlds`)
