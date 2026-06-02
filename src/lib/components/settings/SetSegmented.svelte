@@ -86,19 +86,22 @@
 
 	.set-segmented-label {
 		font-size: var(--t-14);
-		font-weight: 600;
+		font-weight: 500;
+		letter-spacing: -0.005em;
 		color: var(--text-base);
 	}
 
 	.set-segmented-sub {
 		font-size: var(--t-11);
+		line-height: 1.4;
 		color: var(--text-muted);
+		text-wrap: pretty;
 	}
 
 	.set-segmented-track {
 		display: grid;
 		grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
-		gap: 0.25rem;
+		gap: 0.125rem;
 		padding: 0.2rem;
 		border-radius: var(--r-8);
 		background: color-mix(in srgb, var(--text-base) 5%, transparent);
@@ -110,12 +113,12 @@
 	}
 
 	.set-segment {
-		padding: 0.4rem 0.5rem;
+		padding: 0.5rem 0.625rem;
 		border: none;
 		border-radius: var(--r-4);
 		background: transparent;
-		font-size: var(--t-12);
-		font-weight: 600;
+		font-size: var(--t-13);
+		font-weight: 500;
 		color: var(--text-muted);
 		cursor: pointer;
 		transition:
@@ -123,9 +126,16 @@
 			color var(--d-hover) var(--ease-vici);
 	}
 
+	.set-segment:hover {
+		color: var(--text-base);
+	}
+
+	/* Active segment lifts to the elevated surface with plain foreground
+	   text (not the brand accent) so the selected pill reads as a neutral
+	   raised tab, matching the in-page flow-deck tabs. */
 	.set-segment.is-active {
-		background: var(--bg-surface);
-		color: var(--color-primary);
+		background: var(--bg-popover);
+		color: var(--text-base);
 		box-shadow: var(--shadow-card);
 	}
 </style>
