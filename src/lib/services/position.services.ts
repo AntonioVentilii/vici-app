@@ -1,7 +1,7 @@
 import type { RegistryDid } from '$declarations';
 import { getPositions as getPositionsApi } from '$lib/api/clearing.api';
 import { getIdentity } from '$lib/services/identity.services';
-import { getMarketsLite } from '$lib/services/market.services';
+import { fetchMarketsLite } from '$lib/services/market.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import type { MarketId } from '$lib/types/market';
 import type { Position } from '$lib/types/position';
@@ -26,8 +26,10 @@ const fetchPositions = async ({
 	const [positions, markets] = await Promise.all([
 		getPositionsApi({ identity, certified }),
 		// Order-book-free: we only need the market id set to filter positions to
-		// the currently visible markets. Stays certified to avoid tearing.
-		getMarketsLite(domain)
+		// the currently visible markets. Threads the pass's own `certified` so the
+		// uncertified query pass isn't blocked on a certified catalog, while each
+		// pass stays self-consistent (no tearing).
+		fetchMarketsLite({ identity, certified, domain })
 	]);
 
 	const marketIds = new Set(markets.map((m) => m.id));
@@ -36,7 +38,7 @@ const fetchPositions = async ({
 };
 
 /**
- * All positions for the signed-in user, limited to markets returned by {@link getMarketsLite}.
+ * All positions for the signed-in user, limited to markets returned by {@link fetchMarketsLite}.
  *
  * Performs a single certified update. Prefer {@link loadPositions} for UI flows
  * that should render fast then upgrade to a certified result.

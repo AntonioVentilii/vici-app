@@ -499,23 +499,41 @@ const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: 
 		}, {});
 
 /**
- * Order-book-free single-shot fetch: returns the domain-scoped binary market
- * set (open + resolved) but skips the per-market `getOrderBook` fan-out, so
- * probabilities are seeded neutral (0.5). The price-bearing list path is
- * {@link loadMarkets} (fast query then certified update, both enriched).
+ * Order-book-free fetch: returns the domain-scoped binary market set (open +
+ * resolved) but skips the per-market `getOrderBook` fan-out. The price-bearing
+ * list path is {@link loadMarkets} (fast query then certified update, both
+ * enriched).
  *
  * For callers that consume only the market *set* — `id`, `balanceDomain`,
  * `status`, `outcome`, `engineId`, `payoffType` — to filter their own data:
  * positions, trade history, and the calibration deck. These ran the full
- * certified fan-out purely to derive an id set, multiplying first-load cost by
- * the catalog size. Stays `certified: true` to keep the set in lockstep with
- * the certified positions / events / settled-id reads it filters against —
- * cheap now that it's a handful of catalog reads rather than N book lookups.
+ * fan-out purely to derive an id set, multiplying first-load cost by the
+ * catalog size; this skips it. Probability fields are NOT meaningful here —
+ * open series are seeded neutral 0.5, resolved series keep `mapMarketData`'s
+ * defaults — so callers must not read them.
+ *
+ * Certification is threaded so this composes with `queryAndUpdate`: the
+ * uncertified query pass and the certified update pass each fetch the market
+ * set at their own level, keeping it in lockstep with the positions / events
+ * read it's filtered against (no tearing) without forcing the fast pass to
+ * block on a certified catalog. See {@link getMarketsLite} for the one-shot
+ * certified variant.
+ */
+export const fetchMarketsLite = (params: {
+	identity: Identity;
+	certified: boolean;
+	domain: RegistryDid.BalanceDomain;
+}): Promise<Market[]> => fetchMarkets({ ...params, includeOrderBook: false });
+
+/**
+ * One-shot, certified {@link fetchMarketsLite} for callers outside a
+ * `queryAndUpdate` flow (e.g. the calibration deck, which must match a
+ * certified settled-id read).
  */
 export const getMarketsLite = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 
-	return fetchMarkets({ identity, certified: true, domain, includeOrderBook: false });
+	return fetchMarketsLite({ identity, certified: true, domain });
 };
 
 /**
