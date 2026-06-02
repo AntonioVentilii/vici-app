@@ -1504,8 +1504,6 @@ export const enMessages = {
 	'onboarding.beat1b.headline': 'Make your first call.',
 	'onboarding.beat1b.skip_sub':
 		'Following the tournament. Swipe YES if you think {team} takes it all.',
-	'onboarding.beat1b.a11y_commit_no': 'Commit NO — predict this will not happen',
-	'onboarding.beat1b.a11y_commit_yes': 'Commit YES — predict this will happen',
 	'onboarding.beat2.affil_eyebrow': 'Your profile',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.invalid': 'Letters, numbers, . _ - only',

@@ -1431,8 +1431,6 @@ export const zhCnMessages = {
 	'onboarding.beat1b.first_call_label': '首次预测',
 	'onboarding.beat1b.headline': '做出你的第一次预测。',
 	'onboarding.beat1b.skip_sub': '只看比赛。如果你认为 {team} 能夺冠,滑动 YES。',
-	'onboarding.beat1b.a11y_commit_no': '确认否 — 预测此事不会发生',
-	'onboarding.beat1b.a11y_commit_yes': '确认是 — 预测此事将会发生',
 	'onboarding.beat2.affil_eyebrow': '你的资料',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.invalid': '仅字母、数字、. _ -',
