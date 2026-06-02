@@ -2935,8 +2935,8 @@ a.title-action::after {
 	   card stage) collapsed to content height. `100dvh` fills the frame
 	   regardless. */
 	min-height: 100dvh;
-	background: var(--ink);
-	color: var(--parchment);
+	background: var(--bg-base);
+	color: var(--text-base);
 }
 
 .ob-wrap {
@@ -2958,7 +2958,7 @@ a.title-action::after {
 	align-self: flex-end;
 	border: 0;
 	background: transparent;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	font-family: inherit;
 	font-size: 13px;
 	padding: 12px 16px 4px;
@@ -2967,7 +2967,7 @@ a.title-action::after {
 	transition: color 160ms var(--ease-vici);
 }
 .ob-switch-link:hover {
-	color: var(--parchment);
+	color: var(--text-base);
 }
 .ob-switch-link .acc {
 	color: var(--laurel);
@@ -2992,7 +2992,7 @@ a.title-action::after {
 	width: 24px;
 	height: 3px;
 	border-radius: 999px;
-	background: rgba(242, 236, 220, 0.1);
+	background: color-mix(in srgb, var(--text-base) 10%, transparent);
 	transition: background 240ms var(--ease-vici);
 }
 .ob2-progress-dot.filled {
@@ -3003,7 +3003,7 @@ a.title-action::after {
 	font-size: 9.5px;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 
 /* ─── Beat container ──────────────────────────────────────── */
@@ -3029,12 +3029,12 @@ a.title-action::after {
 .ob2-sub {
 	font-size: 13.5px;
 	line-height: 1.45;
-	color: var(--parchment-dim);
+	color: var(--fg-dim);
 	margin: 0 0 14px;
 	flex-shrink: 0;
 }
 .ob2-sub b {
-	color: var(--parchment);
+	color: var(--text-base);
 	font-weight: 600;
 }
 /* Accent eyebrow above the Beat 2 title — sits tight to the heading
@@ -3070,15 +3070,15 @@ a.title-action::after {
 .ob2-team-tile {
 	appearance: none;
 	cursor: pointer;
-	background: var(--ink-raised);
-	border: 1.5px solid var(--ink-line);
+	background: var(--bg-surface);
+	border: 1.5px solid var(--border-base);
 	border-radius: 14px;
 	padding: 16px 12px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 6px;
-	color: var(--parchment);
+	color: var(--text-base);
 	font-family: inherit;
 	transition:
 		border-color 180ms var(--ease-vici),
@@ -3088,7 +3088,7 @@ a.title-action::after {
 	transform: scale(0.98);
 }
 .ob2-team-tile:hover {
-	border-color: var(--ink-line-strong);
+	border-color: var(--border-strong);
 }
 .ob2-team-flag-lg {
 	display: inline-flex;
@@ -3108,17 +3108,17 @@ a.title-action::after {
 	font-size: 10.5px;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: var(--parchment);
+	color: var(--text-base);
 	font-weight: 600;
 }
 .ob2-team-more-tile {
-	background: rgba(242, 236, 220, 0.04);
+	background: color-mix(in srgb, var(--text-base) 4%, transparent);
 	border-style: dashed;
 }
 .ob2-team-more-sub {
 	font-family: var(--font-mono);
 	font-size: 9px;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	letter-spacing: 0.06em;
 }
 .ob2-skip-team {
@@ -3128,7 +3128,7 @@ a.title-action::after {
 	width: 100%;
 	margin-top: 4px;
 	padding: 14px;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	font-family: inherit;
 	font-size: 13px;
 	cursor: pointer;
@@ -3136,7 +3136,7 @@ a.title-action::after {
 	flex-shrink: 0;
 }
 .ob2-skip-team:hover {
-	color: var(--parchment);
+	color: var(--text-base);
 }
 
 /* "Change team" link inline with sub copy */
@@ -3177,7 +3177,7 @@ a.title-action::after {
 	font-family: var(--font-mono);
 	font-size: 10px;
 	letter-spacing: 0.06em;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 
 .ob2-card-stage {
@@ -3212,8 +3212,8 @@ a.title-action::after {
 	right: 12px;
 	top: 14px;
 	bottom: -2px;
-	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
-	border: 1px solid var(--ink-line);
+	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
+	border: 1px solid var(--border-base);
 	border-radius: 18px;
 	transform: rotate(-2deg);
 	opacity: 0.45;
@@ -3222,12 +3222,12 @@ a.title-action::after {
 .ob-card {
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
+	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
 	border: 1px solid var(--border-strong);
 	border-radius: 18px;
 	box-shadow:
 		0 18px 50px -16px rgba(0, 0, 0, 0.6),
-		inset 0 1px 0 rgba(242, 236, 220, 0.08);
+		inset 0 1px 0 color-mix(in srgb, var(--text-base) 8%, transparent);
 	overflow: hidden;
 	z-index: 2;
 	cursor: grab;
@@ -3269,8 +3269,8 @@ a.title-action::after {
 	font-weight: 600;
 	padding: 2px 8px;
 	border-radius: 999px;
-	background: rgba(242, 236, 220, 0.05);
-	border: 1px solid rgba(242, 236, 220, 0.1);
+	background: color-mix(in srgb, var(--text-base) 5%, transparent);
+	border: 1px solid color-mix(in srgb, var(--text-base) 10%, transparent);
 	color: var(--fg-dim);
 }
 .ob-first-call {
@@ -3297,8 +3297,8 @@ a.title-action::after {
 .ob-art {
 	flex: 1;
 	min-height: 120px;
-	border-bottom: 1px solid var(--ink-line);
-	border-top: 1px solid var(--ink-line);
+	border-bottom: 1px solid var(--border-base);
+	border-top: 1px solid var(--border-base);
 	position: relative;
 	overflow: hidden;
 }
@@ -3339,9 +3339,9 @@ a.title-action::after {
 }
 .ob-prob {
 	padding: 10px 14px;
-	border: 1px solid var(--ink-line);
+	border: 1px solid var(--border-base);
 	border-radius: 11px;
-	background: rgba(242, 236, 220, 0.02);
+	background: color-mix(in srgb, var(--text-base) 2%, transparent);
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -3375,7 +3375,7 @@ a.title-action::after {
 	justify-content: space-between;
 	font-family: var(--font-mono);
 	font-size: 11px;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .ob-foot-swipe {
 	letter-spacing: 0.14em;
@@ -3474,10 +3474,10 @@ a.title-action::after {
 	gap: 6px;
 	padding: 10px 6px 8px;
 	min-height: 64px;
-	border: 1px solid var(--ink-line);
+	border: 1px solid var(--border-base);
 	border-radius: 10px;
-	background: var(--ink-raised);
-	color: var(--parchment);
+	background: var(--bg-surface);
+	color: var(--text-base);
 	font-family: inherit;
 	text-transform: none;
 	/* allow the grid item to shrink so the name can wrap/clip inside it */
@@ -3658,7 +3658,7 @@ a.title-action::after {
 	flex-shrink: 0;
 }
 .ob2-team-chip:hover {
-	border-color: var(--ink-line-strong);
+	border-color: var(--border-strong);
 }
 .ob2-team-flag {
 	display: inline-flex;
@@ -3678,7 +3678,7 @@ a.title-action::after {
 	font-size: 9.5px;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	color: var(--parchment-dim);
+	color: var(--fg-dim);
 	font-weight: 600;
 	max-width: 100%;
 	text-align: center;
@@ -3695,8 +3695,8 @@ a.title-action::after {
 .ob2-all-teams {
 	margin-top: 8px;
 	padding: 12px;
-	background: var(--ink-elevated);
-	border: 1px solid var(--ink-line);
+	background: var(--bg-popover);
+	border: 1px solid var(--border-base);
 	border-radius: 12px;
 	max-height: 280px;
 	overflow-y: auto;
@@ -3714,8 +3714,8 @@ a.title-action::after {
 	display: flex;
 	gap: 2px;
 	padding: 3px;
-	background: rgba(242, 236, 220, 0.04);
-	border: 1px solid var(--ink-line);
+	background: color-mix(in srgb, var(--text-base) 4%, transparent);
+	border: 1px solid var(--border-base);
 	border-radius: 10px;
 	margin-bottom: 16px;
 }
