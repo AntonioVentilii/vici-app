@@ -58,6 +58,12 @@ export const UserProfileApiSchema = j.strictObject({
 	// `optional()` with NO default so legacy rows decode as "never placed".
 	// Mirror any change here in `src/lib/schema/profile.schema.ts`.
 	sharpestEyeBestTier: j.string().optional(),
+	// Alma Mater (university affiliation) verification state — a loose string
+	// (`'unverified'` | `'pending'` | `'verified'`). `optional()` with NO
+	// default so legacy rows decode as absent ("no school / never set"); a set
+	// school with this absent is treated as `'unverified'`. Mirror any change
+	// here in `src/lib/schema/profile.schema.ts`.
+	schoolStatus: j.string().optional(),
 	// Wall-clock ms of the owner's last handle (nickname) change — drives the
 	// 30-day handle-change cooldown. `optional()` with NO default so legacy
 	// rows decode as never-changed. Mirror any change here in

@@ -126,6 +126,10 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		// award). `optional()` so an absent value (never placed) round-trips
 		// unchanged.
 		sharpestEyeBestTier: profile.sharpestEyeBestTier,
+		// Alma Mater verification state (drives the verification pill on the
+		// profile's school slot). `optional()` so an absent value (no school /
+		// never set) round-trips unchanged.
+		schoolStatus: profile.schoolStatus,
 		// Handle-change cooldown timestamp (drives the 30-day handle limit).
 		// `optional()` so an absent value (never changed) round-trips unchanged.
 		handleLastChangeMs: profile.handleLastChangeMs,

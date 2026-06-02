@@ -293,6 +293,7 @@ export interface AppGetProfileResult {
 					};
 					longest_streak: number;
 					archetype: string;
+					school_status: [] | [string];
 					last_active_day: [] | [string];
 					total_trades: number;
 					last_top_decile_day: [] | [string];

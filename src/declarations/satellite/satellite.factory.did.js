@@ -297,6 +297,7 @@ export const idlFactory = ({ IDL }) => {
 				}),
 				longest_streak: IDL.Float64,
 				archetype: IDL.Text,
+				school_status: IDL.Opt(IDL.Text),
 				last_active_day: IDL.Opt(IDL.Text),
 				total_trades: IDL.Float64,
 				last_top_decile_day: IDL.Opt(IDL.Text),
