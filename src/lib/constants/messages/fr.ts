@@ -1521,8 +1521,6 @@ export const frMessages = {
 	'onboarding.beat1b.first_call_label': 'Premier pronostic',
 	'onboarding.beat1b.headline': 'Fais ton premier pronostic.',
 	'onboarding.beat1b.skip_sub': 'Tu suis le tournoi. Swipe OUI si tu vois {team} tout rafler.',
-	'onboarding.beat1b.a11y_commit_no': 'Confirmer NON — prédire que cela n’arrivera pas',
-	'onboarding.beat1b.a11y_commit_yes': 'Confirmer OUI — prédire que cela arrivera',
 	'onboarding.beat2.affil_eyebrow': 'Ton profil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.invalid': 'Lettres, chiffres, . _ - uniquement',
