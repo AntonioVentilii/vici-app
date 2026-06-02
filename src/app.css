@@ -3528,6 +3528,7 @@ a.title-action::after {
 }
 @media (prefers-reduced-motion: reduce) {
 	.flow-card[data-coach-phase] {
+		transition: none !important;
 		transform: none !important;
 		animation: none !important;
 	}
