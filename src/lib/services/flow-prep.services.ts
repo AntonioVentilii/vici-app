@@ -12,7 +12,7 @@ import { isNullish, nonNullish } from '@dfinity/utils';
  * in this module so the pre-warmed payload is already trimmed to
  * what the component will actually consume.
  */
-const MAX_MARKETS = 20;
+export const MAX_MARKETS = 20;
 
 const EMPTY_SIGNALS: UserMarketSignals = {
 	categoryAcc: {},
@@ -63,14 +63,25 @@ export const prepareFlow = async ({
 	const metadataPromise = listMarketMetadataBySeries().catch(() => ({}));
 	const tagsPromise = metadataPromise.then(deriveTagsBySeries);
 
+	// Share the queue promise so user signals can scope their per-market
+	// `followedLean` fan-out to the markets the deck will actually render (the
+	// top-N ranked candidates) instead of the whole tagged catalog. The deck's
+	// `MAX_MARKETS` slice happens below; deriving the ids here keeps the
+	// signals fetch overlapping with everything else rather than serialising
+	// behind the resolved queue.
+	const queuePromise = getFlowQueue({
+		domain,
+		tagMappings: tagsPromise,
+		metadataBySeries: metadataPromise
+	});
+	const deckIdsPromise = queuePromise.then((q) => q.slice(0, MAX_MARKETS).map((m) => m.id));
+
 	const [queue, signals, tagMap, metadataBySeries] = await Promise.all([
-		getFlowQueue({
-			domain,
-			tagMappings: tagsPromise,
-			metadataBySeries: metadataPromise
-		}),
+		queuePromise,
 		signedIn
-			? getUserMarketSignals({ domain, tagMappings: tagsPromise }).catch(() => EMPTY_SIGNALS)
+			? getUserMarketSignals({ domain, marketIds: deckIdsPromise, tagMappings: tagsPromise }).catch(
+					() => EMPTY_SIGNALS
+				)
 			: Promise.resolve(EMPTY_SIGNALS),
 		tagsPromise,
 		metadataPromise
