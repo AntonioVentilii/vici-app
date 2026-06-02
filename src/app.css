@@ -4798,8 +4798,8 @@ a.title-action::after {
 	width: 96px;
 	height: 132px;
 	border-radius: 14px;
-	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
-	border: 1px solid var(--ink-line-strong);
+	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
+	border: 1px solid var(--border-strong);
 	box-shadow: 0 16px 36px -16px rgba(0, 0, 0, 0.5);
 	z-index: 1;
 }
@@ -4831,7 +4831,7 @@ a.title-action::after {
 .flow-loading .pc i.s {
 	bottom: 16px;
 	height: 8px;
-	background: var(--ink-line-strong);
+	background: var(--border-strong);
 }
 .flow-loading .orcfloat {
 	position: absolute;
@@ -5168,8 +5168,8 @@ a.title-action::after {
 	gap: 8px;
 	padding: 24px 22px 20px;
 	border-radius: 20px;
-	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
-	border: 1px solid var(--ink-line);
+	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
+	border: 1px solid var(--border-base);
 	box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
 	overflow: auto;
 	opacity: 1;
@@ -5183,7 +5183,7 @@ a.title-action::after {
 	font-style: italic;
 	font-size: 26px;
 	letter-spacing: -0.02em;
-	color: var(--parchment);
+	color: var(--text-base);
 }
 .reso-net {
 	font-size: 40px;
@@ -5203,14 +5203,14 @@ a.title-action::after {
 	color: var(--no);
 }
 .reso-net.neutral {
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-tally {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
 	font-size: var(--text-eyebrow);
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-tally b {
 	font-weight: 700;
@@ -5222,7 +5222,7 @@ a.title-action::after {
 	color: var(--no);
 }
 .reso-tally .neutral b {
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-tally .reso-dot {
 	opacity: 0.5;
@@ -5240,8 +5240,8 @@ a.title-action::after {
 	gap: 9px;
 	padding: 8px 10px;
 	border-radius: 10px;
-	background: color-mix(in srgb, var(--parchment) 4%, transparent);
-	border: 1px solid var(--ink-line);
+	background: color-mix(in srgb, var(--text-base) 4%, transparent);
+	border: 1px solid var(--border-base);
 }
 .reso-row-side {
 	flex-shrink: 0;
@@ -5261,15 +5261,15 @@ a.title-action::after {
 	background: var(--no-wash);
 }
 .reso-row-side.hold {
-	color: var(--parchment-mute);
-	background: color-mix(in srgb, var(--parchment) 8%, transparent);
+	color: var(--text-muted);
+	background: color-mix(in srgb, var(--text-base) 8%, transparent);
 }
 .reso-row-q {
 	flex: 1;
 	min-width: 0;
 	text-align: left;
 	font-size: var(--text-eyebrow);
-	color: var(--parchment-dim);
+	color: var(--fg-dim);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -5288,11 +5288,11 @@ a.title-action::after {
 	color: var(--no);
 }
 .reso-row-out.neutral {
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-more {
 	font-size: var(--text-micro);
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	text-align: center;
 	padding-top: 2px;
 }
@@ -5325,10 +5325,10 @@ a.title-action::after {
 .reso-reveal-card .btn-ghost {
 	margin-top: -2px;
 	background: transparent;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-reveal-card .btn-ghost:hover {
-	color: var(--parchment);
+	color: var(--text-base);
 }
 /* Right-call celebration — dopamine hit on settled wins. No
    bounce/overshoot per brand: scale + opacity rises only. */
