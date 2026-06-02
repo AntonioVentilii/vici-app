@@ -2135,6 +2135,7 @@ export const ptMessages = {
 	'welcome.faq.sub': 'O que todo novo caller pergunta antes da primeira previsão.',
 	'welcome.faq.title_a': 'Perguntas',
 	'welcome.faq.title_b': 'que importam.',
+	'welcome.flowcard.consensus_aria': '{pct}% de consenso {side}',
 	'welcome.flowcard.delta_today': '+{delta} hoje',
 	'welcome.flowcard.favorite': 'FAVORITO',
 	'welcome.flowcard.long_shot': 'AZARÃO',

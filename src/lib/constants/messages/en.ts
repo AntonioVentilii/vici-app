@@ -2136,6 +2136,7 @@ export const enMessages = {
 	'welcome.faq.sub': 'What every new caller asks before their first prediction.',
 	'welcome.faq.title_a': 'Questions',
 	'welcome.faq.title_b': 'worth asking.',
+	'welcome.flowcard.consensus_aria': '{pct}% {side} consensus',
 	'welcome.flowcard.delta_today': '+{delta} today',
 	'welcome.flowcard.favorite': 'FAVORITE',
 	'welcome.flowcard.long_shot': 'LONG SHOT',
