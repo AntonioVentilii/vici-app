@@ -860,7 +860,7 @@
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-8);
 		background: color-mix(in srgb, var(--text-base) 4%, transparent);
-		color: var(--text-muted);
+		color: var(--fg-dim);
 		font-size: var(--t-13);
 		font-weight: 500;
 		cursor: pointer;
@@ -898,7 +898,7 @@
 		width: 8px;
 		height: 8px;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--text-muted) 60%, transparent);
+		background: var(--fg-faint);
 		flex-shrink: 0;
 		transition: background var(--d-hover) var(--ease-vici);
 	}
