@@ -28,6 +28,14 @@ export const UserProfileSchema = j.strictObject({
 	totalTrades: j.number().default(0),
 	winRate: j.number().default(0),
 	dailyStreak: j.number().default(0),
+	// Best daily-streak the user has ever reached — the running
+	// `max(longestStreak, dailyStreak)` maintained wherever `dailyStreak`
+	// is persisted (Flow Mode's first-swipe write and the trade-execution
+	// `recordActivity` path). Drives the "Longest {N}" readout on the dash
+	// streak hero. Defaults to 0 so legacy rows decode without a migration
+	// and self-heal up to their current `dailyStreak` on the next bump.
+	// Mirror any change here in `src/satellite/api-schemas.ts`.
+	longestStreak: j.number().default(0),
 	// Daily-goal counter — predictions committed on `dailyGoalDate`
 	// (local `YYYY-MM-DD`). `dailyGoalDone` rolls back to 0 the first
 	// time it's touched on a new local day, mirroring the `dailyStreak`

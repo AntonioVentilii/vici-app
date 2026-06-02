@@ -688,7 +688,6 @@ export const itMessages = {
 	'dash.placeholder.positions':
 		'Le tue previsioni aperte appariranno qui non appena inizi a giocare.',
 	'dash.streak.days': '{count} giorni',
-	'dash.streak.longest_to_marathon_em': 'Più lunga — · {count} al Marathon',
 	'dash.title': 'Dashboard',
 	'dash.accuracy.signed_in_short': 'Bentornato, {handle}',
 	'dash.active.vol_calls': '{count} previsioni',
