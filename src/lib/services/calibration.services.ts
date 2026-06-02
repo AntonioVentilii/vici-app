@@ -1,6 +1,6 @@
 import type { RegistryDid } from '$declarations';
 import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
-import { getMarkets } from '$lib/services/market.services';
+import { getMarketsLite } from '$lib/services/market.services';
 import { getSettledSeriesIds } from '$lib/services/resolution.services';
 import type { CalibrationCard } from '$lib/types/calibration';
 import type { Market } from '$lib/types/market';
@@ -19,9 +19,10 @@ import type { Market } from '$lib/types/market';
  * `list_settled_series` (scoped to the ViciXp domain) rather than from the
  * activity-log–derived `status`: clearing is the single source of truth for
  * resolution, so a series is in the deck only if it is in that settled set.
- * The market view-models still come from {@link getMarkets} (titles, engine,
+ * The market view-models still come from {@link getMarketsLite} (titles, engine,
  * payoff shape, and the activity-derived outcome label used only to drop
- * un-scoreable cards below).
+ * un-scoreable cards below) — the deck never reads order-book prices, so the
+ * lite fetch avoids a catalog-wide book fan-out.
  *
  * Inclusion gate (all must hold):
  * - settled per `list_settled_series` — the authoritative resolved set;
@@ -45,12 +46,12 @@ export const getCalibrationDeck = async (): Promise<CalibrationCard[]> => {
 	// The reward pays in VXP, so scope the deck to the ViciXp domain.
 	const domain: RegistryDid.BalanceDomain = { ViciXp: null };
 
-	// Both inputs must share a certification level: `getMarkets` forces
+	// Both inputs must share a certification level: `getMarketsLite` forces
 	// `certified: true`, so the settled set must too. Mixing a certified
 	// catalog with an uncertified settled set can transiently drop a
 	// recently-settled series, wrongly flipping its eligibility.
 	const [markets, settledIds] = await Promise.all([
-		getMarkets(domain),
+		getMarketsLite(domain),
 		getSettledSeriesIds({ certified: true, balanceDomain: domain })
 	]);
 

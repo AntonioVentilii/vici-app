@@ -7,7 +7,7 @@ import {
 	redeemCompleteSet as redeemCompleteSetApi
 } from '$lib/api/clearing.api';
 import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
-import { getMarkets } from '$lib/services/market.services';
+import { fetchMarketsLite } from '$lib/services/market.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
 import { deriveMarketPriceHistory } from '$lib/utils/market-price-history.utils';
@@ -92,9 +92,11 @@ const fetchUserTradeHistory = async ({
 }): Promise<ClearingDid.Event[]> => {
 	const [events, markets] = await Promise.all([
 		getTradeHistoryApi({ identity, certified }),
-		// getMarkets internally performs a certified update; the trade history
-		// would otherwise tear against the market set.
-		getMarkets(domain)
+		// Order-book-free: trade history only needs the market id set to scope
+		// events to the current domain. Threads the pass's own `certified` so the
+		// uncertified query pass isn't blocked on a certified catalog, while each
+		// pass stays self-consistent (no tearing).
+		fetchMarketsLite({ identity, certified, domain })
 	]);
 
 	const marketIds = new Set(markets.map((m) => m.id));
