@@ -295,6 +295,7 @@ export const idlFactory = ({ IDL }) => {
 					flow_tags: IDL.Vec(IDL.Text),
 					flow_session_length: IDL.Float64
 				}),
+				longest_streak: IDL.Float64,
 				archetype: IDL.Text,
 				last_active_day: IDL.Opt(IDL.Text),
 				total_trades: IDL.Float64,

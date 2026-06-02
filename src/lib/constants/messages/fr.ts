@@ -694,7 +694,6 @@ export const frMessages = {
 	'dash.placeholder.positions':
 		'Vos pronostics ouverts apparaîtront ici dès que vous commencerez à jouer.',
 	'dash.streak.days': '{count} jours',
-	'dash.streak.longest_to_marathon_em': 'Record — · {count} avant Marathon',
 	'dash.title': 'Tableau de bord',
 	'dash.accuracy.signed_in_short': 'Bienvenue, {handle}',
 	'dash.active.vol_calls': '{count} prédictions',

@@ -73,6 +73,10 @@
 	const accuracyValue = $derived(profile?.accuracy ?? 0);
 	const accuracyPct = $derived(accuracyValue.toFixed(1));
 	const streak = $derived(profile?.dailyStreak ?? 0);
+	// Personal-best streak. Defended with `max(…, streak)` so a legacy row
+	// whose stored `longestStreak` hasn't self-healed yet never renders
+	// below the current streak (the best can't be below today's run).
+	const longestStreak = $derived(Math.max(profile?.longestStreak ?? 0, streak));
 	// Daily-goal progress — the persisted cross-session counter feeds the
 	// "Today's goal" resume card. The card itself rolls a stale day over to
 	// 0 and hides until there's progress to resume.
@@ -593,6 +597,7 @@
 			<DashHeroAccuracy
 				{accuracyPct}
 				{daysToMarathon}
+				{longestStreak}
 				{nickname}
 				{sessionDelta}
 				{streak}

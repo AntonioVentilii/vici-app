@@ -291,6 +291,7 @@ export interface AppGetProfileResult {
 						flow_tags: Array<string>;
 						flow_session_length: number;
 					};
+					longest_streak: number;
 					archetype: string;
 					last_active_day: [] | [string];
 					total_trades: number;

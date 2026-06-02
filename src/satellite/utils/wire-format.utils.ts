@@ -214,9 +214,11 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	totalTrades: profile.total_trades,
 	winRate: profile.win_rate,
 	dailyStreak: profile.daily_streak,
-	// Daily goal isn't carried on the leaderboard / search wire (those
-	// surfaces don't read it), so default it like the other non-wire
-	// fields below to keep the rebuilt UserProfile fully shaped.
+	// `longestStreak` / daily goal aren't carried on the leaderboard /
+	// search wire (those surfaces don't read them), so default them like
+	// the other non-wire fields below to keep the rebuilt UserProfile fully
+	// shaped.
+	longestStreak: 0,
 	dailyGoalDone: 0,
 	streak: profile.streak,
 	accuracy: profile.accuracy,
