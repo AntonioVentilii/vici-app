@@ -1166,7 +1166,6 @@ export const zhCnMessages = {
 	'market.detail.chart.no_trades': '暂无交易',
 	'market.detail.chart.period.all': '全部',
 	'market.detail.closed.expired': '该市场已关闭，等待结算。',
-	'market.detail.closed.resolved': '该市场已结算，不再交易。',
 	'market.detail.coldstart.body': '还没有人预测这个市场——你的预测将定下第一个读数。',
 	'market.detail.coldstart.lead': '新市场。',
 	'market.detail.cta.predict_no': '预测 NO',
