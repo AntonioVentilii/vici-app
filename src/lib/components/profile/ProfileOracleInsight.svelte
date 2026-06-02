@@ -30,7 +30,7 @@
 		gap: 0.85rem;
 		padding: 0.9rem 1rem;
 		border: 1px solid color-mix(in srgb, var(--char-oracle) 18%, var(--border-base));
-		border-radius: 1.25rem;
+		border-radius: var(--r-12);
 		background: color-mix(in srgb, var(--char-oracle) 4%, var(--bg-popover));
 	}
 

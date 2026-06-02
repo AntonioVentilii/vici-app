@@ -597,7 +597,7 @@
 		     VXP" numbers. -->
 		<div class="profile-level-row">
 			<span class="profile-level-label">
-				{t({ locale: $localeStore, key: 'profile.dashboard.level_label' })}
+				{t({ locale: $localeStore, key: 'profile.dashboard.level_label', params: { level } })}
 			</span>
 			<span class="num profile-level-target">
 				{points.toLocaleString($localeStore)} / {nextLevelTarget.toLocaleString($localeStore)} VXP
@@ -817,7 +817,7 @@
 		overflow: hidden;
 		padding: 1rem;
 		border: 1px solid var(--border-base);
-		border-radius: 1.5rem;
+		border-radius: var(--r-12);
 		background: var(--bg-popover);
 		box-shadow: var(--shadow-card);
 	}
@@ -1145,7 +1145,7 @@
 		gap: 0.75rem;
 		padding: 1rem;
 		border: 1px solid var(--border-base);
-		border-radius: 1.5rem;
+		border-radius: var(--r-12);
 		background: var(--bg-popover);
 		box-shadow: var(--shadow-card);
 	}
@@ -1182,11 +1182,11 @@
 	.affil-slot {
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
-		min-height: 6.2rem;
-		padding: 0.85rem;
+		gap: 0.375rem;
+		min-height: 5.25rem;
+		padding: 0.75rem 0.85rem;
 		border: 1px solid var(--border-base);
-		border-radius: 1rem;
+		border-radius: var(--r-8);
 		/* Tiles sit one surface step inside the affiliations card (which is
 		   `--bg-popover`), so they read as distinct tiles rather than blending
 		   into the card. `--bg-surface` is the darker step in every theme. */
@@ -1199,9 +1199,17 @@
 			border-color var(--d-hover) var(--ease-vici);
 	}
 
+	/* Empty (addable) slots read as dashed outlines on a transparent
+	   surface, so they're visually distinct from a filled tile and invite
+	   the user to add an affiliation. */
+	.affil-slot.is-empty {
+		border-style: dashed;
+		background: transparent;
+	}
+
 	.affil-slot.is-empty:hover {
 		border-color: var(--border-strong);
-		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-surface));
+		background: color-mix(in srgb, var(--color-primary) 4%, transparent);
 	}
 
 	.affil-slot.is-filled {
@@ -1221,8 +1229,8 @@
 	.affil-slot-icon {
 		display: inline-flex;
 		overflow: hidden;
-		width: 2.4rem;
-		height: 2.4rem;
+		width: 1.75rem;
+		height: 1.75rem;
 		align-items: center;
 		justify-content: center;
 		border-radius: var(--r-pill);
@@ -1238,8 +1246,6 @@
 
 	.affil-slot.is-empty .affil-slot-icon,
 	.affil-slot.is-locked .affil-slot-icon {
-		width: 1.7rem;
-		height: 1.7rem;
 		font-size: 0.95rem;
 	}
 
@@ -1417,7 +1423,7 @@
 		gap: 0.5rem;
 		padding: 0.85rem 0.9rem 0.95rem;
 		border: 1px solid var(--border-base);
-		border-radius: 1rem;
+		border-radius: var(--r-12);
 		background: var(--bg-popover);
 		scroll-snap-align: start;
 		overflow: hidden;

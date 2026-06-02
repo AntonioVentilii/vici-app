@@ -1683,7 +1683,7 @@ export const deMessages = {
 	'profile.avatar.option.bg.clay': 'Lehm',
 	'profile.dashboard.identity_meta': 'Lvl {level} · {rank} global · {accuracy}% Genauigkeit',
 	'profile.dashboard.calls_count': '{calls} Calls',
-	'profile.dashboard.level_label': 'LEVEL',
+	'profile.dashboard.level_label': 'LEVEL {level}',
 	'profile.dashboard.oracle.above':
 		'{acc}% Genauigkeit über {trades} Calls. Über dem Durchschnitt.',
 	'profile.dashboard.oracle.approves': '{acc}% Genauigkeit über {trades} Calls. Das Oracle nickt.',
