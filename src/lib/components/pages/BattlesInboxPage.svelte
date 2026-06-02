@@ -3,7 +3,7 @@
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import BattlesIntroCard from '$lib/components/leagues/BattlesIntroCard.svelte';
 	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
@@ -378,8 +378,7 @@
 
 <div class="battles-inbox" class:embedded>
 	{#if !embedded}
-		<MobileAppBar
-			align="left"
+		<ScreenHeader
 			back={{
 				label: t({ locale: $localeStore, key: 'leagues.battles_inbox.back' }),
 				onBack: () => goBack(resolve(AppPath.Arena))

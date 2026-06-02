@@ -47,7 +47,6 @@ move to one of the other sections.
 - `src/lib/components/authn/SignInModal.svelte`
 - `src/lib/components/dev/TweaksPanel.svelte`
 - `src/lib/components/landing/LandingSectionHeader.svelte`
-- `src/lib/components/layout/MobileAppBar.svelte`
 - `src/lib/components/market/BinaryProbabilities.svelte`
 - `src/lib/components/market/CategoricalProbabilities.svelte`
 - `src/lib/components/market/MarketCardSkeleton.svelte`

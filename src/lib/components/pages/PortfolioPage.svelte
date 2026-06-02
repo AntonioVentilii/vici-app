@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { LineChart } from 'lucide-svelte/icons';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
 	import PortfolioEmptyState from '$lib/components/portfolio/PortfolioEmptyState.svelte';
@@ -44,7 +44,7 @@
 	 * Portfolio page — single-page hero + flat lists.
 	 *
 	 * Layout (top → bottom)
-	 * - `MobileAppBar`, title "Portfolio", chart icon right.
+	 * - `ScreenHeader`, title "Portfolio", chart icon right.
 	 * - Hero card (left-aligned, gradient surface) — TOTAL HOLDINGS
 	 *   eyebrow, 38 px VXP balance + unit, 3-col stat row
 	 *   (Unrealized P&L · 7D Accuracy · Rank).
@@ -330,8 +330,7 @@
 {/snippet}
 
 <div class="portfolio-page">
-	<MobileAppBar
-		align="left"
+	<ScreenHeader
 		right={portfolioAppbarRight}
 		title={t({ locale: $localeStore, key: 'portfolio.title' })}
 	/>

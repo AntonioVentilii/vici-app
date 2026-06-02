@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
 	import WorldsAffiliationPrompt from '$lib/components/worlds/WorldsAffiliationPrompt.svelte';
 	import WorldsPodiumClaim from '$lib/components/worlds/WorldsPodiumClaim.svelte';
@@ -286,7 +286,7 @@
 </script>
 
 <div class="worlds-page">
-	<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'worlds.title' })} />
+	<ScreenHeader title={t({ locale: $localeStore, key: 'worlds.title' })} />
 
 	{#if podiumClaim}
 		<WorldsPodiumClaim

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
@@ -280,8 +280,7 @@
 </script>
 
 <div class="tournament-page">
-	<MobileAppBar
-		align="left"
+	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'tournament.back' }),
 			onBack: () => goBack(resolve(AppPath.Arena))

@@ -3,7 +3,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import CreateLeagueModal from '$lib/components/leagues/CreateLeagueModal.svelte';
 	import JoinLeagueModal from '$lib/components/leagues/JoinLeagueModal.svelte';
 	import LeagueCtaCard from '$lib/components/leagues/LeagueCtaCard.svelte';
@@ -242,7 +242,7 @@
 
 <div class="leagues-page pb-24" class:embedded>
 	{#if !embedded}
-		<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'leagues.title' })} />
+		<ScreenHeader title={t({ locale: $localeStore, key: 'leagues.title' })} />
 	{/if}
 
 	{#if loadState === 'loading'}

@@ -5,7 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import IconIc from '$lib/components/icons/IconIC.svelte';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -136,8 +136,7 @@
 </script>
 
 <div class="account-page">
-	<MobileAppBar
-		align="left"
+	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'account.back' }),
 			onBack: () => goBack(resolve(AppPath.Settings))
