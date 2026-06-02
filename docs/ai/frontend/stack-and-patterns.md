@@ -239,6 +239,24 @@ pins `VICI_ENGINE_ID` is
   [`juno.config.ts`](../../../juno.config.ts).
 - Auth worker assets must be synced via `npm run postinstall` to
   `./static/workers` — otherwise sign-in silently breaks.
+- **Apple sign-in bypasses Juno on purpose.** Juno's `signIn()` has no
+  Apple provider and no OpenID deep-link for its II provider, so
+  "Continue with Apple" drives `@icp-sdk/auth` v6 directly against
+  Internet Identity 2.0 (`id.ai`) with `openIdProvider: 'apple'` — see
+  [`apple-signin.services.ts`](../../../src/lib/services/apple-signin.services.ts).
+  v6 is installed under the **`icp-auth-openid` npm alias**
+  (`npm:@icp-sdk/auth@^6`) so Juno keeps its own peer `@icp-sdk/auth` v5
+  untouched — never import `icp-auth-openid` from anything Juno owns, and
+  never bump Juno's peer to v6 (v6 dropped the `AuthClient.create` /
+  `login` API Juno calls). The two versions share an identical IndexedDB
+  contract (`auth-client-db` / `ic-keyval`, ECDSA key + delegation JSON),
+  so the v6-written delegation is adopted by Juno on the next document
+  load. That adoption is why Apple sign-in ends with a **full
+  `window.location.assign`** (not a client `goto`): only a fresh load
+  re-runs `initSatellite()` / `loadAuth()`, which picks up the delegation
+  and fires `onAuthStateChange`. Flush host state (e.g. the signup
+  onboarding `onSuccess` that persists pending picks to storage) before
+  that reload.
 
 ## Tailwind v4 + design tokens
 

@@ -2,14 +2,17 @@
 	import { isWebAuthnAvailable, signIn } from '@junobuild/core';
 	import { Check, ChevronRight, Mail } from '@lucide/svelte';
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import IconApple from '$lib/components/icons/IconApple.svelte';
 	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import IconIc from '$lib/components/icons/IconIC.svelte';
 	import IconPasskey from '$lib/components/icons/IconPasskey.svelte';
 	import IconRobot from '$lib/components/icons/IconRobot.svelte';
 	import { II_MAX_TIME_TO_LIVE_NS } from '$lib/constants/app.constants';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { isDev, isNotSkylab, isProd } from '$lib/env/app.env';
+	import { AppleSignInCancelledError, signInWithApple } from '$lib/services/apple-signin.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -20,15 +23,12 @@
 	const { onSuccess }: Props = $props();
 
 	// Provider IDs used to drive per-provider loading + faded-others
-	// state. Apple + email are placeholders until we ship the
-	// corresponding back-end providers.
+	// state. Email is still a placeholder until its back-end ships.
 	type ProviderId = 'apple' | 'google' | 'email' | 'ii' | 'passkey' | 'dev';
 
-	// Auth surfaces that are wired to a live back-end provider. Apple
-	// + email render as disabled placeholders with a "Coming soon"
-	// micro-label until we ship them.
+	// Email renders as a disabled placeholder with a "Coming soon"
+	// micro-label until the magic-link back-end ships.
 	const EMAIL_ENABLED = false;
-	const APPLE_ENABLED = false;
 
 	// Per-provider visibility flags — show/hide the button entirely,
 	// independent of the "coming soon" placeholder state above.
@@ -81,6 +81,42 @@
 		} finally {
 			signingIn = null;
 		}
+	};
+
+	// Apple sign-in routes through Internet Identity 2.0's OpenID flow
+	// (Juno has no Apple provider), so it bypasses Juno's `signIn()` and
+	// drives `@icp-sdk/auth` directly via `signInWithApple`. That persists
+	// the delegation to the same store Juno reads but does NOT update
+	// Juno's in-memory auth state — so we can't use the shared `startSignIn`
+	// (whose success path assumes Juno is already aware of the session).
+	// Instead: flush host state via `onSuccess` (in the signup onboarding
+	// flow that persists the pending picks to storage), then hard-load Flow.
+	// A full document load re-runs `initSatellite()` / `loadAuth()`, which
+	// adopts the persisted delegation, fires `onAuthStateChange`, and (via
+	// the (app) layout) drains any pending onboarding. The signed-out bounce
+	// waits for the auth handshake, so there's no signin flash.
+	const onApple = async () => {
+		if (signingIn !== null) {
+			return;
+		}
+
+		signingIn = 'apple';
+
+		try {
+			await signInWithApple();
+		} catch (err: unknown) {
+			if (!(err instanceof AppleSignInCancelledError)) {
+				console.error('apple sign-in failed', err);
+			}
+
+			signingIn = null;
+
+			return;
+		}
+
+		onSuccess?.();
+
+		window.location.assign(resolve(AppPath.Flow));
 	};
 
 	const onGoogle = () =>
@@ -183,15 +219,15 @@
 	</div>
 {:else}
 	<div class="signin-providers signin-providers-equal">
-		<!-- Apple — disabled placeholder until backend ships. -->
+		<!-- Apple — live via Internet Identity 2.0 OpenID one-click. -->
 		{#if APPLE_LOGIN_ENABLED}
 			<button
 				class="signin-provider-btn is-onboarding ob-dark"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'apple'}
 				aria-busy={signingIn === 'apple'}
-				disabled={!APPLE_ENABLED || isBusy}
-				title={t({ locale: $localeStore, key: 'signin.provider.placeholder_title' })}
+				disabled={isBusy}
+				onclick={onApple}
 				type="button"
 			>
 				<span class="signin-provider-icon" aria-hidden="true">
@@ -204,10 +240,6 @@
 				</span>
 				{#if signingIn === 'apple'}
 					<span class="signin-spinner" aria-hidden="true"></span>
-				{:else if !APPLE_ENABLED}
-					<small class="signin-provider-soon">
-						{t({ locale: $localeStore, key: 'signin.provider.soon' })}
-					</small>
 				{/if}
 			</button>
 		{/if}
