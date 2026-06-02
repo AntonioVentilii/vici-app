@@ -688,7 +688,6 @@ export const ptMessages = {
 	'dash.placeholder.positions':
 		'Suas previsões abertas aparecerão aqui assim que você começar a jogar.',
 	'dash.streak.days': '{count} dias',
-	'dash.streak.longest_to_marathon_em': 'Maior — · {count} para Marathon',
 	'dash.title': 'Painel',
 	'dash.accuracy.signed_in_short': 'Bem-vindo, {handle}',
 	'dash.active.vol_calls': '{count} previsões',
