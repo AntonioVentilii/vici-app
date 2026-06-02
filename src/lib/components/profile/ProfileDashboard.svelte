@@ -130,7 +130,10 @@
 	const vxpBalance = $derived(points);
 	const vxpBalanceLabel = $derived(`${vxpBalance.toLocaleString($localeStore)} VXP`);
 
-	const accuracyDisplay = $derived((Math.round(accuracy * 10) / 10).toFixed(0));
+	// `profile.accuracy` is a 0..100 win-rate float (see `profile.services.ts`
+	// `calculateAndSyncStats`), so render one decimal to match the Dash hero
+	// figure (`DashPage` `accuracyPct`) rather than truncating to an integer.
+	const accuracyDisplay = $derived(accuracy.toFixed(1));
 
 	/**
 	 * Global rank — viewer's 1-based index in the cached leaderboard.
