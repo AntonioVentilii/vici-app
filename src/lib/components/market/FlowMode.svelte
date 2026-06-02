@@ -671,28 +671,32 @@
 			key: commitToastKeySeq
 		};
 
-		// Single beat-aware vibrate — fires once per beat, with the
-		// envelope mapped from `beat.kind`. On the first-call beat the
-		// `firm-tap` swipe-commit haptic has already fired upstream; that
-		// envelope is itself celebratory, so the commit + beat firing
-		// back-to-back is intentional.
+		// Beat-aware haptic envelope mapped from `beat.kind`. Fires paired
+		// with the beat's REVEAL, not the swipe commit — see below. On the
+		// first-call beat the `firm-tap` swipe-commit haptic has already
+		// fired upstream; that envelope is itself celebratory, so the commit
+		// + beat firing back-to-back is intentional.
 		const beatHaptic = hapticForBeat(motion.beat?.kind);
 
-		if (beatHaptic) {
-			vibrate(beatHaptic);
-		}
-
-		// Beat sound cue — paired with the beat haptic. A wildcard treat
-		// plays the playful arpeggio; otherwise a gating beat (any
-		// non-ambient beat, i.e. one that pauses the deck) plays the bigger
-		// "hard" figure and the ambient `ambient-10` pop plays the soft beat.
-		if (motion.beat) {
-			if (motion.beat.kind === 'wildcard') {
-				flowWild();
-			} else {
-				flowBeat(motion.beat.kind !== 'ambient-10');
+		// The beat's haptic + sound cue are paired with the moment the
+		// character is revealed, not the swipe commit, so the "thunk" lands
+		// on the pop rather than on the empty-slot gap. A wildcard treat
+		// plays the playful arpeggio; otherwise a gating beat (any non-ambient
+		// beat) plays the bigger "hard" figure and the ambient `ambient-10`
+		// pop plays the soft beat.
+		const fireBeatCue = () => {
+			if (beatHaptic) {
+				vibrate(beatHaptic);
 			}
-		}
+
+			if (motion.beat) {
+				if (motion.beat.kind === 'wildcard') {
+					flowWild();
+				} else {
+					flowBeat(motion.beat.kind !== 'ambient-10');
+				}
+			}
+		};
 
 		// A real beat plays IN THE GAP. The deck holds (`flowPaused`): the
 		// called card flies out, the empty slot opens, then the REAL
@@ -700,9 +704,10 @@
 		// treat chips · sub-label — before the next card rises over.
 		// `flowPaused` flips now so the outgoing card hides and drag locks;
 		// the centered beat is revealed 250 ms later so the card-out clears
-		// the slot first. Ambient (`ambient-10`) is a soft pop that never
-		// gates — it advances immediately. Advance is deferred to
-		// `onMotionBeatDone` for gating beats.
+		// the slot first — and the haptic + sound cue fire WITH that reveal.
+		// Ambient (`ambient-10`) is a soft pop that never gates — it advances
+		// immediately, with its cue paired to its immediate reveal. Advance is
+		// deferred to `onMotionBeatDone` for gating beats.
 		if (motion.beat && motion.beat.kind !== 'ambient-10') {
 			const gatingBeat = motion.beat;
 			flowPaused = true;
@@ -713,6 +718,7 @@
 
 			gatingBeatTimer = setTimeout(() => {
 				activeMotionBeat = gatingBeat;
+				fireBeatCue();
 				gatingBeatTimer = null;
 			}, 250);
 
@@ -721,6 +727,7 @@
 
 		if (motion.beat) {
 			activeMotionBeat = motion.beat;
+			fireBeatCue();
 		}
 
 		// Non-gating commit: the per-swipe `XpToast` above is the feedback —
