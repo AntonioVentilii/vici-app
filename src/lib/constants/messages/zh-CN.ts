@@ -1181,6 +1181,8 @@ export const zhCnMessages = {
 	'market.detail.not_found.cta': '返回市场列表',
 	'market.detail.not_found.sub': '你要找的市场已隐藏或不存在。',
 	'market.detail.not_found.title': '404 - 未找到市场',
+	'market.detail.readonly.live': '仅供查看 · 预测在 Flow 中进行',
+	'market.detail.readonly.settled': '市场已结算 · 不再交易',
 	'market.detail.resolution.eyebrow': '裁定',
 	'market.detail.resolution.fallback':
 		'若官方来源在 {closesAt} 之前根据市场裁定标准确认结果,则裁定为 YES。',
