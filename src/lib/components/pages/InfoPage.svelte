@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft } from '@lucide/svelte/icons';
+	import { ChevronLeft } from '@lucide/svelte/icons';
 	import { resolve } from '$app/paths';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
@@ -10,7 +10,7 @@
 
 	/**
 	 * Info / legal doc page — single-column reading view with:
-	 *  - top-left circular back arrow + the doc title flowing alongside it
+	 *  - top-left circular back chevron + the doc title flowing alongside it
 	 *  - small accent-coloured eyebrow under the title
 	 *  - serif-italic lede paragraph
 	 *  - sans-serif body paragraphs at 1.65 line-height
@@ -49,7 +49,7 @@
 <div class="info-page">
 	<header class="info-appbar">
 		<button class="appbar-icon-btn info-back" onclick={handleBack} type="button">
-			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
+			<ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 			<span class="sr-only">{t({ locale: $localeStore, key: 'info.back' })}</span>
 		</button>
 		<h1 class="info-hero-title">{title}</h1>
@@ -86,7 +86,7 @@
 		-->
 		<div class="info-foot">
 			<button class="info-foot-back" onclick={handleBack} type="button">
-				<ArrowLeft aria-hidden="true" size={14} strokeWidth={1.8} />
+				<ChevronLeft aria-hidden="true" size={14} strokeWidth={1.8} />
 				<span>{t({ locale: $localeStore, key: footBackKey })}</span>
 			</button>
 		</div>
