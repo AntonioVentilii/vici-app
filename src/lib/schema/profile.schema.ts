@@ -104,6 +104,19 @@ export const UserProfileSchema = j.strictObject({
 	// per-month history) is the v1 storage shape. Mirror any change here in
 	// `src/satellite/api-schemas.ts`.
 	sharpestEyeBestTier: j.string().optional(),
+	// Verification state of the owner's Alma Mater (university affiliation):
+	// `'unverified'` | `'pending'` | `'verified'`. Drives the verification
+	// pill on the profile's Alma Mater slot. Stored as a loose string (not an
+	// enum) so it round-trips through JsonData→Candid without the
+	// `Option<Enum>` limitation. `optional()` with NO default — absence is the
+	// meaningful "no school / never set" state, and a default would force every
+	// legacy row to look like it had a verification status. When a university
+	// affiliation exists but this field is absent, the surface treats it as
+	// `'unverified'`. Membership-email verification (the path that would move
+	// this to `'verified'`) is deferred to its own roadmap item; until then the
+	// only reachable state for a set school is `'unverified'`. Mirror any
+	// change here in `src/satellite/api-schemas.ts`.
+	schoolStatus: j.string().optional(),
 	// Wall-clock ms at which the owner last CHANGED their handle (nickname).
 	// Drives the {@link HANDLE_COOLDOWN_DAYS}-day handle-change cooldown: a
 	// rename is only allowed once this is older than the window. PRESENCE = a

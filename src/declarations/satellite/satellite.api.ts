@@ -302,6 +302,7 @@ const AppGetProfileResultSchema = j.strictObject({
 			topDecileStreak: j.number(),
 			lastTopDecileDay: j.optional(j.string()),
 			sharpestEyeBestTier: j.optional(j.string()),
+			schoolStatus: j.optional(j.string()),
 			handleLastChangeMs: j.optional(j.number()),
 			preferences: j.strictObject({
 				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),
