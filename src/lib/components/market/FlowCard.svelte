@@ -713,9 +713,9 @@
 					{tradeAmount}
 				/>
 
-				<!-- Back-face swipe still commits a call — corner stamps mirror
-			     the front, counter-rotated so the lettering reads forward
-			     through the flipped face. -->
+				<!-- Back-face swipe still commits a call — corner stamps reuse
+			     the front-face YES/NO treatment; the doubly-rotated back face
+			     resolves forward-facing so they read correctly as-is. -->
 				<div
 					style:opacity={backOverlayYes}
 					class="flow-overlay flow-overlay-yes flow-overlay-back"
@@ -1201,24 +1201,15 @@
 		border-color: color-mix(in srgb, var(--text-base) 70%, transparent);
 		background: color-mix(in srgb, var(--bg-base) 55%, transparent);
 		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
 	}
-	/* Back face is pre-rotated rotateY(180deg) to face the user, which
-	   mirrors its children's text and left/right anchoring. Counter-mirror
-	   each back stamp with its own rotateY(180deg) so the lettering reads
-	   forward, and swap the corner anchors so the swipe-direction mapping
-	   is preserved (right-swipe YES still lands top-right, NO top-left). */
+	/* The back face is pre-rotated rotateY(180deg) and the flipper adds
+	   another 180° when flipped, so back content already resolves
+	   forward-facing (net 360°). The back stamps therefore inherit the
+	   front-face YES/NO treatment as-is — lettering reads forward and
+	   YES lands top-right, NO top-left. Only the stacking order differs. */
 	.flow-overlay-back {
 		z-index: 25;
-	}
-	.flow-overlay-back.flow-overlay-yes {
-		right: auto;
-		left: 24px;
-		transform: rotateY(180deg) rotate(8deg) scale(1.06);
-	}
-	.flow-overlay-back.flow-overlay-no {
-		left: auto;
-		right: 24px;
-		transform: rotateY(180deg) rotate(-8deg) scale(1.06);
 	}
 
 	/* Reduced motion: drop the stamp pop + transform easing — the stamp
@@ -1235,12 +1226,6 @@
 		}
 		.flow-overlay-skip {
 			transform: translateX(-50%);
-		}
-		.flow-overlay-back.flow-overlay-yes {
-			transform: rotateY(180deg) rotate(8deg);
-		}
-		.flow-overlay-back.flow-overlay-no {
-			transform: rotateY(180deg) rotate(-8deg);
 		}
 	}
 
