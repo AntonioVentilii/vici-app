@@ -35,19 +35,19 @@
 		danger: 'bg-danger text-danger-foreground shadow-inset-hi hover:bg-danger-deep'
 	};
 
-	// Padding + radius scale: default = `14px 20px / radius 12px`,
-	// large = `16px 22px / radius 14px`, small scales down
-	// proportionally. The base radius (`rounded-xl` = 12px) is set on
-	// the wrapper below; the `lg` variant overrides to 14px.
+	// Padding + type scale: default = `14px 20px / 14px text`, large =
+	// `16px 22px / 16px text`, small scales down proportionally. Every
+	// size shares the full pill radius (`rounded-full`) set on the
+	// wrapper below — the shape is a pill across all variants and sizes.
 	const sizes: Record<NonNullable<Props['size']>, string> = {
 		sm: 'px-3 py-2 text-xs',
-		md: 'px-5 py-3.5 text-[15px]',
-		lg: 'rounded-[14px] px-[1.375rem] py-4 text-base'
+		md: 'px-5 py-3.5 text-sm',
+		lg: 'px-[1.375rem] py-4 text-base'
 	};
 </script>
 
 <BaseButton
-	class="ease-vici duration-hover gap-2 rounded-xl font-semibold tracking-tight whitespace-nowrap transition-all active:scale-[0.985] {variants[
+	class="ease-vici duration-hover gap-2 rounded-full font-semibold tracking-[-0.005em] whitespace-nowrap transition-all active:scale-[0.97] {variants[
 		variant
 	]} {sizes[size]} {className}"
 	{busyLabel}
