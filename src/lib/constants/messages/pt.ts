@@ -1504,8 +1504,6 @@ export const ptMessages = {
 	'onboarding.beat1b.first_call_label': 'Primeira previsão',
 	'onboarding.beat1b.headline': 'Faça sua primeira previsão.',
 	'onboarding.beat1b.skip_sub': 'Acompanha o torneio. Marque SIM se acha que {team} leva tudo.',
-	'onboarding.beat1b.a11y_commit_no': 'Confirmar NÃO — prever que isso não vai acontecer',
-	'onboarding.beat1b.a11y_commit_yes': 'Confirmar SIM — prever que isso vai acontecer',
 	'onboarding.beat2.affil_eyebrow': 'Seu perfil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.invalid': 'Só letras, números, . _ -',
