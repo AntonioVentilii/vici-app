@@ -13,12 +13,19 @@
 	 *    net loss → measured neutral net, no confetti, "shake it off"), the
 	 *    actual resolved calls (win/loss list, capped at 5 + "+N more").
 	 *
-	 * There is NO auto-dismiss. A gated "Enter Flow →" CTA arms after 4s
-	 * (600ms under reduced motion) with a countdown bar filling INSIDE the
-	 * pill; entering settles the matured calls (`onEnter`) and reveals the
-	 * deck. The loading mode is wired to the REAL first-card fetch state —
-	 * `loading` flips false when the deck has arrived; between-card waits
-	 * prefetch and never re-show this surface. Reduced-motion + theme safe.
+	 * The "Enter Flow →" CTA arms only when BOTH conditions hold: the read
+	 * beat has elapsed (4s, or 600ms under reduced motion — a moment to read
+	 * the digest / let the deck settle) AND `ready` is true. `ready` carries
+	 * the REAL first-card fetch state, so the CTA never reveals a deck that
+	 * has not arrived: while the fetch is in flight the Oracle copy keeps
+	 * cycling and the CTA holds its arming state. A countdown bar fills INSIDE
+	 * the pill; entering settles the matured calls (`onEnter`) and reveals the
+	 * deck.
+	 *
+	 * As a safety net, the surface auto-enters once both 30s have elapsed and
+	 * the deck is ready — so the entry never lingers indefinitely if the CTA
+	 * is left untapped. The auto-enter runs the same `onEnter` path (settling
+	 * any matured digest). Reduced-motion + theme safe.
 	 */
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -31,13 +38,20 @@
 		/** The away-digest; `count === 0` falls back to deck-shuffle mode. */
 		digest: ResolutionRevealData;
 		/**
+		 * Real first-card fetch readiness. The CTA arms (and the auto-enter
+		 * fires) only once this is true — so neither path ever reveals a deck
+		 * that has not yet arrived. Stays false while the deck is loading.
+		 */
+		ready: boolean;
+		/**
 		 * Settles the matured calls and reveals the deck. Called once, when
-		 * the user taps the armed CTA.
+		 * the user taps the armed CTA (or when the 30s ready-gated auto-enter
+		 * fires).
 		 */
 		onEnter: () => void;
 	}
 
-	const { digest, onEnter }: Props = $props();
+	const { digest, ready, onEnter }: Props = $props();
 
 	const hasDigest = $derived(digest.count > 0);
 	const positive = $derived(digest.netVxp >= 0);
@@ -63,9 +77,20 @@
 		loadLine = (loadLine + 1) % loadLineKeys.length;
 	};
 
-	// The CTA arms on a timer (a beat to read the digest / let the deck
-	// settle), not on the fetch — the user always enters on their own.
-	let ctaReady = $state(false);
+	// The read beat — a moment to read the digest / let the deck settle —
+	// elapses on a timer. The CTA arms only once this AND the real fetch
+	// (`ready`) have both landed, so it never reveals a deck that hasn't
+	// arrived.
+	let armBeatElapsed = $state(false);
+	const ctaReady = $derived(armBeatElapsed && ready);
+
+	// Whether `onEnter` already ran (manual tap or the 30s auto-enter), so the
+	// ready-gated auto-enter never double-fires once the deck becomes ready.
+	let entered = $state(false);
+
+	// Set when the 30s safety-net timer fires; the actual auto-enter is
+	// ready-gated (see the effect below) so it enters at max(30s, ready).
+	let autoElapsed = $state(false);
 
 	const previewItems = $derived(digest.items.slice(0, 5));
 
@@ -101,10 +126,17 @@
 		const rot = reduce ? setInterval(advanceLine, 1100) : undefined;
 		const arm = setTimeout(
 			() => {
-				ctaReady = true;
+				armBeatElapsed = true;
 			},
 			reduce ? 600 : 4000
 		);
+
+		// Auto-enter safety net: after 30s, flag that the wait has run long.
+		// The actual enter is ready-gated below, so an in-flight deck is never
+		// revealed early — it enters the moment the deck becomes ready.
+		const auto = setTimeout(() => {
+			autoElapsed = true;
+		}, 30_000);
 
 		// Reveal cue: a celebratory chime for a net gain, a soft single tone
 		// for a loss. Suppressed under reduced motion. Stored so it can be
@@ -127,6 +159,7 @@
 		return () => {
 			clearInterval(rot);
 			clearTimeout(arm);
+			clearTimeout(auto);
 			clearTimeout(audioCue);
 		};
 	});
@@ -141,12 +174,21 @@
 	};
 
 	const enterFlow = () => {
-		if (!ctaReady) {
+		if (!ctaReady || entered) {
 			return;
 		}
 
+		entered = true;
 		onEnter();
 	};
+
+	// 30s safety-net auto-enter, ready-gated: enters at max(30s, ready) so the
+	// surface never lingers indefinitely, yet never reveals an unready deck.
+	$effect(() => {
+		if (autoElapsed && ready && !entered) {
+			enterFlow();
+		}
+	});
 
 	const ctaLabel = $derived(
 		ctaReady
