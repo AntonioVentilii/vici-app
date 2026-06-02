@@ -430,10 +430,17 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.6rem;
-		padding: 2.5rem 1.25rem;
+		/* Gold-washed, dashed-laurel "invite-only" panel — distinct from
+		   the neutral surface cards so the zero-state reads as an
+		   editorial prompt, not a plain empty card. */
+		padding: 1.5rem 1.375rem;
 		text-align: center;
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
-		border: 1px solid var(--border-base);
+		background: linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--laurel) 6%, transparent),
+			transparent 70%
+		);
+		border: 1px dashed color-mix(in srgb, var(--laurel) 25%, transparent);
 		border-radius: var(--r-16, var(--r-12));
 	}
 

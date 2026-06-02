@@ -289,7 +289,7 @@
 		font: inherit;
 		text-align: left;
 		color: var(--text-base);
-		background: var(--bg-popover);
+		background: var(--bg-surface);
 		border: 1px solid var(--border-base);
 		border-radius: 12px;
 		cursor: pointer;
@@ -300,7 +300,7 @@
 	}
 
 	.league-list-card:hover {
-		background: var(--bg-surface);
+		background: var(--bg-popover);
 		border-color: var(--border-strong);
 		transform: translateY(-1px);
 	}
@@ -471,7 +471,7 @@
 		display: inline-flex;
 		margin-left: -6px;
 		border-radius: 50%;
-		outline: 1.5px solid var(--bg-popover);
+		outline: 1.5px solid var(--bg-surface);
 	}
 
 	.friend-avatar:first-child {
