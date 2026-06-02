@@ -99,7 +99,17 @@ const persistDelegation = async ({
 	await storage.set(KEY_STORAGE_DELEGATION, JSON.stringify(chain.toJSON()));
 };
 
-const acquireDelegationIdentity = async (identityProvider: string): Promise<Identity> => {
+interface AcquiredDelegation {
+	key: ECDSAKeyIdentity;
+	chain: DelegationChain;
+}
+
+// Acquire the delegation but do NOT persist here: persistence happens only
+// once the acquire branch wins the cancel race (see `signInWithApple`).
+// Otherwise a popup closed at the exact moment the delegation resolves could
+// reject as "cancelled" while a valid delegation still lands in storage —
+// surfacing a cancel to the user yet silently logging them in on reload.
+const acquireDelegation = async (identityProvider: string): Promise<AcquiredDelegation> => {
 	const transport = new PostMessageTransport({
 		url: identityProvider,
 		disconnectTimeout: PASSKEY_AWARE_DISCONNECT_TIMEOUT_MS
@@ -118,9 +128,7 @@ const acquireDelegationIdentity = async (identityProvider: string): Promise<Iden
 		maxTimeToLive: II_MAX_TIME_TO_LIVE_NS
 	});
 
-	await persistDelegation({ key, chain });
-
-	return DelegationIdentity.fromDelegation(key, chain);
+	return { key, chain };
 };
 
 /**
@@ -161,7 +169,7 @@ export const signInWithApple = async (): Promise<void> => {
 		}, SIGNER_WINDOW_CLOSED_POLL_MS);
 	});
 
-	const acquire = acquireDelegationIdentity(identityProvider);
+	const acquire = acquireDelegation(identityProvider);
 
 	// When the interrupt wins the race the acquire promise settles much later
 	// via the transport's heartbeat disconnect; swallow it so the runtime
@@ -169,17 +177,21 @@ export const signInWithApple = async (): Promise<void> => {
 	acquire.catch(() => undefined);
 
 	try {
-		const identity = await Promise.race([acquire, userInterrupt]);
+		const { key, chain } = await Promise.race([acquire, userInterrupt]);
 
-		// Delegation acquired: the popup has closed on its own, so stop polling
-		// before the (now meaningless) close is observed, then make Juno able
-		// to resolve this session on the next load.
+		// Acquire won the race (not a cancel), so it's safe to commit: stop
+		// polling before the popup's own close is observed, persist the
+		// delegation, then create the `#user` doc so Juno resolves the session
+		// on the next load. Persisting only here guarantees a cancelled attempt
+		// never leaves a usable session behind.
 		if (nonNullish(pollHandle)) {
 			clearInterval(pollHandle);
 			pollHandle = undefined;
 		}
 
-		await ensureJunoUserDoc(identity);
+		await persistDelegation({ key, chain });
+
+		await ensureJunoUserDoc(DelegationIdentity.fromDelegation(key, chain));
 	} finally {
 		if (nonNullish(pollHandle)) {
 			clearInterval(pollHandle);
