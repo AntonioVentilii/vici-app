@@ -1670,7 +1670,7 @@ export const enMessages = {
 	'profile.avatar.option.bg.clay': 'Clay',
 	'profile.dashboard.identity_meta': 'Lvl {level} · {rank} global · {accuracy}% accuracy',
 	'profile.dashboard.calls_count': '{calls} calls',
-	'profile.dashboard.level_label': 'LEVEL',
+	'profile.dashboard.level_label': 'LEVEL {level}',
 	'profile.dashboard.nickname_save_failed_title': 'Could not save nickname',
 	'profile.dashboard.nickname_save_failed': 'Try again in a moment.',
 	'profile.dashboard.nickname_taken_title': 'Nickname taken',

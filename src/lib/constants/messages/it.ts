@@ -1672,7 +1672,7 @@ export const itMessages = {
 	'profile.avatar.option.bg.clay': 'Argilla',
 	'profile.dashboard.identity_meta': 'Liv {level} · {rank} global · {accuracy}% di precisione',
 	'profile.dashboard.calls_count': '{calls} previsioni',
-	'profile.dashboard.level_label': 'LIVELLO',
+	'profile.dashboard.level_label': 'LIVELLO {level}',
 	'profile.dashboard.oracle.above': '{acc}% di precisione su {trades} previsioni. Sopra la folla.',
 	'profile.dashboard.oracle.approves':
 		'{acc}% di precisione su {trades} previsioni. L’Oracolo approva.',
