@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft } from 'lucide-svelte/icons';
+	import { ArrowLeft } from '@lucide/svelte/icons';
 	import { resolve } from '$app/paths';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';

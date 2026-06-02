@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FlaskConical, ShieldCheck } from 'lucide-svelte/icons';
+	import { FlaskConical, ShieldCheck } from '@lucide/svelte/icons';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { setBalanceDomain } from '$lib/services/balance-domain.services';

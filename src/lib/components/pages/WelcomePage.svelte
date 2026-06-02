@@ -7,7 +7,7 @@
 	 * The hero copy + visual is inlined here (rather than extracted)
 	 * because it's a single editorial block.
 	 */
-	import { ChevronRight, Clock } from 'lucide-svelte/icons';
+	import { ChevronRight, Clock } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import WelcomeFAQ from '$lib/components/landing/WelcomeFAQ.svelte';

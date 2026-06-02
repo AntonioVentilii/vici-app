@@ -5,7 +5,7 @@
 	 * `m.id.charCodeAt(0) * 173 % 8500` so the numbers stay stable
 	 * across renders.
 	 */
-	import { ChevronRight } from 'lucide-svelte/icons';
+	import { ChevronRight } from '@lucide/svelte/icons';
 	import { LANDING_CAT_COLORS, LANDING_MARKETS } from '$lib/constants/landing-data.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { X } from 'lucide-svelte/icons';
+	import { X } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';

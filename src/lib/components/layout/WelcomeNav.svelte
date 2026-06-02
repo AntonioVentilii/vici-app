@@ -7,7 +7,7 @@
 	 * breakpoint so both render in the markup and the right one
 	 * shows.
 	 */
-	import { Globe, Lock } from 'lucide-svelte/icons';
+	import { Globe, Lock } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Logo from '$lib/components/layout/Logo.svelte';

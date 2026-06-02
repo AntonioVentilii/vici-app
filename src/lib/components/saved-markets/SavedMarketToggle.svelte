@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Eye, Heart } from 'lucide-svelte/icons';
+	import { Eye, Heart } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { PublicPath } from '$lib/constants/routes.constants';

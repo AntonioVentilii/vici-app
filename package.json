@@ -78,9 +78,9 @@
 		"@junobuild/core": "^5.4.0",
 		"@junobuild/functions": "^0.9.0",
 		"@junobuild/schema": "^1.2.4",
+		"@lucide/svelte": "^1.0.1",
 		"decimal.js": "^10.6.0",
 		"ethers": "^6.16.0",
-		"lucide-svelte": "^1.0.1",
 		"nanoid": "^5.1.11"
 	},
 	"overrides": {

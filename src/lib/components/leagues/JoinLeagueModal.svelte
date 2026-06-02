@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check } from 'lucide-svelte/icons';
+	import { Check } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { joinLeagueByInvite, lookupLeagueByInvite } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';

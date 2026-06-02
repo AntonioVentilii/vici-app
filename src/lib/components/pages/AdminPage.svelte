@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, Gavel, TrendingUp, UsersRound } from 'lucide-svelte/icons';
+	import { ChevronRight, Gavel, TrendingUp, UsersRound } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';

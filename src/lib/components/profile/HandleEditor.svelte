@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { X } from 'lucide-svelte/icons';
+	import { X } from '@lucide/svelte/icons';
 	import { untrack } from 'svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import {

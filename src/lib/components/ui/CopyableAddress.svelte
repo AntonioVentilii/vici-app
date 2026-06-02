@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Copy, Check } from 'lucide-svelte/icons';
+	import { Copy, Check } from '@lucide/svelte/icons';
 	import { fade } from 'svelte/transition';
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { TestId } from '$lib/constants/test-ids.constants';

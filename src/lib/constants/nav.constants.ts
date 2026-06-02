@@ -1,6 +1,6 @@
 import { AppPath } from '$lib/constants/routes.constants';
 import type { NavItem } from '$lib/types/nav';
-import { CircleUserRound, House, LayoutDashboard, Users, Zap } from 'lucide-svelte/icons';
+import { CircleUserRound, House, LayoutDashboard, Users, Zap } from '@lucide/svelte/icons';
 
 /**
  * Bottom-nav structure. The five visible tabs map 1:1 onto the design

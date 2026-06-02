@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Search, X } from 'lucide-svelte/icons';
+	import { Search, X } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';

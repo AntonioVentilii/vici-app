@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft, Check, Mail, Search, X } from 'lucide-svelte/icons';
+	import { ArrowLeft, Check, Mail, Search, X } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import {

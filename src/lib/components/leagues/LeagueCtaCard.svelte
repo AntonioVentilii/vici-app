@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, Plus } from 'lucide-svelte/icons';
+	import { ChevronRight, Plus } from '@lucide/svelte/icons';
 
 	/**
 	 * Trailing "Create a league" / "Join with code" CTA card

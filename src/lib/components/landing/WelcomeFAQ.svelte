@@ -7,7 +7,7 @@
 	 * the `welcome.faq.*` catalog so the section localizes with the
 	 * rest of the landing surface.
 	 */
-	import { ChevronDown } from 'lucide-svelte/icons';
+	import { ChevronDown } from '@lucide/svelte/icons';
 	import { SUPPORT_EMAIL } from '$lib/constants/contact.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';

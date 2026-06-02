@@ -6,7 +6,7 @@
 	 * `tick` cycles 0→3 every 1300 ms — 0 = at rest, 1 = mid-swipe,
 	 * 2 = swiped out + xp burst, 3 = next card sliding up.
 	 */
-	import { Flame, Zap } from 'lucide-svelte/icons';
+	import { Flame, Zap } from '@lucide/svelte/icons';
 	import { onDestroy, onMount } from 'svelte';
 	import LandingFlowCard from '$lib/components/landing/LandingFlowCard.svelte';
 	import { LANDING_MARKETS } from '$lib/constants/landing-data.constants';

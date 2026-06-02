@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Share } from 'lucide-svelte/icons';
+	import { Share } from '@lucide/svelte/icons';
 	import SharePopover from '$lib/components/market/SharePopover.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import { categoryLabel } from '$lib/constants/market-tags.constants';

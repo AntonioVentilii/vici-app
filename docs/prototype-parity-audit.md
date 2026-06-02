@@ -283,7 +283,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Category chips at top — `MarketsCategoryChips` with the ♥ Saved
   chip prepended, then `All`, then the 6 `MARKET_TAGS` categories.
   Per-tag accent driven by `var(--cat-{id})` via the `tagColor`
-  helper. Per-category glyphs via `lucide-svelte` icons
+  helper. Per-category glyphs via `@lucide/svelte` icons
   (LandPlot / Bitcoin / Landmark / Wand2 / Trophy / Sparkles).
 - ✅ Status tabs removed — `MarketFilters` no longer mounted on the
   Markets list page; the page is now driven entirely by category

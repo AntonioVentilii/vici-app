@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isWebAuthnAvailable, signIn } from '@junobuild/core';
-	import { Check, ChevronRight, Mail } from 'lucide-svelte';
+	import { Check, ChevronRight, Mail } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import IconApple from '$lib/components/icons/IconApple.svelte';
 	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';

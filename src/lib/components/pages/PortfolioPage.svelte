@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LineChart } from 'lucide-svelte/icons';
+	import { LineChart } from '@lucide/svelte/icons';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';

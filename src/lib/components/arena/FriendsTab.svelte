@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Doc } from '@junobuild/core';
-	import { Check, ChevronRight, Link2, Plus, Share2, Sparkles } from 'lucide-svelte/icons';
+	import { Check, ChevronRight, Link2, Plus, Share2, Sparkles } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { fade } from 'svelte/transition';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Gift } from 'lucide-svelte/icons';
+	import { Gift } from '@lucide/svelte/icons';
 	import SignInProviderStack from '$lib/components/authn/SignInProviderStack.svelte';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import { newUserVxpAmountMilestone1BaseUnits } from '$lib/constants/vxp-onboarding.constants';

@@ -39,7 +39,7 @@ covers the use case.
 4. **Compose, don't reinvent.** Build on `$lib/components/ui/` (`Button`,
    `Card`, `Modal`, `Dialog`, `Tabs`, `Switch`, `Table`, `Banner`,
    `EmptyState`, `LoadingSpinner`, `PopOver`, …). Pull existing icons from
-   `$lib/components/icons/` or `lucide-svelte` before adding new ones.
+   `$lib/components/icons/` or `@lucide/svelte` before adding new ones.
    Use snippets (`{#snippet}` + `{@render}`) for repeating intra-component
    markup.
 5. **Style with the project's tokens.** Look at the closest neighbour's

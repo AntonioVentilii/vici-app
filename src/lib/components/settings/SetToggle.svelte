@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Icon as LucideIcon } from 'lucide-svelte';
+	import type { Icon as LucideIcon } from '@lucide/svelte';
 
 	interface Props {
 		label: string;

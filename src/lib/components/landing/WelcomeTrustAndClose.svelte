@@ -3,7 +3,7 @@
 	 * Closer section on the landing page: credibility wall (3 pillars)
 	 * → hairline divider → final CTA with Latin sign-off.
 	 */
-	import { ChevronRight } from 'lucide-svelte/icons';
+	import { ChevronRight } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
