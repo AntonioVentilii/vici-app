@@ -5507,7 +5507,7 @@ a.title-action::after {
 			color-mix(in srgb, var(--laurel) 5%, transparent),
 			color-mix(in srgb, var(--laurel) 1%, transparent)
 		),
-		var(--ink-raised);
+		var(--bg-surface);
 	border-radius: 12px;
 	padding: 14px;
 	margin-top: 6px;
@@ -5577,7 +5577,7 @@ a.title-action::after {
 	width: 100%;
 	cursor: pointer;
 	border: 1px solid var(--border-base);
-	background: var(--ink-raised);
+	background: var(--bg-surface);
 	border-radius: 10px;
 	padding: 10px 12px;
 	display: grid;
@@ -5624,7 +5624,7 @@ a.title-action::after {
 	width: 100%;
 	cursor: pointer;
 	border: 1px solid var(--border-base);
-	background: var(--ink-raised);
+	background: var(--bg-surface);
 	border-radius: 12px;
 	padding: 14px;
 	display: grid;
@@ -5692,7 +5692,7 @@ a.title-action::after {
 	padding: 14px;
 	background:
 		linear-gradient(180deg, color-mix(in srgb, var(--laurel) 3%, transparent), transparent),
-		var(--ink-raised);
+		var(--bg-surface);
 	border: 1px dashed color-mix(in srgb, var(--laurel) 30%, transparent);
 	border-radius: 12px;
 }
@@ -5727,7 +5727,7 @@ a.title-action::after {
 .dz-past-empty {
 	padding: 14px;
 	text-align: center;
-	background: var(--ink-raised);
+	background: var(--bg-surface);
 	border: 1px solid var(--border-base);
 	border-radius: 12px;
 }
