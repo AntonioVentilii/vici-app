@@ -376,43 +376,4 @@
 			{/if}
 		</div>
 	</div>
-
-	<!-- Keyboard / switch-user accessible commit row.
-	     The swipeable card above is pointer-only (role="presentation"),
-	     so these buttons are the primary a11y path for keyboard and
-	     switch-access users. Visually matches the ob-prob tiles;
-	     hidden via aria-hidden once committed so the screen reader
-	     doesn't announce stale interactive elements. -->
-	<div class="ob-commit-row" aria-hidden={committed !== null ? 'true' : undefined}>
-		<button
-			class="ob-commit-btn no"
-			aria-label={t({ locale: $localeStore, key: 'onboarding.beat1b.a11y_commit_no' })}
-			disabled={committed !== null}
-			onclick={() => {
-				everInteracted = true;
-				commit('NO');
-			}}
-			type="button"
-		>
-			<span class="ob-commit-eyebrow no">
-				{t({ locale: $localeStore, key: 'flow.action.no' })}
-			</span>
-			<span class="ob-commit-pct">{noPct}%</span>
-		</button>
-		<button
-			class="ob-commit-btn yes"
-			aria-label={t({ locale: $localeStore, key: 'onboarding.beat1b.a11y_commit_yes' })}
-			disabled={committed !== null}
-			onclick={() => {
-				everInteracted = true;
-				commit('YES');
-			}}
-			type="button"
-		>
-			<span class="ob-commit-eyebrow yes">
-				{t({ locale: $localeStore, key: 'flow.action.yes' })}
-			</span>
-			<span class="ob-commit-pct">{yesPct}%</span>
-		</button>
-	</div>
 </div>
