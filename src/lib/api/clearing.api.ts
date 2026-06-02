@@ -4,6 +4,7 @@ import { ClearingCanister } from '$lib/canisters/clearing.canister';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
 import type { QueryParams } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
+import type { Principal } from '@icp-sdk/core/principal';
 
 export const depositCollateral = async ({
 	identity,
@@ -278,6 +279,30 @@ export const registerIcrcAsset = async ({
 	const { registerIcrcAsset } = await clearingCanister({ identity });
 
 	return await registerIcrcAsset({ params, ...queryParams });
+};
+
+/**
+ * Per-window ranked standings (week / month / all-time) by net realized P&L.
+ * See {@link ClearingCanister.listLeaderboard} — drains the cursor (bounded by
+ * `maxPages`) and returns the ranked entries plus the full `total` count.
+ */
+export const listLeaderboard = async ({
+	identity,
+	window,
+	members,
+	pageLimit,
+	maxPages,
+	...queryParams
+}: {
+	identity: Identity;
+	window: ClearingDid.LeaderboardWindow;
+	members?: Principal[];
+	pageLimit?: bigint;
+	maxPages?: number;
+} & QueryParams): Promise<{ items: ClearingDid.LeaderboardEntry[]; total: bigint }> => {
+	const { listLeaderboard } = await clearingCanister({ identity });
+
+	return await listLeaderboard({ window, members, pageLimit, maxPages, ...queryParams });
 };
 
 const clearingCanister = async ({
