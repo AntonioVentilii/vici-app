@@ -30,6 +30,20 @@ export default defineConfig({
 		__BUILD_SHA__: JSON.stringify(buildSha)
 	},
 	plugins: [sveltekit(), juno(), tailwindcss()],
+	// `@lucide/svelte` ships raw `.svelte` icon sources behind a barrel that
+	// re-exports ~1,600 modules (`@lucide/svelte/icons` aliases the same
+	// barrel). Svelte component libraries are excluded from esbuild's
+	// dependency pre-bundling by default, so in dev every route that renders
+	// any icon (e.g. `BaseButton` → `LoaderCircle`, used app-wide) pulls the
+	// whole barrel and the browser fetches + compiles all ~1,600 icon modules
+	// on demand — making first navigation to each surface crawl. The
+	// deprecated `lucide-svelte` shipped compiled `.js` and was pre-bundled
+	// automatically; forcing the successor into the optimizer (compiled via
+	// the svelte esbuild plugin, since `prebundleSvelteLibraries` defaults on
+	// in dev) restores the single-chunk fast path.
+	optimizeDeps: {
+		include: ['@lucide/svelte', '@lucide/svelte/icons']
+	},
 	server: {
 		fs: {
 			allow: ['.']
