@@ -4,6 +4,9 @@
 	 * 50/50, down at strong NO. Used inside the FlowCard header when
 	 * the market isn't a contrarian / Trickster call.
 	 */
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
+
 	interface Props {
 		yes: number;
 		size?: number;
@@ -16,9 +19,12 @@
 	const dir = $derived(isYes ? 'yes' : 'no');
 	const color = $derived(isYes ? 'var(--yes)' : 'var(--no)');
 	const pct = $derived(Math.max(yes, 100 - yes));
+	const ariaLabel = $derived(
+		t({ locale: $localeStore, key: 'welcome.flowcard.consensus_aria', params: { yes } })
+	);
 </script>
 
-<div class="flow-compass {dir}" aria-label="{yes}% YES consensus">
+<div class="flow-compass {dir}" aria-label={ariaLabel}>
 	<svg height={size} viewBox="0 0 42 42" width={size}>
 		<circle cx="21" cy="21" fill="none" r="18" stroke="var(--border)" stroke-width="1.2" />
 		<line stroke="var(--fg-faint)" stroke-width="1" x1="21" x2="21" y1="2" y2="5" />

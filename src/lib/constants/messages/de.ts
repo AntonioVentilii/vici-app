@@ -2157,6 +2157,7 @@ export const deMessages = {
 	'welcome.faq.sub': 'Was jeder neue Caller vor seiner ersten Vorhersage fragt.',
 	'welcome.faq.title_a': 'Fragen,',
 	'welcome.faq.title_b': 'die zählen.',
+	'welcome.flowcard.consensus_aria': '{yes}% JA-Konsens',
 	'welcome.flowcard.delta_today': '+{delta} heute',
 	'welcome.flowcard.favorite': 'FAVORIT',
 	'welcome.flowcard.long_shot': 'AUSSENSEITER',

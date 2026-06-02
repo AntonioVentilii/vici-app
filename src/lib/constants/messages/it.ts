@@ -2141,6 +2141,7 @@ export const itMessages = {
 	'welcome.faq.sub': 'Quello che ogni nuovo caller chiede prima della prima previsione.',
 	'welcome.faq.title_a': 'Domande',
 	'welcome.faq.title_b': 'che contano.',
+	'welcome.flowcard.consensus_aria': '{yes}% di consenso SÌ',
 	'welcome.flowcard.delta_today': '+{delta} oggi',
 	'welcome.flowcard.favorite': 'FAVORITO',
 	'welcome.flowcard.long_shot': 'OUTSIDER',

@@ -2148,6 +2148,7 @@ export const esMessages = {
 	'welcome.faq.sub': 'Lo que todo nuevo caller pregunta antes de su primera predicción.',
 	'welcome.faq.title_a': 'Preguntas',
 	'welcome.faq.title_b': 'que importan.',
+	'welcome.flowcard.consensus_aria': '{yes}% de consenso YES',
 	'welcome.flowcard.delta_today': '+{delta} hoy',
 	'welcome.flowcard.favorite': 'FAVORITO',
 	'welcome.flowcard.long_shot': 'TIRO LEJANO',
