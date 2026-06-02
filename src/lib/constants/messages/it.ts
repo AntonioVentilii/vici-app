@@ -1236,7 +1236,6 @@ export const itMessages = {
 	'market.detail.chart.no_trades': 'Ancora nessuno scambio',
 	'market.detail.chart.period.all': 'Tutto',
 	'market.detail.closed.expired': 'Questo mercato è chiuso e in attesa di risoluzione.',
-	'market.detail.closed.resolved': 'Questo mercato è risolto e non è più scambiabile.',
 	'market.detail.coldstart.body':
 		'Nessuno ha ancora previsto questo mercato — la tua previsione fissa la prima lettura.',
 	'market.detail.coldstart.lead': 'Nuovo mercato.',
