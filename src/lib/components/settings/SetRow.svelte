@@ -69,6 +69,14 @@
 		color: var(--text-muted);
 	}
 
+	/* Muted rows soften the label one tier — lighter weight and the dim
+	   foreground — so secondary actions (help / legal links) read quieter
+	   than the primary account / preference rows. */
+	.set-row.is-muted .set-row-label {
+		color: var(--fg-dim);
+		font-weight: 400;
+	}
+
 	/* Settings row glyph — a bare inline icon (no tinted tile), tinted
 	   to the dim foreground tier so it reads as a quiet leading marker
 	   rather than a coloured chip. Muted rows drop one tier further to
@@ -95,12 +103,15 @@
 
 	.set-row-label {
 		font-size: var(--t-14);
-		font-weight: 600;
+		font-weight: 500;
+		letter-spacing: -0.005em;
 	}
 
 	.set-row-sub {
 		font-size: var(--t-11);
+		line-height: 1.4;
 		color: var(--text-muted);
+		text-wrap: pretty;
 	}
 
 	.set-row-badge {

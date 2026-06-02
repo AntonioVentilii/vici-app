@@ -84,20 +84,23 @@
 
 	.set-toggle-label {
 		font-size: var(--t-14);
-		font-weight: 600;
+		font-weight: 500;
+		letter-spacing: -0.005em;
 		color: var(--text-base);
 	}
 
 	.set-toggle-sub {
 		font-size: var(--t-11);
+		line-height: 1.4;
 		color: var(--text-muted);
+		text-wrap: pretty;
 	}
 
 	.set-switch {
 		position: relative;
 		flex-shrink: 0;
 		width: 2.75rem;
-		height: 1.5rem;
+		height: 1.625rem;
 		border: none;
 		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--text-base) 14%, transparent);
@@ -111,18 +114,25 @@
 
 	.set-switch-thumb {
 		position: absolute;
-		top: 2px;
-		left: 2px;
+		top: 3px;
+		left: 3px;
 		width: 1.25rem;
 		height: 1.25rem;
 		border-radius: 50%;
-		background: #ffffff;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+		background: var(--parchment);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 		transition: transform var(--d-hover) var(--ease-vici);
 	}
 
+	/* Light / peach themes render the thumb pure white against the
+	   accent-filled track, matching the dark theme's parchment thumb. */
+	:global([data-theme='light']) .set-switch-thumb,
+	:global([data-theme='peach']) .set-switch-thumb {
+		background: #ffffff;
+	}
+
 	.set-switch.is-on .set-switch-thumb {
-		transform: translateX(1.25rem);
+		transform: translateX(1.125rem);
 	}
 
 	.set-toggle.is-disabled .set-switch,

@@ -1678,7 +1678,7 @@ export const esMessages = {
 	'profile.avatar.option.bg.clay': 'Arcilla',
 	'profile.dashboard.identity_meta': 'Nvl {level} · {rank} global · {accuracy}% de precisión',
 	'profile.dashboard.calls_count': '{calls} predicciones',
-	'profile.dashboard.level_label': 'NIVEL',
+	'profile.dashboard.level_label': 'NIVEL {level}',
 	'profile.dashboard.oracle.above':
 		'{acc}% de precisión en {trades} predicciones. Por encima de la multitud.',
 	'profile.dashboard.oracle.approves':

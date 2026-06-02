@@ -1690,7 +1690,7 @@ export const frMessages = {
 	'profile.avatar.option.bg.clay': 'Argile',
 	'profile.dashboard.identity_meta': 'Niv {level} · {rank} global · {accuracy}% de précision',
 	'profile.dashboard.calls_count': '{calls} pronostics',
-	'profile.dashboard.level_label': 'NIVEAU',
+	'profile.dashboard.level_label': 'NIVEAU {level}',
 	'profile.dashboard.oracle.above':
 		'{acc}% de précision sur {trades} pronostics. Au-dessus de la foule.',
 	'profile.dashboard.oracle.approves':
