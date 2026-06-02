@@ -583,7 +583,6 @@ export const frMessages = {
 	'common.error.generic': 'Une erreur est survenue. Veuillez réessayer.',
 	'companion.oracle.called_it': 'Bien vu.',
 	'cta.primary': 'Commencer à prédire',
-	'cta.see_markets': 'Voir les marchés en direct',
 	'cta.start_predict': 'Commencer à prédire',
 	'dash.accuracy.eyebrow': 'Votre précision',
 	'dash.accuracy.first_session': 'Première session',

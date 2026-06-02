@@ -577,7 +577,6 @@ export const itMessages = {
 	'common.error.generic': 'Qualcosa è andato storto. Riprova.',
 	'companion.oracle.called_it': 'Ci hai visto giusto.',
 	'cta.primary': 'Inizia a prevedere',
-	'cta.see_markets': 'Vedi i mercati live',
 	'cta.start_predict': 'Inizia a prevedere',
 	'dash.accuracy.eyebrow': 'La tua accuratezza',
 	'dash.accuracy.first_session': 'Prima sessione',

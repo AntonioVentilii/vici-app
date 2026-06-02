@@ -581,7 +581,6 @@ export const deMessages = {
 	'common.error.generic': 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
 	'companion.oracle.called_it': 'Genau richtig.',
 	'cta.primary': 'Jetzt vorhersagen',
-	'cta.see_markets': 'Live-Märkte ansehen',
 	'cta.start_predict': 'Vorhersagen starten',
 	'dash.accuracy.eyebrow': 'Deine Genauigkeit',
 	'dash.accuracy.first_session': 'Erste Session',
