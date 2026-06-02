@@ -45,7 +45,7 @@
 	const events = $derived(points === undefined ? ($marketMetadata[marketId]?.events ?? []) : []);
 </script>
 
-<!-- 7-day chart card with period chips.
+<!-- Price-history chart card with multi-period chips.
      Reuses `FlowCardSparkline` so the line shape, event markers, and
      pulse beat stay consistent across Flow cards and the Market detail
      surface. -->
