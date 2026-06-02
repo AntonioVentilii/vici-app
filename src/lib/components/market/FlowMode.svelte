@@ -620,8 +620,8 @@
 			dayStreak: dailyStreak,
 			isComeback,
 			// Seed the engine's lifetime-volume milestones from the REAL
-			// profile count (`totalTrades`, the closest analogue of the
-			// prototype's `ME.calls`) rather than the engine's persisted
+			// profile count (`totalTrades`, our lifetime call count)
+			// rather than the engine's persisted
 			// local tally, so milestone thresholds and the milestone
 			// count-up reflect actual lifetime activity. `totalTrades` is
 			// the lifetime call count BEFORE this swipe; the engine adds the

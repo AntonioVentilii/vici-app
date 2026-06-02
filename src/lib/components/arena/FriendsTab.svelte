@@ -1323,7 +1323,7 @@
 		gap: 0.5rem;
 	}
 
-	/* Accent-tinted chip — proto `.friends-add-btn` (app.css:4424-4435). */
+	/* Accent-tinted add-friend chip. */
 	.ranked-add {
 		display: inline-flex;
 		align-items: center;
@@ -1350,8 +1350,7 @@
 	}
 
 	/* ── Pending list ──────────────────────────────────────── */
-	/* Single unified card with internal dividers — proto pattern
-	   (`.friends-pending-list`, app.css:4285-4311). Per-row borders
+	/* Single unified card with internal dividers. Per-row borders
 	   are replaced by a `border-bottom` on each `<li>` except last. */
 	.pending-list {
 		display: flex;
@@ -1480,8 +1479,7 @@
 	}
 
 	/* ── Ranked list ───────────────────────────────────────── */
-	/* Single unified card with internal dividers — proto pattern
-	   (`.friends-rank-list`, app.css:4285-4311 + 4407-4411). The
+	/* Single unified card with internal dividers. The
 	   list is its own internal-scroll container (`overflow: auto;
 	   max-height: 60vh`) so the YOU `<li>` can stick to the bottom
 	   of the card on scroll, instead of being trapped by the page
@@ -1523,8 +1521,7 @@
 	}
 
 	/* Sticky YOU row — pinned to the bottom edge of the rank list
-	   with a gold-tinted backdrop blur. Mirrors proto's
-	   `.friends-rank-row-you` (app.css:4396-4406).
+	   with a gold-tinted backdrop blur.
 	   `position: sticky` lives on the `<li>` wrapper (not the
 	   inner `<div>`): a sticky element is constrained by its
 	   containing block, and the `<li>` is a direct child of the
@@ -1633,8 +1630,7 @@
 
 	/* "See all N →" sits as the last divider-separated row inside
 	   the unified ranked card. Accent text, no border (border-top
-	   comes from the shared `li + li` divider rule). Mirrors proto
-	   `.friends-see-all` (app.css:4445-4456). */
+	   comes from the shared `li + li` divider rule). */
 	.ranked-see-all {
 		width: 100%;
 		padding: 0.7rem 0.85rem;
