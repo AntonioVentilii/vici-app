@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, Eye, Flame, Lock, Pencil, Target, Trophy, X } from 'lucide-svelte';
+	import { Eye, Flame, Lock, Pencil, Target, Trophy } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -10,7 +10,6 @@
 	import HandleEditor from '$lib/components/profile/HandleEditor.svelte';
 	import ProfileOracleInsight from '$lib/components/profile/ProfileOracleInsight.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
-	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
@@ -20,11 +19,9 @@
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { myAvatarParts } from '$lib/stores/avatar.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { marketsStore } from '$lib/stores/markets.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
-	import type { Market } from '$lib/types/market';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
 	import { evaluateAchievements } from '$lib/utils/achievements.utils';
@@ -169,58 +166,28 @@
 		return totalTrades.toString();
 	});
 
-	/* User-stats — drives session VXP delta + past calls preview. ------ */
+	/* User-stats — drives the inline session VXP delta. --------------- */
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
 
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
 
+	// The inline "session" figure is the net VXP swing across the user's
+	// recent-calls window — the bounded `recentSettlements` snapshot (capped
+	// at `USER_STATS_RECENT_LIMIT`), not a fixed clock window. It reads as
+	// "how the latest run of calls is going" rather than "today".
+	// `RecentSettlementSnapshot` does not carry per-call VXP; we estimate at
+	// the canonical 240 VXP-per-resolution rate used elsewhere in the app.
+	// Sign is win → +240, loss → -240.
 	const sessionVxpDelta = $derived.by(() => {
-		const since = Date.now() - DAY_IN_MS;
-		const today = recentSettlements.filter((s) => s.settledAtMs >= since);
-
-		// `RecentSettlementSnapshot` does not carry per-call VXP; we estimate
-		// at the canonical 240 VXP-per-resolution rate used elsewhere in the
-		// app. Sign is win → +240, loss → -240.
 		const VXP_PER_CALL = 240;
-		const delta = today.reduce((acc, s) => acc + (s.win ? VXP_PER_CALL : -VXP_PER_CALL), 0);
+		const delta = recentSettlements.reduce(
+			(acc, s) => acc + (s.win ? VXP_PER_CALL : -VXP_PER_CALL),
+			0
+		);
 
-		return { count: today.length, delta };
+		return { count: recentSettlements.length, delta };
 	});
-
-	const marketsById = $derived(
-		new Map<string, Market>(($marketsStore ?? []).map((m) => [m.id, m]))
-	);
-	const marketTitle = (marketId: string): string => marketsById.get(marketId)?.title ?? marketId;
-
-	const fmtRelativeTime = (ms: number): string => {
-		const delta = Date.now() - ms;
-		const seconds = Math.floor(delta / 1000);
-
-		if (seconds < 60) {
-			return t({ locale: $localeStore, key: 'dash.history.just_now' });
-		}
-
-		const minutes = Math.floor(seconds / 60);
-
-		if (minutes < 60) {
-			return t({
-				locale: $localeStore,
-				key: 'dash.history.minutes_ago',
-				params: { count: minutes }
-			});
-		}
-
-		const hours = Math.floor(minutes / 60);
-
-		if (hours < 24) {
-			return t({ locale: $localeStore, key: 'dash.history.hours_ago', params: { count: hours } });
-		}
-
-		const days = Math.floor(hours / 24);
-
-		return t({ locale: $localeStore, key: 'dash.history.days_ago', params: { count: days } });
-	};
 
 	/* Affiliations ----------------------------------------------------- */
 
@@ -434,10 +401,6 @@
 		return Trophy;
 	};
 
-	/* Past calls preview ---------------------------------------------- */
-
-	const pastCallsPreview = $derived(recentSettlements.slice(0, 3));
-
 	onMount(() => {
 		if (!isOwnProfile) {
 			return;
@@ -586,7 +549,7 @@
 							class:is-up={sessionVxpDelta.delta > 0}
 						>
 							{sessionVxpDelta.delta >= 0 ? '+' : ''}{sessionVxpDelta.delta}
-							{t({ locale: $localeStore, key: 'profile.dashboard.session_today' })}
+							{t({ locale: $localeStore, key: 'profile.dashboard.session' })}
 						</span>
 					{/if}
 				</p>
@@ -661,41 +624,6 @@
 			{/each}
 		</div>
 	</section>
-
-	<!-- Past calls preview · 3 rows → Album -->
-	{#if isOwnProfile && pastCallsPreview.length > 0}
-		<section class="profile-past">
-			<div class="profile-past-head">
-				<h2 class="profile-section-title">
-					{t({ locale: $localeStore, key: 'profile.dashboard.past_calls' })}
-				</h2>
-				<button class="profile-past-all" onclick={() => goto(resolve(AppPath.Album))} type="button">
-					{t({ locale: $localeStore, key: 'profile.dashboard.all' })}
-				</button>
-			</div>
-			<ul class="profile-past-list">
-				{#each pastCallsPreview as row (row.marketId + row.settledAtMs)}
-					<li>
-						<a class="profile-past-row" href={resolve(`${AppPath.Markets}/${row.marketId}`)}>
-							<span class="profile-past-res" class:is-lost={!row.win} class:is-won={row.win}>
-								{#if row.win}
-									<Check aria-hidden="true" size={11} strokeWidth={3} />
-								{:else}
-									<X aria-hidden="true" size={11} strokeWidth={3} />
-								{/if}
-							</span>
-							<div class="profile-past-body">
-								<div class="profile-past-q">{marketTitle(row.marketId)}</div>
-								<div class="profile-past-ctx">
-									{fmtRelativeTime(row.settledAtMs)}
-								</div>
-							</div>
-						</a>
-					</li>
-				{/each}
-			</ul>
-		</section>
-	{/if}
 
 	<!-- Achievements rail (glyph emblems + tier classes) -->
 	<section class="profile-achievements">
@@ -1275,103 +1203,6 @@
 	.affil-slot-value.dim {
 		color: var(--text-muted);
 		font-weight: 500;
-	}
-
-	/* Past calls preview ---------------------------------------------- */
-	.profile-past {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.profile-past-head {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.profile-past-all {
-		border: 0;
-		background: transparent;
-		color: var(--color-primary);
-		font-family: var(--font-mono);
-		font-size: 0.65rem;
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-		cursor: pointer;
-	}
-
-	.profile-past-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-		padding: 0;
-		margin: 0;
-		list-style: none;
-	}
-
-	.profile-past-row {
-		display: flex;
-		align-items: center;
-		gap: 0.65rem;
-		padding: 0.7rem 0.85rem;
-		border: 1px solid var(--border-base);
-		border-radius: 0.85rem;
-		background: var(--bg-popover);
-		color: var(--text-base);
-		text-decoration: none;
-		transition: background-color var(--d-hover) var(--ease-vici);
-	}
-
-	.profile-past-row:hover {
-		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-popover));
-	}
-
-	.profile-past-res {
-		display: inline-flex;
-		width: 1.4rem;
-		height: 1.4rem;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: center;
-		border-radius: var(--r-pill);
-	}
-
-	.profile-past-res.is-won {
-		background: color-mix(in srgb, var(--yes) 18%, transparent);
-		color: var(--yes);
-	}
-
-	.profile-past-res.is-lost {
-		background: color-mix(in srgb, var(--no) 18%, transparent);
-		color: var(--no);
-	}
-
-	.profile-past-body {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-		gap: 0.1rem;
-		min-width: 0;
-	}
-
-	.profile-past-q {
-		overflow: hidden;
-		color: var(--text-base);
-		font-size: var(--t-13);
-		font-weight: 600;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.profile-past-ctx {
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-10);
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
 	}
 
 	/* Achievements rail ----------------------------------------------- */
