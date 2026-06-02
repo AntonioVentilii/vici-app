@@ -3392,8 +3392,11 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
  * country's dominant flag hue) plus a `text` foreground tuned for
  * contrast over it, so the profile affiliation chip + filled-slot tile
  * can render in the country's own palette (same `color`/`text` shape as
- * the university roster). `text` is the cream `#F2ECDC` over dark/saturated
- * fields and near-black `#0E0D0B` over light ones.
+ * the university roster). `text` is a per-entry contrast-checked
+ * foreground — typically the cream `#F2ECDC` over dark/saturated fields
+ * and near-black `#0E0D0B` over light ones, but some entries use a flag
+ * accent hue (e.g. CN `#FFDE00`, SE `#FECC02`, ZA `#FFB915`) where it
+ * reads better over the country's `color`.
  */
 export const WORLDS_COUNTRIES: readonly WorldsAffiliationOption[] = [
 	{ id: 'AR', name: 'Argentina', glyph: '🇦🇷', color: '#75AADB', text: '#0E0D0B' },
