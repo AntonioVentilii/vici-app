@@ -432,7 +432,7 @@
 	}
 
 	.meta-sep {
-		color: var(--text-faint, var(--text-muted));
+		color: var(--fg-faint, var(--text-muted));
 	}
 
 	.meta-rank {
@@ -472,6 +472,11 @@
 		margin-left: -6px;
 		border-radius: 50%;
 		outline: 1.5px solid var(--bg-surface);
+		transition: outline-color 180ms var(--ease-vici);
+	}
+
+	.league-list-card:hover .friend-avatar {
+		outline-color: var(--bg-popover);
 	}
 
 	.friend-avatar:first-child {

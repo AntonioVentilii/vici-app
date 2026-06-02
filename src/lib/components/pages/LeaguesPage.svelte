@@ -435,11 +435,9 @@
 		   editorial prompt, not a plain empty card. */
 		padding: 1.5rem 1.375rem;
 		text-align: center;
-		background: linear-gradient(
-			180deg,
-			color-mix(in srgb, var(--laurel) 6%, transparent),
-			transparent 70%
-		);
+		background:
+			linear-gradient(180deg, color-mix(in srgb, var(--laurel) 6%, transparent), transparent 70%),
+			var(--bg-surface);
 		border: 1px dashed color-mix(in srgb, var(--laurel) 25%, transparent);
 		border-radius: var(--r-16, var(--r-12));
 	}
