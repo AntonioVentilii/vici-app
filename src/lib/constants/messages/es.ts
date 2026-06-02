@@ -1250,6 +1250,8 @@ export const esMessages = {
 	'market.detail.not_found.cta': 'Volver a mercados',
 	'market.detail.not_found.sub': 'El mercado que buscas está oculto o no existe.',
 	'market.detail.not_found.title': '404 - Mercado no encontrado',
+	'market.detail.readonly.live': 'Solo lectura · las predicciones se hacen en Flow',
+	'market.detail.readonly.settled': 'Mercado liquidado · ya no opera',
 	'market.detail.resolution.eyebrow': 'Resolución',
 	'market.detail.resolution.fallback':
 		'Se resuelve YES si la fuente oficial confirma el resultado antes de {closesAt}, según los criterios del mercado.',
