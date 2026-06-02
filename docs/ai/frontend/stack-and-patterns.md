@@ -241,17 +241,24 @@ pins `VICI_ENGINE_ID` is
   `./static/workers` — otherwise sign-in silently breaks.
 - **Apple sign-in bypasses Juno on purpose.** Juno's `signIn()` has no
   Apple provider and no OpenID deep-link for its II provider, so
-  "Continue with Apple" drives `@icp-sdk/auth` v6 directly against
-  Internet Identity 2.0 (`id.ai`) with `openIdProvider: 'apple'` — see
+  "Continue with Apple" goes straight to Internet Identity 2.0 (`id.ai`)
+  with `?openid=…appleid.apple.com` — see
   [`apple-signin.services.ts`](../../../src/lib/services/apple-signin.services.ts).
-  v6 is installed under the **`icp-auth-openid` npm alias**
-  (`npm:@icp-sdk/auth@^6`) so Juno keeps its own peer `@icp-sdk/auth` v5
-  untouched — never import `icp-auth-openid` from anything Juno owns, and
-  never bump Juno's peer to v6 (v6 dropped the `AuthClient.create` /
-  `login` API Juno calls). The two versions share an identical IndexedDB
-  contract (`auth-client-db` / `ic-keyval`, ECDSA key + delegation JSON),
-  so the v6-written delegation is adopted by Juno on the next document
-  load. **Persisting the delegation is not enough**: Juno's boot-time
+  It drives the **ICRC-29 `Signer` / `PostMessageTransport` directly**
+  (not `AuthClient.signIn()`): `AuthClient` hard-codes the transport's 2s
+  `disconnectTimeout`, which drops the channel ("Connection closed") while
+  the popup is off on Apple's OIDC ceremony — so we build the transport
+  ourselves with a passkey-aware 60s timeout, request the delegation, and
+  persist it by hand. The signer / storage primitives come from
+  `@icp-sdk/auth` v6 + `@icp-sdk/signer`, installed under the
+  **`icp-auth-openid` npm alias** (`npm:@icp-sdk/auth@^6`) so Juno keeps
+  its own peer `@icp-sdk/auth` v5 untouched — never import `icp-auth-openid`
+  from anything Juno owns, and never bump Juno's peer to v6 (v6 dropped the
+  `AuthClient.create` / `login` API Juno calls). v5 and v6 share an
+  identical IndexedDB contract (`auth-client-db` / `ic-keyval`, ECDSA key
+  under `identity` + delegation JSON under `delegation`), so the
+  hand-persisted delegation is adopted by Juno on the next document load.
+  **Persisting the delegation is not enough**: Juno's boot-time
   `loadAuth()` only _loads_ an existing `#user` doc (it never creates one —
   that's done inside Juno's interactive `signIn()`), so the service also
   creates the `#user` doc with the Apple identity (mirroring Juno's
