@@ -22,6 +22,7 @@
 		updateLeague,
 		validateLeagueDraft
 	} from '$lib/services/leagues.services';
+	import { findOwnStanding, getLeagueStandings } from '$lib/services/standings.services';
 	import { deleteLeagueImageByUrl, uploadLeagueImage } from '$lib/services/storage.services';
 	import {
 		leagueBattlesStore,
@@ -36,6 +37,7 @@
 	import type { BattleDoc, BattleState } from '$lib/types/battle';
 	import { leagueEmblem, LEAGUE_NAME_MAX_LENGTH, LEAGUE_NAME_MIN_LENGTH } from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
+	import type { StandingsWindow } from '$lib/types/standings';
 	import { formatDate, formatLocalePercent, shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
@@ -299,16 +301,46 @@
 		}
 	};
 
-	// 1-indexed roster position of the caller — used for the head
-	// card's `N°{NN}` corner badge. Falls back to 1 before the
-	// roster lands so the badge isn't blank.
+	// The caller's standing within the league, ranked by net realized P&L over
+	// the active window (clearing canister `list_leaderboard`, filtered to this
+	// league's roster). `undefined` until it loads or when the caller has no
+	// settled position in the window.
+	let standingRank = $state<number | undefined>(undefined);
+
+	$effect(() => {
+		const owner = selfPrincipal;
+		const window: StandingsWindow = leaderboardTab === 'week' ? 'week' : 'all';
+		const roster = members.map((m) => m.member);
+
+		if (owner === undefined || roster.length === 0) {
+			standingRank = undefined;
+
+			return;
+		}
+
+		getLeagueStandings({ window, members: roster })
+			.then((result) => {
+				standingRank = findOwnStanding({ result, owner })?.rank;
+			})
+			.catch((err: unknown) => {
+				console.error(err);
+				standingRank = undefined;
+			});
+	});
+
+	// 1-indexed position of the caller for the head card's `N°{NN}` corner
+	// badge. Prefers the clearing standings rank; falls back to the roster
+	// order (the leaderboard render order) while standings load or when the
+	// caller has no settled position yet, so the badge is never blank.
 	const yourRank = $derived.by(() => {
+		if (standingRank !== undefined) {
+			return standingRank;
+		}
+
 		if (selfPrincipal === undefined) {
 			return 1;
 		}
 
-		// Rank off `sortedMembers` (the order the leaderboard renders) so
-		// the sticky YOU row and the list agree on the caller's number.
 		const idx = sortedMembers.findIndex((m) => m.member === selfPrincipal);
 
 		return idx === -1 ? 1 : idx + 1;

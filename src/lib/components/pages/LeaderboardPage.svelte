@@ -1,19 +1,20 @@
 <script lang="ts">
 	import type { Doc } from '@junobuild/core';
-	import { UserMinus, UserPlus, Users } from 'lucide-svelte/icons';
+	import { ArrowDown, ArrowUp, Minus, UserMinus, UserPlus, Users } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
-	import { leaderboard, leaderboardNotInitialized } from '$lib/derived/leaderboard.derived';
+	import { globalStandingsRows, type StandingsRow } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import {
 		cancelFriendRequest,
 		sendFriendRequest,
 		unfriendUser
 	} from '$lib/services/relation.services';
+	import { loadGlobalStandings } from '$lib/services/standings.services';
 	import {
 		friendsListStore,
 		refreshFriendRelations,
@@ -21,59 +22,87 @@
 	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
-	import type { UserProfile } from '$lib/types/profile';
 	import type { Relation } from '$lib/types/relation';
+	import type { StandingsWindow } from '$lib/types/standings';
+	import { shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
-	 * Global leaderboard.
+	 * Global standings.
 	 *
-	 * Three scoped tabs (`This week` / `This month` / `All time`) all
-	 * read the same global `$leaderboard` for now — when the backend
-	 * gains time-window filtering each scope routes to its own slice.
+	 * Three windows (`This week` / `This month` / `All time`) each read their
+	 * own slice of the clearing canister's `list_leaderboard` ranking (by net
+	 * realized P&L over a fixed calendar window). Switching a window lazily
+	 * loads + caches that slice, so a revisit renders instantly while a refresh
+	 * runs in the background.
 	 *
 	 * Layout is a single column:
-	 *  - chip-style scope tabs at the top
+	 *  - chip-style window tabs at the top
 	 *  - 3-tile podium row (top-3, #1 gets the gold halo + tinted bg)
-	 *  - flat list of rest rows (rank, avatar, handle + VXP + streak,
+	 *  - flat list of rest rows (rank + ↑/↓ delta, avatar, handle + streak,
 	 *    accuracy on the right — coloured `--yes` once accuracy ≥ 78%)
 	 *
-	 * The viewer's own row carries an accent border + tinted bg and is
-	 * never tappable. Every other row / podium tile is a real button
-	 * that opens a mini-profile bottom sheet surfacing accuracy / VXP /
-	 * streak with an add- or remove-friend action. Friend state reads
-	 * from the shared `friendsListStore`, and add/remove route through
-	 * the same `relation.services` the Friends tab uses, so the inbox
-	 * badge and Arena tab stay in lockstep.
+	 * Rank, the prior-window delta, and accuracy are authoritative from the
+	 * clearing canister; handle / avatar / streak are overlaid from the shared
+	 * profile cache (the viewer's own row from their live profile). The
+	 * viewer's own row carries an accent border + tinted bg and is never
+	 * tappable; every other row / podium tile opens a mini-profile bottom sheet
+	 * with an add- or remove-friend action that routes through the same
+	 * `relation.services` the Friends tab uses.
 	 */
 
-	type Scope = 'week' | 'month' | 'all';
-
-	const scopes: { id: Scope; labelKey: MessageKey }[] = [
+	const windows: { id: StandingsWindow; labelKey: MessageKey }[] = [
 		{ id: 'week', labelKey: 'leaderboard.scope.week' },
 		{ id: 'month', labelKey: 'leaderboard.scope.month' },
 		{ id: 'all', labelKey: 'leaderboard.scope.all' }
 	];
 
-	let activeScope = $state<Scope>('week');
+	let activeWindow = $state<StandingsWindow>('week');
 	const currentUser = $derived($authPrincipal);
 
-	const loading = $derived($leaderboardNotInitialized);
+	// Per-window joined rows. `undefined` until the active window's slice has
+	// loaded, distinct from a loaded-but-empty window (`[]`).
+	const weekRows = globalStandingsRows('week');
+	const monthRows = globalStandingsRows('month');
+	const allRows = globalStandingsRows('all');
 
-	const rankedUsers: UserProfile[] = $derived($leaderboard);
+	const rows = $derived.by<StandingsRow[] | undefined>(() => {
+		switch (activeWindow) {
+			case 'week':
+				return $weekRows;
+			case 'month':
+				return $monthRows;
+			case 'all':
+				return $allRows;
+		}
+	});
 
-	const podium = $derived(rankedUsers.slice(0, 3));
-	const rest = $derived(rankedUsers.slice(3));
+	const loading = $derived(rows === undefined);
+	const rankedRows = $derived(rows ?? []);
 
-	// Rank is implicit in the array order; expose it so the sheet can
-	// show `#N global` without re-deriving the index from the row.
-	const rankOf = (owner: string): number => rankedUsers.findIndex((u) => u.owner === owner) + 1;
+	const podium = $derived(rankedRows.slice(0, 3));
+	const rest = $derived(rankedRows.slice(3));
+
+	// Hydrate each window on first view. The store caches per-window, so a
+	// repeat visit short-circuits the fetch and re-renders the cached slice.
+	$effect(() => {
+		const window = activeWindow;
+
+		if (rows === undefined) {
+			void loadGlobalStandings({ window }).catch((err: unknown) => {
+				console.error(err);
+			});
+		}
+	});
+
+	const handleOf = (row: StandingsRow): string =>
+		row.nickname && row.nickname.length > 0 ? row.nickname : shortenPrincipal(row.owner);
+
+	const rankOf = (owner: string): number =>
+		rankedRows.find((row) => row.owner === owner)?.entry.rank ?? 0;
 
 	// ── Friend state ────────────────────────────────────────────────
-	// `friendsListStore` holds accepted friend relations; `sentFriendRequestsStore`
-	// holds outgoing requests still awaiting the recipient's response.
-	// Three states: accepted friend, outgoing-pending, or none.
 	const friendOwners = $derived(
 		new Set(
 			$friendsListStore.flatMap((relation) =>
@@ -84,44 +113,38 @@
 
 	const isFriend = (owner: string): boolean => friendOwners.has(owner);
 
-	// Returns the pending-sent Doc for `owner`, or undefined if none.
 	const pendingSentDoc = (owner: string): Doc<Relation> | undefined =>
 		$sentFriendRequestsStore.find((doc) => doc.data.participants.includes(owner));
 
 	onMount(() => {
-		// Hydrate the shared social graph so `isFriend` is accurate on
-		// first paint. The store is stale-while-revalidate, so a warm
-		// cache renders instantly and this just refreshes in the back.
+		// Hydrate the shared social graph so `isFriend` is accurate on first
+		// paint. The store is stale-while-revalidate.
 		void refreshFriendRelations();
 	});
 
 	// ── Mini-profile bottom sheet ───────────────────────────────────
-	let openProfile = $state<UserProfile | undefined>(undefined);
+	let openRow = $state<StandingsRow | undefined>(undefined);
 	let mutatingOwner = $state<string | undefined>(undefined);
 
-	const openSheet = (user: UserProfile) => {
+	const openSheet = (row: StandingsRow) => {
 		// The viewer's own row is informational — there's nothing to add.
-		if (user.owner === currentUser) {
+		if (row.isSelf) {
 			return;
 		}
 
-		openProfile = user;
+		openRow = row;
 	};
 
 	const closeSheet = () => {
-		openProfile = undefined;
+		openRow = undefined;
 	};
 
-	const accuracyOf = (user: UserProfile): number => Math.round(user.accuracy ?? 0);
-	const vxpOf = (user: UserProfile): string => Math.round(user.points ?? 0).toLocaleString('en-US');
-	const streakOf = (user: UserProfile): number => user.streak ?? 0;
-
 	const handleToggleFriend = async () => {
-		if (!openProfile || !currentUser) {
+		if (!openRow || !currentUser) {
 			return;
 		}
 
-		const target = openProfile.owner;
+		const target = openRow.owner;
 		mutatingOwner = target;
 
 		// Determine which of the three states we are in at call time.
@@ -143,7 +166,7 @@
 			}
 
 			await refreshFriendRelations();
-			openProfile = undefined;
+			openRow = undefined;
 		} catch (err: unknown) {
 			console.error(err);
 			notificationsStore.add({
@@ -167,24 +190,42 @@
 	</button>
 {/snippet}
 
+<!-- ↑/↓ rank-delta pill. Positive delta = climbed (better rank), negative =
+     dropped, 0 = held. `undefined` (newcomer / no prior window) shows nothing. -->
+{#snippet rankDelta(delta: number | undefined)}
+	{#if delta !== undefined && delta > 0}
+		<span class="lb-delta lb-delta-up num">
+			<ArrowUp aria-hidden="true" size={11} strokeWidth={2.4} />{delta}
+		</span>
+	{:else if delta !== undefined && delta < 0}
+		<span class="lb-delta lb-delta-down num">
+			<ArrowDown aria-hidden="true" size={11} strokeWidth={2.4} />{Math.abs(delta)}
+		</span>
+	{:else if delta === 0}
+		<span class="lb-delta lb-delta-flat">
+			<Minus aria-hidden="true" size={11} strokeWidth={2.4} />
+		</span>
+	{/if}
+{/snippet}
+
 <div class="leaderboard-page">
 	<ScreenHeader
 		right={leaderboardAppbarRight}
 		title={t({ locale: $localeStore, key: 'leaderboard.title' })}
 	/>
 
-	<!-- Scope chips — `This week / This month / All time`. -->
+	<!-- Window chips — `This week / This month / All time`. -->
 	<div class="leaderboard-scopes" role="tablist">
-		{#each scopes as scope (scope.id)}
+		{#each windows as window (window.id)}
 			<button
 				class="leaderboard-scope"
-				class:is-active={activeScope === scope.id}
-				aria-selected={activeScope === scope.id}
-				onclick={() => (activeScope = scope.id)}
+				class:is-active={activeWindow === window.id}
+				aria-selected={activeWindow === window.id}
+				onclick={() => (activeWindow = window.id)}
 				role="tab"
 				type="button"
 			>
-				{t({ locale: $localeStore, key: scope.labelKey })}
+				{t({ locale: $localeStore, key: window.labelKey })}
 			</button>
 		{/each}
 	</div>
@@ -194,94 +235,102 @@
 			<div class="leaderboard-spinner"></div>
 			<p class="allcaps">{t({ locale: $localeStore, key: 'leaderboard.loading' })}</p>
 		</div>
-	{:else if rankedUsers.length === 0}
+	{:else if rankedRows.length === 0}
 		<div class="leaderboard-empty">
 			<p class="allcaps">{t({ locale: $localeStore, key: 'leaderboard.empty' })}</p>
+			<p class="leaderboard-empty-sub">
+				{t({ locale: $localeStore, key: 'leaderboard.empty_sub' })}
+			</p>
 		</div>
 	{:else}
-		<!-- 3-tile podium row. #1 gets the gold halo + tinted bg; #2 / #3
-		     stay on the neutral surface. Every tile but the viewer's own
-		     is a real button that opens the mini-profile sheet. -->
+		<!-- 3-tile podium row. #1 gets the gold halo + tinted bg; #2 / #3 stay
+		     on the neutral surface. Every tile but the viewer's own is a real
+		     button that opens the mini-profile sheet. -->
 		<div class="leaderboard-podium">
-			{#each podium as user, i (user.owner)}
-				{@const isYou = user.owner === currentUser}
+			{#each podium as row, i (row.owner)}
 				<button
 					class="leaderboard-podium-tile"
 					class:is-first={i === 0}
-					class:is-you={isYou}
-					aria-label={isYou
+					class:is-you={row.isSelf}
+					aria-label={row.isSelf
 						? undefined
 						: t({
 								locale: $localeStore,
 								key: 'leaderboard.open_profile_aria',
-								params: { name: user.nickname }
+								params: { name: handleOf(row) }
 							})}
-					disabled={isYou}
-					onclick={() => openSheet(user)}
+					disabled={row.isSelf}
+					onclick={() => openSheet(row)}
 					type="button"
 					in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 24, delay: i * 100 }}
 				>
-					<div class="leaderboard-podium-rank num allcaps">#{i + 1}</div>
+					<div class="leaderboard-podium-rank num allcaps">#{row.entry.rank}</div>
 					<div class="leaderboard-podium-avatar-wrap">
 						<Avatar
 							class={i === 0 ? 'leaderboard-podium-avatar-lg' : 'leaderboard-podium-avatar-md'}
-							avatar={user.avatar}
-							nickname={user.nickname}
-							owner={user.owner}
-							self={isYou}
+							avatar={row.avatar ?? null}
+							nickname={row.nickname ?? null}
+							owner={row.owner}
+							self={row.isSelf}
 						/>
 					</div>
 					<div class="leaderboard-podium-name">
-						{isYou ? t({ locale: $localeStore, key: 'leaderboard.you' }) : user.nickname}
+						{row.isSelf ? t({ locale: $localeStore, key: 'leaderboard.you' }) : handleOf(row)}
 					</div>
-					<div class="leaderboard-podium-acc num">{accuracyOf(user)}%</div>
+					<div class="leaderboard-podium-acc num">{row.entry.accuracy}%</div>
 				</button>
 			{/each}
 		</div>
 
 		<!-- Flat list of rest rows. -->
 		<ul class="leaderboard-rows">
-			{#each rest as user, i (user.owner)}
-				{@const isYou = user.owner === currentUser}
+			{#each rest as row, i (row.owner)}
 				<li in:fade={{ delay: i * 20 }}>
 					<button
 						class="leaderboard-row"
-						class:is-you={isYou}
-						aria-label={isYou
+						class:is-you={row.isSelf}
+						aria-label={row.isSelf
 							? undefined
 							: t({
 									locale: $localeStore,
 									key: 'leaderboard.open_profile_aria',
-									params: { name: user.nickname }
+									params: { name: handleOf(row) }
 								})}
-						disabled={isYou}
-						onclick={() => openSheet(user)}
+						disabled={row.isSelf}
+						onclick={() => openSheet(row)}
 						type="button"
 					>
 						<span class="leaderboard-row-left">
-							<span class="leaderboard-row-rank num">#{i + 4}</span>
+							<span class="leaderboard-row-rank-wrap">
+								<span class="leaderboard-row-rank num">#{row.entry.rank}</span>
+								{@render rankDelta(row.entry.rankDelta)}
+							</span>
 							<Avatar
 								class="leaderboard-row-avatar"
-								avatar={user.avatar}
-								nickname={user.nickname}
-								owner={user.owner}
-								self={isYou}
+								avatar={row.avatar ?? null}
+								nickname={row.nickname ?? null}
+								owner={row.owner}
+								self={row.isSelf}
 							/>
 							<span class="leaderboard-row-text">
 								<span class="leaderboard-row-handle">
-									{isYou ? t({ locale: $localeStore, key: 'leaderboard.you' }) : user.nickname}
+									{row.isSelf ? t({ locale: $localeStore, key: 'leaderboard.you' }) : handleOf(row)}
 								</span>
 								<span class="leaderboard-row-meta num">
-									{vxpOf(user)} VXP · {t({
+									{t({
+										locale: $localeStore,
+										key: 'leaderboard.row.settled',
+										params: { count: row.entry.settledCount }
+									})} · {t({
 										locale: $localeStore,
 										key: 'leaderboard.row.streak',
-										params: { count: streakOf(user) }
+										params: { count: row.streak }
 									})}
 								</span>
 							</span>
 						</span>
-						<span class="leaderboard-row-acc num" class:is-strong={accuracyOf(user) >= 78}>
-							{accuracyOf(user)}%
+						<span class="leaderboard-row-acc num" class:is-strong={row.entry.accuracy >= 78}>
+							{row.entry.accuracy}%
 						</span>
 					</button>
 				</li>
@@ -290,32 +339,31 @@
 	{/if}
 </div>
 
-<!-- Mini-profile bottom sheet — opens on row / podium tap. Shows the
-     tapped predictor's accuracy, VXP and streak with an add- or
-     remove-friend action that routes through the shared relation
-     services. -->
-<BottomSheet isOpen={openProfile !== undefined} onClose={closeSheet}>
-	{#if openProfile}
-		{@const user = openProfile}
-		{@const friend = isFriend(user.owner)}
-		{@const sentDoc = pendingSentDoc(user.owner)}
+<!-- Mini-profile bottom sheet — opens on row / podium tap. Shows the tapped
+     predictor's window accuracy, settled count and streak with an add- or
+     remove-friend action that routes through the shared relation services. -->
+<BottomSheet isOpen={openRow !== undefined} onClose={closeSheet}>
+	{#if openRow}
+		{@const row = openRow}
+		{@const friend = isFriend(row.owner)}
+		{@const sentDoc = pendingSentDoc(row.owner)}
 		{@const pending = !friend && sentDoc !== undefined}
 		<div class="lb-sheet-head">
 			<span class="lb-sheet-avatar">
 				<Avatar
 					class="h-full w-full"
-					avatar={user.avatar}
-					nickname={user.nickname}
-					owner={user.owner}
+					avatar={row.avatar ?? null}
+					nickname={row.nickname ?? null}
+					owner={row.owner}
 				/>
 			</span>
 			<div class="lb-sheet-head-copy">
-				<span class="lb-sheet-name">@{user.nickname}</span>
+				<span class="lb-sheet-name">@{handleOf(row)}</span>
 				<span class="num lb-sheet-sub">
 					{t({
 						locale: $localeStore,
 						key: 'leaderboard.sheet.rank_streak',
-						params: { rank: rankOf(user.owner), count: streakOf(user) }
+						params: { rank: rankOf(row.owner), count: row.streak }
 					})}
 				</span>
 			</div>
@@ -323,22 +371,22 @@
 
 		<div class="lb-sheet-stats">
 			<div class="lb-sheet-stat">
-				<span class="lb-sheet-lbl"
-					>{t({ locale: $localeStore, key: 'arena.friends.sheet.accuracy' })}</span
-				>
-				<span class="lb-sheet-val num">{accuracyOf(user)}%</span>
+				<span class="lb-sheet-lbl">
+					{t({ locale: $localeStore, key: 'arena.friends.sheet.accuracy' })}
+				</span>
+				<span class="lb-sheet-val num">{row.entry.accuracy}%</span>
 			</div>
 			<div class="lb-sheet-stat">
-				<span class="lb-sheet-lbl"
-					>{t({ locale: $localeStore, key: 'arena.friends.sheet.vxp' })}</span
-				>
-				<span class="lb-sheet-val num">{vxpOf(user)}</span>
+				<span class="lb-sheet-lbl">
+					{t({ locale: $localeStore, key: 'leaderboard.sheet.settled' })}
+				</span>
+				<span class="lb-sheet-val num">{row.entry.settledCount}</span>
 			</div>
 			<div class="lb-sheet-stat">
-				<span class="lb-sheet-lbl"
-					>{t({ locale: $localeStore, key: 'arena.friends.sheet.streak' })}</span
-				>
-				<span class="lb-sheet-val num">{streakOf(user)}d</span>
+				<span class="lb-sheet-lbl">
+					{t({ locale: $localeStore, key: 'arena.friends.sheet.streak' })}
+				</span>
+				<span class="lb-sheet-val num">{row.streak}d</span>
 			</div>
 		</div>
 
@@ -349,7 +397,7 @@
 					? 'lb-sheet-action lb-sheet-pending'
 					: 'lb-sheet-action lb-sheet-add'}
 			onclick={handleToggleFriend}
-			status={mutatingOwner === user.owner ? 'pending' : 'enabled'}
+			status={mutatingOwner === row.owner ? 'pending' : 'enabled'}
 		>
 			{#if friend}
 				<UserMinus aria-hidden="true" size={15} strokeWidth={1.8} />
@@ -378,7 +426,7 @@
 		padding: 0 1.25rem 6rem;
 	}
 
-	/* Scope chip strip — `This week / This month / All time`. */
+	/* Window chip strip — `This week / This month / All time`. */
 	.leaderboard-scopes {
 		display: flex;
 		gap: 0.375rem;
@@ -558,8 +606,15 @@
 		min-width: 0;
 	}
 
+	.leaderboard-row-rank-wrap {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1rem;
+		width: 2rem;
+	}
+
 	.leaderboard-row-rank {
-		width: 1.5rem;
 		font-size: var(--t-13);
 		font-weight: 600;
 		color: var(--text-muted);
@@ -567,6 +622,29 @@
 
 	.leaderboard-row.is-you .leaderboard-row-rank {
 		color: var(--color-primary);
+	}
+
+	/* ↑/↓ rank-delta pill under the rank number. */
+	.lb-delta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.05rem;
+		font-size: 0.6rem;
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.lb-delta-up {
+		color: var(--yes);
+	}
+
+	.lb-delta-down {
+		color: var(--no);
+	}
+
+	.lb-delta-flat {
+		color: var(--text-muted);
+		opacity: 0.6;
 	}
 
 	:global(.leaderboard-row-avatar) {
@@ -618,6 +696,16 @@
 		font-size: 0.7rem;
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
+	}
+
+	.leaderboard-empty-sub {
+		max-width: 18rem;
+		font-size: var(--t-12);
+		font-weight: 500;
+		letter-spacing: normal;
+		text-align: center;
+		text-transform: none;
+		color: var(--text-muted);
 	}
 
 	.leaderboard-spinner {

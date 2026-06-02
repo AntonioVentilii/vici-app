@@ -4,6 +4,7 @@ import {
 	type ClearingDid,
 	type ClearingService
 } from '$declarations';
+import { ZERO } from '$lib/constants/app.constants';
 import type { CreateCanisterOptions } from '$lib/types/canister';
 import {
 	Canister,
@@ -420,6 +421,65 @@ export class ClearingCanister extends Canister<ClearingService> {
 		}
 
 		throw new Error(`Failed to redeem complete set: ${JSON.stringify(result.Err, jsonReplacer)}`);
+	};
+
+	/**
+	 * Per-window ranked standings (week / month / all-time) by net realized
+	 * P&L, draining the clearing canister's exclusive `start_after` cursor.
+	 *
+	 * The query is an aggregate — each entry carries the principal's rank, the
+	 * prior-window rank (for ↑/↓ deltas), net realized P&L, and settled / win
+	 * counts (`win_count / settled_count` is the window accuracy). When
+	 * `members` is supplied the ranking is computed within that league set in
+	 * isolation (inactive members included with a zeroed aggregate); otherwise
+	 * the global standings are returned. `total` is the full ranked count after
+	 * any `members` filter, so a caller can show "rank X of total" without
+	 * paging to the end. `maxPages` bounds the drain so a large window can't
+	 * fan out into an unbounded number of round-trips.
+	 */
+	listLeaderboard = async ({
+		window,
+		members,
+		pageLimit,
+		maxPages,
+		...queryParams
+	}: {
+		window: ClearingDid.LeaderboardWindow;
+		members?: Principal[];
+		pageLimit?: bigint;
+		maxPages?: number;
+	} & QueryParams): Promise<{ items: ClearingDid.LeaderboardEntry[]; total: bigint }> => {
+		const { list_leaderboard } = this.caller(queryParams);
+
+		const items: ClearingDid.LeaderboardEntry[] = [];
+		let startAfter: [] | [bigint] = toNullable();
+		let total = ZERO;
+		let pages = 0;
+
+		while (maxPages === undefined || pages < maxPages) {
+			const page = await list_leaderboard({
+				window,
+				members: members === undefined ? toNullable() : toNullable(members),
+				start_after: startAfter,
+				limit: pageLimit === undefined ? toNullable() : toNullable(pageLimit)
+			});
+
+			const { items: pageItems, total: pageTotal } = page;
+
+			items.push(...pageItems);
+			total = pageTotal;
+			pages += 1;
+
+			const next = fromNullable(page.next_cursor);
+
+			if (isNullish(next)) {
+				break;
+			}
+
+			startAfter = toNullable(next);
+		}
+
+		return { items, total };
 	};
 
 	registerIcrcAsset = async ({
