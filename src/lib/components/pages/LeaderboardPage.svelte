@@ -103,8 +103,12 @@
 	// its cached slice but only needs the viewer's own rank), so the Leaderboard
 	// owns this. `loadProfilesByPrincipals` dedupes against the cache, so the
 	// re-run this triggers once profiles arrive is a no-op.
+	//
+	// The viewer's own row is excluded: `globalStandingsRows` already overlays
+	// the self row from the live `userStore.profile`, so hydrating it would only
+	// add a redundant `getProfile` on every visit / window switch.
 	$effect(() => {
-		const owners = rankedRows.map((row) => row.owner);
+		const owners = rankedRows.filter((row) => !row.isSelf).map((row) => row.owner);
 
 		if (owners.length > 0) {
 			void loadProfilesByPrincipals({ principals: owners });
