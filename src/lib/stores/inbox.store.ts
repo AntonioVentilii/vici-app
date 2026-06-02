@@ -54,7 +54,7 @@ const seedInbox = (): InboxNotification[] => [
 		id: 'n4',
 		kind: 'level',
 		title: 'Level up',
-		body: 'You reached level 4. +250 session XP unlocked.',
+		body: 'You reached level 4. +250 session VXP unlocked.',
 		when: '3d ago',
 		unread: false
 	},
