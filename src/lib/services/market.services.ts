@@ -179,7 +179,9 @@ export const createMarket = async ({
  *
  * Accepts an explicit `identity` and `certified` flag so the caller can run this
  * once as an uncertified query (fast) and/or once as a certified update (verified).
- * This is what makes the function compatible with {@link loadMarkets} / `queryAndUpdate`.
+ * Callers thread that flag per use: {@link loadMarketsProgressive} and
+ * {@link fetchMarketsLite} run uncertified, while {@link getMarketsLite} forces
+ * certified for set reads that must match a certified counterpart.
  *
  * Note: Juno-backed calls (`getGlobalActivities`) honor the same flag but tap the
  * satellite datastore, not an ICDC canister.
@@ -410,10 +412,11 @@ const fetchOpenBinaryMarketsLite = async ({
 
 /**
  * Adds book-derived fields (`yesProbability`, `noProbability`,
- * `bestBid`/`bestAsk`) to lite `Market` objects produced by
- * {@link fetchOpenBinaryMarketsLite}. Called by the Flow path on just
- * the top-N ranked markets so we pay for at most `MAX_MARKETS` round-
- * trips instead of one per open series.
+ * `bestBid`/`bestAsk`) to lite `Market` objects (from
+ * {@link fetchOpenBinaryMarketsLite} or {@link fetchMarketsLite}). Callers
+ * pass a bounded slice — the Flow deck's top-N, or one
+ * {@link loadMarketsProgressive} batch — so we never fan out one request per
+ * open series at once.
  */
 const enrichMarketsWithOrderBook = ({
 	markets,
@@ -501,8 +504,8 @@ const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: 
 /**
  * Order-book-free fetch: returns the domain-scoped binary market set (open +
  * resolved) but skips the per-market `getOrderBook` fan-out. The price-bearing
- * list path is {@link loadMarkets} (fast query then certified update, both
- * enriched).
+ * list path is {@link loadMarketsProgressive} (instant lite render, then
+ * background book enrichment).
  *
  * For callers that consume only the market *set* — `id`, `balanceDomain`,
  * `status`, `outcome`, `engineId`, `payoffType` — to filter their own data:
@@ -536,28 +539,117 @@ export const getMarketsLite = async (domain: RegistryDid.BalanceDomain): Promise
 	return fetchMarketsLite({ identity, certified: true, domain });
 };
 
+// How many order-book reads the progressive list enrichment runs at once. The
+// list can span the whole catalog, so an unbounded `Promise.all` would open a
+// request per open market and saturate the browser's per-host connection pool
+// during the cold-load burst — the very contention this path exists to avoid.
+const MARKETS_ENRICH_BATCH_SIZE = 8;
+
 /**
- * Certified-aware list loader built on `queryAndUpdate`: fires `onLoad` up to
- * twice — once with the fast uncertified query result, then again with the
- * certified update result. Both passes are order-book-enriched (this is the
- * price-bearing markets-list path). The underlying utility drops stale query
- * responses that arrive after the update has settled, so callers can safely
- * overwrite their sink on every invocation.
+ * Progressive markets-list loader. Renders instantly from the order-book-free
+ * lite set — so first paint and the rest of the shell's cold-load aren't
+ * blocked on a catalog-wide book fan-out — then fills in book-derived prices in
+ * the background, a bounded batch at a time, invoking `onUpdate` after each so
+ * the list "fills in" top-first.
+ *
+ * Uncertified throughout: the list is a browse surface where the approximate
+ * consensus % is enough, and the sort key (`totalVolume`) is series-derived, so
+ * prices arriving late never reorder rows. The certified order book is fetched
+ * per-market by the detail page ({@link loadMarket}) at trade time, where trust
+ * actually matters. This replaces the prior `queryAndUpdate` loader that ran a
+ * per-market `getOrderBook` across the whole catalog *twice* (uncertified +
+ * certified) on every refresh.
+ *
+ * `previous` (the caller's last-known set) carries prices forward so a refresh
+ * doesn't flash every row back to the neutral 0.5 before re-enriching; pass it
+ * omitted/empty for a cold load (or a balance-domain switch, where the prior
+ * domain's prices must not leak).
+ *
+ * `isStale` lets the caller abort a run superseded by a balance-domain switch
+ * before it writes a stale slice.
  */
-export const loadMarkets = ({
+export const loadMarketsProgressive = async ({
 	domain,
-	onLoad,
-	onUpdateError
+	onUpdate,
+	previous,
+	isStale
 }: {
 	domain: RegistryDid.BalanceDomain;
-	onLoad: (options: { certified: boolean; response: Market[] }) => void;
-	onUpdateError?: (error: unknown) => void;
-}): Promise<void> =>
-	loadWithCertification<Market[]>({
-		request: ({ certified, identity }) => fetchMarkets({ identity, certified, domain }),
-		onLoad,
-		onUpdateError
+	onUpdate: (markets: Market[]) => void;
+	previous?: Market[];
+	isStale?: () => boolean;
+}): Promise<void> => {
+	const identity = await getIdentityOrAnonymous();
+
+	// Phase 1 — instant render from the order-book-free set (open + resolved).
+	const lite = await fetchMarkets({ identity, certified: false, domain, includeOrderBook: false });
+
+	if (isStale?.()) {
+		return;
+	}
+
+	// Seed each row's book-derived fields before enrichment:
+	//  - a resolved market with a known outcome renders deterministically from
+	//    that outcome (YES won → 100/0, NO won → 0/100) — no order-book read,
+	//    and never the misleading neutral 0.5 the lite mapper would leave;
+	//  - everything else overlays last-known prices from `previous` so a refresh
+	//    doesn't flash rows back to 0.5 while re-enrichment runs, falling back to
+	//    the lite neutral seed for genuinely new markets.
+	const priceById = new Map((previous ?? []).map((market) => [market.id, market]));
+	const seeded = lite.map((market) => {
+		if (market.status === 'Resolved' && market.outcome !== undefined) {
+			const yesWon = market.outcome === 'YES';
+
+			return { ...market, yesProbability: yesWon ? 1 : 0, noProbability: yesWon ? 0 : 1 };
+		}
+
+		const prior = priceById.get(market.id);
+
+		return prior === undefined
+			? market
+			: {
+					...market,
+					yesProbability: prior.yesProbability,
+					noProbability: prior.noProbability,
+					bestBid: prior.bestBid,
+					bestAsk: prior.bestAsk,
+					bestBidQty: prior.bestBidQty,
+					bestAskQty: prior.bestAskQty
+				};
 	});
+
+	onUpdate(seeded);
+
+	// Phase 2 — background book enrichment for every non-resolved market (open
+	// *and* expired-but-unresolved both carry a live/last book the list prices
+	// off). Resolved markets are skipped: they're already pinned to their
+	// outcome above.
+	const enriched = [...seeded];
+	const indexById = new Map(seeded.map((market, index) => [market.id, index]));
+	const pending = seeded.filter((market) => market.status !== 'Resolved');
+
+	for (let start = 0; start < pending.length; start += MARKETS_ENRICH_BATCH_SIZE) {
+		if (isStale?.()) {
+			return;
+		}
+
+		const batch = await enrichMarketsWithOrderBook({
+			markets: pending.slice(start, start + MARKETS_ENRICH_BATCH_SIZE),
+			identity,
+			certified: false
+		});
+
+		for (const market of batch) {
+			const index = indexById.get(market.id);
+
+			if (index !== undefined) {
+				enriched[index] = market;
+			}
+		}
+
+		onUpdate([...enriched]);
+	}
+};
 
 /**
  * Core single-market fetch: threads identity + certified so it composes with
