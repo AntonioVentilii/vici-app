@@ -1233,7 +1233,6 @@ export const ptMessages = {
 	'market.detail.chart.no_trades': 'Ainda sem negociações',
 	'market.detail.chart.period.all': 'Tudo',
 	'market.detail.closed.expired': 'Este mercado está fechado e aguardando resolução.',
-	'market.detail.closed.resolved': 'Este mercado foi resolvido e não está mais sendo negociado.',
 	'market.detail.coldstart.body':
 		'Ninguém previu este mercado ainda — sua previsão define a primeira leitura.',
 	'market.detail.coldstart.lead': 'Mercado novo.',

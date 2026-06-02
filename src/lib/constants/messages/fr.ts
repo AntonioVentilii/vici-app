@@ -1249,7 +1249,6 @@ export const frMessages = {
 	'market.detail.chart.no_trades': 'Aucune transaction',
 	'market.detail.chart.period.all': 'Tout',
 	'market.detail.closed.expired': 'Ce marché est clos et en attente de résolution.',
-	'market.detail.closed.resolved': "Ce marché est résolu et n'est plus négocié.",
 	'market.detail.coldstart.body':
 		"Personne n'a encore pronostiqué ce marché — votre prédiction donne le premier repère.",
 	'market.detail.coldstart.lead': 'Nouveau marché.',
