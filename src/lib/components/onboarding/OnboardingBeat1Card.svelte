@@ -1,5 +1,6 @@
 <script lang="ts">
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
+	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { DAY_IN_MS, ZERO } from '$lib/constants/app.constants';
@@ -20,9 +21,12 @@
 	 * first call" beat — deliberately NOT the in-product Flow deck card.
 	 * It carries its own header (event tag + days pill + first-call
 	 * label), generative artwork band, YES / NO probability split, and
-	 * footer, plus a built-in directional coach. Tap-to-flip and the
-	 * swipe-up SKIP are intentionally absent: the first call can only
-	 * commit a YES or a NO.
+	 * footer, plus the shared `FlowCoach` gesture overlay. The actual
+	 * commit is YES / NO only — tap-to-flip and swipe-up SKIP are not
+	 * wired here — but, mirroring the prototype, the coach still
+	 * demonstrates the full gesture set (the SKIP and tap cues teach the
+	 * deck's vocabulary). Phase 3 ("tap card") degrades to a
+	 * zoom-and-de-blur on this faceless card rather than a flip.
 	 *
 	 * Two question modes (mirrored from the team-pick branch):
 	 *   - Picked team → advancement market ("Will X make the round of
@@ -37,16 +41,9 @@
 		participantId: string | null;
 		onCommit: (side: 'YES' | 'NO') => void;
 		onChangeTeam: () => void;
-		// Whether the built-in directional coach rides above the card.
-		// Always-on at this onboarding step: the coach must teach the
-		// swipe every time the user reaches the first call, with no
-		// cross-visit ("seen once per browser") suppression. The in-mount
-		// `everInteracted` guard still hides it after the first drag /
-		// commit. Defaults on; the parent pins it explicitly.
-		showCoach?: boolean;
 	}
 
-	const { participantId, onCommit, onChangeTeam, showCoach = true }: Props = $props();
+	const { participantId, onCommit, onChangeTeam }: Props = $props();
 
 	const event = $derived($featuredEvent);
 
@@ -126,21 +123,12 @@
 	let dragY = $state(0);
 	let dragging = $state(false);
 	let committed: 'YES' | 'NO' | null = $state(null);
-	// Tracks whether the user has started their first interaction (pointer
-	// down or keyboard commit). Used to permanently dismiss the coach once
-	// the user engages — a cancelled first drag would reset dragX→0 and
-	// cause the coach to reappear without this separate flag.
-	let everInteracted = $state(false);
 
 	const rotation = $derived(dragX / 18);
 	const yesStampOpacity = $derived(Math.min(1, Math.max(0, dragX / 60)));
 	const noStampOpacity = $derived(Math.min(1, Math.max(0, -dragX / 60)));
 	const yesEdgeOpacity = $derived(Math.min(1, Math.max(0, dragX / 100)) * 0.55);
 	const noEdgeOpacity = $derived(Math.min(1, Math.max(0, -dragX / 100)) * 0.55);
-
-	// Coach fades out as the card is dragged, then stays hidden after the
-	// first interaction (even if the drag is cancelled and dragX resets).
-	const coachOpacity = $derived(Math.max(0, 1 - Math.abs(dragX) / 40));
 
 	const cardTransform = $derived(`translate(${dragX}px, ${dragY}px) rotate(${rotation}deg)`);
 	const cardTransition = $derived(
@@ -176,7 +164,6 @@
 		startX = p.clientX;
 		startY = p.clientY;
 		dragging = true;
-		everInteracted = true;
 	};
 
 	const onPointerMove = (e: MouseEvent | TouchEvent) => {
@@ -348,32 +335,13 @@
 				</span>
 			</div>
 
-			<!-- Built-in directional coach — sits above the card, fades on
-			     the first drag, and stays hidden once the user has
-			     interacted (even if the drag is cancelled). `showCoach` is
-			     pinned on at this step so it teaches the swipe on every
-			     visit, with no cross-visit suppression. -->
-			{#if showCoach && !everInteracted && committed === null}
-				<div style:opacity={coachOpacity} class="ob-coach ob-coach-swipe" aria-live="polite">
-					<div class="ob-coach-row">
-						<span class="ob-coach-arrow no" aria-hidden="true">←</span>
-						<span class="ob-coach-text">
-							{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_lead' })}
-							<span class="serif-italic no">
-								{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_left' })}
-							</span>
-							{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_or' })}
-							<span class="serif-italic yes">
-								{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_right' })}
-							</span>
-						</span>
-						<span class="ob-coach-arrow yes" aria-hidden="true">→</span>
-					</div>
-					<p class="ob-coach-sub">
-						{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_sub' })}
-					</p>
-				</div>
-			{/if}
+			<!-- Shared gesture coach — the same five-phase overlay the deck
+			     uses, riding on this surface's `.ob-card`. Cycles NO / YES
+			     / SKIP / TAP / IDLE, drifting the card in sympathy via the
+			     `data-coach-phase` CSS in app.css, and dismisses on the
+			     first pointer-down. Shown once per device
+			     (`vici.coach-onboarding-seen`). -->
+			<FlowCoach surface="onboarding" />
 		</div>
 	</div>
 
@@ -388,10 +356,7 @@
 			class="ob-commit-btn no"
 			aria-label={t({ locale: $localeStore, key: 'onboarding.beat1b.a11y_commit_no' })}
 			disabled={committed !== null}
-			onclick={() => {
-				everInteracted = true;
-				commit('NO');
-			}}
+			onclick={() => commit('NO')}
 			type="button"
 		>
 			<span class="ob-commit-eyebrow no">
@@ -403,10 +368,7 @@
 			class="ob-commit-btn yes"
 			aria-label={t({ locale: $localeStore, key: 'onboarding.beat1b.a11y_commit_yes' })}
 			disabled={committed !== null}
-			onclick={() => {
-				everInteracted = true;
-				commit('YES');
-			}}
+			onclick={() => commit('YES')}
 			type="button"
 		>
 			<span class="ob-commit-eyebrow yes">

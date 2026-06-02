@@ -3414,177 +3414,42 @@ a.title-action::after {
 	transform: rotate(-8deg);
 }
 
-/* Built-in directional coach — a sibling of `.ob-card` inside the
-   stage so it stays fixed while the card translates under a swipe.
-   pointer-events:none lets swipes/taps pass to the card. */
-.ob-coach {
-	position: absolute;
-	left: 0;
-	right: 0;
-	top: 50%;
-	transform: translateY(-50%);
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	text-align: center;
-	padding: 0 20px;
-	z-index: 4;
+/* First-call gesture coach · card drift driven by data-coach-phase.
+   Onboarding-only mirror of the deck's `.flow-card` drift — the shared
+   `FlowCoach` (surface="onboarding") tags `.ob-card` each phase. Phases
+   0–2 drift + blur the card toward each gesture; phase 3 ("tap card")
+   settles it sharp a hair above rest (a zoom-and-de-blur, not a flip —
+   this card has no back face); phase 4 ("your turn") drops the attribute
+   and returns to rest. !important overrides the card's inline drag
+   transform. */
+:global(.ob-card[data-coach-phase]) {
+	transition:
+		transform 480ms cubic-bezier(0.16, 1, 0.3, 1),
+		filter 240ms ease !important;
+	filter: blur(1.4px) saturate(0.92) brightness(0.86);
 	pointer-events: none;
-	transition: opacity 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
-	animation: ob-coach-in 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
-.ob-coach::before {
-	content: '';
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	width: 92%;
-	height: 200%;
-	transform: translate(-50%, -50%);
-	background: radial-gradient(
-		ellipse at center,
-		rgba(14, 13, 11, 0.78) 0%,
-		rgba(14, 13, 11, 0.55) 35%,
-		rgba(14, 13, 11, 0.15) 70%,
-		rgba(14, 13, 11, 0) 100%
-	);
-	z-index: -1;
-	border-radius: 50%;
-	filter: blur(2px);
+:global(.ob-card[data-coach-phase='0']) {
+	transform: translate(-22px, 0) rotate(-2deg) !important;
 }
-[data-theme='light'] .ob-coach::before,
-[data-theme='peach'] .ob-coach::before {
-	background: radial-gradient(
-		ellipse at center,
-		rgba(242, 236, 220, 0.92) 0%,
-		rgba(242, 236, 220, 0.7) 35%,
-		rgba(242, 236, 220, 0.25) 70%,
-		rgba(242, 236, 220, 0) 100%
-	);
+:global(.ob-card[data-coach-phase='1']) {
+	transform: translate(22px, 0) rotate(2deg) !important;
 }
-.ob-coach-row {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 14px;
-	margin-bottom: 10px;
+:global(.ob-card[data-coach-phase='2']) {
+	transform: translate(0, -22px) !important;
 }
-.ob-coach-text {
-	font-family: var(--font-sans);
-	font-size: 28px;
-	line-height: 1.1;
-	letter-spacing: -0.015em;
-	font-weight: 600;
-	color: var(--parchment);
-	text-wrap: balance;
-	text-shadow: 0 1px 16px rgba(14, 13, 11, 0.55);
-}
-[data-theme='light'] .ob-coach-text,
-[data-theme='peach'] .ob-coach-text {
-	color: var(--ink);
-	text-shadow: 0 1px 16px rgba(242, 236, 220, 0.6);
-}
-.ob-coach-text .serif-italic {
-	font-family: var(--font-serif);
-	font-style: italic;
-	font-weight: 400;
-	letter-spacing: 0;
-}
-.ob-coach-text .serif-italic.yes {
-	color: var(--yes);
-}
-.ob-coach-text .serif-italic.no {
-	color: var(--no);
-}
-.ob-coach-arrow {
-	font-family: var(--font-sans);
-	font-size: 34px;
-	font-weight: 300;
-	line-height: 1;
-	display: inline-flex;
-	width: 1em;
-	align-items: center;
-	justify-content: center;
-	color: var(--parchment);
-	filter: drop-shadow(0 1px 8px rgba(14, 13, 11, 0.6));
-}
-.ob-coach-arrow.yes {
-	color: var(--yes);
-	animation: ob-arrow-nudge-right 1.5s ease-in-out 0.4s infinite;
-}
-.ob-coach-arrow.no {
-	color: var(--no);
-	animation: ob-arrow-nudge-left 1.5s ease-in-out 0.4s infinite;
-}
-.ob-coach-sub {
-	font-family: var(--font-mono);
-	font-size: 11px;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: rgba(242, 236, 220, 0.78);
-	margin: 0;
-	text-shadow: 0 1px 8px rgba(14, 13, 11, 0.55);
-}
-[data-theme='light'] .ob-coach-sub,
-[data-theme='peach'] .ob-coach-sub {
-	color: rgba(14, 13, 11, 0.7);
-	text-shadow: 0 1px 8px rgba(242, 236, 220, 0.6);
-}
-@media (max-height: 720px) {
-	.ob-coach-text {
-		font-size: 24px;
-	}
-	.ob-coach-arrow {
-		font-size: 28px;
-	}
-}
-@media (max-height: 620px) {
-	.ob-coach-text {
-		font-size: 20px;
-	}
-	.ob-coach-arrow {
-		font-size: 24px;
-	}
-	.ob-coach-sub {
-		font-size: 10px;
-	}
-}
-@keyframes ob-coach-in {
-	from {
-		opacity: 0;
-		transform: translateY(calc(-50% + 8px));
-	}
-	to {
-		opacity: 1;
-		transform: translateY(-50%);
-	}
-}
-@keyframes ob-arrow-nudge-right {
-	0%,
-	100% {
-		transform: translateX(0);
-	}
-	50% {
-		transform: translateX(5px);
-	}
-}
-@keyframes ob-arrow-nudge-left {
-	0%,
-	100% {
-		transform: translateX(0);
-	}
-	50% {
-		transform: translateX(-5px);
-	}
+:global(.ob-card[data-coach-phase='3']) {
+	filter: none !important;
+	transform: scale(1.01) !important;
+	pointer-events: none;
 }
 @media (prefers-reduced-motion: reduce) {
-	.ob-coach,
-	.ob-coach-arrow.yes,
-	.ob-coach-arrow.no {
-		animation: none;
-	}
 	.ob-card {
 		transition: none !important;
+	}
+	:global(.ob-card[data-coach-phase]) {
+		transform: none !important;
+		animation: none !important;
 	}
 }
 
