@@ -506,22 +506,30 @@
 						principal: currentProfile.owner
 					});
 
-					if (!probe.available && probe.reason === 'taken') {
-						notificationsStore.add({
-							title: t({
-								locale: $localeStore,
-								key: 'onboarding.handoff.collision_title'
-							}),
-							message: t({
-								locale: $localeStore,
-								key: 'onboarding.handoff.collision',
-								params: { handle: pending.handle }
-							}),
-							type: 'error'
-						});
+					if (!probe.available) {
+						// Any unavailable reason — `'taken'`, or the
+						// `'too_short'` / `'required'` cases that
+						// `parsePendingOnboarding`'s tolerated legacy payloads
+						// can still produce — must SKIP the nickname update.
+						// Only the collision case is worth a toast; the user
+						// can rename later from their profile.
+						if (probe.reason === 'taken') {
+							notificationsStore.add({
+								title: t({
+									locale: $localeStore,
+									key: 'onboarding.handoff.collision_title'
+								}),
+								message: t({
+									locale: $localeStore,
+									key: 'onboarding.handoff.collision',
+									params: { handle: pending.handle }
+								}),
+								type: 'error'
+							});
+						}
 
 						// Apply interests + email + team/side/completion
-						// even when the handle collides — they're
+						// even when the handle is skipped — they're
 						// independently useful and the user can rename
 						// later.
 						await upsertProfile({
@@ -540,7 +548,22 @@
 						return;
 					}
 
-					nextProfile = { ...baseUpdated, nickname: pending.handle };
+					// Stamp the handle-change time so the set-profile assertion
+					// accepts the write. The satellite requires
+					// `handleLastChangeMs` ≈ now whenever the (normalized)
+					// nickname differs from the stored doc, and rejects a moved
+					// stamp when it is unchanged — so stamp only on a real change.
+					// The bootstrapped nickname almost always differs from the
+					// picked handle, which is the case that was failing.
+					const handleChanged =
+						pending.handle.trim().toLowerCase() !==
+						(currentProfile.nickname ?? '').trim().toLowerCase();
+
+					nextProfile = {
+						...baseUpdated,
+						nickname: pending.handle,
+						...(handleChanged && { handleLastChangeMs: Date.now() })
+					};
 				}
 
 				await upsertProfile({
@@ -558,6 +581,10 @@
 				void joinPendingLeagueIfAny(pending.leagueInvite);
 			} catch (err: unknown) {
 				const message = err instanceof Error ? err.message : '';
+
+				// Surface the real failure — the generic toast below otherwise
+				// swallows it, which is what made this class of bug invisible.
+				console.error('Onboarding handoff (pre-auth drain) failed:', err);
 
 				if (message.includes('already taken')) {
 					notificationsStore.add({

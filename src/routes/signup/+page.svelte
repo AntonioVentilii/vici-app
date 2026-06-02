@@ -183,21 +183,46 @@
 					principal: currentProfile.owner
 				});
 
-				if (!probe.available && probe.reason === 'taken') {
-					notificationsStore.add({
-						title: t({
-							locale: $localeStore,
-							key: 'onboarding.handoff.collision_title'
-						}),
-						message: t({
-							locale: $localeStore,
-							key: 'onboarding.handoff.collision',
-							params: { handle: result.handle }
-						}),
-						type: 'error'
-					});
+				if (!probe.available) {
+					// Any unavailable reason — `'taken'`, or the `'too_short'` /
+					// `'required'` cases that a tolerated legacy payload can still
+					// produce — must SKIP the nickname update. Keeping the
+					// bootstrapped nickname lets the upsert below persist
+					// team/side/completion (the picks that matter), instead of the
+					// satellite rejecting the whole atomic write. Only the
+					// collision case is worth a toast; the user can rename later.
+					if (probe.reason === 'taken') {
+						notificationsStore.add({
+							title: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.collision_title'
+							}),
+							message: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.collision',
+								params: { handle: result.handle }
+							}),
+							type: 'error'
+						});
+					}
 				} else {
-					nextProfile = { ...baseUpdated, nickname: result.handle };
+					// Stamp the handle-change time so the set-profile assertion
+					// accepts the write. The satellite requires `handleLastChangeMs`
+					// ≈ now whenever the (normalized) nickname differs from the
+					// stored doc, and rejects a moved stamp when it is unchanged —
+					// so stamp only on a real change. A brand-new user's
+					// bootstrapped nickname (their OAuth display name / shortened
+					// principal) almost always differs from the handle they pick,
+					// which is exactly the case that was failing.
+					const handleChanged =
+						result.handle.trim().toLowerCase() !==
+						(currentProfile.nickname ?? '').trim().toLowerCase();
+
+					nextProfile = {
+						...baseUpdated,
+						nickname: result.handle,
+						...(handleChanged && { handleLastChangeMs: Date.now() })
+					};
 				}
 			}
 
@@ -214,6 +239,10 @@
 			void goto(resolve(AppPath.Flow), { replaceState: true });
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : '';
+
+			// Surface the real failure — the generic toast below otherwise
+			// swallows it, which is what made this class of bug invisible.
+			console.error('Onboarding handoff (authenticated) failed:', err);
 
 			if (message.includes('already taken')) {
 				notificationsStore.add({
