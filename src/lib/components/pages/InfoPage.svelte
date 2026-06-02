@@ -118,9 +118,8 @@
 	}
 
 	/* Matches the design system's base `h2` size (44 px / weight 600 /
-	   tight leading + tracking). Held at a flat 2.75 rem so it lines up
-	   with the proto on every mobile width — the proto doesn't clamp
-	   this title either, even at 320 px. */
+	   tight leading + tracking). Held at a flat 2.75 rem (not clamped)
+	   so it stays consistent across every mobile width, even at 320 px. */
 	.info-hero-title {
 		flex: 1 1 auto;
 		min-width: 0;
