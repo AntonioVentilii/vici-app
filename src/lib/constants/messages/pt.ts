@@ -688,7 +688,6 @@ export const ptMessages = {
 	'dash.placeholder.positions':
 		'Suas previsões abertas aparecerão aqui assim que você começar a jogar.',
 	'dash.streak.days': '{count} dias',
-	'dash.streak.longest_to_marathon_em': 'Maior — · {count} para Marathon',
 	'dash.title': 'Painel',
 	'dash.accuracy.signed_in_short': 'Bem-vindo, {handle}',
 	'dash.active.vol_calls': '{count} previsões',
@@ -1172,6 +1171,7 @@ export const ptMessages = {
 	'leagues.empty.cta_join': 'Entre com um código',
 	'leagues.empty.quote': '“As ligas são privadas.”',
 	'leagues.eyebrow.founded': 'Suas ligas · Admin',
+	'leagues.eyebrow.friends_in': 'Seus amigos estão aqui',
 	'leagues.eyebrow.joined': 'Ligas em que você está',
 	'leagues.error.generic': 'Não foi possível carregar suas ligas. Tente novamente em instantes.',
 	'leagues.join.cancel': 'Cancelar',

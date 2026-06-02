@@ -219,6 +219,11 @@
 		 *  `<CountryFlag>` rather than the display `value` (name). */
 		affiliationIdentifier: string | null;
 		glyph: string;
+		/** Affiliation brand palette — tints the filled-slot icon in the
+		 *  school's / country's own colour. Absent for roster entries
+		 *  without a curated palette and for the locked placeholders. */
+		color: string | null;
+		text: string | null;
 		locked: boolean;
 		/** Alma Mater verification state — only meaningful on the
 		 *  `university` slot when filled. `null` on every other slot. */
@@ -268,6 +273,8 @@
 				value: uniOption?.name ?? null,
 				affiliationIdentifier: uniOption?.id ?? null,
 				glyph: uniOption?.glyph ?? '+',
+				color: uniOption?.color ?? null,
+				text: uniOption?.text ?? null,
 				locked: false,
 				status: uniOption !== undefined ? schoolStatus : null
 			},
@@ -279,6 +286,8 @@
 				value: countryOption?.name ?? null,
 				affiliationIdentifier: countryOption?.id ?? null,
 				glyph: countryOption?.glyph ?? '+',
+				color: countryOption?.color ?? null,
+				text: countryOption?.text ?? null,
 				locked: false,
 				status: null
 			},
@@ -290,6 +299,8 @@
 				value: null,
 				affiliationIdentifier: null,
 				glyph: '+',
+				color: null,
+				text: null,
 				locked: true,
 				status: null
 			},
@@ -301,6 +312,8 @@
 				value: null,
 				affiliationIdentifier: null,
 				glyph: '+',
+				color: null,
+				text: null,
 				locked: true,
 				status: null
 			}
@@ -516,13 +529,16 @@
 				</div>
 
 				<!-- Row 2: school + country chip(s) BELOW the handle.
-				     Each chip would ideally render in its affiliation's
-				     own accent ("STANFORD" red, country flag tint) —
-				     we don't carry per-school / per-country colours
-				     yet, so we use a laurel-accent stand-in (school)
-				     and a muted pill (country). Archetype tag trails
-				     behind when no affiliations are set, preserving the
-				     "you're an archetype" affordance. -->
+				     Each chip renders in its affiliation's own palette —
+				     the school's brand colour ("STANFORD" red), the
+				     country's national tint — drawn from the roster's
+				     curated `color`/`text` pair (same plumbing the
+				     onboarding affiliation preview uses). Either colour may
+				     be missing for a roster entry, so each chip falls back
+				     to the laurel accent (school) / neutral surface
+				     (country). The archetype tag trails behind when no
+				     affiliations are set, preserving the "you're an
+				     archetype" affordance. -->
 				{#if myUni !== undefined || myCountry !== undefined}
 					{@const uniOption = myUni
 						? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationIdentifier })
@@ -532,13 +548,23 @@
 						: undefined}
 					<div class="profile-affil-chip-row">
 						{#if uniOption}
-							<span class="school-chip">
+							<span
+								style:background={uniOption.color}
+								style:color={uniOption.color ? (uniOption.text ?? '#F2ECDC') : undefined}
+								class="school-chip"
+								class:has-brand={uniOption.color !== undefined}
+							>
 								<span class="school-chip-dot" aria-hidden="true"></span>
 								{uniOption.name.toUpperCase()}
 							</span>
 						{/if}
 						{#if countryOption}
-							<span class="country-chip">
+							<span
+								style:background={countryOption.color}
+								style:color={countryOption.color ? (countryOption.text ?? '#F2ECDC') : undefined}
+								class="country-chip"
+								class:has-brand={countryOption.color !== undefined}
+							>
 								<CountryFlag class="profile-country-flag" countryCode={countryOption.id} />
 								{countryOption.name.toUpperCase()}
 							</span>
@@ -635,7 +661,15 @@
 					onclick={() => handleSlotClick(slot)}
 					type="button"
 				>
-					<span class="affil-slot-icon" aria-hidden="true">
+					<span
+						style:background={slot.filled && slot.kind !== 'country' ? slot.color : undefined}
+						style:color={slot.filled && slot.kind !== 'country' && slot.color
+							? (slot.text ?? '#F2ECDC')
+							: undefined}
+						class="affil-slot-icon"
+						class:has-brand={slot.filled && slot.kind !== 'country' && slot.color !== null}
+						aria-hidden="true"
+					>
 						{#if slot.locked}
 							<Lock size={14} strokeWidth={1.8} />
 						{:else if slot.kind === 'country' && slot.affiliationIdentifier !== null}
@@ -964,11 +998,14 @@
 		margin-top: 0.1rem;
 	}
 
-	/* School + country chips — laurel-accent / muted stand-ins.
-	   Per-school and per-country palettes don't exist in our data
-	   yet, so school chips use the laurel accent and country chips
-	   use a neutral surface tint. Both share the same small
-	   uppercase mono geometry. */
+	/* School + country chips — each tinted in its affiliation's own
+	   palette via inline `background`/`color` (set from the roster's
+	   curated `color`/`text` pair). The class-level rules below are the
+	   fallback for roster entries that carry no brand colour: school
+	   chips fall back to the laurel accent, country chips to a neutral
+	   surface tint. `.has-brand` carries the inset highlight that reads
+	   on a saturated fill. Both share the same small uppercase mono
+	   geometry. */
 	.school-chip,
 	.country-chip {
 		display: inline-flex;
@@ -994,6 +1031,18 @@
 		color: var(--text-base);
 		border: 1px solid var(--border-base);
 		box-shadow: none;
+	}
+
+	/* Brand-tinted chips drop the neutral stand-in chrome — the inline
+	   fill carries the colour, so the country chip sheds its border and
+	   both pick up the same inset highlight the school chip uses. */
+	.country-chip.has-brand {
+		border-color: transparent;
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+	}
+
+	.school-chip.has-brand {
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 	}
 
 	.school-chip-dot {
@@ -1239,6 +1288,14 @@
 	.affil-slot.is-filled .affil-slot-icon {
 		background: color-mix(in srgb, var(--laurel) 18%, var(--bg-surface));
 		color: var(--laurel);
+	}
+
+	/* Brand-tinted slot icon (university with a curated palette) — the
+	   inline `background`/`color` carry the school's own colour, so the
+	   icon just adds the inset highlight that reads on a saturated fill,
+	   overriding the laurel stand-in above. */
+	.affil-slot.is-filled .affil-slot-icon.has-brand {
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 	}
 
 	.affil-slot-label {

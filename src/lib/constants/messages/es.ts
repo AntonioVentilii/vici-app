@@ -688,7 +688,6 @@ export const esMessages = {
 	'dash.placeholder.positions':
 		'Tus predicciones abiertas aparecerán aquí en cuanto empieces a jugar.',
 	'dash.streak.days': '{count} días',
-	'dash.streak.longest_to_marathon_em': 'Más larga — · {count} a Marathon',
 	'dash.title': 'Panel',
 	'dash.accuracy.signed_in_short': 'Hola, {handle}',
 	'dash.active.vol_calls': '{count} predicciones',
@@ -1173,6 +1172,7 @@ export const esMessages = {
 	'leagues.empty.cta_join': 'Únete con un código',
 	'leagues.empty.quote': '“Las ligas son privadas.”',
 	'leagues.eyebrow.founded': 'Tus ligas · Admin',
+	'leagues.eyebrow.friends_in': 'Tus amigos están aquí',
 	'leagues.eyebrow.joined': 'Ligas a las que perteneces',
 	'leagues.error.generic': 'No se pudieron cargar tus ligas. Inténtalo de nuevo en un momento.',
 	'leagues.join.cancel': 'Cancelar',

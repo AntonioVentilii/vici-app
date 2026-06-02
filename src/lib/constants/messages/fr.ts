@@ -694,7 +694,6 @@ export const frMessages = {
 	'dash.placeholder.positions':
 		'Vos pronostics ouverts apparaîtront ici dès que vous commencerez à jouer.',
 	'dash.streak.days': '{count} jours',
-	'dash.streak.longest_to_marathon_em': 'Record — · {count} avant Marathon',
 	'dash.title': 'Tableau de bord',
 	'dash.accuracy.signed_in_short': 'Bienvenue, {handle}',
 	'dash.active.vol_calls': '{count} prédictions',
@@ -1186,6 +1185,7 @@ export const frMessages = {
 	'leagues.empty.cta_join': 'Rejoindre avec un code',
 	'leagues.empty.quote': '“Les ligues sont privées.”',
 	'leagues.eyebrow.founded': 'Tes ligues · Admin',
+	'leagues.eyebrow.friends_in': 'Tes amis y sont',
 	'leagues.eyebrow.joined': 'Tes ligues',
 	'leagues.error.generic': 'Impossible de charger tes ligues. Réessaie dans un instant.',
 	'leagues.join.cancel': 'Annuler',

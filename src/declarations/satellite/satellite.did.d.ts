@@ -8,902 +8,1045 @@
 
 import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
+import type { Principal } from '@icp-sdk/core/principal';
 
-export interface AppAcceptFriendRequestArgs {
-	relation_id: string;
-}
-export interface AppCancelFriendRequestArgs {
-	relation_id: string;
-}
-export interface AppCheckFriendshipArgs {
-	user_a: string;
-	user_b: string;
-}
-export interface AppCheckFriendshipResult {
-	is_friend: boolean;
-}
+export interface AppAcceptFriendRequestArgs { 'relation_id' : string }
+export interface AppCancelFriendRequestArgs { 'relation_id' : string }
+export interface AppCheckFriendshipArgs { 'user_a' : string, 'user_b' : string }
+export interface AppCheckFriendshipResult { 'is_friend' : boolean }
 export interface AppCheckNicknameAvailabilityArgs {
-	nickname: string;
-	exclude_principal_str: string;
+  'nickname' : string,
+  'exclude_principal_str' : string,
 }
 export interface AppCheckNicknameAvailabilityResult {
-	available: boolean;
-	reason: [] | [{ taken: null } | { required: null } | { too_short: null }];
+  'available' : boolean,
+  'reason' : [] | [
+    { 'taken' : null } |
+      { 'required' : null } |
+      { 'too_short' : null }
+  ],
 }
 export interface AppClaimCalibrationRewardArgs {
-	series_id: string;
-	chosen_side: { NO: null } | { YES: null };
+  'series_id' : string,
+  'chosen_side' : { 'NO' : null } |
+    { 'YES' : null },
 }
 export interface AppClaimCalibrationRewardResult {
-	block_index: [] | [string];
-	new_balance_base_units: [] | [string];
-	error_message: [] | [string];
-	correct: boolean;
-	paid_now: boolean;
-	reward_base_units: [] | [string];
-	already_claimed: boolean;
-	reason:
-		| []
-		| [
-				| { not_binary: null }
-				| { not_engaged_yet: null }
-				| { transfer_failed: null }
-				| { rate_limited_daily: null }
-				| { anonymous: null }
-				| { balance_above_floor: null }
-				| { not_finalised: null }
-				| { outcome_undetermined: null }
-				| { not_vici_market: null }
-				| { rate_limited_hourly: null }
-		  ];
+  'block_index' : [] | [string],
+  'new_balance_base_units' : [] | [string],
+  'error_message' : [] | [string],
+  'correct' : boolean,
+  'paid_now' : boolean,
+  'reward_base_units' : [] | [string],
+  'already_claimed' : boolean,
+  'reason' : [] | [
+    { 'not_binary' : null } |
+      { 'not_engaged_yet' : null } |
+      { 'transfer_failed' : null } |
+      { 'rate_limited_daily' : null } |
+      { 'anonymous' : null } |
+      { 'balance_above_floor' : null } |
+      { 'not_finalised' : null } |
+      { 'outcome_undetermined' : null } |
+      { 'not_vici_market' : null } |
+      { 'rate_limited_hourly' : null }
+  ],
 }
-export interface AppClaimReferralFriendshipArgs {
-	code: string;
-}
-export interface AppClaimTournamentPrizeArgs {
-	tournament_id: string;
-}
+export interface AppClaimReferralFriendshipArgs { 'code' : string }
+export interface AppClaimTournamentPrizeArgs { 'tournament_id' : string }
 export interface AppClaimTournamentPrizeResult {
-	ok: boolean;
-	awards_created: [] | [number];
-	awards_already_claimed: [] | [number];
-	total_vxp_credited: [] | [number];
-	reason:
-		| []
-		| [
-				| { tournament_not_found: null }
-				| { tournament_not_concluded: null }
-				| { not_member_of_top_league: null }
-		  ];
+  'ok' : boolean,
+  'awards_created' : [] | [number],
+  'awards_already_claimed' : [] | [number],
+  'total_vxp_credited' : [] | [number],
+  'reason' : [] | [
+    { 'tournament_not_found' : null } |
+      { 'tournament_not_concluded' : null } |
+      { 'not_member_of_top_league' : null }
+  ],
 }
-export interface AppClaimWorldsPodiumPrizeArgs {
-	month_anchor: string;
-}
+export interface AppClaimWorldsPodiumPrizeArgs { 'month_anchor' : string }
 export interface AppClaimWorldsPodiumPrizeResult {
-	month_anchor: string;
-	not_eligible: boolean;
-	awards_created: number;
-	awards_already_claimed: number;
+  'month_anchor' : string,
+  'not_eligible' : boolean,
+  'awards_created' : number,
+  'awards_already_claimed' : number,
 }
 export interface AppDeleteMyAccountArgs {
-	note: string;
-	league_resolutions:
-		| []
-		| [
-				Array<{
-					action: { delete: null } | { transfer: null };
-					league_id: string;
-					transfer_to: [] | [string];
-				}>
-		  ];
-	reason: string;
+  'note' : string,
+  'league_resolutions' : [] | [
+    Array<
+      {
+        'action' : { 'delete' : null } |
+          { 'transfer' : null },
+        'league_id' : string,
+        'transfer_to' : [] | [string],
+      }
+    >
+  ],
+  'reason' : string,
 }
 export interface AppDeleteMyAccountResult {
-	ok: boolean;
-	resolution_reason: [] | [string];
-	blocking_league_ids: [] | [Array<string>];
-	failed_league_id: [] | [string];
-	soft_deleted: [] | [boolean];
-	reason:
-		| []
-		| [
-				| { league_resolution_failed: null }
-				| { owns_non_empty_league: null }
-				| { invalid_input: null }
-		  ];
+  'ok' : boolean,
+  'resolution_reason' : [] | [string],
+  'blocking_league_ids' : [] | [Array<string>],
+  'failed_league_id' : [] | [string],
+  'soft_deleted' : [] | [boolean],
+  'reason' : [] | [
+    { 'league_resolution_failed' : null } |
+      { 'owns_non_empty_league' : null } |
+      { 'invalid_input' : null }
+  ],
 }
-export interface AppFollowUserArgs {
-	target: string;
-}
+export interface AppFollowUserArgs { 'target' : string }
 export interface AppGetAffiliationStatsArgs {
-	kind: { country: null } | { university: null };
-	affiliation_identifier: string;
+  'kind' : { 'country' : null } |
+    { 'university' : null },
+  'affiliation_identifier' : string,
 }
 export interface AppGetAffiliationStatsResult {
-	stats:
-		| []
-		| [
-				{
-					month_anchor: string;
-					kind: { country: null } | { university: null };
-					wins: number;
-					month_wins: number;
-					updated_at_ms: number;
-					total_calls: number;
-					month_total_calls: number;
-					affiliation_identifier: string;
-				}
-		  ];
+  'stats' : [] | [
+    {
+      'month_anchor' : string,
+      'kind' : { 'country' : null } |
+        { 'university' : null },
+      'wins' : number,
+      'month_wins' : number,
+      'updated_at_ms' : number,
+      'total_calls' : number,
+      'month_total_calls' : number,
+      'affiliation_identifier' : string,
+    }
+  ],
 }
 export interface AppGetCurrentTournamentResult {
-	tournament:
-		| []
-		| [
-				{
-					id: string;
-					seeded_league_ids: Array<string>;
-					month_start_ms: number;
-					created_at_ms: number;
-					state: { concluded: null } | { in_flight: null };
-					bracket_size: number;
-					month_end_ms: number;
-				}
-		  ];
-	matches: Array<{
-		winner_league_id: [] | [string];
-		to_league_id: [] | [string];
-		start_ms: number;
-		to_start_calls: [] | [number];
-		to_start_wins: [] | [number];
-		from_league_id: [] | [string];
-		to_acc: [] | [number];
-		from_start_wins: [] | [number];
-		tournament_id: string;
-		from_acc: [] | [number];
-		from_start_calls: [] | [number];
-		index: number;
-		round: { r1: null } | { final: null } | { semifinal: null } | { quarter: null };
-		end_ms: number;
-	}>;
+  'tournament' : [] | [
+    {
+      'id' : string,
+      'seeded_league_ids' : Array<string>,
+      'month_start_ms' : number,
+      'created_at_ms' : number,
+      'state' : { 'concluded' : null } |
+        { 'in_flight' : null },
+      'bracket_size' : number,
+      'month_end_ms' : number,
+    }
+  ],
+  'matches' : Array<
+    {
+      'winner_league_id' : [] | [string],
+      'to_league_id' : [] | [string],
+      'start_ms' : number,
+      'to_start_calls' : [] | [number],
+      'to_start_wins' : [] | [number],
+      'from_league_id' : [] | [string],
+      'to_acc' : [] | [number],
+      'from_start_wins' : [] | [number],
+      'tournament_id' : string,
+      'from_acc' : [] | [number],
+      'from_start_calls' : [] | [number],
+      'index' : number,
+      'round' : { 'r1' : null } |
+        { 'final' : null } |
+        { 'semifinal' : null } |
+        { 'quarter' : null },
+      'end_ms' : number,
+    }
+  >,
 }
-export interface AppGetMarketMetadataArgs {
-	series_id: string;
-}
+export interface AppGetMarketMetadataArgs { 'series_id' : string }
 export interface AppGetMarketMetadataResult {
-	metadata:
-		| []
-		| [
-				{
-					updated_at: number;
-					updated_by: string;
-					suggested: boolean;
-					series_id: string;
-					tags: Array<string>;
-					events: Array<{
-						day: number;
-						dir: { up: null } | { down: null };
-						label: string;
-					}>;
-					why_now:
-						| []
-						| [
-								{
-									kind:
-										| { new: null }
-										| { social: null }
-										| { trending: null }
-										| { closing: null }
-										| { topical: null };
-									text: string;
-								}
-						  ];
-					subtitle: [] | [string];
-				}
-		  ];
+  'metadata' : [] | [
+    {
+      'updated_at' : number,
+      'updated_by' : string,
+      'suggested' : boolean,
+      'series_id' : string,
+      'tags' : Array<string>,
+      'events' : Array<
+        {
+          'day' : number,
+          'dir' : { 'up' : null } |
+            { 'down' : null },
+          'label' : string,
+        }
+      >,
+      'why_now' : [] | [
+        {
+          'kind' : { 'new' : null } |
+            { 'social' : null } |
+            { 'trending' : null } |
+            { 'closing' : null } |
+            { 'topical' : null },
+          'text' : string,
+        }
+      ],
+      'subtitle' : [] | [string],
+    }
+  ],
 }
 export interface AppGetMarketTranslationArgs {
-	series_id: string;
-	locale: string;
+  'series_id' : string,
+  'locale' : string,
 }
 export interface AppGetMarketTranslationResult {
-	translation:
-		| []
-		| [
-				{
-					title: string;
-					updated_at: number;
-					updated_by: string;
-					series_id: string;
-					locale: string;
-					description: string;
-					outcomes: Array<{ id: string; title: string }>;
-				}
-		  ];
+  'translation' : [] | [
+    {
+      'title' : string,
+      'updated_at' : number,
+      'updated_by' : string,
+      'series_id' : string,
+      'locale' : string,
+      'description' : string,
+      'outcomes' : Array<{ 'id' : string, 'title' : string }>,
+    }
+  ],
 }
-export interface AppGetMonthlyLeaderboardArgs {
-	month_anchor: string;
-}
+export interface AppGetMonthlyLeaderboardArgs { 'month_anchor' : string }
 export interface AppGetMonthlyLeaderboardResult {
-	bold_callers: Array<{
-		owner: string;
-		month_wins: number;
-		median_consensus: number;
-		month_calls: number;
-		accuracy: number;
-	}>;
-	items: Array<{
-		placement: number;
-		owner: string;
-		month_wins: number;
-		month_calls: number;
-		accuracy: number;
-	}>;
+  'bold_callers' : Array<
+    {
+      'owner' : string,
+      'month_wins' : number,
+      'median_consensus' : number,
+      'month_calls' : number,
+      'accuracy' : number,
+    }
+  >,
+  'items' : Array<
+    {
+      'placement' : number,
+      'owner' : string,
+      'month_wins' : number,
+      'month_calls' : number,
+      'accuracy' : number,
+    }
+  >,
 }
-export interface AppGetMyReferralCodeResult {
-	code: [] | [string];
-}
-export interface AppGetProfileArgs {
-	principal_str: string;
-}
+export interface AppGetMyReferralCodeResult { 'code' : [] | [string] }
+export interface AppGetProfileArgs { 'principal_str' : string }
 export interface AppGetProfileResult {
-	profile:
-		| []
-		| [
-				{
-					pnl: number;
-					sharpest_eye_best_tier: [] | [string];
-					streak: number;
-					top_decile_streak: number;
-					nickname: string;
-					hibernated_at_ms: [] | [number];
-					daily_goal_date: [] | [string];
-					daily_goal_done: number;
-					contrarian_wins: number;
-					owner: string;
-					interests: Array<string>;
-					role:
-						| []
-						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-					handle_last_change_ms: [] | [number];
-					email: string;
-					level: number;
-					preferences: {
-						favorite_participant_id: string;
-						favorite_side: string;
-						notify: {
-							market_alerts: boolean;
-							friend_activity: boolean;
-							weekly_digest: boolean;
-							streak_reminder: boolean;
-						};
-						haptics_enabled: boolean;
-						sharing: {
-							worlds_opt_in: boolean;
-							leaderboard_opt_in: boolean;
-							calls_public: boolean;
-							profile_visibility: string;
-						};
-						sound_enabled: boolean;
-						onboarding_completed: boolean;
-						default_amount: { flow: string; manual: string };
-						world_cup_mode: boolean;
-						saved_market_ids: Array<string>;
-						flow_tags: Array<string>;
-						flow_session_length: number;
-					};
-					archetype: string;
-					school_status: [] | [string];
-					last_active_day: [] | [string];
-					total_trades: number;
-					last_top_decile_day: [] | [string];
-					win_rate: number;
-					avatar_parts: string;
-					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
-					daily_streak: number;
-					unlocked_achievements: Array<string>;
-					deleted_at_ms: [] | [number];
-					points: number;
-					avatar: string;
-					accuracy: number;
-				}
-		  ];
+  'profile' : [] | [
+    {
+      'pnl' : number,
+      'sharpest_eye_best_tier' : [] | [string],
+      'streak' : number,
+      'top_decile_streak' : number,
+      'nickname' : string,
+      'hibernated_at_ms' : [] | [number],
+      'daily_goal_date' : [] | [string],
+      'daily_goal_done' : number,
+      'contrarian_wins' : number,
+      'owner' : string,
+      'interests' : Array<string>,
+      'role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'handle_last_change_ms' : [] | [number],
+      'email' : string,
+      'level' : number,
+      'preferences' : {
+        'favorite_participant_id' : string,
+        'favorite_side' : string,
+        'notify' : {
+          'market_alerts' : boolean,
+          'friend_activity' : boolean,
+          'weekly_digest' : boolean,
+          'streak_reminder' : boolean,
+        },
+        'haptics_enabled' : boolean,
+        'sharing' : {
+          'worlds_opt_in' : boolean,
+          'leaderboard_opt_in' : boolean,
+          'calls_public' : boolean,
+          'profile_visibility' : string,
+        },
+        'sound_enabled' : boolean,
+        'onboarding_completed' : boolean,
+        'default_amount' : { 'flow' : string, 'manual' : string },
+        'world_cup_mode' : boolean,
+        'saved_market_ids' : Array<string>,
+        'flow_tags' : Array<string>,
+        'flow_session_length' : number,
+      },
+      'longest_streak' : number,
+      'archetype' : string,
+      'school_status' : [] | [string],
+      'last_active_day' : [] | [string],
+      'total_trades' : number,
+      'last_top_decile_day' : [] | [string],
+      'win_rate' : number,
+      'avatar_parts' : string,
+      'visibility' : { 'friends_and_followers' : null } |
+        { 'public' : null } |
+        { 'friends_only' : null },
+      'daily_streak' : number,
+      'unlocked_achievements' : Array<string>,
+      'deleted_at_ms' : [] | [number],
+      'points' : number,
+      'avatar' : string,
+      'accuracy' : number,
+    }
+  ],
 }
-export interface AppGetUserRankAndCountArgs {
-	principal_str: string;
-}
+export interface AppGetUserRankAndCountArgs { 'principal_str' : string }
 export interface AppGetUserRankAndCountResult {
-	count: number;
-	rank: [] | [number];
+  'count' : number,
+  'rank' : [] | [number],
 }
 export interface AppHibernateMyAccountResult {
-	ok: boolean;
-	reason: [] | [{ deleted: null } | { no_profile: null }];
+  'ok' : boolean,
+  'reason' : [] | [{ 'deleted' : null } | { 'no_profile' : null }],
 }
 export interface AppListAffiliationChampionshipsArgs {
-	kind: { country: null } | { university: null };
-	affiliation_identifier: string;
+  'kind' : { 'country' : null } |
+    { 'university' : null },
+  'affiliation_identifier' : string,
 }
 export interface AppListAffiliationChampionshipsResult {
-	items: Array<{
-		month_anchor: string;
-		month_total_calls: number;
-		accuracy: number;
-	}>;
+  'items' : Array<
+    {
+      'month_anchor' : string,
+      'month_total_calls' : number,
+      'accuracy' : number,
+    }
+  >,
 }
 export interface AppListAffiliationStatsArgs {
-	kind: { country: null } | { university: null };
-	limit: [] | [number];
+  'kind' : { 'country' : null } |
+    { 'university' : null },
+  'limit' : [] | [number],
 }
 export interface AppListAffiliationStatsResult {
-	items: Array<{
-		month_anchor: string;
-		kind: { country: null } | { university: null };
-		wins: number;
-		month_wins: number;
-		updated_at_ms: number;
-		total_calls: number;
-		month_total_calls: number;
-		affiliation_identifier: string;
-	}>;
+  'items' : Array<
+    {
+      'month_anchor' : string,
+      'kind' : { 'country' : null } |
+        { 'university' : null },
+      'wins' : number,
+      'month_wins' : number,
+      'updated_at_ms' : number,
+      'total_calls' : number,
+      'month_total_calls' : number,
+      'affiliation_identifier' : string,
+    }
+  >,
 }
 export interface AppListChallengeableLeaguesResult {
-	items: Array<{
-		id: string;
-		accent_color: [] | [string];
-		image_url: [] | [string];
-		owner: string;
-		name: string;
-		invite_code: string;
-		description: [] | [string];
-		emblem: [] | [string];
-		created_at_ms: number;
-		private: boolean;
-	}>;
+  'items' : Array<
+    {
+      'id' : string,
+      'accent_color' : [] | [string],
+      'image_url' : [] | [string],
+      'owner' : string,
+      'name' : string,
+      'invite_code' : string,
+      'description' : [] | [string],
+      'emblem' : [] | [string],
+      'created_at_ms' : number,
+      'private' : boolean,
+    }
+  >,
 }
 export interface AppListFollowersResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
 }
 export interface AppListFollowingResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
+}
+export interface AppListFriendRecommendedLeaguesResult {
+  'items' : Array<
+    {
+      'league' : {
+        'id' : string,
+        'accent_color' : [] | [string],
+        'image_url' : [] | [string],
+        'owner' : string,
+        'name' : string,
+        'invite_code' : string,
+        'description' : [] | [string],
+        'emblem' : [] | [string],
+        'created_at_ms' : number,
+        'private' : boolean,
+      },
+      'friend_members' : Array<string>,
+      'member_count' : number,
+    }
+  >,
 }
 export interface AppListFriendRequestsResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
 }
 export interface AppListFriendsResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
 }
 export interface AppListLeaderboardResult {
-	items: Array<{
-		pnl: number;
-		streak: number;
-		nickname: string;
-		contrarian_wins: number;
-		owner: string;
-		interests: Array<string>;
-		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		email: string;
-		level: number;
-		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
-		archetype: string;
-		last_active_day: [] | [string];
-		total_trades: number;
-		win_rate: number;
-		visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
-		daily_streak: number;
-		unlocked_achievements: Array<string>;
-		points: number;
-		avatar: string;
-		accuracy: number;
-	}>;
+  'items' : Array<
+    {
+      'pnl' : number,
+      'streak' : number,
+      'nickname' : string,
+      'contrarian_wins' : number,
+      'owner' : string,
+      'interests' : Array<string>,
+      'role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'email' : string,
+      'level' : number,
+      'preferences' : [] | [
+        { 'default_amount' : { 'flow' : string, 'manual' : string } }
+      ],
+      'archetype' : string,
+      'last_active_day' : [] | [string],
+      'total_trades' : number,
+      'win_rate' : number,
+      'visibility' : { 'friends_and_followers' : null } |
+        { 'public' : null } |
+        { 'friends_only' : null },
+      'daily_streak' : number,
+      'unlocked_achievements' : Array<string>,
+      'points' : number,
+      'avatar' : string,
+      'accuracy' : number,
+    }
+  >,
 }
-export interface AppListLeagueBattlesArgs {
-	league_id: string;
-}
+export interface AppListLeagueBattlesArgs { 'league_id' : string }
 export interface AppListLeagueBattlesResult {
-	items: Array<{
-		id: string;
-		trash_talk: [] | [string];
-		kind: { duel: null } | { league: null };
-		winner: [] | [{ A: null } | { B: null } | { draw: null }];
-		score_a: [] | [number];
-		score_b: [] | [number];
-		scope: [] | [string];
-		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
-		side_a: string;
-		side_b: string;
-		proposer: string;
-		kickoff_ms: number;
-		wager: [] | [number];
-		settle_ms: number;
-	}>;
+  'items' : Array<
+    {
+      'id' : string,
+      'trash_talk' : [] | [string],
+      'kind' : { 'duel' : null } |
+        { 'league' : null },
+      'winner' : [] | [{ 'A' : null } | { 'B' : null } | { 'draw' : null }],
+      'score_a' : [] | [number],
+      'score_b' : [] | [number],
+      'scope' : [] | [string],
+      'state' : { 'resolved' : null } |
+        { 'proposed' : null } |
+        { 'in_flight' : null } |
+        { 'accepted' : null },
+      'side_a' : string,
+      'side_b' : string,
+      'proposer' : string,
+      'kickoff_ms' : number,
+      'wager' : [] | [number],
+      'settle_ms' : number,
+    }
+  >,
 }
-export interface AppListLeagueMembersArgs {
-	league_id: string;
-}
+export interface AppListLeagueMembersArgs { 'league_id' : string }
 export interface AppListLeagueMembersResult {
-	items: Array<{
-		member: string;
-		league_id: string;
-		role: { member: null } | { admin: null } | { owner: null };
-		joined_at_ms: number;
-	}>;
+  'items' : Array<
+    {
+      'member' : string,
+      'league_id' : string,
+      'role' : { 'member' : null } |
+        { 'admin' : null } |
+        { 'owner' : null },
+      'joined_at_ms' : number,
+    }
+  >,
 }
-export interface AppListMarketTranslationsArgs {
-	series_id: string;
-}
+export interface AppListMarketTranslationsArgs { 'series_id' : string }
 export interface AppListMarketTranslationsResult {
-	items: Array<{
-		title: string;
-		updated_at: number;
-		updated_by: string;
-		series_id: string;
-		locale: string;
-		description: string;
-		outcomes: Array<{ id: string; title: string }>;
-	}>;
+  'items' : Array<
+    {
+      'title' : string,
+      'updated_at' : number,
+      'updated_by' : string,
+      'series_id' : string,
+      'locale' : string,
+      'description' : string,
+      'outcomes' : Array<{ 'id' : string, 'title' : string }>,
+    }
+  >,
 }
 export interface AppListMyAffiliationsResult {
-	country:
-		| []
-		| [
-				{
-					member: string;
-					locked_until_ms: number;
-					kind: { country: null } | { university: null };
-					joined_at_ms: number;
-					affiliation_identifier: string;
-				}
-		  ];
-	university:
-		| []
-		| [
-				{
-					member: string;
-					locked_until_ms: number;
-					kind: { country: null } | { university: null };
-					joined_at_ms: number;
-					affiliation_identifier: string;
-				}
-		  ];
+  'country' : [] | [
+    {
+      'member' : string,
+      'locked_until_ms' : number,
+      'kind' : { 'country' : null } |
+        { 'university' : null },
+      'joined_at_ms' : number,
+      'affiliation_identifier' : string,
+    }
+  ],
+  'university' : [] | [
+    {
+      'member' : string,
+      'locked_until_ms' : number,
+      'kind' : { 'country' : null } |
+        { 'university' : null },
+      'joined_at_ms' : number,
+      'affiliation_identifier' : string,
+    }
+  ],
 }
 export interface AppListMyBattlesResult {
-	items: Array<{
-		id: string;
-		trash_talk: [] | [string];
-		kind: { duel: null } | { league: null };
-		winner: [] | [{ A: null } | { B: null } | { draw: null }];
-		score_a: [] | [number];
-		score_b: [] | [number];
-		scope: [] | [string];
-		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
-		side_a: string;
-		side_b: string;
-		proposer: string;
-		kickoff_ms: number;
-		wager: [] | [number];
-		settle_ms: number;
-	}>;
+  'items' : Array<
+    {
+      'id' : string,
+      'trash_talk' : [] | [string],
+      'kind' : { 'duel' : null } |
+        { 'league' : null },
+      'winner' : [] | [{ 'A' : null } | { 'B' : null } | { 'draw' : null }],
+      'score_a' : [] | [number],
+      'score_b' : [] | [number],
+      'scope' : [] | [string],
+      'state' : { 'resolved' : null } |
+        { 'proposed' : null } |
+        { 'in_flight' : null } |
+        { 'accepted' : null },
+      'side_a' : string,
+      'side_b' : string,
+      'proposer' : string,
+      'kickoff_ms' : number,
+      'wager' : [] | [number],
+      'settle_ms' : number,
+    }
+  >,
 }
-export interface AppListMyBlockingLeaguesResult {
-	league_ids: Array<string>;
-}
+export interface AppListMyBlockingLeaguesResult { 'league_ids' : Array<string> }
 export interface AppListMyLeaguesResult {
-	items: Array<{
-		role: { member: null } | { admin: null } | { owner: null };
-		joined_at_ms: number;
-		league: {
-			id: string;
-			accent_color: [] | [string];
-			image_url: [] | [string];
-			owner: string;
-			name: string;
-			invite_code: string;
-			description: [] | [string];
-			emblem: [] | [string];
-			created_at_ms: number;
-			private: boolean;
-		};
-		member_count: number;
-	}>;
+  'items' : Array<
+    {
+      'role' : { 'member' : null } |
+        { 'admin' : null } |
+        { 'owner' : null },
+      'joined_at_ms' : number,
+      'league' : {
+        'id' : string,
+        'accent_color' : [] | [string],
+        'image_url' : [] | [string],
+        'owner' : string,
+        'name' : string,
+        'invite_code' : string,
+        'description' : [] | [string],
+        'emblem' : [] | [string],
+        'created_at_ms' : number,
+        'private' : boolean,
+      },
+      'member_count' : number,
+    }
+  >,
 }
 export interface AppListMyReferralsResult {
-	items: Array<{
-		within_referrer_cap: boolean;
-		referee_payout: {
-			last_error: [] | [string];
-			status: { none: null } | { owed: null } | { paid: null } | { processing: null };
-			block_index: [] | [string];
-			amount_base_units: string;
-		};
-		referrer: string;
-		code: string;
-		redeemed_at_ms: number;
-		referee: string;
-		referrer_payout: {
-			last_error: [] | [string];
-			status: { none: null } | { owed: null } | { paid: null } | { processing: null };
-			block_index: [] | [string];
-			amount_base_units: string;
-		};
-	}>;
+  'items' : Array<
+    {
+      'within_referrer_cap' : boolean,
+      'referee_payout' : {
+        'last_error' : [] | [string],
+        'status' : { 'none' : null } |
+          { 'owed' : null } |
+          { 'paid' : null } |
+          { 'processing' : null },
+        'block_index' : [] | [string],
+        'amount_base_units' : string,
+      },
+      'referrer' : string,
+      'code' : string,
+      'redeemed_at_ms' : number,
+      'referee' : string,
+      'referrer_payout' : {
+        'last_error' : [] | [string],
+        'status' : { 'none' : null } |
+          { 'owed' : null } |
+          { 'paid' : null } |
+          { 'processing' : null },
+        'block_index' : [] | [string],
+        'amount_base_units' : string,
+      },
+    }
+  >,
 }
 export interface AppListSentFriendRequestsResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
 }
 export interface AppListWorldsMemberCountsArgs {
-	kind: { country: null } | { university: null };
+  'kind' : { 'country' : null } |
+    { 'university' : null },
 }
 export interface AppListWorldsMemberCountsResult {
-	items: Array<{
-		kind: { country: null } | { university: null };
-		member_count: number;
-		affiliation_identifier: string;
-	}>;
+  'items' : Array<
+    {
+      'kind' : { 'country' : null } |
+        { 'university' : null },
+      'member_count' : number,
+      'affiliation_identifier' : string,
+    }
+  >,
 }
 export interface AppListWorldsRosterArgs {
-	kind: { country: null } | { university: null };
-	affiliation_identifier: string;
+  'kind' : { 'country' : null } |
+    { 'university' : null },
+  'affiliation_identifier' : string,
 }
 export interface AppListWorldsRosterResult {
-	items: Array<{
-		member: string;
-		locked_until_ms: number;
-		kind: { country: null } | { university: null };
-		joined_at_ms: number;
-		affiliation_identifier: string;
-	}>;
+  'items' : Array<
+    {
+      'member' : string,
+      'locked_until_ms' : number,
+      'kind' : { 'country' : null } |
+        { 'university' : null },
+      'joined_at_ms' : number,
+      'affiliation_identifier' : string,
+    }
+  >,
 }
-export interface AppLookupLeagueByInviteArgs {
-	invite_code: string;
-}
+export interface AppLookupLeagueByInviteArgs { 'invite_code' : string }
 export interface AppLookupLeagueByInviteResult {
-	league:
-		| []
-		| [
-				{
-					id: string;
-					accent_color: [] | [string];
-					image_url: [] | [string];
-					owner: string;
-					name: string;
-					invite_code: string;
-					description: [] | [string];
-					emblem: [] | [string];
-					created_at_ms: number;
-					private: boolean;
-				}
-		  ];
+  'league' : [] | [
+    {
+      'id' : string,
+      'accent_color' : [] | [string],
+      'image_url' : [] | [string],
+      'owner' : string,
+      'name' : string,
+      'invite_code' : string,
+      'description' : [] | [string],
+      'emblem' : [] | [string],
+      'created_at_ms' : number,
+      'private' : boolean,
+    }
+  ],
 }
-export interface AppLookupReferralCodeArgs {
-	code: string;
-}
-export interface AppLookupReferralCodeResult {
-	owner: [] | [string];
-}
+export interface AppLookupReferralCodeArgs { 'code' : string }
+export interface AppLookupReferralCodeResult { 'owner' : [] | [string] }
 export interface AppRecoverMyAccountResult {
-	ok: boolean;
-	recovered: [] | [boolean];
-	reason: [] | [{ expired: null }];
+  'ok' : boolean,
+  'recovered' : [] | [boolean],
+  'reason' : [] | [{ 'expired' : null }],
 }
-export interface AppRedeemReferralCodeArgs {
-	code: string;
-}
-export interface AppRejectFriendRequestArgs {
-	relation_id: string;
-}
+export interface AppRedeemReferralCodeArgs { 'code' : string }
+export interface AppRejectFriendRequestArgs { 'relation_id' : string }
 export interface AppResolveTournamentRoundArgs {
-	tournament_id: string;
-	round: string;
+  'tournament_id' : string,
+  'round' : string,
 }
 export interface AppResolveTournamentRoundResult {
-	ok: boolean;
-	tournament_concluded: [] | [boolean];
-	matches_resolved: [] | [number];
-	reason:
-		| []
-		| [
-				| { tournament_not_found: null }
-				| { previous_round_not_resolved: null }
-				| { invalid_input: null }
-				| { round_not_yet_closed: null }
-				| { no_matches: null }
-		  ];
+  'ok' : boolean,
+  'tournament_concluded' : [] | [boolean],
+  'matches_resolved' : [] | [number],
+  'reason' : [] | [
+    { 'tournament_not_found' : null } |
+      { 'previous_round_not_resolved' : null } |
+      { 'invalid_input' : null } |
+      { 'round_not_yet_closed' : null } |
+      { 'no_matches' : null }
+  ],
 }
 export interface AppResumeMyAccountResult {
-	ok: boolean;
-	resumed: boolean;
+  'ok' : boolean,
+  'resumed' : boolean,
 }
-export interface AppSearchProfilesArgs {
-	query_str: string;
-}
+export interface AppSearchProfilesArgs { 'query_str' : string }
 export interface AppSearchProfilesResult {
-	items: Array<{
-		pnl: number;
-		streak: number;
-		nickname: string;
-		contrarian_wins: number;
-		owner: string;
-		interests: Array<string>;
-		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		email: string;
-		level: number;
-		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
-		archetype: string;
-		last_active_day: [] | [string];
-		total_trades: number;
-		win_rate: number;
-		visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
-		daily_streak: number;
-		unlocked_achievements: Array<string>;
-		points: number;
-		avatar: string;
-		accuracy: number;
-	}>;
+  'items' : Array<
+    {
+      'pnl' : number,
+      'streak' : number,
+      'nickname' : string,
+      'contrarian_wins' : number,
+      'owner' : string,
+      'interests' : Array<string>,
+      'role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'email' : string,
+      'level' : number,
+      'preferences' : [] | [
+        { 'default_amount' : { 'flow' : string, 'manual' : string } }
+      ],
+      'archetype' : string,
+      'last_active_day' : [] | [string],
+      'total_trades' : number,
+      'win_rate' : number,
+      'visibility' : { 'friends_and_followers' : null } |
+        { 'public' : null } |
+        { 'friends_only' : null },
+      'daily_streak' : number,
+      'unlocked_achievements' : Array<string>,
+      'points' : number,
+      'avatar' : string,
+      'accuracy' : number,
+    }
+  >,
 }
-export interface AppSendFriendRequestArgs {
-	target: string;
-}
-export interface AppSweepExpiredDeletionsResult {
-	swept: number;
-}
+export interface AppSendFriendRequestArgs { 'target' : string }
+export interface AppSweepExpiredDeletionsResult { 'swept' : number }
 export interface AppTransferLeagueOwnershipArgs {
-	new_owner_principal: string;
-	league_id: string;
+  'new_owner_principal' : string,
+  'league_id' : string,
 }
 export interface AppTransferLeagueOwnershipResult {
-	ok: boolean;
-	reason:
-		| []
-		| [
-				| { league_not_found: null }
-				| { new_owner_is_caller: null }
-				| { new_owner_not_member: null }
-				| { not_owner: null }
-				| { invalid_input: null }
-		  ];
+  'ok' : boolean,
+  'reason' : [] | [
+    { 'league_not_found' : null } |
+      { 'new_owner_is_caller' : null } |
+      { 'new_owner_not_member' : null } |
+      { 'not_owner' : null } |
+      { 'invalid_input' : null }
+  ],
 }
-export interface AppTriggerTournamentDrawArgs {
-	month_anchor: string;
-}
+export interface AppTriggerTournamentDrawArgs { 'month_anchor' : string }
 export interface AppTriggerTournamentDrawResult {
-	ok: boolean;
-	available_leagues: [] | [number];
-	tournament_id: [] | [string];
-	reason:
-		| []
-		| [
-				| { insufficient_leagues: null }
-				| { already_drawn: null }
-				| { invalid_input: null }
-				| { month_not_started: null }
-		  ];
+  'ok' : boolean,
+  'available_leagues' : [] | [number],
+  'tournament_id' : [] | [string],
+  'reason' : [] | [
+    { 'insufficient_leagues' : null } |
+      { 'already_drawn' : null } |
+      { 'invalid_input' : null } |
+      { 'month_not_started' : null }
+  ],
 }
 export interface AppUpsertMarketMetadataArgs {
-	data: {
-		suggested: boolean;
-		tags: Array<string>;
-		events: Array<{
-			day: number;
-			dir: { up: null } | { down: null };
-			label: string;
-		}>;
-		why_now:
-			| []
-			| [
-					{
-						kind:
-							| { new: null }
-							| { social: null }
-							| { trending: null }
-							| { closing: null }
-							| { topical: null };
-						text: string;
-					}
-			  ];
-		subtitle: [] | [string];
-	};
-	series_id: string;
+  'data' : {
+    'suggested' : boolean,
+    'tags' : Array<string>,
+    'events' : Array<
+      {
+        'day' : number,
+        'dir' : { 'up' : null } |
+          { 'down' : null },
+        'label' : string,
+      }
+    >,
+    'why_now' : [] | [
+      {
+        'kind' : { 'new' : null } |
+          { 'social' : null } |
+          { 'trending' : null } |
+          { 'closing' : null } |
+          { 'topical' : null },
+        'text' : string,
+      }
+    ],
+    'subtitle' : [] | [string],
+  },
+  'series_id' : string,
 }
 export interface AppUpsertMarketMetadataResult {
-	metadata: {
-		updated_at: number;
-		updated_by: string;
-		suggested: boolean;
-		series_id: string;
-		tags: Array<string>;
-		events: Array<{
-			day: number;
-			dir: { up: null } | { down: null };
-			label: string;
-		}>;
-		why_now:
-			| []
-			| [
-					{
-						kind:
-							| { new: null }
-							| { social: null }
-							| { trending: null }
-							| { closing: null }
-							| { topical: null };
-						text: string;
-					}
-			  ];
-		subtitle: [] | [string];
-	};
+  'metadata' : {
+    'updated_at' : number,
+    'updated_by' : string,
+    'suggested' : boolean,
+    'series_id' : string,
+    'tags' : Array<string>,
+    'events' : Array<
+      {
+        'day' : number,
+        'dir' : { 'up' : null } |
+          { 'down' : null },
+        'label' : string,
+      }
+    >,
+    'why_now' : [] | [
+      {
+        'kind' : { 'new' : null } |
+          { 'social' : null } |
+          { 'trending' : null } |
+          { 'closing' : null } |
+          { 'topical' : null },
+        'text' : string,
+      }
+    ],
+    'subtitle' : [] | [string],
+  },
 }
 export interface AppUpsertMarketTranslationArgs {
-	data: {
-		title: string;
-		description: string;
-		outcomes: Array<{ id: string; title: string }>;
-	};
-	series_id: string;
-	locale: string;
+  'data' : {
+    'title' : string,
+    'description' : string,
+    'outcomes' : Array<{ 'id' : string, 'title' : string }>,
+  },
+  'series_id' : string,
+  'locale' : string,
 }
 export interface AppUpsertMarketTranslationResult {
-	translation: {
-		title: string;
-		updated_at: number;
-		updated_by: string;
-		series_id: string;
-		locale: string;
-		description: string;
-		outcomes: Array<{ id: string; title: string }>;
-	};
+  'translation' : {
+    'title' : string,
+    'updated_at' : number,
+    'updated_by' : string,
+    'series_id' : string,
+    'locale' : string,
+    'description' : string,
+    'outcomes' : Array<{ 'id' : string, 'title' : string }>,
+  },
 }
 export interface _SERVICE {
-	app_accept_friend_request: ActorMethod<[AppAcceptFriendRequestArgs], undefined>;
-	app_cancel_friend_request: ActorMethod<[AppCancelFriendRequestArgs], undefined>;
-	app_check_friendship: ActorMethod<[AppCheckFriendshipArgs], AppCheckFriendshipResult>;
-	app_check_nickname_availability: ActorMethod<
-		[AppCheckNicknameAvailabilityArgs],
-		AppCheckNicknameAvailabilityResult
-	>;
-	app_claim_calibration_reward: ActorMethod<
-		[AppClaimCalibrationRewardArgs],
-		AppClaimCalibrationRewardResult
-	>;
-	app_claim_referral_friendship: ActorMethod<[AppClaimReferralFriendshipArgs], undefined>;
-	app_claim_tournament_prize: ActorMethod<
-		[AppClaimTournamentPrizeArgs],
-		AppClaimTournamentPrizeResult
-	>;
-	app_claim_worlds_podium_prize: ActorMethod<
-		[AppClaimWorldsPodiumPrizeArgs],
-		AppClaimWorldsPodiumPrizeResult
-	>;
-	app_delete_my_account: ActorMethod<[AppDeleteMyAccountArgs], AppDeleteMyAccountResult>;
-	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
-	app_get_affiliation_stats: ActorMethod<
-		[AppGetAffiliationStatsArgs],
-		AppGetAffiliationStatsResult
-	>;
-	app_get_current_tournament: ActorMethod<[], AppGetCurrentTournamentResult>;
-	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
-	app_get_market_translation: ActorMethod<
-		[AppGetMarketTranslationArgs],
-		AppGetMarketTranslationResult
-	>;
-	app_get_monthly_leaderboard: ActorMethod<
-		[AppGetMonthlyLeaderboardArgs],
-		AppGetMonthlyLeaderboardResult
-	>;
-	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
-	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
-	app_get_user_rank_and_count: ActorMethod<
-		[AppGetUserRankAndCountArgs],
-		AppGetUserRankAndCountResult
-	>;
-	app_hibernate_my_account: ActorMethod<[], AppHibernateMyAccountResult>;
-	app_list_affiliation_championships: ActorMethod<
-		[AppListAffiliationChampionshipsArgs],
-		AppListAffiliationChampionshipsResult
-	>;
-	app_list_affiliation_stats: ActorMethod<
-		[AppListAffiliationStatsArgs],
-		AppListAffiliationStatsResult
-	>;
-	app_list_challengeable_leagues: ActorMethod<[], AppListChallengeableLeaguesResult>;
-	app_list_followers: ActorMethod<[], AppListFollowersResult>;
-	app_list_following: ActorMethod<[], AppListFollowingResult>;
-	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
-	app_list_friends: ActorMethod<[], AppListFriendsResult>;
-	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;
-	app_list_league_battles: ActorMethod<[AppListLeagueBattlesArgs], AppListLeagueBattlesResult>;
-	app_list_league_members: ActorMethod<[AppListLeagueMembersArgs], AppListLeagueMembersResult>;
-	app_list_market_translations: ActorMethod<
-		[AppListMarketTranslationsArgs],
-		AppListMarketTranslationsResult
-	>;
-	app_list_my_affiliations: ActorMethod<[], AppListMyAffiliationsResult>;
-	app_list_my_battles: ActorMethod<[], AppListMyBattlesResult>;
-	app_list_my_blocking_leagues: ActorMethod<[], AppListMyBlockingLeaguesResult>;
-	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
-	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
-	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
-	app_list_worlds_member_counts: ActorMethod<
-		[AppListWorldsMemberCountsArgs],
-		AppListWorldsMemberCountsResult
-	>;
-	app_list_worlds_roster: ActorMethod<[AppListWorldsRosterArgs], AppListWorldsRosterResult>;
-	app_lookup_league_by_invite: ActorMethod<
-		[AppLookupLeagueByInviteArgs],
-		AppLookupLeagueByInviteResult
-	>;
-	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
-	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;
-	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
-	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
-	app_resolve_tournament_round: ActorMethod<
-		[AppResolveTournamentRoundArgs],
-		AppResolveTournamentRoundResult
-	>;
-	app_resume_my_account: ActorMethod<[], AppResumeMyAccountResult>;
-	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
-	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
-	app_sweep_expired_deletions: ActorMethod<[], AppSweepExpiredDeletionsResult>;
-	app_transfer_league_ownership: ActorMethod<
-		[AppTransferLeagueOwnershipArgs],
-		AppTransferLeagueOwnershipResult
-	>;
-	app_trigger_tournament_draw: ActorMethod<
-		[AppTriggerTournamentDrawArgs],
-		AppTriggerTournamentDrawResult
-	>;
-	app_upsert_market_metadata: ActorMethod<
-		[AppUpsertMarketMetadataArgs],
-		AppUpsertMarketMetadataResult
-	>;
-	app_upsert_market_translation: ActorMethod<
-		[AppUpsertMarketTranslationArgs],
-		AppUpsertMarketTranslationResult
-	>;
+  'app_accept_friend_request' : ActorMethod<
+    [AppAcceptFriendRequestArgs],
+    undefined
+  >,
+  'app_cancel_friend_request' : ActorMethod<
+    [AppCancelFriendRequestArgs],
+    undefined
+  >,
+  'app_check_friendship' : ActorMethod<
+    [AppCheckFriendshipArgs],
+    AppCheckFriendshipResult
+  >,
+  'app_check_nickname_availability' : ActorMethod<
+    [AppCheckNicknameAvailabilityArgs],
+    AppCheckNicknameAvailabilityResult
+  >,
+  'app_claim_calibration_reward' : ActorMethod<
+    [AppClaimCalibrationRewardArgs],
+    AppClaimCalibrationRewardResult
+  >,
+  'app_claim_referral_friendship' : ActorMethod<
+    [AppClaimReferralFriendshipArgs],
+    undefined
+  >,
+  'app_claim_tournament_prize' : ActorMethod<
+    [AppClaimTournamentPrizeArgs],
+    AppClaimTournamentPrizeResult
+  >,
+  'app_claim_worlds_podium_prize' : ActorMethod<
+    [AppClaimWorldsPodiumPrizeArgs],
+    AppClaimWorldsPodiumPrizeResult
+  >,
+  'app_delete_my_account' : ActorMethod<
+    [AppDeleteMyAccountArgs],
+    AppDeleteMyAccountResult
+  >,
+  'app_follow_user' : ActorMethod<[AppFollowUserArgs], undefined>,
+  'app_get_affiliation_stats' : ActorMethod<
+    [AppGetAffiliationStatsArgs],
+    AppGetAffiliationStatsResult
+  >,
+  'app_get_current_tournament' : ActorMethod<[], AppGetCurrentTournamentResult>,
+  'app_get_market_metadata' : ActorMethod<
+    [AppGetMarketMetadataArgs],
+    AppGetMarketMetadataResult
+  >,
+  'app_get_market_translation' : ActorMethod<
+    [AppGetMarketTranslationArgs],
+    AppGetMarketTranslationResult
+  >,
+  'app_get_monthly_leaderboard' : ActorMethod<
+    [AppGetMonthlyLeaderboardArgs],
+    AppGetMonthlyLeaderboardResult
+  >,
+  'app_get_my_referral_code' : ActorMethod<[], AppGetMyReferralCodeResult>,
+  'app_get_profile' : ActorMethod<[AppGetProfileArgs], AppGetProfileResult>,
+  'app_get_user_rank_and_count' : ActorMethod<
+    [AppGetUserRankAndCountArgs],
+    AppGetUserRankAndCountResult
+  >,
+  'app_hibernate_my_account' : ActorMethod<[], AppHibernateMyAccountResult>,
+  'app_list_affiliation_championships' : ActorMethod<
+    [AppListAffiliationChampionshipsArgs],
+    AppListAffiliationChampionshipsResult
+  >,
+  'app_list_affiliation_stats' : ActorMethod<
+    [AppListAffiliationStatsArgs],
+    AppListAffiliationStatsResult
+  >,
+  'app_list_challengeable_leagues' : ActorMethod<
+    [],
+    AppListChallengeableLeaguesResult
+  >,
+  'app_list_followers' : ActorMethod<[], AppListFollowersResult>,
+  'app_list_following' : ActorMethod<[], AppListFollowingResult>,
+  'app_list_friend_recommended_leagues' : ActorMethod<
+    [],
+    AppListFriendRecommendedLeaguesResult
+  >,
+  'app_list_friend_requests' : ActorMethod<[], AppListFriendRequestsResult>,
+  'app_list_friends' : ActorMethod<[], AppListFriendsResult>,
+  'app_list_leaderboard' : ActorMethod<[], AppListLeaderboardResult>,
+  'app_list_league_battles' : ActorMethod<
+    [AppListLeagueBattlesArgs],
+    AppListLeagueBattlesResult
+  >,
+  'app_list_league_members' : ActorMethod<
+    [AppListLeagueMembersArgs],
+    AppListLeagueMembersResult
+  >,
+  'app_list_market_translations' : ActorMethod<
+    [AppListMarketTranslationsArgs],
+    AppListMarketTranslationsResult
+  >,
+  'app_list_my_affiliations' : ActorMethod<[], AppListMyAffiliationsResult>,
+  'app_list_my_battles' : ActorMethod<[], AppListMyBattlesResult>,
+  'app_list_my_blocking_leagues' : ActorMethod<
+    [],
+    AppListMyBlockingLeaguesResult
+  >,
+  'app_list_my_leagues' : ActorMethod<[], AppListMyLeaguesResult>,
+  'app_list_my_referrals' : ActorMethod<[], AppListMyReferralsResult>,
+  'app_list_sent_friend_requests' : ActorMethod<
+    [],
+    AppListSentFriendRequestsResult
+  >,
+  'app_list_worlds_member_counts' : ActorMethod<
+    [AppListWorldsMemberCountsArgs],
+    AppListWorldsMemberCountsResult
+  >,
+  'app_list_worlds_roster' : ActorMethod<
+    [AppListWorldsRosterArgs],
+    AppListWorldsRosterResult
+  >,
+  'app_lookup_league_by_invite' : ActorMethod<
+    [AppLookupLeagueByInviteArgs],
+    AppLookupLeagueByInviteResult
+  >,
+  'app_lookup_referral_code' : ActorMethod<
+    [AppLookupReferralCodeArgs],
+    AppLookupReferralCodeResult
+  >,
+  'app_recover_my_account' : ActorMethod<[], AppRecoverMyAccountResult>,
+  'app_redeem_referral_code' : ActorMethod<
+    [AppRedeemReferralCodeArgs],
+    undefined
+  >,
+  'app_reject_friend_request' : ActorMethod<
+    [AppRejectFriendRequestArgs],
+    undefined
+  >,
+  'app_resolve_tournament_round' : ActorMethod<
+    [AppResolveTournamentRoundArgs],
+    AppResolveTournamentRoundResult
+  >,
+  'app_resume_my_account' : ActorMethod<[], AppResumeMyAccountResult>,
+  'app_search_profiles' : ActorMethod<
+    [AppSearchProfilesArgs],
+    AppSearchProfilesResult
+  >,
+  'app_send_friend_request' : ActorMethod<
+    [AppSendFriendRequestArgs],
+    undefined
+  >,
+  'app_sweep_expired_deletions' : ActorMethod<
+    [],
+    AppSweepExpiredDeletionsResult
+  >,
+  'app_transfer_league_ownership' : ActorMethod<
+    [AppTransferLeagueOwnershipArgs],
+    AppTransferLeagueOwnershipResult
+  >,
+  'app_trigger_tournament_draw' : ActorMethod<
+    [AppTriggerTournamentDrawArgs],
+    AppTriggerTournamentDrawResult
+  >,
+  'app_upsert_market_metadata' : ActorMethod<
+    [AppUpsertMarketMetadataArgs],
+    AppUpsertMarketMetadataResult
+  >,
+  'app_upsert_market_translation' : ActorMethod<
+    [AppUpsertMarketTranslationArgs],
+    AppUpsertMarketTranslationResult
+  >,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

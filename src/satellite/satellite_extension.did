@@ -31,7 +31,7 @@ type AppGetMyReferralCodeResult = record { code : opt text };
 
 type AppGetProfileArgs = record { principal_str : text };
 
-type AppGetProfileResult = record { profile : opt record { owner : text; nickname : text; avatar : text; avatar_parts : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; daily_goal_done : float64; daily_goal_date : opt text; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; deleted_at_ms : opt float64; hibernated_at_ms : opt float64; unlocked_achievements : vec text; contrarian_wins : float64; top_decile_streak : float64; last_top_decile_day : opt text; sharpest_eye_best_tier : opt text; school_status : opt text; handle_last_change_ms : opt float64; preferences : record { default_amount : record { flow : text; manual : text }; notify : record { streak_reminder : bool; market_alerts : bool; friend_activity : bool; weekly_digest : bool }; flow_session_length : float64; haptics_enabled : bool; sound_enabled : bool; sharing : record { profile_visibility : text; calls_public : bool; leaderboard_opt_in : bool; worlds_opt_in : bool }; flow_tags : vec text; world_cup_mode : bool; saved_market_ids : vec text; favorite_participant_id : text; favorite_side : text; onboarding_completed : bool } } };
+type AppGetProfileResult = record { profile : opt record { owner : text; nickname : text; avatar : text; avatar_parts : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; longest_streak : float64; daily_goal_done : float64; daily_goal_date : opt text; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; deleted_at_ms : opt float64; hibernated_at_ms : opt float64; unlocked_achievements : vec text; contrarian_wins : float64; top_decile_streak : float64; last_top_decile_day : opt text; sharpest_eye_best_tier : opt text; school_status : opt text; handle_last_change_ms : opt float64; preferences : record { default_amount : record { flow : text; manual : text }; notify : record { streak_reminder : bool; market_alerts : bool; friend_activity : bool; weekly_digest : bool }; flow_session_length : float64; haptics_enabled : bool; sound_enabled : bool; sharing : record { profile_visibility : text; calls_public : bool; leaderboard_opt_in : bool; worlds_opt_in : bool }; flow_tags : vec text; world_cup_mode : bool; saved_market_ids : vec text; favorite_participant_id : text; favorite_side : text; onboarding_completed : bool } } };
 
 type AppGetUserRankAndCountArgs = record { principal_str : text };
 
@@ -50,6 +50,8 @@ type AppListChallengeableLeaguesResult = record { items : vec record { id : text
 type AppListFollowersResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
 type AppListFollowingResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
+
+type AppListFriendRecommendedLeaguesResult = record { items : vec record { league : record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; emblem : opt text; private : bool; image_url : opt text }; member_count : float64; friend_members : vec text } };
 
 type AppListFriendRequestsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
@@ -175,6 +177,7 @@ service : {
 	app_list_challengeable_leagues : () -> (AppListChallengeableLeaguesResult) query;
 	app_list_followers : () -> (AppListFollowersResult) query;
 	app_list_following : () -> (AppListFollowingResult) query;
+	app_list_friend_recommended_leagues : () -> (AppListFriendRecommendedLeaguesResult) query;
 	app_list_friend_requests : () -> (AppListFriendRequestsResult) query;
 	app_list_friends : () -> (AppListFriendsResult) query;
 	app_list_leaderboard : () -> (AppListLeaderboardResult) query;

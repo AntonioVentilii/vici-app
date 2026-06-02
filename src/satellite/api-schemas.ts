@@ -28,6 +28,11 @@ export const UserProfileApiSchema = j.strictObject({
 	totalTrades: j.number().default(0),
 	winRate: j.number().default(0),
 	dailyStreak: j.number().default(0),
+	// Best daily-streak ever reached — running `max(longestStreak,
+	// dailyStreak)`. Defaults to 0 so legacy rows decode without a
+	// migration. Mirror any change here in
+	// `src/lib/schema/profile.schema.ts`.
+	longestStreak: j.number().default(0),
 	streak: j.number().default(0),
 	accuracy: j.number().default(0),
 	points: j.number().default(0),

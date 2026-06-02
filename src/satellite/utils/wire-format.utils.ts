@@ -214,9 +214,11 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	totalTrades: profile.total_trades,
 	winRate: profile.win_rate,
 	dailyStreak: profile.daily_streak,
-	// Daily goal isn't carried on the leaderboard / search wire (those
-	// surfaces don't read it), so default it like the other non-wire
-	// fields below to keep the rebuilt UserProfile fully shaped.
+	// `longestStreak` / daily goal aren't carried on the leaderboard /
+	// search wire (those surfaces don't read them), so default them like
+	// the other non-wire fields below to keep the rebuilt UserProfile fully
+	// shaped.
+	longestStreak: 0,
 	dailyGoalDone: 0,
 	streak: profile.streak,
 	accuracy: profile.accuracy,
@@ -518,6 +520,24 @@ export const toWireLeagueWithRole = (entry: {
 	role: entry.role,
 	joined_at_ms: entry.joinedAtMs,
 	member_count: entry.memberCount
+});
+
+export const FriendRecommendedLeagueWireSchema = j.strictObject({
+	league: LeagueWireSchema,
+	member_count: j.number().default(1),
+	friend_members: j.array(PrincipalTextSchema)
+});
+
+export type WireFriendRecommendedLeague = j.infer<typeof FriendRecommendedLeagueWireSchema>;
+
+export const toWireFriendRecommendedLeague = (entry: {
+	league: Parameters<typeof toWireLeague>[0];
+	memberCount: number;
+	friendMembers: string[];
+}): WireFriendRecommendedLeague => ({
+	league: toWireLeague(entry.league),
+	member_count: entry.memberCount,
+	friend_members: entry.friendMembers
 });
 
 export const toWireLeagueMember = (member: {
