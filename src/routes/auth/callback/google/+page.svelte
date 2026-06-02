@@ -2,6 +2,8 @@
 	import { handleRedirectCallback } from '@junobuild/core';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -11,7 +13,12 @@
 				google: null
 			});
 
-			await goto('/', { replaceState: true });
+			// Land the freshly authenticated session straight on Flow —
+			// the canonical first surface for every authenticated session
+			// (see #421). Routing through `/` here would double-bounce
+			// (`/` → `/flow`) and risk a transient marketing / markets
+			// paint before the root gate re-runs.
+			await goto(resolve(AppPath.Flow), { replaceState: true });
 		} catch (err: unknown) {
 			console.error('Failed to finish Google sign-in:', err);
 
