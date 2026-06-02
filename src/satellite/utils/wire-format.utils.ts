@@ -522,6 +522,24 @@ export const toWireLeagueWithRole = (entry: {
 	member_count: entry.memberCount
 });
 
+export const FriendRecommendedLeagueWireSchema = j.strictObject({
+	league: LeagueWireSchema,
+	member_count: j.number().default(1),
+	friend_members: j.array(PrincipalTextSchema)
+});
+
+export type WireFriendRecommendedLeague = j.infer<typeof FriendRecommendedLeagueWireSchema>;
+
+export const toWireFriendRecommendedLeague = (entry: {
+	league: Parameters<typeof toWireLeague>[0];
+	memberCount: number;
+	friendMembers: string[];
+}): WireFriendRecommendedLeague => ({
+	league: toWireLeague(entry.league),
+	member_count: entry.memberCount,
+	friend_members: entry.friendMembers
+});
+
 export const toWireLeagueMember = (member: {
 	leagueId: string;
 	member: string;

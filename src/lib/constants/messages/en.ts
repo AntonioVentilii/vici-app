@@ -1152,6 +1152,7 @@ export const enMessages = {
 	'leagues.empty.cta_join': 'Join with code',
 	'leagues.empty.quote': '“Leagues are private.”',
 	'leagues.eyebrow.founded': 'Your leagues · Admin',
+	'leagues.eyebrow.friends_in': 'Friends are in',
 	'leagues.eyebrow.joined': "Leagues you're in",
 	'leagues.error.generic': 'Could not load your leagues. Try again in a moment.',
 	'leagues.join.cancel': 'Cancel',

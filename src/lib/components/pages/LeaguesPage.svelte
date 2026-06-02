@@ -13,6 +13,7 @@
 	import type { LeagueWithRole } from '$lib/services/leagues.services';
 	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
 	import {
+		friendRecommendedLeaguesStore,
 		leagueBattlesStore,
 		leagueMembersStore,
 		leaguesErrorStore,
@@ -128,6 +129,12 @@
 	const founded = $derived(rows.filter((r) => r.role === 'owner'));
 	const joined = $derived(rows.filter((r) => r.role !== 'owner'));
 
+	// "Friends are in" — public leagues the caller's confirmed friends are
+	// in but the caller is not. Capped at two so the row stays a discovery
+	// nudge at the foot of the list, not a directory.
+	const FRIEND_RECS_LIMIT = 2;
+	const recommendations = $derived($friendRecommendedLeaguesStore.slice(0, FRIEND_RECS_LIMIT));
+
 	/**
 	 * For each league, derive a friend-overlap summary using the
 	 * `friendPrincipals` set + the prefetched profile cache. Falls
@@ -136,9 +143,19 @@
 	 */
 	const friendOverlapFor = (
 		row: LeagueRow
-	): { handle: string; count: number; principals: string[] } | undefined => {
-		const overlap = row.members.filter((m) => friendPrincipals.has(m));
+	): { handle: string; count: number; principals: string[] } | undefined =>
+		friendOverlapFromPrincipals(row.members.filter((m) => friendPrincipals.has(m)));
 
+	/**
+	 * Build a friend-overlap summary from an already-resolved list of
+	 * friend principals (the league members who are friends of the
+	 * viewer). Shared by the membership cards (which derive the overlap
+	 * from the full roster) and the recommendation cards (where the
+	 * satellite already returns the overlap directly).
+	 */
+	const friendOverlapFromPrincipals = (
+		overlap: string[]
+	): { handle: string; count: number; principals: string[] } | undefined => {
 		if (overlap.length === 0) {
 			return;
 		}
@@ -340,11 +357,26 @@
 			</li>
 		</ul>
 
-		<!-- "Friends are in" recommendations section is deferred:
-		     the satellite has no public listing for leagues the
-		     caller isn't already in, so we can't compute the
-		     "friends here, you're not" overlap without scanning the
-		     full collection. Tracked in the parity audit. -->
+		{#if recommendations.length > 0}
+			<section class="leagues-section">
+				<h2 class="leagues-eyebrow allcaps">
+					{t({ locale: $localeStore, key: 'leagues.eyebrow.friends_in' })}
+				</h2>
+				<ul class="leagues-list">
+					{#each recommendations as rec (rec.league.id)}
+						<li>
+							<LeagueListCard
+								friendOverlap={friendOverlapFromPrincipals(rec.friendMembers)}
+								isRecommendation
+								league={rec.league}
+								memberCount={rec.memberCount}
+								onclick={() => handleCardClick(rec.league.id)}
+							/>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
 	{/if}
 </div>
 

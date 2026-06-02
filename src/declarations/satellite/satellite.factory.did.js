@@ -428,6 +428,26 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListFriendRecommendedLeaguesResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				league: IDL.Record({
+					id: IDL.Text,
+					accent_color: IDL.Opt(IDL.Text),
+					image_url: IDL.Opt(IDL.Text),
+					owner: IDL.Text,
+					name: IDL.Text,
+					invite_code: IDL.Text,
+					description: IDL.Opt(IDL.Text),
+					emblem: IDL.Opt(IDL.Text),
+					created_at_ms: IDL.Float64,
+					private: IDL.Bool
+				}),
+				friend_members: IDL.Vec(IDL.Text),
+				member_count: IDL.Float64
+			})
+		)
+	});
 	const AppListFriendRequestsResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
@@ -1019,6 +1039,11 @@ export const idlFactory = ({ IDL }) => {
 		app_list_challengeable_leagues: IDL.Func([], [AppListChallengeableLeaguesResult], ['query']),
 		app_list_followers: IDL.Func([], [AppListFollowersResult], ['query']),
 		app_list_following: IDL.Func([], [AppListFollowingResult], ['query']),
+		app_list_friend_recommended_leagues: IDL.Func(
+			[],
+			[AppListFriendRecommendedLeaguesResult],
+			['query']
+		),
 		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),
 		app_list_friends: IDL.Func([], [AppListFriendsResult], ['query']),
 		app_list_leaderboard: IDL.Func([], [AppListLeaderboardResult], ['query']),

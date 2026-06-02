@@ -384,6 +384,24 @@ export interface AppListFollowingResult {
 		viewer_principal: [] | [string];
 	}>;
 }
+export interface AppListFriendRecommendedLeaguesResult {
+	items: Array<{
+		league: {
+			id: string;
+			accent_color: [] | [string];
+			image_url: [] | [string];
+			owner: string;
+			name: string;
+			invite_code: string;
+			description: [] | [string];
+			emblem: [] | [string];
+			created_at_ms: number;
+			private: boolean;
+		};
+		friend_members: Array<string>;
+		member_count: number;
+	}>;
+}
 export interface AppListFriendRequestsResult {
 	items: Array<{
 		viewer_role:
@@ -852,6 +870,7 @@ export interface _SERVICE {
 	app_list_challengeable_leagues: ActorMethod<[], AppListChallengeableLeaguesResult>;
 	app_list_followers: ActorMethod<[], AppListFollowersResult>;
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
+	app_list_friend_recommended_leagues: ActorMethod<[], AppListFriendRecommendedLeaguesResult>;
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
 	app_list_friends: ActorMethod<[], AppListFriendsResult>;
 	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;

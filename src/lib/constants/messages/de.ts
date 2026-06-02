@@ -1180,6 +1180,7 @@ export const deMessages = {
 	'leagues.empty.cta_join': 'Mit Code beitreten',
 	'leagues.empty.quote': '“Ligen sind privat.”',
 	'leagues.eyebrow.founded': 'Deine Ligen · Admin',
+	'leagues.eyebrow.friends_in': 'Freunde sind dabei',
 	'leagues.eyebrow.joined': 'Deine Mitgliedschaften',
 	'leagues.error.generic':
 		'Deine Ligen konnten nicht geladen werden. Versuche es gleich noch einmal.',
