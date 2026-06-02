@@ -3387,31 +3387,38 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
  * Country roster — ISO-3166 alpha-2 ids, emoji flags. Tracks the
  * top ~24 countries by predicted active-user volume; future expansion
  * is an additions-only change (no satellite migration needed).
+ *
+ * Each entry carries a curated national-flag-derived `color` (the
+ * country's dominant flag hue) plus a `text` foreground tuned for
+ * contrast over it, so the profile affiliation chip + filled-slot tile
+ * can render in the country's own palette (same `color`/`text` shape as
+ * the university roster). `text` is the cream `#F2ECDC` over dark/saturated
+ * fields and near-black `#0E0D0B` over light ones.
  */
 export const WORLDS_COUNTRIES: readonly WorldsAffiliationOption[] = [
-	{ id: 'AR', name: 'Argentina', glyph: '🇦🇷' },
-	{ id: 'AU', name: 'Australia', glyph: '🇦🇺' },
-	{ id: 'BR', name: 'Brazil', glyph: '🇧🇷' },
-	{ id: 'CA', name: 'Canada', glyph: '🇨🇦' },
-	{ id: 'CH', name: 'Switzerland', glyph: '🇨🇭' },
-	{ id: 'CN', name: 'China', glyph: '🇨🇳' },
-	{ id: 'DE', name: 'Germany', glyph: '🇩🇪' },
-	{ id: 'DK', name: 'Denmark', glyph: '🇩🇰' },
-	{ id: 'ES', name: 'Spain', glyph: '🇪🇸' },
-	{ id: 'FR', name: 'France', glyph: '🇫🇷' },
-	{ id: 'GB', name: 'United Kingdom', glyph: '🇬🇧' },
-	{ id: 'IN', name: 'India', glyph: '🇮🇳' },
-	{ id: 'IT', name: 'Italy', glyph: '🇮🇹' },
-	{ id: 'JP', name: 'Japan', glyph: '🇯🇵' },
-	{ id: 'KR', name: 'Korea Rep.', glyph: '🇰🇷' },
-	{ id: 'MX', name: 'Mexico', glyph: '🇲🇽' },
-	{ id: 'NL', name: 'Netherlands', glyph: '🇳🇱' },
-	{ id: 'PT', name: 'Portugal', glyph: '🇵🇹' },
-	{ id: 'SE', name: 'Sweden', glyph: '🇸🇪' },
-	{ id: 'SG', name: 'Singapore', glyph: '🇸🇬' },
-	{ id: 'TR', name: 'Turkey', glyph: '🇹🇷' },
-	{ id: 'US', name: 'United States', glyph: '🇺🇸' },
-	{ id: 'ZA', name: 'South Africa', glyph: '🇿🇦' }
+	{ id: 'AR', name: 'Argentina', glyph: '🇦🇷', color: '#75AADB', text: '#0E0D0B' },
+	{ id: 'AU', name: 'Australia', glyph: '🇦🇺', color: '#00843D', text: '#F2ECDC' },
+	{ id: 'BR', name: 'Brazil', glyph: '🇧🇷', color: '#0F8C3A', text: '#F2ECDC' },
+	{ id: 'CA', name: 'Canada', glyph: '🇨🇦', color: '#D52B1E', text: '#F2ECDC' },
+	{ id: 'CH', name: 'Switzerland', glyph: '🇨🇭', color: '#D52B1E', text: '#F2ECDC' },
+	{ id: 'CN', name: 'China', glyph: '🇨🇳', color: '#DE2910', text: '#FFDE00' },
+	{ id: 'DE', name: 'Germany', glyph: '🇩🇪', color: '#1F2A3A', text: '#F2ECDC' },
+	{ id: 'DK', name: 'Denmark', glyph: '🇩🇰', color: '#C8102E', text: '#F2ECDC' },
+	{ id: 'ES', name: 'Spain', glyph: '🇪🇸', color: '#AA151B', text: '#F2ECDC' },
+	{ id: 'FR', name: 'France', glyph: '🇫🇷', color: '#0055A4', text: '#F2ECDC' },
+	{ id: 'GB', name: 'United Kingdom', glyph: '🇬🇧', color: '#C8102E', text: '#F2ECDC' },
+	{ id: 'IN', name: 'India', glyph: '🇮🇳', color: '#FF9933', text: '#0E0D0B' },
+	{ id: 'IT', name: 'Italy', glyph: '🇮🇹', color: '#008C45', text: '#F2ECDC' },
+	{ id: 'JP', name: 'Japan', glyph: '🇯🇵', color: '#BC002D', text: '#F2ECDC' },
+	{ id: 'KR', name: 'Korea Rep.', glyph: '🇰🇷', color: '#003478', text: '#F2ECDC' },
+	{ id: 'MX', name: 'Mexico', glyph: '🇲🇽', color: '#006847', text: '#F2ECDC' },
+	{ id: 'NL', name: 'Netherlands', glyph: '🇳🇱', color: '#FF6B00', text: '#F2ECDC' },
+	{ id: 'PT', name: 'Portugal', glyph: '🇵🇹', color: '#006600', text: '#F2ECDC' },
+	{ id: 'SE', name: 'Sweden', glyph: '🇸🇪', color: '#006AA7', text: '#FECC02' },
+	{ id: 'SG', name: 'Singapore', glyph: '🇸🇬', color: '#EF3340', text: '#F2ECDC' },
+	{ id: 'TR', name: 'Turkey', glyph: '🇹🇷', color: '#E30A17', text: '#F2ECDC' },
+	{ id: 'US', name: 'United States', glyph: '🇺🇸', color: '#3C3B6E', text: '#F2ECDC' },
+	{ id: 'ZA', name: 'South Africa', glyph: '🇿🇦', color: '#007A4D', text: '#FFB915' }
 ] as const;
 
 /**
