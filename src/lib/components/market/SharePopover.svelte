@@ -161,9 +161,13 @@
 				const items = await listMyReferrals();
 
 				if (alive) {
-					// Only rows that earned a positive tiered reward count toward the
-					// sharer's banked total; over-cap monitoring rows do not.
-					priorPaidCount = items.filter(({ withinReferrerCap }) => withinReferrerCap).length;
+					// Mirror the satellite's authoritative credited-referrals tally (the
+					// count that feeds the tier curve): rows whose `referrerPayout.status`
+					// has left `none` (owed / processing / paid). Anything still `none` —
+					// including over-cap monitoring rows — does not count.
+					priorPaidCount = items.filter(
+						({ referrerPayout }) => referrerPayout.status !== 'none'
+					).length;
 				}
 			} catch {
 				// Keep the optimistic top-tier figure on failure — the footer is a

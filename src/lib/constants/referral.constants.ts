@@ -87,9 +87,11 @@ export const referrerRewardBaseUnits = (priorPaidCount: number): bigint => {
  * copy. Reads the same {@link REFERRAL_REWARD_TIERS} table so the headline figure can never drift
  * from the on-chain payout. Returns `0` once the referrer has reached {@link REFERRAL_MAX_PAID}.
  *
- * The referrer's prior-paid count is the count of the caller's own redemption rows that landed
- * within the cap (`withinReferrerCap === true`) — derivable client-side from `listMyReferrals`, no
- * privileged query needed. The figure is cosmetic; the satellite remains authoritative on payout.
+ * The referrer's prior-paid count is the count of the caller's own redemption rows whose
+ * `referrerPayout.status` has left `none` (owed / processing / paid) — the same rule the satellite's
+ * authoritative tally (`countReferrerCredits`) applies before feeding `referrerRewardBaseUnits`.
+ * Derivable client-side from `listMyReferrals`, no privileged query needed. The figure is cosmetic;
+ * the satellite remains authoritative on payout.
  */
 export const referrerRewardVxp = (priorPaidCount: number): number => {
 	const redemptionIndex = priorPaidCount + 1;
