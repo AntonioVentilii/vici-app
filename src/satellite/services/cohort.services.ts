@@ -1,4 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { RelationCategory, RelationState } from '$lib/enums/relation';
 import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 import {
 	affiliationStatsKey,
@@ -8,6 +9,7 @@ import {
 import type { BattleDoc } from '$lib/types/battle';
 import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
+import type { Relation } from '$lib/types/relation';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
@@ -363,6 +365,167 @@ export const listChallengeableLeaguesFn = (): LeagueDoc[] => {
 	}
 
 	return challengeable.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+};
+
+/** A public league a friend is in but the caller is not — plus the overlap. */
+export interface FriendRecommendedLeague {
+	league: LeagueDoc;
+	/** Total members in the league (owner included). */
+	memberCount: number;
+	/**
+	 * Principals of the caller's friends who are members of this league.
+	 * Drives the stacked-avatar cluster + "N friends here" count on the
+	 * recommendation card.
+	 */
+	friendMembers: string[];
+}
+
+/**
+ * Recommend leagues the caller's **friends** are in but the caller is
+ * **not** — the "Friends are in" row at the foot of the Leagues list.
+ *
+ * Definition of "friend": a confirmed, bilateral friendship — a
+ * `RELATIONS` doc with `category === FRIEND`, `state === ACTIVE`, and
+ * the caller among its participants. The same definition
+ * {@link listFriends} (relation.services) uses. One-way follows are
+ * intentionally NOT treated as friends here: a follow is asymmetric and
+ * does not imply the followed user consented to a relationship, so
+ * surfacing "leagues that someone you follow is in" would leak that
+ * user's league membership to an account they never opted into.
+ *
+ * Privacy scope (the conservative call): only **public** leagues
+ * (`private !== true`) are recommended, even when a friend is a member
+ * of a private one. Private leagues stay invite-only and invisible to
+ * non-members — the same posture {@link listChallengeableLeaguesFn}
+ * takes. Membership itself is only ever exposed for the caller's own
+ * confirmed friends (never for strangers), so the surface answers
+ * "which public leagues are my friends in?" and nothing broader.
+ *
+ * Cost: one scan of `RELATIONS` (friend set), one scan of
+ * `LEAGUE_MEMBERS` (member buckets + the caller's own leagues + member
+ * tallies), then a `getDocStore` per candidate league to read its
+ * privacy flag + metadata. Candidate count is bounded by the number of
+ * distinct leagues the caller's friends belong to.
+ *
+ * Sorted by friend-overlap count descending (most friends first), then
+ * by league name ascending for a deterministic tie-break.
+ */
+export const listFriendRecommendedLeaguesFn = (): FriendRecommendedLeague[] => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+	const callerBytes = caller.toUint8Array();
+
+	// ── Friend set: confirmed bilateral friendships involving the caller.
+	const { items: relationItems } = listDocsStore({
+		collection: Collection.RELATIONS,
+		caller: callerBytes,
+		params: {}
+	});
+
+	const friendPrincipals = new Set<string>();
+
+	for (const [, item] of relationItems) {
+		try {
+			const relation = decodeDocData<Relation>(item.data);
+
+			if (
+				relation.category === RelationCategory.FRIEND &&
+				relation.state === RelationState.ACTIVE &&
+				relation.participants.includes(callerText)
+			) {
+				const other = relation.participants.find((p) => p !== callerText);
+
+				if (nonNullish(other)) {
+					friendPrincipals.add(other);
+				}
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	// No friends ⇒ nothing to recommend; skip the membership scan.
+	if (friendPrincipals.size === 0) {
+		return [];
+	}
+
+	// ── Single pass over `league_members`: bucket friend members per
+	// league, tally total members per league, and collect the caller's
+	// own leagues (to exclude them).
+	const { items: memberItems } = listDocsStore({
+		collection: Collection.LEAGUE_MEMBERS,
+		caller: callerBytes,
+		params: {}
+	});
+
+	const myLeagueIds = new Set<string>();
+	const memberCounts = new Map<string, number>();
+	const friendsByLeague = new Map<string, Set<string>>();
+
+	for (const [, item] of memberItems) {
+		try {
+			const member = decodeDocData<LeagueMemberDoc>(item.data);
+
+			memberCounts.set(member.leagueId, (memberCounts.get(member.leagueId) ?? 0) + 1);
+
+			if (member.member === callerText) {
+				myLeagueIds.add(member.leagueId);
+			} else if (friendPrincipals.has(member.member)) {
+				const bucket = friendsByLeague.get(member.leagueId);
+
+				if (nonNullish(bucket)) {
+					bucket.add(member.member);
+				} else {
+					friendsByLeague.set(member.leagueId, new Set([member.member]));
+				}
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	const recommendations: FriendRecommendedLeague[] = [];
+
+	for (const [leagueId, friendSet] of friendsByLeague.entries()) {
+		// A friend is in it, but the caller already is too ⇒ not a rec.
+		const isRecommendable = !myLeagueIds.has(leagueId);
+
+		if (isRecommendable) {
+			const leagueDoc = getDocStore({
+				collection: Collection.LEAGUES,
+				key: leagueId,
+				caller: callerBytes
+			});
+
+			// Skip orphaned membership rows whose parent league is gone,
+			// mirroring `listMyLeaguesFn`'s tolerance of orphans.
+			if (nonNullish(leagueDoc)) {
+				try {
+					const league = decodeDocData<LeagueDoc>(leagueDoc.data);
+
+					// Conservative privacy: never surface a private league to a
+					// non-member, even via a friend. Invite-only stays invite-only.
+					if (league.private !== true) {
+						recommendations.push({
+							league,
+							memberCount: memberCounts.get(leagueId) ?? friendSet.size,
+							friendMembers: [...friendSet]
+						});
+					}
+				} catch {
+					// skip malformed
+				}
+			}
+		}
+	}
+
+	return recommendations.sort((a, b) => {
+		if (a.friendMembers.length !== b.friendMembers.length) {
+			return b.friendMembers.length - a.friendMembers.length;
+		}
+
+		return a.league.name < b.league.name ? -1 : a.league.name > b.league.name ? 1 : 0;
+	});
 };
 
 /**

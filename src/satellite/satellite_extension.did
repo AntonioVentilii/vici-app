@@ -51,6 +51,8 @@ type AppListFollowersResult = record { items : vec record { category : variant {
 
 type AppListFollowingResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
+type AppListFriendRecommendedLeaguesResult = record { items : vec record { league : record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; emblem : opt text; private : bool; image_url : opt text }; member_count : float64; friend_members : vec text } };
+
 type AppListFriendRequestsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
 type AppListFriendsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
@@ -175,6 +177,7 @@ service : {
 	app_list_challengeable_leagues : () -> (AppListChallengeableLeaguesResult) query;
 	app_list_followers : () -> (AppListFollowersResult) query;
 	app_list_following : () -> (AppListFollowingResult) query;
+	app_list_friend_recommended_leagues : () -> (AppListFriendRecommendedLeaguesResult) query;
 	app_list_friend_requests : () -> (AppListFriendRequestsResult) query;
 	app_list_friends : () -> (AppListFriendsResult) query;
 	app_list_leaderboard : () -> (AppListLeaderboardResult) query;

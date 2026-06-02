@@ -98,6 +98,31 @@ export const listChallengeableLeagues = async (): Promise<LeagueDoc[]> => {
 	return items.map(projectLeagueWire);
 };
 
+/** A public league a friend is in but the caller is not, plus the overlap. */
+export interface FriendRecommendedLeague {
+	league: LeagueDoc;
+	/** Total members in the league (owner included). */
+	memberCount: number;
+	/** Principals of the caller's friends who are members of this league. */
+	friendMembers: string[];
+}
+
+/**
+ * List public leagues the caller's confirmed friends are in but the
+ * caller is not — the "Friends are in" recommendations row at the foot
+ * of the Leagues list. Sorted by friend-overlap count descending per
+ * the satellite query.
+ */
+export const listFriendRecommendedLeagues = async (): Promise<FriendRecommendedLeague[]> => {
+	const { items } = await functions.listFriendRecommendedLeagues();
+
+	return items.map(({ league, member_count, friend_members }) => ({
+		league: projectLeagueWire(league),
+		memberCount: member_count,
+		friendMembers: friend_members
+	}));
+};
+
 /**
  * List the full member roster of a league, projected to the
  * camelCase `LeagueMemberDoc` the FE uses everywhere. Powers the

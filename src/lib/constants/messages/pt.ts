@@ -1177,6 +1177,7 @@ export const ptMessages = {
 	'leagues.empty.cta_join': 'Entre com um código',
 	'leagues.empty.quote': '“As ligas são privadas.”',
 	'leagues.eyebrow.founded': 'Suas ligas · Admin',
+	'leagues.eyebrow.friends_in': 'Seus amigos estão aqui',
 	'leagues.eyebrow.joined': 'Ligas em que você está',
 	'leagues.error.generic': 'Não foi possível carregar suas ligas. Tente novamente em instantes.',
 	'leagues.join.cancel': 'Cancelar',

@@ -1178,6 +1178,7 @@ export const esMessages = {
 	'leagues.empty.cta_join': 'Únete con un código',
 	'leagues.empty.quote': '“Las ligas son privadas.”',
 	'leagues.eyebrow.founded': 'Tus ligas · Admin',
+	'leagues.eyebrow.friends_in': 'Tus amigos están aquí',
 	'leagues.eyebrow.joined': 'Ligas a las que perteneces',
 	'leagues.error.generic': 'No se pudieron cargar tus ligas. Inténtalo de nuevo en un momento.',
 	'leagues.join.cancel': 'Cancelar',

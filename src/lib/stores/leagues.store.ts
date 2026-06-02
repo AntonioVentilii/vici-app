@@ -1,7 +1,9 @@
 import {
+	listFriendRecommendedLeagues,
 	listLeagueBattles,
 	listLeagueMembers,
 	listMyLeagues,
+	type FriendRecommendedLeague,
 	type LeagueWithRole
 } from '$lib/services/leagues.services';
 import type { BattleDoc } from '$lib/types/battle';
@@ -36,6 +38,15 @@ export const leagueMembersStore = writable<Map<string, LeagueMemberDoc[]>>(new M
 export const leagueBattlesStore = writable<Map<string, BattleDoc[]>>(new Map());
 
 /**
+ * Public leagues the caller's confirmed friends are in but the caller is
+ * not — the "Friends are in" recommendations row at the foot of the
+ * Leagues list. Refreshed alongside the caller's own leagues; an empty
+ * array means there's nothing to recommend (no friends, or no friend is
+ * in a public league the caller hasn't joined).
+ */
+export const friendRecommendedLeaguesStore = writable<FriendRecommendedLeague[]>([]);
+
+/**
  * Flips to `true` the first time `refreshMyLeagues` completes for the
  * current principal, and stays `true` until `clearLeagues` runs (i.e.
  * the principal changes). Lets consumers show a skeleton only on the
@@ -52,7 +63,17 @@ export const leaguesLoadedStore = writable<boolean>(false);
 export const leaguesErrorStore = writable<boolean>(false);
 
 const runRefresh = async (): Promise<void> => {
-	const memberships = await listMyLeagues();
+	// Recommendations refresh in parallel with the caller's own leagues —
+	// a flaky recommendation fetch falls back to an empty row rather than
+	// tanking the whole list.
+	const [memberships, recommendations] = await Promise.all([
+		listMyLeagues(),
+		listFriendRecommendedLeagues().catch((err) => {
+			console.warn('leagues.store: friend-recommendations fetch failed', err);
+
+			return [];
+		})
+	]);
 
 	// Fan out the per-league roster + battle fetches. A single flaky
 	// league falls back to an empty roster / no battles so it can't tank
@@ -85,18 +106,27 @@ const runRefresh = async (): Promise<void> => {
 	myLeaguesStore.set(memberships);
 	leagueMembersStore.set(membersMap);
 	leagueBattlesStore.set(battlesMap);
+	friendRecommendedLeaguesStore.set(recommendations);
 	leaguesErrorStore.set(false);
 	leaguesLoadedStore.set(true);
 
 	// Hydrate the shared `profilesStore` for every member we can name in
-	// the friend-overlap row / leaderboard. Lazy import avoids a circular
-	// reference between profile.services → leagues.store. Fire-and-forget
-	// so the refresh resolves as soon as the league data is in the stores.
+	// the friend-overlap row / leaderboard, plus the friend members behind
+	// each recommendation card's avatar cluster. Lazy import avoids a
+	// circular reference between profile.services → leagues.store.
+	// Fire-and-forget so the refresh resolves as soon as the league data
+	// is in the stores.
 	const allMembers = new Set<string>();
 
 	for (const { members } of hydrated) {
 		for (const m of members) {
 			allMembers.add(m.member);
+		}
+	}
+
+	for (const rec of recommendations) {
+		for (const friend of rec.friendMembers) {
+			allMembers.add(friend);
 		}
 	}
 
@@ -158,6 +188,7 @@ export const clearLeagues = (): void => {
 	myLeaguesStore.set([]);
 	leagueMembersStore.set(new Map());
 	leagueBattlesStore.set(new Map());
+	friendRecommendedLeaguesStore.set([]);
 	leaguesLoadedStore.set(false);
 	leaguesErrorStore.set(false);
 };
