@@ -1249,7 +1249,7 @@
 		padding: 0.5rem 0.6rem;
 		border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border-base));
 		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--ink-deep) 40%, transparent);
+		background: var(--bg-base);
 		color: var(--text-base);
 		font-family: var(--font-mono, monospace);
 		font-size: var(--t-12);
@@ -1470,7 +1470,7 @@
 		font-size: var(--t-11);
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
-		color: var(--text-muted);
+		color: var(--parchment-mute);
 	}
 
 	.del-gone-vale {
@@ -1486,14 +1486,14 @@
 		margin: 0 0 0.25rem;
 		font-size: var(--t-14);
 		line-height: 1.5;
-		color: var(--text-base);
+		color: var(--parchment);
 	}
 
 	.del-gone-sub {
 		margin: 0.35rem 0 1.4rem;
 		font-size: var(--t-12);
 		line-height: 1.5;
-		color: var(--text-muted);
+		color: var(--parchment-mute);
 	}
 
 	.del-gone-recovery {
@@ -1504,7 +1504,7 @@
 		background: color-mix(in srgb, var(--accent) 4%, transparent);
 		font-size: var(--t-12);
 		line-height: 1.5;
-		color: var(--text-base);
+		color: var(--parchment);
 	}
 
 	.del-gone-cta {
@@ -1512,10 +1512,10 @@
 		align-items: center;
 		gap: 0.4rem;
 		padding: 0.75rem 1.4rem;
-		border: 1px solid var(--border-base);
+		border: 1px solid var(--ink-line);
 		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-		color: var(--text-base);
+		background: var(--ink-raised);
+		color: var(--parchment);
 		font-family: inherit;
 		font-size: var(--t-13);
 		font-weight: 500;
@@ -1526,11 +1526,11 @@
 	}
 
 	.del-gone-cta:hover {
-		border-color: var(--border-strong);
+		border-color: var(--ink-line-strong);
 	}
 
 	.del-gone-counter {
-		color: var(--text-muted);
+		color: var(--parchment-mute);
 	}
 
 	@keyframes del-gone-fade-in {

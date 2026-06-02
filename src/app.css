@@ -3070,15 +3070,15 @@ a.title-action::after {
 .ob2-team-tile {
 	appearance: none;
 	cursor: pointer;
-	background: var(--ink-raised);
-	border: 1.5px solid var(--ink-line);
+	background: var(--bg-surface);
+	border: 1.5px solid var(--border-base);
 	border-radius: 14px;
 	padding: 16px 12px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: 6px;
-	color: var(--parchment);
+	color: var(--text-base);
 	font-family: inherit;
 	transition:
 		border-color 180ms var(--ease-vici),
@@ -3088,7 +3088,7 @@ a.title-action::after {
 	transform: scale(0.98);
 }
 .ob2-team-tile:hover {
-	border-color: var(--ink-line-strong);
+	border-color: var(--border-strong);
 }
 .ob2-team-flag-lg {
 	display: inline-flex;
@@ -3108,17 +3108,17 @@ a.title-action::after {
 	font-size: 10.5px;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: var(--parchment);
+	color: var(--text-base);
 	font-weight: 600;
 }
 .ob2-team-more-tile {
-	background: rgba(242, 236, 220, 0.04);
+	background: color-mix(in srgb, var(--text-base) 4%, transparent);
 	border-style: dashed;
 }
 .ob2-team-more-sub {
 	font-family: var(--font-mono);
 	font-size: 9px;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	letter-spacing: 0.06em;
 }
 .ob2-skip-team {
@@ -3212,8 +3212,8 @@ a.title-action::after {
 	right: 12px;
 	top: 14px;
 	bottom: -2px;
-	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
-	border: 1px solid var(--ink-line);
+	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
+	border: 1px solid var(--border-base);
 	border-radius: 18px;
 	transform: rotate(-2deg);
 	opacity: 0.45;
@@ -3222,7 +3222,7 @@ a.title-action::after {
 .ob-card {
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
+	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
 	border: 1px solid var(--border-strong);
 	border-radius: 18px;
 	box-shadow:
@@ -3235,6 +3235,7 @@ a.title-action::after {
 	touch-action: none;
 	display: flex;
 	flex-direction: column;
+	color: var(--text-base);
 }
 .ob-card:active {
 	cursor: grabbing;
@@ -3269,8 +3270,8 @@ a.title-action::after {
 	font-weight: 600;
 	padding: 2px 8px;
 	border-radius: 999px;
-	background: rgba(242, 236, 220, 0.05);
-	border: 1px solid rgba(242, 236, 220, 0.1);
+	background: color-mix(in srgb, var(--text-base) 5%, transparent);
+	border: 1px solid color-mix(in srgb, var(--text-base) 10%, transparent);
 	color: var(--fg-dim);
 }
 .ob-first-call {
@@ -3297,8 +3298,8 @@ a.title-action::after {
 .ob-art {
 	flex: 1;
 	min-height: 120px;
-	border-bottom: 1px solid var(--ink-line);
-	border-top: 1px solid var(--ink-line);
+	border-bottom: 1px solid var(--border-base);
+	border-top: 1px solid var(--border-base);
 	position: relative;
 	overflow: hidden;
 }
@@ -3339,9 +3340,9 @@ a.title-action::after {
 }
 .ob-prob {
 	padding: 10px 14px;
-	border: 1px solid var(--ink-line);
+	border: 1px solid var(--border-base);
 	border-radius: 11px;
-	background: rgba(242, 236, 220, 0.02);
+	background: color-mix(in srgb, var(--text-base) 2%, transparent);
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
@@ -3375,7 +3376,7 @@ a.title-action::after {
 	justify-content: space-between;
 	font-family: var(--font-mono);
 	font-size: 11px;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .ob-foot-swipe {
 	letter-spacing: 0.14em;
@@ -3474,10 +3475,10 @@ a.title-action::after {
 	gap: 6px;
 	padding: 10px 6px 8px;
 	min-height: 64px;
-	border: 1px solid var(--ink-line);
+	border: 1px solid var(--border-base);
 	border-radius: 10px;
-	background: var(--ink-raised);
-	color: var(--parchment);
+	background: var(--bg-surface);
+	color: var(--text-base);
 	font-family: inherit;
 	text-transform: none;
 	/* allow the grid item to shrink so the name can wrap/clip inside it */
@@ -3658,7 +3659,7 @@ a.title-action::after {
 	border-radius: 10px;
 	min-width: 64px;
 	cursor: pointer;
-	color: var(--parchment);
+	color: var(--text-base);
 	font-family: inherit;
 	transition:
 		border-color 180ms var(--ease-vici),
@@ -3686,7 +3687,7 @@ a.title-action::after {
 	font-size: 9.5px;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	color: var(--parchment-dim);
+	color: var(--fg-dim);
 	font-weight: 600;
 	max-width: 100%;
 	text-align: center;
@@ -3703,8 +3704,8 @@ a.title-action::after {
 .ob2-all-teams {
 	margin-top: 8px;
 	padding: 12px;
-	background: var(--ink-elevated);
-	border: 1px solid var(--ink-line);
+	background: var(--bg-popover);
+	border: 1px solid var(--border-base);
 	border-radius: 12px;
 	max-height: 280px;
 	overflow-y: auto;
@@ -4806,8 +4807,8 @@ a.title-action::after {
 	width: 96px;
 	height: 132px;
 	border-radius: 14px;
-	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
-	border: 1px solid var(--ink-line-strong);
+	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
+	border: 1px solid var(--border-strong);
 	box-shadow: 0 16px 36px -16px rgba(0, 0, 0, 0.5);
 	z-index: 1;
 }
@@ -4839,7 +4840,7 @@ a.title-action::after {
 .flow-loading .pc i.s {
 	bottom: 16px;
 	height: 8px;
-	background: var(--ink-line-strong);
+	background: var(--border-strong);
 }
 .flow-loading .orcfloat {
 	position: absolute;
@@ -5176,8 +5177,8 @@ a.title-action::after {
 	gap: 8px;
 	padding: 24px 22px 20px;
 	border-radius: 20px;
-	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
-	border: 1px solid var(--ink-line);
+	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
+	border: 1px solid var(--border-base);
 	box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
 	overflow: auto;
 	opacity: 1;
@@ -5191,7 +5192,7 @@ a.title-action::after {
 	font-style: italic;
 	font-size: 26px;
 	letter-spacing: -0.02em;
-	color: var(--parchment);
+	color: var(--text-base);
 }
 .reso-net {
 	font-size: 40px;
@@ -5211,14 +5212,14 @@ a.title-action::after {
 	color: var(--no);
 }
 .reso-net.neutral {
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-tally {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
 	font-size: var(--text-eyebrow);
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-tally b {
 	font-weight: 700;
@@ -5230,7 +5231,7 @@ a.title-action::after {
 	color: var(--no);
 }
 .reso-tally .neutral b {
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-tally .reso-dot {
 	opacity: 0.5;
@@ -5248,8 +5249,8 @@ a.title-action::after {
 	gap: 9px;
 	padding: 8px 10px;
 	border-radius: 10px;
-	background: color-mix(in srgb, var(--parchment) 4%, transparent);
-	border: 1px solid var(--ink-line);
+	background: color-mix(in srgb, var(--text-base) 4%, transparent);
+	border: 1px solid var(--border-base);
 }
 .reso-row-side {
 	flex-shrink: 0;
@@ -5269,15 +5270,15 @@ a.title-action::after {
 	background: var(--no-wash);
 }
 .reso-row-side.hold {
-	color: var(--parchment-mute);
-	background: color-mix(in srgb, var(--parchment) 8%, transparent);
+	color: var(--text-muted);
+	background: color-mix(in srgb, var(--text-base) 8%, transparent);
 }
 .reso-row-q {
 	flex: 1;
 	min-width: 0;
 	text-align: left;
 	font-size: var(--text-eyebrow);
-	color: var(--parchment-dim);
+	color: var(--fg-dim);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -5296,11 +5297,11 @@ a.title-action::after {
 	color: var(--no);
 }
 .reso-row-out.neutral {
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-more {
 	font-size: var(--text-micro);
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	text-align: center;
 	padding-top: 2px;
 }
@@ -5333,10 +5334,10 @@ a.title-action::after {
 .reso-reveal-card .btn-ghost {
 	margin-top: -2px;
 	background: transparent;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-reveal-card .btn-ghost:hover {
-	color: var(--parchment);
+	color: var(--text-base);
 }
 /* Right-call celebration — dopamine hit on settled wins. No
    bounce/overshoot per brand: scale + opacity rises only. */
@@ -5515,7 +5516,7 @@ a.title-action::after {
 			color-mix(in srgb, var(--laurel) 5%, transparent),
 			color-mix(in srgb, var(--laurel) 1%, transparent)
 		),
-		var(--ink-raised);
+		var(--bg-surface);
 	border-radius: 12px;
 	padding: 14px;
 	margin-top: 6px;
@@ -5556,7 +5557,7 @@ a.title-action::after {
 	height: 4px;
 	border-radius: 999px;
 	overflow: hidden;
-	background: color-mix(in srgb, var(--parchment) 8%, transparent);
+	background: color-mix(in srgb, var(--text-base) 8%, transparent);
 	margin-bottom: 10px;
 }
 .dz-pinned .bar .fill {
@@ -5585,7 +5586,7 @@ a.title-action::after {
 	width: 100%;
 	cursor: pointer;
 	border: 1px solid var(--border-base);
-	background: var(--ink-raised);
+	background: var(--bg-surface);
 	border-radius: 10px;
 	padding: 10px 12px;
 	display: grid;
@@ -5632,7 +5633,7 @@ a.title-action::after {
 	width: 100%;
 	cursor: pointer;
 	border: 1px solid var(--border-base);
-	background: var(--ink-raised);
+	background: var(--bg-surface);
 	border-radius: 12px;
 	padding: 14px;
 	display: grid;
@@ -5700,7 +5701,7 @@ a.title-action::after {
 	padding: 14px;
 	background:
 		linear-gradient(180deg, color-mix(in srgb, var(--laurel) 3%, transparent), transparent),
-		var(--ink-raised);
+		var(--bg-surface);
 	border: 1px dashed color-mix(in srgb, var(--laurel) 30%, transparent);
 	border-radius: 12px;
 }
@@ -5735,7 +5736,7 @@ a.title-action::after {
 .dz-past-empty {
 	padding: 14px;
 	text-align: center;
-	background: var(--ink-raised);
+	background: var(--bg-surface);
 	border: 1px solid var(--border-base);
 	border-radius: 12px;
 }
@@ -5785,8 +5786,8 @@ a.title-action::after {
 	line-height: 1.5;
 }
 .ob2-mode-tab.active {
-	background: var(--ink-elevated);
-	color: var(--parchment);
+	background: var(--bg-popover);
+	color: var(--text-base);
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
 }
 
@@ -5798,8 +5799,8 @@ a.title-action::after {
 }
 .ob2-pool-chip {
 	appearance: none;
-	border: 1px solid var(--ink-line);
-	background: var(--ink-raised);
+	border: 1px solid var(--border-base);
+	background: var(--bg-surface);
 	padding: 10px 12px;
 	border-radius: 8px;
 	display: flex;
@@ -5808,7 +5809,7 @@ a.title-action::after {
 	gap: 6px;
 	font-family: var(--font-mono);
 	font-size: 12.5px;
-	color: var(--parchment);
+	color: var(--text-base);
 	cursor: pointer;
 	letter-spacing: 0.02em;
 	transition:
@@ -5837,7 +5838,7 @@ a.title-action::after {
 	text-decoration: none;
 }
 .ob2-at {
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	font-weight: 600;
 	margin-right: 1px;
 }
@@ -5864,10 +5865,10 @@ a.title-action::after {
 	width: 26px;
 	height: 26px;
 	padding: 0;
-	border: 1px solid var(--ink-line);
+	border: 1px solid var(--border-base);
 	border-radius: 999px;
-	background: var(--ink-raised);
-	color: var(--parchment-mute);
+	background: var(--bg-surface);
+	color: var(--text-muted);
 	cursor: pointer;
 	transition:
 		border-color 180ms var(--ease-vici),
@@ -5896,9 +5897,9 @@ a.title-action::after {
 	min-height: 38px;
 	background: linear-gradient(
 		90deg,
-		var(--ink-raised) 0%,
-		var(--ink-elevated) 50%,
-		var(--ink-raised) 100%
+		var(--bg-surface) 0%,
+		var(--bg-popover) 50%,
+		var(--bg-surface) 100%
 	);
 	background-size: 200% 100%;
 	animation: ob2-shimmer 1.2s ease-in-out infinite;
@@ -5918,7 +5919,7 @@ a.title-action::after {
 	}
 	.ob2-pool-chip-skeleton {
 		animation: none;
-		background: var(--ink-raised);
+		background: var(--bg-surface);
 	}
 }
 
@@ -5927,15 +5928,15 @@ a.title-action::after {
 	align-items: center;
 	gap: 8px;
 	padding: 14px 18px;
-	background: var(--ink-elevated);
-	border: 1px solid var(--ink-line);
+	background: var(--bg-popover);
+	border: 1px solid var(--border-base);
 	border-radius: 12px;
 	margin-bottom: 14px;
 }
 .ob2-at-large {
 	font-family: var(--font-mono);
 	font-size: 22px;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	font-weight: 600;
 }
 .ob2-custom-input {
@@ -5944,14 +5945,14 @@ a.title-action::after {
 	background: transparent;
 	border: 0;
 	outline: 0;
-	color: var(--parchment);
+	color: var(--text-base);
 	font-family: var(--font-mono);
 	font-size: 18px;
 	font-weight: 600;
 	letter-spacing: 0.01em;
 }
 .ob2-custom-input::placeholder {
-	color: var(--parchment-faint);
+	color: var(--fg-faint);
 }
 
 .ob2-avail {
@@ -5979,8 +5980,8 @@ a.title-action::after {
 	align-items: center;
 	gap: 12px;
 	padding: 12px 14px;
-	background: var(--ink-elevated);
-	border: 1px solid var(--ink-line);
+	background: var(--bg-popover);
+	border: 1px solid var(--border-base);
 	border-radius: 12px;
 	margin-bottom: 18px;
 }
@@ -6005,7 +6006,7 @@ a.title-action::after {
 	font-size: 9px;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .ob2-affil-name {
 	font-size: 13.5px;
@@ -6013,6 +6014,7 @@ a.title-action::after {
 	display: flex;
 	align-items: center;
 	gap: 6px;
+	color: var(--text-base);
 }
 .ob2-affil-name .serif-italic {
 	font-size: 14px;
@@ -6089,10 +6091,11 @@ a.title-action::after {
 /* ─── Beat 3 · Auth ───────────────────────────────────────── */
 .ob2-summary {
 	padding: 14px;
-	background: var(--ink-elevated);
-	border: 1px solid var(--ink-line);
+	background: var(--bg-popover);
+	border: 1px solid var(--border-base);
 	border-radius: 12px;
 	margin-bottom: 18px;
+	color: var(--text-base);
 }
 .ob2-summary-row {
 	display: flex;
@@ -6119,7 +6122,7 @@ a.title-action::after {
 	font-family: var(--font-mono);
 	font-size: 10px;
 	letter-spacing: 0.06em;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	margin-top: 2px;
 }
 
