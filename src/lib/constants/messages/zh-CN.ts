@@ -1108,6 +1108,7 @@ export const zhCnMessages = {
 	'leagues.empty.cta_join': '用邀请码加入',
 	'leagues.empty.quote': '“联盟是私有的。”',
 	'leagues.eyebrow.founded': '你的联盟 · 管理员',
+	'leagues.eyebrow.friends_in': '好友所在的联盟',
 	'leagues.eyebrow.joined': '你加入的联盟',
 	'leagues.error.generic': '联盟列表加载失败,请稍后再试。',
 	'leagues.join.cancel': '取消',

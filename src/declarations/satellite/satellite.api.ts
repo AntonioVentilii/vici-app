@@ -516,6 +516,42 @@ const listFollowing = async (): Promise<j.infer<typeof AppListFollowingResultSch
 	return AppListFollowingResultSchema.parse(result);
 };
 
+const AppListFriendRecommendedLeaguesResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			league: j.strictObject({
+				id: j.string(),
+				name: j.string(),
+				description: j.optional(j.string()),
+				invite_code: j.string(),
+				owner: j.string(),
+				created_at_ms: j.number(),
+				accent_color: j.optional(j.string()),
+				emblem: j.optional(j.string()),
+				private: j.boolean(),
+				image_url: j.optional(j.string())
+			}),
+			member_count: j.number(),
+			friend_members: j.array(j.string())
+		})
+	)
+});
+
+const listFriendRecommendedLeagues = async (): Promise<
+	j.infer<typeof AppListFriendRecommendedLeaguesResultSchema>
+> => {
+	const { app_list_friend_recommended_leagues } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_friend_recommended_leagues();
+
+	const result = schemaFromIdl({
+		schema: AppListFriendRecommendedLeaguesResultSchema,
+		value: idlResult
+	});
+	return AppListFriendRecommendedLeaguesResultSchema.parse(result);
+};
+
 const AppListFriendRequestsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
@@ -1555,6 +1591,7 @@ export const functions = {
 	listChallengeableLeagues,
 	listFollowers,
 	listFollowing,
+	listFriendRecommendedLeagues,
 	listFriendRequests,
 	listFriends,
 	listLeaderboard,

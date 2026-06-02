@@ -1172,6 +1172,7 @@ export const itMessages = {
 	'leagues.empty.cta_join': 'Entra con un codice',
 	'leagues.empty.quote': '“Le leghe sono private.”',
 	'leagues.eyebrow.founded': 'Le tue leghe · Admin',
+	'leagues.eyebrow.friends_in': 'Ci sono i tuoi amici',
 	'leagues.eyebrow.joined': 'Leghe a cui partecipi',
 	'leagues.error.generic': 'Impossibile caricare le tue leghe. Riprova tra un momento.',
 	'leagues.join.cancel': 'Annulla',
