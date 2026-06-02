@@ -183,19 +183,28 @@
 					principal: currentProfile.owner
 				});
 
-				if (!probe.available && probe.reason === 'taken') {
-					notificationsStore.add({
-						title: t({
-							locale: $localeStore,
-							key: 'onboarding.handoff.collision_title'
-						}),
-						message: t({
-							locale: $localeStore,
-							key: 'onboarding.handoff.collision',
-							params: { handle: result.handle }
-						}),
-						type: 'error'
-					});
+				if (!probe.available) {
+					// Any unavailable reason — `'taken'`, or the `'too_short'` /
+					// `'required'` cases that a tolerated legacy payload can still
+					// produce — must SKIP the nickname update. Keeping the
+					// bootstrapped nickname lets the upsert below persist
+					// team/side/completion (the picks that matter), instead of the
+					// satellite rejecting the whole atomic write. Only the
+					// collision case is worth a toast; the user can rename later.
+					if (probe.reason === 'taken') {
+						notificationsStore.add({
+							title: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.collision_title'
+							}),
+							message: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.collision',
+								params: { handle: result.handle }
+							}),
+							type: 'error'
+						});
+					}
 				} else {
 					// Stamp the handle-change time so the set-profile assertion
 					// accepts the write. The satellite requires `handleLastChangeMs`

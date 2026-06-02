@@ -506,22 +506,30 @@
 						principal: currentProfile.owner
 					});
 
-					if (!probe.available && probe.reason === 'taken') {
-						notificationsStore.add({
-							title: t({
-								locale: $localeStore,
-								key: 'onboarding.handoff.collision_title'
-							}),
-							message: t({
-								locale: $localeStore,
-								key: 'onboarding.handoff.collision',
-								params: { handle: pending.handle }
-							}),
-							type: 'error'
-						});
+					if (!probe.available) {
+						// Any unavailable reason — `'taken'`, or the
+						// `'too_short'` / `'required'` cases that
+						// `parsePendingOnboarding`'s tolerated legacy payloads
+						// can still produce — must SKIP the nickname update.
+						// Only the collision case is worth a toast; the user
+						// can rename later from their profile.
+						if (probe.reason === 'taken') {
+							notificationsStore.add({
+								title: t({
+									locale: $localeStore,
+									key: 'onboarding.handoff.collision_title'
+								}),
+								message: t({
+									locale: $localeStore,
+									key: 'onboarding.handoff.collision',
+									params: { handle: pending.handle }
+								}),
+								type: 'error'
+							});
+						}
 
 						// Apply interests + email + team/side/completion
-						// even when the handle collides — they're
+						// even when the handle is skipped — they're
 						// independently useful and the user can rename
 						// later.
 						await upsertProfile({
