@@ -289,7 +289,7 @@
 		font: inherit;
 		text-align: left;
 		color: var(--text-base);
-		background: var(--bg-popover);
+		background: var(--bg-surface);
 		border: 1px solid var(--border-base);
 		border-radius: 12px;
 		cursor: pointer;
@@ -300,7 +300,7 @@
 	}
 
 	.league-list-card:hover {
-		background: var(--bg-surface);
+		background: var(--bg-popover);
 		border-color: var(--border-strong);
 		transform: translateY(-1px);
 	}
@@ -432,7 +432,7 @@
 	}
 
 	.meta-sep {
-		color: var(--text-faint, var(--text-muted));
+		color: var(--fg-faint, var(--text-muted));
 	}
 
 	.meta-rank {
@@ -471,7 +471,12 @@
 		display: inline-flex;
 		margin-left: -6px;
 		border-radius: 50%;
-		outline: 1.5px solid var(--bg-popover);
+		outline: 1.5px solid var(--bg-surface);
+		transition: outline-color 180ms var(--ease-vici);
+	}
+
+	.league-list-card:hover .friend-avatar {
+		outline-color: var(--bg-popover);
 	}
 
 	.friend-avatar:first-child {
