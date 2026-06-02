@@ -21,7 +21,7 @@
 	import WelcomeTrustAndClose from '$lib/components/landing/WelcomeTrustAndClose.svelte';
 	import Ticker from '$lib/components/layout/Ticker.svelte';
 	import WelcomeNav from '$lib/components/layout/WelcomeNav.svelte';
-	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { PublicPath } from '$lib/constants/routes.constants';
 	import { WORLD_CUP_KICKOFF } from '$lib/constants/world-cup-kickoff.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -81,9 +81,6 @@
 							>
 								{t({ locale: $localeStore, key: 'cta.primary' })}
 								<ChevronRight size={16} />
-							</button>
-							<button class="btn btn-ghost btn-lg" onclick={() => goto(AppPath.Home)} type="button">
-								{t({ locale: $localeStore, key: 'cta.see_markets' })}
 							</button>
 						</div>
 						<p class="num mute lp-cta-micro">

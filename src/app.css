@@ -622,6 +622,22 @@ html {
 		cursor: pointer;
 	}
 
+	/* Safari/WebKit greys the label of disabled <button>s via its UA
+	 * `-webkit-text-fill-color`, which overrides the author `color`.
+	 * Blink doesn't, so disabled CTAs and provider pills (e.g. the gold
+	 * "Claim @…" handle button before a pick, the Apple/Email "Soon"
+	 * placeholders, Internet Identity/Passkey when the live backend isn't
+	 * available) rendered an unreadable dark label in Safari/iOS while
+	 * Chrome — matching the prototype — kept them legible. Pinning the
+	 * fill to `currentColor` makes our `color` authoritative again; it
+	 * resolves per-element so every variant and the disabled state stay
+	 * legible. We don't author `-webkit-text-fill-color` anywhere else
+	 * (no gradient/clipped button text), so this is regression-safe. */
+	button,
+	[role='button'] {
+		-webkit-text-fill-color: currentColor;
+	}
+
 	/* Tailwind v4 preflight also strips the UA focus ring without
 	 * replacing it, so keyboard users get no visible cue. Restore a
 	 * brand-aligned focus-visible ring on every interactive element:
@@ -2529,15 +2545,6 @@ a.title-action::after {
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-base);
-	/* Safari/WebKit greys the text of disabled <button>s via its UA
-	   `-webkit-text-fill-color`, which wins over `color` — so the
-	   disabled provider pills (Apple/Email "Soon", II/Passkey when the
-	   live backend isn't available) render their light label as an
-	   unreadable dark in Safari while Blink leaves them legible. Pinning
-	   the fill to `currentColor` makes our author `color` authoritative
-	   again; it tracks every variant (cream/dark/faint) and the disabled
-	   state with no extra rules. */
-	-webkit-text-fill-color: currentColor;
 	transition:
 		opacity 200ms var(--ease-vici),
 		border-color 200ms var(--ease-vici),
@@ -3422,23 +3429,23 @@ a.title-action::after {
    this card has no back face); phase 4 ("your turn") drops the attribute
    and returns to rest. !important overrides the card's inline drag
    transform. */
-:global(.ob-card[data-coach-phase]) {
+.ob-card[data-coach-phase] {
 	transition:
 		transform 480ms cubic-bezier(0.16, 1, 0.3, 1),
 		filter 240ms ease !important;
 	filter: blur(1.4px) saturate(0.92) brightness(0.86);
 	pointer-events: none;
 }
-:global(.ob-card[data-coach-phase='0']) {
+.ob-card[data-coach-phase='0'] {
 	transform: translate(-22px, 0) rotate(-2deg) !important;
 }
-:global(.ob-card[data-coach-phase='1']) {
+.ob-card[data-coach-phase='1'] {
 	transform: translate(22px, 0) rotate(2deg) !important;
 }
-:global(.ob-card[data-coach-phase='2']) {
+.ob-card[data-coach-phase='2'] {
 	transform: translate(0, -22px) !important;
 }
-:global(.ob-card[data-coach-phase='3']) {
+.ob-card[data-coach-phase='3'] {
 	filter: none !important;
 	transform: scale(1.01) !important;
 	pointer-events: none;
@@ -3447,72 +3454,10 @@ a.title-action::after {
 	.ob-card {
 		transition: none !important;
 	}
-	:global(.ob-card[data-coach-phase]) {
+	.ob-card[data-coach-phase] {
 		transform: none !important;
 		animation: none !important;
 	}
-}
-
-/* Accessible YES / NO commit row — keyboard / switch-access path.
-   Styled to match the `.ob-prob` tiles (same grid, border, radius) so
-   the visual language is consistent with the probability split above.
-   Pointer users will reach `commit()` via swipe; this row is the
-   primary a11y path. Hidden (aria-hidden) once committed. */
-.ob-commit-row {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 8px;
-	padding: 0 0 4px;
-	flex-shrink: 0;
-}
-.ob-commit-btn {
-	appearance: none;
-	cursor: pointer;
-	padding: 10px 14px;
-	border: 1px solid var(--ink-line);
-	border-radius: 11px;
-	background: rgba(242, 236, 220, 0.02);
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	text-align: left;
-	transition:
-		background 120ms,
-		border-color 120ms,
-		opacity 120ms;
-}
-.ob-commit-btn:hover:not(:disabled) {
-	background: rgba(242, 236, 220, 0.06);
-}
-.ob-commit-btn:focus-visible {
-	outline: 2px solid var(--laurel);
-	outline-offset: 2px;
-}
-.ob-commit-btn:disabled {
-	opacity: 0.4;
-	cursor: default;
-}
-.ob-commit-btn.yes {
-	align-items: flex-end;
-}
-.ob-commit-eyebrow {
-	font-family: var(--font-mono);
-	font-size: 10px;
-	letter-spacing: 0.12em;
-	font-weight: 700;
-	text-transform: uppercase;
-}
-.ob-commit-eyebrow.no {
-	color: var(--no);
-}
-.ob-commit-eyebrow.yes {
-	color: var(--yes);
-}
-.ob-commit-pct {
-	font-family: var(--font-mono);
-	font-size: 22px;
-	font-weight: 600;
-	letter-spacing: -0.02em;
 }
 
 /* ─── Team rail (expanded all-teams) ──────────────────────

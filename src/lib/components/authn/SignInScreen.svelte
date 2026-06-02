@@ -15,15 +15,16 @@
 		// `signup` for new accounts.
 		mode?: 'signin' | 'signup';
 		// Callback for after a successful auth handshake. Defaults to
-		// navigating to `AppPath.Home`; routes calling this from a
-		// layout can pass a different post-auth target.
+		// navigating to `AppPath.Flow` — the canonical first surface for
+		// every authenticated session; routes calling this from a layout
+		// can pass a different post-auth target.
 		onSuccess?: () => void;
 	}
 
 	const {
 		mode = 'signin',
 		onSuccess = () => {
-			void goto(resolve(AppPath.Home));
+			void goto(resolve(AppPath.Flow));
 		}
 	}: Props = $props();
 
