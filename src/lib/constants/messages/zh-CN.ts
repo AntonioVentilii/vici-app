@@ -547,7 +547,6 @@ export const zhCnMessages = {
 	'common.error.generic': '出了点问题。请重试。',
 	'companion.oracle.called_it': '说中了。',
 	'cta.primary': '开始预测',
-	'cta.see_markets': '查看实时市场',
 	'cta.start_predict': '开始预测',
 	'dash.accuracy.eyebrow': '你的准确率',
 	'dash.accuracy.first_session': '首次会话',

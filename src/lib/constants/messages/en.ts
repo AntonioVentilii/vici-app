@@ -571,7 +571,6 @@ export const enMessages = {
 	'common.error.generic': 'Something went wrong. Please try again.',
 	'companion.oracle.called_it': 'Called it.',
 	'cta.primary': 'Start predicting',
-	'cta.see_markets': 'See live markets',
 	'cta.start_predict': 'Start predicting',
 	'dash.accuracy.eyebrow': 'Your accuracy',
 	'dash.accuracy.first_session': 'First session',

@@ -577,7 +577,6 @@ export const esMessages = {
 	'common.error.generic': 'Algo salió mal. Inténtalo de nuevo.',
 	'companion.oracle.called_it': 'Acertaste.',
 	'cta.primary': 'Empieza a predecir',
-	'cta.see_markets': 'Ver mercados en vivo',
 	'cta.start_predict': 'Empieza a predecir',
 	'dash.accuracy.eyebrow': 'Tu precisión',
 	'dash.accuracy.first_session': 'Primera sesión',
