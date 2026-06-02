@@ -651,7 +651,6 @@ export const zhCnMessages = {
 	'dash.placeholder.categories': '完成每个领域足够的预测后，分类准确率会解锁。',
 	'dash.placeholder.positions': '一旦你开始预测，未结算的持仓会显示在这里。',
 	'dash.streak.days': '{count} 天',
-	'dash.streak.longest_to_marathon_em': '最长 — · 距 Marathon 还差 {count}',
 	'dash.title': '仪表盘',
 	'dash.accuracy.signed_in_short': '欢迎,{handle}',
 	'dash.active.vol_calls': '{count} 次预测',
