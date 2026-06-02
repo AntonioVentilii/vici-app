@@ -5240,8 +5240,8 @@ a.title-action::after {
 	gap: 9px;
 	padding: 8px 10px;
 	border-radius: 10px;
-	background: color-mix(in srgb, var(--parchment) 4%, transparent);
-	border: 1px solid var(--ink-line);
+	background: color-mix(in srgb, var(--text-base) 4%, transparent);
+	border: 1px solid var(--border-base);
 }
 .reso-row-side {
 	flex-shrink: 0;
@@ -5261,15 +5261,15 @@ a.title-action::after {
 	background: var(--no-wash);
 }
 .reso-row-side.hold {
-	color: var(--parchment-mute);
-	background: color-mix(in srgb, var(--parchment) 8%, transparent);
+	color: var(--text-muted);
+	background: color-mix(in srgb, var(--text-base) 8%, transparent);
 }
 .reso-row-q {
 	flex: 1;
 	min-width: 0;
 	text-align: left;
 	font-size: var(--text-eyebrow);
-	color: var(--parchment-dim);
+	color: var(--fg-dim);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -5288,11 +5288,11 @@ a.title-action::after {
 	color: var(--no);
 }
 .reso-row-out.neutral {
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-more {
 	font-size: var(--text-micro);
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 	text-align: center;
 	padding-top: 2px;
 }
@@ -5325,10 +5325,10 @@ a.title-action::after {
 .reso-reveal-card .btn-ghost {
 	margin-top: -2px;
 	background: transparent;
-	color: var(--parchment-mute);
+	color: var(--text-muted);
 }
 .reso-reveal-card .btn-ghost:hover {
-	color: var(--parchment);
+	color: var(--text-base);
 }
 /* Right-call celebration — dopamine hit on settled wins. No
    bounce/overshoot per brand: scale + opacity rises only. */
