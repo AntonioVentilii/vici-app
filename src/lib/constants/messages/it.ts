@@ -1502,8 +1502,6 @@ export const itMessages = {
 	'onboarding.beat1b.first_call_label': 'Prima chiamata',
 	'onboarding.beat1b.headline': 'Fai la tua prima chiamata.',
 	'onboarding.beat1b.skip_sub': 'Segui il torneo. Vai su SÌ se pensi che {team} la porti a casa.',
-	'onboarding.beat1b.a11y_commit_no': 'Conferma NO — predici che questo non accadrà',
-	'onboarding.beat1b.a11y_commit_yes': 'Conferma SÌ — predici che questo accadrà',
 	'onboarding.beat2.affil_eyebrow': 'Il tuo profilo',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.invalid': 'Solo lettere, numeri, . _ -',

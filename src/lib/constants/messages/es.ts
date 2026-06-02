@@ -1504,8 +1504,6 @@ export const esMessages = {
 	'onboarding.beat1b.first_call_label': 'Primera predicción',
 	'onboarding.beat1b.headline': 'Haz tu primera predicción.',
 	'onboarding.beat1b.skip_sub': 'Sigues el torneo. Marca SÍ si crees que {team} se lo lleva todo.',
-	'onboarding.beat1b.a11y_commit_no': 'Confirmar NO — predecir que esto no ocurrirá',
-	'onboarding.beat1b.a11y_commit_yes': 'Confirmar SÍ — predecir que esto ocurrirá',
 	'onboarding.beat2.affil_eyebrow': 'Tu perfil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.invalid': 'Solo letras, números, . _ -',
