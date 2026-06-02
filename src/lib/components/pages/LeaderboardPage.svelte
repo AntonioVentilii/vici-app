@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Doc } from '@junobuild/core';
-	import { ArrowDown, ArrowUp, Minus, UserMinus, UserPlus, Users } from 'lucide-svelte/icons';
+	import { ArrowDown, ArrowUp, Minus, UserMinus, UserPlus, Users } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';

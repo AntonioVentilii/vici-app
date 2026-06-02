@@ -330,7 +330,7 @@ In the repo, branded glyphs live in
 - [`IconIC`](../../../src/lib/components/icons/IconIC.svelte) /
   `IconGoogle` / `IconPasskey` / `IconRobot`
 
-For everything else, reach for `lucide-svelte` — the project standard.
+For everything else, reach for `@lucide/svelte` — the project standard.
 When you add a bespoke brand glyph, register it in
 [`reusability.md`](./reusability.md).
 

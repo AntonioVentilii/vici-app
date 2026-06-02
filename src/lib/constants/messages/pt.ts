@@ -578,7 +578,6 @@ export const ptMessages = {
 	'common.error.generic': 'Algo deu errado. Tente novamente.',
 	'companion.oracle.called_it': 'Acertou em cheio.',
 	'cta.primary': 'Comece a prever',
-	'cta.see_markets': 'Ver mercados ao vivo',
 	'cta.start_predict': 'Comece a prever',
 	'dash.accuracy.eyebrow': 'Sua precisão',
 	'dash.accuracy.first_session': 'Primeira sessão',

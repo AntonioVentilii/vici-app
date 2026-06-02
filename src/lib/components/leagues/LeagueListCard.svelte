@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, ChevronDown, ChevronRight, ChevronUp } from 'lucide-svelte/icons';
+	import { Check, ChevronDown, ChevronRight, ChevronUp } from '@lucide/svelte/icons';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';

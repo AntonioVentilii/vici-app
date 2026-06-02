@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
-	import { Wrench, X } from 'lucide-svelte/icons';
+	import { Wrench, X } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';

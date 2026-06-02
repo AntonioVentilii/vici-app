@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
-	import { ArrowLeftRight, Check, ChevronRight, Mail } from 'lucide-svelte/icons';
+	import { ArrowLeftRight, Check, ChevronRight, Mail } from '@lucide/svelte/icons';
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';

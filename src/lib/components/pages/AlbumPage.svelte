@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { X } from 'lucide-svelte/icons';
+	import { X } from '@lucide/svelte/icons';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import type { AchievementTier } from '$lib/constants/achievements.constants';

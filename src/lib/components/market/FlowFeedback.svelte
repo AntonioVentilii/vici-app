@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Zap } from 'lucide-svelte/icons';
+	import { Zap } from '@lucide/svelte/icons';
 	import { onDestroy, onMount } from 'svelte';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';

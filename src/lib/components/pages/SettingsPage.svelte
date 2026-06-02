@@ -20,7 +20,7 @@
 		Trophy,
 		Users,
 		Volume2
-	} from 'lucide-svelte/icons';
+	} from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';

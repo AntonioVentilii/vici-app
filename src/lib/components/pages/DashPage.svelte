@@ -5,7 +5,7 @@
 	 * canister (rival, contrarian count, lifetime VXP, global rank, …)
 	 * fall back to an em-dash placeholder rather than an approximation.
 	 */
-	import { Check, ChevronRight, X } from 'lucide-svelte/icons';
+	import { Check, ChevronRight, X } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';

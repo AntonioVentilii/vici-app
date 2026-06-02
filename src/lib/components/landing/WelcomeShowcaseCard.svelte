@@ -11,7 +11,7 @@
 	 * gradient, eyebrow colour, optional badge and CTA target all differ
 	 * between the three call sites.
 	 */
-	import { ChevronRight } from 'lucide-svelte/icons';
+	import { ChevronRight } from '@lucide/svelte/icons';
 	import type { Snippet } from 'svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';

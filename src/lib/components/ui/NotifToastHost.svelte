@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Icon as LucideIcon } from 'lucide-svelte';
+	import type { Icon as LucideIcon } from '@lucide/svelte';
 	import {
 		Bell,
 		Check,
@@ -10,7 +10,7 @@
 		UserPlus,
 		Users,
 		X
-	} from 'lucide-svelte/icons';
+	} from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { clearInboxToast, latestInboxToast } from '$lib/stores/inbox.store';

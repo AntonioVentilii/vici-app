@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronDown } from 'lucide-svelte/icons';
+	import { ChevronDown } from '@lucide/svelte/icons';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -87,7 +87,7 @@
 	}
 
 	/* Chevrons inherit from `app.css .swipe-hint*` — local rules below
-	   handle just the per-side rotation of the `lucide-svelte` icons so
+	   handle just the per-side rotation of the `@lucide/svelte` icons so
 	   the down-chevron points outward (NO ⇒ left, YES ⇒ right) and the
 	   per-side colour tint. */
 	.swipe-hint-chevs {

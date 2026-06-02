@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight, Check } from 'lucide-svelte/icons';
+	import { ArrowRight, Check } from '@lucide/svelte/icons';
 	import { onMount, tick } from 'svelte';
 	import { get } from 'svelte/store';
 	import { browser } from '$app/environment';

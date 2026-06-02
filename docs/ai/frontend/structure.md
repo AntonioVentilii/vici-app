@@ -56,7 +56,7 @@ top-level group:
 - `authz/` — authorization (role gating, guards rendering).
 - `challenge/` — challenge / passkey UI.
 - `characters/` — character SVGs (Vici, Oracle, Trickster, Flame).
-- `icons/` — bespoke icons not covered by `lucide-svelte`.
+- `icons/` — bespoke icons not covered by `@lucide/svelte`.
 - `layout/` — top-level chrome (`Header`, `Ticker`, navigation surfaces).
 - `landing/` — public marketing sections (`LandingSectionHeader`, `WelcomeLiveMarkets`, `WelcomeFooter`, …).
 - `leaderboard/` — leaderboard widgets.

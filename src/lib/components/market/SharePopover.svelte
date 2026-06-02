@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Copy, Image as ImageIcon } from 'lucide-svelte/icons';
+	import { Copy, Image as ImageIcon } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import IconFacebook from '$lib/components/icons/IconFacebook.svelte';

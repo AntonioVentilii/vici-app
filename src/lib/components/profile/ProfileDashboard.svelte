@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Eye, Flame, Lock, Pencil, Target, Trophy } from 'lucide-svelte';
+	import { Eye, Flame, Lock, Pencil, Target, Trophy } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
