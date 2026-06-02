@@ -130,9 +130,11 @@ These need a per-item decision before deletion. Default = remove.
 - ✅ Beat 1.b — static "Make your first call." heading hoisted above the
   card via `onboarding.beat1b.headline`.
 - ✅ Beat 1.b — progress-dots header dropped.
-- ✅ Beat 1.b — `FlowCoach.svelte` overlay (laurel-tinted YES/NO
-  coach-marks + italic instruction) mounted inside a new
-  `.ob2-card-stage` wrapper; tap-anywhere dismiss.
+- ✅ Beat 1.b — shared `FlowCoach.svelte` overlay (`surface="onboarding"`)
+  mounted inside the `.ob-stage`; runs the full five-phase gesture cycle
+  (NO / YES / SKIP / TAP / IDLE) with card drift/blur via
+  `data-coach-phase`, phase-3 "tap" degrading to a zoom-and-de-blur on the
+  faceless `.ob-card` (no flip); tap-anywhere dismiss, once per device.
 - ✅ Beat 2 — "taken" state on pool chips: live probe of the top 50
   leaderboard rows via `getLeaderboard()`, seeded into a
   `SvelteSet<string>` (case-insensitive); chips render the inline
