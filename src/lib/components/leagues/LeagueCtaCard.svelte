@@ -45,7 +45,7 @@
 		font: inherit;
 		text-align: left;
 		color: var(--text-base);
-		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+		background: var(--bg-surface);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
 		cursor: pointer;
@@ -55,7 +55,7 @@
 	}
 
 	.league-cta-card:hover {
-		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+		background: var(--bg-popover);
 		border-color: var(--border-strong);
 	}
 
