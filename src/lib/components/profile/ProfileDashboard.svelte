@@ -932,7 +932,7 @@
 
 	.profile-handle-btn :global(.profile-handle-pencil) {
 		flex-shrink: 0;
-		color: var(--text-faint, var(--text-muted));
+		color: var(--fg-faint);
 	}
 
 	.profile-handle-btn:hover,

@@ -363,7 +363,7 @@
 	<span class="share-row-label">
 		{t({ locale: $localeStore, key: 'flow.share.post_to_story' })}
 	</span>
-	<div class="share-tile-row">
+	<div class="share-tile-row share-tile-row-story">
 		{#each storyApps as app (app.key)}
 			<button
 				class="share-tile"
@@ -374,7 +374,7 @@
 			>
 				<span
 					style:color={app.tint}
-					style:background={app.bg ?? 'var(--bg-surface)'}
+					style:background={app.bg ?? 'var(--bg-popover)'}
 					class="share-tile-icon"
 					class:branded={app.bg !== undefined}
 				>
@@ -465,6 +465,7 @@
 	.share-pop-eyebrow {
 		font-family: var(--font-mono);
 		font-size: var(--t-10);
+		font-weight: 700;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
 		color: var(--text-muted);
@@ -475,6 +476,8 @@
 		display: flex;
 		gap: 14px;
 		align-items: center;
+		/* The 2px top nudge stays; the 12px flex gap on .share-pop already
+		   supplies the spacing below this header — no extra margin-bottom. */
 		margin: 2px 0;
 	}
 
@@ -485,7 +488,7 @@
 		height: 139px;
 		border: 1px solid var(--border-base);
 		border-radius: 11px;
-		background: var(--bg-surface);
+		background: var(--bg-popover);
 		box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.6);
 	}
 	.share-card-thumb img {
@@ -501,8 +504,8 @@
 		align-items: center;
 		justify-content: center;
 		font-family: var(--font-mono);
-		font-size: 12px;
-		color: var(--text-faint, var(--text-muted));
+		font-size: 9px;
+		color: var(--fg-faint);
 	}
 
 	.share-card-cta-col {
@@ -515,7 +518,7 @@
 	.share-card-pitch {
 		font-size: var(--t-13);
 		line-height: 1.4;
-		color: var(--text-dim, var(--text-muted));
+		color: var(--fg-dim);
 	}
 	.share-card-cta {
 		display: inline-flex;
@@ -541,14 +544,17 @@
 		cursor: default;
 	}
 
-	/* Row label above each tile group */
+	/* Row label above each tile group. The 12px flex gap on .share-pop is
+	   wider than the intended 8px label→tiles rhythm, so pull the tiles up
+	   by 4px (12 − 4 = 8px effective). */
 	.share-row-label {
 		display: block;
+		margin-bottom: -4px;
 		font-family: var(--font-mono);
 		font-size: var(--t-10);
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
-		color: var(--text-faint, var(--text-muted));
+		color: var(--fg-faint);
 	}
 
 	/* Circular channel tiles in a four-up row */
@@ -556,6 +562,11 @@
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: 4px;
+	}
+	/* Breathing room below the story row before the next group: the 12px
+	   flex gap on .share-pop already supplies it, so no extra margin. */
+	.share-tile-row-story {
+		margin-bottom: 0;
 	}
 	.share-tile {
 		display: flex;
@@ -581,6 +592,7 @@
 		justify-content: center;
 		border: 1px solid var(--border-base);
 		border-radius: 50%;
+		background: var(--bg-popover);
 		transition:
 			border-color var(--d-hover) var(--ease-vici),
 			background var(--d-hover) var(--ease-vici);
@@ -603,14 +615,16 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		/* Intended 14px above the footer; the 12px flex gap on .share-pop
+		   already contributes, so add 2px (12 + 2 = 14px effective). */
 		margin-top: 2px;
 		padding: 9px 11px;
 		border: 1px solid rgba(79, 211, 161, 0.3);
 		border-radius: 10px;
 		background: linear-gradient(90deg, rgba(79, 211, 161, 0.1), rgba(79, 211, 161, 0.04));
-		font-size: var(--t-13);
+		font-size: var(--t-12);
 		line-height: 1.4;
-		color: var(--text-dim, var(--text-muted));
+		color: var(--fg-dim);
 	}
 	.share-pop-referral b {
 		color: var(--yes);
