@@ -14,8 +14,8 @@
 		 */
 		store: Writable<T | undefined>;
 		/**
-		 * Callback-style certified loader (`loadMarkets` / `loadUserOrders` /
-		 * `loadPositions` / `loadUserTradeHistory` shape): receives the current
+		 * Callback-style certified loader (`loadUserOrders` / `loadPositions` /
+		 * `loadUserTradeHistory` shape): receives the current
 		 * domain and an `onLoad` callback fired once for the fast uncertified
 		 * query and once for the certified update.
 		 */

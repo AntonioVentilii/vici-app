@@ -52,7 +52,7 @@
 		font-variant-numeric: tabular-nums slashed-zero;
 		letter-spacing: 0.06em;
 		color: var(--text-base);
-		background: var(--ink-elevated);
+		background: var(--bg-popover);
 		border: 1px solid var(--border-strong);
 		border-radius: var(--r-pill);
 		padding: 4px 10px;

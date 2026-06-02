@@ -705,10 +705,19 @@
 							{t({ locale: $localeStore, key: 'profile.dashboard.affiliations.status_pending' })}
 						</span>
 					{:else if slot.status === 'unverified'}
-						<span class="affil-slot-badge affil-slot-badge-unverified num">
+						<!-- Until the membership-email verification flow ships (#351,
+						     gated behind `SCHOOL_PASS2_ENABLED`), a freshly picked
+						     school can only ever read `unverified`. Surfacing a bare
+						     "Unverified" pill on every Alma Mater reads as a defect, so
+						     we render a subtle, non-actionable "verification — coming
+						     soon" hint instead. It carries no control: the slot still
+						     just re-opens the picker, whose verify path is itself gated
+						     off. The verified / pending pills above stay intact for when
+						     the flow lands. -->
+						<span class="affil-slot-badge affil-slot-badge-soon num">
 							{t({
 								locale: $localeStore,
-								key: 'profile.dashboard.affiliations.status_unverified'
+								key: 'profile.dashboard.affiliations.verify_soon'
 							})}
 						</span>
 					{/if}
@@ -1343,7 +1352,7 @@
 		color: var(--ink, #0e0d0b);
 	}
 
-	.affil-slot-badge-unverified,
+	.affil-slot-badge-soon,
 	.affil-slot-badge-pending {
 		padding: 0.1rem 0.4rem;
 		border-radius: var(--r-pill);
@@ -1353,10 +1362,17 @@
 		white-space: nowrap;
 	}
 
-	.affil-slot-badge-unverified {
-		color: #6b9fff;
-		background: color-mix(in srgb, #6b9fff 10%, transparent);
-		border: 1px solid color-mix(in srgb, #6b9fff 30%, transparent);
+	/* "Verification — coming soon" hint. Deliberately quiet and
+	   theme-adaptive (neutral muted text on a faint surface tint) so it
+	   reads as a passive promise rather than the actionable / attention-
+	   seeking pill the verified (gold) and pending (amber) states use.
+	   No live control hangs off it — the verify flow is gated off until
+	   the membership-email pass ships. */
+	.affil-slot-badge-soon {
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
+		border: 1px solid var(--border-base);
+		opacity: 0.85;
 	}
 
 	.affil-slot-badge-pending {

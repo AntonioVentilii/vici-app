@@ -251,12 +251,17 @@ pins `VICI_ENGINE_ID` is
   `login` API Juno calls). The two versions share an identical IndexedDB
   contract (`auth-client-db` / `ic-keyval`, ECDSA key + delegation JSON),
   so the v6-written delegation is adopted by Juno on the next document
-  load. That adoption is why Apple sign-in ends with a **full
-  `window.location.assign`** (not a client `goto`): only a fresh load
-  re-runs `initSatellite()` / `loadAuth()`, which picks up the delegation
-  and fires `onAuthStateChange`. Flush host state (e.g. the signup
-  onboarding `onSuccess` that persists pending picks to storage) before
-  that reload.
+  load. **Persisting the delegation is not enough**: Juno's boot-time
+  `loadAuth()` only _loads_ an existing `#user` doc (it never creates one —
+  that's done inside Juno's interactive `signIn()`), so the service also
+  creates the `#user` doc with the Apple identity (mirroring Juno's
+  `initUser`); skip this and `loadAuth()` finds a valid delegation but no
+  user and the app drops straight back to the signed-out screen. That
+  adoption is why Apple sign-in ends with a **full `window.location.assign`**
+  (not a client `goto`): only a fresh load re-runs `initSatellite()` /
+  `loadAuth()`, which resolves the user and fires `onAuthStateChange`. Flush
+  host state (e.g. the signup onboarding `onSuccess` that persists pending
+  picks to storage) before that reload.
 
 ## Tailwind v4 + design tokens
 
