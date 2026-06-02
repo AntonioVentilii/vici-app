@@ -131,13 +131,6 @@
 			reduce ? 600 : 4000
 		);
 
-		// Auto-enter safety net: after 30s, flag that the wait has run long.
-		// The actual enter is ready-gated below, so an in-flight deck is never
-		// revealed early — it enters the moment the deck becomes ready.
-		const auto = setTimeout(() => {
-			autoElapsed = true;
-		}, 30_000);
-
 		// Reveal cue: a celebratory chime for a net gain, a soft single tone
 		// for a loss. Suppressed under reduced motion. Stored so it can be
 		// cancelled on cleanup if the user navigates or preference flips before
@@ -159,8 +152,24 @@
 		return () => {
 			clearInterval(rot);
 			clearTimeout(arm);
-			clearTimeout(auto);
 			clearTimeout(audioCue);
+		};
+	});
+
+	// Auto-enter safety net: after 30s, flag that the wait has run long. Kept
+	// in its OWN effect with NO dependency on `prefersReducedMotion()`, so the
+	// 30s timer starts once on mount and isn't cleared/restarted when the OS
+	// reduced-motion preference is toggled mid-session (which would postpone
+	// the safety auto-enter). The actual enter is ready-gated below, so an
+	// in-flight deck is never revealed early — it enters the moment the deck
+	// becomes ready.
+	$effect(() => {
+		const auto = setTimeout(() => {
+			autoElapsed = true;
+		}, 30_000);
+
+		return () => {
+			clearTimeout(auto);
 		};
 	});
 
