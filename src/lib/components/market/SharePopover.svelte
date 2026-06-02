@@ -9,7 +9,8 @@
 	import IconTikTok from '$lib/components/icons/IconTikTok.svelte';
 	import IconWhatsApp from '$lib/components/icons/IconWhatsApp.svelte';
 	import IconX from '$lib/components/icons/IconX.svelte';
-	import { getMyReferralCode } from '$lib/services/referral.services';
+	import { referrerRewardVxp } from '$lib/constants/referral.constants';
+	import { getMyReferralCode, listMyReferrals } from '$lib/services/referral.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
@@ -29,8 +30,10 @@
 	 * Snapchat, Facebook) routes through the OS share sheet
 	 * (`navigator.share({ files })`); OR SEND A LINK (WhatsApp, Telegram, X,
 	 * Copy) shares the referral URL. Desktop / no-file-share falls back to
-	 * saving the PNG and opening the target app. A +500 VXP referral hook
-	 * sits at the foot.
+	 * saving the PNG and opening the target app. A referral hook sits at
+	 * the foot — its headline VXP figure reflects the sharer's *next*
+	 * referrer-reward tier on the diminishing curve, derived client-side
+	 * from their own redemption rows.
 	 */
 	interface PriorCallLite {
 		side: 'YES' | 'NO';
@@ -60,10 +63,18 @@
 	const accuracy = $derived($userStore.profile?.accuracy);
 
 	// Referral code resolved from the satellite — the share URL carries it
-	// so a friend's signup is attributed to the sharer (+500 VXP). Falls
-	// back to the handle until the code loads (or if it's unavailable), so
-	// the link is always shareable.
+	// so a friend's signup is attributed to the sharer. Falls back to the
+	// handle until the code loads (or if it's unavailable), so the link is
+	// always shareable.
 	let referralCode = $state<string | undefined>(undefined);
+
+	// The sharer's lifetime count of *paid* referrals (rows still within the
+	// hard cap). The referrer reward diminishes with each one, so the footer
+	// headline shows the reward for the *next* friend, not a flat figure.
+	// Authoritative payout stays server-side; this is cosmetic and starts at
+	// the top tier until the list resolves.
+	let priorPaidCount = $state(0);
+	const nextRewardVxp = $derived(referrerRewardVxp(priorPaidCount));
 
 	const refToken = $derived(referralCode ?? handle);
 	const origin = $derived(browser ? window.location.origin : 'https://vici.market');
@@ -142,6 +153,21 @@
 				}
 			} catch {
 				referralCode = undefined;
+			}
+		})();
+
+		void (async () => {
+			try {
+				const items = await listMyReferrals();
+
+				if (alive) {
+					// Only rows that earned a positive tiered reward count toward the
+					// sharer's banked total; over-cap monitoring rows do not.
+					priorPaidCount = items.filter(({ withinReferrerCap }) => withinReferrerCap).length;
+				}
+			} catch {
+				// Keep the optimistic top-tier figure on failure — the footer is a
+				// soft nudge, and the satellite is authoritative on the real payout.
 			}
 		})();
 
@@ -434,13 +460,28 @@
 		{/each}
 	</div>
 
-	<!-- Referral incentive — quiet growth hook -->
+	<!-- Referral incentive — quiet growth hook. The headline VXP reflects the
+	     sharer's next referrer-reward tier; past the cap it falls back to the
+	     friend's guaranteed bonus so the promise stays honest. -->
 	<div class="share-pop-referral">
 		<span class="share-referral-icon" aria-hidden="true">✦</span>
-		<span>
-			<b>{t({ locale: $localeStore, key: 'flow.share.referral_amount' })}</b>
-			{t({ locale: $localeStore, key: 'flow.share.referral_tail' })}
-		</span>
+		{#if nextRewardVxp > 0}
+			<span>
+				<b>
+					{t({
+						locale: $localeStore,
+						key: 'flow.share.referral_amount',
+						params: { amount: nextRewardVxp }
+					})}
+				</b>
+				{t({ locale: $localeStore, key: 'flow.share.referral_tail' })}
+			</span>
+		{:else}
+			<span>
+				<b>{t({ locale: $localeStore, key: 'flow.share.referral_capped_amount' })}</b>
+				{t({ locale: $localeStore, key: 'flow.share.referral_capped_tail' })}
+			</span>
+		{/if}
 	</div>
 </div>
 

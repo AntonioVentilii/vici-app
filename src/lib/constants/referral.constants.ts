@@ -10,8 +10,10 @@ import { parseToken } from '$lib/utils/parse.utils';
  * The **referrer** reward is *not* flat: it follows the diminishing curve in
  * {@link referrerRewardBaseUnits}, so the longer-term incentive to spam-share a code decays.
  */
+export const REFERRAL_VXP_BONUS_VALUE = 500;
+
 export const REFERRAL_VXP_BONUS_BASE_UNITS = parseToken({
-	value: '500',
+	value: `${REFERRAL_VXP_BONUS_VALUE}`,
 	unitName: VXP_TOKEN.decimals
 });
 
@@ -45,6 +47,13 @@ const REFERRAL_REWARD_TIERS: ReadonlyArray<{ throughIndex: number; value: string
 	{ throughIndex: 30, value: '50' }
 ];
 
+/**
+ * Highest reward on the curve (the first/best tier), as a whole-VXP display number. Used as the
+ * "up to N VXP" ceiling in invite copy. Kept derived from {@link REFERRAL_REWARD_TIERS} so the
+ * two never drift.
+ */
+export const REFERRAL_REFERRER_MAX_REWARD_VXP = Number(REFERRAL_REWARD_TIERS[0].value);
+
 const REFERRAL_REWARD_TIER_BASE_UNITS: ReadonlyArray<{ throughIndex: number; value: bigint }> =
 	REFERRAL_REWARD_TIERS.map(({ throughIndex, value }) => ({
 		throughIndex,
@@ -70,6 +79,28 @@ export const referrerRewardBaseUnits = (priorPaidCount: number): bigint => {
 	}
 
 	return ZERO;
+};
+
+/**
+ * Display-side twin of {@link referrerRewardBaseUnits}: given how many paid redemptions a referrer
+ * has *already* banked (lifetime), returns the *next* redemption's reward as a whole-VXP number for
+ * copy. Reads the same {@link REFERRAL_REWARD_TIERS} table so the headline figure can never drift
+ * from the on-chain payout. Returns `0` once the referrer has reached {@link REFERRAL_MAX_PAID}.
+ *
+ * The referrer's prior-paid count is the count of the caller's own redemption rows that landed
+ * within the cap (`withinReferrerCap === true`) — derivable client-side from `listMyReferrals`, no
+ * privileged query needed. The figure is cosmetic; the satellite remains authoritative on payout.
+ */
+export const referrerRewardVxp = (priorPaidCount: number): number => {
+	const redemptionIndex = priorPaidCount + 1;
+
+	for (const { throughIndex, value } of REFERRAL_REWARD_TIERS) {
+		if (redemptionIndex <= throughIndex) {
+			return Number(value);
+		}
+	}
+
+	return 0;
 };
 
 /**
