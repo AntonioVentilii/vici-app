@@ -10,7 +10,6 @@
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
 	import FlowDailyCap from '$lib/components/market/FlowDailyCap.svelte';
-	import FlowDeckSkeleton from '$lib/components/market/FlowDeckSkeleton.svelte';
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
 	import FlowEntry from '$lib/components/market/FlowEntry.svelte';
@@ -878,22 +877,14 @@
 
 <div
 	class="flow-shell bg-background"
-	class:is-active={!completed && markets.length > 0 && !loading}
+	class:is-active={!completed && (loading || markets.length > 0)}
 	class:is-paused={flowPaused}
 >
-	{#if loading}
-		<!-- Cold-load: the entry overlay's deck-shuffle mode plays over a
-		     card-shaped skeleton while the real first-card fetch resolves.
-		     The skeleton lands in the box the real deck will occupy so the
-		     hand-off is seamless once `loading` flips false. If the user
-		     arms + enters before the fetch lands, the skeleton holds until
-		     the deck arrives (the overlay is already dismissed). -->
-		<div class="flow-skeleton-shell" in:fade>
-			<FlowDeckSkeleton />
-		</div>
-	{:else if markets.length === 0}
+	{#if !loading && markets.length === 0}
+		<!-- Fetch resolved to an empty deck — surface the empty state directly
+		     rather than gating it behind the entry overlay. -->
 		<FlowEmptyDeck onBackToMarkets={backToMarkets} />
-	{:else if dailyCapReached && betsCount === 0}
+	{:else if entered && dailyCapReached && betsCount === 0}
 		<!-- Daily hard cap already met today (across sessions). Opening Flow
 		     shows the "come back tomorrow" takeover, not a fresh deck. -->
 		<FlowDailyCap hardCap={DAILY_HARD_CAP} onClose={handleClose} />
@@ -908,7 +899,7 @@
 			staked={sessionStaked}
 			streak={dailyStreak}
 		/>
-	{:else}
+	{:else if entered}
 		<!-- Persistent Flow header: VICI wordmark + deck-scope chip +
 		     bolt streak chip on the left; bell on the right. Secondary
 		     row carries `idx / total` and `+xp VXP this session` over a
@@ -1053,7 +1044,7 @@
 	     Entering settles the matured calls and reveals the deck below. -->
 	{#if !entered && !completed && (loading || markets.length > 0)}
 		<div out:fade={{ duration: prefersReducedMotion() ? 0 : 220 }}>
-			<FlowEntry digest={liveDigest} onEnter={enterFlow} />
+			<FlowEntry digest={liveDigest} onEnter={enterFlow} ready={!loading} />
 		</div>
 	{/if}
 </div>
@@ -1102,14 +1093,6 @@
 		inset: 0;
 		z-index: 50;
 		overflow: hidden;
-	}
-
-	/* Cold-load wrapper: lets FlowDeckSkeleton fill the shell so its in-slot
-	   card skeleton lands in the same box the real deck will occupy. */
-	.flow-skeleton-shell {
-		position: relative;
-		flex: 1 1 auto;
-		min-height: 0;
 	}
 
 	/* Card stack: relative flex:1 container with the card absolutely
