@@ -16,7 +16,10 @@
 	const total = LANDING_WORLDS_UNIVERSITIES_COUNT;
 	const top3 = [...schools].sort((a, b) => b.accWC - a.accWC).slice(0, 3);
 
-	// silver, gold, bronze ordering — gold center, taller.
+	// silver, gold, bronze ordering — gold center, taller. Heights are
+	// the staggered baseline; tiles use `min-height` so the shortest
+	// (bronze) grows just enough to keep the 3-line content — rank,
+	// school short-name, accuracy — fully visible without clipping.
 	const podium = [
 		{ s: top3[1], rank: 2, height: 84 },
 		{ s: top3[0], rank: 1, height: 110 },
@@ -77,7 +80,7 @@
 				</div>
 				<div
 					style="
-						width:100%; height:{p.height}px;
+						width:100%; min-height:{p.height}px;
 						background:{p.rank === 1
 						? 'linear-gradient(180deg, rgba(226,184,66,0.18), rgba(226,184,66,0.05))'
 						: 'rgba(242,236,220,0.05)'};
