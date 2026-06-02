@@ -1217,7 +1217,6 @@ export const enMessages = {
 	'market.detail.chart.no_trades': 'No trades yet',
 	'market.detail.chart.period.all': 'All',
 	'market.detail.closed.expired': 'This market is closed and awaiting resolution.',
-	'market.detail.closed.resolved': 'This market has resolved and is no longer trading.',
 	'market.detail.coldstart.body':
 		'No one has called this market yet — your prediction sets the first read.',
 	'market.detail.coldstart.lead': 'New market.',

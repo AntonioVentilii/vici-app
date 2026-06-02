@@ -1234,7 +1234,6 @@ export const esMessages = {
 	'market.detail.chart.no_trades': 'Aún sin operaciones',
 	'market.detail.chart.period.all': 'Todo',
 	'market.detail.closed.expired': 'Este mercado está cerrado y a la espera de resolución.',
-	'market.detail.closed.resolved': 'Este mercado se ha resuelto y ya no opera.',
 	'market.detail.coldstart.body':
 		'Nadie ha llamado este mercado todavía — tu predicción marca la primera lectura.',
 	'market.detail.coldstart.lead': 'Mercado nuevo.',
