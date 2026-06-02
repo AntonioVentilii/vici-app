@@ -197,7 +197,23 @@
 						type: 'error'
 					});
 				} else {
-					nextProfile = { ...baseUpdated, nickname: result.handle };
+					// Stamp the handle-change time so the set-profile assertion
+					// accepts the write. The satellite requires `handleLastChangeMs`
+					// ≈ now whenever the (normalized) nickname differs from the
+					// stored doc, and rejects a moved stamp when it is unchanged —
+					// so stamp only on a real change. A brand-new user's
+					// bootstrapped nickname (their OAuth display name / shortened
+					// principal) almost always differs from the handle they pick,
+					// which is exactly the case that was failing.
+					const handleChanged =
+						result.handle.trim().toLowerCase() !==
+						(currentProfile.nickname ?? '').trim().toLowerCase();
+
+					nextProfile = {
+						...baseUpdated,
+						nickname: result.handle,
+						...(handleChanged && { handleLastChangeMs: Date.now() })
+					};
 				}
 			}
 
@@ -214,6 +230,10 @@
 			void goto(resolve(AppPath.Flow), { replaceState: true });
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : '';
+
+			// Surface the real failure — the generic toast below otherwise
+			// swallows it, which is what made this class of bug invisible.
+			console.error('Onboarding handoff (authenticated) failed:', err);
 
 			if (message.includes('already taken')) {
 				notificationsStore.add({

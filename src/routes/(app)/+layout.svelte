@@ -540,7 +540,22 @@
 						return;
 					}
 
-					nextProfile = { ...baseUpdated, nickname: pending.handle };
+					// Stamp the handle-change time so the set-profile assertion
+					// accepts the write. The satellite requires
+					// `handleLastChangeMs` ≈ now whenever the (normalized)
+					// nickname differs from the stored doc, and rejects a moved
+					// stamp when it is unchanged — so stamp only on a real change.
+					// The bootstrapped nickname almost always differs from the
+					// picked handle, which is the case that was failing.
+					const handleChanged =
+						pending.handle.trim().toLowerCase() !==
+						(currentProfile.nickname ?? '').trim().toLowerCase();
+
+					nextProfile = {
+						...baseUpdated,
+						nickname: pending.handle,
+						...(handleChanged && { handleLastChangeMs: Date.now() })
+					};
 				}
 
 				await upsertProfile({
@@ -558,6 +573,10 @@
 				void joinPendingLeagueIfAny(pending.leagueInvite);
 			} catch (err: unknown) {
 				const message = err instanceof Error ? err.message : '';
+
+				// Surface the real failure — the generic toast below otherwise
+				// swallows it, which is what made this class of bug invisible.
+				console.error('Onboarding handoff (pre-auth drain) failed:', err);
 
 				if (message.includes('already taken')) {
 					notificationsStore.add({
