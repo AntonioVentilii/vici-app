@@ -1187,20 +1187,31 @@ html[data-app='1'] body {
 	}
 }
 
-/* XP-award toast envelope — rises from the swipe-exit edge,
-   overshoots, settles. */
+/* XP-award toast envelope — rises from the swipe-exit edge, overshoots,
+   settles, then holds at full opacity for the bulk of the second so the
+   "CALLED YES · N IN PLAY" pill stays legible before the gentle fade-out
+   over the final stretch. The hold mirrors the reduced-motion variant
+   (`xp-toast-rm`); without it the pill fades the instant it lands. */
 @keyframes xp-toast-pop {
 	0% {
 		opacity: 0;
 		transform: translateY(0) scale(0.6);
 	}
-	18% {
+	14% {
 		opacity: 1;
 		transform: translateY(-8px) scale(1.08);
 	}
+	22% {
+		opacity: 1;
+		transform: translateY(-9px) scale(1);
+	}
+	70% {
+		opacity: 1;
+		transform: translateY(-16px) scale(1);
+	}
 	100% {
 		opacity: 0;
-		transform: translateY(-42px) scale(1);
+		transform: translateY(-40px) scale(1);
 	}
 }
 
@@ -2173,7 +2184,7 @@ a.title-action::after {
 	box-shadow:
 		0 0 0 4px rgba(226, 184, 66, 0.18),
 		0 6px 18px -6px rgba(226, 184, 66, 0.55);
-	animation: xp-toast-pop 900ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+	animation: xp-toast-pop 1000ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 .xp-toast .num {
 	font-size: var(--text-body);
