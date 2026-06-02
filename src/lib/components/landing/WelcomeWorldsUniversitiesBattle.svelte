@@ -16,14 +16,17 @@
 	const total = LANDING_WORLDS_UNIVERSITIES_COUNT;
 	const top3 = [...schools].sort((a, b) => b.accWC - a.accWC).slice(0, 3);
 
-	// silver, gold, bronze ordering — gold center, taller. Heights are
-	// the staggered baseline; tiles use `min-height` so the shortest
-	// (bronze) grows just enough to keep the 3-line content — rank,
-	// school short-name, accuracy — fully visible without clipping.
+	// silver, gold, bronze ordering — gold center, taller. The staggered
+	// heights keep the even 26/14px steps (gold › silver › bronze) while
+	// sitting tall enough that even the bronze tile fits its 3-line content
+	// — rank, school short-name, accuracy — without clipping. `min-height`
+	// is kept as a safety so any longer short-name still grows rather than
+	// clips, but the baseline already clears the content so the podium
+	// stagger stays visually even.
 	const podium = [
-		{ s: top3[1], rank: 2, height: 84 },
-		{ s: top3[0], rank: 1, height: 110 },
-		{ s: top3[2], rank: 3, height: 70 }
+		{ s: top3[1], rank: 2, height: 94 },
+		{ s: top3[0], rank: 1, height: 120 },
+		{ s: top3[2], rank: 3, height: 80 }
 	].filter((p): p is { s: (typeof top3)[number]; rank: number; height: number } => Boolean(p.s));
 
 	const fmtAcc = (acc: number): string =>
