@@ -1593,7 +1593,7 @@ export const zhCnMessages = {
 	'profile.avatar.option.bg.clay': '陶土',
 	'profile.dashboard.identity_meta': '等级 {level} · 全球 {rank} · {accuracy}% 准确率',
 	'profile.dashboard.calls_count': '{calls} 次预测',
-	'profile.dashboard.level_label': '等级',
+	'profile.dashboard.level_label': '等级 {level}',
 	'profile.dashboard.oracle.above': '{trades} 次预测中达到 {acc}% 准确率。高于平均水平。',
 	'profile.dashboard.oracle.approves': '{trades} 次预测中达到 {acc}% 准确率。神谕认可。',
 	'profile.dashboard.oracle.no_calls': '尚未预测。神谕在等你。',
