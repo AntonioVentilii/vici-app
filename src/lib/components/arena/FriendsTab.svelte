@@ -1503,13 +1503,16 @@
 		background: color-mix(in srgb, var(--color-primary) 10%, var(--bg-popover));
 	}
 
+	/* Rank index — centered in a fixed-width column so 01/02/… and the
+	   YOU label align under one another. */
 	.ranked-num {
-		min-width: 1.5rem;
+		min-width: 26px;
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
 		font-weight: 800;
 		letter-spacing: var(--tracking-wide);
+		text-align: center;
 	}
 
 	.ranked-num.is-you {
@@ -1551,20 +1554,28 @@
 		font-size: var(--t-12);
 	}
 
+	/* Head-to-head accuracy delta chip — centered with a min-width so
+	   single- and double-digit deltas line up in a column, and a 1px
+	   tinted border on both the ahead and behind variants. */
 	.ranked-h2h {
+		min-width: 42px;
 		padding: 0.2rem 0.5rem;
+		border: 1px solid transparent;
 		border-radius: var(--r-pill);
 		font-size: var(--t-12);
 		font-weight: 700;
+		text-align: center;
 	}
 
 	.ranked-h2h.is-ahead {
 		background: var(--yes-wash, color-mix(in srgb, var(--yes) 16%, transparent));
+		border-color: color-mix(in srgb, var(--yes) 25%, transparent);
 		color: var(--yes);
 	}
 
 	.ranked-h2h.is-behind {
 		background: color-mix(in srgb, var(--no) 14%, transparent);
+		border-color: color-mix(in srgb, var(--no) 22%, transparent);
 		color: var(--no);
 	}
 
