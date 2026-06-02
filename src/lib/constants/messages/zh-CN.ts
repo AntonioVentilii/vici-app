@@ -2026,6 +2026,7 @@ export const zhCnMessages = {
 	'welcome.faq.sub': '每位新 caller 在首次预测前都会问的问题。',
 	'welcome.faq.title_a': '值得问的',
 	'welcome.faq.title_b': '问题。',
+	'welcome.flowcard.consensus_aria': '{pct}% {side} 共识',
 	'welcome.flowcard.delta_today': '今日 +{delta}',
 	'welcome.flowcard.favorite': '热门',
 	'welcome.flowcard.long_shot': '冷门',

@@ -2149,6 +2149,7 @@ export const frMessages = {
 	'welcome.faq.sub': 'Ce que tout nouveau caller demande avant son premier pronostic.',
 	'welcome.faq.title_a': 'Questions',
 	'welcome.faq.title_b': 'qui comptent.',
+	'welcome.flowcard.consensus_aria': '{pct}% de consensus {side}',
 	'welcome.flowcard.delta_today': "+{delta} aujourd'hui",
 	'welcome.flowcard.favorite': 'FAVORI',
 	'welcome.flowcard.long_shot': 'OUTSIDER',
