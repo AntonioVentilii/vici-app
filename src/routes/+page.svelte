@@ -13,7 +13,8 @@
 	//   script in `app.html` (reads the `vici.signed-in` localStorage
 	//   flag) so no UI paints before the bounce.
 	// - For warm in-app navigations to `/`, this $effect bounces to
-	//   `/app` once `userSignedIn` resolves.
+	//   `/flow` once `userSignedIn` resolves — Flow mode is the
+	//   canonical first surface for every authenticated session.
 	// - For signed-out visitors, we render `WelcomePage` only once the
 	//   auth handshake has settled, leaving the brand-coloured shell
 	//   blank in the brief unresolved window. This guarantees the
@@ -21,7 +22,7 @@
 	//   inline script missed (private mode, cleared storage, etc.).
 	$effect(() => {
 		if ($userSignedIn) {
-			void goto(resolve(AppPath.App), { replaceState: true });
+			void goto(resolve(AppPath.Flow), { replaceState: true });
 		}
 	});
 </script>
