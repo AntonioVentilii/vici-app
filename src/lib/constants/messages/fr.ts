@@ -2000,9 +2000,10 @@ export const frMessages = {
 	'arena.friends.feed.eyebrow': 'Activité récente',
 	'arena.friends.global.eyebrow': 'Classement global',
 	'arena.friends.global.unranked': 'Non classé',
-	'arena.friends.invite.cap_reached': "Limite mensuelle d'invitations atteinte.",
-	'arena.friends.invite.cap_remaining': '{remaining} restantes ce mois-ci',
-	'arena.friends.invite.cap_resets': 'Réinitialisée le mois prochain.',
+	'arena.friends.invite.cap_reached': 'Plafond de récompenses atteint.',
+	'arena.friends.invite.cap_remaining': '{remaining} invitations récompensées restantes',
+	'arena.friends.invite.cap_resets':
+		"Vos amis continuent de s'inscrire — les récompenses sont plafonnées.",
 	'arena.friends.invite.copied': 'Copié',
 	'arena.friends.invite.copy': 'Copier le lien',
 	'arena.friends.invite.eyebrow_suffix': 'pour vous deux',

@@ -1982,9 +1982,10 @@ export const itMessages = {
 	'arena.friends.feed.eyebrow': 'Attività recente',
 	'arena.friends.global.eyebrow': 'Classifica globale',
 	'arena.friends.global.unranked': 'Non classificato',
-	'arena.friends.invite.cap_reached': 'Limite mensile di inviti raggiunto.',
-	'arena.friends.invite.cap_remaining': '{remaining} rimasti questo mese',
-	'arena.friends.invite.cap_resets': 'Si azzera il mese prossimo.',
+	'arena.friends.invite.cap_reached': 'Limite delle ricompense raggiunto.',
+	'arena.friends.invite.cap_remaining': '{remaining} inviti con ricompensa rimasti',
+	'arena.friends.invite.cap_resets':
+		'Gli amici continuano a iscriversi: le ricompense hanno un tetto.',
 	'arena.friends.invite.copied': 'Copiato',
 	'arena.friends.invite.copy': 'Copia link',
 	'arena.friends.invite.eyebrow_suffix': 'per entrambi',
