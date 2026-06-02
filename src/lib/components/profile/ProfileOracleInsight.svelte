@@ -24,14 +24,19 @@
 </section>
 
 <style lang="postcss">
+	/* Accent "signal" treatment — the insight is a gold/laurel signal
+	   card, not a character card: accent glow, accent border, accent
+	   eyebrow, mirroring the earned-achievement emblem and the other
+	   accent surfaces. Tri-theme via `--color-primary` / `--accent-glow`
+	   (with a `color-mix` fallback). */
 	.profile-oracle {
 		display: flex;
 		align-items: flex-start;
 		gap: 0.85rem;
 		padding: 0.9rem 1rem;
-		border: 1px solid color-mix(in srgb, var(--char-oracle) 18%, var(--border-base));
+		border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--border-base));
 		border-radius: var(--r-12);
-		background: color-mix(in srgb, var(--char-oracle) 4%, var(--bg-popover));
+		background: var(--accent-glow, color-mix(in srgb, var(--color-primary) 6%, var(--bg-popover)));
 	}
 
 	.profile-oracle-icon {
@@ -42,7 +47,7 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--char-oracle) 18%, transparent);
+		background: color-mix(in srgb, var(--color-primary) 16%, transparent);
 	}
 
 	.profile-oracle-body {
@@ -55,7 +60,7 @@
 
 	.profile-oracle-eyebrow {
 		margin: 0;
-		color: var(--char-oracle);
+		color: var(--color-primary);
 		font-family: var(--font-mono);
 		font-size: var(--t-10);
 		font-weight: 800;
