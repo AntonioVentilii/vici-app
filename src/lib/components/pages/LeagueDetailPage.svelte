@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import ChallengeLeagueModal from '$lib/components/leagues/ChallengeLeagueModal.svelte';
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
 	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
@@ -726,9 +726,8 @@
 
 <div class="league-detail">
 	<!-- Back control only — the league name lives once in the editorial
-	     hero below, so the app bar carries no centered title for this
-	     surface. -->
-	<MobileAppBar
+	     hero below, so the header carries no title for this surface. -->
+	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
 			onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)

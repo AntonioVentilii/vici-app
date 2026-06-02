@@ -3,7 +3,7 @@
 	import { Check, X } from 'lucide-svelte/icons';
 	import { onDestroy, onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -249,8 +249,7 @@
 </script>
 
 <div class="calib-screen">
-	<MobileAppBar
-		align="center"
+	<ScreenHeader
 		back={{ label: t({ locale: $localeStore, key: 'calibration.back.label' }), onBack: back }}
 		title={t({ locale: $localeStore, key: 'calibration.title' })}
 	/>

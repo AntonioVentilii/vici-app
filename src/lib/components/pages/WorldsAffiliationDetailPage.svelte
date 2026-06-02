@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import {
 		lookupWorldsAffiliation,
 		WORLDS_COUNTRIES,
@@ -40,7 +40,7 @@
 	 *
 	 * Layout, top to bottom:
 	 *
-	 *  1. Compact bar (`MobileAppBar`) with an inline back control and
+	 *  1. Compact bar (`ScreenHeader`) with an inline back control and
 	 *     the affiliation name, followed by a scrollable context-chip
 	 *     row (kind · members · champion count · your-marker).
 	 *  2. Identity card — a brand-coloured letter badge (or flag) beside
@@ -162,6 +162,12 @@
 
 	const headerName = $derived(option?.name ?? affiliationIdentifier);
 
+	// Compact-header title. Countries lead with their flag glyph so the
+	// bar still carries the nation marker the identity card repeats below.
+	const headerTitle = $derived(
+		isCountry && option?.glyph ? `${option.glyph} ${headerName}` : headerName
+	);
+
 	/**
 	 * Render a `YYYY-MM` anchor as a localized "Month YYYY" label for
 	 * the champion-history list.
@@ -256,22 +262,13 @@
 </script>
 
 <div class="worlds-detail">
-	<MobileAppBar
-		align="center"
+	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'worlds.detail.back' }),
 			onBack: backToWorlds
 		}}
-	>
-		{#snippet titleChildren()}
-			<h1 class="worlds-detail-title">
-				{#if isCountry && option?.glyph}
-					<span class="worlds-detail-title-flag" aria-hidden="true">{option.glyph}</span>
-				{/if}
-				{headerName}
-			</h1>
-		{/snippet}
-	</MobileAppBar>
+		title={headerTitle}
+	/>
 
 	<div class="worlds-detail-chips">
 		{#each chips as chip (chip.label)}
@@ -458,30 +455,7 @@
 		padding: 0 1.25rem 6rem;
 	}
 
-	/* ─────────────────────────── editorial title + context chips */
-	.worlds-detail-title {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		margin: 0;
-		overflow: hidden;
-		font-family: var(--font-display);
-		font-style: italic;
-		font-weight: 400;
-		font-size: var(--t-20, 1.25rem);
-		letter-spacing: var(--tracking-snug);
-		line-height: 1.1;
-		color: var(--text-base);
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.worlds-detail-title-flag {
-		font-family: var(--font-sans);
-		font-style: normal;
-		font-size: 0.78em;
-	}
-
+	/* ─────────────────────────── context chips */
 	.worlds-detail-chips {
 		display: flex;
 		gap: 0.375rem;

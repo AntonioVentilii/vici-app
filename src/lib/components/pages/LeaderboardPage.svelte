@@ -3,7 +3,7 @@
 	import { UserMinus, UserPlus, Users } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
@@ -168,8 +168,7 @@
 {/snippet}
 
 <div class="leaderboard-page">
-	<MobileAppBar
-		align="left"
+	<ScreenHeader
 		right={leaderboardAppbarRight}
 		title={t({ locale: $localeStore, key: 'leaderboard.title' })}
 	/>

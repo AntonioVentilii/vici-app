@@ -1,15 +1,12 @@
 import type { ClearingDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
 import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
-import { ActivityType } from '$lib/enums/social';
 import type { CallSide, MarketId } from '$lib/types/market';
 import type {
 	CategoryAccuracySignal,
-	FollowedLeanSignal,
 	PriorCallSignal,
 	UserMarketSignals
 } from '$lib/types/market-signals';
-import type { Activity } from '$lib/types/social';
 import {
 	FLOW_ART_CATEGORY_SET,
 	resolveFlowArtCategory,
@@ -62,12 +59,6 @@ const eventConsensus = (event: ClearingDid.Event): number | undefined => {
 	}
 
 	return Math.max(0, Math.min(1, value));
-};
-
-const activityOutcome = (details: string | undefined): CallSide | undefined => {
-	const match = /\bon\s+(YES|NO)\b/i.exec(details ?? '');
-
-	return match?.[1]?.toUpperCase() as CallSide | undefined;
 };
 
 export const deriveCategoryAccuracySignals = ({
@@ -128,49 +119,19 @@ export const derivePriorCallSignals = (
 };
 
 /**
- * Derives followed-user lean from the public activity feed available to
- * the current viewer. This intentionally returns a sparse map: if no
- * followed activity is available for a market, the back-card simply
- * omits the followed-predictor row rather than showing invented data.
+ * Trade-history-derived signals (category accuracy + prior calls). The
+ * friends-lean signal is sourced separately from the clearing canister's
+ * privacy-preserving `aggregate_lean` query — see
+ * `$lib/services/followed-lean.services` — and merged in by the caller, so
+ * it is not produced here.
  */
-export const deriveFollowedLeanSignals = (
-	activities: Activity[]
-): Partial<Record<MarketId, FollowedLeanSignal>> => {
-	const bucket = new Map<MarketId, { yes: number; total: number }>();
-
-	for (const activity of activities.filter(
-		(a) => Boolean(a.marketId) && a.type === ActivityType.TRADE
-	)) {
-		const side = activityOutcome(activity.details);
-
-		if (side !== undefined && activity.marketId) {
-			const marketId = activity.marketId as MarketId;
-			const current = bucket.get(marketId) ?? { yes: 0, total: 0 };
-			current.total += 1;
-			current.yes += side === 'YES' ? 1 : 0;
-			bucket.set(marketId, current);
-		}
-	}
-
-	const followedLean: Partial<Record<MarketId, FollowedLeanSignal>> = {};
-
-	for (const [marketId, value] of bucket.entries()) {
-		followedLean[marketId] = { marketId, ...value };
-	}
-
-	return followedLean;
-};
-
 export const deriveUserMarketSignals = ({
 	events,
-	tagMappings,
-	friendActivities = []
+	tagMappings
 }: {
 	events: ClearingDid.Event[];
 	tagMappings: Record<string, MarketTag[]>;
-	friendActivities?: Activity[];
-}): UserMarketSignals => ({
+}): Omit<UserMarketSignals, 'followedLean'> => ({
 	categoryAcc: deriveCategoryAccuracySignals({ events, tagMappings }),
-	priorCalls: derivePriorCallSignals(events),
-	followedLean: deriveFollowedLeanSignals(friendActivities)
+	priorCalls: derivePriorCallSignals(events)
 });

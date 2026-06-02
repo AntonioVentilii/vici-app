@@ -582,6 +582,13 @@
 				</button>
 			{/if}
 
+			<!-- ─── TODAY'S GOAL · resume the daily call goal ───
+			     Leads the standard dashboard so the active nudge sits above
+			     the accuracy overview. Self-hides until there's progress to
+			     resume; nudges back into Flow while calls remain, then settles
+			     into a calm complete state. -->
+			<DashTodaysGoal date={dailyGoalDate} done={dailyGoalDone} target={DAILY_GOAL_TARGET} />
+
 			<!-- ─── HERO · accuracy ─── -->
 			<DashHeroAccuracy
 				{accuracyPct}
@@ -591,12 +598,6 @@
 				{streak}
 				{streakBarPct}
 			/>
-
-			<!-- ─── TODAY'S GOAL · resume the daily call goal ───
-			     Sits next to the streak/accuracy overview. Self-hides until
-			     there's progress to resume; nudges back into Flow while calls
-			     remain, then settles into a calm complete state. -->
-			<DashTodaysGoal date={dailyGoalDate} done={dailyGoalDone} target={DAILY_GOAL_TARGET} />
 
 			<!-- ─── Time window ─── -->
 			<div
