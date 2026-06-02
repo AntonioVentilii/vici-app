@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Settings, Shield, User } from 'lucide-svelte/icons';
+	import { Settings, Shield, User } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';

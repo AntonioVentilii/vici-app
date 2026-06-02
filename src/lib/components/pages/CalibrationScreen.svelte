@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { Check, X } from 'lucide-svelte/icons';
+	import { Check, X } from '@lucide/svelte/icons';
 	import { onDestroy, onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';

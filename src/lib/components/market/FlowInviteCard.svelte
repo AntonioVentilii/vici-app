@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, Copy, Users } from 'lucide-svelte/icons';
+	import { ChevronRight, Copy, Users } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { REFERRAL_VXP_BONUS_VALUE } from '$lib/constants/referral.constants';

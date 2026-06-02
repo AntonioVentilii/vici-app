@@ -4,7 +4,7 @@
 	 * (eyebrow + countdown + h2 + sub + CTA) paired with a 2×2
 	 * favourite-flag grid on the right.
 	 */
-	import { ChevronRight, Clock } from 'lucide-svelte/icons';
+	import { ChevronRight, Clock } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';

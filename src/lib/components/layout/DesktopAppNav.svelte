@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Settings, User } from 'lucide-svelte/icons';
+	import { Settings, User } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { navItems } from '$lib/constants/nav.constants';

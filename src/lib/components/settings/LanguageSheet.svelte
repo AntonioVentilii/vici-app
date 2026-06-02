@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, Search, X } from 'lucide-svelte/icons';
+	import { Check, Search, X } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import { SUPPORTED_LOCALES, type AppLocale } from '$lib/constants/locale.constants';
 	import { localeStore } from '$lib/stores/locale.store';

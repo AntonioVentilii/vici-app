@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Lock } from 'lucide-svelte';
+	import { Lock } from '@lucide/svelte';
 	import { fade, fly } from 'svelte/transition';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import Card from '$lib/components/ui/Card.svelte';

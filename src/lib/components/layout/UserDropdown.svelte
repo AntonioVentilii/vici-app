@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
-	import { Settings } from 'lucide-svelte/icons';
+	import { Settings } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import DomainSwitch from '$lib/components/layout/DomainSwitch.svelte';
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';

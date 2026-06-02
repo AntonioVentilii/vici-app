@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Share2 } from 'lucide-svelte/icons';
+	import { Share2 } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';

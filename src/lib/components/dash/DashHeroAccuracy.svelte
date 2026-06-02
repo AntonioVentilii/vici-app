@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowDown, ArrowUp, Flame, Sparkles } from 'lucide-svelte/icons';
+	import { ArrowDown, ArrowUp, Flame, Sparkles } from '@lucide/svelte/icons';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 

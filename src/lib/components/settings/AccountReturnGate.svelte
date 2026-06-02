@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
-	import { Loader2 } from 'lucide-svelte/icons';
+	import { Loader2 } from '@lucide/svelte/icons';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { recoverMyAccount, resumeMyAccount } from '$lib/services/account.services';
 	import { localeStore } from '$lib/stores/locale.store';

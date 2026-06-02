@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Bell } from 'lucide-svelte/icons';
+	import { Bell } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { AppPath } from '$lib/constants/routes.constants';

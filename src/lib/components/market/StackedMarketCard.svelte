@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Layers, UsersRound } from 'lucide-svelte/icons';
+	import { Layers, UsersRound } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MarketCard from '$lib/components/market/MarketCard.svelte';

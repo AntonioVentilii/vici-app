@@ -21,7 +21,7 @@
 | --------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **UI primitives**           | `$lib/components/ui/`                   | App-local primitives (Button, Card, Modal, Table, Tabs, Switch, …).                                                                                                                |
 | **Feature components**      | `$lib/components/<feature>/`            | UI specific to a feature (`market/`, `wallet/`, `social/`, `admin/`, `portfolio/`, `profile/`, `leaderboard/`, `authn/`, `authz/`, `challenge/`, `loaders/`, `layout/`, `pages/`). |
-| **Bespoke icons**           | `$lib/components/icons/`                | Project icons not covered by `lucide-svelte`.                                                                                                                                      |
+| **Bespoke icons**           | `$lib/components/icons/`                | Project icons not covered by `@lucide/svelte`.                                                                                                                                     |
 | **Mascot characters**       | `$lib/components/characters/`           | The five companion silhouettes + `StreakFlame` (see Feature folders).                                                                                                              |
 | **Cross-cutting utils**     | `$lib/utils/<concern>.utils.ts`         | Pure helpers usable across features.                                                                                                                                               |
 | **Cross-cutting constants** | `$lib/constants/<concern>.constants.ts` | App-wide constants & lookup tables.                                                                                                                                                |
@@ -93,23 +93,23 @@ Page components read the populated store via a `*.derived.ts` helper.
 
 ### Bespoke icons — `$lib/components/icons/`
 
-Use `lucide-svelte` first; these are the project's own SVGs.
+Use `@lucide/svelte` first; these are the project's own SVGs.
 
-| Component       | Use it for                                                                 |
-| --------------- | -------------------------------------------------------------------------- |
-| `IconGoogle`    | Google sign-in button.                                                     |
-| `IconIC`        | Internet Identity sign-in button.                                          |
-| `IconPasskey`   | Passkey / WebAuthn surfaces.                                               |
-| `IconRobot`     | Bot / automation surfaces.                                                 |
-| `IconSignalYes` | YES prediction signal — arrow-up + tail. Use `text-yes` to colour it.      |
-| `IconSignalNo`  | NO prediction signal — arrow-down + tail. Use `text-no` to colour it.      |
-| `IconInstagram` | Instagram brand glyph (share tiles). `lucide-svelte` ships no brand icons. |
-| `IconFacebook`  | Facebook brand glyph (share tiles).                                        |
-| `IconWhatsApp`  | WhatsApp brand glyph (share tiles).                                        |
-| `IconTelegram`  | Telegram brand glyph (share tiles).                                        |
-| `IconX`         | X (Twitter) brand glyph (share tiles).                                     |
-| `IconTikTok`    | TikTok brand glyph (share tiles).                                          |
-| `IconSnapchat`  | Snapchat brand glyph — render on a brand-yellow tile.                      |
+| Component       | Use it for                                                                  |
+| --------------- | --------------------------------------------------------------------------- |
+| `IconGoogle`    | Google sign-in button.                                                      |
+| `IconIC`        | Internet Identity sign-in button.                                           |
+| `IconPasskey`   | Passkey / WebAuthn surfaces.                                                |
+| `IconRobot`     | Bot / automation surfaces.                                                  |
+| `IconSignalYes` | YES prediction signal — arrow-up + tail. Use `text-yes` to colour it.       |
+| `IconSignalNo`  | NO prediction signal — arrow-down + tail. Use `text-no` to colour it.       |
+| `IconInstagram` | Instagram brand glyph (share tiles). `@lucide/svelte` ships no brand icons. |
+| `IconFacebook`  | Facebook brand glyph (share tiles).                                         |
+| `IconWhatsApp`  | WhatsApp brand glyph (share tiles).                                         |
+| `IconTelegram`  | Telegram brand glyph (share tiles).                                         |
+| `IconX`         | X (Twitter) brand glyph (share tiles).                                      |
+| `IconTikTok`    | TikTok brand glyph (share tiles).                                           |
+| `IconSnapchat`  | Snapchat brand glyph — render on a brand-yellow tile.                       |
 
 Static brand assets that aren't components live in `static/branding/`:
 `vici-wordmark.svg`, `vici-monogram.svg`, `vici-app-icon.svg`, `grain.svg`

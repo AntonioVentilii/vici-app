@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Icon as LucideIcon } from 'lucide-svelte';
+	import type { Icon as LucideIcon } from '@lucide/svelte';
 	import {
 		ArrowLeft,
 		Bell,
@@ -10,7 +10,7 @@
 		Target,
 		UserPlus,
 		Users
-	} from 'lucide-svelte/icons';
+	} from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { AppPath } from '$lib/constants/routes.constants';

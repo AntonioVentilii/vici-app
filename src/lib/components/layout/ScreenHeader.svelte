@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft } from 'lucide-svelte/icons';
+	import { ArrowLeft } from '@lucide/svelte/icons';
 	import type { Snippet } from 'svelte';
 
 	interface BackAction {

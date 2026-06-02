@@ -292,7 +292,7 @@ pins `VICI_ENGINE_ID` is
 
 ## Icons
 
-- Default to `lucide-svelte` (`import { ArrowRight } from 'lucide-svelte';`).
+- Default to `@lucide/svelte` (`import { ArrowRight } from '@lucide/svelte';`).
 - Bespoke icons live under `$lib/components/icons/`. Re-use them before
   inlining a new SVG.
 - Decorative icons → `aria-hidden="true"`.

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, Shuffle, X } from 'lucide-svelte/icons';
+	import { Check, Shuffle, X } from '@lucide/svelte/icons';
 	import { untrack } from 'svelte';
 	import { saveMyAvatarParts } from '$lib/stores/avatar.store';
 	import { localeStore } from '$lib/stores/locale.store';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { RefreshCw } from 'lucide-svelte/icons';
+	import { RefreshCw } from '@lucide/svelte/icons';
 	import { onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
