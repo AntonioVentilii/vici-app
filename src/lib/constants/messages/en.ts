@@ -677,7 +677,6 @@ export const enMessages = {
 		'Per-category accuracy unlocks after you’ve made enough calls in each domain.',
 	'dash.placeholder.positions': 'Your open predictions will appear here once you start calling.',
 	'dash.streak.days': '{count} days',
-	'dash.streak.longest_to_marathon_em': 'Longest — · {count} to Marathon',
 	'dash.title': 'Dashboard',
 	'dash.accuracy.signed_in_short': 'Welcome, {handle}',
 	'dash.active.vol_calls': '{count} calls',

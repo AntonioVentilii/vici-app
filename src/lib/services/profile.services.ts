@@ -52,6 +52,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				totalTrades: 0,
 				winRate: 0,
 				dailyStreak: 0,
+				longestStreak: 0,
 				dailyGoalDone: 0,
 				streak: 0,
 				accuracy: 0,
@@ -183,11 +184,15 @@ const patchProfile = ({
 	patch
 }: {
 	principal: PrincipalText;
-	patch: Partial<UserProfile>;
+	// A static field set, or a function that derives the patch from the
+	// freshest profile (e.g. `longestStreak = max(existing, dailyStreak)`),
+	// evaluated inside the queued turn so it sees prior writes.
+	patch: Partial<UserProfile> | ((current: UserProfile) => Partial<UserProfile>);
 }): Promise<UserProfile> => {
 	const run = profilePatchQueue.then(async () => {
 		const profileDoc = await getProfile(principal);
-		const data: UserProfile = { ...profileDoc.data, ...patch };
+		const resolved = typeof patch === 'function' ? patch(profileDoc.data) : patch;
+		const data: UserProfile = { ...profileDoc.data, ...resolved };
 
 		await upsertProfile({ ...profileDoc, data });
 
@@ -217,7 +222,18 @@ export const persistDailyStreak = ({
 	principal: PrincipalText;
 	dailyStreak: number;
 	lastActiveDay: string;
-}): Promise<UserProfile> => patchProfile({ principal, patch: { dailyStreak, lastActiveDay } });
+}): Promise<UserProfile> =>
+	patchProfile({
+		principal,
+		// `longestStreak` is the high-water mark of `dailyStreak`. Derive it
+		// from the freshest doc inside the queued turn so this is the single
+		// place the personal-best is maintained alongside the bump it tracks.
+		patch: (current) => ({
+			dailyStreak,
+			lastActiveDay,
+			longestStreak: Math.max(current.longestStreak ?? 0, dailyStreak)
+		})
+	});
 
 /**
  * Persist the user's daily-goal counter. Called from Flow Mode after
@@ -732,6 +748,9 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 		data: {
 			...profileDoc.data,
 			dailyStreak: bump.streak,
+			// Keep the personal-best in lock-step with the bump (same
+			// high-water-mark rule as `persistDailyStreak`).
+			longestStreak: Math.max(profileDoc.data.longestStreak ?? 0, bump.streak),
 			lastActiveDay: bump.lastActiveDay,
 			points,
 			level,

@@ -691,7 +691,6 @@ export const deMessages = {
 		'Die Genauigkeit je Kategorie schaltet frei, sobald du in jeder Domäne genug Calls hast.',
 	'dash.placeholder.positions': 'Deine offenen Vorhersagen erscheinen hier, sobald du startest.',
 	'dash.streak.days': '{count} Tage',
-	'dash.streak.longest_to_marathon_em': 'Längste — · {count} bis zum Marathon',
 	'dash.title': 'Dashboard',
 	'dash.accuracy.signed_in_short': 'Willkommen, {handle}',
 	'dash.active.vol_calls': '{count} Vorhersagen',
