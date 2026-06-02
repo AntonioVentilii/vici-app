@@ -2,6 +2,7 @@
 	import { ChevronRight, Copy, Users } from 'lucide-svelte/icons';
 	import { browser } from '$app/environment';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { REFERRAL_VXP_BONUS_VALUE } from '$lib/constants/referral.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
@@ -90,7 +91,11 @@
 			<p class="flow-invite-copy">
 				{t({ locale: $localeStore, key: 'flow.invite.copy_lead' })}
 				<span class="num text-laurel">
-					{t({ locale: $localeStore, key: 'flow.invite.copy_xp', params: { xp: 500 } })}
+					{t({
+						locale: $localeStore,
+						key: 'flow.invite.copy_vxp',
+						params: { vxp: REFERRAL_VXP_BONUS_VALUE }
+					})}
 				</span>
 				{t({ locale: $localeStore, key: 'flow.invite.copy_tail' })}
 			</p>
