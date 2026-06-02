@@ -187,11 +187,18 @@ export const createMarket = async ({
 const fetchMarkets = async ({
 	identity,
 	certified,
-	domain
+	domain,
+	includeOrderBook = true
 }: {
 	identity: Identity;
 	certified: boolean;
 	domain: RegistryDid.BalanceDomain;
+	// When `false`, skip the per-market `getOrderBook` round-trip and seed
+	// neutral 0.5 probabilities. Callers that only need the market *set*
+	// (id / domain / status / outcome) for filtering — positions, trade
+	// history, the calibration deck — pass `false` to avoid an N-wide
+	// order-book fan-out they'd immediately discard (see {@link getMarketsLite}).
+	includeOrderBook?: boolean;
 }): Promise<Market[]> => {
 	const [allSeries, activities] = await Promise.all([
 		listSeries({ identity, certified }),
@@ -221,6 +228,19 @@ const fetchMarkets = async ({
 			// detail page on `Resolved` state.
 			const status: MarketStatus = isResolved ? 'Resolved' : isExpired ? 'Expired' : 'Open';
 			const outcome: Outcome | undefined = resolution?.outcome;
+
+			// Lite mode: callers that only filter by the market set don't need
+			// book-derived prices. Seed the neutral 0.5 (matching
+			// `fetchOpenBinaryMarketsLite`) and skip the round-trip entirely.
+			if (!includeOrderBook) {
+				return mapMarketData({
+					series: s,
+					yesProbability: 0.5,
+					noProbability: 0.5,
+					status,
+					outcome
+				});
+			}
 
 			if (isCategorical && nonNullish(s.outcomes?.[0])) {
 				const orders = await listOrdersApi({
@@ -479,22 +499,30 @@ const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: 
 		}, {});
 
 /**
- * Loads series for the current domain, enriches with order book stats, merges resolved markets
- * from activity, and filters by domain. In playground mode (ViciXp), Social markets are included.
+ * Order-book-free single-shot fetch: returns the domain-scoped binary market
+ * set (open + resolved) but skips the per-market `getOrderBook` fan-out, so
+ * probabilities are seeded neutral (0.5). The price-bearing list path is
+ * {@link loadMarkets} (fast query then certified update, both enriched).
  *
- * Performs a single certified update. Prefer {@link loadMarkets} for UI flows that
- * should render a fast uncertified result first and upgrade once certified data arrives.
+ * For callers that consume only the market *set* — `id`, `balanceDomain`,
+ * `status`, `outcome`, `engineId`, `payoffType` — to filter their own data:
+ * positions, trade history, and the calibration deck. These ran the full
+ * certified fan-out purely to derive an id set, multiplying first-load cost by
+ * the catalog size. Stays `certified: true` to keep the set in lockstep with
+ * the certified positions / events / settled-id reads it filters against —
+ * cheap now that it's a handful of catalog reads rather than N book lookups.
  */
-export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
+export const getMarketsLite = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 
-	return fetchMarkets({ identity, certified: true, domain });
+	return fetchMarkets({ identity, certified: true, domain, includeOrderBook: false });
 };
 
 /**
- * Callback-based variant of {@link getMarkets} built on `queryAndUpdate`: fires
- * `onLoad` up to twice — once with the fast uncertified query result, then again
- * with the certified update result. The underlying utility drops stale query
+ * Certified-aware list loader built on `queryAndUpdate`: fires `onLoad` up to
+ * twice — once with the fast uncertified query result, then again with the
+ * certified update result. Both passes are order-book-enriched (this is the
+ * price-bearing markets-list path). The underlying utility drops stale query
  * responses that arrive after the update has settled, so callers can safely
  * overwrite their sink on every invocation.
  */
