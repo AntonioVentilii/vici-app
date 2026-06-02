@@ -16,6 +16,8 @@
 		LANDING_CAT_LABELS,
 		type LandingMarket
 	} from '$lib/constants/landing-data.constants';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		market: LandingMarket;
@@ -51,7 +53,7 @@
 			<span
 				style="font-family:var(--font-mono); font-size:var(--t-10); color:#FF8A7A; text-transform:uppercase; letter-spacing:var(--tracking-allcaps); font-weight:600;"
 			>
-				{minority}% agree · 2× VXP
+				{t({ locale: $localeStore, key: 'welcome.flowcard.trickster', params: { minority } })}
 			</span>
 		</div>
 	{/if}
@@ -82,9 +84,15 @@
 			<div style="gap:8px;" class="row">
 				<LandingAvatarStack />
 				<span class="num mute t-eyebrow">
-					{predictors.toLocaleString()} predicting
+					{t({
+						locale: $localeStore,
+						key: 'welcome.flowcard.predicting',
+						params: { count: predictors.toLocaleString() }
+					})}
 					<span style="margin:0 5px; color:var(--fg-faint);">·</span>
-					<span style="color:var(--yes); font-weight:700;">+{delta} today</span>
+					<span style="color:var(--yes); font-weight:700;">
+						{t({ locale: $localeStore, key: 'welcome.flowcard.delta_today', params: { delta } })}
+					</span>
 				</span>
 			</div>
 		</div>
@@ -97,14 +105,18 @@
 			<div class="flow-probs-row">
 				<div class="flow-probs-side no" data-side="no">
 					<span class="flow-probs-pct">{no}%</span>
-					<span class="flow-probs-label no">NO</span>
+					<span class="flow-probs-label no">
+						{t({ locale: $localeStore, key: 'welcome.flowcard.no' })}
+					</span>
 				</div>
 				<div class="flow-probs-track" aria-hidden="true">
 					<div style="width:{no}%;" class="flow-probs-fill-no"></div>
 					<div style="width:{yes}%;" class="flow-probs-fill-yes"></div>
 				</div>
 				<div class="flow-probs-side yes" data-side="yes">
-					<span class="flow-probs-label yes">YES</span>
+					<span class="flow-probs-label yes">
+						{t({ locale: $localeStore, key: 'welcome.flowcard.yes' })}
+					</span>
 					<span class="flow-probs-pct">{yes}%</span>
 				</div>
 			</div>
@@ -112,10 +124,20 @@
 				<div class="flow-probs-action no">
 					<span class="flow-probs-arrow">←</span>
 					<span class="flow-probs-payout">+{winNo}</span>
-					<span class="flow-probs-role">{yesIsFav ? 'LONG SHOT' : 'FAVORITE'}</span>
+					<span class="flow-probs-role">
+						{t({
+							locale: $localeStore,
+							key: yesIsFav ? 'welcome.flowcard.long_shot' : 'welcome.flowcard.favorite'
+						})}
+					</span>
 				</div>
 				<div class="flow-probs-action yes">
-					<span class="flow-probs-role">{yesIsFav ? 'FAVORITE' : 'LONG SHOT'}</span>
+					<span class="flow-probs-role">
+						{t({
+							locale: $localeStore,
+							key: yesIsFav ? 'welcome.flowcard.favorite' : 'welcome.flowcard.long_shot'
+						})}
+					</span>
 					<span class="flow-probs-payout">+{winYes}</span>
 					<span class="flow-probs-arrow">→</span>
 				</div>
@@ -124,9 +146,11 @@
 
 		<div class="row between flow-foot">
 			<span style="letter-spacing:0.10em;" class="num mute t-eyebrow">
-				SIZE · {STAKE} VXP
+				{t({ locale: $localeStore, key: 'welcome.flowcard.size', params: { stake: STAKE } })}
 			</span>
-			<span style="letter-spacing:0.14em;" class="num mute t-eyebrow"> SWIPE TO CALL </span>
+			<span style="letter-spacing:0.14em;" class="num mute t-eyebrow">
+				{t({ locale: $localeStore, key: 'welcome.flowcard.swipe_to_call' })}
+			</span>
 		</div>
 	</div>
 </div>
