@@ -19,8 +19,18 @@
 	const dir = $derived(isYes ? 'yes' : 'no');
 	const color = $derived(isYes ? 'var(--yes)' : 'var(--no)');
 	const pct = $derived(Math.max(yes, 100 - yes));
+	// The dial points to whichever side holds the majority, and the readout
+	// shows that majority percent — so the screen-reader label must name the
+	// displayed side (YES or NO), not a fixed one.
+	const sideLabel = $derived(
+		t({ locale: $localeStore, key: isYes ? 'welcome.flowcard.yes' : 'welcome.flowcard.no' })
+	);
 	const ariaLabel = $derived(
-		t({ locale: $localeStore, key: 'welcome.flowcard.consensus_aria', params: { yes } })
+		t({
+			locale: $localeStore,
+			key: 'welcome.flowcard.consensus_aria',
+			params: { pct, side: sideLabel }
+		})
 	);
 </script>
 
