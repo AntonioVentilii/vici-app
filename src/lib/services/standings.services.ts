@@ -1,7 +1,6 @@
 import type { ClearingDid } from '$declarations';
 import { listLeaderboard } from '$lib/api/clearing.api';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
-import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 import { setGlobalStandings } from '$lib/stores/standings.store';
 import type { StandingEntry, StandingsResult, StandingsWindow } from '$lib/types/standings';
 import { fromNullable } from '@dfinity/utils';
@@ -88,26 +87,25 @@ export const getStandings = async ({
 };
 
 /**
- * Loads one window's global standings, hydrates the shared profile cache for
- * every ranked principal (so rows can render handle / avatar), and merges the
- * slice into {@link globalStandingsStore}. Awaited by the Leaderboard tab and
- * the dashboard rank tiles; profile hydration is best-effort and never blocks
- * the standings from landing.
+ * Loads one window's global standings ranking and merges it into
+ * {@link globalStandingsStore}. Ranking only — it deliberately does NOT
+ * hydrate the profile cache.
+ *
+ * Profile hydration is the caller's job, because the two consumers have wildly
+ * different needs from the SAME cached slice: the dashboard rank tile renders
+ * only the viewer's own rank (no other handle/avatar), whereas the Leaderboard
+ * renders every row. Folding a hydrate-everyone fan-out in here meant the dash
+ * — hit on the first authenticated page of a session — fired one `getProfile`
+ * per ranked principal (up to {@link MAX_STANDINGS_PAGES} × 500), a multi-
+ * thousand request burst it threw away. The Leaderboard now hydrates only the
+ * rows it actually paints (see `LeaderboardPage`).
  */
 export const loadGlobalStandings = async ({
 	window
 }: {
 	window: StandingsWindow;
 }): Promise<void> => {
-	const result = await getStandings({ window });
-
-	setGlobalStandings(result);
-
-	if (result.entries.length > 0) {
-		await loadProfilesByPrincipals({
-			principals: result.entries.map((entry) => entry.owner)
-		}).catch(() => undefined);
-	}
+	setGlobalStandings(await getStandings({ window }));
 };
 
 /**
