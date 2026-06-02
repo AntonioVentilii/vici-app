@@ -622,6 +622,22 @@ html {
 		cursor: pointer;
 	}
 
+	/* Safari/WebKit greys the label of disabled <button>s via its UA
+	 * `-webkit-text-fill-color`, which overrides the author `color`.
+	 * Blink doesn't, so disabled CTAs and provider pills (e.g. the gold
+	 * "Claim @…" handle button before a pick, the Apple/Email "Soon"
+	 * placeholders, Internet Identity/Passkey when the live backend isn't
+	 * available) rendered an unreadable dark label in Safari/iOS while
+	 * Chrome — matching the prototype — kept them legible. Pinning the
+	 * fill to `currentColor` makes our `color` authoritative again; it
+	 * resolves per-element so every variant and the disabled state stay
+	 * legible. We don't author `-webkit-text-fill-color` anywhere else
+	 * (no gradient/clipped button text), so this is regression-safe. */
+	button,
+	[role='button'] {
+		-webkit-text-fill-color: currentColor;
+	}
+
 	/* Tailwind v4 preflight also strips the UA focus ring without
 	 * replacing it, so keyboard users get no visible cue. Restore a
 	 * brand-aligned focus-visible ring on every interactive element:
