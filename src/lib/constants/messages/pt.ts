@@ -1668,7 +1668,7 @@ export const ptMessages = {
 	'profile.avatar.option.bg.clay': 'Argila',
 	'profile.dashboard.identity_meta': 'Nv {level} · {rank} global · {accuracy}% de precisão',
 	'profile.dashboard.calls_count': '{calls} previsões',
-	'profile.dashboard.level_label': 'NÍVEL',
+	'profile.dashboard.level_label': 'NÍVEL {level}',
 	'profile.dashboard.oracle.above': '{acc}% de precisão em {trades} previsões. Acima da multidão.',
 	'profile.dashboard.oracle.approves':
 		'{acc}% de precisão em {trades} previsões. O Oráculo aprova.',
