@@ -1244,6 +1244,8 @@ export const ptMessages = {
 	'market.detail.not_found.cta': 'Voltar aos mercados',
 	'market.detail.not_found.sub': 'O mercado que você procura está oculto ou não existe.',
 	'market.detail.not_found.title': '404 - Mercado não encontrado',
+	'market.detail.readonly.live': 'Somente leitura · as previsões são feitas no Flow',
+	'market.detail.readonly.settled': 'Mercado liquidado · não está mais sendo negociado',
 	'market.detail.resolution.eyebrow': 'Resolução',
 	'market.detail.resolution.fallback':
 		'Resolve YES se a fonte oficial confirmar o resultado antes de {closesAt}, conforme os critérios do mercado.',

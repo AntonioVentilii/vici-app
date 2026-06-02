@@ -1256,6 +1256,8 @@ export const deMessages = {
 	'market.detail.not_found.cta': 'Zurück zu Märkten',
 	'market.detail.not_found.sub': 'Der gesuchte Markt ist entweder verborgen oder existiert nicht.',
 	'market.detail.not_found.title': '404 – Markt nicht gefunden',
+	'market.detail.readonly.live': 'Nur ansehen · Vorhersagen werden in Flow getroffen',
+	'market.detail.readonly.settled': 'Markt abgerechnet · kein Handel mehr',
 	'market.detail.resolution.eyebrow': 'Auflösung',
 	'market.detail.resolution.fallback':
 		'Löst JA auf, wenn die offizielle Quelle das Ergebnis vor {closesAt} gemäß den Marktkriterien bestätigt.',

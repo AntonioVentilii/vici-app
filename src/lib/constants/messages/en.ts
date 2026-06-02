@@ -1229,6 +1229,8 @@ export const enMessages = {
 	'market.detail.not_found.cta': 'Return to Markets',
 	'market.detail.not_found.sub': 'The market you are seeking is either hidden or does not exist.',
 	'market.detail.not_found.title': '404 - Market Not Found',
+	'market.detail.readonly.live': 'Read only · predictions are made in Flow',
+	'market.detail.readonly.settled': 'Market settled · no longer trading',
 	'market.detail.resolution.eyebrow': 'Resolution',
 	'market.detail.resolution.fallback':
 		"Resolves YES if the official source confirms the outcome before {closesAt}, in line with the market's resolution criteria.",

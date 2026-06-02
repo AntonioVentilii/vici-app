@@ -22,6 +22,7 @@
 	import TradeModal from '$lib/components/market/TradeModal.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { MARKET_DETAIL_DIRECT_TRADE_ENABLED } from '$lib/constants/feature-flags.constants';
 	import { categoryLabel } from '$lib/constants/market-tags.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
@@ -370,7 +371,10 @@
 	>
 </svelte:head>
 
-<div class="market-detail-screen">
+<div
+	class="market-detail-screen"
+	class:market-detail-screen--readonly={!MARKET_DETAIL_DIRECT_TRADE_ENABLED}
+>
 	{#if loading}
 		<MarketDetailSkeleton />
 	{:else if market}
@@ -515,25 +519,33 @@
 			</section>
 		{/if}
 
-		<!-- CTA bar is only meaningful while the market is taking calls.
-		     Expired (closed, awaiting resolution) and Resolved markets both
-		     suppress it so the YES/NO actions can't be tapped against a
-		     market that no longer accepts predictions. -->
-		{#if isLive}
+		<!-- The detail page is a read-only depth view by default: the
+		     probability, chart, and stats are on display, while predictions
+		     are placed in Flow. The in-page YES/NO CTA bar (and its trade
+		     sheet below) is preserved behind a build-time flag so direct
+		     trading from the detail page can be restored by flipping it. It
+		     only ever shows while the market is still taking calls — expired
+		     and resolved markets never expose the actions. -->
+		{#if MARKET_DETAIL_DIRECT_TRADE_ENABLED && isLive}
 			<MarketDetailCtaBar {noPercent} onPick={handlePick} {yesPercent} />
 		{:else}
-			<!-- No-longer-trading footer — stands in for the CTA bar on
-			     expired / resolved markets so the page closes with an
-			     explicit "this market is closed" line rather than an empty
-			     gap where the YES/NO actions used to be. -->
+			<!-- Read-only footer — closes the page with an explicit status
+			     line instead of an empty gap where the CTA bar would sit:
+			     a live market points the viewer to Flow, a resolved one
+			     states it has settled, and an expired one notes it is
+			     awaiting resolution. -->
 			<p class="market-detail-closed-foot">
-				{isResolved
-					? t({ locale: $localeStore, key: 'market.detail.closed.resolved' })
-					: t({ locale: $localeStore, key: 'market.detail.closed.expired' })}
+				{#if isResolved}
+					{t({ locale: $localeStore, key: 'market.detail.readonly.settled' })}
+				{:else if isLive}
+					{t({ locale: $localeStore, key: 'market.detail.readonly.live' })}
+				{:else}
+					{t({ locale: $localeStore, key: 'market.detail.closed.expired' })}
+				{/if}
 			</p>
 		{/if}
 
-		{#if nonNullish(selectedSide)}
+		{#if MARKET_DETAIL_DIRECT_TRADE_ENABLED && nonNullish(selectedSide)}
 			<TradeModal
 				{market}
 				onClose={() => (selectedSide = undefined)}
@@ -574,6 +586,14 @@
 		   pad is: safe-area + navpill + CTA (~5rem) + a little breathing
 		   room. */
 		padding: 0.25rem 0 calc(env(safe-area-inset-bottom, 0px) + var(--navpill-h, 0px) + 6rem);
+	}
+
+	/* Read-only depth view: no floating CTA bar, so the in-flow read-only
+	   footer is the last element. Drop the CTA reservation and keep just
+	   safe-area + navpill + a small footer margin, so there's no empty gap
+	   below the footer. */
+	.market-detail-screen--readonly {
+		padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--navpill-h, 0px) + 2rem);
 	}
 
 	/* Scope the ghost header look to this detail app-bar only. The
@@ -732,6 +752,12 @@
 	@media (min-width: 56rem) {
 		.market-detail-screen {
 			padding-bottom: 8rem;
+		}
+
+		/* No floating CTA bar in the read-only view, so the desktop
+		   clearance collapses to a standard bottom margin. */
+		.market-detail-screen--readonly {
+			padding-bottom: 2rem;
 		}
 	}
 </style>

@@ -1260,6 +1260,8 @@ export const frMessages = {
 	'market.detail.not_found.cta': 'Retour aux marchés',
 	'market.detail.not_found.sub': 'Le marché que vous cherchez est caché ou n’existe pas.',
 	'market.detail.not_found.title': '404 - Marché introuvable',
+	'market.detail.readonly.live': 'Lecture seule · les prédictions se font dans Flow',
+	'market.detail.readonly.settled': 'Marché réglé · plus de transactions',
 	'market.detail.resolution.eyebrow': 'Résolution',
 	'market.detail.resolution.fallback':
 		'Se résout YES si la source officielle confirme le résultat avant {closesAt}, selon les critères du marché.',
