@@ -2529,6 +2529,15 @@ a.title-action::after {
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-base);
+	/* Safari/WebKit greys the text of disabled <button>s via its UA
+	   `-webkit-text-fill-color`, which wins over `color` — so the
+	   disabled provider pills (Apple/Email "Soon", II/Passkey when the
+	   live backend isn't available) render their light label as an
+	   unreadable dark in Safari while Blink leaves them legible. Pinning
+	   the fill to `currentColor` makes our author `color` authoritative
+	   again; it tracks every variant (cream/dark/faint) and the disabled
+	   state with no extra rules. */
+	-webkit-text-fill-color: currentColor;
 	transition:
 		opacity 200ms var(--ease-vici),
 		border-color 200ms var(--ease-vici),
