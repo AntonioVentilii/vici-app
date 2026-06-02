@@ -19,10 +19,11 @@
 	// silver, gold, bronze ordering — gold center, taller. The staggered
 	// heights keep the even 26/14px steps (gold › silver › bronze) while
 	// sitting tall enough that even the bronze tile fits its 3-line content
-	// — rank, school short-name, accuracy — without clipping. `min-height`
-	// is kept as a safety so any longer short-name still grows rather than
-	// clips, but the baseline already clears the content so the podium
-	// stagger stays visually even.
+	// — rank, school short-name, accuracy — without clipping. The baseline
+	// already clears the content, so `min-height` (vs fixed `height`) is
+	// only a guard against font / line-height / locale shifts (e.g. a taller
+	// numeral set or a localized label), not the short-name — which is
+	// nowrap + ellipsis and so never grows the tile.
 	const podium = [
 		{ s: top3[1], rank: 2, height: 94 },
 		{ s: top3[0], rank: 1, height: 120 },
