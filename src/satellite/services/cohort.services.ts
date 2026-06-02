@@ -509,7 +509,10 @@ export const listFriendRecommendedLeaguesFn = (): FriendRecommendedLeague[] => {
 						recommendations.push({
 							league,
 							memberCount: memberCounts.get(leagueId) ?? friendSet.size,
-							friendMembers: [...friendSet]
+							// Sort for a stable order — the Set's insertion order
+							// follows the LEAGUE_MEMBERS scan, which would make the
+							// highlighted friend + stacked avatars non-deterministic.
+							friendMembers: [...friendSet].sort()
 						});
 					}
 				} catch {

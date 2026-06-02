@@ -125,7 +125,9 @@ const runRefresh = async (): Promise<void> => {
 	}
 
 	for (const rec of recommendations) {
-		for (const friend of rec.friendMembers) {
+		// LeagueListCard renders only the first 3 overlapping friend avatars,
+		// so hydrate just those profiles — loading the rest is unused work.
+		for (const friend of rec.friendMembers.slice(0, 3)) {
 			allMembers.add(friend);
 		}
 	}
