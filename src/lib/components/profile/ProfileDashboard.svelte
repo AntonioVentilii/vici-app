@@ -241,9 +241,10 @@
 		'verified'
 	]);
 
-	// Read the stored Alma Mater verification state, defaulting to
-	// `'unverified'` once a university affiliation exists. A stored value
-	// outside the known set is ignored (treated as `'unverified'`).
+	// Normalize the stored Alma Mater verification state: an absent value
+	// or one outside the known set reads as `'unverified'`. This derived
+	// status is only surfaced on the slot when a university affiliation
+	// exists (see the `status:` assignment on the university slot below).
 	const schoolStatus = $derived<SchoolStatus>(
 		profile.schoolStatus !== undefined && SCHOOL_STATUSES.has(profile.schoolStatus)
 			? (profile.schoolStatus as SchoolStatus)
@@ -656,14 +657,14 @@
 						{/if}
 					</span>
 					{#if slot.status === 'verified'}
-						<span
-							class="affil-slot-badge affil-slot-badge-verified"
-							aria-label={t({
-								locale: $localeStore,
-								key: 'profile.dashboard.affiliations.status_verified'
-							})}
-						>
+						<span class="affil-slot-badge affil-slot-badge-verified">
 							<Check aria-hidden="true" size={9} strokeWidth={3.5} />
+							<span class="sr-only">
+								{t({
+									locale: $localeStore,
+									key: 'profile.dashboard.affiliations.status_verified'
+								})}
+							</span>
 						</span>
 					{:else if slot.status === 'pending'}
 						<span class="affil-slot-badge affil-slot-badge-pending num">
