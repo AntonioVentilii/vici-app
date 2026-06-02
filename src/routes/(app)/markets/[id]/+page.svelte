@@ -227,6 +227,12 @@
 	const isResolved = $derived(market?.status === 'Resolved');
 	const isLive = $derived(market?.status === 'Open');
 
+	// The direct-trade CTA bar only ever renders for a live market behind the
+	// build-time flag. Drive both the CTA `{#if}` and the read-only padding
+	// modifier from this single source so the reserved CTA space collapses
+	// whenever the bar is absent — including a flag-on, non-live market.
+	const showTradeCta = $derived(MARKET_DETAIL_DIRECT_TRADE_ENABLED && isLive);
+
 	// Resolved binary outcome (YES/NO) when known. Drives the
 	// "RESOLVED · YES/NO" tag, the settled banner, and the dimming of the
 	// losing side in the probability hero.
@@ -371,10 +377,7 @@
 	>
 </svelte:head>
 
-<div
-	class="market-detail-screen"
-	class:market-detail-screen--readonly={!MARKET_DETAIL_DIRECT_TRADE_ENABLED}
->
+<div class="market-detail-screen" class:market-detail-screen--readonly={!showTradeCta}>
 	{#if loading}
 		<MarketDetailSkeleton />
 	{:else if market}
@@ -526,7 +529,7 @@
 		     trading from the detail page can be restored by flipping it. It
 		     only ever shows while the market is still taking calls — expired
 		     and resolved markets never expose the actions. -->
-		{#if MARKET_DETAIL_DIRECT_TRADE_ENABLED && isLive}
+		{#if showTradeCta}
 			<MarketDetailCtaBar {noPercent} onPick={handlePick} {yesPercent} />
 		{:else}
 			<!-- Read-only footer — closes the page with an explicit status
