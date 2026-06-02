@@ -77,9 +77,10 @@
 			Reads the `vici.signed-in` localStorage hint written by
 			`Authn.svelte` on every auth-state transition. If we're hitting
 			the marketing root `/` and the hint says we have a session,
-			bounce to `/app` synchronously before SvelteKit hydrates so
-			the landing surface never paints. The in-page gate at
-			`src/routes/+page.svelte` is the source of truth — this is
+			bounce to `/flow` synchronously before SvelteKit hydrates so
+			the landing surface never paints. Flow mode is the canonical
+			first surface for every authenticated session. The in-page gate
+			at `src/routes/+page.svelte` is the source of truth — this is
 			purely a paint-time optimisation, so a stale or missing flag
 			just falls through to the regular gate.
 		-->
@@ -89,7 +90,7 @@
 					var signedIn = localStorage.getItem('vici.signed-in') === '1';
 					var p = location.pathname;
 					if (signedIn && p === '/') {
-						location.replace('/app');
+						location.replace('/flow');
 					}
 				} catch (e) {}
 			})();
