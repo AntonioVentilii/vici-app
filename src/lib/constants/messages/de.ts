@@ -1245,7 +1245,6 @@ export const deMessages = {
 	'market.detail.chart.no_trades': 'Noch keine Trades',
 	'market.detail.chart.period.all': 'Alle',
 	'market.detail.closed.expired': 'Dieser Markt ist geschlossen und wartet auf die Auflösung.',
-	'market.detail.closed.resolved': 'Dieser Markt ist aufgelöst und wird nicht mehr gehandelt.',
 	'market.detail.coldstart.body':
 		'Diesen Markt hat noch niemand eingeschätzt — deine Vorhersage setzt den ersten Stand.',
 	'market.detail.coldstart.lead': 'Neuer Markt.',
