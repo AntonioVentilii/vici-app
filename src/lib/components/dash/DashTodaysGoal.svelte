@@ -164,7 +164,7 @@
 
 	.track {
 		height: 6px;
-		background: color-mix(in srgb, var(--parchment) 6%, transparent);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 		border-radius: 999px;
 		overflow: hidden;
 	}

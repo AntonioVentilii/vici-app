@@ -126,7 +126,7 @@
 	}
 	.flow-back-share:hover,
 	.flow-back-share.is-active {
-		background: color-mix(in srgb, var(--parchment) 6%, transparent);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 		color: var(--text-base);
 	}
 </style>

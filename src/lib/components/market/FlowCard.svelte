@@ -899,7 +899,7 @@
 		background: color-mix(in srgb, var(--text-base) 4%, transparent);
 		font-size: var(--text-eyebrow);
 		font-weight: 500;
-		color: var(--parchment-dim);
+		color: var(--fg-dim);
 		letter-spacing: 0;
 	}
 	.flow-whynow strong {
@@ -956,7 +956,7 @@
 		font-size: 13.5px;
 		line-height: 1.35;
 		letter-spacing: 0;
-		color: var(--parchment-dim);
+		color: var(--fg-dim);
 		/* Serif-italic accent — editorial sub-row. The global
 		   `.serif-italic` utility also sets font-family + weight; this
 		   duplicates a few props so the typography still reads when the
