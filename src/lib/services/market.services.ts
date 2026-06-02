@@ -588,11 +588,21 @@ export const loadMarketsProgressive = async ({
 		return;
 	}
 
-	// Overlay last-known book-derived fields onto the fresh set so a refresh
-	// shows prior prices immediately (no 0.5 flash) while re-enrichment runs;
-	// genuinely new markets fall back to the lite neutral seed.
+	// Seed each row's book-derived fields before enrichment:
+	//  - a resolved market with a known outcome renders deterministically from
+	//    that outcome (YES won → 100/0, NO won → 0/100) — no order-book read,
+	//    and never the misleading neutral 0.5 the lite mapper would leave;
+	//  - everything else overlays last-known prices from `previous` so a refresh
+	//    doesn't flash rows back to 0.5 while re-enrichment runs, falling back to
+	//    the lite neutral seed for genuinely new markets.
 	const priceById = new Map((previous ?? []).map((market) => [market.id, market]));
 	const seeded = lite.map((market) => {
+		if (market.status === 'Resolved' && market.outcome !== undefined) {
+			const yesWon = market.outcome === 'YES';
+
+			return { ...market, yesProbability: yesWon ? 1 : 0, noProbability: yesWon ? 0 : 1 };
+		}
+
 		const prior = priceById.get(market.id);
 
 		return prior === undefined
@@ -610,19 +620,21 @@ export const loadMarketsProgressive = async ({
 
 	onUpdate(seeded);
 
-	// Phase 2 — background book enrichment. Only open markets carry a live book
-	// worth pricing; resolved markets keep their (price-irrelevant) lite values.
+	// Phase 2 — background book enrichment for every non-resolved market (open
+	// *and* expired-but-unresolved both carry a live/last book the list prices
+	// off). Resolved markets are skipped: they're already pinned to their
+	// outcome above.
 	const enriched = [...seeded];
 	const indexById = new Map(seeded.map((market, index) => [market.id, index]));
-	const open = seeded.filter((market) => market.status === 'Open');
+	const pending = seeded.filter((market) => market.status !== 'Resolved');
 
-	for (let start = 0; start < open.length; start += MARKETS_ENRICH_BATCH_SIZE) {
+	for (let start = 0; start < pending.length; start += MARKETS_ENRICH_BATCH_SIZE) {
 		if (isStale?.()) {
 			return;
 		}
 
 		const batch = await enrichMarketsWithOrderBook({
-			markets: open.slice(start, start + MARKETS_ENRICH_BATCH_SIZE),
+			markets: pending.slice(start, start + MARKETS_ENRICH_BATCH_SIZE),
 			identity,
 			certified: false
 		});

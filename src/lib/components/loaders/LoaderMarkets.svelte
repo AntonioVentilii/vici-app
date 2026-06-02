@@ -9,8 +9,18 @@
 
 	let prevDomain: ClearingDid.BalanceDomain | undefined = undefined;
 
+	// Monotonic run token. A progressive load emits many updates over time, and
+	// refresh() has several concurrent triggers (the AtomicLoader poll, the
+	// `viciRefreshMarkets` event, a balance-domain switch). Without a token an
+	// older run still batching could overwrite a newer run's data even within
+	// the same domain. Every refresh claims the next token; a run only writes
+	// (and only keeps fetching) while it's still the latest AND the domain it
+	// captured is still current.
+	let latestRun = 0;
+
 	const refresh = async ({ resetStore = false } = {}) => {
 		const domainToken = $balanceDomain;
+		const run = ++latestRun;
 
 		if (resetStore) {
 			marketsStore.set(undefined);
@@ -21,23 +31,26 @@
 		// cleared, so there's nothing (correctly) to carry.
 		const previous = resetStore ? undefined : get(marketsStore);
 
+		// A run is current only while it's the latest claimed and its captured
+		// domain still matches. Structural compare: `balanceDomain` is a derived
+		// store that emits fresh `{ Settlement: null }`-style literals, so
+		// referential `===` is unreliable even when the logical domain is unchanged.
+		const isCurrent = () => run === latestRun && compareBalanceDomains($balanceDomain, domainToken);
+
 		// Progressive load: the order-book-free lite set lands first (instant,
 		// unblocking the shell's cold-load), then book-derived prices fill in
-		// batch-by-batch in the background. Each update is dropped if a
-		// balance-domain switch landed mid-flight, and `isStale` aborts the
-		// in-flight enrichment so a superseded run stops fetching.
+		// batch-by-batch in the background. Updates from a superseded run are
+		// dropped, and `isStale` aborts its in-flight enrichment so it stops
+		// fetching.
 		await loadMarketsProgressive({
 			domain: domainToken,
 			previous,
 			onUpdate: (markets) => {
-				// Structural compare: `balanceDomain` is a derived store that emits
-				// fresh `{ Settlement: null }`-style literals, so referential `===`
-				// is unreliable even when the logical domain is unchanged.
-				if (compareBalanceDomains($balanceDomain, domainToken)) {
+				if (isCurrent()) {
 					marketsStore.set(markets);
 				}
 			},
-			isStale: () => !compareBalanceDomains($balanceDomain, domainToken)
+			isStale: () => !isCurrent()
 		});
 	};
 
