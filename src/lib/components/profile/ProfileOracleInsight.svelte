@@ -27,7 +27,8 @@
 	/* Accent "signal" treatment — the insight is a gold/laurel signal
 	   card, not a character card: accent glow, accent border, accent
 	   eyebrow, mirroring the earned-achievement emblem and the other
-	   accent surfaces. Tri-theme via `--color-primary` / `--laurel`. */
+	   accent surfaces. Tri-theme via `--color-primary` / `--accent-glow`
+	   (with a `color-mix` fallback). */
 	.profile-oracle {
 		display: flex;
 		align-items: flex-start;
