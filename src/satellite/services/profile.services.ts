@@ -93,6 +93,9 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		totalTrades: profile.totalTrades ?? 0,
 		winRate: profile.winRate ?? 0,
 		dailyStreak: profile.dailyStreak ?? 0,
+		// Best daily-streak ever reached. Defaults to 0 for legacy rows; the
+		// next streak bump self-heals it up to the current `dailyStreak`.
+		longestStreak: profile.longestStreak ?? 0,
 		dailyGoalDone: profile.dailyGoalDone ?? 0,
 		dailyGoalDate: profile.dailyGoalDate,
 		streak: profile.streak ?? 0,
