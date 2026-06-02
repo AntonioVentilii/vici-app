@@ -1,3 +1,4 @@
+import { CONTACT_DOMAIN } from '$lib/constants/contact.constants';
 import type { CallSide } from '$lib/types/market';
 import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
 
@@ -291,7 +292,7 @@ export const renderPredictionCard = async ({
 	setLetterSpacing(ctx, '0px');
 	ctx.fillStyle = accent;
 	ctx.font = '600 32px "Hanken Grotesk", system-ui, sans-serif';
-	const dom = 'vici.market';
+	const dom = CONTACT_DOMAIN;
 	ctx.fillText(dom, W - PAD - ctx.measureText(dom).width, H - 108);
 
 	if (typeof canvas.toBlob !== 'function' || typeof canvas.toDataURL !== 'function') {

@@ -387,7 +387,7 @@
 	}
 
 	.handle-editor-indicator {
-		color: var(--text-faint, var(--text-muted));
+		color: var(--fg-faint);
 		font-family: var(--font-mono);
 		font-size: 0.6875rem;
 	}
@@ -399,7 +399,7 @@
 	.handle-editor-hint {
 		min-height: 1rem;
 		margin: 0.5rem 0 0;
-		color: var(--text-faint, var(--text-muted));
+		color: var(--fg-faint);
 		font-family: var(--font-mono);
 		font-size: 0.6875rem;
 		letter-spacing: 0.02em;

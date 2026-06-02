@@ -476,7 +476,9 @@
 		display: flex;
 		gap: 14px;
 		align-items: center;
-		margin: 2px 0 14px;
+		/* The 2px top nudge stays; the 12px flex gap on .share-pop already
+		   supplies the spacing below this header — no extra margin-bottom. */
+		margin: 2px 0;
 	}
 
 	.share-card-thumb {
@@ -542,10 +544,12 @@
 		cursor: default;
 	}
 
-	/* Row label above each tile group. */
+	/* Row label above each tile group. The 12px flex gap on .share-pop is
+	   wider than the intended 8px label→tiles rhythm, so pull the tiles up
+	   by 4px (12 − 4 = 8px effective). */
 	.share-row-label {
 		display: block;
-		margin-bottom: 8px;
+		margin-bottom: -4px;
 		font-family: var(--font-mono);
 		font-size: var(--t-10);
 		letter-spacing: 0.14em;
@@ -559,9 +563,10 @@
 		grid-template-columns: repeat(4, 1fr);
 		gap: 4px;
 	}
-	/* Extra breathing room below the story row before the next group. */
+	/* Breathing room below the story row before the next group: the 12px
+	   flex gap on .share-pop already supplies it, so no extra margin. */
 	.share-tile-row-story {
-		margin-bottom: 12px;
+		margin-bottom: 0;
 	}
 	.share-tile {
 		display: flex;
@@ -610,7 +615,9 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		margin-top: 14px;
+		/* Intended 14px above the footer; the 12px flex gap on .share-pop
+		   already contributes, so add 2px (12 + 2 = 14px effective). */
+		margin-top: 2px;
 		padding: 9px 11px;
 		border: 1px solid rgba(79, 211, 161, 0.3);
 		border-radius: 10px;
