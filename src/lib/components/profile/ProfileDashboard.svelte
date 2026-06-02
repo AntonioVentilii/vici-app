@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Eye, Flame, Lock, Pencil, Target, Trophy } from '@lucide/svelte';
+	import { Check, Eye, Flame, Lock, Pencil, Target, Trophy } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -220,7 +220,35 @@
 		affiliationIdentifier: string | null;
 		glyph: string;
 		locked: boolean;
+		/** Alma Mater verification state — only meaningful on the
+		 *  `university` slot when filled. `null` on every other slot. */
+		status: SchoolStatus | null;
 	}
+
+	/**
+	 * Alma Mater verification state. Persisted on the profile as a loose
+	 * string; a filled university slot with no stored status reads as
+	 * `'unverified'`. `'pending'` / `'verified'` are reached through the
+	 * membership-email verification flow, which is deferred to its own
+	 * roadmap item — until then `'unverified'` is the only state a freshly
+	 * picked school can hold.
+	 */
+	type SchoolStatus = 'unverified' | 'pending' | 'verified';
+
+	const SCHOOL_STATUSES: ReadonlySet<string> = new Set<SchoolStatus>([
+		'unverified',
+		'pending',
+		'verified'
+	]);
+
+	// Read the stored Alma Mater verification state, defaulting to
+	// `'unverified'` once a university affiliation exists. A stored value
+	// outside the known set is ignored (treated as `'unverified'`).
+	const schoolStatus = $derived<SchoolStatus>(
+		profile.schoolStatus !== undefined && SCHOOL_STATUSES.has(profile.schoolStatus)
+			? (profile.schoolStatus as SchoolStatus)
+			: 'unverified'
+	);
 
 	const slots = $derived.by<AffilSlot[]>(() => {
 		const uniOption = myUni
@@ -239,7 +267,8 @@
 				value: uniOption?.name ?? null,
 				affiliationIdentifier: uniOption?.id ?? null,
 				glyph: uniOption?.glyph ?? '+',
-				locked: false
+				locked: false,
+				status: uniOption !== undefined ? schoolStatus : null
 			},
 			{
 				key: 'country',
@@ -249,7 +278,8 @@
 				value: countryOption?.name ?? null,
 				affiliationIdentifier: countryOption?.id ?? null,
 				glyph: countryOption?.glyph ?? '+',
-				locked: false
+				locked: false,
+				status: null
 			},
 			{
 				key: 'city',
@@ -259,7 +289,8 @@
 				value: null,
 				affiliationIdentifier: null,
 				glyph: '+',
-				locked: true
+				locked: true,
+				status: null
 			},
 			{
 				key: 'company',
@@ -269,7 +300,8 @@
 				value: null,
 				affiliationIdentifier: null,
 				glyph: '+',
-				locked: true
+				locked: true,
+				status: null
 			}
 		];
 	});
@@ -623,6 +655,28 @@
 							{t({ locale: $localeStore, key: 'profile.dashboard.affiliations.add' })}
 						{/if}
 					</span>
+					{#if slot.status === 'verified'}
+						<span
+							class="affil-slot-badge affil-slot-badge-verified"
+							aria-label={t({
+								locale: $localeStore,
+								key: 'profile.dashboard.affiliations.status_verified'
+							})}
+						>
+							<Check aria-hidden="true" size={9} strokeWidth={3.5} />
+						</span>
+					{:else if slot.status === 'pending'}
+						<span class="affil-slot-badge affil-slot-badge-pending num">
+							{t({ locale: $localeStore, key: 'profile.dashboard.affiliations.status_pending' })}
+						</span>
+					{:else if slot.status === 'unverified'}
+						<span class="affil-slot-badge affil-slot-badge-unverified num">
+							{t({
+								locale: $localeStore,
+								key: 'profile.dashboard.affiliations.status_unverified'
+							})}
+						</span>
+					{/if}
 				</button>
 			{/each}
 		</div>
@@ -1112,6 +1166,7 @@
 
 	.affil-slot {
 		display: flex;
+		position: relative; /* anchor for the .affil-slot-badge pill */
 		flex-direction: column;
 		gap: 0.375rem;
 		min-height: 5.25rem;
@@ -1206,6 +1261,52 @@
 	.affil-slot-value.dim {
 		color: var(--text-muted);
 		font-weight: 500;
+	}
+
+	/* Verification pill on the Alma Mater (university) slot. Pinned to the
+	   top-right of the tile. The verified state is a gold tick (matching the
+	   established-school badge in the picker); unverified / pending are text
+	   pills (blue / amber). */
+	.affil-slot-badge {
+		display: inline-flex;
+		position: absolute;
+		top: 0.45rem;
+		right: 0.45rem;
+		align-items: center;
+		justify-content: center;
+		gap: 0.15rem;
+	}
+
+	.affil-slot-badge-verified {
+		width: 1rem;
+		height: 1rem;
+		border-radius: var(--r-pill);
+		background: var(--laurel);
+		color: var(--ink, #0e0d0b);
+	}
+
+	.affil-slot-badge-unverified,
+	.affil-slot-badge-pending {
+		padding: 0.1rem 0.4rem;
+		border-radius: var(--r-pill);
+		font-size: var(--t-10);
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		white-space: nowrap;
+	}
+
+	.affil-slot-badge-unverified {
+		color: #6b9fff;
+		background: color-mix(in srgb, #6b9fff 10%, transparent);
+		border: 1px solid color-mix(in srgb, #6b9fff 30%, transparent);
+	}
+
+	.affil-slot-badge-pending {
+		/* Amber "awaiting verification" — distinct from the gold accent
+		   (verified) and the blue unverified pill. */
+		color: #d8a23a;
+		background: color-mix(in srgb, #d8a23a 12%, transparent);
+		border: 1px solid color-mix(in srgb, #d8a23a 35%, transparent);
 	}
 
 	/* Achievements rail ----------------------------------------------- */
