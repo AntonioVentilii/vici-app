@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ProbBar from '$lib/components/ui/ProbBar.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
 	import { categoryLabel, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -25,6 +26,10 @@
 	const { market, tag }: Props = $props();
 
 	const yes = $derived(Math.round(market.yesProbability * 100));
+	// Cold-start: a market with no real volume yet reads "New" instead of
+	// "0 vol" — framing the empty market as an opportunity, never a synthetic
+	// crowd. Uses our real volume field only.
+	const freshVolume = $derived(market.totalVolume === ZERO);
 	const vol = $derived(formatToken({ value: market.totalVolume, unitName: market.token.decimals }));
 	const closes = $derived(
 		new Date(Number(market.expiryDate)).toLocaleDateString($localeStore, {
@@ -46,7 +51,9 @@
 			<span class="tag">&nbsp;</span>
 		{/if}
 		<span class="num mute t-eyebrow"
-			>{vol} {t({ locale: $localeStore, key: 'market.vol_suffix' })} · {closes}</span
+			>{freshVolume
+				? t({ locale: $localeStore, key: 'market.detail.stats.new' })
+				: `${vol} ${t({ locale: $localeStore, key: 'market.vol_suffix' })}`} · {closes}</span
 		>
 	</div>
 	<div style="margin-top: 8px; font-weight: 600; line-height: 1.35;" class="t-body">

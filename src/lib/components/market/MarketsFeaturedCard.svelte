@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ProbBar from '$lib/components/ui/ProbBar.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
 	import { categoryLabel, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -24,6 +25,10 @@
 	const { market, tag }: Props = $props();
 
 	const yes = $derived(Math.round(market.yesProbability * 100));
+	// Cold-start: a market with no real volume yet reads "New" instead of
+	// "0 VXP" — framing the empty market as an opportunity, never a synthetic
+	// crowd. Uses our real volume field only.
+	const freshVolume = $derived(market.totalVolume === ZERO);
 	const vol = $derived(
 		formatVolume({
 			volume: market.totalVolume,
@@ -56,7 +61,9 @@
 		{:else}
 			<span class="tag">&nbsp;</span>
 		{/if}
-		<span class="num mute t-eyebrow">{vol}</span>
+		<span class="num mute t-eyebrow"
+			>{freshVolume ? t({ locale: $localeStore, key: 'market.detail.stats.new' }) : vol}</span
+		>
 	</div>
 	<div
 		style="margin-top: 12px; font-size: 15px; font-weight: 600; line-height: 1.3; min-height: 58px;"
