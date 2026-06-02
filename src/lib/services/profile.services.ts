@@ -111,7 +111,15 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
  * Failures for individual principals are swallowed: the cache simply won't
  * have an entry, and the UI is expected to fall back to a shortened
  * principal. This mirrors what every existing caller was already doing.
+ *
+ * Fetches run in bounded batches ({@link PROFILE_HYDRATION_CONCURRENCY}) rather
+ * than one big `Promise.all`: a large caller (e.g. the full Leaderboard) would
+ * otherwise open a request per principal at once, saturating the browser's
+ * per-host connection pool and starving every other in-flight call. Batching
+ * paces the burst without dropping any principal.
  */
+const PROFILE_HYDRATION_CONCURRENCY = 25;
+
 export const loadProfilesByPrincipals = async ({
 	principals
 }: {
@@ -126,9 +134,19 @@ export const loadProfilesByPrincipals = async ({
 		return;
 	}
 
-	const docs = await Promise.all(
-		unique.map((principal) => getProfile(principal).catch(() => undefined))
-	);
+	const docs: (Awaited<ReturnType<typeof getProfile>> | undefined)[] = [];
+
+	for (let start = 0; start < unique.length; start += PROFILE_HYDRATION_CONCURRENCY) {
+		const batch = unique.slice(start, start + PROFILE_HYDRATION_CONCURRENCY);
+
+		// Batches run sequentially to cap concurrency; within a batch the
+		// per-principal fetches are parallel.
+		const settled = await Promise.all(
+			batch.map((principal) => getProfile(principal).catch(() => undefined))
+		);
+
+		docs.push(...settled);
+	}
 
 	profilesStore.update((current) => {
 		const next = new Map(current);
