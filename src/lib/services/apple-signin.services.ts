@@ -11,9 +11,10 @@ import { AuthClient, IdbStorage } from 'icp-auth-openid/client';
 const INTERNET_IDENTITY_OPENID_URL = 'https://id.ai/authorize';
 
 // `@icp-sdk/auth`'s ICRC-29 PostMessageTransport opens its signer popup
-// under this fixed window name (`<provider-origin>-signer-window`).
-// Pre-opening a window with the same name lets the SDK reuse it, giving us
-// a handle to poll for a user-initiated close.
+// under a fixed window name derived from the identity-provider origin
+// (`<identityProvider-origin>-signer-window`). Pre-opening a window with
+// the same name lets the SDK reuse it, giving us a handle to poll for a
+// user-initiated close.
 const buildSignerWindowName = (identityProvider: string): string =>
 	`${new URL(identityProvider).origin}-signer-window`;
 
