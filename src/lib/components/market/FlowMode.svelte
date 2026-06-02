@@ -402,7 +402,17 @@
 				riseNextCard = false;
 				riseResetTimer = null;
 			}, 600);
-			finishCommitAdvance();
+
+			// Advance synchronously the instant the gap closes — the committed
+			// card already flew out when the deck paused, so there is no
+			// commit-feedback hold to wait on here. Deferring (as the
+			// non-gating commit path does) would let the just-vacated slot
+			// re-render the committed card for the delay window (`flowPaused`
+			// is now false) before `advance` shifts it away — a flash. Reset
+			// the committed marker too so the next card never inherits it.
+			committedAction = null;
+			committedMarketId = null;
+			advance();
 		}
 	};
 
@@ -941,34 +951,42 @@
 					{@const priorCall = userSignals.priorCalls[market.id]}
 					{@const followedLean = userSignals.followedLean[market.id]}
 					{@const categoryAcc = userSignals.categoryAcc[flowCategory]}
-					<div
-						style="z-index: {20 - i}; --depth: {i};"
-						class="flow-card-slot"
-						class:flow-card-rise={isCurrent && riseNextCard}
-						class:is-back={!isCurrent}
-						in:fade={{ duration: prefersReducedMotion() ? 0 : 200, easing: cubicOut }}
-						out:fly={prefersReducedMotion()
-							? { duration: 0 }
-							: { x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
-					>
-						<FlowCard
-							category={flowCategory}
-							{categoryAcc}
-							committedAction={market.id === committedMarketId ? committedAction : null}
-							{followedLean}
-							interactive={isCurrent && !flowPaused}
-							locked={isCurrent && flowPaused}
-							{market}
-							{metadata}
-							onAction={handleAction}
-							onStakeChange={(next) => {
-								tradeAmount = next;
-							}}
-							{priorCall}
-							signedIn={nonNullish($userStore.user)}
-							{tradeAmount}
-						/>
-					</div>
+					<!-- During a gating beat the committed card flies out and the slot
+					     is held EMPTY (`flowPaused`) so the centered character plays in
+					     the gap, not over a still-present card. Removing the slot here
+					     (not just dimming it) triggers its `out:fly` exit — the called
+					     card leaves before the beat is revealed, and the next card rises
+					     into the vacated slot once `onMotionBeatDone` advances. -->
+					{#if !(isCurrent && flowPaused)}
+						<div
+							style="z-index: {20 - i}; --depth: {i};"
+							class="flow-card-slot"
+							class:flow-card-rise={isCurrent && riseNextCard}
+							class:is-back={!isCurrent}
+							in:fade={{ duration: prefersReducedMotion() ? 0 : 200, easing: cubicOut }}
+							out:fly={prefersReducedMotion()
+								? { duration: 0 }
+								: { x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
+						>
+							<FlowCard
+								category={flowCategory}
+								{categoryAcc}
+								committedAction={market.id === committedMarketId ? committedAction : null}
+								{followedLean}
+								interactive={isCurrent && !flowPaused}
+								locked={isCurrent && flowPaused}
+								{market}
+								{metadata}
+								onAction={handleAction}
+								onStakeChange={(next) => {
+									tradeAmount = next;
+								}}
+								{priorCall}
+								signedIn={nonNullish($userStore.user)}
+								{tradeAmount}
+							/>
+						</div>
+					{/if}
 				{/each}
 			</div>
 
