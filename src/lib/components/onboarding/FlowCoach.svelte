@@ -5,22 +5,35 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * FlowCoach — first-run gesture coach overlay shown above the Flow
-	 * deck. Cycles through five hints (NO / YES / SKIP / TAP / IDLE) on
-	 * a timer-driven phase machine. Every phase tags `.flow-card`
-	 * elements with `data-coach-phase` so the cards drift in sympathy
-	 * via the matching CSS in `app.css`
-	 * (`.flow-card[data-coach-phase]`). Phase 3 flips the card to its
-	 * back face by toggling `is-flipped`; the IDLE beat ("your turn")
+	 * FlowCoach — first-run gesture coach overlay. Cycles through five
+	 * hints (NO / YES / SKIP / TAP / IDLE) on a timer-driven phase
+	 * machine. Every phase tags the surface's card elements with
+	 * `data-coach-phase` so they drift in sympathy via the matching CSS
+	 * in `app.css`. Phase 3 toggles `is-flipped`; on a card with
+	 * front/back faces (the deck) that reveals the detail back, and on
+	 * the faceless onboarding card it degrades to a zoom-and-de-blur —
+	 * the prototype behaves the same way. The IDLE beat ("your turn")
 	 * then lingers until the user acts. Dismisses on the first
 	 * pointer-down, or when the user presses Escape / Enter.
 	 *
-	 * The dismissal flag is persisted in `localStorage`
-	 * (`vici.coach-flow-seen`) so the deck coach is shown at most once
-	 * per device. Onboarding does NOT use this overlay — its first-call
-	 * card carries a built-in coach that always shows at that step.
+	 * `surface` selects which card the coach rides on and which
+	 * dismissal flag persists in `localStorage` (shown at most once per
+	 * device, per surface):
+	 *   - `flow` (default) → the in-product deck (`.flow-card`,
+	 *     `vici.coach-flow-seen`).
+	 *   - `onboarding` → the first-call card (`.ob-card`,
+	 *     `vici.coach-onboarding-seen`).
 	 */
-	const STORAGE_KEY = 'vici.coach-flow-seen';
+	interface Props {
+		surface?: 'flow' | 'onboarding';
+	}
+
+	const { surface = 'flow' }: Props = $props();
+
+	const storageKey = $derived(
+		surface === 'onboarding' ? 'vici.coach-onboarding-seen' : 'vici.coach-flow-seen'
+	);
+	const cardSelector = $derived(surface === 'onboarding' ? '.ob-card' : '.flow-card');
 
 	const readSeen = (): boolean => {
 		if (!browser) {
@@ -28,7 +41,7 @@
 		}
 
 		try {
-			return Boolean(localStorage.getItem(STORAGE_KEY));
+			return Boolean(localStorage.getItem(storageKey));
 		} catch {
 			return false;
 		}
@@ -93,7 +106,7 @@
 	const dismiss = () => {
 		if (browser) {
 			try {
-				localStorage.setItem(STORAGE_KEY, '1');
+				localStorage.setItem(storageKey, '1');
 			} catch {
 				// localStorage write blocked — accept the loss; the coach
 				// will reappear next session for this device.
@@ -110,7 +123,7 @@
 		}
 
 		raf = requestAnimationFrame(() => {
-			cards = Array.from(document.querySelectorAll('.flow-card'));
+			cards = Array.from(document.querySelectorAll(cardSelector));
 			applyPhase(0);
 			timers.push(setTimeout(() => applyPhase(1), 2200));
 			timers.push(setTimeout(() => applyPhase(2), 4400));
