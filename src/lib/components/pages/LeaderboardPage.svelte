@@ -9,6 +9,7 @@
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { globalStandingsRows, type StandingsRow } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 	import {
 		cancelFriendRequest,
 		sendFriendRequest,
@@ -93,6 +94,20 @@
 			void loadGlobalStandings({ window }).catch((err: unknown) => {
 				console.error(err);
 			});
+		}
+	});
+
+	// Hydrate the shared profile cache for the rows this surface actually
+	// paints — handle / avatar / streak overlay onto the standing reactively as
+	// profiles land. `loadGlobalStandings` no longer hydrates (the dash shares
+	// its cached slice but only needs the viewer's own rank), so the Leaderboard
+	// owns this. `loadProfilesByPrincipals` dedupes against the cache, so the
+	// re-run this triggers once profiles arrive is a no-op.
+	$effect(() => {
+		const owners = rankedRows.map((row) => row.owner);
+
+		if (owners.length > 0) {
+			void loadProfilesByPrincipals({ principals: owners });
 		}
 	});
 
