@@ -973,8 +973,7 @@
 								{categoryAcc}
 								committedAction={market.id === committedMarketId ? committedAction : null}
 								{followedLean}
-								interactive={isCurrent && !flowPaused}
-								locked={isCurrent && flowPaused}
+								interactive={isCurrent}
 								{market}
 								{metadata}
 								onAction={handleAction}
