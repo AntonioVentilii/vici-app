@@ -8,12 +8,20 @@
 		sessionDelta: number | null;
 		nickname: string;
 		streak: number;
+		longestStreak: number;
 		daysToMarathon: number;
 		streakBarPct: number;
 	}
 
-	let { accuracyPct, sessionDelta, nickname, streak, daysToMarathon, streakBarPct }: Props =
-		$props();
+	let {
+		accuracyPct,
+		sessionDelta,
+		nickname,
+		streak,
+		longestStreak,
+		daysToMarathon,
+		streakBarPct
+	}: Props = $props();
 </script>
 
 <div class="dash-hero">
@@ -68,8 +76,8 @@
 				<span class="dash-streak-sub">
 					{t({
 						locale: $localeStore,
-						key: 'dash.streak.longest_to_marathon_em',
-						params: { count: daysToMarathon }
+						key: 'dash.streak.longest_to_marathon',
+						params: { longest: longestStreak, count: daysToMarathon }
 					})}
 				</span>
 			</div>
