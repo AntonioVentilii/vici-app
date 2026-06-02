@@ -14,6 +14,7 @@
 	import { REFERRAL_MAX_PAID, referrerRewardBaseUnits } from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { VXP_REFERRAL_MONTHLY_CAP } from '$lib/constants/vxp-economy.constants';
 	import { globalActivities } from '$lib/derived/activities.derived';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -118,7 +119,11 @@
 					inviteCode = code;
 				}
 			} catch {
-				inviteCode = undefined;
+				// Guard on `alive` so a late rejection after unmount can't reset
+				// state on a destroyed component.
+				if (alive) {
+					inviteCode = undefined;
+				}
 			}
 		})();
 
@@ -157,13 +162,25 @@
 
 	// Social-proof line above the invite buttons —
 	// `{N} friends joined · +{cumulative} VXP earned`. Derived from the viewer's actual
-	// redemption rows (`listMyReferrals`): the paid count is the subset still within the
-	// referrer cap, and the earned total sums each paid redemption's tier reward by its
-	// 1-based order — the i-th paid redemption pays `referrerRewardBaseUnits(i - 1)`, so the
-	// diminishing tier table (and its hard cap) is honoured rather than assuming a flat 500
-	// VXP per friend.
+	// redemption rows (`listMyReferrals`).
+	//
+	// `joinedCount` is the TOTAL number of friends who signed up with this code — every row,
+	// regardless of payout. The "joined" headline is a factual count, so it must not shrink to
+	// the paid subset once a cap is hit.
+	//
+	// `referralPaidCount` is the CREDITED subset, derived the same way the satellite's
+	// `countReferrerCredits` tally does it: a row counts as paid when its `referrerPayout.status`
+	// is anything other than `none` (`owed | processing | paid` — anything in flight still
+	// consumes a slot). This is the authoritative rule the server uses to feed the diminishing
+	// reward curve and enforce both caps, so the hero stays in lockstep with it rather than
+	// re-reading the stored `withinReferrerCap` flag.
+	//
+	// The earned total sums each paid redemption's tier reward by its 1-based order — the i-th
+	// paid redemption pays `referrerRewardBaseUnits(i - 1)`, so the diminishing tier table (and
+	// its hard cap) is honoured rather than assuming a flat 500 VXP per friend.
+	const joinedCount = $derived(myReferrals.length);
 	const referralPaidCount = $derived(
-		myReferrals.filter(({ withinReferrerCap }) => withinReferrerCap).length
+		myReferrals.filter(({ referrerPayout }) => referrerPayout.status !== 'none').length
 	);
 	const referralVxpEarnedBaseUnits = $derived.by(() => {
 		let total = ZERO;
@@ -175,7 +192,33 @@
 		return total;
 	});
 	const referralVxpEarnedLabel = $derived(formatVxpBalance({ value: referralVxpEarnedBaseUnits }));
-	const referralsRemaining = $derived(Math.max(0, REFERRAL_MAX_PAID - referralPaidCount));
+
+	// Rewarded-invites-left line must honour BOTH the lifetime hard cap and the separate monthly
+	// cap — the satellite stops paying when EITHER is hit. The FE row carries both the credited
+	// flag (`referrerPayout.status`) and `redeemedAtMs`, so we can mirror the satellite's
+	// `countReferrerCredits` two-tally scan locally: count this calendar month's credited rows
+	// against `VXP_REFERRAL_MONTHLY_CAP`, count all credited rows against `REFERRAL_MAX_PAID`, and
+	// surface the binding (smaller) remainder. Anchored on the UTC month start to match the
+	// satellite's `currentMonthStartUtcMs` boundary so the two never disagree on whether the month
+	// has rolled over.
+	const currentMonthPaidCount = $derived.by(() => {
+		const now = new Date();
+		const monthStartMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+
+		return myReferrals.filter(
+			({ referrerPayout, redeemedAtMs }) =>
+				referrerPayout.status !== 'none' && redeemedAtMs >= monthStartMs
+		).length;
+	});
+	const referralsRemaining = $derived(
+		Math.max(
+			0,
+			Math.min(
+				REFERRAL_MAX_PAID - referralPaidCount,
+				VXP_REFERRAL_MONTHLY_CAP - currentMonthPaidCount
+			)
+		)
+	);
 	let copied = $state(false);
 	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -561,23 +604,25 @@
 			{/if}
 		</p>
 
-		{#if referralPaidCount > 0}
+		{#if joinedCount > 0}
 			<div class="invite-proof num">
 				<span>
-					<b>{referralPaidCount}</b>
+					<b>{joinedCount}</b>
 					{t({
 						locale: $localeStore,
 						key:
-							referralPaidCount === 1
+							joinedCount === 1
 								? 'arena.friends.invite.proof_one'
 								: 'arena.friends.invite.proof_many'
 					})}
 				</span>
-				<span class="invite-proof-dot" aria-hidden="true">·</span>
-				<span class="invite-proof-earned">
-					<b>+{referralVxpEarnedLabel}</b>
-					{t({ locale: $localeStore, key: 'arena.friends.invite.proof_earned' })}
-				</span>
+				{#if referralPaidCount > 0}
+					<span class="invite-proof-dot" aria-hidden="true">·</span>
+					<span class="invite-proof-earned">
+						<b>+{referralVxpEarnedLabel}</b>
+						{t({ locale: $localeStore, key: 'arena.friends.invite.proof_earned' })}
+					</span>
+				{/if}
 			</div>
 		{/if}
 
