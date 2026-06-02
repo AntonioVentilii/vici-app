@@ -264,7 +264,7 @@
 		color: var(--text-base);
 	}
 	.flow-stake-peg:active {
-		background: color-mix(in srgb, var(--parchment) 5%, transparent);
+		background: color-mix(in srgb, var(--text-base) 5%, transparent);
 	}
 	.flow-stake-peg.is-active {
 		color: var(--accent);
