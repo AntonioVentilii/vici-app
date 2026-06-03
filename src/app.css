@@ -132,8 +132,11 @@
 	/* Text on a gold/laurel fill. Raw-CSS call-sites
 	 * (`var(--text-on-accent, #fff)`) referenced this token but it was
 	 * never declared, so every gold CTA fell back to white-on-gold.
-	 * Gold always wants dark ink — mirror `--color-accent-foreground`. */
-	--text-on-accent: var(--ink);
+	 * Alias `--color-accent-foreground` so per-theme overrides apply
+	 * (dark/light resolve to ink; peach to its warm `#3d2419`); the
+	 * `var()` resolves at the use-site, so this single `:root` decl
+	 * cascades correctly under each `[data-theme]`. */
+	--text-on-accent: var(--color-accent-foreground);
 
 	/* Plain `--accent` alias — app-shell call-sites read `var(--accent)`.
 	 * landing.css already declares it at `:root`, but own it here so the
