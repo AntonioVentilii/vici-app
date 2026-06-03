@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
@@ -11,6 +11,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import type { LeagueWithRole } from '$lib/services/leagues.services';
+	import { findOwnStanding, getLeagueStandings } from '$lib/services/standings.services';
 	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
 	import {
 		friendRecommendedLeaguesStore,
@@ -188,20 +189,73 @@
 	};
 
 	/**
-	 * Deterministic rank-trend for a league, seeded from its id so the
-	 * arrow is stable across renders. Range ±3 (negative = climbed).
-	 * Per-period rank deltas aren't exposed by the satellite yet, so
-	 * this stands in until a ranking endpoint lands.
+	 * Per-league rank-trend for the viewer, keyed by league id. Sourced from
+	 * the clearing canister's weekly `list_leaderboard` ranking over each
+	 * league's own roster: the sign of the viewer's own week-over-week rank
+	 * movement (`rankDelta = priorRank - rank`). A league the viewer has no
+	 * prior-week rank in (newcomer / no settled position) carries no entry, so
+	 * the card shows no arrow rather than a fabricated one.
 	 */
-	const trendFor = (row: LeagueRow): number => {
-		let seed = 0;
+	const leagueTrends = new SvelteMap<string, number>();
+	// The principal the `leagueTrends` cache was computed for. Trends are
+	// viewer-specific, so on a viewer change (sign-out → sign-in, account
+	// switch without a reload) the cache is dropped and recomputed.
+	let trendsOwner: string | undefined;
 
-		for (const ch of row.league.id) {
-			seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+	// Resolve each membership's weekly rank-trend in isolation, once a roster
+	// is known. `getLeagueStandings` ranks the supplied member set against the
+	// week window; we keep only the sign of the viewer's own `rankDelta` and
+	// map it onto the card's convention (negative = climbed, shown as ↑).
+	$effect(() => {
+		const owner = selfPrincipal;
+
+		if (owner === undefined) {
+			return;
 		}
 
-		return (seed % 7) - 3;
-	};
+		// New viewer → discard the previous viewer's cached trends so the
+		// arrows are never computed for the wrong principal.
+		if (owner !== trendsOwner) {
+			trendsOwner = owner;
+			leagueTrends.clear();
+		}
+
+		const pending = rows.filter(
+			(row) => row.members.length > 0 && !leagueTrends.has(row.league.id)
+		);
+
+		for (const row of pending) {
+			const { id } = row.league;
+			const { members } = row;
+
+			// Mark this league resolved the moment its query is scheduled
+			// (default 0 = no arrow), so a reactive re-run before the request
+			// settles never re-fires the same query. A real prior-week delta
+			// overwrites the 0 below; leagues with no comparable prior week
+			// simply keep it.
+			leagueTrends.set(id, 0);
+
+			void getLeagueStandings({ window: 'week', members })
+				.then((result) => {
+					const own = findOwnStanding({ result, owner });
+					const delta = own?.rankDelta;
+
+					// `rankDelta` is `priorRank - rank` (positive = climbed); the
+					// card's `trend` inverts that (negative = climbed). Leave the
+					// 0 (no arrow) when there is no comparable prior week.
+					if (delta !== undefined) {
+						leagueTrends.set(id, -delta);
+					}
+				})
+				.catch((err: unknown) => {
+					console.error(err);
+				});
+		}
+	});
+
+	// The card's `trend` value for a league — 0 (no arrow) until its weekly
+	// standing has resolved a comparable prior-week rank for the viewer.
+	const trendFor = (row: LeagueRow): number => leagueTrends.get(row.league.id) ?? 0;
 
 	/**
 	 * Translate the latest battle into a short "activity preview"
