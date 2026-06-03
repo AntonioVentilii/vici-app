@@ -2164,23 +2164,13 @@ a.title-action::after {
 }
 
 /* ============================================================
-   Flow sub-component rules — `.flow-coach` / `.flow-feedback` /
-   `.xp-toast` / `.swipe-hint` / `.share-pop` blocks. Built on the
+   Flow sub-component rules — `.flow-coach` / `.xp-toast` /
+   `.swipe-hint` / `.share-pop` blocks. Built on the
    shared token set (`--text-base` / `--text-muted` /
    `--color-accent` / `--bg-popover` / `--bg-surface` /
    `--border-base` / `--border-strong` / `--ease-vici`). Kept in
    one block so the visual catalogue is greppable.
    ============================================================ */
-
-/* Plain envelope used by FlowFeedback for the dim-in backdrop. */
-@keyframes fade-in {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
 
 /* ── XP toast — standalone pill (used by XpToast.svelte) ───── */
 .xp-toast {
@@ -2299,59 +2289,6 @@ a.title-action::after {
 .swipe-hint .eyebrow.mute {
 	color: var(--text-muted);
 	opacity: 0.55;
-}
-
-/* ── Flow feedback overlay — Oracle pop after a swipe ───── */
-.flow-feedback {
-	position: absolute;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-direction: column;
-	gap: 14px;
-	background: rgba(14, 13, 11, 0.62);
-	backdrop-filter: blur(10px);
-	animation: fade-in 200ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-	z-index: 30;
-	bottom: var(--bn-clear, calc(96px + env(safe-area-inset-bottom, 0px))) !important;
-}
-.flow-feedback-skip {
-	gap: 8px;
-	background: rgba(14, 13, 11, 0.42);
-	backdrop-filter: blur(6px);
-	animation: fade-in 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-.flow-feedback-skip-chip {
-	padding: 8px 18px;
-	border-radius: 999px;
-	border: 1px solid color-mix(in srgb, var(--text-base) 18%, transparent);
-	background: color-mix(in srgb, var(--text-base) 4%, transparent);
-	font-family: var(--font-mono);
-	letter-spacing: 0.16em;
-	color: var(--text-muted);
-	animation: fade-up 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-.flow-feedback .bolt-burst {
-	width: 72px;
-	height: 72px;
-	border-radius: 50%;
-	background: var(--laurel);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--ink);
-	box-shadow:
-		0 0 0 8px var(--laurel-glow),
-		0 0 60px var(--laurel-glow);
-	animation: pop-in 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-.flow-feedback-phrase {
-	font-size: 34px;
-	font-family: var(--font-serif);
-	font-style: italic;
-	color: var(--laurel);
-	animation: fade-up 320ms cubic-bezier(0.2, 0.7, 0.2, 1) 80ms both;
 }
 
 /* ── Flow coach overlay — phase machine ─────────────────── */
