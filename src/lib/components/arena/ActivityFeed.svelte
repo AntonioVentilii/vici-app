@@ -83,7 +83,7 @@
 		width: 4px;
 	}
 	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: rgba(var(--primary-rgb), 0.2);
+		background: color-mix(in srgb, var(--color-primary) 20%, transparent);
 		border-radius: 10px;
 	}
 </style>

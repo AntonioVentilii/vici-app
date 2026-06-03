@@ -45,7 +45,7 @@
 	}
 
 	.welcome-theme-dot.active {
-		border-color: var(--primary);
+		border-color: var(--color-primary);
 	}
 
 	.welcome-theme-dot-inner {

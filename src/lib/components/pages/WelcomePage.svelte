@@ -134,13 +134,13 @@
 		background:
 			radial-gradient(1200px 600px at 80% -20%, rgba(226, 184, 66, 0.08), transparent 60%),
 			radial-gradient(1000px 700px at -10% 30%, rgba(107, 159, 255, 0.04), transparent 60%),
-			var(--background);
+			var(--bg-base);
 	}
 	:global([data-theme='light']) .lp-root,
 	:global([data-theme='peach']) .lp-root {
 		background:
 			radial-gradient(1200px 600px at 80% -20%, rgba(226, 184, 66, 0.1), transparent 60%),
 			radial-gradient(1000px 700px at -10% 30%, rgba(181, 70, 44, 0.04), transparent 60%),
-			var(--background);
+			var(--bg-base);
 	}
 </style>
