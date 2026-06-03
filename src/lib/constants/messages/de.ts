@@ -670,6 +670,7 @@ export const deMessages = {
 	'dash.rank.league': 'League',
 	'dash.rank.league_sub': 'tippen, um zu sehen',
 	'dash.rank.of_total': 'von {total}',
+	'dash.rank.percentile': 'Top {pct}%',
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': 'Top-Kategorie',
 	'dash.rank.top_cat_sub': 'beste Kat.',
