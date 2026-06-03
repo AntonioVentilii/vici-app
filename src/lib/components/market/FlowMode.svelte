@@ -13,7 +13,6 @@
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
 	import FlowEntry from '$lib/components/market/FlowEntry.svelte';
-	import FlowFeedback from '$lib/components/market/FlowFeedback.svelte';
 	import FlowStreakBreakBanner from '$lib/components/market/FlowStreakBreakBanner.svelte';
 	import FlowTopBar from '$lib/components/market/FlowTopBar.svelte';
 	import FlowXpPops from '$lib/components/market/FlowXpPops.svelte';
@@ -194,21 +193,6 @@
 	let commitToast = $state<CommitToast | null>(null);
 	let commitToastKeySeq = 0;
 
-	// SKIP commit pop — the shorter 520 ms "SKIPPED" chip rendered via
-	// `FlowFeedback`. YES / NO no longer go through this path — they use
-	// `XpToast` + optionally the centered `MotionBeat`. Kept because SKIP
-	// has no XpToast (stake > 0 guard) and no motion beat, so this is the
-	// only visual confirmation that a skip registered.
-	interface ActiveFeedback {
-		result: FlowAction;
-		xp: number;
-		correct: boolean;
-		streakHit: boolean;
-		// monotonic key so consecutive skips remount the component.
-		key: number;
-	}
-	let activeFeedback = $state<ActiveFeedback | null>(null);
-	let feedbackKeySeq = 0;
 	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
 
 	let xpPops = $state<XpPop[]>([]);
@@ -509,14 +493,6 @@
 				dailyJustCompleted: false,
 				dayStreak: dailyStreak
 			});
-			feedbackKeySeq += 1;
-			activeFeedback = {
-				result: 'SKIP',
-				xp: 0,
-				correct: false,
-				streakHit: false,
-				key: feedbackKeySeq
-			};
 			finishCommitAdvance();
 
 			return;
@@ -1018,18 +994,6 @@
 			     holds; the next card rises over it once it finishes. -->
 			{#if activeMotionBeat}
 				<MotionBeat beat={activeMotionBeat} onDone={onMotionBeatDone} />
-			{/if}
-
-			{#if activeFeedback}
-				{#key activeFeedback.key}
-					<FlowFeedback
-						correct={activeFeedback.correct}
-						onDone={() => (activeFeedback = null)}
-						result={activeFeedback.result}
-						streakHit={activeFeedback.streakHit}
-						xp={activeFeedback.xp}
-					/>
-				{/key}
 			{/if}
 		</main>
 
