@@ -917,28 +917,34 @@
 					{@const categoryAcc = userSignals.categoryAcc[flowCategory]}
 					{#key currentIndex}
 						{#if !flowPaused}
+							<!-- Outer slot owns the exit (`out:fly`); the inner riser
+							     owns the rise-in (`flow-card-rise`). Keeping the two on
+							     separate elements means the exit transform never fights
+							     the rise animation if a card is committed mid-rise. -->
 							<div
-								class="flow-card-slot flow-card-rise"
+								class="flow-card-slot"
 								out:fly={prefersReducedMotion()
 									? { duration: 0 }
 									: { x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
 							>
-								<FlowCard
-									category={flowCategory}
-									{categoryAcc}
-									committedAction={currentCard.id === committedMarketId ? committedAction : null}
-									{followedLean}
-									interactive
-									market={currentCard}
-									{metadata}
-									onAction={handleAction}
-									onStakeChange={(next) => {
-										tradeAmount = next;
-									}}
-									{priorCall}
-									signedIn={nonNullish($userStore.user)}
-									{tradeAmount}
-								/>
+								<div class="flow-card-riser flow-card-rise">
+									<FlowCard
+										category={flowCategory}
+										{categoryAcc}
+										committedAction={currentCard.id === committedMarketId ? committedAction : null}
+										{followedLean}
+										interactive
+										market={currentCard}
+										{metadata}
+										onAction={handleAction}
+										onStakeChange={(next) => {
+											tradeAmount = next;
+										}}
+										{priorCall}
+										signedIn={nonNullish($userStore.user)}
+										{tradeAmount}
+									/>
+								</div>
 							</div>
 						{/if}
 					{/key}
@@ -1082,6 +1088,14 @@
 	}
 
 	.flow-card-slot {
+		position: absolute;
+		inset: 0;
+	}
+
+	/* The riser fills the slot and carries the rise-in animation, kept
+	   separate from the slot's `out:fly` so the two never animate the
+	   same element's transform. */
+	.flow-card-riser {
 		position: absolute;
 		inset: 0;
 	}
