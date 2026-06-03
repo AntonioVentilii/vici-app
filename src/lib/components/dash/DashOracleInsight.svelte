@@ -5,9 +5,15 @@
 	interface Props {
 		hasBestWin: boolean;
 		bestWinTitle: string;
+		// Realized VXP of the highlighted win, in whole VXP. Rendered as
+		// "+{vxp} VXP" in the sub-line.
+		bestWinVxp: number;
+		// `true` when the highlighted win was against the crowd — switches
+		// the sub-line tag from "best call" to "contrarian win".
+		bestWinContrarian: boolean;
 	}
 
-	let { hasBestWin, bestWinTitle }: Props = $props();
+	let { hasBestWin, bestWinTitle, bestWinVxp, bestWinContrarian }: Props = $props();
 
 	const stripWillPrefix = (title: string): string =>
 		title.replace(/^Will\s+/i, '').replace(/\?\s*$/, '');
@@ -25,7 +31,13 @@
 				})}
 			</p>
 			<span class="sub">
-				{t({ locale: $localeStore, key: 'dash.oracle.best_call_sub' })}
+				{t({
+					locale: $localeStore,
+					key: bestWinContrarian
+						? 'dash.oracle.best_call_sub_contrarian'
+						: 'dash.oracle.best_call_sub',
+					params: { vxp: bestWinVxp }
+				})}
 			</span>
 		{:else}
 			<p class="q">{t({ locale: $localeStore, key: 'dash.oracle.empty' })}</p>
