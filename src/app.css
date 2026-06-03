@@ -2172,15 +2172,6 @@ a.title-action::after {
    one block so the visual catalogue is greppable.
    ============================================================ */
 
-@keyframes fade-in {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
-
 /* ── XP toast — standalone pill (used by XpToast.svelte) ───── */
 .xp-toast {
 	position: absolute;
