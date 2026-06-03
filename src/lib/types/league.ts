@@ -150,13 +150,27 @@ export const LEAGUE_DESCRIPTION_MAX_LENGTH = 240;
 export const LEAGUE_PRIVACY_LEGACY_FALLBACK = LeaguePrivacy.OPEN;
 
 /**
- * Resolve a league's effective privacy, mapping the legacy absent field
- * to {@link LEAGUE_PRIVACY_LEGACY_FALLBACK}. Single source of truth for
- * every visibility / recommendation decision so the legacy mapping lives
- * in one place.
+ * A league shape readable for its effective privacy: the current
+ * `privacy` field, plus the optional legacy `private` boolean still
+ * carried by rows written before the 3-way model.
  */
-export const leaguePrivacy = (league: Pick<LeagueDoc, 'privacy'>): LeaguePrivacy =>
-	league.privacy ?? LEAGUE_PRIVACY_LEGACY_FALLBACK;
+type LeaguePrivacyReadable = Pick<LeagueDoc, 'privacy'> & { private?: boolean };
+
+/**
+ * Resolve a league's effective privacy. Single source of truth for every
+ * visibility / recommendation decision. Legacy rows (no `privacy`) map
+ * from the old boolean: `private === true` carried an invite code + was
+ * hidden from public lists → {@link LeaguePrivacy.INVITE} (so a legacy
+ * private league is NEVER leaked as Open); otherwise →
+ * {@link LEAGUE_PRIVACY_LEGACY_FALLBACK} (Open, the old public default).
+ */
+export const leaguePrivacy = (league: LeaguePrivacyReadable): LeaguePrivacy => {
+	if (league.privacy !== undefined) {
+		return league.privacy;
+	}
+
+	return league.private === true ? LeaguePrivacy.INVITE : LEAGUE_PRIVACY_LEGACY_FALLBACK;
+};
 
 /**
  * Whether a league appears in public, non-member-scoped lists (challenge
@@ -164,7 +178,7 @@ export const leaguePrivacy = (league: Pick<LeagueDoc, 'privacy'>): LeaguePrivacy
  * publicly listed; invite-only and private leagues are reachable by code
  * only.
  */
-export const isLeaguePubliclyListed = (league: Pick<LeagueDoc, 'privacy'>): boolean =>
+export const isLeaguePubliclyListed = (league: LeaguePrivacyReadable): boolean =>
 	leaguePrivacy(league) === LeaguePrivacy.OPEN;
 
 /**
@@ -173,5 +187,5 @@ export const isLeaguePubliclyListed = (league: Pick<LeagueDoc, 'privacy'>): bool
  * {@link LeaguePrivacy.INVITE} leagues qualify (invite-only is a code
  * gate, not secrecy); {@link LeaguePrivacy.PRIVATE} is never recommended.
  */
-export const isLeagueRecommendableToFriends = (league: Pick<LeagueDoc, 'privacy'>): boolean =>
+export const isLeagueRecommendableToFriends = (league: LeaguePrivacyReadable): boolean =>
 	leaguePrivacy(league) !== LeaguePrivacy.PRIVATE;

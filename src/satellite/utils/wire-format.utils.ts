@@ -463,10 +463,9 @@ export const LeagueWireSchema = j.strictObject({
 	created_at_ms: j.number(),
 	accent_color: j.string().optional(),
 	emblem: j.string().optional(),
-	// Three-way visibility. Legacy rows that predate the field decode to
-	// `open` — the legacy `private === false/undefined` default. (The
-	// legacy `private === true`, which carried a code + was hidden from
-	// public lists, maps to `invite` at write time, not here.)
+	// Three-way visibility. `toWireLeague` always emits a concrete value
+	// (mapping the legacy `private` boolean: `true` → `invite`, else
+	// `open`), so this default only guards a genuinely absent field.
 	privacy: j.enum(LeaguePrivacy).default(LeaguePrivacy.OPEN),
 	image_url: j.string().optional()
 });
@@ -501,6 +500,10 @@ export const toWireLeague = (league: {
 	accentColor?: string;
 	emblem?: string;
 	privacy?: LeaguePrivacy;
+	/** Legacy boolean still carried by rows written before the 3-way
+	 *  model; mapped to a concrete `privacy` below so an old private
+	 *  league doesn't serialize as `open`. */
+	private?: boolean;
 	imageUrl?: string;
 }): WireLeague => ({
 	id: league.id,
@@ -511,9 +514,11 @@ export const toWireLeague = (league: {
 	created_at_ms: league.createdAtMs,
 	accent_color: league.accentColor,
 	emblem: league.emblem,
-	// Resolve the legacy-absent field to `open` on the wire so every
-	// consumer sees a concrete value (matches the schema default).
-	privacy: league.privacy ?? LeaguePrivacy.OPEN,
+	// Emit a concrete privacy on the wire. Legacy rows (no `privacy`) map
+	// from the old boolean: `private === true` (code-gated + hidden from
+	// public lists) → `invite` so it's never leaked as Open; otherwise →
+	// `open` (the old publicly-listed default).
+	privacy: league.privacy ?? (league.private === true ? LeaguePrivacy.INVITE : LeaguePrivacy.OPEN),
 	image_url: league.imageUrl
 });
 
