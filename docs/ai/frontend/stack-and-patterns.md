@@ -279,6 +279,17 @@ pins `VICI_ENGINE_ID` is
   authenticates an existing passkey. The label flips between
   `authn.passkey.create_button` and `authn.passkey.signin_button` the same
   way.
+- **Email sign-in is passkey-backed — there is no magic link.** The email
+  row in `SignInProviderStack` is a friendlier framing of the WebAuthn flow:
+  on sign-up it registers a passkey labelled by the address and merges that
+  address into the `vici:pending-onboarding` payload (same single-field merge
+  `/i/[code]` and `/league/[code]` do for their codes), so the post-sign-in
+  drain in [`(app)/+layout.svelte`](<../../../src/routes/(app)/+layout.svelte>)
+  persists it onto the new profile — the WebAuthn `User` carries no email of
+  its own. On sign-in it just authenticates the existing passkey. Because it
+  is WebAuthn under the hood it shares the passkey button's gating
+  (`isWebAuthnAvailable` + production-only). The settings "Sign-in method" row
+  reads `profile.email` to label these accounts.
 
 ## Tailwind v4 + design tokens
 

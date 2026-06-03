@@ -107,14 +107,19 @@
 		const existing = readExistingPending();
 		const existingReferralCode =
 			typeof existing.referralCode === 'string' ? existing.referralCode : undefined;
+		// An email stashed by the email provider (passkey-backed sign-up,
+		// see `SignInProviderStack`) must survive this rebuild so the drain
+		// persists it onto the profile.
+		const existingEmail = typeof existing.email === 'string' ? existing.email : undefined;
 
 		// Skip the write if the user bailed before making any pick **and** there's no
-		// stashed referral code to carry forward — nothing to hand off.
+		// stashed referral code or email to carry forward — nothing to hand off.
 		if (
 			result.handle === null &&
 			result.participantId === null &&
 			result.side === null &&
-			existingReferralCode === undefined
+			existingReferralCode === undefined &&
+			existingEmail === undefined
 		) {
 			return;
 		}
@@ -128,7 +133,8 @@
 					side: result.side,
 					interests: [],
 					completedAt: new Date().toISOString(),
-					...(existingReferralCode !== undefined && { referralCode: existingReferralCode })
+					...(existingReferralCode !== undefined && { referralCode: existingReferralCode }),
+					...(existingEmail !== undefined && { email: existingEmail })
 				})
 			);
 		} catch (err: unknown) {
