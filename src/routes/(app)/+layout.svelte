@@ -258,14 +258,16 @@
 
 		// At least one actionable signal is required for the payload to be useful — onboarding
 		// picks (handle / participantId / side) drive the profile upsert, `referralCode` drives
-		// the redeem-or-friendship flow, and `leagueInvite` drives the auto-join. A bare payload
+		// the redeem-or-friendship flow, `leagueInvite` drives the auto-join, and `email` (stashed
+		// by the passkey-backed email sign-up) is persisted onto the new profile. A bare payload
 		// with none of those is dropped so the caller can clear the slot.
 		if (
 			handle === null &&
 			participantId === null &&
 			side === null &&
 			referralCode === undefined &&
-			leagueInvite === undefined
+			leagueInvite === undefined &&
+			email === undefined
 		) {
 			return;
 		}
