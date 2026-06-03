@@ -304,10 +304,6 @@
 			clearTimeout(gatingBeatTimer);
 		}
 
-		if (riseResetTimer !== null) {
-			clearTimeout(riseResetTimer);
-		}
-
 		// Promote the pre-built follow-up deck and rebuild a fresh
 		// `next` excluding the markets just shown — re-entering /flow
 		// opens on an unseen deck without a network round-trip.
@@ -363,11 +359,6 @@
 		}, COMMIT_RESET_MS);
 	};
 
-	// Set when a gating beat finishes: the next card RISES over the empty
-	// slot the character just vacated (not a plain cross-fade). Consumed by
-	// the entering current slot and cleared once its rise has played.
-	let riseNextCard = $state(false);
-	let riseResetTimer: ReturnType<typeof setTimeout> | null = null;
 	let gatingBeatTimer: ReturnType<typeof setTimeout> | null = null;
 
 	const onMotionBeatDone = () => {
@@ -376,17 +367,6 @@
 		flowPaused = false;
 
 		if (wasPaused) {
-			riseNextCard = true;
-
-			if (riseResetTimer !== null) {
-				clearTimeout(riseResetTimer);
-			}
-
-			riseResetTimer = setTimeout(() => {
-				riseNextCard = false;
-				riseResetTimer = null;
-			}, 600);
-
 			// Advance synchronously the instant the gap closes — the committed
 			// card already flew out when the deck paused, so there is no
 			// commit-feedback hold to wait on here. Deferring (as the
@@ -394,6 +374,8 @@
 			// re-render the committed card for the delay window (`flowPaused`
 			// is now false) before `advance` shifts it away — a flash. Reset
 			// the committed marker too so the next card never inherits it.
+			// `advance` bumps `currentIndex`, which remounts the keyed card slot
+			// and replays the rise over the empty gap the character vacated.
 			committedAction = null;
 			committedMarketId = null;
 			advance();
@@ -806,7 +788,7 @@
 		tradeAmount = String(next);
 	};
 
-	const visibleCards = $derived(markets.slice(currentIndex, currentIndex + 3));
+	const currentCard = $derived(markets[currentIndex]);
 
 	// Trickster appears on the active card when the YES probability is
 	// strongly skewed (≤ 25 % or ≥ 75 %) — i.e. when committing on this
@@ -914,55 +896,59 @@
 
 		<main class="flow-stage">
 			<div class="flow-card-wrap">
-				{#each visibleCards as market, i (market?.id)}
-					{@const isCurrent = i === 0}
+				<!-- Only the current card is rendered — it stands alone over an
+				     empty stage, with no peeking cards behind it. Keyed on
+				     `currentIndex` so each advance remounts it and replays the
+				     rise-from-below (`flow-card-rise`). While a gating beat plays
+				     (`flowPaused`) the card is removed so the character holds the
+				     empty slot; that removal also triggers the `out:fly` throw of
+				     the just-committed card. -->
+				{#if currentCard}
 					{@const primaryTag = primaryMarketTag(
-						(marketTagMap[market.id] ?? []) as ReadonlyArray<MarketTag>
+						(marketTagMap[currentCard.id] ?? []) as ReadonlyArray<MarketTag>
 					)}
 					{@const flowCategory = resolveFlowCategory({
 						categoryId: primaryTag,
-						marketId: market.id
+						marketId: currentCard.id
 					})}
-					{@const metadata = marketMetadataMap.get(market.id)}
-					{@const priorCall = userSignals.priorCalls[market.id]}
-					{@const followedLean = userSignals.followedLean[market.id]}
+					{@const metadata = marketMetadataMap.get(currentCard.id)}
+					{@const priorCall = userSignals.priorCalls[currentCard.id]}
+					{@const followedLean = userSignals.followedLean[currentCard.id]}
 					{@const categoryAcc = userSignals.categoryAcc[flowCategory]}
-					<!-- During a gating beat the committed card flies out and the slot
-					     is held EMPTY (`flowPaused`) so the centered character plays in
-					     the gap, not over a still-present card. Removing the slot here
-					     (not just dimming it) triggers its `out:fly` exit — the called
-					     card leaves before the beat is revealed, and the next card rises
-					     into the vacated slot once `onMotionBeatDone` advances. -->
-					{#if !(isCurrent && flowPaused)}
-						<div
-							style="z-index: {20 - i}; --depth: {i};"
-							class="flow-card-slot"
-							class:flow-card-rise={isCurrent && riseNextCard}
-							class:is-back={!isCurrent}
-							in:fade={{ duration: prefersReducedMotion() ? 0 : 200, easing: cubicOut }}
-							out:fly={prefersReducedMotion()
-								? { duration: 0 }
-								: { x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
-						>
-							<FlowCard
-								category={flowCategory}
-								{categoryAcc}
-								committedAction={market.id === committedMarketId ? committedAction : null}
-								{followedLean}
-								interactive={isCurrent}
-								{market}
-								{metadata}
-								onAction={handleAction}
-								onStakeChange={(next) => {
-									tradeAmount = next;
-								}}
-								{priorCall}
-								signedIn={nonNullish($userStore.user)}
-								{tradeAmount}
-							/>
-						</div>
-					{/if}
-				{/each}
+					{#key currentIndex}
+						{#if !flowPaused}
+							<!-- Outer slot owns the exit (`out:fly`); the inner riser
+							     owns the rise-in (`flow-card-rise`). Keeping the two on
+							     separate elements means the exit transform never fights
+							     the rise animation if a card is committed mid-rise. -->
+							<div
+								class="flow-card-slot"
+								out:fly={prefersReducedMotion()
+									? { duration: 0 }
+									: { x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
+							>
+								<div class="flow-card-riser flow-card-rise">
+									<FlowCard
+										category={flowCategory}
+										{categoryAcc}
+										committedAction={currentCard.id === committedMarketId ? committedAction : null}
+										{followedLean}
+										interactive
+										market={currentCard}
+										{metadata}
+										onAction={handleAction}
+										onStakeChange={(next) => {
+											tradeAmount = next;
+										}}
+										{priorCall}
+										signedIn={nonNullish($userStore.user)}
+										{tradeAmount}
+									/>
+								</div>
+							</div>
+						{/if}
+					{/key}
+				{/if}
 			</div>
 
 			<FlowXpPops pops={xpPops} />
@@ -1104,20 +1090,13 @@
 	.flow-card-slot {
 		position: absolute;
 		inset: 0;
-		transition:
-			transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
-			opacity 420ms ease;
-	}
-	.flow-card-slot.is-back {
-		pointer-events: none;
-		transform: translateY(calc(var(--depth) * 9px)) scale(calc(1 - var(--depth) * 0.035));
-		opacity: calc(1 - var(--depth) * 0.28);
-		filter: saturate(calc(1 - var(--depth) * 0.12));
 	}
 
-	:global([data-theme='light']) .flow-card-slot.is-back,
-	:global([data-theme='peach']) .flow-card-slot.is-back {
-		opacity: calc(1 - var(--depth) * 0.22);
-		filter: saturate(calc(1 - var(--depth) * 0.08)) drop-shadow(0 18px 32px rgba(14, 13, 11, 0.08));
+	/* The riser fills the slot and carries the rise-in animation, kept
+	   separate from the slot's `out:fly` so the two never animate the
+	   same element's transform. */
+	.flow-card-riser {
+		position: absolute;
+		inset: 0;
 	}
 </style>
