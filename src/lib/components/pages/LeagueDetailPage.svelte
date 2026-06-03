@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { ChevronRight, Copy, Check, Pencil, ImagePlus, Trash2 } from '@lucide/svelte/icons';
+	import {
+		ChevronLeft,
+		ChevronRight,
+		Copy,
+		Check,
+		Pencil,
+		ImagePlus,
+		Trash2
+	} from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -757,77 +765,102 @@
 </script>
 
 <div class="league-detail">
-	<!-- Back control only — the league name lives once in the editorial
-	     hero below, so the header carries no title for this surface. -->
-	<ScreenHeader
-		back={{
-			label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
-			onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
-		}}
-	/>
-
 	{#if loadState === 'loading'}
+		<ScreenHeader
+			back={{
+				label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
+				onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
+			}}
+		/>
 		<p class="league-detail-status" aria-busy="true">
 			{t({ locale: $localeStore, key: 'leagues.detail.loading' })}
 		</p>
 	{:else if loadState === 'not_member'}
+		<ScreenHeader
+			back={{
+				label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
+				onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
+			}}
+		/>
 		<LeagueDetailEmptyState />
 	{:else if loadState === 'error'}
+		<ScreenHeader
+			back={{
+				label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
+				onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
+			}}
+		/>
 		<p class="league-detail-error" role="alert">
 			{errorMessage ?? t({ locale: $localeStore, key: 'leagues.error.generic' })}
 		</p>
 	{:else if league}
-		<!-- ─── Editorial hero · compact eyebrow chips + large title ─── -->
+		<!-- ─── Editorial hero · back chevron + serif title on one row,
+		     then compact context chips + optional description. Mirrors the
+		     source design's title-bar (inline back + 24px serif-italic
+		     title) rather than stacking the title under a standalone bar. -->
 		<header class="league-detail-hero">
-			<div class="league-detail-hero-chips">
-				{#each heroChips as chip (chip)}
-					<span class="league-detail-hero-chip num">{chip}</span>
-				{/each}
-			</div>
 			{#if renaming}
-				<div class="league-detail-rename">
-					<div class="league-detail-rename-row">
-						<!-- svelte-ignore a11y_autofocus -->
-						<input
-							class="league-detail-rename-input"
-							aria-invalid={renameError !== undefined}
-							aria-label={t({ locale: $localeStore, key: 'leagues.detail.rename_label' })}
-							autofocus
-							disabled={renameSaving}
-							maxlength={LEAGUE_NAME_MAX_LENGTH}
-							minlength={LEAGUE_NAME_MIN_LENGTH}
-							onkeydown={handleRenameKeydown}
-							type="text"
-							bind:value={renameDraft}
-						/>
-						<button
-							class="league-detail-rename-btn is-primary"
-							disabled={renameSaving || renameError !== undefined}
-							onclick={handleRename}
-							type="button"
-						>
-							{t({
-								locale: $localeStore,
-								key: renameSaving ? 'leagues.detail.rename_saving' : 'leagues.detail.rename_save'
-							})}
-						</button>
-						<button
-							class="league-detail-rename-btn is-ghost"
-							disabled={renameSaving}
-							onclick={cancelRename}
-							type="button"
-						>
-							{t({ locale: $localeStore, key: 'leagues.detail.rename_cancel' })}
-						</button>
+				<div class="league-detail-hero-bar">
+					<button
+						class="league-detail-hero-back"
+						aria-label={t({ locale: $localeStore, key: 'leagues.detail.back' })}
+						onclick={() => goBack(`${resolve(AppPath.Arena)}/leagues`)}
+						type="button"
+					>
+						<ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
+					</button>
+					<div class="league-detail-rename">
+						<div class="league-detail-rename-row">
+							<!-- svelte-ignore a11y_autofocus -->
+							<input
+								class="league-detail-rename-input"
+								aria-invalid={renameError !== undefined}
+								aria-label={t({ locale: $localeStore, key: 'leagues.detail.rename_label' })}
+								autofocus
+								disabled={renameSaving}
+								maxlength={LEAGUE_NAME_MAX_LENGTH}
+								minlength={LEAGUE_NAME_MIN_LENGTH}
+								onkeydown={handleRenameKeydown}
+								type="text"
+								bind:value={renameDraft}
+							/>
+							<button
+								class="league-detail-rename-btn is-primary"
+								disabled={renameSaving || renameError !== undefined}
+								onclick={handleRename}
+								type="button"
+							>
+								{t({
+									locale: $localeStore,
+									key: renameSaving ? 'leagues.detail.rename_saving' : 'leagues.detail.rename_save'
+								})}
+							</button>
+							<button
+								class="league-detail-rename-btn is-ghost"
+								disabled={renameSaving}
+								onclick={cancelRename}
+								type="button"
+							>
+								{t({ locale: $localeStore, key: 'leagues.detail.rename_cancel' })}
+							</button>
+						</div>
+						{#if renameError}
+							<p class="league-detail-rename-error" role="alert">
+								{t({ locale: $localeStore, key: renameError })}
+							</p>
+						{/if}
 					</div>
-					{#if renameError}
-						<p class="league-detail-rename-error" role="alert">
-							{t({ locale: $localeStore, key: renameError })}
-						</p>
-					{/if}
 				</div>
 			{:else}
-				<div class="league-detail-hero-titlebar">
+				<div class="league-detail-hero-bar">
+					<button
+						class="league-detail-hero-back"
+						aria-label={t({ locale: $localeStore, key: 'leagues.detail.back' })}
+						onclick={() => goBack(`${resolve(AppPath.Arena)}/leagues`)}
+						type="button"
+					>
+						<ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
+					</button>
 					<h1 class="league-detail-hero-title">{league.name}</h1>
 					{#if canRename}
 						<button
@@ -841,6 +874,11 @@
 					{/if}
 				</div>
 			{/if}
+			<div class="league-detail-hero-chips">
+				{#each heroChips as chip (chip)}
+					<span class="league-detail-hero-chip num">{chip}</span>
+				{/each}
+			</div>
 			{#if league.description}
 				<p class="league-detail-hero-desc serif-italic">{league.description}</p>
 			{/if}
@@ -1358,6 +1396,45 @@
 		padding: 0.25rem 0 0.1rem;
 	}
 
+	/* Title-bar row — inline back chevron + serif title (+ owner rename
+	   pencil), vertically centred, mirroring the source design's title
+	   bar. 50px min-height + 12px gap keep the chevron and title aligned
+	   on a single row. */
+	.league-detail-hero-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		min-height: 50px;
+	}
+
+	/* Inline back circle — flush to the content edge via the negative
+	   margin, so it reads as part of the title row rather than an inset
+	   action. */
+	.league-detail-hero-back {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: none;
+		width: 36px;
+		height: 36px;
+		margin-left: -8px;
+		padding: 0;
+		color: var(--text-muted);
+		background: transparent;
+		border: 0;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			color 140ms var(--ease-vici),
+			background 140ms var(--ease-vici);
+	}
+
+	.league-detail-hero-back:hover {
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+	}
+
 	.league-detail-hero-chips {
 		display: flex;
 		flex-wrap: wrap;
@@ -1378,16 +1455,23 @@
 	}
 
 	/* League title — serif-italic editorial treatment (the entity name
-	   reads as a masthead, not a UI label). */
+	   reads as a masthead, not a UI label). Sized to the source design's
+	   inline title-bar (24px), filling the row so any trailing pencil
+	   sits at the edge; ellipsizes only when truly out of room. */
 	.league-detail-hero-title {
 		margin: 0;
+		flex: 1 1 auto;
+		min-width: 0;
 		font-family: var(--font-serif, var(--font-display, serif));
 		font-style: italic;
-		font-size: var(--t-26, 1.625rem);
+		font-size: var(--t-24, 1.5rem);
 		font-weight: 400;
 		letter-spacing: -0.01em;
 		color: var(--text-base);
 		line-height: 1.1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.league-detail-hero-desc {
@@ -1399,23 +1483,12 @@
 
 	/* ─── Inline rename (owner only) ────────────────────────────── */
 
-	.league-detail-hero-titlebar {
-		display: flex;
-		align-items: flex-start;
-		gap: 0.4rem;
-	}
-
-	.league-detail-hero-titlebar .league-detail-hero-title {
-		min-width: 0;
-	}
-
 	.league-detail-hero-edit {
 		appearance: none;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
-		margin-top: 0.2rem;
 		padding: 0.25rem;
 		color: var(--text-muted);
 		background: none;
@@ -1434,6 +1507,8 @@
 
 	.league-detail-rename {
 		display: flex;
+		flex: 1 1 auto;
+		min-width: 0;
 		flex-direction: column;
 		gap: 0.4rem;
 	}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight } from '@lucide/svelte/icons';
+	import { ChevronRight, X } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { createLeague, validateLeagueDraft } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -151,6 +151,14 @@
 	<form class="league-form" onsubmit={handleSubmit}>
 		<header class="league-form-head">
 			<h2>{t({ locale: $localeStore, key: 'leagues.create.title' })}</h2>
+			<button
+				class="league-form-close"
+				aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
+				onclick={handleClose}
+				type="button"
+			>
+				<X aria-hidden="true" size={18} strokeWidth={1.8} />
+			</button>
 		</header>
 
 		<!-- Live preview card — mirrors the leagues-list row so the
@@ -298,11 +306,44 @@
 		gap: 0.85rem;
 	}
 
+	/* Title + top-right close × on one row — mirrors the sheet header in
+	   the source design (title left, circular ghost close right). */
+	.league-form-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
 	.league-form-head h2 {
 		margin: 0;
 		font-family: var(--font-display);
 		font-size: var(--t-18, 1.1rem);
 		color: var(--text-base);
+	}
+
+	.league-form-close {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		color: var(--text-muted);
+		background: transparent;
+		border: 0;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			color 140ms var(--ease-vici),
+			background 140ms var(--ease-vici);
+	}
+
+	.league-form-close:hover {
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 	}
 
 	/* ─── Live preview card ─────────────────────────────────────── */

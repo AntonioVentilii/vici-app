@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, ChevronRight } from '@lucide/svelte/icons';
+	import { Check, ChevronRight, X } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { joinLeagueByInvite, lookupLeagueByInvite } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -156,7 +156,17 @@
 <BottomSheet {isOpen} onClose={handleClose}>
 	<form class="league-form" onsubmit={handleSubmit}>
 		<header class="league-form-head">
-			<h2>{t({ locale: $localeStore, key: 'leagues.join.title' })}</h2>
+			<div class="league-form-head-row">
+				<h2>{t({ locale: $localeStore, key: 'leagues.join.title' })}</h2>
+				<button
+					class="league-form-close"
+					aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
+					onclick={handleClose}
+					type="button"
+				>
+					<X aria-hidden="true" size={18} strokeWidth={1.8} />
+				</button>
+			</div>
 			<p>
 				{t({ locale: $localeStore, key: 'leagues.join.sub' })}
 				<code class="league-code-example num">{CODE_EXAMPLE}</code>.
@@ -249,11 +259,46 @@
 		gap: 0.85rem;
 	}
 
+	/* Title + top-right close × on one row — mirrors the sheet header in
+	   the source design (title left, circular ghost close right). The
+	   helper paragraph stays below the row. */
+	.league-form-head-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-bottom: 0.25rem;
+	}
+
 	.league-form-head h2 {
-		margin: 0 0 0.25rem;
+		margin: 0;
 		font-family: var(--font-display);
 		font-size: var(--t-18, 1.1rem);
 		color: var(--text-base);
+	}
+
+	.league-form-close {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		color: var(--text-muted);
+		background: transparent;
+		border: 0;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			color 140ms var(--ease-vici),
+			background 140ms var(--ease-vici);
+	}
+
+	.league-form-close:hover {
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 	}
 
 	.league-form-head p {
