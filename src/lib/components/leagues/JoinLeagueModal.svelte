@@ -1,9 +1,14 @@
 <script lang="ts">
-	import { Check } from '@lucide/svelte/icons';
+	import { Check, ChevronRight, X } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { joinLeagueByInvite, lookupLeagueByInvite } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { LEAGUE_INVITE_CODE_REGEX, leagueEmblem, type LeagueDoc } from '$lib/types/league';
+	import {
+		LEAGUE_INVITE_CODE_EXAMPLE,
+		LEAGUE_INVITE_CODE_REGEX,
+		leagueEmblem,
+		type LeagueDoc
+	} from '$lib/types/league';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	interface Props {
@@ -13,6 +18,13 @@
 	}
 
 	const { isOpen, onClose, onJoined }: Props = $props();
+
+	// The helper sentence carries a `{code}` slot so spacing and trailing
+	// punctuation stay locale-correct (zh-CN ends on 。, not "."); we split
+	// the localized copy on that slot and drop the accent-tinted sample
+	// token (our real 6-char invite shape) into the gap. Mirrors the field
+	// placeholder, which renders the same shared sample.
+	const subParts = $derived(t({ locale: $localeStore, key: 'leagues.join.sub' }).split('{code}'));
 
 	let code = $state('');
 	let submitting = $state(false);
@@ -149,11 +161,24 @@
 	};
 </script>
 
-<BottomSheet {isOpen} onClose={handleClose}>
+<BottomSheet {isOpen} onClose={handleClose} sidePadding="22px">
 	<form class="league-form" onsubmit={handleSubmit}>
 		<header class="league-form-head">
-			<h2>{t({ locale: $localeStore, key: 'leagues.join.title' })}</h2>
-			<p>{t({ locale: $localeStore, key: 'leagues.join.sub' })}</p>
+			<div class="league-form-head-row">
+				<h2>{t({ locale: $localeStore, key: 'leagues.join.title' })}</h2>
+				<button
+					class="league-form-close"
+					aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
+					onclick={handleClose}
+					type="button"
+				>
+					<X aria-hidden="true" size={18} strokeWidth={1.8} />
+				</button>
+			</div>
+			<p>
+				{subParts[0]}<code class="league-code-example num">{LEAGUE_INVITE_CODE_EXAMPLE}</code
+				>{subParts[1] ?? ''}
+			</p>
 		</header>
 
 		{#if pasteHint}
@@ -177,7 +202,7 @@
 				autocomplete="off"
 				maxlength="6"
 				minlength="6"
-				placeholder="ABC123"
+				placeholder={LEAGUE_INVITE_CODE_EXAMPLE}
 				required
 				spellcheck="false"
 				type="text"
@@ -215,18 +240,18 @@
 		{/if}
 
 		<div class="league-form-actions">
-			<button class="league-btn is-ghost" onclick={handleClose} type="button">
-				{t({ locale: $localeStore, key: 'leagues.join.cancel' })}
-			</button>
 			<button class="league-btn is-primary" disabled={!canSubmit} type="submit">
 				{#if submitting}
 					{t({ locale: $localeStore, key: 'leagues.join.submitting' })}
 				{:else if matched}
-					{t({
-						locale: $localeStore,
-						key: 'leagues.join.cta_named',
-						params: { name: matched.name }
-					})}
+					<span>
+						{t({
+							locale: $localeStore,
+							key: 'leagues.join.cta_named',
+							params: { name: matched.name }
+						})}
+					</span>
+					<ChevronRight aria-hidden="true" size={15} strokeWidth={2.2} />
 				{:else}
 					{t({ locale: $localeStore, key: 'leagues.join.cta' })}
 				{/if}
@@ -242,11 +267,46 @@
 		gap: 0.85rem;
 	}
 
+	/* Title + top-right close × on one row — mirrors the sheet header in
+	   the source design (title left, circular ghost close right). The
+	   helper paragraph stays below the row. */
+	.league-form-head-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-bottom: 0.25rem;
+	}
+
 	.league-form-head h2 {
-		margin: 0 0 0.25rem;
+		margin: 0;
 		font-family: var(--font-display);
 		font-size: var(--t-18, 1.1rem);
 		color: var(--text-base);
+	}
+
+	.league-form-close {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		color: var(--text-muted);
+		background: transparent;
+		border: 0;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			color 140ms var(--ease-vici),
+			background 140ms var(--ease-vici);
+	}
+
+	.league-form-close:hover {
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 	}
 
 	.league-form-head p {
@@ -254,6 +314,15 @@
 		font-size: var(--t-13);
 		color: var(--text-muted);
 		line-height: 1.5;
+	}
+
+	/* Inline sample code — mono, accent-tinted, so the expected format
+	   stands out from the surrounding helper sentence. */
+	.league-code-example {
+		font-family: var(--font-mono);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		color: var(--color-accent);
 	}
 
 	/* ─── Clipboard paste hint ──────────────────────────────────── */
@@ -395,22 +464,25 @@
 		color: var(--no);
 	}
 
-	/* Two-column grid so the buttons split the sheet width evenly and
-	   never crowd the right edge on narrow viewports. */
+	/* Single full-width CTA — no Cancel; the disabled label doubles as
+	   the inline hint ("Enter a valid code") until a code resolves. */
 	.league-form-actions {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.5rem;
+		display: flex;
 		margin-top: 0.35rem;
 	}
 
 	.league-btn {
 		appearance: none;
-		padding: 0.75rem 1rem;
+		display: inline-flex;
+		flex: 1;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		padding: 0.875rem 1rem;
 		font: inherit;
 		font-size: var(--t-13);
 		font-weight: 700;
-		border-radius: var(--r-12);
+		border-radius: var(--r-pill);
 		cursor: pointer;
 		text-align: center;
 		overflow: hidden;
@@ -420,17 +492,6 @@
 			background 140ms ease,
 			color 140ms ease,
 			border-color 140ms ease;
-	}
-
-	.league-btn.is-ghost {
-		color: var(--text-muted);
-		background: none;
-		border: 1px solid var(--border-base);
-	}
-
-	.league-btn.is-ghost:hover {
-		color: var(--text-base);
-		border-color: var(--border-strong);
 	}
 
 	.league-btn.is-primary {

@@ -1988,21 +1988,23 @@
 		line-height: var(--leading-snug);
 	}
 
+	/* Open-column stats — label over value, no per-tile box. The block is
+	   bracketed by a top + bottom divider rule so the three columns read as
+	   one editorial band rather than three cards. */
 	.friends-sheet-stats {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: 0.5rem;
-		margin-bottom: 0.65rem;
+		padding: 0.75rem 0;
+		border-top: 1px solid var(--border-base);
+		border-bottom: 1px solid var(--border-base);
 	}
 
 	.friends-sheet-stat {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
-		padding: 0.55rem 0.65rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
+		gap: 0.25rem;
+		text-align: center;
 	}
 
 	.friends-sheet-lbl {
@@ -2016,19 +2018,24 @@
 
 	.friends-sheet-val {
 		color: var(--text-base);
-		font-size: var(--t-14);
+		font-family: var(--font-mono);
+		font-size: var(--t-16);
 		font-weight: 700;
 	}
 
+	/* Head-to-head reads as a single open row — label left, delta right —
+	   sharing the open-column register of the stats band above (no box). */
 	.friends-sheet-h2h {
 		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-		padding: 0.65rem 0.75rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
-		margin-bottom: 0.85rem;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.85rem 0 0.25rem;
+		margin-bottom: 0.6rem;
+	}
+
+	.friends-sheet-h2h .friends-sheet-val {
+		font-size: var(--t-13);
 	}
 
 	.friends-sheet-h2h.is-ahead .friends-sheet-val {
