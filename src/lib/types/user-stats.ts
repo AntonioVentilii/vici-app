@@ -23,6 +23,22 @@ export interface RecentSettlementSnapshot {
 	win: boolean;
 	/** UTC ms timestamp of the settlement event. */
 	settledAtMs: number;
+	/**
+	 * Realized VXP for this settlement, in whole VXP (rounded). Derived
+	 * from the clearing `Settled` event's `qty` × execution `price` — the
+	 * same product the profile sync uses for lifetime realized P&L — so a
+	 * winning settlement carries the positive payout the Oracle insight
+	 * surfaces ("+{vxp} VXP"). `≥ 0` for a win.
+	 */
+	vxp: number;
+	/**
+	 * `true` when the user took this side against the crowd: a win whose
+	 * execution price priced their side as a long shot (≤
+	 * `CONTRARIAN_PRICE_THRESHOLD`). Lets the Oracle insight tag the call
+	 * a "contrarian win" vs a plain "best call". Mirrors the long-shot
+	 * rule the `contrarian` achievement counts on.
+	 */
+	contrarian: boolean;
 }
 
 /**

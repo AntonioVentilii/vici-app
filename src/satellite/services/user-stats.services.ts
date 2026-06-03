@@ -66,4 +66,23 @@ export const assertSetUserStats = ({
 			`user_stats recentSettlements length (${proposedDoc.recentSettlements.length}) exceeds limit ${USER_STATS_RECENT_LIMIT}.`
 		);
 	}
+
+	// Per-settlement realized payout is a finite, non-negative VXP amount
+	// (the Oracle insight only ever surfaces a win's "+{vxp} VXP"), and the
+	// contrarian flag must be a real boolean. This doc is user-writable, so
+	// reject missing / non-numeric / non-finite vxp and non-boolean flags
+	// before a corrupt row can reach the UI.
+	for (const settlement of proposedDoc.recentSettlements) {
+		if (
+			typeof settlement.vxp !== 'number' ||
+			!Number.isFinite(settlement.vxp) ||
+			settlement.vxp < 0
+		) {
+			throw new Error('user_stats recentSettlements vxp must be a finite non-negative number.');
+		}
+
+		if (typeof settlement.contrarian !== 'boolean') {
+			throw new Error('user_stats recentSettlements contrarian must be a boolean.');
+		}
+	}
 };
