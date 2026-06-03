@@ -4293,6 +4293,20 @@ a.title-action::after {
 	margin-top: 2px;
 	display: block;
 }
+/* Percentile band ("Top X%") — restated from the tile's authoritative
+   rank / total. Reads as an accent micro-badge under the sub line. */
+.dash-rank-tile .pctl {
+	display: inline-block;
+	margin-top: 4px;
+	padding: 1px 6px;
+	font-family: var(--font-mono);
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--laurel);
+	background: color-mix(in srgb, var(--laurel) 12%, transparent);
+	border-radius: var(--r-pill);
+}
 
 /* ─── Oracle insight ─── */
 .dash-oracle {

@@ -665,6 +665,7 @@ export const enMessages = {
 	'dash.rank.league': 'League',
 	'dash.rank.league_sub': 'tap to view',
 	'dash.rank.of_total': 'of {total}',
+	'dash.rank.percentile': 'Top {pct}%',
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': 'Top category',
 	'dash.rank.top_cat_sub': 'best cat.',
