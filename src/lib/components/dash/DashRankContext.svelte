@@ -9,7 +9,8 @@
 	import {
 		findOwnStanding,
 		getLeagueStandings,
-		loadGlobalStandings
+		loadGlobalStandings,
+		percentileBand
 	} from '$lib/services/standings.services';
 	import {
 		leagueMembersStore,
@@ -72,9 +73,29 @@
 		};
 	});
 
+	// The viewer's global percentile band ("Top X%"), restated from the same
+	// authoritative rank / total — `undefined` (no band shown) until the slice
+	// has resolved the viewer's own rank.
+	const globalPercentile = $derived.by(() => {
+		const entry = globalStanding?.entry;
+
+		if (entry === undefined || globalStanding === undefined) {
+			return;
+		}
+
+		return percentileBand({ rank: entry.rank, total: globalStanding.total });
+	});
+
 	// The viewer's rank within their primary league. Loaded on demand (it is a
 	// per-league query, not the cached global slice).
 	let leagueRank = $state<{ rank: number; total: number } | undefined>(undefined);
+
+	// The viewer's percentile band within their primary league roster.
+	const leaguePercentile = $derived.by(() =>
+		leagueRank === undefined
+			? undefined
+			: percentileBand({ rank: leagueRank.rank, total: leagueRank.total })
+	);
 
 	// Load the global all-time slice once so the global tile can resolve the
 	// viewer's rank. The store caches it, so a repeat mount short-circuits.
@@ -154,6 +175,15 @@
 					{t({ locale: $localeStore, key: 'dash.rank.global_sub' })}
 				{/if}
 			</span>
+			{#if globalPercentile !== undefined}
+				<span class="pctl num">
+					{t({
+						locale: $localeStore,
+						key: 'dash.rank.percentile',
+						params: { pct: globalPercentile }
+					})}
+				</span>
+			{/if}
 		</button>
 		<button class="dash-rank-tile dash-rank-tile-btn" onclick={openLeague} type="button">
 			<span class="lbl">{t({ locale: $localeStore, key: 'dash.rank.league' })}</span>
@@ -171,6 +201,15 @@
 					{t({ locale: $localeStore, key: 'dash.rank.league_sub' })}
 				{/if}
 			</span>
+			{#if leaguePercentile !== undefined}
+				<span class="pctl num">
+					{t({
+						locale: $localeStore,
+						key: 'dash.rank.percentile',
+						params: { pct: leaguePercentile }
+					})}
+				</span>
+			{/if}
 		</button>
 		{#if worldCupActive}
 			<div class="dash-rank-tile">
