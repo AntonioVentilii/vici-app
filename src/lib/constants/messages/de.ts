@@ -1878,7 +1878,7 @@ export const deMessages = {
 	'signin.legal.terms': 'AGB',
 	'signin.loading.apple': 'Apple wird geöffnet…',
 	'signin.loading.dev': 'Anmelden…',
-	'signin.loading.email': 'Wird eingerichtet …',
+	'signin.loading.email': 'Wird eingerichtet…',
 	'signin.loading.google': 'Google wird geöffnet…',
 	'signin.loading.ii': 'Internet Identity wird geöffnet…',
 	'signin.loading.passkey': 'Passkey wird geöffnet…',

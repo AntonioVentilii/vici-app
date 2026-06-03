@@ -256,13 +256,18 @@
 			id: 'email',
 			run: async () => {
 				if (isSignUp) {
-					stashPendingEmail(address);
-
 					await signUp({
 						webauthn: {
 							options: { passkey: { user: { displayName: address, name: address } } }
 						}
 					});
+
+					// Stash only AFTER the passkey ceremony succeeds — a cancelled
+					// or failed `signUp` throws here, so the address never lingers
+					// in pending-onboarding to be wrongly applied to a later
+					// successful sign-up (e.g. a Passkey attempt after a cancelled
+					// email one).
+					stashPendingEmail(address);
 
 					return;
 				}
