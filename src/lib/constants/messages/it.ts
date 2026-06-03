@@ -255,7 +255,7 @@ export const itMessages = {
 	'account.email.used_for': 'Usata per accesso e notifiche importanti.',
 	'account.email.verified': 'Verificata',
 	'account.intro':
-		'VICI ti fa accedere con una passkey — il tuo Face ID o impronta — oppure con Internet Identity o Google. Niente password, niente link di accesso via email. Cambia metodo in qualsiasi momento — i tuoi dati restano.',
+		'VICI ti fa accedere con una passkey — il tuo Face ID o impronta — oppure con Internet Identity o Google. Niente da ricordare, niente link di accesso via email. Cambia metodo in qualsiasi momento — i tuoi dati restano.',
 	'account.method.eyebrow': 'METODO DI ACCESSO',
 	'account.method.ii': 'Internet Identity',
 	'account.method.google': 'Google',

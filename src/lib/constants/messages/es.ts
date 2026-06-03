@@ -254,7 +254,7 @@ export const esMessages = {
 	'account.email.used_for': 'Se usa para iniciar sesión y avisos importantes de la cuenta.',
 	'account.email.verified': 'Verificado',
 	'account.intro':
-		'VICI te inicia sesión con una passkey — tu Face ID o huella — o con Internet Identity o Google. Sin contraseñas, sin enlaces de inicio de sesión por email. Cambia cuando quieras — tus datos siguen contigo.',
+		'VICI te inicia sesión con una passkey — tu Face ID o huella — o con Internet Identity o Google. Nada que recordar, sin enlaces de inicio de sesión por email. Cambia cuando quieras — tus datos siguen contigo.',
 	'account.method.eyebrow': 'MÉTODO DE ACCESO',
 	'account.method.ii': 'Internet Identity',
 	'account.method.google': 'Google',

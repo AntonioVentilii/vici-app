@@ -246,7 +246,7 @@ export const zhCnMessages = {
 	'account.email.used_for': '用于登录及重要的账户通知。',
 	'account.email.verified': '已验证',
 	'account.intro':
-		'VICI 通过通行密钥（你的 Face ID 或指纹）登录，也支持 Internet Identity 或 Google。无需密码，也不会通过邮件发送登录链接。随时切换 — 数据保留。',
+		'VICI 通过通行密钥（你的 Face ID 或指纹）登录，也支持 Internet Identity 或 Google。无需记忆，也不会通过邮件发送登录链接。随时切换 — 数据保留。',
 	'account.method.eyebrow': '当前登录方式',
 	'account.method.ii': 'Internet Identity',
 	'account.method.google': 'Google',
