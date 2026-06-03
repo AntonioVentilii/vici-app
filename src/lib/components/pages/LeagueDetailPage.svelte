@@ -22,6 +22,7 @@
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { LeaguePrivacy } from '$lib/enums/league';
 	import {
 		acceptBattle,
 		kickoffBattle,
@@ -43,7 +44,12 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleDoc, BattleState } from '$lib/types/battle';
-	import { leagueEmblem, LEAGUE_NAME_MAX_LENGTH, LEAGUE_NAME_MIN_LENGTH } from '$lib/types/league';
+	import {
+		leagueEmblem,
+		leaguePrivacy,
+		LEAGUE_NAME_MAX_LENGTH,
+		LEAGUE_NAME_MIN_LENGTH
+	} from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
 	import type { StandingsWindow } from '$lib/types/standings';
 	import { formatDate, formatLocalePercent, shortenPrincipal } from '$lib/utils/format.utils';
@@ -386,10 +392,19 @@
 		})
 	);
 
+	// Maps the three-way privacy onto its chip label key. A league with an
+	// absent field resolves to `open` via `leaguePrivacy`.
+	const PRIVACY_CHIP_KEY: Record<LeaguePrivacy, MessageKey> = {
+		[LeaguePrivacy.OPEN]: 'leagues.detail.hero_chip_open',
+		[LeaguePrivacy.INVITE]: 'leagues.detail.hero_chip_invite',
+		[LeaguePrivacy.PRIVATE]: 'leagues.detail.hero_chip_private'
+	};
+
 	// Editorial-hero eyebrow chips — exactly three: the kind ("League"),
-	// the member count, and the public/private flag. The privacy chip
-	// reads the league's `private` field (absent → public). The caller's
-	// role is surfaced in the battle section ("Admin · you"), not here.
+	// the member count, and the privacy state (Open / Invite-only /
+	// Private). The privacy chip reads the league's `privacy` field
+	// through `leaguePrivacy` (absent → Open). The caller's role is
+	// surfaced in the battle section ("Admin · you"), not here.
 	const heroChips = $derived([
 		t({ locale: $localeStore, key: 'leagues.detail.hero_chip_kind' }),
 		t({
@@ -400,7 +415,10 @@
 		}),
 		t({
 			locale: $localeStore,
-			key: league?.private ? 'leagues.detail.hero_chip_private' : 'leagues.detail.hero_chip_public'
+			key:
+				league === undefined
+					? 'leagues.detail.hero_chip_open'
+					: PRIVACY_CHIP_KEY[leaguePrivacy(league)]
 		})
 	]);
 

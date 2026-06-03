@@ -1,3 +1,4 @@
+import { LeaguePrivacy } from '$lib/enums/league';
 import { ProfileVisibility } from '$lib/enums/profile';
 import { RelationCategory, RelationState } from '$lib/enums/relation';
 import { UserRole } from '$lib/enums/user';
@@ -462,7 +463,11 @@ export const LeagueWireSchema = j.strictObject({
 	created_at_ms: j.number(),
 	accent_color: j.string().optional(),
 	emblem: j.string().optional(),
-	private: j.boolean().default(false),
+	// Three-way visibility. Legacy rows that predate the field decode to
+	// `open` — the legacy `private === false/undefined` default. (The
+	// legacy `private === true`, which carried a code + was hidden from
+	// public lists, maps to `invite` at write time, not here.)
+	privacy: j.enum(LeaguePrivacy).default(LeaguePrivacy.OPEN),
 	image_url: j.string().optional()
 });
 
@@ -495,7 +500,7 @@ export const toWireLeague = (league: {
 	createdAtMs: number;
 	accentColor?: string;
 	emblem?: string;
-	private?: boolean;
+	privacy?: LeaguePrivacy;
 	imageUrl?: string;
 }): WireLeague => ({
 	id: league.id,
@@ -506,7 +511,9 @@ export const toWireLeague = (league: {
 	created_at_ms: league.createdAtMs,
 	accent_color: league.accentColor,
 	emblem: league.emblem,
-	private: league.private ?? false,
+	// Resolve the legacy-absent field to `open` on the wire so every
+	// consumer sees a concrete value (matches the schema default).
+	privacy: league.privacy ?? LeaguePrivacy.OPEN,
 	image_url: league.imageUrl
 });
 

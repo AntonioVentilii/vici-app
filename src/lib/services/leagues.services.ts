@@ -1,5 +1,6 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
+import { LeaguePrivacy } from '$lib/enums/league';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
@@ -56,7 +57,10 @@ const projectLeagueWire = (league: {
 	created_at_ms: number;
 	accent_color?: string;
 	emblem?: string;
-	private?: boolean;
+	// The generated wire client surfaces the Candid variant as a plain
+	// string union; coerce it back to the `LeaguePrivacy` enum below (the
+	// runtime values are identical).
+	privacy: `${LeaguePrivacy}`;
 	image_url?: string;
 }): LeagueDoc => ({
 	id: league.id,
@@ -67,7 +71,7 @@ const projectLeagueWire = (league: {
 	createdAtMs: league.created_at_ms,
 	accentColor: league.accent_color,
 	emblem: league.emblem,
-	private: league.private,
+	privacy: league.privacy as LeaguePrivacy,
 	imageUrl: league.image_url
 });
 
@@ -88,9 +92,9 @@ export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 
 /**
  * List the leagues the caller can challenge to a battle — the opponent
- * pool for the create-battle picker. Public leagues plus the caller's
- * own memberships, minus leagues the caller owns. Sorted alphabetically
- * by name per the satellite query.
+ * pool for the create-battle picker. Publicly listed (Open) leagues plus
+ * the caller's own memberships, minus leagues the caller owns. Sorted
+ * alphabetically by name per the satellite query.
  */
 export const listChallengeableLeagues = async (): Promise<LeagueDoc[]> => {
 	const { items } = await functions.listChallengeableLeagues();
@@ -98,7 +102,10 @@ export const listChallengeableLeagues = async (): Promise<LeagueDoc[]> => {
 	return items.map(projectLeagueWire);
 };
 
-/** A public league a friend is in but the caller is not, plus the overlap. */
+/**
+ * A non-private (Open or Invite-only) league a friend is in but the
+ * caller is not, plus the overlap.
+ */
 export interface FriendRecommendedLeague {
 	league: LeagueDoc;
 	/** Total members in the league (owner included). */
@@ -108,10 +115,10 @@ export interface FriendRecommendedLeague {
 }
 
 /**
- * List public leagues the caller's confirmed friends are in but the
- * caller is not — the "Friends are in" recommendations row at the foot
- * of the Leagues list. Sorted by friend-overlap count descending per
- * the satellite query.
+ * List Open and Invite-only leagues the caller's confirmed friends are in
+ * but the caller is not — the "Friends are in" recommendations row at the
+ * foot of the Leagues list. Private leagues are never surfaced. Sorted by
+ * friend-overlap count descending per the satellite query.
  */
 export const listFriendRecommendedLeagues = async (): Promise<FriendRecommendedLeague[]> => {
 	const { items } = await functions.listFriendRecommendedLeagues();
@@ -249,7 +256,7 @@ export const createLeague = async ({
 	description,
 	accentColor,
 	emblem,
-	isPrivate = false
+	privacy = LeaguePrivacy.INVITE
 }: {
 	name: string;
 	description?: string;
@@ -261,10 +268,10 @@ export const createLeague = async ({
 	 *  Persisted on the league doc so the logo tile reads the same
 	 *  everywhere the league is rendered. */
 	emblem?: string;
-	/** Whether the owner marked the league private at creation. Public
-	 *  by default; persisted on the league doc and surfaced as the
-	 *  detail header's privacy chip. */
-	isPrivate?: boolean;
+	/** Three-way visibility the owner picked in the create sheet.
+	 *  Defaults to Invite-only (the design default); persisted on the
+	 *  league doc and surfaced as the detail header's privacy chip. */
+	privacy?: LeaguePrivacy;
 }): Promise<LeagueDoc> => {
 	const validation = validateLeagueDraft({ name, description });
 
@@ -294,7 +301,7 @@ export const createLeague = async ({
 		createdAtMs,
 		accentColor,
 		emblem,
-		private: isPrivate
+		privacy
 	};
 
 	await setDoc<LeagueDoc>({
@@ -326,7 +333,7 @@ export const createLeague = async ({
 /**
  * Edit an owner-mutable league field. Only the current owner can call
  * this; the satellite assert hard-rejects anyone else. On the edit path
- * `id`, `createdAtMs`, `inviteCode`, `emblem`, and `private` stay
+ * `id`, `createdAtMs`, `inviteCode`, `emblem`, and `privacy` stay
  * frozen — `name` and `imageUrl` are the freely-mutable fields.
  *
  * Pass `name` to rename (trimmed + re-validated against the same 3–40
