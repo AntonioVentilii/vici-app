@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ChevronRight } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { createLeague, validateLeagueDraft } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -150,7 +151,6 @@
 	<form class="league-form" onsubmit={handleSubmit}>
 		<header class="league-form-head">
 			<h2>{t({ locale: $localeStore, key: 'leagues.create.title' })}</h2>
-			<p>{t({ locale: $localeStore, key: 'leagues.create.sub' })}</p>
 		</header>
 
 		<!-- Live preview card — mirrors the leagues-list row so the
@@ -276,14 +276,16 @@
 		{/if}
 
 		<div class="league-form-actions">
-			<button class="league-btn is-ghost" onclick={handleClose} type="button">
-				{t({ locale: $localeStore, key: 'leagues.create.cancel' })}
-			</button>
 			<button class="league-btn is-primary" disabled={!canSubmit} type="submit">
-				{t({
-					locale: $localeStore,
-					key: submitting ? 'leagues.create.submitting' : 'leagues.create.cta'
-				})}
+				<span>
+					{t({
+						locale: $localeStore,
+						key: submitting ? 'leagues.create.submitting' : 'leagues.create.cta'
+					})}
+				</span>
+				{#if !submitting}
+					<ChevronRight aria-hidden="true" size={15} strokeWidth={2.2} />
+				{/if}
 			</button>
 		</div>
 	</form>
@@ -297,16 +299,10 @@
 	}
 
 	.league-form-head h2 {
-		margin: 0 0 0.25rem;
+		margin: 0;
 		font-family: var(--font-display);
 		font-size: var(--t-18, 1.1rem);
 		color: var(--text-base);
-	}
-
-	.league-form-head p {
-		margin: 0;
-		font-size: var(--t-13);
-		color: var(--text-muted);
 	}
 
 	/* ─── Live preview card ─────────────────────────────────────── */
@@ -493,39 +489,31 @@
 		color: var(--no);
 	}
 
-	/* Two-column grid so the buttons split the sheet width evenly and
-	   never crowd the right edge on narrow viewports. */
+	/* Single full-width CTA — no Cancel; the sheet scrim / grip is the
+	   dismiss affordance, so the create action owns the row edge to edge. */
 	.league-form-actions {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.5rem;
+		display: flex;
 		margin-top: 0.35rem;
 	}
 
 	.league-btn {
 		appearance: none;
-		padding: 0.75rem 1rem;
+		display: inline-flex;
+		flex: 1;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		padding: 0.875rem 1rem;
 		font: inherit;
 		font-size: var(--t-13);
 		font-weight: 700;
-		border-radius: var(--r-12);
+		border-radius: var(--r-pill);
 		cursor: pointer;
 		text-align: center;
 		transition:
 			background 140ms ease,
 			color 140ms ease,
 			border-color 140ms ease;
-	}
-
-	.league-btn.is-ghost {
-		color: var(--text-muted);
-		background: none;
-		border: 1px solid var(--border-base);
-	}
-
-	.league-btn.is-ghost:hover {
-		color: var(--text-base);
-		border-color: var(--border-strong);
 	}
 
 	.league-btn.is-primary {

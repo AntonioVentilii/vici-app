@@ -781,7 +781,7 @@
 		<header class="league-detail-hero">
 			<div class="league-detail-hero-chips">
 				{#each heroChips as chip (chip)}
-					<span class="league-detail-hero-chip allcaps num">{chip}</span>
+					<span class="league-detail-hero-chip num">{chip}</span>
 				{/each}
 			</div>
 			{#if renaming}
@@ -1364,20 +1364,27 @@
 		gap: 0.35rem;
 	}
 
+	/* Context chips — mono, Title-case, rounded outline. The chip copy
+	   carries its own casing (League / 8 members / Public), so no
+	   uppercasing transform; the row reads as content, not a status pill. */
 	.league-detail-hero-chip {
-		font-size: var(--t-10);
-		letter-spacing: var(--tracking-allcaps);
-		padding: 0.15rem 0.5rem;
+		font-family: var(--font-mono);
+		font-size: var(--t-11);
+		letter-spacing: 0.02em;
+		padding: 0.25rem 0.625rem;
 		border-radius: var(--r-pill);
 		color: var(--text-muted);
-		background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+		border: 1px solid var(--border-base);
 	}
 
+	/* League title — serif-italic editorial treatment (the entity name
+	   reads as a masthead, not a UI label). */
 	.league-detail-hero-title {
 		margin: 0;
-		font-family: var(--font-display);
+		font-family: var(--font-serif, var(--font-display, serif));
+		font-style: italic;
 		font-size: var(--t-26, 1.625rem);
-		font-weight: 600;
+		font-weight: 400;
 		letter-spacing: -0.01em;
 		color: var(--text-base);
 		line-height: 1.1;

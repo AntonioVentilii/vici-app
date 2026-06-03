@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check } from '@lucide/svelte/icons';
+	import { Check, ChevronRight } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { joinLeagueByInvite, lookupLeagueByInvite } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -13,6 +13,10 @@
 	}
 
 	const { isOpen, onClose, onJoined }: Props = $props();
+
+	// Sample of our real invite-code shape (6-char alphanumeric) shown in
+	// the helper line and field placeholder so the format reads at a glance.
+	const CODE_EXAMPLE = 'ABC123';
 
 	let code = $state('');
 	let submitting = $state(false);
@@ -153,7 +157,10 @@
 	<form class="league-form" onsubmit={handleSubmit}>
 		<header class="league-form-head">
 			<h2>{t({ locale: $localeStore, key: 'leagues.join.title' })}</h2>
-			<p>{t({ locale: $localeStore, key: 'leagues.join.sub' })}</p>
+			<p>
+				{t({ locale: $localeStore, key: 'leagues.join.sub' })}
+				<code class="league-code-example num">{CODE_EXAMPLE}</code>.
+			</p>
 		</header>
 
 		{#if pasteHint}
@@ -215,18 +222,18 @@
 		{/if}
 
 		<div class="league-form-actions">
-			<button class="league-btn is-ghost" onclick={handleClose} type="button">
-				{t({ locale: $localeStore, key: 'leagues.join.cancel' })}
-			</button>
 			<button class="league-btn is-primary" disabled={!canSubmit} type="submit">
 				{#if submitting}
 					{t({ locale: $localeStore, key: 'leagues.join.submitting' })}
 				{:else if matched}
-					{t({
-						locale: $localeStore,
-						key: 'leagues.join.cta_named',
-						params: { name: matched.name }
-					})}
+					<span>
+						{t({
+							locale: $localeStore,
+							key: 'leagues.join.cta_named',
+							params: { name: matched.name }
+						})}
+					</span>
+					<ChevronRight aria-hidden="true" size={15} strokeWidth={2.2} />
 				{:else}
 					{t({ locale: $localeStore, key: 'leagues.join.cta' })}
 				{/if}
@@ -254,6 +261,15 @@
 		font-size: var(--t-13);
 		color: var(--text-muted);
 		line-height: 1.5;
+	}
+
+	/* Inline sample code — mono, accent-tinted, so the expected format
+	   stands out from the surrounding helper sentence. */
+	.league-code-example {
+		font-family: var(--font-mono);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		color: var(--color-accent);
 	}
 
 	/* ─── Clipboard paste hint ──────────────────────────────────── */
@@ -395,22 +411,25 @@
 		color: var(--no);
 	}
 
-	/* Two-column grid so the buttons split the sheet width evenly and
-	   never crowd the right edge on narrow viewports. */
+	/* Single full-width CTA — no Cancel; the disabled label doubles as
+	   the inline hint ("Enter a valid code") until a code resolves. */
 	.league-form-actions {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.5rem;
+		display: flex;
 		margin-top: 0.35rem;
 	}
 
 	.league-btn {
 		appearance: none;
-		padding: 0.75rem 1rem;
+		display: inline-flex;
+		flex: 1;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		padding: 0.875rem 1rem;
 		font: inherit;
 		font-size: var(--t-13);
 		font-weight: 700;
-		border-radius: var(--r-12);
+		border-radius: var(--r-pill);
 		cursor: pointer;
 		text-align: center;
 		overflow: hidden;
@@ -420,17 +439,6 @@
 			background 140ms ease,
 			color 140ms ease,
 			border-color 140ms ease;
-	}
-
-	.league-btn.is-ghost {
-		color: var(--text-muted);
-		background: none;
-		border: 1px solid var(--border-base);
-	}
-
-	.league-btn.is-ghost:hover {
-		color: var(--text-base);
-		border-color: var(--border-strong);
 	}
 
 	.league-btn.is-primary {

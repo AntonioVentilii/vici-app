@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft } from '@lucide/svelte/icons';
+	import { ChevronLeft } from '@lucide/svelte/icons';
 	import type { Snippet } from 'svelte';
 
 	interface BackAction {
@@ -58,7 +58,7 @@
 				onclick={handleBack}
 				type="button"
 			>
-				<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
+				<ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 			</button>
 		{/if}
 
