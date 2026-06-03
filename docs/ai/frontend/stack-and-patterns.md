@@ -269,6 +269,16 @@ pins `VICI_ENGINE_ID` is
   `loadAuth()`, which resolves the user and fires `onAuthStateChange`. Flush
   host state (e.g. the signup onboarding `onSuccess` that persists pending
   picks to storage) before that reload.
+- **Passkey: `signUp` creates, `signIn` authenticates.** Juno's WebAuthn
+  provider splits the two, and only `signUp` accepts a display name for the
+  new credential. `SignInProviderStack` takes a `mode` (`signin` | `signup`)
+  prop and branches the passkey button on it: the onboarding flow passes
+  `mode="signup"` (plus the chosen `handle`) so a brand-new user registers a
+  passkey labelled `VICI · {handle}`; every other mount (the /signin gate,
+  the "sign in to continue" modals) defaults to `mode="signin"` and
+  authenticates an existing passkey. The label flips between
+  `authn.passkey.create_button` and `authn.passkey.signin_button` the same
+  way.
 
 ## Tailwind v4 + design tokens
 
