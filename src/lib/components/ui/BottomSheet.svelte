@@ -26,9 +26,16 @@
 		isOpen: boolean;
 		children: Snippet;
 		onClose: () => void;
+		/**
+		 * Per-sheet horizontal padding (CSS length) overriding the default
+		 * side inset. Hosts that need a tighter design metric (e.g. the
+		 * league create / join sheets at 22px) pass it here; every other
+		 * sheet keeps the shared default by leaving it unset.
+		 */
+		sidePadding?: string;
 	}
 
-	const { isOpen, children, onClose }: Props = $props();
+	const { isOpen, children, onClose, sidePadding }: Props = $props();
 
 	let sheetEl = $state<HTMLDivElement | undefined>();
 	let trap: FocusTrap | null = null;
@@ -118,6 +125,7 @@
 	>
 		<div
 			bind:this={sheetEl}
+			style:--sheet-side-padding={sidePadding}
 			class="sheet"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
@@ -179,7 +187,11 @@
 		max-height: 92vh;
 		max-height: max(0px, calc(92vh - var(--kb-inset, 0px)));
 		transition: margin-bottom 0.22s var(--ease-vici);
-		padding: 0.5rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
+		/* Side inset defaults to the shared 1.1rem; hosts can override just
+		 * the horizontal padding via `--sheet-side-padding` (the `sidePadding`
+		 * prop) without disturbing the top / safe-area-bottom metrics. */
+		padding: 0.5rem var(--sheet-side-padding, 1.1rem)
+			calc(1.1rem + env(safe-area-inset-bottom, 0px));
 		background: var(--bg-popover);
 		border-top: 1px solid var(--border-base);
 		border-top-left-radius: 22px;

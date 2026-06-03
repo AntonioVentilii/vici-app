@@ -72,7 +72,7 @@ export const LEAGUE_IMAGE_JPEG_QUALITY = 0.82;
  * verbatim on the league doc's `emblem` field, then rendered inside
  * the gradient logo tile. The first entry is the default selection.
  */
-export const LEAGUE_EMBLEMS = ['⚔', '☼', '✦', '✧', '◎', '⌬', '⊿', '☆', '◆', '⬡'] as const;
+export const LEAGUE_EMBLEMS = ['⚔', '☼', '✦', '✧', '◎', '⌬', '⊿', '☆'] as const;
 
 /** Default emblem when the owner doesn't change the selection. */
 export const [LEAGUE_EMBLEM_DEFAULT] = LEAGUE_EMBLEMS;
@@ -103,6 +103,15 @@ export const leagueEmblem = (league: Pick<LeagueDoc, 'emblem' | 'name'>): string
  * write.
  */
 export const LEAGUE_INVITE_CODE_REGEX = /^[A-Z0-9]{6}$/;
+
+/**
+ * Sample invite code shown as a format affordance — the join sheet's
+ * helper line and the field placeholder both render this so the
+ * expected shape (6 uppercase alphanumerics) reads at a glance. Kept as
+ * a single constant so the two spots can never drift apart, and shaped
+ * to satisfy {@link LEAGUE_INVITE_CODE_REGEX}.
+ */
+export const LEAGUE_INVITE_CODE_EXAMPLE = 'ABC123';
 
 /**
  * Display-name length window — 3 chars keeps single-letter junk out,
