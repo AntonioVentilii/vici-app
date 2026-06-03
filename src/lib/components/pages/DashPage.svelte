@@ -40,7 +40,12 @@
 	} from '$lib/derived/resolved-positions.derived';
 	import { worldCupActive } from '$lib/derived/world-cup.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
+	import { getLeaderboard } from '$lib/services/leaderboard.services';
+	import {
+		calculateAndSyncStats,
+		getDisplayName,
+		getProfile
+	} from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
@@ -48,7 +53,8 @@
 	import { marketsStore } from '$lib/stores/markets.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
-	import type { UserStatsDoc } from '$lib/types/user-stats';
+	import type { UserProfile } from '$lib/types/profile';
+	import type { RecentSettlementSnapshot, UserStatsDoc } from '$lib/types/user-stats';
 	import { DAILY_GOAL_TARGET } from '$lib/utils/daily-goal.utils';
 	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -84,6 +90,10 @@
 	const dailyGoalDate = $derived(profile?.dailyGoalDate);
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
+	// Points-ranked profiles from the satellite `listLeaderboard` query —
+	// the source for the "Your rival" insight (the principal one rank
+	// above the user). Empty until the onMount load resolves.
+	let leaderboard = $state<UserProfile[]>([]);
 
 	let tw = $state<TimeWindow>('30d');
 	let pastFilter = $state<PastFilter>('all');
@@ -374,16 +384,77 @@
 	// for the `sessionDelta` insight further up the file, which is a
 	// distinct concept (accuracy delta in the recent window).
 
-	// Best win for the Oracle insight — first WIN in recent
-	// settlements, otherwise the first row, otherwise undefined.
-	const bestWin = $derived(recentSettlements.find((s) => s.win) ?? recentSettlements[0]);
+	// Best win for the Oracle insight — the user's highest-VXP settled
+	// WIN in the recent window (the "best call" worth surfacing), falling
+	// back to the most recent row only when nothing in the window won.
+	// `vxp` and `contrarian` are threaded through the user_stats snapshot
+	// from the clearing settlement event (see `user-stats.services`), so
+	// the sub-line reads "+{vxp} VXP · contrarian win" / "· best call".
+	const bestWin = $derived(
+		recentSettlements
+			.filter((s) => s.win)
+			.reduce<
+				RecentSettlementSnapshot | undefined
+			>((best, s) => (best === undefined || s.vxp > best.vxp ? s : best), undefined) ??
+			recentSettlements[0]
+	);
 	const bestWinTitle = $derived(
 		bestWin ? (marketById.get(bestWin.marketId)?.title ?? bestWin.marketId) : ''
 	);
+	const bestWinVxp = $derived(bestWin?.vxp ?? 0);
+	const bestWinContrarian = $derived(bestWin?.contrarian ?? false);
 
-	// Contrarian wins — placeholder until the satellite tags each
-	// settlement with a `contrarian` flag.
-	const contrarianWins = $derived(recentSettlements.filter((s) => s.win).slice(0, 3));
+	// Contrarian wins — settled wins the user took against the crowd
+	// (the satellite tags each settlement with a `contrarian` flag,
+	// derived from the execution price vs the long-shot threshold).
+	const contrarianWins = $derived(
+		recentSettlements.filter((s) => s.win && s.contrarian).slice(0, 3)
+	);
+
+	// ─── Rival ─────────────────────────────────────────────────────────
+	// The user's rival is the adjacent competitor directly above them on
+	// the points-ranked leaderboard — the next person to overtake. Derived
+	// purely from the existing `listLeaderboard` query: find the user's own
+	// row, take the one immediately above it. `undefined` (→ locked tease)
+	// when the user isn't on the leaderboard yet or is already rank 1.
+	const rival = $derived.by<
+		{ name: string; initials: string; gapPts: number; acc: number } | undefined
+	>(() => {
+		const owner = profile?.owner;
+
+		if (owner === undefined || leaderboard.length === 0) {
+			return;
+		}
+
+		const myIndex = leaderboard.findIndex((entry) => entry.owner === owner);
+
+		if (myIndex <= 0) {
+			// Not ranked yet (−1) or already at the top (0) — no rival above.
+			return;
+		}
+
+		const above = leaderboard[myIndex - 1];
+		const me = leaderboard[myIndex];
+		const name = getDisplayName({ profile: above });
+		// Up to two leading initials from the display name, caps. Falls
+		// back to a neutral glyph so the disc is never blank (brand: no
+		// emoji avatar fallback — initials in a tinted disc).
+		const initials =
+			name
+				.trim()
+				.split(/\s+/)
+				.map((part) => part.charAt(0))
+				.join('')
+				.slice(0, 2)
+				.toUpperCase() || '·';
+
+		return {
+			name,
+			initials,
+			gapPts: Math.max(0, Math.round((above.points ?? 0) - (me.points ?? 0))),
+			acc: above.accuracy ?? 0
+		};
+	});
 
 	// Next-unlock achievement (Marathon by default).
 	const unlocked = $derived(new Set<string>(profile?.unlockedAchievements ?? []));
@@ -511,6 +582,15 @@
 			userStats = await loadMyUserStats(profile.owner);
 		} catch (err) {
 			console.error('DashPage: failed to load user_stats', err);
+		}
+
+		try {
+			// Powers the "Your rival" insight — the competitor one rank above
+			// the user. Best-effort: a failed read leaves the rival as the
+			// locked tease rather than blocking the dashboard.
+			leaderboard = await getLeaderboard();
+		} catch (err) {
+			console.error('DashPage: failed to load leaderboard for rival', err);
 		}
 	});
 </script>
@@ -722,7 +802,12 @@
 			<DashRankContext topCategory={catRows[0]} {wcAccuracy} worldCupActive={$worldCupActive} />
 
 			<!-- ─── ORACLE INSIGHT ─── -->
-			<DashOracleInsight {bestWinTitle} hasBestWin={Boolean(bestWin)} />
+			<DashOracleInsight
+				{bestWinContrarian}
+				{bestWinTitle}
+				{bestWinVxp}
+				hasBestWin={Boolean(bestWin)}
+			/>
 
 			<!-- ─── PAST predictions ─── -->
 			<div class="dash-section">
@@ -825,22 +910,52 @@
 			{/if}
 
 			<!-- ─── DISCLOSURE foldouts ─── -->
+			<!-- Your rival · the competitor one rank above the user on the
+			     points leaderboard. Falls back to the locked tease (em-dashes)
+			     until the user is ranked with someone above them. -->
 			<details class="dash-disclosure">
 				<summary>
-					<span>{t({ locale: $localeStore, key: 'dash.disclosure.rival_title' })}</span>
+					<span>
+						{#if rival}
+							{t({
+								locale: $localeStore,
+								key: 'dash.disclosure.rival_title',
+								params: { handle: rival.name }
+							})}
+						{:else}
+							{t({ locale: $localeStore, key: 'dash.disclosure.rival_title_unknown' })}
+						{/if}
+					</span>
 					<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
 				</summary>
 				<div class="dash-disclosure-body">
-					<div class="dash-rival">
-						<span class="av">{EM_DASH}</span>
-						<div class="meta">
-							<span class="name">{EM_DASH}</span>
-							<span class="gap"
-								>{t({ locale: $localeStore, key: 'dash.disclosure.rival_gap_unknown' })}</span
-							>
+					{#if rival}
+						<div class="dash-rival">
+							<span class="av">{rival.initials}</span>
+							<div class="meta">
+								<span class="name">{rival.name}</span>
+								<span class="gap">
+									{t({
+										locale: $localeStore,
+										key: 'dash.disclosure.rival_gap',
+										params: { points: rival.gapPts }
+									})}
+								</span>
+							</div>
+							<span class="acc-num">{rival.acc.toFixed(1)}%</span>
 						</div>
-						<span class="acc-num">{EM_DASH}</span>
-					</div>
+					{:else}
+						<div class="dash-rival">
+							<span class="av">{EM_DASH}</span>
+							<div class="meta">
+								<span class="name">{EM_DASH}</span>
+								<span class="gap"
+									>{t({ locale: $localeStore, key: 'dash.disclosure.rival_gap_unknown' })}</span
+								>
+							</div>
+							<span class="acc-num">{EM_DASH}</span>
+						</div>
+					{/if}
 				</div>
 			</details>
 
@@ -872,7 +987,13 @@
 										{t({ locale: $localeStore, key: 'dash.disclosure.contrarian_ctx' })}
 									</div>
 								</div>
-								<span class="delta-pct delta-won">+{EM_DASH} VXP</span>
+								<span class="delta-pct delta-won">
+									{t({
+										locale: $localeStore,
+										key: 'dash.disclosure.contrarian_amount',
+										params: { vxp: h.vxp }
+									})}
+								</span>
 							</div>
 						{/each}
 					{/if}

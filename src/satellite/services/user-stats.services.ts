@@ -66,4 +66,12 @@ export const assertSetUserStats = ({
 			`user_stats recentSettlements length (${proposedDoc.recentSettlements.length}) exceeds limit ${USER_STATS_RECENT_LIMIT}.`
 		);
 	}
+
+	// Per-settlement realized payout is a non-negative VXP amount (the
+	// Oracle insight only ever surfaces a win's "+{vxp} VXP").
+	for (const settlement of proposedDoc.recentSettlements) {
+		if (settlement.vxp < 0) {
+			throw new Error('user_stats recentSettlements vxp must be non-negative.');
+		}
+	}
 };

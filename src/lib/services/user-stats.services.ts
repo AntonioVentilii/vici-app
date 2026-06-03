@@ -9,6 +9,8 @@ import {
 	type RecentSettlementSnapshot,
 	type UserStatsDoc
 } from '$lib/types/user-stats';
+import { CONTRARIAN_PRICE_THRESHOLD } from '$lib/utils/achievements.utils';
+import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { getDoc, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
@@ -70,6 +72,27 @@ const tagForSeries = ({
 };
 
 /**
+ * Execution price of a settlement event in [0, 1] probability units —
+ * the price the user's side cleared at. The same decimal decode the
+ * profile sync uses for realized P&L and the `contrarian` achievement.
+ */
+const settlementPrice = (event: ClearingDid.Event): number =>
+	decimalFixedValueToNumber({
+		value: event.price.decimal.value,
+		decimals: event.price.decimal.decimals
+	});
+
+/**
+ * Realized VXP for a single settlement, in whole VXP. `qty` is in
+ * 1e8-scaled contract units (mirrors the lifetime-P&L product in
+ * `calculateAndSyncStats`); a winning settlement clears at its
+ * execution `price`, so `(qty / 1e8) × price` is the payout. Rounded to
+ * a whole VXP for the Oracle insight headline; never negative.
+ */
+const settlementVxp = (event: ClearingDid.Event): number =>
+	Math.max(0, Math.round((Number(event.qty) / 1e8) * settlementPrice(event)));
+
+/**
  * Build a `UserStatsDoc` payload from raw clearing history plus the
  * in-memory market-metadata map. Pure function — no IO.
  *
@@ -113,12 +136,22 @@ export const computeUserStatsSnapshot = ({
 	const recentSettlements: RecentSettlementSnapshot[] = [...settled]
 		.sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
 		.slice(0, USER_STATS_RECENT_LIMIT)
-		.map((event) => ({
-			marketId: event.series_id,
-			tag: tagForSeries({ seriesId: event.series_id, metadata }),
-			win: event.qty > ZERO,
-			settledAtMs: Number(event.timestamp / 1_000_000n)
-		}));
+		.map((event) => {
+			const win = event.qty > ZERO;
+
+			return {
+				marketId: event.series_id,
+				tag: tagForSeries({ seriesId: event.series_id, metadata }),
+				win,
+				settledAtMs: Number(event.timestamp / 1_000_000n),
+				vxp: settlementVxp(event),
+				// Contrarian = a win the market priced as a long shot (the
+				// user's side cleared at ≤ the long-shot threshold), i.e. they
+				// were right against the crowd. Same rule the `contrarian`
+				// achievement counts on.
+				contrarian: win && settlementPrice(event) <= CONTRARIAN_PRICE_THRESHOLD
+			};
+		});
 
 	return {
 		owner,
