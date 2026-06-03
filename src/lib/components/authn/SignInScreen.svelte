@@ -117,7 +117,7 @@
 			</div>
 		</div>
 
-		<SignInProviderStack {onSuccess} />
+		<SignInProviderStack {mode} {onSuccess} />
 
 		<div class="signin-foot">
 			<span class="mute">{t({ locale: $localeStore, key: footerPromptKey })}</span>

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { isWebAuthnAvailable, signIn } from '@junobuild/core';
+	import { nonNullish } from '@dfinity/utils';
+	import { isWebAuthnAvailable, signIn, signUp } from '@junobuild/core';
 	import { Check, ChevronRight, Mail } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
@@ -18,9 +19,29 @@
 
 	interface Props {
 		onSuccess?: () => void;
+		// `signup` for new accounts (onboarding), `signin` for returning
+		// users (the /signin gate and every "sign in to continue" modal).
+		// Only the WebAuthn passkey path branches on this: Juno splits
+		// `signUp` (create a new passkey, which is the only call that can
+		// name it) from `signIn` (authenticate an existing one).
+		mode?: 'signin' | 'signup';
+		// Onboarding handle, used only to label a freshly-created passkey
+		// (`VICI · {handle}`) so it's recognizable in the OS / password
+		// manager. Absent → a plain `VICI` label. The user can rename it
+		// afterwards from their authenticator.
+		handle?: string | null;
 	}
 
-	const { onSuccess }: Props = $props();
+	const { onSuccess, mode = 'signin', handle = null }: Props = $props();
+
+	const isSignUp = $derived(mode === 'signup');
+
+	// Friendly display name for a newly-created passkey. Shown by the
+	// authenticator's account picker; not required to be unique and freely
+	// renamable by the user later.
+	const passkeyDisplayName = $derived(
+		nonNullish(handle) && handle.trim().length > 0 ? `VICI · ${handle.trim()}` : 'VICI'
+	);
 
 	// Provider IDs used to drive per-provider loading + faded-others
 	// state. Email is still a placeholder until its back-end ships.
@@ -152,10 +173,27 @@
 			}
 		});
 
+	// Passkey is the one provider where Juno splits create-vs-authenticate.
+	// In the sign-up flow we register a NEW passkey (`signUp`) — the only
+	// call that accepts a display name, so this is where the `VICI · {handle}`
+	// label is set. Everywhere else (the /signin gate, "sign in to continue"
+	// modals) we authenticate an EXISTING passkey (`signIn`).
 	const onPasskey = () =>
 		startSignIn({
 			id: 'passkey',
 			run: async () => {
+				if (isSignUp) {
+					await signUp({
+						webauthn: {
+							options: {
+								passkey: { user: { displayName: passkeyDisplayName, name: passkeyDisplayName } }
+							}
+						}
+					});
+
+					return;
+				}
+
 				await signIn({ webauthn: {} });
 			}
 		});
@@ -376,7 +414,9 @@
 				<span class="signin-provider-label">
 					{signingIn === 'passkey'
 						? t({ locale: $localeStore, key: 'signin.loading.passkey' })
-						: t({ locale: $localeStore, key: 'authn.passkey.signin_button' })}
+						: isSignUp
+							? t({ locale: $localeStore, key: 'authn.passkey.create_button' })
+							: t({ locale: $localeStore, key: 'authn.passkey.signin_button' })}
 				</span>
 				{#if signingIn === 'passkey'}
 					<span class="signin-spinner" aria-hidden="true"></span>
