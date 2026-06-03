@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ChevronRight, X } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import { LeaguePrivacy } from '$lib/enums/league';
 	import {
 		createLeague,
 		generateInviteCode,
@@ -28,10 +29,10 @@
 
 	const { isOpen, onClose, onCreated }: Props = $props();
 
-	// The emblem, colour, and public/private choice all persist onto the
-	// league doc — the emblem as `emblem`, the colour as `accentColor`,
-	// and the public/private choice as the league's `private` flag — and
-	// drive the live preview tile in this sheet.
+	// The emblem, colour, and privacy choice all persist onto the league
+	// doc — the emblem as `emblem`, the colour as `accentColor`, and the
+	// privacy choice as the league's `privacy` field — and drive the live
+	// preview tile in this sheet.
 	const COLORS = [
 		{ id: 'laurel', value: '#e2b842' },
 		{ id: 'mint', value: '#4fd3a1' },
@@ -40,17 +41,17 @@
 		{ id: 'violet', value: '#b49cff' },
 		{ id: 'parch', value: '#f2ecdc' }
 	] as const;
-	// Public/private toggle — defaults to public. The chosen value
-	// persists onto the league doc's `private` flag and reads back as
-	// the detail header's privacy chip.
-	const PRIVACIES = ['public', 'private'] as const;
-	type Privacy = (typeof PRIVACIES)[number];
+	// Three-way privacy selector — Invite-only / Private / Open, in that
+	// order, defaulting to Invite-only (the design default). The chosen
+	// value persists onto the league doc's `privacy` field and reads back
+	// as the detail header's privacy chip.
+	const PRIVACIES = [LeaguePrivacy.INVITE, LeaguePrivacy.PRIVATE, LeaguePrivacy.OPEN] as const;
 
 	const [DEFAULT_COLOR] = COLORS;
 
 	let name = $state('');
 	let description = $state('');
-	let privacy = $state<Privacy>('public');
+	let privacy = $state<LeaguePrivacy>(LeaguePrivacy.INVITE);
 	let emblem = $state<string>(LEAGUE_EMBLEM_DEFAULT);
 	let color = $state<string>(DEFAULT_COLOR.value);
 	let submitting = $state(false);
@@ -102,7 +103,7 @@
 
 	const showPreview = $derived(trimmedName.length >= LEAGUE_NAME_MIN_LENGTH);
 
-	const privacyLabel = (value: Privacy): string =>
+	const privacyLabel = (value: LeaguePrivacy): string =>
 		t({ locale: $localeStore, key: `leagues.create.privacy_${value}` });
 
 	const previewMeta = $derived(
@@ -116,7 +117,7 @@
 	const reset = () => {
 		name = '';
 		description = '';
-		privacy = 'public';
+		privacy = LeaguePrivacy.INVITE;
 		emblem = LEAGUE_EMBLEM_DEFAULT;
 		color = DEFAULT_COLOR.value;
 		submitting = false;
@@ -146,7 +147,7 @@
 				description: trimmedDescription || undefined,
 				accentColor: color,
 				emblem,
-				isPrivate: privacy === 'private',
+				privacy,
 				inviteCode
 			});
 			onCreated(league);

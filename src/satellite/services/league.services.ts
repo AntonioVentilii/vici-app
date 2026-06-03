@@ -1,4 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { LeaguePrivacy } from '$lib/enums/league';
 import {
 	LEAGUE_DESCRIPTION_MAX_LENGTH,
 	LEAGUE_EMBLEMS,
@@ -6,6 +7,7 @@ import {
 	LEAGUE_INVITE_CODE_REGEX,
 	LEAGUE_NAME_MAX_LENGTH,
 	LEAGUE_NAME_MIN_LENGTH,
+	leaguePrivacy,
 	type LeagueDoc
 } from '$lib/types/league';
 import { leagueMemberKey, type LeagueMemberDoc } from '$lib/types/league-member';
@@ -178,6 +180,19 @@ export const assertSetLeague = ({
 			);
 		}
 
+		// Privacy is frozen after creation and drives every visibility
+		// decision, so a value that locks in must be one of the three
+		// known variants (or absent for legacy-style rows, which resolve
+		// to `open`). Reject arbitrary strings up front.
+		if (
+			nonNullish(proposedDoc.privacy) &&
+			!Object.values(LeaguePrivacy).includes(proposedDoc.privacy)
+		) {
+			throw new Error(
+				`leagues privacy must be one of ${Object.values(LeaguePrivacy).join(', ')} (got "${proposedDoc.privacy}").`
+			);
+		}
+
 		// A cover image may be seeded at creation; same validation as the
 		// edit path — when present it must be one of our own league_images
 		// Storage URLs, else the field stays absent ("no image").
@@ -199,8 +214,10 @@ export const assertSetLeague = ({
 	// 3. Identity fields are immutable on edits — `owner` is now
 	// editable, the rest stay frozen. Privacy and the emblem are both
 	// chosen once at creation and frozen alongside the identity fields
-	// so the league's visible identity (public/private state, logo
-	// glyph) can't silently shift under existing members.
+	// so the league's visible identity (privacy state, logo glyph) can't
+	// silently shift under existing members. Privacy is compared through
+	// `leaguePrivacy` so a legacy row with an absent field (resolved to
+	// `open`) compares equal to an explicit `open` proposed value.
 	//
 	// `imageUrl` is the deliberate exception among the visual-identity
 	// fields: the owner can set, change, or clear the league's cover
@@ -210,10 +227,10 @@ export const assertSetLeague = ({
 		currentDoc.createdAtMs !== proposedDoc.createdAtMs ||
 		currentDoc.inviteCode !== proposedDoc.inviteCode ||
 		(currentDoc.emblem ?? '') !== (proposedDoc.emblem ?? '') ||
-		(currentDoc.private ?? false) !== (proposedDoc.private ?? false)
+		leaguePrivacy(currentDoc) !== leaguePrivacy(proposedDoc)
 	) {
 		throw new Error(
-			'leagues identity fields are immutable (id, createdAtMs, inviteCode, emblem, private).'
+			'leagues identity fields are immutable (id, createdAtMs, inviteCode, emblem, privacy).'
 		);
 	}
 

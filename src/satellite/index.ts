@@ -502,12 +502,12 @@ export const listChallengeableLeagues = defineQuery({
 });
 
 // Recommendation pool for the "Friends are in" row at the foot of the
-// Leagues list — public leagues the caller's confirmed friends are in
-// but the caller is not, with the per-league friend overlap for the
-// avatar cluster + count. "Friend" = active bilateral friendship (same
-// definition as `listFriends`); private leagues are never surfaced to a
-// non-member. See `listFriendRecommendedLeaguesFn` for the full privacy
-// rationale.
+// Leagues list — Open and Invite-only leagues the caller's confirmed
+// friends are in but the caller is not, with the per-league friend
+// overlap for the avatar cluster + count. "Friend" = active bilateral
+// friendship (same definition as `listFriends`); Private leagues are
+// never surfaced to a non-member. See `listFriendRecommendedLeaguesFn`
+// for the full privacy rationale.
 export const listFriendRecommendedLeagues = defineQuery({
 	result: j.strictObject({
 		items: j.array(FriendRecommendedLeagueWireSchema)
