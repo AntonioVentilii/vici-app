@@ -254,7 +254,7 @@ export const frMessages = {
 	'account.email.used_for': 'Sert à la connexion et aux notifications importantes du compte.',
 	'account.email.verified': 'Vérifié',
 	'account.intro':
-		'VICI te connecte avec une passkey — ton Face ID ou ton empreinte — ou avec Internet Identity ou Google. Rien Ã  retenir, pas de lien de connexion par e-mail. Change de méthode à tout moment — tes données restent.',
+		'VICI te connecte avec une passkey — ton Face ID ou ton empreinte — ou avec Internet Identity ou Google. Rien à retenir, pas de lien de connexion par e-mail. Change de méthode à tout moment — tes données restent.',
 	'account.method.eyebrow': 'MÉTHODE DE CONNEXION',
 	'account.method.ii': 'Internet Identity',
 	'account.method.google': 'Google',
