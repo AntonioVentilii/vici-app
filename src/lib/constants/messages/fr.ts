@@ -681,7 +681,7 @@ export const frMessages = {
 	'dash.rank.league': 'Ligue',
 	'dash.rank.league_sub': 'toucher pour voir',
 	'dash.rank.of_total': 'sur {total}',
-	'dash.rank.percentile': 'Top {pct} %',
+	'dash.rank.percentile': 'Top {pct}%',
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': 'Top catégorie',
 	'dash.rank.top_cat_sub': 'meilleure cat.',

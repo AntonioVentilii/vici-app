@@ -197,6 +197,10 @@
 	 * the card shows no arrow rather than a fabricated one.
 	 */
 	const leagueTrends = new SvelteMap<string, number>();
+	// The principal the `leagueTrends` cache was computed for. Trends are
+	// viewer-specific, so on a viewer change (sign-out → sign-in, account
+	// switch without a reload) the cache is dropped and recomputed.
+	let trendsOwner: string | undefined;
 
 	// Resolve each membership's weekly rank-trend in isolation, once a roster
 	// is known. `getLeagueStandings` ranks the supplied member set against the
@@ -209,6 +213,13 @@
 			return;
 		}
 
+		// New viewer → discard the previous viewer's cached trends so the
+		// arrows are never computed for the wrong principal.
+		if (owner !== trendsOwner) {
+			trendsOwner = owner;
+			leagueTrends.clear();
+		}
+
 		const pending = rows.filter(
 			(row) => row.members.length > 0 && !leagueTrends.has(row.league.id)
 		);
@@ -217,14 +228,21 @@
 			const { id } = row.league;
 			const { members } = row;
 
+			// Mark this league resolved the moment its query is scheduled
+			// (default 0 = no arrow), so a reactive re-run before the request
+			// settles never re-fires the same query. A real prior-week delta
+			// overwrites the 0 below; leagues with no comparable prior week
+			// simply keep it.
+			leagueTrends.set(id, 0);
+
 			void getLeagueStandings({ window: 'week', members })
 				.then((result) => {
 					const own = findOwnStanding({ result, owner });
 					const delta = own?.rankDelta;
 
 					// `rankDelta` is `priorRank - rank` (positive = climbed); the
-					// card's `trend` inverts that (negative = climbed). Skip when
-					// there is no comparable prior week so no arrow renders.
+					// card's `trend` inverts that (negative = climbed). Leave the
+					// 0 (no arrow) when there is no comparable prior week.
 					if (delta !== undefined) {
 						leagueTrends.set(id, -delta);
 					}
