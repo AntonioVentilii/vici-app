@@ -385,8 +385,9 @@
 	// distinct concept (accuracy delta in the recent window).
 
 	// Best win for the Oracle insight — the user's highest-VXP settled
-	// WIN in the recent window (the "best call" worth surfacing), falling
-	// back to the most recent row only when nothing in the window won.
+	// WIN in the recent window (the "best call" worth surfacing). When
+	// nothing in the window won, this is `undefined` so the Oracle empty
+	// state renders — never a loss dressed up as a "best call" (+0 VXP).
 	// `vxp` and `contrarian` are threaded through the user_stats snapshot
 	// from the clearing settlement event (see `user-stats.services`), so
 	// the sub-line reads "+{vxp} VXP · contrarian win" / "· best call".
@@ -395,8 +396,7 @@
 			.filter((s) => s.win)
 			.reduce<
 				RecentSettlementSnapshot | undefined
-			>((best, s) => (best === undefined || s.vxp > best.vxp ? s : best), undefined) ??
-			recentSettlements[0]
+			>((best, s) => (best === undefined || s.vxp > best.vxp ? s : best), undefined)
 	);
 	const bestWinTitle = $derived(
 		bestWin ? (marketById.get(bestWin.marketId)?.title ?? bestWin.marketId) : ''
