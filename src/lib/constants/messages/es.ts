@@ -667,6 +667,7 @@ export const esMessages = {
 	'dash.rank.league': 'Liga',
 	'dash.rank.league_sub': 'toca para ver',
 	'dash.rank.of_total': 'de {total}',
+	'dash.rank.percentile': 'Top {pct}%',
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': 'Mejor categoría',
 	'dash.rank.top_cat_sub': 'mejor cat.',

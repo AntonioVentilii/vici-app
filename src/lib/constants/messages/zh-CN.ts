@@ -632,6 +632,7 @@ export const zhCnMessages = {
 	'dash.rank.league': '联赛',
 	'dash.rank.league_sub': '点击查看',
 	'dash.rank.of_total': '共 {total} 名',
+	'dash.rank.percentile': '前 {pct}%',
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': '最佳分类',
 	'dash.rank.top_cat_sub': '最佳分类',
