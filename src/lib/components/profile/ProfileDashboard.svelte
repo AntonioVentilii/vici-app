@@ -710,11 +710,13 @@
 						     school can only ever read `unverified`. Surfacing a bare
 						     "Unverified" pill on every Alma Mater reads as a defect, so
 						     we render a subtle, non-actionable "verification — coming
-						     soon" hint instead. It carries no control: the slot still
-						     just re-opens the picker, whose verify path is itself gated
-						     off. The verified / pending pills above stay intact for when
-						     the flow lands. -->
-						<span class="affil-slot-badge affil-slot-badge-soon num">
+						     soon" hint instead. Unlike the short verified / pending
+						     pills it is too long to pin to the top-right corner without
+						     overflowing the tile, so it flows in-line as a quiet
+						     footnote at the bottom of the slot. It carries no control:
+						     the slot still just re-opens the picker, whose verify path
+						     is itself gated off. -->
+						<span class="affil-slot-hint num">
 							{t({
 								locale: $localeStore,
 								key: 'profile.dashboard.affiliations.verify_soon'
@@ -1352,7 +1354,6 @@
 		color: var(--ink, #0e0d0b);
 	}
 
-	.affil-slot-badge-soon,
 	.affil-slot-badge-pending {
 		padding: 0.1rem 0.4rem;
 		border-radius: var(--r-pill);
@@ -1363,15 +1364,21 @@
 	}
 
 	/* "Verification — coming soon" hint. Deliberately quiet and
-	   theme-adaptive (neutral muted text on a faint surface tint) so it
+	   theme-adaptive (neutral muted text, no chrome) so it
 	   reads as a passive promise rather than the actionable / attention-
 	   seeking pill the verified (gold) and pending (amber) states use.
-	   No live control hangs off it — the verify flow is gated off until
-	   the membership-email pass ships. */
-	.affil-slot-badge-soon {
+	   Too long to pin to the corner like those pills, so it flows in-line at
+	   the bottom of the slot (`margin-top: auto`) and stays within the tile's
+	   width. No live control hangs off it — the verify flow is gated off
+	   until the membership-email pass ships. */
+	.affil-slot-hint {
+		margin-top: auto;
+		max-width: 100%;
 		color: var(--text-muted);
-		background: color-mix(in srgb, var(--text-base) 8%, transparent);
-		border: 1px solid var(--border-base);
+		font-size: var(--t-10);
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		line-height: 1.25;
 		opacity: 0.85;
 	}
 
