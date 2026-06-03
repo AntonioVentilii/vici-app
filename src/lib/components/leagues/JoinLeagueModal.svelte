@@ -3,7 +3,12 @@
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { joinLeagueByInvite, lookupLeagueByInvite } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { LEAGUE_INVITE_CODE_REGEX, leagueEmblem, type LeagueDoc } from '$lib/types/league';
+	import {
+		LEAGUE_INVITE_CODE_EXAMPLE,
+		LEAGUE_INVITE_CODE_REGEX,
+		leagueEmblem,
+		type LeagueDoc
+	} from '$lib/types/league';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	interface Props {
@@ -14,9 +19,12 @@
 
 	const { isOpen, onClose, onJoined }: Props = $props();
 
-	// Sample of our real invite-code shape (6-char alphanumeric) shown in
-	// the helper line and field placeholder so the format reads at a glance.
-	const CODE_EXAMPLE = 'ABC123';
+	// The helper sentence carries a `{code}` slot so spacing and trailing
+	// punctuation stay locale-correct (zh-CN ends on 。, not "."); we split
+	// the localized copy on that slot and drop the accent-tinted sample
+	// token (our real 6-char invite shape) into the gap. Mirrors the field
+	// placeholder, which renders the same shared sample.
+	const subParts = $derived(t({ locale: $localeStore, key: 'leagues.join.sub' }).split('{code}'));
 
 	let code = $state('');
 	let submitting = $state(false);
@@ -153,7 +161,7 @@
 	};
 </script>
 
-<BottomSheet {isOpen} onClose={handleClose}>
+<BottomSheet {isOpen} onClose={handleClose} sidePadding="22px">
 	<form class="league-form" onsubmit={handleSubmit}>
 		<header class="league-form-head">
 			<div class="league-form-head-row">
@@ -168,8 +176,8 @@
 				</button>
 			</div>
 			<p>
-				{t({ locale: $localeStore, key: 'leagues.join.sub' })}
-				<code class="league-code-example num">{CODE_EXAMPLE}</code>.
+				{subParts[0]}<code class="league-code-example num">{LEAGUE_INVITE_CODE_EXAMPLE}</code
+				>{subParts[1] ?? ''}
 			</p>
 		</header>
 
@@ -194,7 +202,7 @@
 				autocomplete="off"
 				maxlength="6"
 				minlength="6"
-				placeholder="ABC123"
+				placeholder={LEAGUE_INVITE_CODE_EXAMPLE}
 				required
 				spellcheck="false"
 				type="text"

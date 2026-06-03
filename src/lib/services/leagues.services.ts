@@ -256,7 +256,8 @@ export const createLeague = async ({
 	description,
 	accentColor,
 	emblem,
-	privacy = LeaguePrivacy.INVITE
+	privacy = LeaguePrivacy.INVITE,
+	inviteCode
 }: {
 	name: string;
 	description?: string;
@@ -272,6 +273,12 @@ export const createLeague = async ({
 	 *  Defaults to Invite-only (the design default); persisted on the
 	 *  league doc and surfaced as the detail header's privacy chip. */
 	privacy?: LeaguePrivacy;
+	/** Pre-generated 6-char invite code. The create sheet surfaces the
+	 *  code to the owner before submit (so they can share it), so it
+	 *  passes the same value here to keep the displayed and persisted
+	 *  codes identical. Omitted callers get a fresh code generated here.
+	 *  Re-validated against {@link LEAGUE_INVITE_CODE_REGEX} either way. */
+	inviteCode?: string;
 }): Promise<LeagueDoc> => {
 	const validation = validateLeagueDraft({ name, description });
 
@@ -283,9 +290,9 @@ export const createLeague = async ({
 	const ownerPrincipal = identity.getPrincipal().toText();
 	const createdAtMs = Date.now();
 	const leagueId = deriveLeagueId({ name, suffix: createdAtMs });
-	const inviteCode = generateInviteCode();
+	const resolvedInviteCode = inviteCode ?? generateInviteCode();
 
-	if (!LEAGUE_INVITE_CODE_REGEX.test(inviteCode)) {
+	if (!LEAGUE_INVITE_CODE_REGEX.test(resolvedInviteCode)) {
 		// `generateInviteCode` is built to satisfy the regex; this
 		// branch is here so a future change to either side trips the
 		// FE error path instead of failing on the satellite assert.
@@ -296,7 +303,7 @@ export const createLeague = async ({
 		id: leagueId,
 		name,
 		description,
-		inviteCode,
+		inviteCode: resolvedInviteCode,
 		owner: ownerPrincipal,
 		createdAtMs,
 		accentColor,

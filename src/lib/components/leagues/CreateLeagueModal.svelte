@@ -2,7 +2,11 @@
 	import { ChevronRight, X } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { LeaguePrivacy } from '$lib/enums/league';
-	import { createLeague, validateLeagueDraft } from '$lib/services/leagues.services';
+	import {
+		createLeague,
+		generateInviteCode,
+		validateLeagueDraft
+	} from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import {
 		LEAGUE_DESCRIPTION_MAX_LENGTH,
@@ -52,6 +56,12 @@
 	let color = $state<string>(DEFAULT_COLOR.value);
 	let submitting = $state(false);
 	let submitError: string | null = $state(null);
+	// The 6-char invite code the owner shares to bring members in. Our
+	// codes are client-generated (see `createLeague`), so we mint one up
+	// front and surface it on this sheet as a format affordance — then
+	// hand the same value to `createLeague` so the code the owner sees is
+	// the one persisted. Re-minted on every open of a fresh draft.
+	let inviteCode = $state(generateInviteCode());
 
 	const trimmedName = $derived(name.trim());
 	const trimmedDescription = $derived(description.trim());
@@ -112,6 +122,8 @@
 		color = DEFAULT_COLOR.value;
 		submitting = false;
 		submitError = null;
+		// Mint a fresh code so the next draft shows (and persists) its own.
+		inviteCode = generateInviteCode();
 	};
 
 	const handleClose = () => {
@@ -135,7 +147,8 @@
 				description: trimmedDescription || undefined,
 				accentColor: color,
 				emblem,
-				privacy
+				privacy,
+				inviteCode
 			});
 			onCreated(league);
 			reset();
@@ -148,7 +161,7 @@
 	};
 </script>
 
-<BottomSheet {isOpen} onClose={handleClose}>
+<BottomSheet {isOpen} onClose={handleClose} sidePadding="22px">
 	<form class="league-form" onsubmit={handleSubmit}>
 		<header class="league-form-head">
 			<h2>{t({ locale: $localeStore, key: 'leagues.create.title' })}</h2>
@@ -275,6 +288,16 @@
 				{/each}
 			</div>
 		</fieldset>
+
+		<!-- Invite-code affordance — surfaces the league's real 6-char code
+		     so the owner can share it the moment they create. Read-only;
+		     the value is minted client-side and handed to `createLeague`. -->
+		<div class="league-invite-code">
+			<span class="num league-invite-code-value">{inviteCode}</span>
+			<span class="num mute allcaps league-invite-code-label">
+				{t({ locale: $localeStore, key: 'leagues.create.invite_code' })}
+			</span>
+		</div>
 
 		{#if draftError}
 			<p class="league-form-error" role="alert">
@@ -479,7 +502,7 @@
 
 	.league-emblem-grid {
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-template-columns: repeat(8, 1fr);
 		gap: 0.4rem;
 	}
 
@@ -523,6 +546,36 @@
 	.league-color-btn.is-active {
 		border: 2px solid var(--color-accent);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--laurel) 22%, transparent);
+	}
+
+	/* ─── Invite-code affordance ────────────────────────────────── */
+
+	/* Dashed read-only box: the league's real code (accent, tracked) on
+	   the left, an "Invite code" eyebrow on the right — the owner's cue
+	   for what to share. */
+	.league-invite-code {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.65rem 0.9rem;
+		background: color-mix(in srgb, var(--laurel) 4%, transparent);
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.league-invite-code-value {
+		font-family: var(--font-mono);
+		font-size: var(--t-14);
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		color: var(--color-accent);
+	}
+
+	.league-invite-code-label {
+		font-size: 9.5px;
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
 	}
 
 	.league-form-error {
