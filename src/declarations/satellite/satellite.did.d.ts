@@ -358,7 +358,7 @@ export interface AppListChallengeableLeaguesResult {
 		description: [] | [string];
 		emblem: [] | [string];
 		created_at_ms: number;
-		private: boolean;
+		privacy: { open: null } | { private: null } | { invite: null };
 	}>;
 }
 export interface AppListFollowersResult {
@@ -397,7 +397,7 @@ export interface AppListFriendRecommendedLeaguesResult {
 			description: [] | [string];
 			emblem: [] | [string];
 			created_at_ms: number;
-			private: boolean;
+			privacy: { open: null } | { private: null } | { invite: null };
 		};
 		friend_members: Array<string>;
 		member_count: number;
@@ -556,7 +556,7 @@ export interface AppListMyLeaguesResult {
 			description: [] | [string];
 			emblem: [] | [string];
 			created_at_ms: number;
-			private: boolean;
+			privacy: { open: null } | { private: null } | { invite: null };
 		};
 		member_count: number;
 	}>;
@@ -634,7 +634,7 @@ export interface AppLookupLeagueByInviteResult {
 					description: [] | [string];
 					emblem: [] | [string];
 					created_at_ms: number;
-					private: boolean;
+					privacy: { open: null } | { private: null } | { invite: null };
 				}
 		  ];
 }

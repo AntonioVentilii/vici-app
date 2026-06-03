@@ -454,7 +454,7 @@ const AppListChallengeableLeaguesResultSchema = j.strictObject({
 			created_at_ms: j.number(),
 			accent_color: j.optional(j.string()),
 			emblem: j.optional(j.string()),
-			private: j.boolean(),
+			privacy: j.enum(['open', 'invite', 'private']),
 			image_url: j.optional(j.string())
 		})
 	)
@@ -529,7 +529,7 @@ const AppListFriendRecommendedLeaguesResultSchema = j.strictObject({
 				created_at_ms: j.number(),
 				accent_color: j.optional(j.string()),
 				emblem: j.optional(j.string()),
-				private: j.boolean(),
+				privacy: j.enum(['open', 'invite', 'private']),
 				image_url: j.optional(j.string())
 			}),
 			member_count: j.number(),
@@ -823,7 +823,7 @@ const AppListMyLeaguesResultSchema = j.strictObject({
 				created_at_ms: j.number(),
 				accent_color: j.optional(j.string()),
 				emblem: j.optional(j.string()),
-				private: j.boolean(),
+				privacy: j.enum(['open', 'invite', 'private']),
 				image_url: j.optional(j.string())
 			}),
 			role: j.enum(['owner', 'admin', 'member']),
@@ -975,7 +975,7 @@ const AppLookupLeagueByInviteResultSchema = j.strictObject({
 			created_at_ms: j.number(),
 			accent_color: j.optional(j.string()),
 			emblem: j.optional(j.string()),
-			private: j.boolean(),
+			privacy: j.enum(['open', 'invite', 'private']),
 			image_url: j.optional(j.string())
 		})
 	)
