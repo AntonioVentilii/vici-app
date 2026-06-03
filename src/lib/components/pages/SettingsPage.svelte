@@ -48,6 +48,7 @@
 	import type { UserProfile } from '$lib/types/profile';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
+	import { resolveSignInMethod } from '$lib/utils/signin-method.utils';
 	import { visibilityToProfile } from '$lib/utils/visibility.utils';
 
 	// Delete-account flow — the six-beat flow lives in
@@ -126,18 +127,27 @@
 	const email = $derived(profile?.email ?? '');
 	const hasEmail = $derived(email.length > 0);
 
-	// Sign-in method sub — for email-backed accounts we show the
-	// address; for Internet Identity accounts (no email on file) we
-	// fall back to a friendly "Internet Identity" label.
-	const signinMethodSub = $derived(
-		hasEmail
-			? t({
+	// Sign-in method sub — derived from the provider Juno records on the
+	// `#user` doc (refined by whether an email is on file), so Google /
+	// Passkey accounts surface their own label instead of collapsing into
+	// the old email-vs-II heuristic. Email-backed accounts show the address.
+	const signinMethod = $derived(resolveSignInMethod({ user: $userStore.user, hasEmail }));
+	const signinMethodSub = $derived.by(() => {
+		switch (signinMethod) {
+			case 'email':
+				return t({
 					locale: $localeStore,
-					key: 'settings.account.signin_method.magic_link',
+					key: 'settings.account.signin_method.email',
 					params: { email }
-				})
-			: t({ locale: $localeStore, key: 'settings.account.signin_method.ii' })
-	);
+				});
+			case 'google':
+				return t({ locale: $localeStore, key: 'settings.account.signin_method.google' });
+			case 'passkey':
+				return t({ locale: $localeStore, key: 'settings.account.signin_method.passkey' });
+			default:
+				return t({ locale: $localeStore, key: 'settings.account.signin_method.ii' });
+		}
+	});
 
 	// Email row sub — just the address; the "verified" affordance is
 	// rendered as a separate green badge.
