@@ -47,8 +47,15 @@ export const formatVxpBalance = ({
  * the nearest whole point.
  *
  * Magnitude only — callers prepend the sign (`+` / `−`) and the `VXP` unit.
+ * Whole-point amounts keep thousands separators (matching the rest of the
+ * numeric UI); a non-finite value (malformed data) renders as `0` rather
+ * than leaking `NaN` / `Infinity` into the UI.
  */
 export const formatWholeVxpMagnitude = (value: number): string => {
+	if (!Number.isFinite(value)) {
+		return '0';
+	}
+
 	const abs = Math.abs(value);
 
 	if (abs === 0) {
@@ -59,7 +66,7 @@ export const formatWholeVxpMagnitude = (value: number): string => {
 		return '<1';
 	}
 
-	return String(Math.round(abs));
+	return groupIntegerPart({ formatted: String(Math.round(abs)) });
 };
 
 /**

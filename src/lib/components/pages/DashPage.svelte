@@ -649,7 +649,7 @@
 								class:is-neg={digest.netVxp < 0}
 								class:is-pos={digest.netVxp >= 0}
 							>
-								{digest.netVxp >= 0 ? '+' : '−'}{Math.abs(digest.netVxp).toLocaleString()}
+								{digest.netVxp >= 0 ? '+' : '−'}{formatWholeVxpMagnitude(digest.netVxp)}
 								{t({ locale: $localeStore, key: 'flow.reso.vxp' })}
 							</span>
 							<span class="dash-reso-dim">
