@@ -2,22 +2,22 @@
  * School-picker feature gating.
  *
  * The "add your own university" pass — submit a school + school email,
- * receive a 6-digit code, verify membership — depends on two backend
- * endpoints that are **not yet built** (tracked as backend item B.1:
- * `/schools/submit` + `/schools/verify`). Until those land,
- * {@link SCHOOL_PASS2_ENABLED} stays `false`: the picker ships the
- * directory browse + fuzzy search + status badges + the always-
- * reachable "use it unverified" path, and hides every surface that
- * would call the unimplemented endpoints (the add-your-own CTAs,
- * founder badges, and the empty-state "add" hero).
+ * receive a 6-digit code, verify membership. When `true`, the picker
+ * exposes the add-your-own CTAs, founder badges, and the empty-state
+ * "add" hero, and the submit/verify round-trips call the satellite
+ * `submitSchool` / `verifySchoolCode` endpoints (which mail the code via
+ * the `vici-courier` relay). When `false`, only the directory browse +
+ * fuzzy search + status badges + the always-reachable "use it
+ * unverified" path ship.
  *
- * Do NOT flip this to `true` in production before B.1 is wired AND the
- * `vici-courier` email service is deployed with its `app_config`
- * relay doc set — until then the submit call cannot actually mail a
- * code (see `school-verification.services.ts` + the satellite
- * `submitSchool` / `verifySchoolCode` endpoints).
+ * Prerequisites for `true` to actually work in an environment: the
+ * satellite functions for that environment must be the build that
+ * includes `submitSchool` / `verifySchoolCode`, AND a controller must
+ * have set the `app_config/school_relay` doc — otherwise submit fails
+ * server-side (gated by the relay config). Confirm both before
+ * deploying the frontend with this on.
  */
-export const SCHOOL_PASS2_ENABLED = false;
+export const SCHOOL_PASS2_ENABLED = true;
 
 /**
  * Cap on how many "founder" badges render in a single directory list,
