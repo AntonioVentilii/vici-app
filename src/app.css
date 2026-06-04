@@ -3439,11 +3439,11 @@ a.title-action::after {
 }
 /* Phase 3 ("tap card for detail") — de-blur and settle a hair above
    rest (no pulse). The detail back is meant to reveal here via an
-   opacity crossfade; the deck card still uses the 3D rotateY flip
-   flagged for removal, so the back-reveal is deferred to that change
-   rather than forced through the incompatible opacity override (the
-   back face is culled by backface-visibility while the flipper sits
-   at 0°). */
+   opacity crossfade; the deck card still uses a 3D rotateY flip, and a
+   follow-up will swap that flip for the opacity crossfade. Until then
+   the back-reveal is deferred to that change rather than forced through
+   the incompatible opacity override here (the back face is culled by
+   backface-visibility while the flipper sits at 0°). */
 .flow-card[data-coach-phase='3'] {
 	filter: none !important;
 	transform: scale(1.01) !important;

@@ -27,7 +27,7 @@ export const SCHOOL_FOUNDER_BADGE_CAP = 3;
 
 /**
  * Length of the membership verification code mailed to the school
- * address. Six digits balances guessability against entry friction.
+ * address. A six-digit code balances guessability against entry friction.
  */
 export const SCHOOL_CODE_LENGTH = 6;
 
