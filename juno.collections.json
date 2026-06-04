@@ -21,5 +21,8 @@
 	"TOURNAMENT_MATCHES": "tournament_matches",
 	"LEAGUE_STATS": "league_stats",
 	"USER_STATS": "user_stats",
-	"USER_MONTHLY_STATS": "user_monthly_stats"
+	"USER_MONTHLY_STATS": "user_monthly_stats",
+	"SCHOOL_SUBMISSIONS": "school_submissions",
+	"SCHOOLS": "schools",
+	"APP_CONFIG": "app_config"
 }

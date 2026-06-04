@@ -707,6 +707,16 @@ export interface AppSearchProfilesResult {
 export interface AppSendFriendRequestArgs {
 	target: string;
 }
+export interface AppSubmitSchoolArgs {
+	country: [] | [string];
+	name: string;
+	school_id: [] | [string];
+	locale: string;
+	email: string;
+}
+export interface AppSubmitSchoolResult {
+	submission_id: string;
+}
 export interface AppSweepExpiredDeletionsResult {
 	swept: number;
 }
@@ -816,6 +826,16 @@ export interface AppUpsertMarketTranslationResult {
 		outcomes: Array<{ id: string; title: string }>;
 	};
 }
+export interface AppVerifySchoolCodeArgs {
+	code: string;
+	submission_id: string;
+}
+export interface AppVerifySchoolCodeResult {
+	ok: boolean;
+	status: [] | [{ pending: null } | { public: null }];
+	school_id: [] | [string];
+	message: [] | [string];
+}
 export interface _SERVICE {
 	app_accept_friend_request: ActorMethod<[AppAcceptFriendRequestArgs], undefined>;
 	app_cancel_friend_request: ActorMethod<[AppCancelFriendRequestArgs], undefined>;
@@ -907,6 +927,7 @@ export interface _SERVICE {
 	app_resume_my_account: ActorMethod<[], AppResumeMyAccountResult>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
+	app_submit_school: ActorMethod<[AppSubmitSchoolArgs], AppSubmitSchoolResult>;
 	app_sweep_expired_deletions: ActorMethod<[], AppSweepExpiredDeletionsResult>;
 	app_transfer_league_ownership: ActorMethod<
 		[AppTransferLeagueOwnershipArgs],
@@ -924,6 +945,7 @@ export interface _SERVICE {
 		[AppUpsertMarketTranslationArgs],
 		AppUpsertMarketTranslationResult
 	>;
+	app_verify_school_code: ActorMethod<[AppVerifySchoolCodeArgs], AppVerifySchoolCodeResult>;
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

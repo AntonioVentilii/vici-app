@@ -33,7 +33,10 @@ enum JunoDatastoreCollection {
 	TOURNAMENT_MATCHES = 'tournament_matches',
 	LEAGUE_STATS = 'league_stats',
 	USER_STATS = 'user_stats',
-	USER_MONTHLY_STATS = 'user_monthly_stats'
+	USER_MONTHLY_STATS = 'user_monthly_stats',
+	SCHOOL_SUBMISSIONS = 'school_submissions',
+	SCHOOLS = 'schools',
+	APP_CONFIG = 'app_config'
 }
 
 /**
@@ -224,6 +227,35 @@ export default defineConfig(({ mode }) => ({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				// School-email verification submissions (B.1). Controllers-only:
+				// the satellite's submit/verify endpoints are the sole reader and
+				// writer (via the privileged *DocStore APIs), so a client can
+				// neither read a stored code digest nor tamper with an attempt
+				// counter / expiry.
+				{
+					collection: JunoDatastoreCollection.SCHOOL_SUBMISSIONS,
+					memory: 'stable',
+					read: 'controllers',
+					write: 'controllers'
+				},
+				// Verified-school registry (B.1). Public read so picker surfaces
+				// can list public schools; controllers-only write so the running
+				// verified-member count + public gate are server-authoritative.
+				{
+					collection: JunoDatastoreCollection.SCHOOLS,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
+				},
+				// Server runtime config (B.1) — e.g. the vici-courier relay URL +
+				// bearer token, set by a controller after deploy. Controllers-only
+				// so it never needs to live in the repo.
+				{
+					collection: JunoDatastoreCollection.APP_CONFIG,
+					memory: 'stable',
+					read: 'controllers',
+					write: 'controllers'
 				}
 			],
 			// Owner-uploaded league cover images. Public read so every

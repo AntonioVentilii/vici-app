@@ -1399,6 +1399,31 @@ const sendFriendRequest = async (
 	await app_send_friend_request(idlArgs);
 };
 
+const AppSubmitSchoolArgsSchema = j.strictObject({
+	name: j.string(),
+	country: j.optional(j.string()),
+	schoolId: j.optional(j.string()),
+	email: j.string(),
+	locale: j.string()
+});
+const AppSubmitSchoolResultSchema = j.strictObject({ submissionId: j.string() });
+
+const submitSchool = async (
+	args: j.infer<typeof AppSubmitSchoolArgsSchema>
+): Promise<j.infer<typeof AppSubmitSchoolResultSchema>> => {
+	const parsedArgs = AppSubmitSchoolArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppSubmitSchoolArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_submit_school']>[0];
+
+	const { app_submit_school } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_submit_school(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppSubmitSchoolResultSchema, value: idlResult });
+	return AppSubmitSchoolResultSchema.parse(result);
+};
+
 const AppSweepExpiredDeletionsResultSchema = j.strictObject({ swept: j.number() });
 
 const sweepExpiredDeletions = async (): Promise<
@@ -1576,6 +1601,35 @@ const upsertMarketTranslation = async (
 	return AppUpsertMarketTranslationResultSchema.parse(result);
 };
 
+const AppVerifySchoolCodeArgsSchema = j.strictObject({
+	submissionId: j.string(),
+	code: j.string()
+});
+const AppVerifySchoolCodeResultSchema = j.strictObject({
+	ok: j.boolean(),
+	schoolId: j.optional(j.string()),
+	status: j.optional(j.enum(['pending', 'public'])),
+	message: j.optional(j.string())
+});
+
+const verifySchoolCode = async (
+	args: j.infer<typeof AppVerifySchoolCodeArgsSchema>
+): Promise<j.infer<typeof AppVerifySchoolCodeResultSchema>> => {
+	const parsedArgs = AppVerifySchoolCodeArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppVerifySchoolCodeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_verify_school_code']>[0];
+
+	const { app_verify_school_code } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_verify_school_code(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppVerifySchoolCodeResultSchema, value: idlResult });
+	return AppVerifySchoolCodeResultSchema.parse(result);
+};
+
 export const functions = {
 	checkFriendship,
 	checkNicknameAvailability,
@@ -1625,9 +1679,11 @@ export const functions = {
 	resolveTournamentRound,
 	resumeMyAccount,
 	sendFriendRequest,
+	submitSchool,
 	sweepExpiredDeletions,
 	transferLeagueOwnership,
 	triggerTournamentDraw,
 	upsertMarketMetadata,
-	upsertMarketTranslation
+	upsertMarketTranslation,
+	verifySchoolCode
 };

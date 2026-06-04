@@ -485,6 +485,40 @@ When a hook calls another canister (typically the icdc-core registry):
   guard. If the registry is down, log + return; the next write will
   retrigger.
 
+## HTTPS outcalls + off-chain relay (the `vici-courier` email service)
+
+When the satellite must reach the public internet (e.g. send a
+transactional email), it uses `httpRequest` from
+`@junobuild/functions/ic-cdk` — **not** SMTP (a canister can't) and
+**never** by holding a vendor secret (node operators can read canister
+state). The pattern, as built for school-email verification
+([`school.services.ts`](../../../src/satellite/services/school.services.ts)):
+
+- **`isReplicated: false`.** A non-idempotent side effect (sending one
+  email) must run on a single node, not the whole subnet (~13–40×). The
+  receiving relay also dedupes on an `idempotency-key` header for the
+  belt-and-braces case.
+- **Outcall a thin off-chain relay, not the vendor.** The relay
+  ([`vici-courier`](https://github.com/AntonioVentilii/vici-courier), a
+  Bun/Elysia app on Fly.io) holds the real vendor key and is
+  IPv6-reachable (IC outcalls are IPv6-only; many vendor APIs are not).
+  The satellite holds only a **rotatable bearer token**, read at call
+  time from a controllers-only `app_config` doc — never the repo. Send a
+  **semantic** body (`{ template, to, locale, vars }`) so email copy +
+  localization live in the relay, not the canister.
+- **Secure randomness via `raw_rand`.** For anything that must be
+  unpredictable (a verification code), call the management canister
+  (`call({ canisterId: Principal.fromText('aaaaa-aa'), method:
+'raw_rand', … })`) — do **not** reuse the `time()`-seeded FNV trick in
+  `referral.services.ts`, which is for uniqueness only.
+- **Server-owned collections are `controllers`-scoped.** Submissions /
+  config the satellite alone reads + writes (via `*DocStore`) use
+  `read/write: 'controllers'` in `juno.config.ts` so no client can read a
+  stored code digest or tamper with an attempt counter. The plaintext
+  code is never persisted — only an `FNV(code|raw_rand_salt)` digest,
+  with the attempt cap + TTL + per-principal/email rate limit as the real
+  guessing defense.
+
 ## Logging
 
 - Use the helpers in
