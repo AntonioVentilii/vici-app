@@ -34,6 +34,42 @@ export const formatVxpBalance = ({
 	});
 
 /**
+ * Format a single VXP win / PnL magnitude for the whole-number "points" UI.
+ *
+ * VXP surfaces render whole points (`VXP_BALANCE_DISPLAY_DECIMALS = 0`), but a
+ * winning call on a heavy favourite credits a real *sub-1* amount — e.g. a 50
+ * VXP stake on a 0.99 side nets ~0.43 VXP, since the server pays the true
+ * `stake·(1/price − 1)` cashflow minus fees with **no** payout floor (see
+ * the `vxpNetWin` formula). Rounding such a win to the
+ * nearest whole point would render it as `0` — a genuine win that reads as
+ * nothing ("+0 VXP"). To keep the points feel without lying, any non-zero
+ * amount below one whole point renders as `<1`; one point or more rounds to
+ * the nearest whole point.
+ *
+ * Magnitude only — callers prepend the sign (`+` / `−`) and the `VXP` unit.
+ * Whole-point amounts keep thousands separators (matching the rest of the
+ * numeric UI); a non-finite value (malformed data) renders as `0` rather
+ * than leaking `NaN` / `Infinity` into the UI.
+ */
+export const formatWholeVxpMagnitude = (value: number): string => {
+	if (!Number.isFinite(value)) {
+		return '0';
+	}
+
+	const abs = Math.abs(value);
+
+	if (abs === 0) {
+		return '0';
+	}
+
+	if (abs < 1) {
+		return '<1';
+	}
+
+	return groupIntegerPart({ formatted: String(Math.round(abs)) });
+};
+
+/**
  * A profile's whole-number `points` → VXP base units (scaled by the VXP
  * ledger decimals), ready to hand to {@link formatVxpBalance}.
  *
