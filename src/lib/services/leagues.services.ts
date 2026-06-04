@@ -76,6 +76,37 @@ const projectLeagueWire = (league: {
 });
 
 /**
+ * Project the satellite's camelCase `Option<League>` wire to `LeagueDoc`.
+ * The `lookupLeagueByInvite` result is an `Option<NestedStruct>`, which
+ * Sputnik serialises in camelCase (the `#[json_data(nested)]` mirror) —
+ * unlike the snake_case `j.array(...)` league endpoints above. So this
+ * mirror of {@link projectLeagueWire} reads the camelCase keys directly.
+ */
+const projectLeagueOptionWire = (league: {
+	id: string;
+	name: string;
+	description?: string;
+	inviteCode: string;
+	owner: string;
+	createdAtMs: number;
+	accentColor?: string;
+	emblem?: string;
+	privacy: `${LeaguePrivacy}`;
+	imageUrl?: string;
+}): LeagueDoc => ({
+	id: league.id,
+	name: league.name,
+	description: league.description,
+	inviteCode: league.inviteCode,
+	owner: league.owner,
+	createdAtMs: league.createdAtMs,
+	accentColor: league.accentColor,
+	emblem: league.emblem,
+	privacy: league.privacy as LeaguePrivacy,
+	imageUrl: league.imageUrl
+});
+
+/**
  * List every league the caller is a member of, paired with their
  * role. Sorted newest-join first per the satellite query.
  */
@@ -168,7 +199,7 @@ export const lookupLeagueByInvite = async ({
 		return;
 	}
 
-	return projectLeagueWire(league);
+	return projectLeagueOptionWire(league);
 };
 
 // ─── Writes ──────────────────────────────────────────────────────────────
