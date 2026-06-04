@@ -46,10 +46,11 @@
 	 *    carry members, pending (amber) on the user's own awaiting
 	 *    school, unverified (blue founder) on memberless rows;
 	 *  - email-domain verification + add-your-own ("Pass 2"), gated by
-	 *    {@link SCHOOL_PASS2_ENABLED} (default off until backend B.1 —
-	 *    `/schools/submit` + `/schools/verify` — ships). The flag-off
-	 *    build still exposes the always-reachable "use it unverified"
-	 *    path so the directory remains usable now.
+	 *    {@link SCHOOL_PASS2_ENABLED}. When on, the submit / verify
+	 *    round-trips call the satellite `submitSchool` / `verifySchoolCode`
+	 *    endpoints (which mail the 6-digit code via the `vici-courier`
+	 *    relay). The always-reachable "use it unverified" path stays
+	 *    regardless of the flag.
 	 *
 	 * Selection is a two-step gesture: tap a row to mark it, then tap
 	 * the CTA to commit. When the user already holds an affiliation of
@@ -93,7 +94,7 @@
 	/**
 	 * Sheet sub-modes. `browse` is the only mode the country kind ever
 	 * reaches; the rest are the university Pass-2 add/verify flow,
-	 * unreachable while {@link SCHOOL_PASS2_ENABLED} is `false`.
+	 * reachable only when {@link SCHOOL_PASS2_ENABLED} is on.
 	 */
 	type Mode = 'browse' | 'verify-existing' | 'add-confirm' | 'add-form' | 'add-verifying';
 	let mode = $state<Mode>('browse');
@@ -407,11 +408,11 @@
 	const codeValid = $derived(spIsValidCode(code));
 
 	/**
-	 * Commit a Pass-2 verified pick. The verify/submit round-trips are
-	 * stubbed (backend B.1), so this path is unreachable in shipped
-	 * builds; persisting the verified status itself is also a B.1
-	 * concern — today we commit the affiliation the same way as an
-	 * unverified pick (the directory row is the same school).
+	 * Commit a Pass-2 verified pick. The verified status itself is
+	 * persisted server-side by `verifySchoolCode` (it sets the profile's
+	 * `schoolStatus` and bumps the school's verified-member count); here
+	 * we just commit the affiliation the same way as an unverified pick
+	 * (the directory row is the same school).
 	 */
 	const commitVerified = async (option: WorldsAffiliationOption) => {
 		selected = option.id;
