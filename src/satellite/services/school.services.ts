@@ -62,8 +62,11 @@ import {
 	setDocStore
 } from '@junobuild/functions/sdk';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+const DAY_NS = 86_400_000_000_000n;
 const MANAGEMENT_CANISTER_ID = 'aaaaa-aa';
+
+/** Escape a value for safe interpolation into a `listDocsStore` key regex. */
+const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // ─── Inputs / outputs (mirror the FE service signatures) ─────────────────
 
@@ -155,24 +158,25 @@ const resolveSchool = ({
 
 /**
  * Rolling-24h send counts for the caller, split per principal and per
- * email. Scans the (server-owned) submissions collection once — bounded
- * by total in-flight submissions, which are themselves rate-limited.
+ * email. The scan is bounded server-side to docs created in the last 24h
+ * (the `created_at` matcher), so it never grows with the lifetime size of
+ * the collection — only with the day's submission volume.
  */
 const recentSendCounts = ({
 	caller,
 	memberText,
 	email,
-	sinceMs
+	sinceNs
 }: {
 	caller: Uint8Array;
 	memberText: string;
 	email: string;
-	sinceMs: number;
+	sinceNs: bigint;
 }): { byPrincipal: number; byEmail: number } => {
 	const { items } = listDocsStore({
 		collection: Collection.SCHOOL_SUBMISSIONS,
 		caller,
-		params: {}
+		params: { matcher: { created_at: { greater_than: sinceNs } } }
 	});
 
 	const lowerEmail = email.toLowerCase().trim();
@@ -183,15 +187,12 @@ const recentSendCounts = ({
 		try {
 			const doc = decodeDocData<SchoolSubmissionDoc>(item.data);
 
-			// Only rolling-window rows count toward either cap.
-			if (doc.createdAtMs >= sinceMs) {
-				if (doc.member === memberText) {
-					byPrincipal += 1;
-				}
+			if (doc.member === memberText) {
+				byPrincipal += 1;
+			}
 
-				if (doc.email === lowerEmail) {
-					byEmail += 1;
-				}
+			if (doc.email === lowerEmail) {
+				byEmail += 1;
 			}
 		} catch {
 			// Skip malformed rows for accounting purposes.
@@ -201,13 +202,19 @@ const recentSendCounts = ({
 	return { byPrincipal, byEmail };
 };
 
+const toHex = (bytes: number[]): string =>
+	bytes.map((b) => b.toString(16).padStart(2, '0')).join('');
+
 /**
- * 6-digit code + 16-byte salt from the management canister's `raw_rand`
- * (32 bytes of cryptographic randomness). Using `raw_rand` rather than
- * the `time()`-seeded FNV trick in `referral.services.ts` matters here:
- * a verification code must be unpredictable, not merely unique.
+ * From the management canister's `raw_rand` (32 bytes of cryptographic
+ * randomness): a 6-digit code (bytes 0–3), a 128-bit salt (bytes 4–19),
+ * and a 96-bit submission nonce (bytes 20–31). Using `raw_rand` rather
+ * than the `time()`-seeded FNV trick in `referral.services.ts` matters
+ * here: a verification code must be unpredictable, not merely unique; and
+ * the nonce makes every submission row distinct (immutable, never
+ * overwritten).
  */
-const generateCode = async (): Promise<{ code: string; salt: string }> => {
+const generateCode = async (): Promise<{ code: string; salt: string; nonce: string }> => {
 	const random = await call<Uint8Array | number[]>({
 		canisterId: Principal.fromText(MANAGEMENT_CANISTER_ID),
 		method: 'raw_rand',
@@ -217,18 +224,17 @@ const generateCode = async (): Promise<{ code: string; salt: string }> => {
 
 	const bytes = Array.from(random as ArrayLike<number>);
 
-	if (bytes.length < 20) {
+	if (bytes.length < 32) {
 		throw new Error('raw_rand returned too few bytes.');
 	}
 
 	const n = (((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]) >>> 0) % 1_000_000;
-	const code = n.toString().padStart(6, '0');
-	const salt = bytes
-		.slice(4, 20)
-		.map((b) => b.toString(16).padStart(2, '0'))
-		.join('');
 
-	return { code, salt };
+	return {
+		code: n.toString().padStart(6, '0'),
+		salt: toHex(bytes.slice(4, 20)),
+		nonce: toHex(bytes.slice(20, 32))
+	};
 };
 
 const readRelayConfig = (caller: Uint8Array): SchoolRelayConfig => {
@@ -239,8 +245,8 @@ const readRelayConfig = (caller: Uint8Array): SchoolRelayConfig => {
 	});
 
 	if (isNullish(doc)) {
-		// Reachable only if the flag was flipped before a controller set the
-		// relay doc — surfaced to the FE as a send failure.
+		// The feature is OFF server-side until a controller writes this doc —
+		// so the live endpoints can't send email even if the FE flag is on.
 		throw new Error('School email relay is not configured.');
 	}
 
@@ -248,6 +254,11 @@ const readRelayConfig = (caller: Uint8Array): SchoolRelayConfig => {
 
 	if (isNullish(config.url) || isNullish(config.token)) {
 		throw new Error('School email relay config is incomplete.');
+	}
+
+	// Explicit server-side kill switch — independent of the FE flag.
+	if (config.enabled === false) {
+		throw new Error('School email verification is disabled.');
 	}
 
 	return config;
@@ -319,6 +330,11 @@ export const submitSchoolFn = async ({
 	const memberText = caller.toText();
 	const lowerEmail = email.toLowerCase().trim();
 
+	// 0. Server-side gate — throws unless a controller has set + enabled the
+	// relay config doc. Enforces "OFF" on the canister regardless of the FE
+	// flag, and is read before any work so a disabled feature rejects fast.
+	const relay = readRelayConfig(callerBytes);
+
 	// 1. Server-authoritative domain gate.
 	const resolved = resolveSchool({ email: lowerEmail, name, country });
 
@@ -327,32 +343,25 @@ export const submitSchoolFn = async ({
 		caller: callerBytes,
 		memberText,
 		email: lowerEmail,
-		sinceMs: nowMs() - DAY_MS
+		sinceNs: time() - DAY_NS
 	});
 
 	if (byPrincipal >= SCHOOL_VERIFY_DAILY_CAP || byEmail >= SCHOOL_VERIFY_DAILY_CAP) {
 		throw new Error('Too many codes requested today. Try again tomorrow.');
 	}
 
-	// 3. Unpredictable code + per-submission salt.
-	const { code, salt } = await generateCode();
-
+	// 3. Unpredictable code + per-submission salt + per-send nonce.
+	const { code, salt, nonce } = await generateCode();
+	const createdAtMs = nowMs();
 	const submissionId = schoolSubmissionKey({
 		member: memberText,
-		email: lowerEmail,
-		schoolId: resolved.schoolId
-	});
-	const createdAtMs = nowMs();
-
-	// 4. Persist the submission (digest only — never the plaintext code).
-	// A resend for the same (member, email, school) overwrites the prior
-	// row: fresh code, reset attempts.
-	const existing = getDocStore({
-		collection: Collection.SCHOOL_SUBMISSIONS,
-		key: submissionId,
-		caller: callerBytes
+		schoolId: resolved.schoolId,
+		nonce
 	});
 
+	// 4. Persist a fresh, immutable submission (digest only — never the
+	// plaintext code). The per-send nonce makes the key unique, so this is
+	// always a create and never overwrites a prior (possibly verified) row.
 	const submission: SchoolSubmissionDoc = {
 		member: memberText,
 		email: lowerEmail,
@@ -374,16 +383,11 @@ export const submitSchoolFn = async ({
 		key: submissionId,
 		caller: callerBytes,
 		doc: {
-			version: existing?.version,
 			data: encodeDocData<SchoolSubmissionDoc>(submission)
 		}
 	});
 
-	// 5. Mail the code. A failure here must not leave a usable submission
-	// dangling, but the digest carries no secret, so we let the row stand
-	// (the user can resend) and surface the error.
-	const relay = readRelayConfig(callerBytes);
-
+	// 5. Mail the code via the relay read in step 0.
 	await sendCodeEmail({
 		relay,
 		email: lowerEmail,
@@ -404,8 +408,12 @@ export const submitSchoolFn = async ({
 /**
  * Recompute a school's verified-member count from the verified
  * submissions for its id (distinct members) and persist the `schools`
- * row, flipping it public at the threshold. Server-authoritative and
- * idempotent — re-running yields the same count.
+ * row, flipping it public at the threshold. Recomputing from source (vs
+ * incrementing) keeps it idempotent + concurrency-safe — re-running, or
+ * two members verifying at once, can't double-count or undercount. The
+ * scan is bounded server-side to this school's rows via the `key` matcher
+ * (`/${schoolId}/` is the middle key segment; the JS check re-confirms
+ * `schoolId` exactly so an over-broad regex match can't miscount).
  */
 const upsertSchoolRegistry = ({
 	caller,
@@ -417,7 +425,7 @@ const upsertSchoolRegistry = ({
 	const { items } = listDocsStore({
 		collection: Collection.SCHOOL_SUBMISSIONS,
 		caller,
-		params: {}
+		params: { matcher: { key: `/${escapeRegex(resolved.schoolId)}/` } }
 	});
 
 	const verifiedMembers = new Set<string>();

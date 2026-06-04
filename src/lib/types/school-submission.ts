@@ -11,10 +11,14 @@
  * and the single outbound HTTPS-outcall body to `vici-courier`.
  *
  * The doc key (see {@link schoolSubmissionKey}) doubles as the opaque
- * `submissionId` handed back to the FE and is deterministic in
- * `(member, email, school)` so a resend collides with — and overwrites
- * — the prior attempt instead of piling up rows. Its `${member}/` prefix
- * authorizes verification: only the owning principal can verify it.
+ * `submissionId` handed back to the FE. It carries a per-send random
+ * nonce so every send is an IMMUTABLE new row — a resend never overwrites
+ * a prior attempt (in particular it can't clobber an already-`verified`
+ * row back to `awaiting` and undercount a school). Spam is bounded by the
+ * per-principal / per-email daily rate limit instead. The `${member}/`
+ * prefix authorizes verification (only the owner can verify) and scopes
+ * the rate-limit + registry scans; the `${schoolId}/` segment scopes the
+ * "has this member already verified this school?" check.
  */
 
 /** Lifecycle of a verification submission. */
@@ -41,7 +45,7 @@ export interface SchoolSubmissionDoc {
 	isNew: boolean;
 	/** `FNV-1a(code|salt)` hex digest. Never the plaintext code. */
 	codeHash: string;
-	/** Per-submission 64-bit salt (hex), seeded from `raw_rand`. */
+	/** Per-submission 128-bit salt (32 hex chars), seeded from `raw_rand`. */
 	salt: string;
 	/** Wall-clock ms after which the code is dead (~30 min). */
 	expiresAtMs: number;
@@ -85,18 +89,19 @@ export const hashSchoolCode = ({ code, salt }: { code: string; salt: string }): 
 	fnv1a64Hex(`${code}|${salt}`);
 
 /**
- * Deterministic submission key / `submissionId`. The `${member}/` prefix
- * binds the row to its owner (verify authorization); the trailing segment
- * collapses resends for the same email+school into one row. `email` is
- * folded through {@link fnv1a64Hex} so the key stays opaque and free of
- * `/` or `@` separators.
+ * Unique submission key / `submissionId`: `${member}/${schoolId}/${nonce}`.
+ * The `${member}/` prefix binds the row to its owner (verify auth) and
+ * scopes per-principal scans; `${schoolId}/` scopes the per-school
+ * "already verified?" check; `nonce` (per-send `raw_rand`) makes every
+ * send a distinct immutable row so a resend never overwrites a prior —
+ * possibly `verified` — attempt.
  */
 export const schoolSubmissionKey = ({
 	member,
-	email,
-	schoolId
+	schoolId,
+	nonce
 }: {
 	member: string;
-	email: string;
 	schoolId: string;
-}): string => `${member}/${fnv1a64Hex(email.toLowerCase().trim())}/${schoolId}`;
+	nonce: string;
+}): string => `${member}/${schoolId}/${nonce}`;
