@@ -140,12 +140,14 @@ import {
 	BoldCallerEntryWireSchema,
 	FriendRecommendedLeagueWireSchema,
 	LeagueMemberWireSchema,
+	LeagueOptionWireSchema,
 	LeagueWireSchema,
 	LeagueWithRoleWireSchema,
 	MarketTranslationWireSchema,
 	MonthlyLeaderboardEntryWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
+	toOptionWireLeague,
 	TournamentMatchWireSchema,
 	TournamentWireSchema,
 	toWireAffiliation,
@@ -480,12 +482,17 @@ export const lookupLeagueByInvite = defineQuery({
 		inviteCode: j.string()
 	}),
 	result: j.strictObject({
-		league: j.optional(LeagueWireSchema)
+		league: j.optional(LeagueOptionWireSchema)
 	}),
+	// `Option<NestedStruct>` ⇒ camelCase JS via the JsonData mirror (same as
+	// `getProfile` / `getAffiliationStats`). Emit the camelCase
+	// `toOptionWireLeague` shape — the snake_case `LeagueWireSchema` /
+	// `toWireLeague` are for the `j.array(...)` league endpoints only, and
+	// wrapping an Option in them traps with `missing field 'inviteCode'`.
 	handler: ({ inviteCode }) => {
 		const league = lookupLeagueByInviteFn({ inviteCode });
 
-		return { league: league ? toWireLeague(league) : undefined };
+		return { league: league ? toOptionWireLeague(league) : undefined };
 	}
 });
 
