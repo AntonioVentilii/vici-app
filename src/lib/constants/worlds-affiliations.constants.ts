@@ -1680,7 +1680,7 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 		short: 'PoMI',
 		country: 'IT',
 		region: 'EU',
-		domains: ['polimi.it'],
+		domains: ['polimi.it', 'mail.polimi.it'],
 		rank: 111,
 		color: '#000000',
 		text: '#F2ECDC'

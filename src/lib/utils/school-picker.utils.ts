@@ -114,9 +114,17 @@ export const spFindCloseMatches = ({
 /**
  * Consumer mailbox providers that never count as a school address.
  * Matched against the email's host (or any parent of it).
+ *
+ * NOTE: tokens here match the email host's leading label, so they must
+ * be specific enough not to swallow legitimate university subdomains.
+ * In particular the `mail.ru` / `mail.com` providers are listed as full
+ * domains (NOT a bare `mail` token) — a bare `mail` would wrongly flag
+ * every `mail.<university>` student domain (e.g. `mail.polimi.it`,
+ * `mail.utoronto.ca`) as a consumer mailbox and reject it before the
+ * directory match runs.
  */
 const SP_CONSUMER_DOMAINS =
-	/^(gmail|googlemail|yahoo|hotmail|outlook|live|icloud|me|aol|protonmail|proton|gmx|web|t-online|qq|163|126|mail|sina|naver|hanmail|daum|rambler|rediffmail)(\.|$)/i;
+	/^(gmail|googlemail|yahoo|hotmail|outlook|live|icloud|me|aol|protonmail|proton|gmx|web|t-online|qq|163|126|mail\.(ru|com)|sina|naver|hanmail|daum|rambler|rediffmail)(\.|$)/i;
 
 /**
  * Outcome of matching a typed email against the directory:
