@@ -20,6 +20,7 @@
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import type { Market } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
 	 * Markets screen — chip rail (Saved + per-category) above a
@@ -199,6 +200,20 @@
 
 		return t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[cat] });
 	});
+
+	// The Trending rail is a volume-sorted preview of the deck below — the main
+	// list is already sorted by the same `totalVolume` signal. "See all" on the
+	// rail therefore brings the user down to the full, scrollable list rather
+	// than to a separate route. Bind the list section so we can scroll to it,
+	// honouring `prefers-reduced-motion` (no smooth animation when reduced).
+	let mainListEl = $state<HTMLElement>();
+
+	const scrollToMainList = (): void => {
+		mainListEl?.scrollIntoView({
+			behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+			block: 'start'
+		});
+	};
 </script>
 
 <div class="screen-scroll">
@@ -255,6 +270,7 @@
 			<MarketsCarousel
 				markets={trendingMarkets}
 				moreLabel={t({ locale: $localeStore, key: 'markets.see_all' })}
+				onMore={scrollToMainList}
 				tagsBySeries={tagsByMarket}
 				title={t({ locale: $localeStore, key: 'markets.section.trending' })}
 			/>
@@ -271,7 +287,7 @@
 				</p>
 			</div>
 		{:else}
-			<div class="section-h">
+			<div bind:this={mainListEl} style="scroll-margin-top: 12px;" class="section-h">
 				<h3>{sectionTitle}</h3>
 				<span class="mute t-sub">{list.length}</span>
 			</div>
