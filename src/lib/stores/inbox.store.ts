@@ -270,9 +270,9 @@ const resolvedSide = ({
 /**
  * The away-digest: every settled call the user hasn't acknowledged yet,
  * aggregated into net VXP, win/loss tallies, and per-call rows. A `count` of 0
- * means there is nothing new to reveal. Net VXP is rounded to whole VXP — the
- * digest is a celebratory summary, not an accounting ledger, so sub-unit
- * precision would only add noise.
+ * means there is nothing new to reveal. Per-call and net VXP are carried at
+ * full precision; the digest renderers round for display (a sub-1 favourite
+ * win reads "<1" rather than a broken "+0" — see `formatWholeVxpMagnitude`).
  */
 export const maturedResolutions: Readable<ResolutionRevealData> = derived(
 	[resolvedPositions, markets, settledReadStore, localeStore],
@@ -283,9 +283,14 @@ export const maturedResolutions: Readable<ResolutionRevealData> = derived(
 		const items: ResolutionItem[] = unseen.map((entry) => {
 			const market = marketById.get(entry.marketId);
 			const { label, sideKey } = resolvedSide({ resolved: entry, market });
-			const net = Math.round(
-				decimalFixedValueToNumber({ value: entry.realizedPnlUsd, decimals: USD_DECIMALS })
-			);
+			// Full precision — the digest renderers round for display via
+			// `formatWholeVxpMagnitude` (a sub-1 favourite win reads "<1", not a
+			// broken "+0"). Summing the precise per-call nets also keeps the
+			// digest total honest rather than dropping every sub-1 win to zero.
+			const net = decimalFixedValueToNumber({
+				value: entry.realizedPnlUsd,
+				decimals: USD_DECIMALS
+			});
 
 			return {
 				eventId: entry.eventId,

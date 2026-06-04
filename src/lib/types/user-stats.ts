@@ -24,11 +24,12 @@ export interface RecentSettlementSnapshot {
 	/** UTC ms timestamp of the settlement event. */
 	settledAtMs: number;
 	/**
-	 * Realized VXP for this settlement, in whole VXP (rounded). Derived
-	 * from the clearing `Settled` event's `qty` × execution `price` — the
-	 * same product the profile sync uses for lifetime realized P&L — so a
-	 * winning settlement carries the positive payout the Oracle insight
-	 * surfaces ("+{vxp} VXP"). `≥ 0` for a win.
+	 * Realized VXP for this settlement — the clearing `Settled` event's
+	 * signed `qty` (the realized cashflow, in `USD_DECIMALS` units), clamped
+	 * to `≥ 0` so only a win's positive payout is carried. Stored at full
+	 * precision; the Oracle insight rounds for display via
+	 * `formatWholeVxpMagnitude` (a sub-1 favourite win reads "<1"), so this
+	 * is no longer pre-rounded to a whole number.
 	 */
 	vxp: number;
 	/**
