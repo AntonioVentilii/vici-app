@@ -138,7 +138,7 @@
 			bind:this={sheetEl}
 			style:--sheet-side-padding={sidePadding}
 			class="sheet"
-			class:has-footer={footer !== undefined}
+			class:has-footer={Boolean(footer)}
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
