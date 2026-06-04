@@ -139,9 +139,9 @@ export const LANDING_MARKETS: readonly LandingMarket[] = [
 
 /**
  * World Cup favourites — used by the WCFeature section's 2×2 flag
- * grid. `daysToKickoff` is derived from the repo's `WORLD_CUP_KICKOFF`
- * constant so the landing always shows the same countdown the rest of
- * the app uses.
+ * grid. The kickoff countdown beside the grid is derived live from the
+ * featured event's `kickoffAt_ms` (`daysToKickoff` / `hoursToKickoff`)
+ * so the landing always shows the same countdown the rest of the app uses.
  */
 export interface LandingWcFavorite {
 	readonly code: string;
