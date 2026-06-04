@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { fade, fly } from 'svelte/transition';
@@ -245,6 +245,30 @@
 	const dailyGoalDone = $derived(
 		rolloverDailyGoal({ done: dailyGoalCount, date: dailyGoalDate, now: new Date(nowMs) })
 	);
+
+	// Keep the sitting baseline honest across a local-midnight rollover. The
+	// baseline is snapshotted on entry, but a sitting opened just before
+	// midnight would otherwise carry yesterday's count into the new day and
+	// shrink `maxBets`. While this sitting hasn't placed a call yet
+	// (`betsCount === 0`), re-snapshot against the live `nowMs` day so the
+	// rollover resets the baseline to the new day's count; once a call lands
+	// the baseline freezes (the run owns its ceiling for the rest of the
+	// sitting).
+	$effect(() => {
+		if (betsCount > 0) {
+			return;
+		}
+
+		const rolled = rolloverDailyGoal({
+			done: dailyGoalCount,
+			date: dailyGoalDate,
+			now: new Date(nowMs)
+		});
+
+		if (rolled !== untrack(() => sessionBaseline)) {
+			sessionBaseline = rolled;
+		}
+	});
 
 	// Daily hard-cap gate — once the day's calls reach the hard cap (15)
 	// across sessions, opening Flow shows a "come back tomorrow" takeover
