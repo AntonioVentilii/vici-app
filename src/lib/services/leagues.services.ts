@@ -350,10 +350,11 @@ export const createLeague = async ({
  * cover-less league carries an absent field, matching the assert's
  * non-empty rule). Omitting a field leaves it untouched.
  *
- * Re-reads the existing doc so we round-trip the server's `updated_at`
- * token (`setDoc` needs it for the conflict-free update path) and so
- * unchanged fields are carried over verbatim. Returns the updated
- * `LeagueDoc` so the caller can reflect the change optimistically.
+ * Re-reads the existing doc so we round-trip the server's `version`
+ * token — Juno's optimistic-concurrency guard rejects an update that
+ * omits it — and so unchanged fields are carried over verbatim. Returns
+ * the updated `LeagueDoc` so the caller can reflect the change
+ * optimistically.
  */
 export const updateLeague = async ({
 	id,
@@ -405,7 +406,7 @@ export const updateLeague = async ({
 		doc: {
 			key: id,
 			data: next,
-			updated_at: existing.updated_at
+			version: existing.version
 		}
 	});
 
@@ -674,9 +675,9 @@ export const proposeBattle = async ({
  * (BE-6) enforces the forward-only state machine + per-transition
  * authorisation; the FE just packages the doc + signs the call.
  *
- * All three reads the existing doc first so we round-trip the
- * server's `updated_at` token, which `setDoc` needs for the
- * conflict-free update path.
+ * All three read the existing doc first so we round-trip the
+ * server's `version` token, which Juno's optimistic-concurrency guard
+ * requires on every update of an existing doc.
  */
 export const acceptBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
 	const next: BattleDoc = { ...battle, state: 'accepted' };
@@ -716,7 +717,7 @@ export const retractBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 		doc: {
 			key: battle.id,
 			data: existing.data,
-			updated_at: existing.updated_at
+			version: existing.version
 		}
 	});
 };
@@ -758,7 +759,7 @@ const writeBattleTransition = async ({
 		doc: {
 			key: battle.id,
 			data: next,
-			updated_at: existing.updated_at
+			version: existing.version
 		}
 	});
 };
