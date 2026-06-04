@@ -87,13 +87,35 @@
 		</div>
 
 		<div class="arena-panel" role="tabpanel">
-			{#if activeTab === 'friends'}
-				<FriendsTab />
-			{:else if activeTab === 'leagues'}
-				<LeaguesPage embedded />
-			{:else if activeTab === 'battles'}
-				<BattlesInboxPage embedded />
-			{/if}
+			<!-- Defend against malformed / legacy profile data: a single friend
+			     row with an out-of-shape value could throw while rendering the
+			     active tab. Because the app is `ssr=false`, an unhandled throw
+			     escalates to the SvelteKit client error page (full-screen 500).
+			     The boundary keeps any residual data-shape failure inline so the
+			     rest of the Arena shell (appbar + tab strip) stays usable. -->
+			<svelte:boundary>
+				{#if activeTab === 'friends'}
+					<FriendsTab />
+				{:else if activeTab === 'leagues'}
+					<LeaguesPage embedded />
+				{:else if activeTab === 'battles'}
+					<BattlesInboxPage embedded />
+				{/if}
+
+				{#snippet failed(_error, reset)}
+					<div class="arena-boundary" role="alert">
+						<p class="arena-boundary-title">
+							{t({ locale: $localeStore, key: 'arena.boundary.title' })}
+						</p>
+						<p class="arena-boundary-body">
+							{t({ locale: $localeStore, key: 'arena.boundary.body' })}
+						</p>
+						<button class="arena-boundary-retry" onclick={reset} type="button">
+							{t({ locale: $localeStore, key: 'arena.boundary.retry' })}
+						</button>
+					</div>
+				{/snippet}
+			</svelte:boundary>
 		</div>
 	</PageScaffold>
 </div>
@@ -156,5 +178,50 @@
 
 	.arena-panel {
 		flex: 1;
+	}
+
+	/* Inline fallback for the tab boundary — a quiet card, not a
+	   full-screen error, so the surrounding Arena shell stays usable. */
+	.arena-boundary {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		align-items: flex-start;
+		margin: 1.5rem 0;
+		padding: 1rem 1.1rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: var(--bg-popover);
+	}
+
+	.arena-boundary-title {
+		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-14);
+		font-weight: 600;
+	}
+
+	.arena-boundary-body {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: var(--t-13);
+		line-height: var(--leading-snug);
+	}
+
+	.arena-boundary-retry {
+		margin-top: 0.35rem;
+		padding: 0.45rem 0.9rem;
+		border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--border-base));
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		color: var(--color-primary);
+		font-size: var(--t-12);
+		font-weight: 700;
+		cursor: pointer;
+		transition: background var(--d-state) ease;
+	}
+
+	.arena-boundary-retry:hover {
+		background: color-mix(in srgb, var(--color-primary) 18%, transparent);
 	}
 </style>

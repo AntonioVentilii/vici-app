@@ -17,6 +17,29 @@ const DEFAULT_DISPLAY_DECIMALS = 4;
 const MAX_DEFAULT_DISPLAY_DECIMALS = 8;
 
 /**
+ * Coerce an untrusted numeric value to a `bigint` without ever throwing.
+ *
+ * `BigInt(x)` raises a `RangeError` when `x` is non-integer (float), `NaN`,
+ * or `±Infinity`. Several surfaces feed it numbers that come straight from
+ * stored profile / activity documents whose schema only guarantees
+ * `j.number()` (an unconstrained JS number, not an integer) — a single
+ * malformed or legacy value would otherwise throw and bring the whole view
+ * down. This truncates toward zero and falls back to `0` for any
+ * non-finite input, optionally clamping to a minimum, so the conversion is
+ * always safe.
+ */
+export const safeBigInt = ({ value, min }: { value: number; min?: bigint }): bigint => {
+	const numeric = Number(value);
+	// `Math.trunc(±Infinity)` is still `±Infinity` and `Number(NaN)` stays
+	// `NaN` — `BigInt(…)` throws on both — so gate on finiteness, not a
+	// truthy check, before truncating toward zero.
+	const truncated = Number.isFinite(numeric) ? Math.trunc(numeric) : 0;
+	const result = BigInt(truncated);
+
+	return min !== undefined && result < min ? min : result;
+};
+
+/**
  * Adds locale-aware thousands separators to the integer part of a string
  * already in `[-]?\d+(\.\d+)?` form (the output of `Decimal.toFixed`). The
  * fractional part — including its precision — is preserved verbatim so we
