@@ -58,6 +58,25 @@ export const daysToKickoff: Readable<number | null> = derived(
 );
 
 /**
+ * Remainder hours (0–23) until kickoff, after the whole days already
+ * counted by {@link daysToKickoff}. Lets the landing render a
+ * "{d}d {h}h" countdown off the same `kickoffAt_ms` source the rest of
+ * the app uses. `null` once the event has started.
+ */
+export const hoursToKickoff: Readable<number | null> = derived(
+	[featuredEvent, now_ms],
+	([event, t]) => {
+		if (t >= event.kickoffAt_ms) {
+			return null;
+		}
+
+		const delta_ms = event.kickoffAt_ms - t;
+
+		return Math.floor((delta_ms % 86_400_000) / 3_600_000);
+	}
+);
+
+/**
  * Whole days remaining until the event's final (`finalAt_ms`), clamped
  * at 0. Used by surfaces that frame the active event as a battle with a
  * "{N}d left" timer (e.g. the Worlds hero card / scope toggle). `null`
