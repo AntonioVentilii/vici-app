@@ -11,14 +11,17 @@
 // peach themes. That's why `boostOpacities` skips WC (it would
 // over-saturate these fixed inks against light backdrops).
 
-export const WC_SKIN: Record<string, { base: string; shadow: string; high: string }> = {
+// `as const satisfies` (rather than a `Record<string, …>` annotation)
+// keeps the literal keys, so `keyof typeof WC_SKIN` is the skin-name
+// union and `WCNation['skin']` / `wcFace`'s `skin` param stay key-safe.
+export const WC_SKIN = {
 	umber: { base: '#9C6E45', shadow: '#6E4A2A', high: '#C0916A' },
 	olive: { base: '#A78657', shadow: '#7A5E37', high: '#C9A879' },
 	almond: { base: '#B98968', shadow: '#86603F', high: '#D4A988' },
 	mahog: { base: '#6E4A2A', shadow: '#4A2F18', high: '#8E6238' },
 	sand: { base: '#C99F75', shadow: '#9C7250', high: '#E0BC95' },
 	bronze: { base: '#7E5638', shadow: '#553820', high: '#9E7558' }
-};
+} as const satisfies Record<string, { base: string; shadow: string; high: string }>;
 
 export const WC_HAIR = {
 	jet: '#1A1410',
