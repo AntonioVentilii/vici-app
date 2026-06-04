@@ -1,6 +1,6 @@
 import type { ClearingDid, RegistryDid } from '$declarations';
 import { functions } from '$declarations/satellite/satellite.api';
-import { ZERO } from '$lib/constants/app.constants';
+import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
@@ -539,16 +539,18 @@ export const calculateAndSyncStats = async ({
 	const settledTradesCount = history.filter(isSettled).length;
 	const wins = history.filter(isWin).length;
 
-	const realizedPnl = history.filter(isSettled).reduce(
-		(acc, event) =>
-			acc +
-			(Number(event.qty) / 1e8) *
-				decimalFixedValueToNumber({
-					value: event.price.decimal.value,
-					decimals: event.price.decimal.decimals
-				}),
-		0
-	);
+	// Lifetime realized P&L: sum the signed realized cashflow each
+	// clearing `Settled` event already carries. A settlement's signed
+	// `qty` IS the realized `cashflow_usd` in `USD_DECIMALS` base units
+	// (see `resolved-position.utils.ts` / the `ResolvedPosition` docs) —
+	// not a contract quantity to re-multiply by price. Summed as `bigint`
+	// base units and decoded once at the end, so the conversion is exact
+	// (no per-event float accumulation). NOT clamped: lifetime P&L is net
+	// and must include losing settlements.
+	const realizedPnl = decimalFixedValueToNumber({
+		value: history.filter(isSettled).reduce((acc, event) => acc + event.qty, ZERO),
+		decimals: USD_DECIMALS
+	});
 
 	const totalTrades = history.filter(isExecuted).length;
 	const winRate = settledTradesCount > 0 ? (wins / settledTradesCount) * 100 : 0;
