@@ -89,8 +89,8 @@ export interface Rng {
 // `uid` is a stable per-render suffix appended to every SVG `<defs>`
 // id (gradients, filters, etc.) so multiple FlowArtFrames on the same
 // document never collide on `url(#mwash)` lookups. Derived from the
-// hash of `${category}::${seed}::${state}` so identical inputs reuse
-// the same uid (the renderer is still deterministic).
+// hash of `${category}::${seed}::${state}::${theme}` so identical inputs
+// reuse the same uid (the renderer is still deterministic).
 export interface RenderArgs {
 	rng: Rng;
 	p: FlowArtPalette;

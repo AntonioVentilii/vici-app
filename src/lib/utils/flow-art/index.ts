@@ -2,10 +2,11 @@
 //
 // Six per-category visual languages (macro / crypto / sports /
 // politics / tech / culture) plus the WC editorial system, × three
-// states (neutral / won / lost). Same `(category, seed, state)`
-// triplet always renders the identical composition; the seed flows
-// through a FNV-1a hash + mulberry32 PRNG so output is byte-stable
-// across reloads.
+// states (neutral / won / lost) × theme. Same
+// `(category, seed, state, theme)` tuple always renders the identical
+// composition — theme is part of the seed key (it tunes the palette and
+// the `<defs>` ids), not a pure post-hoc recolor. The seed flows through
+// a FNV-1a hash + mulberry32 PRNG so output is byte-stable across reloads.
 //
 // Returns SVG strings — components mount via {@html ...}. No DOM
 // access, no I/O — pure helper.

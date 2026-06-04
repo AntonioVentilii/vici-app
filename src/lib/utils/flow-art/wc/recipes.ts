@@ -10,7 +10,12 @@ import type { WcHelpers } from '$lib/utils/flow-art/wc/helpers';
 // (The prototype's caption pill is a no-op there and is omitted.)
 // Helpers arrive via the `h` bundle so each scene closes over the
 // per-render palette + uid.
-export const WC_RECIPES: Record<string, (h: WcHelpers) => string> = {
+//
+// `Partial<…>` so a lookup on an unlisted market id is typed `… |
+// undefined` (only a curated subset of ids is present), matching the
+// runtime miss the resolver handles before falling through to the
+// nation tier / generative fallback.
+export const WC_RECIPES: Partial<Record<string, (h: WcHelpers) => string>> = {
 	// ─── CLASSIC ─────────────────────────────────────────────
 	'wc-winner-brazil': (h) =>
 		h.bgFlagDiag({ c1: '#FFD800', c2: '#0F8C3A', c3: '#0033A0' }) +
