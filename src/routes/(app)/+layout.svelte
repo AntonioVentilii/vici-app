@@ -710,6 +710,7 @@
 				class="app-shell-content"
 				aria-label={t({ locale: $localeStore, key: 'authn.checking.aria' })}
 				aria-live="polite"
+				data-tid={TestId.AppMain}
 				role="status"
 			>
 				<LoadingSpinner size="md" />
