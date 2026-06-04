@@ -794,7 +794,7 @@
 		<div class="friends-loading">
 			<LoadingSpinner />
 		</div>
-	{:else if rankedFriends.length > 0}
+	{:else}
 		<section class="friends-section">
 			<header class="section-eyebrow">
 				<span>{t({ locale: $localeStore, key: 'arena.friends.ranked.eyebrow' })}</span>
@@ -811,77 +811,83 @@
 					<span class="num section-count">{rankedFriends.length}</span>
 				</span>
 			</header>
-			<ul class="ranked-list">
-				{#each visibleRanked as row, idx (row.friendId)}
-					{@const h2h = formatH2h(row.accuracy)}
-					<li>
-						<button class="ranked-row" onclick={() => openFriendSheet(row)} type="button">
-							<span class="num ranked-num">{String(idx + 1).padStart(2, '0')}</span>
+			{#if rankedFriends.length === 0}
+				<FriendsEmptyState />
+			{:else}
+				<ul class="ranked-list">
+					{#each visibleRanked as row, idx (row.friendId)}
+						{@const h2h = formatH2h(row.accuracy)}
+						<li>
+							<button class="ranked-row" onclick={() => openFriendSheet(row)} type="button">
+								<span class="num ranked-num">{String(idx + 1).padStart(2, '0')}</span>
+								<span class="ranked-avatar">
+									<Avatar
+										class="h-full w-full"
+										avatar={row.profile?.avatar}
+										nickname={row.profile?.nickname}
+										owner={row.profile?.owner ?? row.friendId}
+									/>
+								</span>
+								<span class="ranked-copy">
+									<span class="ranked-name">
+										@{row.profile?.nickname ??
+											t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
+									</span>
+									<span class="num ranked-meta">
+										{formatPct(row.accuracy)} · {row.streak}d
+									</span>
+								</span>
+								<span
+									class="ranked-h2h num"
+									class:is-ahead={h2h.ahead}
+									class:is-behind={!h2h.ahead}
+								>
+									{h2h.value}
+								</span>
+							</button>
+						</li>
+					{/each}
+					{#if hiddenRankedCount > 0}
+						<li>
+							<button class="ranked-see-all" onclick={() => (showAllRanked = true)} type="button">
+								{t({
+									locale: $localeStore,
+									key: 'arena.friends.ranked.see_all',
+									params: { count: rankedFriends.length }
+								})}
+							</button>
+						</li>
+					{/if}
+					<li class="ranked-li-you">
+						<div class="ranked-row ranked-row-you">
+							<span class="num ranked-num is-you">
+								{t({ locale: $localeStore, key: 'arena.friends.ranked.you' })}
+							</span>
 							<span class="ranked-avatar">
 								<Avatar
 									class="h-full w-full"
-									avatar={row.profile?.avatar}
-									nickname={row.profile?.nickname}
-									owner={row.profile?.owner ?? row.friendId}
+									avatar={myProfile?.avatar}
+									nickname={myProfile?.nickname}
+									owner={userPrincipal}
 								/>
 							</span>
 							<span class="ranked-copy">
-								<span class="ranked-name">
-									@{row.profile?.nickname ??
+								<span class="ranked-name ranked-name-you">
+									@{myProfile?.nickname ??
 										t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
 								</span>
 								<span class="num ranked-meta">
-									{formatPct(row.accuracy)} · {row.streak}d
+									{formatPct(myAccuracy)} · {myProfile?.streak ?? 0}d
 								</span>
 							</span>
-							<span class="ranked-h2h num" class:is-ahead={h2h.ahead} class:is-behind={!h2h.ahead}>
-								{h2h.value}
+							<span class="num ranked-h2h-you">
+								{formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
 							</span>
-						</button>
+						</div>
 					</li>
-				{/each}
-				{#if hiddenRankedCount > 0}
-					<li>
-						<button class="ranked-see-all" onclick={() => (showAllRanked = true)} type="button">
-							{t({
-								locale: $localeStore,
-								key: 'arena.friends.ranked.see_all',
-								params: { count: rankedFriends.length }
-							})}
-						</button>
-					</li>
-				{/if}
-				<li class="ranked-li-you">
-					<div class="ranked-row ranked-row-you">
-						<span class="num ranked-num is-you">
-							{t({ locale: $localeStore, key: 'arena.friends.ranked.you' })}
-						</span>
-						<span class="ranked-avatar">
-							<Avatar
-								class="h-full w-full"
-								avatar={myProfile?.avatar}
-								nickname={myProfile?.nickname}
-								owner={userPrincipal}
-							/>
-						</span>
-						<span class="ranked-copy">
-							<span class="ranked-name ranked-name-you">
-								@{myProfile?.nickname ??
-									t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
-							</span>
-							<span class="num ranked-meta">
-								{formatPct(myAccuracy)} · {myProfile?.streak ?? 0}d
-							</span>
-						</span>
-						<span class="num ranked-h2h-you">
-							{formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
-						</span>
-					</div>
-				</li>
-			</ul>
+				</ul>
+			{/if}
 		</section>
-	{:else}
-		<FriendsEmptyState />
 	{/if}
 
 	<!-- Friends feed ──────────────────────────────────────────── -->
