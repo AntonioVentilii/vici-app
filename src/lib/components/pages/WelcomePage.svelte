@@ -22,15 +22,13 @@
 	import Ticker from '$lib/components/layout/Ticker.svelte';
 	import WelcomeNav from '$lib/components/layout/WelcomeNav.svelte';
 	import { PublicPath } from '$lib/constants/routes.constants';
-	import { WORLD_CUP_KICKOFF } from '$lib/constants/world-cup-kickoff.constants';
+	import { daysToKickoff } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
 	onMount(() => {
 		document.title = 'VICI';
 	});
-
-	const wcDays = WORLD_CUP_KICKOFF.daysToKickoff;
 </script>
 
 <div class="lp-root">
@@ -49,13 +47,13 @@
 								params: { count: '184,210' }
 							})}
 						</span>
-						{#if wcDays !== null}
+						{#if $daysToKickoff !== null}
 							<span class="tag countdown">
 								<Clock size={10} strokeWidth={2.5} />
 								{t({
 									locale: $localeStore,
 									key: 'wc.kickoff_chip',
-									params: { days: String(wcDays) }
+									params: { days: String($daysToKickoff) }
 								})}
 							</span>
 						{/if}
