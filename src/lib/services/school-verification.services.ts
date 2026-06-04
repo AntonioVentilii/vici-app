@@ -20,10 +20,10 @@
  * spinners can never hang indefinitely. The call signatures are kept so
  * the picker only has to pass the active `locale`.
  *
- * Reachable only when `SCHOOL_PASS2_ENABLED` is `true` — keep it `false`
- * until the `vici-courier` relay is deployed and its `app_config` doc is
- * set (otherwise `submitSchool` resolves to a "relay not configured"
- * error rather than a real send).
+ * Reachable only when `SCHOOL_PASS2_ENABLED` is on. Note: in any given
+ * environment `submitSchool` also needs the `vici-courier` relay deployed
+ * and the `app_config/school_relay` doc set there, otherwise the server
+ * returns a "relay not configured" error instead of mailing a code.
  */
 
 import { functions } from '$declarations/satellite/satellite.api';
