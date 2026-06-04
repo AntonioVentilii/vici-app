@@ -1591,6 +1591,7 @@ export const enMessages = {
 	'profile.dashboard.affiliations.title': 'Affiliations',
 	'profile.dashboard.affiliations.university': 'Alma Mater',
 	'profile.dashboard.affiliations.verify_soon': 'Verification — coming soon',
+	'profile.dashboard.affiliations.verify_cta': 'Verify your school →',
 	'profile.dashboard.all': 'All',
 	'profile.dashboard.calls': 'calls',
 	'profile.dashboard.cancel': 'Cancel',

@@ -1594,6 +1594,7 @@ export const itMessages = {
 	'profile.dashboard.affiliations.title': 'Affiliazioni',
 	'profile.dashboard.affiliations.university': 'Alma Mater',
 	'profile.dashboard.affiliations.verify_soon': 'Verifica — in arrivo',
+	'profile.dashboard.affiliations.verify_cta': 'Verifica la tua università →',
 	'profile.dashboard.all': 'Tutti',
 	'profile.dashboard.calls': 'previsioni',
 	'profile.dashboard.cancel': 'Annulla',
