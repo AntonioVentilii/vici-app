@@ -1,6 +1,12 @@
 <script lang="ts">
+	import { ChevronRight, X } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
-	import { createLeague, validateLeagueDraft } from '$lib/services/leagues.services';
+	import { LeaguePrivacy } from '$lib/enums/league';
+	import {
+		createLeague,
+		generateInviteCode,
+		validateLeagueDraft
+	} from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import {
 		LEAGUE_DESCRIPTION_MAX_LENGTH,
@@ -23,10 +29,10 @@
 
 	const { isOpen, onClose, onCreated }: Props = $props();
 
-	// The emblem, colour, and public/private choice all persist onto the
-	// league doc — the emblem as `emblem`, the colour as `accentColor`,
-	// and the public/private choice as the league's `private` flag — and
-	// drive the live preview tile in this sheet.
+	// The emblem, colour, and privacy choice all persist onto the league
+	// doc — the emblem as `emblem`, the colour as `accentColor`, and the
+	// privacy choice as the league's `privacy` field — and drive the live
+	// preview tile in this sheet.
 	const COLORS = [
 		{ id: 'laurel', value: '#e2b842' },
 		{ id: 'mint', value: '#4fd3a1' },
@@ -35,21 +41,27 @@
 		{ id: 'violet', value: '#b49cff' },
 		{ id: 'parch', value: '#f2ecdc' }
 	] as const;
-	// Public/private toggle — defaults to public. The chosen value
-	// persists onto the league doc's `private` flag and reads back as
-	// the detail header's privacy chip.
-	const PRIVACIES = ['public', 'private'] as const;
-	type Privacy = (typeof PRIVACIES)[number];
+	// Three-way privacy selector — Invite-only / Private / Open, in that
+	// order, defaulting to Invite-only (the design default). The chosen
+	// value persists onto the league doc's `privacy` field and reads back
+	// as the detail header's privacy chip.
+	const PRIVACIES = [LeaguePrivacy.INVITE, LeaguePrivacy.PRIVATE, LeaguePrivacy.OPEN] as const;
 
 	const [DEFAULT_COLOR] = COLORS;
 
 	let name = $state('');
 	let description = $state('');
-	let privacy = $state<Privacy>('public');
+	let privacy = $state<LeaguePrivacy>(LeaguePrivacy.INVITE);
 	let emblem = $state<string>(LEAGUE_EMBLEM_DEFAULT);
 	let color = $state<string>(DEFAULT_COLOR.value);
 	let submitting = $state(false);
 	let submitError: string | null = $state(null);
+	// The 6-char invite code the owner shares to bring members in. Our
+	// codes are client-generated (see `createLeague`), so we mint one up
+	// front and surface it on this sheet as a format affordance — then
+	// hand the same value to `createLeague` so the code the owner sees is
+	// the one persisted. Re-minted on every open of a fresh draft.
+	let inviteCode = $state(generateInviteCode());
 
 	const trimmedName = $derived(name.trim());
 	const trimmedDescription = $derived(description.trim());
@@ -91,7 +103,7 @@
 
 	const showPreview = $derived(trimmedName.length >= LEAGUE_NAME_MIN_LENGTH);
 
-	const privacyLabel = (value: Privacy): string =>
+	const privacyLabel = (value: LeaguePrivacy): string =>
 		t({ locale: $localeStore, key: `leagues.create.privacy_${value}` });
 
 	const previewMeta = $derived(
@@ -105,11 +117,13 @@
 	const reset = () => {
 		name = '';
 		description = '';
-		privacy = 'public';
+		privacy = LeaguePrivacy.INVITE;
 		emblem = LEAGUE_EMBLEM_DEFAULT;
 		color = DEFAULT_COLOR.value;
 		submitting = false;
 		submitError = null;
+		// Mint a fresh code so the next draft shows (and persists) its own.
+		inviteCode = generateInviteCode();
 	};
 
 	const handleClose = () => {
@@ -133,7 +147,8 @@
 				description: trimmedDescription || undefined,
 				accentColor: color,
 				emblem,
-				isPrivate: privacy === 'private'
+				privacy,
+				inviteCode
 			});
 			onCreated(league);
 			reset();
@@ -146,11 +161,18 @@
 	};
 </script>
 
-<BottomSheet {isOpen} onClose={handleClose}>
+<BottomSheet {isOpen} onClose={handleClose} sidePadding="22px">
 	<form class="league-form" onsubmit={handleSubmit}>
 		<header class="league-form-head">
 			<h2>{t({ locale: $localeStore, key: 'leagues.create.title' })}</h2>
-			<p>{t({ locale: $localeStore, key: 'leagues.create.sub' })}</p>
+			<button
+				class="league-form-close"
+				aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
+				onclick={handleClose}
+				type="button"
+			>
+				<X aria-hidden="true" size={18} strokeWidth={1.8} />
+			</button>
 		</header>
 
 		<!-- Live preview card — mirrors the leagues-list row so the
@@ -267,6 +289,16 @@
 			</div>
 		</fieldset>
 
+		<!-- Invite-code affordance — surfaces the league's real 6-char code
+		     so the owner can share it the moment they create. Read-only;
+		     the value is minted client-side and handed to `createLeague`. -->
+		<div class="league-invite-code">
+			<span class="num league-invite-code-value">{inviteCode}</span>
+			<span class="num mute allcaps league-invite-code-label">
+				{t({ locale: $localeStore, key: 'leagues.create.invite_code' })}
+			</span>
+		</div>
+
 		{#if draftError}
 			<p class="league-form-error" role="alert">
 				{t({ locale: $localeStore, key: draftError })}
@@ -276,14 +308,16 @@
 		{/if}
 
 		<div class="league-form-actions">
-			<button class="league-btn is-ghost" onclick={handleClose} type="button">
-				{t({ locale: $localeStore, key: 'leagues.create.cancel' })}
-			</button>
 			<button class="league-btn is-primary" disabled={!canSubmit} type="submit">
-				{t({
-					locale: $localeStore,
-					key: submitting ? 'leagues.create.submitting' : 'leagues.create.cta'
-				})}
+				<span>
+					{t({
+						locale: $localeStore,
+						key: submitting ? 'leagues.create.submitting' : 'leagues.create.cta'
+					})}
+				</span>
+				{#if !submitting}
+					<ChevronRight aria-hidden="true" size={15} strokeWidth={2.2} />
+				{/if}
 			</button>
 		</div>
 	</form>
@@ -296,17 +330,44 @@
 		gap: 0.85rem;
 	}
 
+	/* Title + top-right close × on one row — mirrors the sheet header in
+	   the source design (title left, circular ghost close right). */
+	.league-form-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
 	.league-form-head h2 {
-		margin: 0 0 0.25rem;
+		margin: 0;
 		font-family: var(--font-display);
 		font-size: var(--t-18, 1.1rem);
 		color: var(--text-base);
 	}
 
-	.league-form-head p {
-		margin: 0;
-		font-size: var(--t-13);
+	.league-form-close {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
 		color: var(--text-muted);
+		background: transparent;
+		border: 0;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			color 140ms var(--ease-vici),
+			background 140ms var(--ease-vici);
+	}
+
+	.league-form-close:hover {
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 	}
 
 	/* ─── Live preview card ─────────────────────────────────────── */
@@ -441,7 +502,7 @@
 
 	.league-emblem-grid {
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-template-columns: repeat(8, 1fr);
 		gap: 0.4rem;
 	}
 
@@ -487,45 +548,67 @@
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--laurel) 22%, transparent);
 	}
 
+	/* ─── Invite-code affordance ────────────────────────────────── */
+
+	/* Dashed read-only box: the league's real code (accent, tracked) on
+	   the left, an "Invite code" eyebrow on the right — the owner's cue
+	   for what to share. */
+	.league-invite-code {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.65rem 0.9rem;
+		background: color-mix(in srgb, var(--laurel) 4%, transparent);
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.league-invite-code-value {
+		font-family: var(--font-mono);
+		font-size: var(--t-14);
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		color: var(--color-accent);
+	}
+
+	.league-invite-code-label {
+		font-size: 9.5px;
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+	}
+
 	.league-form-error {
 		margin: 0;
 		font-size: var(--t-12);
 		color: var(--no);
 	}
 
-	/* Two-column grid so the buttons split the sheet width evenly and
-	   never crowd the right edge on narrow viewports. */
+	/* Single full-width CTA — no Cancel; the sheet scrim / grip is the
+	   dismiss affordance, so the create action owns the row edge to edge. */
 	.league-form-actions {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.5rem;
+		display: flex;
 		margin-top: 0.35rem;
 	}
 
 	.league-btn {
 		appearance: none;
-		padding: 0.75rem 1rem;
+		display: inline-flex;
+		flex: 1;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		padding: 0.875rem 1rem;
 		font: inherit;
 		font-size: var(--t-13);
 		font-weight: 700;
-		border-radius: var(--r-12);
+		border-radius: var(--r-pill);
 		cursor: pointer;
 		text-align: center;
 		transition:
 			background 140ms ease,
 			color 140ms ease,
 			border-color 140ms ease;
-	}
-
-	.league-btn.is-ghost {
-		color: var(--text-muted);
-		background: none;
-		border: 1px solid var(--border-base);
-	}
-
-	.league-btn.is-ghost:hover {
-		color: var(--text-base);
-		border-color: var(--border-strong);
 	}
 
 	.league-btn.is-primary {

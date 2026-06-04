@@ -7,7 +7,11 @@ import {
 	type AffiliationStatsDoc
 } from '$lib/types/affiliation-stats';
 import type { BattleDoc } from '$lib/types/battle';
-import type { LeagueDoc } from '$lib/types/league';
+import {
+	isLeaguePubliclyListed,
+	isLeagueRecommendableToFriends,
+	type LeagueDoc
+} from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
 import type { Relation } from '$lib/types/relation';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -299,14 +303,16 @@ export const lookupLeagueByInviteFn = ({
  * List the leagues the caller can challenge to a battle — the opponent
  * pool for the create-battle picker.
  *
- * Challengeable = every **public** league (`private !== true`) plus
- * every league the caller is a member of (so private leagues the caller
- * belongs to are reachable too), **minus** any league the caller owns —
- * those are the from-side of a challenge, never the opponent.
+ * Challengeable = every **publicly listed** (Open) league plus every
+ * league the caller is a member of (so invite-only / private leagues the
+ * caller belongs to are reachable too), **minus** any league the caller
+ * owns — those are the from-side of a challenge, never the opponent.
  *
- * Privacy mirrors the rest of the social surface: private leagues the
- * caller is NOT a member of stay hidden. The membership scan resolves
- * "am I in this league?" the same way {@link listMyLeaguesFn} does.
+ * Privacy mirrors the rest of the social surface: invite-only and private
+ * leagues the caller is NOT a member of stay hidden (they're reachable by
+ * invite code, not by browsing the opponent pool). The membership scan
+ * resolves "am I in this league?" the same way {@link listMyLeaguesFn}
+ * does.
  *
  * Sorted by `name` ascending (locale-naive) so the FE picker reads
  * alphabetically before any client-side search filter narrows it.
@@ -316,8 +322,9 @@ export const listChallengeableLeaguesFn = (): LeagueDoc[] => {
 	const callerText = caller.toText();
 	const callerBytes = caller.toUint8Array();
 
-	// Leagues the caller is a member of — lets private leagues the caller
-	// belongs to surface as opponents while non-members can't see them.
+	// Leagues the caller is a member of — lets invite-only / private
+	// leagues the caller belongs to surface as opponents while non-members
+	// can't see them.
 	const myLeagueIds = new Set<string>();
 
 	const { items: memberItems } = listDocsStore({
@@ -353,10 +360,10 @@ export const listChallengeableLeaguesFn = (): LeagueDoc[] => {
 			// Never offer a league the caller owns as the opponent — it's
 			// the from-side of any challenge they send.
 			const ownedByCaller = league.owner === callerText;
-			const isPublic = league.private !== true;
+			const isPubliclyListed = isLeaguePubliclyListed(league);
 			const isMember = myLeagueIds.has(league.id);
 
-			if (!ownedByCaller && (isPublic || isMember)) {
+			if (!ownedByCaller && (isPubliclyListed || isMember)) {
 				challengeable.push(league);
 			}
 		} catch {
@@ -367,7 +374,10 @@ export const listChallengeableLeaguesFn = (): LeagueDoc[] => {
 	return challengeable.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 };
 
-/** A public league a friend is in but the caller is not — plus the overlap. */
+/**
+ * A non-private (Open or Invite-only) league a friend is in but the
+ * caller is not — plus the overlap.
+ */
 export interface FriendRecommendedLeague {
 	league: LeagueDoc;
 	/** Total members in the league (owner included). */
@@ -393,18 +403,19 @@ export interface FriendRecommendedLeague {
  * surfacing "leagues that someone you follow is in" would leak that
  * user's league membership to an account they never opted into.
  *
- * Privacy scope (the conservative call): only **public** leagues
- * (`private !== true`) are recommended, even when a friend is a member
- * of a private one. Private leagues stay invite-only and invisible to
- * non-members — the same posture {@link listChallengeableLeaguesFn}
- * takes. Membership itself is only ever exposed for the caller's own
- * confirmed friends (never for strangers), so the surface answers
- * "which public leagues are my friends in?" and nothing broader.
+ * Privacy scope: Open **and** Invite-only leagues a friend is in are
+ * recommended — an invite-only league is a code gate, not secrecy, and a
+ * friend already in it is the natural inviter, so a "friends are in" nudge
+ * is appropriate. Only **Private** leagues are withheld: they stay hidden
+ * and invite-code-only, never surfaced via a friend. Membership itself is
+ * only ever exposed for the caller's own confirmed friends (never for
+ * strangers), so the surface answers "which Open/Invite-only leagues are
+ * my friends in?" and nothing broader.
  *
  * Cost: one scan of `RELATIONS` (friend set), one scan of
  * `LEAGUE_MEMBERS` (member buckets + the caller's own leagues + member
  * tallies), then a `getDocStore` per candidate league to read its
- * privacy flag + metadata. Candidate count is bounded by the number of
+ * privacy + metadata. Candidate count is bounded by the number of
  * distinct leagues the caller's friends belong to.
  *
  * Sorted by friend-overlap count descending (most friends first), then
@@ -503,9 +514,10 @@ export const listFriendRecommendedLeaguesFn = (): FriendRecommendedLeague[] => {
 				try {
 					const league = decodeDocData<LeagueDoc>(leagueDoc.data);
 
-					// Conservative privacy: never surface a private league to a
-					// non-member, even via a friend. Invite-only stays invite-only.
-					if (league.private !== true) {
+					// Never surface a Private league to a non-member, even via a
+					// friend. Open and Invite-only both qualify (invite-only is a
+					// code gate, not secrecy, and a friend is the natural inviter).
+					if (isLeagueRecommendableToFriends(league)) {
 						recommendations.push({
 							league,
 							memberCount: memberCounts.get(leagueId) ?? friendSet.size,

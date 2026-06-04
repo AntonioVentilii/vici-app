@@ -1,5 +1,6 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
+import { LeaguePrivacy } from '$lib/enums/league';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
@@ -56,7 +57,10 @@ const projectLeagueWire = (league: {
 	created_at_ms: number;
 	accent_color?: string;
 	emblem?: string;
-	private?: boolean;
+	// The generated wire client surfaces the Candid variant as a plain
+	// string union; coerce it back to the `LeaguePrivacy` enum below (the
+	// runtime values are identical).
+	privacy: `${LeaguePrivacy}`;
 	image_url?: string;
 }): LeagueDoc => ({
 	id: league.id,
@@ -67,7 +71,7 @@ const projectLeagueWire = (league: {
 	createdAtMs: league.created_at_ms,
 	accentColor: league.accent_color,
 	emblem: league.emblem,
-	private: league.private,
+	privacy: league.privacy as LeaguePrivacy,
 	imageUrl: league.image_url
 });
 
@@ -88,9 +92,9 @@ export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 
 /**
  * List the leagues the caller can challenge to a battle — the opponent
- * pool for the create-battle picker. Public leagues plus the caller's
- * own memberships, minus leagues the caller owns. Sorted alphabetically
- * by name per the satellite query.
+ * pool for the create-battle picker. Publicly listed (Open) leagues plus
+ * the caller's own memberships, minus leagues the caller owns. Sorted
+ * alphabetically by name per the satellite query.
  */
 export const listChallengeableLeagues = async (): Promise<LeagueDoc[]> => {
 	const { items } = await functions.listChallengeableLeagues();
@@ -98,7 +102,10 @@ export const listChallengeableLeagues = async (): Promise<LeagueDoc[]> => {
 	return items.map(projectLeagueWire);
 };
 
-/** A public league a friend is in but the caller is not, plus the overlap. */
+/**
+ * A non-private (Open or Invite-only) league a friend is in but the
+ * caller is not, plus the overlap.
+ */
 export interface FriendRecommendedLeague {
 	league: LeagueDoc;
 	/** Total members in the league (owner included). */
@@ -108,10 +115,10 @@ export interface FriendRecommendedLeague {
 }
 
 /**
- * List public leagues the caller's confirmed friends are in but the
- * caller is not — the "Friends are in" recommendations row at the foot
- * of the Leagues list. Sorted by friend-overlap count descending per
- * the satellite query.
+ * List Open and Invite-only leagues the caller's confirmed friends are in
+ * but the caller is not — the "Friends are in" recommendations row at the
+ * foot of the Leagues list. Private leagues are never surfaced. Sorted by
+ * friend-overlap count descending per the satellite query.
  */
 export const listFriendRecommendedLeagues = async (): Promise<FriendRecommendedLeague[]> => {
 	const { items } = await functions.listFriendRecommendedLeagues();
@@ -249,7 +256,8 @@ export const createLeague = async ({
 	description,
 	accentColor,
 	emblem,
-	isPrivate = false
+	privacy = LeaguePrivacy.INVITE,
+	inviteCode
 }: {
 	name: string;
 	description?: string;
@@ -261,10 +269,16 @@ export const createLeague = async ({
 	 *  Persisted on the league doc so the logo tile reads the same
 	 *  everywhere the league is rendered. */
 	emblem?: string;
-	/** Whether the owner marked the league private at creation. Public
-	 *  by default; persisted on the league doc and surfaced as the
-	 *  detail header's privacy chip. */
-	isPrivate?: boolean;
+	/** Three-way visibility the owner picked in the create sheet.
+	 *  Defaults to Invite-only (the design default); persisted on the
+	 *  league doc and surfaced as the detail header's privacy chip. */
+	privacy?: LeaguePrivacy;
+	/** Pre-generated 6-char invite code. The create sheet surfaces the
+	 *  code to the owner before submit (so they can share it), so it
+	 *  passes the same value here to keep the displayed and persisted
+	 *  codes identical. Omitted callers get a fresh code generated here.
+	 *  Re-validated against {@link LEAGUE_INVITE_CODE_REGEX} either way. */
+	inviteCode?: string;
 }): Promise<LeagueDoc> => {
 	const validation = validateLeagueDraft({ name, description });
 
@@ -276,9 +290,9 @@ export const createLeague = async ({
 	const ownerPrincipal = identity.getPrincipal().toText();
 	const createdAtMs = Date.now();
 	const leagueId = deriveLeagueId({ name, suffix: createdAtMs });
-	const inviteCode = generateInviteCode();
+	const resolvedInviteCode = inviteCode ?? generateInviteCode();
 
-	if (!LEAGUE_INVITE_CODE_REGEX.test(inviteCode)) {
+	if (!LEAGUE_INVITE_CODE_REGEX.test(resolvedInviteCode)) {
 		// `generateInviteCode` is built to satisfy the regex; this
 		// branch is here so a future change to either side trips the
 		// FE error path instead of failing on the satellite assert.
@@ -289,12 +303,12 @@ export const createLeague = async ({
 		id: leagueId,
 		name,
 		description,
-		inviteCode,
+		inviteCode: resolvedInviteCode,
 		owner: ownerPrincipal,
 		createdAtMs,
 		accentColor,
 		emblem,
-		private: isPrivate
+		privacy
 	};
 
 	await setDoc<LeagueDoc>({
@@ -326,7 +340,7 @@ export const createLeague = async ({
 /**
  * Edit an owner-mutable league field. Only the current owner can call
  * this; the satellite assert hard-rejects anyone else. On the edit path
- * `id`, `createdAtMs`, `inviteCode`, `emblem`, and `private` stay
+ * `id`, `createdAtMs`, `inviteCode`, `emblem`, and `privacy` stay
  * frozen — `name` and `imageUrl` are the freely-mutable fields.
  *
  * Pass `name` to rename (trimmed + re-validated against the same 3–40
@@ -336,10 +350,11 @@ export const createLeague = async ({
  * cover-less league carries an absent field, matching the assert's
  * non-empty rule). Omitting a field leaves it untouched.
  *
- * Re-reads the existing doc so we round-trip the server's `updated_at`
- * token (`setDoc` needs it for the conflict-free update path) and so
- * unchanged fields are carried over verbatim. Returns the updated
- * `LeagueDoc` so the caller can reflect the change optimistically.
+ * Re-reads the existing doc so we round-trip the server's `version`
+ * token — Juno's optimistic-concurrency guard rejects an update that
+ * omits it — and so unchanged fields are carried over verbatim. Returns
+ * the updated `LeagueDoc` so the caller can reflect the change
+ * optimistically.
  */
 export const updateLeague = async ({
 	id,
@@ -391,7 +406,7 @@ export const updateLeague = async ({
 		doc: {
 			key: id,
 			data: next,
-			updated_at: existing.updated_at
+			version: existing.version
 		}
 	});
 
@@ -660,9 +675,9 @@ export const proposeBattle = async ({
  * (BE-6) enforces the forward-only state machine + per-transition
  * authorisation; the FE just packages the doc + signs the call.
  *
- * All three reads the existing doc first so we round-trip the
- * server's `updated_at` token, which `setDoc` needs for the
- * conflict-free update path.
+ * All three read the existing doc first so we round-trip the
+ * server's `version` token, which Juno's optimistic-concurrency guard
+ * requires on every update of an existing doc.
  */
 export const acceptBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
 	const next: BattleDoc = { ...battle, state: 'accepted' };
@@ -702,7 +717,7 @@ export const retractBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 		doc: {
 			key: battle.id,
 			data: existing.data,
-			updated_at: existing.updated_at
+			version: existing.version
 		}
 	});
 };
@@ -744,7 +759,7 @@ const writeBattleTransition = async ({
 		doc: {
 			key: battle.id,
 			data: next,
-			updated_at: existing.updated_at
+			version: existing.version
 		}
 	});
 };

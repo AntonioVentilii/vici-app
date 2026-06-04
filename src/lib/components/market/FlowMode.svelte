@@ -44,7 +44,9 @@
 	import {
 		applyDailyGoalBump,
 		DAILY_GOAL_TARGET,
-		rolloverDailyGoal
+		reconcileDailyGoalOnEntry,
+		rolloverDailyGoal,
+		writeDailyGoalMirror
 	} from '$lib/utils/daily-goal.utils';
 	import {
 		FLOW_ART_CATEGORY_SET,
@@ -272,9 +274,19 @@
 			if (nonNullish(profile)) {
 				dailyStreak = profile.dailyStreak ?? 0;
 				({ lastActiveDay } = profile);
-				dailyGoalCount = profile.dailyGoalDone ?? 0;
-				({ dailyGoalDate } = profile);
 			}
+
+			// Seed the daily-goal count from the higher of the profile
+			// and the localStorage mirror (#484): a lost best-effort
+			// profile write must not reset the count and re-open the
+			// daily hard cap. Runs even when signed out so the mirror
+			// alone still gates an anonymous session.
+			const reconciledGoal = reconcileDailyGoalOnEntry({
+				done: profile?.dailyGoalDone ?? 0,
+				date: profile?.dailyGoalDate
+			});
+			dailyGoalCount = reconciledGoal.done;
+			dailyGoalDate = reconciledGoal.date;
 
 			const fromProfile = $userStore.profile?.preferences?.defaultAmount?.flow;
 
@@ -530,6 +542,11 @@
 		});
 		dailyGoalCount = goalBump.done;
 		dailyGoalDate = goalBump.date;
+
+		// Synchronous, offline-safe mirror — written before the
+		// best-effort profile round-trip below so the daily hard cap
+		// survives a refresh even if that write is dropped (#484).
+		writeDailyGoalMirror(goalBump);
 
 		const goalPrincipal = $userStore.user?.key;
 

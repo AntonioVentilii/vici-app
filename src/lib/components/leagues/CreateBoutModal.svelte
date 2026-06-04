@@ -21,7 +21,7 @@
 		type BattleDoc,
 		type BattleScope
 	} from '$lib/types/battle';
-	import type { LeagueDoc } from '$lib/types/league';
+	import { isLeaguePubliclyListed, type LeagueDoc } from '$lib/types/league';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
@@ -320,7 +320,7 @@
 												type="button"
 											>
 												<span class="create-bout-opponent-name">{league.name}</span>
-												{#if league.private === true}
+												{#if !isLeaguePubliclyListed(league)}
 													<span class="allcaps create-bout-opponent-tag">
 														{t({ locale: $localeStore, key: 'battles.create.opponent_private' })}
 													</span>

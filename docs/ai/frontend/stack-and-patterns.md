@@ -269,6 +269,27 @@ pins `VICI_ENGINE_ID` is
   `loadAuth()`, which resolves the user and fires `onAuthStateChange`. Flush
   host state (e.g. the signup onboarding `onSuccess` that persists pending
   picks to storage) before that reload.
+- **Passkey: `signUp` creates, `signIn` authenticates.** Juno's WebAuthn
+  provider splits the two, and only `signUp` accepts a display name for the
+  new credential. `SignInProviderStack` takes a `mode` (`signin` | `signup`)
+  prop and branches the passkey button on it: the onboarding flow passes
+  `mode="signup"` (plus the chosen `handle`) so a brand-new user registers a
+  passkey labelled `VICI · {handle}`; every other mount (the /signin gate,
+  the "sign in to continue" modals) defaults to `mode="signin"` and
+  authenticates an existing passkey. The label flips between
+  `authn.passkey.create_button` and `authn.passkey.signin_button` the same
+  way.
+- **Email sign-in is passkey-backed — there is no magic link.** The email
+  row in `SignInProviderStack` is a friendlier framing of the WebAuthn flow:
+  on sign-up it registers a passkey labelled by the address and merges that
+  address into the `vici:pending-onboarding` payload (same single-field merge
+  `/i/[code]` and `/league/[code]` do for their codes), so the post-sign-in
+  drain in [`(app)/+layout.svelte`](<../../../src/routes/(app)/+layout.svelte>)
+  persists it onto the new profile — the WebAuthn `User` carries no email of
+  its own. On sign-in it just authenticates the existing passkey. Because it
+  is WebAuthn under the hood it shares the passkey button's gating
+  (`isWebAuthnAvailable` + production-only). The settings "Sign-in method" row
+  reads `profile.email` to label these accounts.
 
 ## Tailwind v4 + design tokens
 

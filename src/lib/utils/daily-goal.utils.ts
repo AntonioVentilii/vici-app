@@ -1,4 +1,6 @@
+import { get as storageGet, set as storageSet } from '$lib/utils/storage.utils';
 import { todayKey } from '$lib/utils/streak.utils';
+import { nonNullish } from '@dfinity/utils';
 
 // Standard daily target — predictions a user commits to making in a day.
 // Single source of truth for both the Flow session ceiling and the
@@ -51,4 +53,71 @@ export const applyDailyGoalBump = ({
 	const base = rolloverDailyGoal({ done, date, now });
 
 	return { done: Math.min(target, base + 1), date: today };
+};
+
+// localStorage mirror of the daily-goal count. The authoritative copy
+// lives on the profile (`persistDailyGoal`), but that write is a
+// best-effort async round-trip to the satellite — in a flaky in-app
+// browser webview it can silently drop, which would reset the count to
+// 0 on re-entry and let a user blow past the daily hard cap (#484). The
+// mirror is written synchronously on every commit so the cap survives a
+// refresh even when the server write is lost, and is reconciled with the
+// profile (max wins) on entry.
+// Namespaced + versioned to match the repo's other persisted keys
+// (`vici.motion.state.v3`, `vici-theme`) and leave room for a future
+// shape migration.
+const DAILY_GOAL_STORAGE_KEY = 'vici.flow.daily-goal.v1';
+
+const isDailyGoalState = (value: unknown): value is DailyGoalState =>
+	nonNullish(value) &&
+	// Reject NaN / Infinity / negatives: a corrupt or hand-edited
+	// count must not propagate through `rolloverDailyGoal` and defeat
+	// the `>= DAILY_HARD_CAP` gate.
+	Number.isFinite((value as DailyGoalState).done) &&
+	(value as DailyGoalState).done >= 0 &&
+	typeof (value as DailyGoalState).date === 'string';
+
+/** Read the localStorage mirror, or `undefined` when absent / malformed. */
+export const readDailyGoalMirror = (): DailyGoalState | undefined => {
+	const raw = storageGet<DailyGoalState>({ key: DAILY_GOAL_STORAGE_KEY });
+
+	return isDailyGoalState(raw) ? raw : undefined;
+};
+
+/** Write the localStorage mirror. Best-effort (see `storage.utils`). */
+export const writeDailyGoalMirror = (state: DailyGoalState): void => {
+	storageSet({ key: DAILY_GOAL_STORAGE_KEY, value: state });
+};
+
+/**
+ * Effective daily-goal state on Flow entry. Takes the higher of the
+ * profile count and the localStorage mirror (both rolled over to today
+ * first, so a stale day reads as 0), so a lost server write can't reset
+ * the cap. When the profile wins, the reconciled max is written back to
+ * the mirror so a later entry *without* a hydrated profile (signed out /
+ * offline / failed fetch) still gates on the real count instead of a
+ * stale lower mirror. Reads and (conditionally) writes the mirror.
+ */
+export const reconcileDailyGoalOnEntry = ({
+	done,
+	date,
+	now = new Date()
+}: {
+	done: number;
+	date?: string;
+	now?: Date;
+}): { done: number; date: string | undefined } => {
+	const mirror = readDailyGoalMirror();
+	const profileDone = rolloverDailyGoal({ done, date, now });
+	const mirrorDone = nonNullish(mirror)
+		? rolloverDailyGoal({ done: mirror.done, date: mirror.date, now })
+		: 0;
+	const best = Math.max(profileDone, mirrorDone);
+	const today = todayKey(now);
+
+	if (best > 0 && best > mirrorDone) {
+		writeDailyGoalMirror({ done: best, date: today });
+	}
+
+	return { done: best, date: best > 0 ? today : date };
 };

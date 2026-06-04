@@ -92,7 +92,7 @@
 				{t({ locale: $localeStore, key: 'onboarding.beat3.finish_cta' })}
 			</button>
 		{:else}
-			<SignInProviderStack onSuccess={onComplete} />
+			<SignInProviderStack {handle} mode="signup" onSuccess={onComplete} />
 		{/if}
 	</div>
 

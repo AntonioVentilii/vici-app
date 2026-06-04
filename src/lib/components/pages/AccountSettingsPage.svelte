@@ -4,13 +4,16 @@
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import IconIc from '$lib/components/icons/IconIC.svelte';
+	import IconPasskey from '$lib/components/icons/IconPasskey.svelte';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
+	import { resolveSignInMethod } from '$lib/utils/signin-method.utils';
 
 	/**
 	 * Account settings — current sign-in method + email address. Two
@@ -18,12 +21,12 @@
 	 * switch action, and the email card with an `idle → editing → sent`
 	 * change flow.
 	 *
-	 * Sign-in method is a display heuristic over the profile, not the
-	 * recorded provider: an address on file surfaces the email-shaped
-	 * card; with no address we show Internet Identity. Our identities do
-	 * not persist a per-provider tag, so passkey / Google collapse into
-	 * this two-way split — the same heuristic the Settings summary row
-	 * uses.
+	 * Sign-in method is derived from the provider Juno records on the
+	 * `#user` doc (`user.data.provider`), refined by whether an address is
+	 * on file: an email surfaces the email-shaped card, `google` / a plain
+	 * `webauthn` passkey surface their own glyph + label, and Internet
+	 * Identity (including Apple, which signs in through II) is the fallback.
+	 * Shared with the Settings summary row via `resolveSignInMethod`.
 	 *
 	 * Switching always signs the user out and returns them to the
 	 * sign-in screen, where the full provider stack lives; rather than
@@ -42,14 +45,20 @@
 	const email = $derived($userStore.profile?.email ?? '');
 	const hasEmail = $derived(email.length > 0);
 
-	type SignInMethod = 'email' | 'ii';
-	const method = $derived<SignInMethod>(hasEmail ? 'email' : 'ii');
+	const method = $derived(resolveSignInMethod({ user: $userStore.user, hasEmail }));
 
-	const methodLabel = $derived(
-		method === 'email'
-			? t({ locale: $localeStore, key: 'account.method.email' })
-			: t({ locale: $localeStore, key: 'account.method.ii' })
-	);
+	const methodLabel = $derived.by(() => {
+		switch (method) {
+			case 'email':
+				return t({ locale: $localeStore, key: 'account.method.email' });
+			case 'google':
+				return t({ locale: $localeStore, key: 'account.method.google' });
+			case 'passkey':
+				return t({ locale: $localeStore, key: 'account.method.passkey' });
+			default:
+				return t({ locale: $localeStore, key: 'account.method.ii' });
+		}
+	});
 
 	let switchingMethod = $state(false);
 
@@ -157,6 +166,10 @@
 			<div class="account-method-glyph" aria-hidden="true">
 				{#if method === 'email'}
 					<Mail size={20} strokeWidth={1.8} />
+				{:else if method === 'google'}
+					<IconGoogle size="20px" />
+				{:else if method === 'passkey'}
+					<IconPasskey size="20px" />
 				{:else}
 					<IconIc size="20px" />
 				{/if}

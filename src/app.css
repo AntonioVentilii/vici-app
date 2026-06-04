@@ -129,6 +129,15 @@
 	--color-accent: var(--laurel);
 	--color-accent-foreground: var(--ink);
 
+	/* Text on a gold/laurel fill. Raw-CSS call-sites
+	 * (`var(--text-on-accent, #fff)`) referenced this token but it was
+	 * never declared, so every gold CTA fell back to white-on-gold.
+	 * Alias `--color-accent-foreground` so per-theme overrides apply
+	 * (dark/light resolve to ink; peach to its warm `#3d2419`); the
+	 * `var()` resolves at the use-site, so this single `:root` decl
+	 * cascades correctly under each `[data-theme]`. */
+	--text-on-accent: var(--color-accent-foreground);
+
 	/* Plain `--accent` alias — app-shell call-sites read `var(--accent)`.
 	 * landing.css already declares it at `:root`, but own it here so the
 	 * app layer doesn't depend on landing.css import order. Mirrors
@@ -2557,18 +2566,8 @@ a.title-action::after {
 	flex: 1;
 	text-align: center;
 }
-.signin-provider-soon {
-	position: absolute;
-	right: 14px;
-	font-family: var(--font-mono);
-	font-size: 10px;
-	font-weight: 800;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: var(--text-muted);
-}
 /* Spinner is pulled out of flow so the centred label never shifts when
-   it appears or disappears. Matches the .signin-provider-soon slot. */
+   it appears or disappears. */
 .signin-spinner {
 	position: absolute;
 	right: 16px;
@@ -2662,26 +2661,6 @@ a.title-action::after {
 	color: var(--text-muted);
 	text-align: center;
 	margin: 4px 0 0;
-}
-
-/* Sent state ---------------------------------------------------- */
-.signin-sent {
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
-	gap: 12px;
-	padding: 8px 0 4px;
-}
-.signin-sent-mark {
-	width: 44px;
-	height: 44px;
-	border-radius: 999px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	background: var(--yes-wash);
-	color: var(--yes);
-	margin-bottom: 4px;
 }
 
 /* ============================================================
@@ -3991,24 +3970,6 @@ a.title-action::after {
 	color: var(--yes);
 	margin-bottom: 4px;
 }
-.signin-sent-title {
-	font-family: var(--font-sans);
-	font-size: 22px;
-	font-weight: 600;
-	letter-spacing: -0.01em;
-	margin: 0;
-	color: var(--text-base);
-}
-.signin-sent-body {
-	font-size: 14px;
-	line-height: 1.5;
-	color: var(--text-muted);
-	margin: 0 0 8px;
-}
-.signin-sent-body .num {
-	color: var(--text-base);
-}
-
 /* Footer / cross-link ------------------------------------------ */
 .signin-foot {
 	margin-top: 26px;
@@ -4063,33 +4024,6 @@ a.title-action::after {
 	text-decoration-color: var(--laurel);
 }
 
-/* Primary CTA used inside the sent state — `btn-primary` block-
-   large shape. Lives in app.css so component styles stay free of
-   duplication. */
-.signin-sent-continue {
-	display: inline-flex;
-	width: 100%;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	padding: 16px 22px;
-	border: 0;
-	border-radius: 14px;
-	background: var(--laurel);
-	color: var(--ink);
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-	font: inherit;
-	font-weight: 600;
-	font-size: 16px;
-	cursor: pointer;
-	transition:
-		background 200ms var(--ease-vici),
-		color 200ms var(--ease-vici);
-}
-.signin-sent-continue:hover {
-	background: var(--laurel-deep);
-	color: var(--text-base);
-}
 .signin-email-submit {
 	display: inline-flex;
 	width: 100%;
