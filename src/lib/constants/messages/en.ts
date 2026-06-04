@@ -1898,6 +1898,10 @@ export const enMessages = {
 	'arena.tabs.friends': 'Friends',
 	'arena.tabs.leagues': 'Leagues',
 	'arena.title': 'Arena',
+	'arena.boundary.title': "Couldn't load this tab",
+	'arena.boundary.body':
+		'Something went wrong rendering this section. Try another tab or reopen Arena.',
+	'arena.boundary.retry': 'Try again',
 	'arena.b_cta': 'See active battles',
 	'arena.b_day': 'DAY {n} OF {total}',
 	'arena.b_eyebrow': '02 · ACTIVE BATTLE',
