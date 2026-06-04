@@ -537,7 +537,105 @@
 		t({ locale: $localeStore, key, params });
 </script>
 
-<BottomSheet {isOpen} onClose={handleClose}>
+{#snippet pickerFooter()}
+	<div class="affil-picker-footer">
+		{#if mode === 'browse'}
+			{#if errorMessage}
+				<p class="affil-picker-error" role="alert">{errorMessage}</p>
+			{/if}
+
+			{#if selectedCanVerify && selectedOption}
+				<button
+					class="affil-picker-cta"
+					disabled={ctaDisabled}
+					onclick={() => openVerifyExisting(selectedOption)}
+					type="button"
+				>
+					{tr('worlds.picker.school.verify_with', { domain: selectedOption.domains?.[0] ?? '' })}
+				</button>
+				<button
+					class="affil-picker-foot-link"
+					disabled={ctaDisabled}
+					onclick={handleCommit}
+					type="button"
+				>
+					{tr('worlds.picker.school.skip_unverified')}
+				</button>
+			{:else}
+				<button
+					class="affil-picker-cta"
+					disabled={ctaDisabled}
+					onclick={handleCommit}
+					type="button"
+				>
+					{#if saving}
+						{tr('worlds.cta.joining')}
+					{:else}
+						{ctaLabel}
+					{/if}
+				</button>
+			{/if}
+		{:else if mode === 'verify-existing' && verifyTarget}
+			<button
+				class="affil-picker-cta"
+				disabled={!verifyDomainOk || submitting}
+				onclick={requestExistingCode}
+				type="button"
+			>
+				{submitting ? tr('worlds.picker.school.sending') : tr('worlds.picker.school.send_code')}
+			</button>
+			<button
+				class="affil-picker-foot-link"
+				onclick={() => verifyTarget && commitVerified(verifyTarget)}
+				type="button"
+			>
+				{tr('worlds.picker.school.skip_unverified')}
+			</button>
+		{:else if mode === 'add-confirm'}
+			<button
+				class="affil-picker-cta"
+				disabled={addName.trim().length < 3}
+				onclick={() => (mode = 'add-form')}
+				type="button"
+			>
+				{addName.trim().length < 3
+					? tr('worlds.picker.school.enter_name')
+					: tr('worlds.picker.school.continue')}
+			</button>
+		{:else if mode === 'add-form'}
+			<button
+				class="affil-picker-cta"
+				disabled={!addCanSubmit}
+				onclick={requestAddCode}
+				type="button"
+			>
+				{submitting ? tr('worlds.picker.school.sending') : tr('worlds.picker.school.send_code')}
+			</button>
+			<button class="affil-picker-foot-link" onclick={backToBrowse} type="button">
+				{tr('worlds.picker.school.no_email_unverified')}
+			</button>
+		{:else if mode === 'add-verifying'}
+			<button
+				class="affil-picker-cta"
+				disabled={!codeValid || submitting}
+				onclick={submitCode}
+				type="button"
+			>
+				{submitting ? tr('worlds.picker.school.verifying') : tr('worlds.picker.school.verify_cta')}
+			</button>
+			<button
+				class="affil-picker-foot-link"
+				disabled={submitting}
+				onclick={() => (mode = verifyTarget ? 'verify-existing' : 'add-form')}
+				type="button"
+			>
+				{tr('worlds.picker.school.wrong_address')}
+			</button>
+		{/if}
+	</div>
+{/snippet}
+
+<BottomSheet footer={pickerFooter} {isOpen} onClose={handleClose}>
 	<div class="affil-picker">
 		<header class="affil-picker-head">
 			{#if mode !== 'browse'}
@@ -742,42 +840,6 @@
 					{/if}
 				{/if}
 			</ul>
-
-			{#if errorMessage}
-				<p class="affil-picker-error" role="alert">{errorMessage}</p>
-			{/if}
-
-			{#if selectedCanVerify && selectedOption}
-				<button
-					class="affil-picker-cta"
-					disabled={ctaDisabled}
-					onclick={() => openVerifyExisting(selectedOption)}
-					type="button"
-				>
-					{tr('worlds.picker.school.verify_with', { domain: selectedOption.domains?.[0] ?? '' })}
-				</button>
-				<button
-					class="affil-picker-foot-link"
-					disabled={ctaDisabled}
-					onclick={handleCommit}
-					type="button"
-				>
-					{tr('worlds.picker.school.skip_unverified')}
-				</button>
-			{:else}
-				<button
-					class="affil-picker-cta"
-					disabled={ctaDisabled}
-					onclick={handleCommit}
-					type="button"
-				>
-					{#if saving}
-						{tr('worlds.cta.joining')}
-					{:else}
-						{ctaLabel}
-					{/if}
-				</button>
-			{/if}
 		{:else if mode === 'verify-existing' && verifyTarget}
 			<div class="affil-picker-summary">
 				<span class="affil-picker-glyph" aria-hidden="true">{verifyTarget.glyph}</span>
@@ -830,22 +892,6 @@
 			{#if verifyError}
 				<p class="affil-picker-error-inline" role="alert">{verifyError}</p>
 			{/if}
-
-			<button
-				class="affil-picker-cta"
-				disabled={!verifyDomainOk || submitting}
-				onclick={requestExistingCode}
-				type="button"
-			>
-				{submitting ? tr('worlds.picker.school.sending') : tr('worlds.picker.school.send_code')}
-			</button>
-			<button
-				class="affil-picker-foot-link"
-				onclick={() => verifyTarget && commitVerified(verifyTarget)}
-				type="button"
-			>
-				{tr('worlds.picker.school.skip_unverified')}
-			</button>
 		{:else if mode === 'add-confirm'}
 			<p class="affil-picker-hint serif-italic">
 				{tr('worlds.picker.school.add_dedupe_hint')}
@@ -888,17 +934,6 @@
 			{:else if addName.trim().length >= 3}
 				<p class="affil-picker-ok">{tr('worlds.picker.school.not_in_directory')}</p>
 			{/if}
-
-			<button
-				class="affil-picker-cta"
-				disabled={addName.trim().length < 3}
-				onclick={() => (mode = 'add-form')}
-				type="button"
-			>
-				{addName.trim().length < 3
-					? tr('worlds.picker.school.enter_name')
-					: tr('worlds.picker.school.continue')}
-			</button>
 		{:else if mode === 'add-form'}
 			<div class="affil-picker-summary">
 				<span class="affil-picker-summary-body">
@@ -960,18 +995,6 @@
 			{#if verifyError}
 				<p class="affil-picker-error-inline" role="alert">{verifyError}</p>
 			{/if}
-
-			<button
-				class="affil-picker-cta"
-				disabled={!addCanSubmit}
-				onclick={requestAddCode}
-				type="button"
-			>
-				{submitting ? tr('worlds.picker.school.sending') : tr('worlds.picker.school.send_code')}
-			</button>
-			<button class="affil-picker-foot-link" onclick={backToBrowse} type="button">
-				{tr('worlds.picker.school.no_email_unverified')}
-			</button>
 		{:else if mode === 'add-verifying'}
 			<div class="affil-picker-verify">
 				<span class="affil-picker-mail-icon" aria-hidden="true">
@@ -1009,23 +1032,6 @@
 					</p>
 				{/if}
 			</div>
-
-			<button
-				class="affil-picker-cta"
-				disabled={!codeValid || submitting}
-				onclick={submitCode}
-				type="button"
-			>
-				{submitting ? tr('worlds.picker.school.verifying') : tr('worlds.picker.school.verify_cta')}
-			</button>
-			<button
-				class="affil-picker-foot-link"
-				disabled={submitting}
-				onclick={() => (mode = verifyTarget ? 'verify-existing' : 'add-form')}
-				type="button"
-			>
-				{tr('worlds.picker.school.wrong_address')}
-			</button>
 		{/if}
 	</div>
 </BottomSheet>
@@ -1159,8 +1165,10 @@
 	}
 
 	.affil-picker-list {
-		max-height: 38vh;
-		overflow-y: auto;
+		/* No own scroll cap: the list flows inside the sheet's single
+		 * scrolling body (`.sheet-body`), while the commit CTA rides in the
+		 * sheet's non-scrolling `footer` snippet — so a long roster scrolls
+		 * the body and the CTA stays docked in view. */
 		list-style: none;
 		padding: 0;
 		margin: 0;
@@ -1622,6 +1630,17 @@
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
 		outline: none;
+	}
+
+	/* ── Docked footer ── */
+	/* Holds the commit CTA (plus the browse-mode error + the optional
+	 * skip/back foot-link) in the sheet's non-scrolling footer slot. Stacks
+	 * its rows with the same rhythm the content column used before the CTA
+	 * moved out. */
+	.affil-picker-footer {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 
 	/* ── CTAs ── */
