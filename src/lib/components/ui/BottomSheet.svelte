@@ -33,9 +33,20 @@
 		 * sheet keeps the shared default by leaving it unset.
 		 */
 		sidePadding?: string;
+		/**
+		 * Optional non-scrolling footer pinned to the bottom of the sheet.
+		 * Renders as a `flex-shrink: 0` sibling after the scrolling
+		 * `.sheet-body`, so a primary CTA stays in view no matter how long
+		 * the body grows — the body scrolls under it. The footer carries
+		 * the `env(safe-area-inset-bottom)` padding itself; the sheet's own
+		 * bottom inset collapses to the side metric when a footer is present
+		 * so the inset isn't doubled. Leave unset for the legacy single-
+		 * scroller layout (body owns the safe-area inset).
+		 */
+		footer?: Snippet;
 	}
 
-	const { isOpen, children, onClose, sidePadding }: Props = $props();
+	const { isOpen, children, onClose, sidePadding, footer }: Props = $props();
 
 	let sheetEl = $state<HTMLDivElement | undefined>();
 	let trap: FocusTrap | null = null;
@@ -127,6 +138,7 @@
 			bind:this={sheetEl}
 			style:--sheet-side-padding={sidePadding}
 			class="sheet"
+			class:has-footer={footer !== undefined}
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
@@ -137,6 +149,11 @@
 			<div class="sheet-body">
 				{@render children()}
 			</div>
+			{#if footer}
+				<div class="sheet-footer">
+					{@render footer()}
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}
@@ -224,6 +241,26 @@
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow-y: auto;
+	}
+
+	/* When a `footer` snippet is present the safe-area bottom inset moves
+	 * onto the footer (it's the element actually docked at the edge), so
+	 * drop it from the sheet's own padding to avoid doubling the gap. The
+	 * footer below re-applies it. */
+	.sheet.has-footer {
+		padding-bottom: 1.1rem;
+	}
+
+	/* Non-scrolling docked footer: a `flex-shrink: 0` sibling after the
+	 * scrolling body so a primary CTA stays in view on a long body. Carries
+	 * the `env(safe-area-inset-bottom)` inset itself and a hairline rule +
+	 * top spacing to separate it from the scrolling content above. */
+	.sheet-footer {
+		flex-shrink: 0;
+		padding-top: 0.7rem;
+		padding-bottom: env(safe-area-inset-bottom, 0px);
+		margin-top: 0.2rem;
+		border-top: 1px solid color-mix(in srgb, var(--border-base) 60%, transparent);
 	}
 
 	@keyframes sheet-rise {
