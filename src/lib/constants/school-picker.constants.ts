@@ -27,14 +27,13 @@ export const SCHOOL_FOUNDER_BADGE_CAP = 3;
 
 /**
  * Length of the membership verification code mailed to the school
- * address. The prototype's pass-2 (point of truth) uses six digits.
+ * address. Six digits balances guessability against entry friction.
  */
 export const SCHOOL_CODE_LENGTH = 6;
 
 /**
  * Time-to-live of a verification code (ms). After this the submission is
- * dead and the user must request a fresh code. Matches the prototype's
- * "~30 minutes".
+ * dead and the user must request a fresh code. Set to ~30 minutes.
  */
 export const SCHOOL_CODE_TTL_MS = 30 * 60 * 1000;
 

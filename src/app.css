@@ -637,7 +637,7 @@ html {
 	 * "Claim @…" handle button before a pick, the Apple/Email "Soon"
 	 * placeholders, Internet Identity/Passkey when the live backend isn't
 	 * available) rendered an unreadable dark label in Safari/iOS while
-	 * Chrome — matching the prototype — kept them legible. Pinning the
+	 * Chrome kept them legible. Pinning the
 	 * fill to `currentColor` makes our `color` authoritative again; it
 	 * resolves per-element so every variant and the disabled state stay
 	 * legible. We don't author `-webkit-text-fill-color` anywhere else
@@ -3419,8 +3419,8 @@ a.title-action::after {
    `routes/+layout.svelte`), NOT a Svelte `<style>` block, so `:global()`
    would be passed to the browser verbatim and dropped as an invalid
    pseudo — which is why the deck card never drifted/blurred. !important
-   overrides FlowCard's inline drag transform. Phases mirror the V1.5
-   prototype: NO → left, YES → right, SKIP → up, then a settle on TAP. */
+   overrides FlowCard's inline drag transform. Phases follow the swipe
+   directions: NO → left, YES → right, SKIP → up, then a settle on TAP. */
 .flow-card[data-coach-phase] {
 	transition:
 		transform 480ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -3438,13 +3438,12 @@ a.title-action::after {
 	transform: translate(0, -22px) !important;
 }
 /* Phase 3 ("tap card for detail") — de-blur and settle a hair above
-   rest, matching the prototype (no pulse). The prototype also reveals
-   the card's detail back here via an opacity crossfade; the deck card
-   still uses the 3D rotateY flip flagged for removal in parity item
-   C-13 (see docs/prototype-parity-audit.md), so the back-reveal is
-   deferred to that change rather than forced through the incompatible
-   opacity override (the back face is culled by backface-visibility
-   while the flipper sits at 0°). */
+   rest (no pulse). The detail back is meant to reveal here via an
+   opacity crossfade; the deck card still uses the 3D rotateY flip
+   flagged for removal, so the back-reveal is deferred to that change
+   rather than forced through the incompatible opacity override (the
+   back face is culled by backface-visibility while the flipper sits
+   at 0°). */
 .flow-card[data-coach-phase='3'] {
 	filter: none !important;
 	transform: scale(1.01) !important;
