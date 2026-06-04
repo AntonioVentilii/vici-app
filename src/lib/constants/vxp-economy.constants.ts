@@ -8,8 +8,7 @@
  * referral cap, Worlds podium) live below — the server is authoritative
  * for the actual credit; these constants drive the expected UI preview.
  *
- * See `vxp-economy.utils.ts` for the payout formula and
- * `docs/economy.md` for the full economy spec.
+ * See `vxp-economy.utils.ts` for the payout formula.
  */
 
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
@@ -17,8 +16,8 @@ import { parseToken } from '$lib/utils/parse.utils';
 
 /**
  * Per-call stake ladder, smallest → largest. The shape is curated, not
- * arithmetic — see `docs/economy.md` §2 for the psychology behind
- * the non-uniform step from 300 to 500.
+ * arithmetic — the non-uniform jump from 300 to 500 (rather than a smooth
+ * rung) is intentional.
  *
  * Frozen so call sites can rely on the literal indexing without worrying
  * about runtime mutation.
