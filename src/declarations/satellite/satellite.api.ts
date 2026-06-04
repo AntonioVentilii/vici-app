@@ -970,13 +970,13 @@ const AppLookupLeagueByInviteResultSchema = j.strictObject({
 			id: j.string(),
 			name: j.string(),
 			description: j.optional(j.string()),
-			invite_code: j.string(),
+			inviteCode: j.string(),
 			owner: j.string(),
-			created_at_ms: j.number(),
-			accent_color: j.optional(j.string()),
+			createdAtMs: j.number(),
+			accentColor: j.optional(j.string()),
 			emblem: j.optional(j.string()),
 			privacy: j.enum(['open', 'invite', 'private']),
-			image_url: j.optional(j.string())
+			imageUrl: j.optional(j.string())
 		})
 	)
 });
