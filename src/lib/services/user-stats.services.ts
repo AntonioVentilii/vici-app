@@ -1,5 +1,5 @@
 import type * as ClearingDid from '$declarations/clearing/clearing';
-import { ZERO } from '$lib/constants/app.constants';
+import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { MARKET_TAGS, isMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 import type { MarketMetadata } from '$lib/types/market-metadata';
@@ -73,8 +73,8 @@ const tagForSeries = ({
 
 /**
  * Execution price of a settlement event in [0, 1] probability units —
- * the price the user's side cleared at. The same decimal decode the
- * profile sync uses for realized P&L and the `contrarian` achievement.
+ * the price the user's side cleared at. Used to classify a win as a
+ * `contrarian` long shot (same rule the `contrarian` achievement counts on).
  */
 const settlementPrice = (event: ClearingDid.Event): number =>
 	decimalFixedValueToNumber({
@@ -83,14 +83,19 @@ const settlementPrice = (event: ClearingDid.Event): number =>
 	});
 
 /**
- * Realized VXP for a single settlement, in whole VXP. `qty` is in
- * 1e8-scaled contract units (mirrors the lifetime-P&L product in
- * `calculateAndSyncStats`); a winning settlement clears at its
- * execution `price`, so `(qty / 1e8) × price` is the payout. Rounded to
- * a whole VXP for the Oracle insight headline; never negative.
+ * Realized VXP for a single settlement — the signed cashflow the clearing
+ * `Settled` event carries on its `qty` field, in `USD_DECIMALS` base units
+ * (see `settledEventToResolvedPosition` and the `ResolvedPosition` docs).
+ * Clamped to ≥ 0 so only a win's positive payout reaches the Oracle insight.
+ *
+ * Kept at full precision (no rounding) — a heavy-favourite win clears for a
+ * real sub-1 VXP amount (the cashflow itself is below one point), and
+ * rounding here would zero it before the Oracle insight headline ever sees
+ * it ("+0 VXP"). The display layer rounds via `formatWholeVxpMagnitude`,
+ * which surfaces a sub-1 win as `<1`.
  */
 const settlementVxp = (event: ClearingDid.Event): number =>
-	Math.max(0, Math.round((Number(event.qty) / 1e8) * settlementPrice(event)));
+	Math.max(0, decimalFixedValueToNumber({ value: event.qty, decimals: USD_DECIMALS }));
 
 /**
  * Build a `UserStatsDoc` payload from raw clearing history plus the

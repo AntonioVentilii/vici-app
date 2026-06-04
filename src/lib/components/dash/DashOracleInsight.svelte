@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 
 	interface Props {
 		hasBestWin: boolean;
 		bestWinTitle: string;
-		// Realized VXP of the highlighted win, in whole VXP. Rendered as
-		// "+{vxp} VXP" in the sub-line.
+		// Realized VXP of the highlighted win, at full precision. Rendered as
+		// "+{vxp} VXP" in the sub-line via `formatWholeVxpMagnitude`, so a
+		// sub-1 favourite win reads "<1" rather than a broken "+0".
 		bestWinVxp: number;
 		// `true` when the highlighted win was against the crowd — switches
 		// the sub-line tag from "best call" to "contrarian win".
@@ -36,7 +38,7 @@
 					key: bestWinContrarian
 						? 'dash.oracle.best_call_sub_contrarian'
 						: 'dash.oracle.best_call_sub',
-					params: { vxp: bestWinVxp }
+					params: { vxp: formatWholeVxpMagnitude(bestWinVxp) }
 				})}
 			</span>
 		{:else}

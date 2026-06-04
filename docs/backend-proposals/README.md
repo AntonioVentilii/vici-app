@@ -114,7 +114,7 @@ the last-processed activity id on the stats doc and skips re-runs.
 
 ## Proposal 2 — Worlds podium monthly fan-out
 
-> **Why:** Phase 7 step 5 of the VXP economy (`docs/economy.md`).
+> **Why:** Phase 7 step 5 of the VXP economy.
 > Currently the `WorldsPage` shows the prize amounts (400 / 200 /
 > 100 VXP for gold / silver / bronze) as a static preview; the
 > monthly fan-out that credits VXP to top-3-affiliation members

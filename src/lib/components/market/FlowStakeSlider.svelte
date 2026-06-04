@@ -2,6 +2,7 @@
 	import { VXP_STAKE_LADDER, type VxpStake } from '$lib/constants/vxp-economy.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 
 	interface Props {
 		currentStake: VxpStake;
@@ -89,13 +90,13 @@
 			<span class="flow-stake-payout-lbl allcaps">
 				{t({ locale: $localeStore, key: 'card.if_yes_at', params: { pct: yesPct } })}
 			</span>
-			<span class="num text-yes">+{stakeYesWin} VXP</span>
+			<span class="num text-yes">+{formatWholeVxpMagnitude(stakeYesWin)} VXP</span>
 		</div>
 		<div class="flow-stake-payout-row">
 			<span class="flow-stake-payout-lbl allcaps">
 				{t({ locale: $localeStore, key: 'card.if_no_at', params: { pct: noPct } })}
 			</span>
-			<span class="num text-yes">+{stakeNoWin} VXP</span>
+			<span class="num text-yes">+{formatWholeVxpMagnitude(stakeNoWin)} VXP</span>
 		</div>
 		<div class="flow-stake-payout-row">
 			<span class="flow-stake-payout-lbl allcaps">

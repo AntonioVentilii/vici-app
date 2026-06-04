@@ -11,8 +11,8 @@
 	 * `data-coach-phase` so they drift in sympathy via the matching CSS
 	 * in `app.css`. Phase 3 toggles `is-flipped`; on a card with
 	 * front/back faces (the deck) that reveals the detail back, and on
-	 * the faceless onboarding card it degrades to a zoom-and-de-blur —
-	 * the prototype behaves the same way. The IDLE beat ("your turn")
+	 * the faceless onboarding card it degrades to a zoom-and-de-blur.
+	 * The IDLE beat ("your turn")
 	 * then lingers until the user acts. Dismisses on the first
 	 * pointer-down, or when the user presses Escape / Enter.
 	 *
