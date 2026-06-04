@@ -23,7 +23,7 @@
 	 * label), generative artwork band, YES / NO probability split, and
 	 * footer, plus the shared `FlowCoach` gesture overlay. The actual
 	 * commit is YES / NO only — tap-to-flip and swipe-up SKIP are not
-	 * wired here — but, mirroring the prototype, the coach still
+	 * wired here — but the coach still
 	 * demonstrates the full gesture set (the SKIP and tap cues teach the
 	 * deck's vocabulary). Phase 3 ("tap card") degrades to a
 	 * zoom-and-de-blur on this faceless card rather than a flip.
