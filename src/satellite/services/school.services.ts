@@ -57,6 +57,7 @@ import { call, httpRequest, msgCaller, time } from '@junobuild/functions/ic-cdk'
 import {
 	decodeDocData,
 	encodeDocData,
+	getAdminAccessKeys,
 	getDocStore,
 	listDocsStore,
 	setDocStore
@@ -64,6 +65,25 @@ import {
 
 const DAY_NS = 86_400_000_000_000n;
 const MANAGEMENT_CANISTER_ID = 'aaaaa-aa';
+
+/**
+ * A satellite controller principal, used as the `caller` for the
+ * server-owned, `controllers`-scoped collections (`app_config`,
+ * `school_submissions`, `schools`). The `*DocStore` APIs enforce the
+ * collection's read/write rule against the `caller` they're given — and
+ * the end user who invokes these endpoints is NOT a controller — so we
+ * read/write those collections as an admin. (User-owned `profiles` stays
+ * on the real caller.) Throws if the satellite somehow has no controller.
+ */
+const adminCaller = (): Uint8Array => {
+	const first = getAdminAccessKeys()[0]?.[0];
+
+	if (isNullish(first)) {
+		throw new Error('No satellite controller available for server config access.');
+	}
+
+	return first;
+};
 
 /** Escape a value for safe interpolation into a `listDocsStore` key regex. */
 const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -326,21 +346,23 @@ export const submitSchoolFn = async ({
 		throw new Error('Sign in before verifying a school.');
 	}
 
-	const callerBytes = caller.toUint8Array();
 	const memberText = caller.toText();
 	const lowerEmail = email.toLowerCase().trim();
+	// The server-owned collections are controllers-scoped, so read/write
+	// them as an admin (the invoking user isn't a controller).
+	const admin = adminCaller();
 
 	// 0. Server-side gate — throws unless a controller has set + enabled the
 	// relay config doc. Enforces "OFF" on the canister regardless of the FE
 	// flag, and is read before any work so a disabled feature rejects fast.
-	const relay = readRelayConfig(callerBytes);
+	const relay = readRelayConfig(admin);
 
 	// 1. Server-authoritative domain gate.
 	const resolved = resolveSchool({ email: lowerEmail, name, country });
 
 	// 2. Rate limit (per principal + per email, rolling 24h).
 	const { byPrincipal, byEmail } = recentSendCounts({
-		caller: callerBytes,
+		caller: admin,
 		memberText,
 		email: lowerEmail,
 		sinceNs: time() - DAY_NS
@@ -381,7 +403,7 @@ export const submitSchoolFn = async ({
 	setDocStore({
 		collection: Collection.SCHOOL_SUBMISSIONS,
 		key: submissionId,
-		caller: callerBytes,
+		caller: admin,
 		doc: {
 			data: encodeDocData<SchoolSubmissionDoc>(submission)
 		}
@@ -528,6 +550,8 @@ export const verifySchoolCodeFn = ({
 	const caller = msgCaller();
 	const callerBytes = caller.toUint8Array();
 	const memberText = caller.toText();
+	// Server-owned collections are controllers-scoped — access as admin.
+	const admin = adminCaller();
 
 	// Authorize: the submission key is `${member}/…`, so only its owner
 	// may verify it.
@@ -538,7 +562,7 @@ export const verifySchoolCodeFn = ({
 	const doc = getDocStore({
 		collection: Collection.SCHOOL_SUBMISSIONS,
 		key: submissionId,
-		caller: callerBytes
+		caller: admin
 	});
 
 	if (isNullish(doc)) {
@@ -552,7 +576,7 @@ export const verifySchoolCodeFn = ({
 		setDocStore({
 			collection: Collection.SCHOOL_SUBMISSIONS,
 			key: submissionId,
-			caller: callerBytes,
+			caller: admin,
 			doc: { version: doc.version, data: encodeDocData<SchoolSubmissionDoc>(next) }
 		});
 	};
@@ -583,7 +607,7 @@ export const verifySchoolCodeFn = ({
 	persist({ ...submission, status: 'verified', verifiedAtMs: now });
 
 	const status = upsertSchoolRegistry({
-		caller: callerBytes,
+		caller: admin,
 		resolved: {
 			schoolId: submission.schoolId,
 			name: submission.schoolName,
@@ -592,6 +616,8 @@ export const verifySchoolCodeFn = ({
 		}
 	});
 
+	// `profiles` is user-owned + public-write — keep the real caller so the
+	// doc stays owned by the user and the set-assert sees the right caller.
 	markProfileVerified({ caller: callerBytes, memberText });
 
 	logInfo({
