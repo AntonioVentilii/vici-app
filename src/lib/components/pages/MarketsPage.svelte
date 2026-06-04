@@ -206,7 +206,7 @@
 	// rail therefore brings the user down to the full, scrollable list rather
 	// than to a separate route. Bind the list section so we can scroll to it,
 	// honouring `prefers-reduced-motion` (no smooth animation when reduced).
-	let mainListEl = $state<HTMLElement>();
+	let mainListEl: HTMLElement | undefined = $state();
 
 	const scrollToMainList = (): void => {
 		mainListEl?.scrollIntoView({
