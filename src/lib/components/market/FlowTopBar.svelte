@@ -20,9 +20,11 @@
 	 * exits Flow.
 	 *
 	 * The bolt chip tracks the day-long goal (`dailyGoalDone` /
-	 * `dailyGoalTarget`) — deliberately a different number from the
-	 * session progress on the row below, which counts `betsCount /
-	 * maxBets`.
+	 * `dailyGoalTarget`). The secondary row's count text reads this
+	 * sitting's calls (`betsCount / maxBets`), but the thin progress bar
+	 * under it fills against the day-long goal so it resumes where the day
+	 * left off — re-entering Flow part-way through the day shows the day's
+	 * accumulated progress, not a bar reset to empty.
 	 */
 	interface Props {
 		maxBets: number;
@@ -48,7 +50,12 @@
 		onExit
 	}: Props = $props();
 
-	const progressPct = $derived(maxBets > 0 ? Math.min(100, (betsCount / maxBets) * 100) : 0);
+	// Fill against the day-long goal (cumulative) so the bar resumes from
+	// the day's accumulated progress instead of resetting to empty on a
+	// fresh sitting. The count text above still reads this sitting's calls.
+	const progressPct = $derived(
+		dailyGoalTarget > 0 ? Math.min(100, (dailyGoalDone / dailyGoalTarget) * 100) : 0
+	);
 
 	const openSettings = () => {
 		goto(resolve(AppPath.Settings));
