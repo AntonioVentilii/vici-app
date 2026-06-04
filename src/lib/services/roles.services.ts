@@ -75,7 +75,7 @@ export const setRole = async ({
 			data: {
 				role
 			},
-			...(existingDoc && { updated_at: existingDoc.updated_at })
+			...(existingDoc && { version: existingDoc.version })
 		}
 	});
 };

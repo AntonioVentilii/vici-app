@@ -255,7 +255,7 @@ export const enMessages = {
 	'account.email.used_for': 'Used for sign-in and important account notifications.',
 	'account.email.verified': 'Verified',
 	'account.intro':
-		'VICI signs you in with a passkey — your Face ID or fingerprint — or with Internet Identity or Google. No passwords, no emailed sign-in links. Switch any time — your record stays.',
+		'VICI signs you in with a passkey — your Face ID or fingerprint — or with Internet Identity or Google. Nothing to remember, no emailed sign-in links. Switch any time — your record stays.',
 	'account.method.eyebrow': 'CURRENT SIGN-IN METHOD',
 	'account.method.ii': 'Internet Identity',
 	'account.method.google': 'Google',
@@ -1898,6 +1898,10 @@ export const enMessages = {
 	'arena.tabs.friends': 'Friends',
 	'arena.tabs.leagues': 'Leagues',
 	'arena.title': 'Arena',
+	'arena.boundary.title': "Couldn't load this tab",
+	'arena.boundary.body':
+		'Something went wrong rendering this section. Try another tab or reopen Arena.',
+	'arena.boundary.retry': 'Try again',
 	'arena.b_cta': 'See active battles',
 	'arena.b_day': 'DAY {n} OF {total}',
 	'arena.b_eyebrow': '02 · ACTIVE BATTLE',

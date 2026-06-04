@@ -255,7 +255,7 @@ export const itMessages = {
 	'account.email.used_for': 'Usata per accesso e notifiche importanti.',
 	'account.email.verified': 'Verificata',
 	'account.intro':
-		'VICI ti fa accedere con una passkey — il tuo Face ID o impronta — oppure con Internet Identity o Google. Niente password, niente link di accesso via email. Cambia metodo in qualsiasi momento — i tuoi dati restano.',
+		'VICI ti fa accedere con una passkey — il tuo Face ID o impronta — oppure con Internet Identity o Google. Niente da ricordare, niente link di accesso via email. Cambia metodo in qualsiasi momento — i tuoi dati restano.',
 	'account.method.eyebrow': 'METODO DI ACCESSO',
 	'account.method.ii': 'Internet Identity',
 	'account.method.google': 'Google',
@@ -1891,6 +1891,10 @@ export const itMessages = {
 	'arena.tabs.friends': 'Amici',
 	'arena.tabs.leagues': 'Leghe',
 	'arena.title': 'Arena',
+	'arena.boundary.title': 'Impossibile caricare questa scheda',
+	'arena.boundary.body':
+		"Si è verificato un errore durante la visualizzazione di questa sezione. Prova un'altra scheda o riapri l'Arena.",
+	'arena.boundary.retry': 'Riprova',
 	'arena.b_cta': 'Vedi le sfide attive',
 	'arena.b_day': 'GIORNO {n} DI {total}',
 	'arena.b_eyebrow': '02 · SFIDA ATTIVA',

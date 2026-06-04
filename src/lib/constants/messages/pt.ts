@@ -255,7 +255,7 @@ export const ptMessages = {
 	'account.email.used_for': 'Usado para acesso e avisos importantes da conta.',
 	'account.email.verified': 'Verificado',
 	'account.intro':
-		'VICI conecta você com uma passkey — seu Face ID ou impressão digital — ou com Internet Identity ou Google. Sem senhas, sem links de acesso por email. Troque a qualquer momento — seus dados continuam.',
+		'VICI conecta você com uma passkey — seu Face ID ou impressão digital — ou com Internet Identity ou Google. Nada para lembrar, sem links de acesso por email. Troque a qualquer momento — seus dados continuam.',
 	'account.method.eyebrow': 'MÉTODO DE ACESSO',
 	'account.method.ii': 'Internet Identity',
 	'account.method.google': 'Google',
@@ -1893,6 +1893,9 @@ export const ptMessages = {
 	'arena.tabs.friends': 'Amigos',
 	'arena.tabs.leagues': 'Ligas',
 	'arena.title': 'Arena',
+	'arena.boundary.title': 'Não foi possível carregar esta aba',
+	'arena.boundary.body': 'Ocorreu um erro ao exibir esta seção. Tente outra aba ou reabra a Arena.',
+	'arena.boundary.retry': 'Tentar novamente',
 	'arena.b_cta': 'Ver combates ativos',
 	'arena.b_day': 'DIA {n} DE {total}',
 	'arena.b_eyebrow': '02 · COMBATE ATIVO',

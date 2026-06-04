@@ -254,7 +254,7 @@ export const frMessages = {
 	'account.email.used_for': 'Sert à la connexion et aux notifications importantes du compte.',
 	'account.email.verified': 'Vérifié',
 	'account.intro':
-		'VICI te connecte avec une passkey — ton Face ID ou ton empreinte — ou avec Internet Identity ou Google. Pas de mot de passe, pas de lien de connexion par e-mail. Change de méthode à tout moment — tes données restent.',
+		'VICI te connecte avec une passkey — ton Face ID ou ton empreinte — ou avec Internet Identity ou Google. Rien à retenir, pas de lien de connexion par e-mail. Change de méthode à tout moment — tes données restent.',
 	'account.method.eyebrow': 'MÉTHODE DE CONNEXION',
 	'account.method.ii': 'Internet Identity',
 	'account.method.google': 'Google',
@@ -1910,6 +1910,10 @@ export const frMessages = {
 	'arena.tabs.friends': 'Amis',
 	'arena.tabs.leagues': 'Ligues',
 	'arena.title': 'Arena',
+	'arena.boundary.title': 'Impossible de charger cet onglet',
+	'arena.boundary.body':
+		"Une erreur s'est produite lors de l'affichage de cette section. Essaie un autre onglet ou rouvre l'Arena.",
+	'arena.boundary.retry': 'Réessayer',
 	'arena.b_cta': 'Voir les duels en cours',
 	'arena.b_day': 'JOUR {n} SUR {total}',
 	'arena.b_eyebrow': '02 · DUEL EN COURS',

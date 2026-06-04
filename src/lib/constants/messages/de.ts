@@ -256,7 +256,7 @@ export const deMessages = {
 	'account.email.used_for': 'Für Anmeldung und wichtige Konto-Benachrichtigungen.',
 	'account.email.verified': 'Verifiziert',
 	'account.intro':
-		'VICI meldet dich mit einem Passkey an — deinem Face ID oder Fingerabdruck — oder mit Internet Identity oder Google. Keine Passwörter, keine per E-Mail verschickten Anmeldelinks. Methode jederzeit wechseln — deine Daten bleiben.',
+		'VICI meldet dich mit einem Passkey an — deinem Face ID oder Fingerabdruck — oder mit Internet Identity oder Google. Nichts zu merken, keine per E-Mail verschickten Anmeldelinks. Methode jederzeit wechseln — deine Daten bleiben.',
 	'account.method.eyebrow': 'AKTUELLE ANMELDEMETHODE',
 	'account.method.ii': 'Internet Identity',
 	'account.method.google': 'Google',
@@ -1910,6 +1910,10 @@ export const deMessages = {
 	'arena.tabs.friends': 'Freunde',
 	'arena.tabs.leagues': 'Ligen',
 	'arena.title': 'Arena',
+	'arena.boundary.title': 'Dieser Tab konnte nicht geladen werden',
+	'arena.boundary.body':
+		'Beim Anzeigen dieses Abschnitts ist ein Fehler aufgetreten. Versuche einen anderen Tab oder öffne die Arena erneut.',
+	'arena.boundary.retry': 'Erneut versuchen',
 	'arena.b_cta': 'Aktive Battles ansehen',
 	'arena.b_day': 'TAG {n} VON {total}',
 	'arena.b_eyebrow': '02 · AKTIVER BATTLE',
