@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { fade, fly } from 'svelte/transition';
@@ -79,14 +79,31 @@
 	// capped at 100 % so the bar / percent never overflows. The day's
 	// target (`DAILY_GOAL_TARGET`) is shared with the dashboard resume card.
 
-	// Session cap — how many calls this run continues to before the FlowEnd
-	// takeover. Starts at the daily ten; the "Push to 15 →" opt-in on FlowEnd
-	// raises it to the daily hard cap (15) so the deck continues into overtime
-	// and the engine's overtime beats (calls 11 / 13 + the overtime-complete
-	// +25 VXP) fire. Replaces the removed session-length preference as the
-	// session ceiling.
-	let sessionTarget = $state(DAILY_GOAL_TARGET);
-	const maxBets = $derived(sessionTarget);
+	// Calls already committed toward today's goal BEFORE this sitting —
+	// the cumulative daily count snapshotted on entry (after the
+	// profile / mirror reconciliation in `onMount`). The day's goal is a
+	// persisted running total, not a per-visit counter: a sitting resumes
+	// from this baseline rather than restarting at 0, so progress survives
+	// navigation (#485) and the daily hard cap holds across sittings (#484).
+	let sessionBaseline = $state(0);
+	// The user opted into overtime (Push-to-15) on FlowEnd, lifting this
+	// sitting's ceiling to the daily hard cap so the deck continues past
+	// the daily ten and the engine's overtime beats fire.
+	let pushedToOvertime = $state(false);
+
+	// This sitting's ceiling for the cumulative daily count: the daily ten
+	// normally, or the daily hard cap (15) once the day is already in
+	// overtime (entered with ten-or-more placed) or the user pushed into it.
+	const sittingGoal = $derived(
+		sessionBaseline >= DAILY_GOAL_TARGET || pushedToOvertime ? DAILY_HARD_CAP : DAILY_GOAL_TARGET
+	);
+
+	// Swipes this sitting may still place: the sitting goal less what the
+	// day already carried in. `advance()` ends the run on the SESSION
+	// counter (`betsCount`) reaching this — which is exactly the cumulative
+	// daily count reaching `sittingGoal`, so the cap holds regardless of how
+	// many times Flow is re-entered today.
+	const maxBets = $derived(Math.max(0, sittingGoal - sessionBaseline));
 
 	const resolveFlowCategory = ({
 		categoryId,
@@ -229,6 +246,30 @@
 		rolloverDailyGoal({ done: dailyGoalCount, date: dailyGoalDate, now: new Date(nowMs) })
 	);
 
+	// Keep the sitting baseline honest across a local-midnight rollover. The
+	// baseline is snapshotted on entry, but a sitting opened just before
+	// midnight would otherwise carry yesterday's count into the new day and
+	// shrink `maxBets`. While this sitting hasn't placed a call yet
+	// (`betsCount === 0`), re-snapshot against the live `nowMs` day so the
+	// rollover resets the baseline to the new day's count; once a call lands
+	// the baseline freezes (the run owns its ceiling for the rest of the
+	// sitting).
+	$effect(() => {
+		if (betsCount > 0) {
+			return;
+		}
+
+		const rolled = rolloverDailyGoal({
+			done: dailyGoalCount,
+			date: dailyGoalDate,
+			now: new Date(nowMs)
+		});
+
+		if (rolled !== untrack(() => sessionBaseline)) {
+			sessionBaseline = rolled;
+		}
+	});
+
 	// Daily hard-cap gate — once the day's calls reach the hard cap (15)
 	// across sessions, opening Flow shows a "come back tomorrow" takeover
 	// (not a fresh deck) so the 15/day model holds. Suppressed mid-session
@@ -287,6 +328,15 @@
 			});
 			dailyGoalCount = reconciledGoal.done;
 			dailyGoalDate = reconciledGoal.date;
+
+			// Snapshot the cumulative daily count this sitting resumes from.
+			// Rolled over against the current day so a stale stored date reads
+			// as a fresh 0-baseline. Drives `sittingGoal` / `maxBets`, so the
+			// sitting grants only the day's remaining headroom (#484/#485).
+			sessionBaseline = rolloverDailyGoal({
+				done: reconciledGoal.done,
+				date: reconciledGoal.date
+			});
 
 			const fromProfile = $userStore.profile?.preferences?.defaultAmount?.flow;
 
@@ -482,8 +532,8 @@
 			// on any swipe, YES / NO / SKIP all count at that layer.
 			recordMotionSwipe({
 				side: 'SKIP',
-				dailyDone: betsCount,
-				dailyTarget: sessionTarget,
+				dailyDone: sessionBaseline + betsCount,
+				dailyTarget: sittingGoal,
 				dailyJustCompleted: false,
 				dayStreak: dailyStreak
 			});
@@ -585,22 +635,24 @@
 		const isContrarian = yesProb <= 0.25 || yesProb >= 0.75;
 
 		// The motion engine's cadence (rhythm 3 / 5 / 8, overtime 11 / 13, and
-		// the daily / overtime-complete beat) runs off the SESSION counter so
-		// the rhythm and the +5 overtime beats actually fire in order. The
-		// cross-session daily-goal `done` above stays the streak source; the
-		// session cap (`sessionTarget`) is the engine's `dailyTarget`. When the
-		// user opts into Push-to-15, `sessionTarget` becomes `DAILY_HARD_CAP`
-		// (15) so `dailyTarget >= DAILY_HARD_CAP` flips the engine into overtime
-		// — emitting the calls-11 / 13 beats and the overtime-complete +25 VXP.
-		const sessionDone = betsCount; // this swipe included (incremented above)
-		const sessionJustCompleted = sessionDone >= sessionTarget;
+		// the daily / overtime-complete beat) keys off the CUMULATIVE daily
+		// call number, not this sitting's count — so a sitting resumed mid-day
+		// continues the day's rhythm from where it left off instead of
+		// replaying call #1's schedule, and the overtime beats land on the
+		// real 11th / 13th call of the day. `dailyGoalDone` (already bumped for
+		// this swipe above, capped at the hard cap) is that cumulative number;
+		// `sittingGoal` is the day's ceiling — 15 in overtime, so
+		// `dailyTarget >= DAILY_HARD_CAP` flips the engine into overtime and the
+		// calls-11 / 13 beats plus the overtime-complete +25 VXP fire.
+		const dailyDone = goalBump.done; // this swipe included (bumped above)
+		const dailyJustCompleted = dailyDone >= sittingGoal;
 
 		const motion = recordMotionSwipe({
 			side: action,
 			isContrarian,
-			dailyDone: sessionDone,
-			dailyTarget: sessionTarget,
-			dailyJustCompleted: sessionJustCompleted,
+			dailyDone,
+			dailyTarget: sittingGoal,
+			dailyJustCompleted,
 			dayStreak: dailyStreak,
 			isComeback,
 			// Seed the engine's lifetime-volume milestones from the REAL
@@ -722,6 +774,13 @@
 	};
 
 	const advance = () => {
+		// End the run when the SITTING is spent: either the deck is exhausted
+		// or this sitting has placed its share of the day's headroom
+		// (`maxBets = sittingGoal - sessionBaseline`). Since `betsCount` is
+		// this sitting's count, `betsCount < maxBets` is exactly
+		// `sessionBaseline + betsCount < sittingGoal` — the cumulative daily
+		// count below the day's ceiling — so the hard cap holds no matter how
+		// many sittings the day is split across (#484).
 		if (currentIndex < markets.length - 1 && betsCount < maxBets) {
 			currentIndex += 1;
 		} else {
@@ -733,37 +792,34 @@
 		}
 	};
 
-	// Whether the session ran into overtime — the cap was raised to the daily
-	// hard cap (15) via Push-to-15. Drives the FlowEnd "overtime" variant.
-	const overtimeSession = $derived(sessionTarget >= DAILY_HARD_CAP);
+	// Whether the day's sitting goal is the hard cap (15) — the day entered
+	// in overtime or the user opted in via Push-to-15. Drives the FlowEnd
+	// "overtime" variant.
+	const overtimeSession = $derived(sittingGoal >= DAILY_HARD_CAP);
 
 	// Push-to-15 is offered only on a regular (non-overtime) day that still
 	// has deck inventory to continue into — never once the hard cap is in
-	// play. `betsCount` reached `sessionTarget` (10) for FlowEnd to show.
-	// Also gated on `dailyGoalDone < DAILY_HARD_CAP`: a user who entered
-	// Flow with prior-day calls already counted toward the cap has no
-	// cross-session headroom left and must come back tomorrow.
+	// play. `betsCount` reached `maxBets` for FlowEnd to show. Also gated on
+	// `dailyGoalDone < DAILY_HARD_CAP`: a user who entered Flow with the day
+	// already at the cap has no cross-session headroom left and must come
+	// back tomorrow.
 	const canExtend = $derived(
 		!overtimeSession && currentIndex < markets.length - 1 && dailyGoalDone < DAILY_HARD_CAP
 	);
 
-	// "Push to 15 →" — raise the session cap to cover remaining daily
-	// headroom, dismiss the takeover, and rise the next card so the deck
-	// continues into overtime. Sizes the new target as
-	// `betsCount + (DAILY_HARD_CAP - dailyGoalDone)` so total daily calls
-	// (cross-session) never exceed DAILY_HARD_CAP.
+	// "Push to 15 →" — lift this sitting's goal to the daily hard cap,
+	// dismiss the takeover, and rise the next card so the deck continues
+	// into overtime. `sittingGoal` becomes `DAILY_HARD_CAP`, so `maxBets`
+	// (`DAILY_HARD_CAP - sessionBaseline`) covers exactly the day's remaining
+	// headroom — total daily calls (cross-session) never exceed the cap.
 	//
-	// For a fresh-day user: betsCount = 10, dailyGoalDone = 10, headroom = 5
-	// → sessionTarget = 15 = DAILY_HARD_CAP, which keeps the engine in
-	// overtime mode (dailyTarget >= DAILY_HARD_CAP) so the calls-11 / 13
-	// beats and the overtime-complete +25 VXP fire correctly.
-	//
-	// For a user who already had prior calls: headroom < 5 → sessionTarget
-	// < DAILY_HARD_CAP; the engine's overtime arc is proportionally shorter,
-	// which is intentional — total daily calls stay ≤ 15.
+	// For a fresh-day user (sessionBaseline = 0): maxBets goes 10 → 15, and
+	// `dailyTarget = sittingGoal = 15 >= DAILY_HARD_CAP` keeps the engine in
+	// overtime mode so the calls-11 / 13 beats and the overtime-complete
+	// +25 VXP fire correctly. For a user who carried prior calls in, the
+	// overtime arc is proportionally shorter — intentional, the cap stays 15.
 	const handleExtend = () => {
-		const headroom = DAILY_HARD_CAP - dailyGoalDone;
-		sessionTarget = betsCount + headroom;
+		pushedToOvertime = true;
 		completed = false;
 		currentIndex += 1;
 	};
@@ -893,7 +949,7 @@
 			{betsCount}
 			categoryLabel={topBarCategoryLabel}
 			{dailyGoalDone}
-			dailyGoalTarget={sessionTarget}
+			dailyGoalTarget={sittingGoal}
 			{dailyStreak}
 			{flameStage}
 			{maxBets}
