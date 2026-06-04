@@ -1891,6 +1891,10 @@ export const itMessages = {
 	'arena.tabs.friends': 'Amici',
 	'arena.tabs.leagues': 'Leghe',
 	'arena.title': 'Arena',
+	'arena.boundary.title': 'Impossibile caricare questa scheda',
+	'arena.boundary.body':
+		"Si è verificato un errore durante la visualizzazione di questa sezione. Prova un'altra scheda o riapri l'Arena.",
+	'arena.boundary.retry': 'Riprova',
 	'arena.b_cta': 'Vedi le sfide attive',
 	'arena.b_day': 'GIORNO {n} DI {total}',
 	'arena.b_eyebrow': '02 · SFIDA ATTIVA',

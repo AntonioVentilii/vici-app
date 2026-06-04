@@ -6,7 +6,12 @@ import {
 	VXP_BALANCE_DISPLAY_DECIMALS
 } from '$lib/constants/playground.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-import { formatAvailableUsd, formatToken, groupIntegerPart } from '$lib/utils/format.utils';
+import {
+	formatAvailableUsd,
+	formatToken,
+	groupIntegerPart,
+	safeBigInt
+} from '$lib/utils/format.utils';
 
 /**
  * Plain VXP balance — whole-number "points" feel with thousands separators
@@ -27,6 +32,19 @@ export const formatVxpBalance = ({
 		unitName: decimals,
 		displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
 	});
+
+/**
+ * A profile's whole-number `points` → VXP base units (scaled by the VXP
+ * ledger decimals), ready to hand to {@link formatVxpBalance}.
+ *
+ * `points` is stored as a `j.number()` on the profile doc, so a friend's
+ * profile may legitimately carry a float / `NaN` / `Infinity` (malformed or
+ * legacy data). Coercing it through {@link safeBigInt} — truncated and
+ * clamped to a non-negative floor — keeps the bare `BigInt(...)` from
+ * throwing a `RangeError` and taking the surrounding view down with it.
+ */
+export const vxpBaseUnitsFromPoints = (points: number): bigint =>
+	safeBigInt({ value: points, min: ZERO }) * 10n ** BigInt(VXP_TOKEN.decimals);
 
 /**
  * Clearing-margin units → `24,000 VXP` (playground display). Uses the

@@ -42,10 +42,14 @@
 	import type { Relation } from '$lib/types/relation';
 	import type { Activity } from '$lib/types/social';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
-	import { formatRelativeAgoFromNs, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+	import {
+		formatRelativeAgoFromNs,
+		safeBigInt,
+		shortenWithMiddleEllipsis
+	} from '$lib/utils/format.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
+	import { formatVxpBalance, vxpBaseUnitsFromPoints } from '$lib/utils/playground-display.utils';
 
 	/**
 	 * Friends — the Arena tab. Lives only inside Arena; there is no
@@ -565,7 +569,9 @@
 
 	const feedRelative = (timestampMs: number): string =>
 		formatRelativeAgoFromNs({
-			timestampNs: BigInt(timestampMs) * MILLISECOND_IN_NANOSECONDS,
+			// Activity timestamps come from stored docs; a fractional / NaN value
+			// would make a bare `BigInt(...)` throw, so coerce defensively.
+			timestampNs: safeBigInt({ value: timestampMs }) * MILLISECOND_IN_NANOSECONDS,
 			locale: $localeStore
 		});
 </script>
@@ -868,9 +874,7 @@
 							</span>
 						</span>
 						<span class="num ranked-h2h-you">
-							{formatVxpBalance({
-								value: BigInt(myProfile?.points ?? 0) * 10n ** BigInt(VXP_DECIMALS)
-							})}
+							{formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
 						</span>
 					</div>
 				</li>
@@ -1029,7 +1033,7 @@
 						{t({ locale: $localeStore, key: 'arena.friends.sheet.vxp' })}
 					</span>
 					<span class="friends-sheet-val num">
-						{formatVxpBalance({ value: BigInt(row.points) * 10n ** BigInt(VXP_DECIMALS) })}
+						{formatVxpBalance({ value: vxpBaseUnitsFromPoints(row.points) })}
 					</span>
 				</div>
 			</div>

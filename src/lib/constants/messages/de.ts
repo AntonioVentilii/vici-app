@@ -1910,6 +1910,10 @@ export const deMessages = {
 	'arena.tabs.friends': 'Freunde',
 	'arena.tabs.leagues': 'Ligen',
 	'arena.title': 'Arena',
+	'arena.boundary.title': 'Dieser Tab konnte nicht geladen werden',
+	'arena.boundary.body':
+		'Beim Anzeigen dieses Abschnitts ist ein Fehler aufgetreten. Versuche einen anderen Tab oder öffne die Arena erneut.',
+	'arena.boundary.retry': 'Erneut versuchen',
 	'arena.b_cta': 'Aktive Battles ansehen',
 	'arena.b_day': 'TAG {n} VON {total}',
 	'arena.b_eyebrow': '02 · AKTIVER BATTLE',
