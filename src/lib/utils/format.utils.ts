@@ -29,7 +29,11 @@ const MAX_DEFAULT_DISPLAY_DECIMALS = 8;
  * always safe.
  */
 export const safeBigInt = ({ value, min }: { value: number; min?: bigint }): bigint => {
-	const truncated = Math.trunc(Number(value) || 0);
+	const numeric = Number(value);
+	// `Math.trunc(±Infinity)` is still `±Infinity` and `Number(NaN)` stays
+	// `NaN` — `BigInt(…)` throws on both — so gate on finiteness, not a
+	// truthy check, before truncating toward zero.
+	const truncated = Number.isFinite(numeric) ? Math.trunc(numeric) : 0;
 	const result = BigInt(truncated);
 
 	return min !== undefined && result < min ? min : result;
