@@ -369,9 +369,44 @@ export interface EnsureProfileResult {
 	existed: boolean;
 }
 
+/**
+ * OpenID profile metadata Juno attaches to the auth `User` for OpenID-backed
+ * providers (Google, GitHub). Every field is optional: the IdP only returns
+ * what the user consented to share, so any of these — `email` included — can
+ * be missing on any given sign-in.
+ */
+interface OpenIdProviderProfile {
+	email?: string;
+	name?: string;
+	givenName?: string;
+	familyName?: string;
+}
+
+/**
+ * Reads the OpenID claims off the auth `User`. They live under
+ * `user.data.providerData.openid` since the `@junobuild/core` v5 auth-client
+ * migration (the pre-v5 `details.profile` shape this used to read no longer
+ * exists). Returns `undefined` for providers that carry no OpenID metadata —
+ * Internet Identity (including Apple-via-II), passkey/WebAuthn, and the dev
+ * shortcut.
+ */
+const extractOpenIdProfile = (user: User): OpenIdProviderProfile | undefined => {
+	const { providerData } = user.data as {
+		providerData?: { openid?: OpenIdProviderProfile };
+	};
+
+	return providerData?.openid;
+};
+
 export const ensureProfile = async (user: User): Promise<EnsureProfileResult> => {
 	const principal = user.key;
 	const profileDoc = await getProfile(principal);
+
+	const openid = extractOpenIdProfile(user);
+	// Best-effort: the IdP only returns an email when the user consented to
+	// share it (and only OpenID providers expose one at all), so this is
+	// frequently empty — capture it when present, never depend on it.
+	const providerEmail = openid?.email?.trim() ?? '';
 
 	// The synthetic shell from `getProfile` never carries a version. To
 	// detect "has the satellite ever stored a profile for this
@@ -386,26 +421,48 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	});
 
 	if (nonNullish(existing) && nonNullish(existing.version)) {
+		// Backfill the provider email onto a returning user whose profile
+		// has none yet — e.g. they signed up before we captured it, or via a
+		// provider that didn't expose one then. Only when currently empty:
+		// never overwrite an address the user already has (a manually-entered
+		// one, or one from an earlier provider), so switching IdPs can't
+		// silently replace it. Best-effort — a failed backfill never blocks
+		// sign-in.
+		if (providerEmail.length > 0 && (existing.data.email ?? '').trim().length === 0) {
+			const backfilled: UserProfile = { ...existing.data, email: providerEmail };
+
+			try {
+				// Write against the version we just read (optimistic concurrency)
+				// rather than via `upsertProfile`, which re-reads and overlays this
+				// full snapshot onto the latest doc — that would clobber any other
+				// field changed in between. A stale version makes `setDoc` fail, so
+				// a concurrent write wins; this best-effort backfill just no-ops.
+				await setDoc({
+					collection: Collection.PROFILES,
+					doc: { key: principal, version: existing.version, data: backfilled }
+				});
+
+				return { profile: backfilled, existed: true };
+			} catch (err: unknown) {
+				console.warn('profile email backfill failed', err);
+			}
+		}
+
 		return { profile: existing.data, existed: true };
 	}
 
-	const { details } = user.data as { details?: Record<string, unknown> };
-	const gProfile =
-		nonNullish(details) && 'profile' in details && nonNullish(details.profile)
-			? (details.profile as {
-					name?: string;
-					given_name?: string;
-					family_name?: string;
-				})
-			: undefined;
-	const fullName = nonNullish(gProfile)
-		? (gProfile.name ?? [gProfile.given_name, gProfile.family_name].filter(Boolean).join(' '))
+	const fullName = nonNullish(openid)
+		? (openid.name ?? [openid.givenName, openid.familyName].filter(Boolean).join(' '))
 		: '';
 	const nickname = fullName.trim().length > 0 ? fullName : profileDoc.data.nickname;
 
 	const data: UserProfile = {
 		...profileDoc.data,
-		nickname
+		nickname,
+		// Seed the provider email on first touch; the pending-onboarding drain
+		// in `(app)/+layout.svelte` preserves it (it only sets `email` when its
+		// own payload carries one — the email-passkey flow).
+		...(providerEmail.length > 0 && { email: providerEmail })
 	};
 
 	// First-touch bootstrap. The default nickname is the user's
