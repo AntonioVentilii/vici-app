@@ -1108,6 +1108,210 @@ const WC_SHIRT = {
 	jersey: '#3E5A38'
 } as const;
 
+// Per-nation scene data for the featured-event advancement markets
+// (`wc-br-r16`, `wc-it-r16`, …). These ids are app-specific (ISO-3166
+// alpha-2 per nation) and never matched a hand-authored `recipes` key,
+// so they used to fall to the generic figure. Each entry pairs the
+// nation's flag colours + flag layout with a home-kit colour and a
+// figure trait set — reusing the same backdrop / face vocabulary as the
+// curated recipes — so every nation card renders a distinct, flag-true
+// scene. Keyed by lowercased alpha-2 code; the renderer resolves any
+// `wc-{cc}-*` seed against this table before the generic fallback.
+type WCFlagLayout = 'horiz' | 'vert' | 'diag';
+
+interface WCNation {
+	c1: string;
+	c2: string;
+	c3: string;
+	layout: WCFlagLayout;
+	shirt: string;
+	shadow: string;
+	skin: keyof typeof WC_SKIN;
+	hair: keyof typeof WC_HAIR;
+	hairStyle: WCHairStyle;
+}
+
+const WC_NATIONS: Record<string, WCNation> = {
+	// Favourites — kits + figure traits mirror the curated winner recipes.
+	br: {
+		c1: '#FFD800',
+		c2: '#0F8C3A',
+		c3: '#0033A0',
+		layout: 'diag',
+		shirt: WC_SHIRT.brazil,
+		shadow: '#C4A300',
+		skin: 'umber',
+		hair: 'jet',
+		hairStyle: 'short'
+	}, // Brazil
+	es: {
+		c1: '#C8102E',
+		c2: '#F1BF00',
+		c3: '#C8102E',
+		layout: 'horiz',
+		shirt: WC_SHIRT.spain,
+		shadow: '#8A0E20',
+		skin: 'almond',
+		hair: 'brown',
+		hairStyle: 'short'
+	}, // Spain
+	fr: {
+		c1: '#0055A4',
+		c2: '#F2ECDC',
+		c3: '#EF4135',
+		layout: 'vert',
+		shirt: WC_SHIRT.france,
+		shadow: '#003A78',
+		skin: 'sand',
+		hair: 'auburn',
+		hairStyle: 'short'
+	}, // France
+	ar: {
+		c1: '#75AADB',
+		c2: '#F2ECDC',
+		c3: '#75AADB',
+		layout: 'horiz',
+		shirt: WC_SHIRT.arg,
+		shadow: '#5189B8',
+		skin: 'olive',
+		hair: 'brown',
+		hairStyle: 'curly'
+	}, // Argentina
+	// Tier two.
+	en: {
+		c1: '#F2ECDC',
+		c2: '#C8102E',
+		c3: '#F2ECDC',
+		layout: 'horiz',
+		shirt: '#F2ECDC',
+		shadow: '#C2BBA8',
+		skin: 'sand',
+		hair: 'brown',
+		hairStyle: 'short'
+	}, // England
+	de: {
+		c1: '#000000',
+		c2: '#DD0000',
+		c3: '#FFCE00',
+		layout: 'horiz',
+		shirt: '#F2ECDC',
+		shadow: '#C2BBA8',
+		skin: 'sand',
+		hair: 'blonde',
+		hairStyle: 'short'
+	}, // Germany
+	pt: {
+		c1: '#046A38',
+		c2: '#DA291C',
+		c3: '#FFE05A',
+		layout: 'vert',
+		shirt: '#DA291C',
+		shadow: '#8E1A12',
+		skin: 'almond',
+		hair: 'brown',
+		hairStyle: 'short'
+	}, // Portugal
+	nl: {
+		c1: '#AE1C28',
+		c2: '#F2ECDC',
+		c3: '#21468B',
+		layout: 'horiz',
+		shirt: '#EE7700',
+		shadow: '#A85200',
+		skin: 'sand',
+		hair: 'blonde',
+		hairStyle: 'short'
+	}, // Netherlands
+	be: {
+		c1: '#000000',
+		c2: '#FAE042',
+		c3: '#ED2939',
+		layout: 'vert',
+		shirt: '#ED2939',
+		shadow: '#A01825',
+		skin: 'sand',
+		hair: 'brown',
+		hairStyle: 'short'
+	}, // Belgium
+	it: {
+		c1: '#008C45',
+		c2: '#F2ECDC',
+		c3: '#CD212A',
+		layout: 'vert',
+		shirt: '#0066B2',
+		shadow: '#003F73',
+		skin: 'almond',
+		hair: 'charcoal',
+		hairStyle: 'short'
+	}, // Italy
+	hr: {
+		c1: '#C8102E',
+		c2: '#F2ECDC',
+		c3: '#171796',
+		layout: 'horiz',
+		shirt: '#C8102E',
+		shadow: '#8A0E20',
+		skin: 'sand',
+		hair: 'brown',
+		hairStyle: 'short'
+	}, // Croatia
+	uy: {
+		c1: '#7BAFD4',
+		c2: '#F2ECDC',
+		c3: '#7BAFD4',
+		layout: 'horiz',
+		shirt: '#5CBFEB',
+		shadow: '#3E8CB0',
+		skin: 'olive',
+		hair: 'brown',
+		hairStyle: 'short'
+	}, // Uruguay
+	us: {
+		c1: '#C8102E',
+		c2: '#F2ECDC',
+		c3: '#0A3161',
+		layout: 'horiz',
+		shirt: WC_SHIRT.usaW,
+		shadow: '#B0A480',
+		skin: 'bronze',
+		hair: 'brown',
+		hairStyle: 'cap'
+	}, // USA
+	ma: {
+		c1: '#C1272D',
+		c2: '#006233',
+		c3: '#C1272D',
+		layout: 'horiz',
+		shirt: '#C1272D',
+		shadow: '#7E191D',
+		skin: 'bronze',
+		hair: 'jet',
+		hairStyle: 'short'
+	}, // Morocco
+	jp: {
+		c1: '#F2ECDC',
+		c2: '#BC002D',
+		c3: '#F2ECDC',
+		layout: 'horiz',
+		shirt: '#0A1A6B',
+		shadow: '#06104A',
+		skin: 'almond',
+		hair: 'jet',
+		hairStyle: 'short'
+	}, // Japan
+	sn: {
+		c1: '#00853F',
+		c2: '#FDEF42',
+		c3: '#E31B23',
+		layout: 'vert',
+		shirt: '#00853F',
+		shadow: '#005A2A',
+		skin: 'mahog',
+		hair: 'jet',
+		hairStyle: 'short'
+	} // Senegal
+};
+
 // Cap brim + cap-band reference colors used inside `wcFace` so the
 // hair-style="cap" branch reads naturally.
 const WC_CAP_DARK = '#2A211A';
@@ -3237,7 +3441,41 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 		return scene;
 	};
 
-	const recipe = recipes[seedKey] ?? generativeFallback;
+	// Per-nation advancement scene — flag backdrop + home kit + figure,
+	// driven by the `WC_NATIONS` table. Renders a flag-true card for the
+	// featured-event markets (`wc-br-r16`, `wc-it-r16`, …) and any other
+	// `wc-{cc}-*` id whose code is a known nation.
+	const nationScene = (n: WCNation): string => {
+		const flag = { c1: n.c1, c2: n.c2, c3: n.c3 };
+		const bg =
+			n.layout === 'diag'
+				? bgFlagDiag(flag)
+				: n.layout === 'vert'
+					? bgFlagVert(flag)
+					: bgFlagHoriz(flag);
+
+		return (
+			bg +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: n.skin,
+				hair: n.hair,
+				hairStyle: n.hairStyle,
+				shirt: n.shirt,
+				shirtShadow: n.shadow,
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 })
+		);
+	};
+
+	// Resolution order: curated recipe → known nation → seed-varied
+	// fallback. The nation tier only fires on non-curated ids (recipes
+	// win first), so it can't shadow a hand-authored scene.
+	const nationCode = /^wc-([a-z]{2})(?:-|$)/.exec(seedKey)?.[1];
+	const nation = nationCode ? WC_NATIONS[nationCode] : undefined;
+	const recipe = recipes[seedKey] ?? (nation ? () => nationScene(nation) : generativeFallback);
 
 	let s = recipe();
 
