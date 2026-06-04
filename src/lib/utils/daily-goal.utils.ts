@@ -63,11 +63,18 @@ export const applyDailyGoalBump = ({
 // mirror is written synchronously on every commit so the cap survives a
 // refresh even when the server write is lost, and is reconciled with the
 // profile (max wins) on entry.
-const DAILY_GOAL_STORAGE_KEY = 'flowDailyGoal';
+// Namespaced + versioned to match the repo's other persisted keys
+// (`vici.motion.state.v3`, `vici-theme`) and leave room for a future
+// shape migration.
+const DAILY_GOAL_STORAGE_KEY = 'vici.flow.daily-goal.v1';
 
 const isDailyGoalState = (value: unknown): value is DailyGoalState =>
 	nonNullish(value) &&
-	typeof (value as DailyGoalState).done === 'number' &&
+	// Reject NaN / Infinity / negatives: a corrupt or hand-edited
+	// count must not propagate through `rolloverDailyGoal` and defeat
+	// the `>= DAILY_HARD_CAP` gate.
+	Number.isFinite((value as DailyGoalState).done) &&
+	(value as DailyGoalState).done >= 0 &&
 	typeof (value as DailyGoalState).date === 'string';
 
 /** Read the localStorage mirror, or `undefined` when absent / malformed. */
@@ -86,7 +93,10 @@ export const writeDailyGoalMirror = (state: DailyGoalState): void => {
  * Effective daily-goal state on Flow entry. Takes the higher of the
  * profile count and the localStorage mirror (both rolled over to today
  * first, so a stale day reads as 0), so a lost server write can't reset
- * the cap. Pure aside from the mirror read.
+ * the cap. When the profile wins, the reconciled max is written back to
+ * the mirror so a later entry *without* a hydrated profile (signed out /
+ * offline / failed fetch) still gates on the real count instead of a
+ * stale lower mirror. Reads and (conditionally) writes the mirror.
  */
 export const reconcileDailyGoalOnEntry = ({
 	done,
@@ -103,6 +113,11 @@ export const reconcileDailyGoalOnEntry = ({
 		? rolloverDailyGoal({ done: mirror.done, date: mirror.date, now })
 		: 0;
 	const best = Math.max(profileDone, mirrorDone);
+	const today = todayKey(now);
 
-	return { done: best, date: best > 0 ? todayKey(now) : date };
+	if (best > 0 && best > mirrorDone) {
+		writeDailyGoalMirror({ done: best, date: today });
+	}
+
+	return { done: best, date: best > 0 ? today : date };
 };
