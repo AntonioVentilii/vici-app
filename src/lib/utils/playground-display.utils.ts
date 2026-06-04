@@ -40,7 +40,7 @@ export const formatVxpBalance = ({
  * winning call on a heavy favourite credits a real *sub-1* amount — e.g. a 50
  * VXP stake on a 0.99 side nets ~0.43 VXP, since the server pays the true
  * `stake·(1/price − 1)` cashflow minus fees with **no** payout floor (see
- * `docs/economy.md` and the `vxpNetWin` formula). Rounding such a win to the
+ * the `vxpNetWin` formula). Rounding such a win to the
  * nearest whole point would render it as `0` — a genuine win that reads as
  * nothing ("+0 VXP"). To keep the points feel without lying, any non-zero
  * amount below one whole point renders as `<1`; one point or more rounds to

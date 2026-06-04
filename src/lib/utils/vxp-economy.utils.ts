@@ -8,7 +8,7 @@ import {
 /**
  * Compute the *net* VXP a user would gain on a winning call.
  *
- * Formula (`docs/economy.md` §1):
+ * Formula:
  *
  *   payout_on_win = stake / max(P_WIN_FLOOR, p_win)
  *   net_win       = payout_on_win − stake
@@ -24,7 +24,8 @@ import {
  * caller decides display granularity via `formatWholeVxpMagnitude`, which
  * renders a sub-1 win as `<1` rather than rounding it to a misleading `+1`
  * or a broken `+0`. The ~0.15% settlement fee is not modelled here — it is
- * a documented, negligible gap (`docs/economy.md`).
+ * a known, negligible gap (the FE shows `<1` rather than over-promising a
+ * `+1` the settlement won't credit).
  */
 export const vxpNetWin = ({
 	stake,
