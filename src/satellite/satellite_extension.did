@@ -143,6 +143,10 @@ type AppResumeMyAccountResult = record { ok : bool; resumed : bool };
 
 type AppSendFriendRequestArgs = record { target : text };
 
+type AppSubmitSchoolArgs = record { name : text; country : opt text; school_id : opt text; email : text; locale : text };
+
+type AppSubmitSchoolResult = record { submission_id : text };
+
 type AppSweepExpiredDeletionsResult = record { swept : float64 };
 
 type AppTransferLeagueOwnershipArgs = record { league_id : text; new_owner_principal : text };
@@ -160,6 +164,10 @@ type AppUpsertMarketMetadataResult = record { metadata : record { series_id : te
 type AppUpsertMarketTranslationArgs = record { series_id : text; locale : text; data : record { title : text; description : text; outcomes : vec record { id : text; title : text } } };
 
 type AppUpsertMarketTranslationResult = record { translation : record { series_id : text; locale : text; title : text; description : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
+
+type AppVerifySchoolCodeArgs = record { submission_id : text; code : text };
+
+type AppVerifySchoolCodeResult = record { ok : bool; school_id : opt text; status : opt variant { pending; public }; message : opt text };
 
 service : {
 	app_check_friendship : (AppCheckFriendshipArgs) -> (AppCheckFriendshipResult) query;
@@ -210,9 +218,11 @@ service : {
 	app_resolve_tournament_round : (AppResolveTournamentRoundArgs) -> (AppResolveTournamentRoundResult);
 	app_resume_my_account : () -> (AppResumeMyAccountResult);
 	app_send_friend_request : (AppSendFriendRequestArgs) -> ();
+	app_submit_school : (AppSubmitSchoolArgs) -> (AppSubmitSchoolResult);
 	app_sweep_expired_deletions : () -> (AppSweepExpiredDeletionsResult);
 	app_transfer_league_ownership : (AppTransferLeagueOwnershipArgs) -> (AppTransferLeagueOwnershipResult);
 	app_trigger_tournament_draw : (AppTriggerTournamentDrawArgs) -> (AppTriggerTournamentDrawResult);
 	app_upsert_market_metadata : (AppUpsertMarketMetadataArgs) -> (AppUpsertMarketMetadataResult);
 	app_upsert_market_translation : (AppUpsertMarketTranslationArgs) -> (AppUpsertMarketTranslationResult);
+	app_verify_school_code : (AppVerifySchoolCodeArgs) -> (AppVerifySchoolCodeResult);
 };

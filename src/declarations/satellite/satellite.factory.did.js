@@ -877,6 +877,14 @@ export const idlFactory = ({ IDL }) => {
 		)
 	});
 	const AppSendFriendRequestArgs = IDL.Record({ target: IDL.Text });
+	const AppSubmitSchoolArgs = IDL.Record({
+		country: IDL.Opt(IDL.Text),
+		name: IDL.Text,
+		school_id: IDL.Opt(IDL.Text),
+		locale: IDL.Text,
+		email: IDL.Text
+	});
+	const AppSubmitSchoolResult = IDL.Record({ submission_id: IDL.Text });
 	const AppSweepExpiredDeletionsResult = IDL.Record({ swept: IDL.Float64 });
 	const AppTransferLeagueOwnershipArgs = IDL.Record({
 		new_owner_principal: IDL.Text,
@@ -985,6 +993,16 @@ export const idlFactory = ({ IDL }) => {
 			description: IDL.Text,
 			outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
 		})
+	});
+	const AppVerifySchoolCodeArgs = IDL.Record({
+		code: IDL.Text,
+		submission_id: IDL.Text
+	});
+	const AppVerifySchoolCodeResult = IDL.Record({
+		ok: IDL.Bool,
+		status: IDL.Opt(IDL.Variant({ pending: IDL.Null, public: IDL.Null })),
+		school_id: IDL.Opt(IDL.Text),
+		message: IDL.Opt(IDL.Text)
 	});
 
 	return IDL.Service({
@@ -1116,6 +1134,7 @@ export const idlFactory = ({ IDL }) => {
 		app_resume_my_account: IDL.Func([], [AppResumeMyAccountResult], []),
 		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
 		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [], []),
+		app_submit_school: IDL.Func([AppSubmitSchoolArgs], [AppSubmitSchoolResult], []),
 		app_sweep_expired_deletions: IDL.Func([], [AppSweepExpiredDeletionsResult], []),
 		app_transfer_league_ownership: IDL.Func(
 			[AppTransferLeagueOwnershipArgs],
@@ -1136,7 +1155,8 @@ export const idlFactory = ({ IDL }) => {
 			[AppUpsertMarketTranslationArgs],
 			[AppUpsertMarketTranslationResult],
 			[]
-		)
+		),
+		app_verify_school_code: IDL.Func([AppVerifySchoolCodeArgs], [AppVerifySchoolCodeResult], [])
 	});
 };
 

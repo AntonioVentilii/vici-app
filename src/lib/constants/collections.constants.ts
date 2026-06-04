@@ -116,7 +116,28 @@ export const Collection = {
 	 * calls) and bold-caller (best accuracy among users whose median consensus-at-call < 0.4)
 	 * album awards.
 	 */
-	USER_MONTHLY_STATS: collections.USER_MONTHLY_STATS
+	USER_MONTHLY_STATS: collections.USER_MONTHLY_STATS,
+	/**
+	 * School-email verification submissions (backend item B.1). One doc per pending
+	 * `(member, email, school)` verification, holding an `FNV-1a(code|salt)` digest (never the
+	 * plaintext code), a ~30-min TTL, and an attempt counter. Server-owned: the satellite's
+	 * `submitSchool` / `verifySchoolCode` endpoints are the only writers (collection is
+	 * controllers-scoped), so a client can neither read a digest nor reset an attempt counter.
+	 */
+	SCHOOL_SUBMISSIONS: collections.SCHOOL_SUBMISSIONS,
+	/**
+	 * Verified-school registry (backend item B.1). One doc per `schoolId` holding the running
+	 * `verifiedMemberCount` and the `pending → public` gate (a school goes public at 3 verified
+	 * members). Written exclusively by `verifySchoolCode` (controllers-scoped write); public read
+	 * so picker surfaces can list public schools.
+	 */
+	SCHOOLS: collections.SCHOOLS,
+	/**
+	 * Server runtime config (backend item B.1). Controllers read+write; holds non-repo config such
+	 * as the `vici-courier` email-relay URL + bearer token, set by a controller after deploy so no
+	 * secret ever lands in git.
+	 */
+	APP_CONFIG: collections.APP_CONFIG
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

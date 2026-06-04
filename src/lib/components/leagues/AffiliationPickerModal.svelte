@@ -427,7 +427,8 @@
 			const { submissionId: id } = await submitSchool({
 				name: addName.trim(),
 				country: inferredCountry,
-				email: addEmail
+				email: addEmail,
+				locale: $localeStore
 			});
 			submissionId = id;
 			code = '';
@@ -458,7 +459,8 @@
 				name: target.name,
 				schoolId: target.id,
 				country: target.country ?? homeCountry,
-				email: verifyEmail
+				email: verifyEmail,
+				locale: $localeStore
 			});
 			submissionId = id;
 			code = '';
