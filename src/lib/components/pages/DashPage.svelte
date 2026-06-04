@@ -58,7 +58,7 @@
 	import { DAILY_GOAL_TARGET } from '$lib/utils/daily-goal.utils';
 	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
+	import { formatVxpBalance, formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	type TimeWindow = '7d' | '30d' | '90d' | 'All';
@@ -498,13 +498,14 @@
 	 * Past-prediction row PnL → "+240 VXP" / "−180 VXP". `pnlUsdMicroUnits`
 	 * is the signed `cashflow_usd` carried on the `Settled` event in
 	 * `USD_DECIMALS` units; converted via `decimalFixedValueToNumber` and
-	 * rounded to whole VXP for the row chip.
+	 * formatted whole-VXP for the row chip. A real sub-1 favourite win reads
+	 * "+<1 VXP" (via `formatWholeVxpMagnitude`) rather than a broken "+0".
 	 */
 	const fmtPastRowAmount = (pnlUsdMicroUnits: bigint): string => {
 		const n = decimalFixedValueToNumber({ value: pnlUsdMicroUnits, decimals: USD_DECIMALS });
 		const sign = n >= 0 ? '+' : '−';
 
-		return `${sign}${Math.round(Math.abs(n))} VXP`;
+		return `${sign}${formatWholeVxpMagnitude(n)} VXP`;
 	};
 
 	const fmtTimeLeft = (expiryMs: number): { label: string; urgent: boolean } => {
@@ -648,7 +649,7 @@
 								class:is-neg={digest.netVxp < 0}
 								class:is-pos={digest.netVxp >= 0}
 							>
-								{digest.netVxp >= 0 ? '+' : '−'}{Math.abs(digest.netVxp).toLocaleString()}
+								{digest.netVxp >= 0 ? '+' : '−'}{formatWholeVxpMagnitude(digest.netVxp)}
 								{t({ locale: $localeStore, key: 'flow.reso.vxp' })}
 							</span>
 							<span class="dash-reso-dim">

@@ -7,6 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import FriendsEmptyState from '$lib/components/arena/FriendsEmptyState.svelte';
+	import RankedRow from '$lib/components/arena/RankedRow.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -794,7 +795,7 @@
 		<div class="friends-loading">
 			<LoadingSpinner />
 		</div>
-	{:else if rankedFriends.length > 0}
+	{:else}
 		<section class="friends-section">
 			<header class="section-eyebrow">
 				<span>{t({ locale: $localeStore, key: 'arena.friends.ranked.eyebrow' })}</span>
@@ -811,77 +812,57 @@
 					<span class="num section-count">{rankedFriends.length}</span>
 				</span>
 			</header>
-			<ul class="ranked-list">
-				{#each visibleRanked as row, idx (row.friendId)}
-					{@const h2h = formatH2h(row.accuracy)}
-					<li>
-						<button class="ranked-row" onclick={() => openFriendSheet(row)} type="button">
-							<span class="num ranked-num">{String(idx + 1).padStart(2, '0')}</span>
-							<span class="ranked-avatar">
-								<Avatar
-									class="h-full w-full"
-									avatar={row.profile?.avatar}
-									nickname={row.profile?.nickname}
-									owner={row.profile?.owner ?? row.friendId}
-								/>
-							</span>
-							<span class="ranked-copy">
-								<span class="ranked-name">
-									@{row.profile?.nickname ??
-										t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
-								</span>
-								<span class="num ranked-meta">
-									{formatPct(row.accuracy)} · {row.streak}d
-								</span>
-							</span>
-							<span class="ranked-h2h num" class:is-ahead={h2h.ahead} class:is-behind={!h2h.ahead}>
-								{h2h.value}
-							</span>
-						</button>
-					</li>
-				{/each}
-				{#if hiddenRankedCount > 0}
-					<li>
-						<button class="ranked-see-all" onclick={() => (showAllRanked = true)} type="button">
-							{t({
-								locale: $localeStore,
-								key: 'arena.friends.ranked.see_all',
-								params: { count: rankedFriends.length }
-							})}
-						</button>
-					</li>
-				{/if}
-				<li class="ranked-li-you">
-					<div class="ranked-row ranked-row-you">
-						<span class="num ranked-num is-you">
-							{t({ locale: $localeStore, key: 'arena.friends.ranked.you' })}
-						</span>
-						<span class="ranked-avatar">
-							<Avatar
-								class="h-full w-full"
-								avatar={myProfile?.avatar}
-								nickname={myProfile?.nickname}
-								owner={userPrincipal}
-							/>
-						</span>
-						<span class="ranked-copy">
-							<span class="ranked-name ranked-name-you">
-								@{myProfile?.nickname ??
+			{#if rankedFriends.length === 0}
+				<FriendsEmptyState />
+			{:else}
+				<ul class="ranked-list">
+					{#each visibleRanked as row, idx (row.friendId)}
+						{@const h2h = formatH2h(row.accuracy)}
+						<li>
+							<RankedRow
+								accuracyLabel={formatPct(row.accuracy)}
+								avatar={row.profile?.avatar}
+								displayName={row.profile?.nickname ??
 									t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
-							</span>
-							<span class="num ranked-meta">
-								{formatPct(myAccuracy)} · {myProfile?.streak ?? 0}d
-							</span>
-						</span>
-						<span class="num ranked-h2h-you">
-							{formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
-						</span>
-					</div>
-				</li>
-			</ul>
+								h2hAhead={h2h.ahead}
+								h2hValue={h2h.value}
+								nickname={row.profile?.nickname}
+								numLabel={String(idx + 1).padStart(2, '0')}
+								onOpen={() => openFriendSheet(row)}
+								owner={row.profile?.owner ?? row.friendId}
+								streak={row.streak}
+								variant="friend"
+							/>
+						</li>
+					{/each}
+					{#if hiddenRankedCount > 0}
+						<li>
+							<button class="ranked-see-all" onclick={() => (showAllRanked = true)} type="button">
+								{t({
+									locale: $localeStore,
+									key: 'arena.friends.ranked.see_all',
+									params: { count: rankedFriends.length }
+								})}
+							</button>
+						</li>
+					{/if}
+					<li class="ranked-li-you">
+						<RankedRow
+							accuracyLabel={formatPct(myAccuracy)}
+							avatar={myProfile?.avatar}
+							displayName={myProfile?.nickname ??
+								t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
+							nickname={myProfile?.nickname}
+							numLabel={t({ locale: $localeStore, key: 'arena.friends.ranked.you' })}
+							owner={userPrincipal}
+							streak={myProfile?.streak ?? 0}
+							variant="you"
+							vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
+						/>
+					</li>
+				</ul>
+			{/if}
 		</section>
-	{:else}
-		<FriendsEmptyState />
 	{/if}
 
 	<!-- Friends feed ──────────────────────────────────────────── -->
@@ -1551,130 +1532,18 @@
 		border-top: 1px solid var(--border-base);
 	}
 
-	.ranked-row {
-		display: grid;
-		grid-template-columns: auto auto minmax(0, 1fr) auto;
-		gap: 0.65rem;
-		align-items: center;
-		width: 100%;
-		padding: 0.7rem 0.85rem;
-		border: 0;
-		background: transparent;
-		text-align: left;
-		cursor: pointer;
-		transition: background 140ms ease;
-	}
-
-	.ranked-row:hover {
-		background: color-mix(in srgb, var(--text-base) 3%, transparent);
-	}
-
 	/* Sticky YOU row — pinned to the bottom edge of the rank list
 	   with a gold-tinted backdrop blur.
 	   `position: sticky` lives on the `<li>` wrapper (not the
-	   inner `<div>`): a sticky element is constrained by its
-	   containing block, and the `<li>` is a direct child of the
-	   scrollable `.ranked-list` — putting sticky on the inner
-	   `<div>` would constrain it to the `<li>`'s own height, which
-	   is the row itself, so no visible sticking. */
+	   inner row element rendered by `RankedRow`): a sticky element
+	   is constrained by its containing block, and the `<li>` is a
+	   direct child of the scrollable `.ranked-list` — putting sticky
+	   on the inner row would constrain it to the `<li>`'s own height,
+	   which is the row itself, so no visible sticking. */
 	.ranked-li-you {
 		position: sticky;
 		bottom: 0;
 		z-index: 2;
-	}
-
-	.ranked-row-you {
-		background: color-mix(in srgb, var(--color-primary) 10%, var(--bg-popover));
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		box-shadow: 0 -6px 16px -8px rgba(0, 0, 0, 0.3);
-		cursor: default;
-	}
-
-	.ranked-row-you:hover {
-		background: color-mix(in srgb, var(--color-primary) 10%, var(--bg-popover));
-	}
-
-	/* Rank index — centered in a fixed-width column so 01/02/… and the
-	   YOU label align under one another. */
-	.ranked-num {
-		min-width: 26px;
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-12);
-		font-weight: 800;
-		letter-spacing: var(--tracking-wide);
-		text-align: center;
-	}
-
-	.ranked-num.is-you {
-		color: var(--color-primary);
-	}
-
-	.ranked-avatar {
-		display: inline-flex;
-		overflow: hidden;
-		width: 2rem;
-		height: 2rem;
-		flex-shrink: 0;
-		border-radius: var(--r-pill);
-		background: var(--bg-popover);
-	}
-
-	.ranked-copy {
-		display: flex;
-		min-width: 0;
-		flex-direction: column;
-		gap: 0.1rem;
-	}
-
-	.ranked-name {
-		overflow: hidden;
-		color: var(--text-base);
-		font-size: var(--t-13);
-		font-weight: 700;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.ranked-name-you {
-		color: var(--color-primary);
-	}
-
-	.ranked-meta {
-		color: var(--text-muted);
-		font-size: var(--t-12);
-	}
-
-	/* Head-to-head accuracy delta chip — centered with a min-width so
-	   single- and double-digit deltas line up in a column, and a 1px
-	   tinted border on both the ahead and behind variants. */
-	.ranked-h2h {
-		min-width: 42px;
-		padding: 0.2rem 0.5rem;
-		border: 1px solid transparent;
-		border-radius: var(--r-pill);
-		font-size: var(--t-12);
-		font-weight: 700;
-		text-align: center;
-	}
-
-	.ranked-h2h.is-ahead {
-		background: var(--yes-wash, color-mix(in srgb, var(--yes) 16%, transparent));
-		border-color: color-mix(in srgb, var(--yes) 25%, transparent);
-		color: var(--yes);
-	}
-
-	.ranked-h2h.is-behind {
-		background: color-mix(in srgb, var(--no) 14%, transparent);
-		border-color: color-mix(in srgb, var(--no) 22%, transparent);
-		color: var(--no);
-	}
-
-	.ranked-h2h-you {
-		color: var(--color-primary);
-		font-size: var(--t-13);
-		font-weight: 700;
 	}
 
 	/* "See all N →" sits as the last divider-separated row inside

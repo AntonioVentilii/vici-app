@@ -669,8 +669,12 @@ export const submitSchool = defineUpdate({
 	result: j.strictObject({
 		submissionId: j.string()
 	}),
-	handler: (args) =>
-		submitSchoolFn({
+	// MUST be `async`: `submitSchoolFn` is async, and the Sputnik runtime
+	// only awaits handlers declared `async` — a plain arrow returning the
+	// promise gets validated as the (un-resolved) Promise, which trips the
+	// result schema with `submissionId: undefined`.
+	handler: async (args) =>
+		await submitSchoolFn({
 			name: args.name,
 			country: args.country ?? null,
 			schoolId: args.schoolId,

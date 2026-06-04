@@ -10,16 +10,14 @@
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { LANDING_WC_FAVORITES } from '$lib/constants/landing-data.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
-	import { WORLD_CUP_KICKOFF } from '$lib/constants/world-cup-kickoff.constants';
-	import { featuredEventActive } from '$lib/derived/featured-event.derived';
+	import {
+		daysToKickoff,
+		featuredEventActive,
+		hoursToKickoff
+	} from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
-	const wcDays = WORLD_CUP_KICKOFF.daysToKickoff;
-	// Hours-to-kickoff isn't tracked in the constant; the surface
-	// shows "{days}d {hours}h" so we leave hours at 0 until the
-	// constant grows.
-	const wcHours = 0;
 	const favorites = LANDING_WC_FAVORITES;
 
 	// Tapping a favourite deep-links into onboarding with that team
@@ -38,10 +36,16 @@
 				<div>
 					<div style="gap:8px; margin-bottom:14px; align-items:center; flex-wrap:wrap;" class="row">
 						<span class="eyebrow acc">{t({ locale: $localeStore, key: 'wc.eyebrow' })}</span>
-						<span style="letter-spacing:0.10em;" class="num mute t-eyebrow">
-							<Clock style="vertical-align: middle; margin-right: 3px;" size={11} strokeWidth={2} />
-							{wcDays ?? 0}d {wcHours}h
-						</span>
+						{#if $daysToKickoff !== null}
+							<span style="letter-spacing:0.10em;" class="num mute t-eyebrow">
+								<Clock
+									style="vertical-align: middle; margin-right: 3px;"
+									size={11}
+									strokeWidth={2}
+								/>
+								{$daysToKickoff}d {$hoursToKickoff ?? 0}h
+							</span>
+						{/if}
 					</div>
 					<h2 class="lp-h2">
 						{t({ locale: $localeStore, key: 'wc.title_a' })}
