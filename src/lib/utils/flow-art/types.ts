@@ -1,0 +1,104 @@
+// Flow Mode generative artwork — shared public + internal types.
+//
+// Extracted from the original flow-art.utils.ts during the structural
+// split; behaviour-identical, no logic here.
+
+import type { Theme } from '$lib/stores/theme.store';
+
+export type FlowArtCategory =
+	| 'macro'
+	| 'crypto'
+	| 'sports'
+	| 'politics'
+	| 'tech'
+	| 'culture'
+	| 'wc';
+
+export type FlowArtState = 'neutral' | 'won' | 'lost';
+// FlowArt's palette dimension is keyed by the app-wide `Theme` union;
+// re-export under a domain alias so existing call sites read naturally.
+export type FlowArtTheme = Theme;
+
+/**
+ * Canonical category set used for random category assignment when a
+ * market has no admin-tagged category. `wc` is intentionally excluded
+ * — it's a tentpole-only language and must be opt-in via an explicit
+ * `category: 'wc'` (typically driven by the FeaturedEvent abstraction).
+ */
+export const FLOW_ART_CATEGORIES: readonly Exclude<FlowArtCategory, 'wc'>[] = [
+	'macro',
+	'crypto',
+	'sports',
+	'politics',
+	'tech',
+	'culture'
+] as const;
+
+/**
+ * Pre-built lookup set for `FLOW_ART_CATEGORIES` plus the opt-in `wc`
+ * tentpole. Three Flow surfaces (FlowCard, FlowMode, market-signals)
+ * need to test whether an arbitrary string is a known category —
+ * exporting the Set once avoids each consumer rebuilding it on module
+ * load.
+ */
+export const FLOW_ART_CATEGORY_SET: ReadonlySet<string> = new Set<FlowArtCategory>([
+	...FLOW_ART_CATEGORIES,
+	'wc'
+]);
+
+export interface FlowArtPalette {
+	bg: string;
+	base: string;
+	ink: string;
+	accent: string;
+	hot: string;
+	dim: string;
+	fg: string;
+	// `culture` is the only category whose palette ships an additional
+	// six-colour ink set. All other categories leave it undefined.
+	inks?: readonly string[];
+}
+
+export interface FlowArtRenderOptions {
+	category: FlowArtCategory;
+	// Stable per-market seed. Pass `market.id` (or any deterministic
+	// string / number — strings are FNV-1a hashed first).
+	seed: string | number;
+	state?: FlowArtState;
+	theme?: FlowArtTheme;
+	// Output viewBox is always 0 0 100 100; `size` controls the
+	// rendered width / height attributes (px). Spec checks 80 / 140 / 220.
+	size?: number;
+	// When true, draws an additional inset stroke frame inside the
+	// composition. Off by default; FlowCard layers a separate frame.
+	frame?: boolean;
+}
+
+export interface Rng {
+	r: () => number;
+	range: (lo: number, hi: number) => number;
+	pick: <T>(arr: readonly T[]) => T;
+	int: (lo: number, hi: number) => number;
+	chance: (p: number) => boolean;
+}
+
+// Renderer protocol — every category renderer takes the same args
+// so the dispatch table types cleanly. Object form (vs positional) per
+// the repo's `prefer-object-params` convention.
+//
+// `uid` is a stable per-render suffix appended to every SVG `<defs>`
+// id (gradients, filters, etc.) so multiple FlowArtFrames on the same
+// document never collide on `url(#mwash)` lookups. Derived from the
+// hash of `${category}::${seed}::${state}::${theme}` so identical inputs
+// reuse the same uid (the renderer is still deterministic).
+export interface RenderArgs {
+	rng: Rng;
+	p: FlowArtPalette;
+	state: FlowArtState;
+	uid: string;
+	// Original render seed (typically a market id). Renderers that
+	// need to pin specific markets to specific outputs (e.g. WC kits
+	// per nation) read this; everything else stays seed-derived via
+	// `rng`.
+	seed: string | number;
+}
