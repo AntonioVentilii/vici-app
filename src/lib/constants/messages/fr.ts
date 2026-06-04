@@ -1910,6 +1910,10 @@ export const frMessages = {
 	'arena.tabs.friends': 'Amis',
 	'arena.tabs.leagues': 'Ligues',
 	'arena.title': 'Arena',
+	'arena.boundary.title': 'Impossible de charger cet onglet',
+	'arena.boundary.body':
+		"Une erreur s'est produite lors de l'affichage de cette section. Essaie un autre onglet ou rouvre l'Arena.",
+	'arena.boundary.retry': 'Réessayer',
 	'arena.b_cta': 'Voir les duels en cours',
 	'arena.b_day': 'JOUR {n} SUR {total}',
 	'arena.b_eyebrow': '02 · DUEL EN COURS',
