@@ -1481,13 +1481,15 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 		return m;
 	};
 
-	// === RECIPES (curated tentpole compositions) =============
+	// === RECIPES (curated compositions) =====================
 	// Each key is a WC market id → a fully deterministic scene
-	// (backdrop + figure + caption + optional prop). The shared
-	// emotion drives both the figure's expression and the caption
-	// pill, so face and chip always agree.
+	// (backdrop + figure + optional prop), ported 1:1 from the
+	// prototype's hand-authored table so every tentpole / prop /
+	// advancement market renders its own composition rather than the
+	// generic fallback. The figure's `emotion` drives its expression.
+	// (The prototype's caption pill is a no-op there and is omitted.)
 	const recipes: Record<string, () => string> = {
-		// ─── CLASSIC ──────────────────────────────────────────
+		// ─── CLASSIC ─────────────────────────────────────────────
 		'wc-winner-brazil': () =>
 			bgFlagDiag({ c1: '#FFD800', c2: '#0F8C3A', c3: '#0033A0' }) +
 			wcFace({
@@ -1553,11 +1555,12 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirtShadow: '#100B07',
 				emotion: 'focus'
 			}) +
-			goldenBoot({ cx: 220, cy: 60, scale: 1 }),
+			goldenBoot({ cx: 220, cy: 60, scale: 1.0 }),
 
 		'wc-usa-quarter': () => {
-			// Stars-and-stripes hosted variant — striped bg + canton.
-			let m = `<rect width="280" height="100" fill="${p.base}"/>`;
+			// Stars-and-stripes hosted variant — bg striped + canton + bracket dot
+			let m = '';
+			m += `<rect width="280" height="100" fill="${p.base}"/>`;
 
 			for (let i = 0; i < 7; i++) {
 				m += `<rect x="0" y="${i * 14.3}" width="280" height="${14.3 * 0.5}" fill="${i % 2 ? '#C8102E' : '#F2ECDC'}" opacity="0.78"/>`;
@@ -1565,6 +1568,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 
 			m += `<rect x="0" y="0" width="120" height="50" fill="#0A3161" opacity="0.95"/>`;
 
+			// tiny stars
 			for (let r = 0; r < 5; r++) {
 				for (let c = 0; c < 9; c++) {
 					m += `<circle cx="${10 + c * 12}" cy="${6 + r * 9}" r="0.9" fill="#F2ECDC" opacity="0.85"/>`;
@@ -1617,7 +1621,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				emotion: 'defeat'
 			}),
 
-		// ─── PLAYFUL ──────────────────────────────────────────
+		// ─── PLAYFUL ─────────────────────────────────────────────
 		'wc-neymar-dive': () =>
 			bgSpotlight({ c1: WC_SHIRT.gold, c2: WC_SHIRT.cream }) +
 			wcFace({
@@ -1658,7 +1662,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				emotion: 'dread'
 			}) +
 			(() => {
-				// Falling rotated trophy + bounce dots.
+				// falling rotated trophy + bounce dots
 				let m = `<g transform="rotate(28 200 56)">`;
 				m += trophyIcon({ cx: 200, cy: 56, scale: 0.75 });
 				m += `</g>`;
@@ -1716,6 +1720,700 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 			}),
 
 		'wc-celebration': () =>
+			bgCircle({ color: WC_SHIRT.gold, cx: 70, cy: 50, r: 50 }) +
+			wcFace({
+				cx: 150,
+				cy: 46,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'joy'
+			}) +
+			goldenBoot({ cx: 214, cy: 58, scale: 0.9 }),
+
+		// ─── BETA V1.4 MARQUEE (hand-authored for the 50-card expansion) ───
+		// Host opener — Mexican tricolor, jubilant home figure, ball at feet.
+		'wc-host-mex-opener': () =>
+			bgFlagVert({ c1: '#006847', c2: '#F2ECDC', c3: '#CE1126' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#006847',
+				shirtShadow: '#00432E',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 222, cy: 62, r: 6 }),
+
+		// USA on home soil — stars-and-stripes canton, focused host figure.
+		'wc-usa-r16': () => {
+			let m = `<rect width="280" height="100" fill="${p.base}"/>`;
+
+			for (let i = 0; i < 7; i++) {
+				m += `<rect x="0" y="${i * 14.3}" width="280" height="${14.3 * 0.5}" fill="${i % 2 ? '#C8102E' : '#F2ECDC'}" opacity="0.78"/>`;
+			}
+
+			m += `<rect x="0" y="0" width="120" height="50" fill="#0A3161" opacity="0.95"/>`;
+
+			for (let r = 0; r < 5; r++) {
+				for (let c = 0; c < 9; c++) {
+					m += `<circle cx="${10 + c * 12}" cy="${6 + r * 9}" r="0.9" fill="#F2ECDC" opacity="0.85"/>`;
+				}
+			}
+
+			return (
+				m +
+				wcFace({
+					cx: 190,
+					cy: 50,
+					skin: 'bronze',
+					hair: 'brown',
+					hairStyle: 'cap',
+					shirt: WC_SHIRT.usaW,
+					shirtShadow: '#B0A480',
+					stripe: '#C8102E',
+					emotion: 'focus'
+				})
+			);
+		},
+
+		// Germany redemption — black/red/gold bands, determined figure.
+		'wc-germany-advance': () =>
+			bgFlagHoriz({ c1: '#000000', c2: '#DD0000', c3: '#FFCE00' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'sand',
+				hair: 'blonde',
+				hairStyle: 'short',
+				shirt: '#F2ECDC',
+				shirtShadow: '#C2BBA8',
+				emotion: 'focus'
+			}),
+
+		// Portugal talisman — green/red vertical, anticipation, ball ready.
+		'wc-portugal-goal-grp': () =>
+			bgFlagVert({ c1: '#046A38', c2: '#046A38', c3: '#DA291C' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'almond',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#A4123F',
+				shirtShadow: '#6E0C2A',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 224, cy: 60, r: 6 }),
+
+		// France QF — tricolore, composed figure, ball.
+		'wc-france-qf': () =>
+			bgFlagVert({ c1: '#0055A4', c2: '#F2ECDC', c3: '#EF4135' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'sand',
+				hair: 'auburn',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.france,
+				shirtShadow: '#003A78',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+
+		// Brazil QF — diagonal canary/green/blue, joyful figure.
+		'wc-brazil-qf': () =>
+			bgFlagDiag({ c1: '#FFD800', c2: '#0F8C3A', c3: '#0033A0' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 230, cy: 64, r: 6 }),
+
+		// Argentina QF — sky-blue/white bands, hopeful figure.
+		'wc-argentina-qf': () =>
+			bgFlagHoriz({ c1: '#75AADB', c2: '#F2ECDC', c3: '#75AADB' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'olive',
+				hair: 'brown',
+				hairStyle: 'curly',
+				shirt: WC_SHIRT.arg,
+				shirtShadow: '#5189B8',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+
+		// Host in the final — golden spotlight, trophy looming, lone host figure.
+		'wc-host-in-final': () =>
+			bgSpotlight({ c1: WC_SHIRT.gold, c2: WC_SHIRT.cream }) +
+			wcFace({
+				cx: 96,
+				cy: 50,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.usaW,
+				shirtShadow: '#B0A480',
+				stripe: '#C8102E',
+				emotion: 'anticipation'
+			}) +
+			trophyIcon({ cx: 208, cy: 52, scale: 0.95 }),
+
+		// Final on penalties — broadcast TV frame, ball on the spot, ref focus.
+		'wc-final-penalties': () =>
+			bgTV(WC_SHIRT.gold) +
+			wcFace({
+				cx: 64,
+				cy: 50,
+				skin: 'mahog',
+				hair: 'charcoal',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.ref,
+				shirtShadow: '#0E0D0B',
+				emotion: 'dread'
+			}) +
+			ballProp({ cx: 206, cy: 70, r: 6 }),
+
+		// First-time champion — bunting + trophy raised, pure joy.
+		'wc-first-time-winner': () =>
+			bgBunting({ c1: WC_SHIRT.gold, c2: '#FF6B6B', c3: '#6FE0B6' }) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'joy'
+			}) +
+			trophyIcon({ cx: 208, cy: 52, scale: 1.0 }),
+
+		// ─── BETA V1.4 EXPANSION II (50 new pre-tournament + prop cards) ───
+		'wc-ball-viral': () =>
+			bgFlagVert({ c1: '#046A38', c2: '#046A38', c3: '#DA291C' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'sand',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#A4123F',
+				shirtShadow: '#6E0C2A',
+				emotion: 'focus'
+			}),
+		'wc-captain-change': () =>
+			bgFlagHoriz({ c1: '#75AADB', c2: '#F2ECDC', c3: '#75AADB' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'olive',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.arg,
+				shirtShadow: '#5189B8',
+				stripe: WC_SHIRT.gold,
+				emotion: 'anticipation'
+			}),
+		'wc-squad-snub': () =>
+			bgFlagHoriz({ c1: '#000000', c2: '#DD0000', c3: '#FFCE00' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'sand',
+				hair: 'blonde',
+				hairStyle: 'short',
+				shirt: '#F2ECDC',
+				shirtShadow: '#C2BBA8',
+				emotion: 'defeat'
+			}),
+		'wc-friendly-brazil': () =>
+			bgFlagDiag({ c1: '#FFD800', c2: '#0F8C3A', c3: '#0033A0' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 228, cy: 62, r: 6 }),
+		'wc-friendly-england': () =>
+			bgFlagHoriz({ c1: '#F2ECDC', c2: '#C8102E', c3: '#F2ECDC' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: '#F2ECDC',
+				shirtShadow: '#C2BBA8',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 228, cy: 62, r: 6 }),
+		'wc-friendly-sweep': () =>
+			bgBunting({ c1: WC_SHIRT.gold, c2: '#0F8C3A', c3: '#75AADB' }) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'anticipation'
+			}) +
+			trophyIcon({ cx: 210, cy: 54, scale: 0.85 }),
+		'wc-kit-sellout': () =>
+			bgCircle({ color: WC_SHIRT.gold, cx: 196, cy: 50, r: 52 }) +
+			wcFace({
+				cx: 124,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'joy'
+			}),
+		'wc-injury-return': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F1BF00', c3: '#C8102E' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'almond',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.spain,
+				shirtShadow: '#8A0E20',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-anthem-star': () =>
+			bgSpotlight({ c1: WC_SHIRT.gold, c2: WC_SHIRT.cream }) +
+			wcFace({
+				cx: 140,
+				cy: 50,
+				skin: 'almond',
+				hair: 'jet',
+				hairStyle: 'mohawk',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'joy'
+			}),
+		'wc-ceremony-record': () =>
+			bgBunting({ c1: WC_SHIRT.gold, c2: '#FF6B6B', c3: '#6FE0B6' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.cream,
+				shirtShadow: '#B0A480',
+				emotion: 'joy'
+			}),
+		'wc-lineup-teen': () =>
+			bgFlagHoriz({ c1: '#F2ECDC', c2: '#C8102E', c3: '#F2ECDC' }) +
+			wcFace({
+				cx: 140,
+				cy: 48,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: '#F2ECDC',
+				shirtShadow: '#C2BBA8',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-late-drama-grp': () =>
+			bgStands('#E2B842') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-opening-sellout': () =>
+			bgStands('#E2B842') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'cap',
+				shirt: WC_SHIRT.usaW,
+				shirtShadow: '#B0A480',
+				stripe: '#C8102E',
+				emotion: 'joy'
+			}),
+		'wc-top-team-lose-open': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.spain,
+				shirtShadow: '#8A0E20',
+				emotion: 'defeat'
+			}),
+		'wc-comeback-grp': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'olive',
+				hair: 'brown',
+				hairStyle: 'curly',
+				shirt: WC_SHIRT.arg,
+				shirtShadow: '#5189B8',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-messi-goal': () =>
+			bgFlagHoriz({ c1: '#75AADB', c2: '#F2ECDC', c3: '#75AADB' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.arg,
+				shirtShadow: '#5189B8',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 230, cy: 62, r: 6 }),
+		'wc-penalty-miss-grp': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'dread'
+			}) +
+			ballProp({ cx: 206, cy: 70, r: 7 }),
+		'wc-five-goal-game': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 78,
+				cy: 50,
+				skin: 'olive',
+				hair: 'gray',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 176, cy: 54, r: 7 }) +
+			ballProp({ cx: 210, cy: 38, r: 5 }) +
+			ballProp({ cx: 236, cy: 64, r: 5 }) +
+			ballProp({ cx: 258, cy: 48, r: 4 }),
+		'wc-veteran-goal': () =>
+			bgCircle({ color: WC_SHIRT.gold, cx: 198, cy: 50, r: 50 }) +
+			wcFace({
+				cx: 122,
+				cy: 46,
+				skin: 'sand',
+				hair: 'gray',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'joy'
+			}),
+		'wc-own-goal-grp': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'dread'
+			}) +
+			ballProp({ cx: 206, cy: 68, r: 6 }),
+		'wc-brazil-group-perfect': () =>
+			bgFlagDiag({ c1: '#FFD800', c2: '#0F8C3A', c3: '#0033A0' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 230, cy: 62, r: 6 }),
+		'wc-clean-sheet-keeper': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'focus'
+			}),
+		'wc-portugal-r16': () =>
+			bgFlagVert({ c1: '#046A38', c2: '#046A38', c3: '#DA291C' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'almond',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#A4123F',
+				shirtShadow: '#6E0C2A',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-netherlands-r16': () =>
+			bgFlagHoriz({ c1: '#AE1C28', c2: '#F2ECDC', c3: '#21468B' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'sand',
+				hair: 'blonde',
+				hairStyle: 'short',
+				shirt: '#EA6F1E',
+				shirtShadow: '#B5530F',
+				emotion: 'focus'
+			}),
+		'wc-r32-host-exit': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'cap',
+				shirt: WC_SHIRT.usaW,
+				shirtShadow: '#B0A480',
+				stripe: '#C8102E',
+				emotion: 'defeat'
+			}),
+		'wc-r32-extra-time': () =>
+			bgStands('#E2B842') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'anticipation'
+			}),
+		'wc-netherlands-qf': () =>
+			bgFlagHoriz({ c1: '#AE1C28', c2: '#F2ECDC', c3: '#21468B' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'sand',
+				hair: 'blonde',
+				hairStyle: 'short',
+				shirt: '#EA6F1E',
+				shirtShadow: '#B5530F',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 230, cy: 62, r: 6 }),
+		'wc-germany-qf': () =>
+			bgFlagHoriz({ c1: '#000000', c2: '#DD0000', c3: '#FFCE00' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'sand',
+				hair: 'blonde',
+				hairStyle: 'short',
+				shirt: '#F2ECDC',
+				shirtShadow: '#C2BBA8',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 230, cy: 62, r: 6 }),
+		'wc-r16-red-card': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 120,
+				cy: 50,
+				skin: 'almond',
+				hair: 'charcoal',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.ref,
+				shirtShadow: '#0E0D0B',
+				emotion: 'defeat'
+			}) +
+			redCardProp({ cx: 186, cy: 38, rot: -14 }),
+		'wc-r16-penalty-shootout': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'mahog',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'dread'
+			}) +
+			ballProp({ cx: 206, cy: 70, r: 7 }),
+		'wc-africa-qf': () =>
+			bgFlagHoriz({ c1: '#1F8A5B', c2: '#F2ECDC', c3: '#D4A017' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'mahog',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#1F8A5B',
+				shirtShadow: '#145F3E',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 230, cy: 62, r: 6 }),
+		'wc-asia-qf': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F2ECDC', c3: '#C8102E' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'almond',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#C8102E',
+				shirtShadow: '#8A0E20',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 230, cy: 62, r: 6 }),
+		'wc-qf-late-winner': () =>
+			bgStands('#E2B842') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-qf-goalless-90': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'focus'
+			}),
+		'wc-keeper-double-save': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 206, cy: 70, r: 7 }),
+		'wc-europe-three-sf': () =>
+			bgFlagHoriz({ c1: '#0055A4', c2: '#F2ECDC', c3: '#C8102E' }) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.france,
+				shirtShadow: '#003A78',
+				emotion: 'focus'
+			}) +
+			trophyIcon({ cx: 212, cy: 54, scale: 0.8 }),
+		'wc-sf-comeback': () =>
+			bgSpotlight({ c1: WC_SHIRT.gold, c2: WC_SHIRT.cream }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'olive',
+				hair: 'brown',
+				hairStyle: 'curly',
+				shirt: WC_SHIRT.arg,
+				shirtShadow: '#5189B8',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 62, r: 6 }),
+		'wc-final-rematch': () =>
+			bgTV(WC_SHIRT.gold) +
+			wcFace({
+				cx: 64,
+				cy: 50,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'anticipation'
+			}),
+		'wc-final-red-card': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 120,
+				cy: 50,
+				skin: 'almond',
+				hair: 'charcoal',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.ref,
+				shirtShadow: '#0E0D0B',
+				emotion: 'defeat'
+			}) +
+			redCardProp({ cx: 188, cy: 36, rot: -16 }),
+		'wc-final-extra-time': () =>
+			bgSpotlight({ c1: WC_SHIRT.gold, c2: WC_SHIRT.cream }) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'dread'
+			}) +
+			ballProp({ cx: 208, cy: 68, r: 6 }),
+		'wc-final-sub-scores': () =>
 			bgBunting({ c1: WC_SHIRT.gold, c2: '#FF6B6B', c3: '#6FE0B6' }) +
 			wcFace({
 				cx: 140,
@@ -1726,6 +2424,725 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirt: WC_SHIRT.brazil,
 				shirtShadow: '#C4A300',
 				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 62, r: 6 }),
+		'wc-final-captain-30': () =>
+			bgSpotlight({ c1: WC_SHIRT.gold, c2: WC_SHIRT.cream }) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'bronze',
+				hair: 'gray',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'joy'
+			}) +
+			trophyIcon({ cx: 210, cy: 52, scale: 0.95 }),
+		'wc-final-attendance': () =>
+			bgStands('#E2B842') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.cream,
+				shirtShadow: '#B0A480',
+				emotion: 'joy'
+			}),
+		'wc-golden-glove-eur': () =>
+			bgCircle({ color: WC_SHIRT.gold, cx: 198, cy: 50, r: 50 }) +
+			wcFace({
+				cx: 122,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'focus'
+			}),
+		'wc-topscorer-host': () =>
+			bgCircle({ color: WC_SHIRT.gold, cx: 70, cy: 50, r: 50 }) +
+			wcFace({
+				cx: 150,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'cap',
+				shirt: WC_SHIRT.usaW,
+				shirtShadow: '#B0A480',
+				stripe: '#C8102E',
+				emotion: 'focus'
+			}) +
+			goldenBoot({ cx: 214, cy: 58, scale: 0.95 }),
+		'wc-cards-record': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 120,
+				cy: 50,
+				skin: 'almond',
+				hair: 'charcoal',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.ref,
+				shirtShadow: '#0E0D0B',
+				emotion: 'defeat'
+			}) +
+			redCardProp({ cx: 180, cy: 38, rot: -12 }) +
+			redCardProp({ cx: 206, cy: 40, rot: 12 }),
+		'wc-goals-record': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 78,
+				cy: 50,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 176, cy: 54, r: 7 }) +
+			ballProp({ cx: 212, cy: 40, r: 5 }) +
+			ballProp({ cx: 240, cy: 64, r: 5 }),
+		'wc-five-shootouts': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'mahog',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'dread'
+			}) +
+			ballProp({ cx: 206, cy: 70, r: 7 }),
+		'wc-manager-former-winner': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 110,
+				cy: 50,
+				skin: 'sand',
+				hair: 'gray',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.suit,
+				shirtShadow: '#0E1626',
+				emotion: 'anticipation'
+			}) +
+			trophyIcon({ cx: 206, cy: 52, scale: 0.85 }),
+		'wc-final-most-watched': () =>
+			bgTV(WC_SHIRT.gold) +
+			wcFace({
+				cx: 64,
+				cy: 50,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'joy'
+			}),
+
+		// ── Expansion: bespoke recipes replacing the generic-pitch fallback ──
+		'wc-fast-squads': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.suit,
+				shirtShadow: '#0E1626',
+				emotion: 'focus'
+			}),
+		'wc-fast-friendly': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F2ECDC', c3: '#0A3161' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'cap',
+				shirt: WC_SHIRT.usaW,
+				shirtShadow: '#B0A480',
+				stripe: '#C8102E',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-fast-injury': () =>
+			bgFlagVert({ c1: '#0055A4', c2: '#F2ECDC', c3: '#EF4135' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'sand',
+				hair: 'auburn',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.france,
+				shirtShadow: '#003A78',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-fast-kit': () =>
+			bgFlagDiag({ c1: '#FFD800', c2: '#0F8C3A', c3: '#0033A0' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'curly',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'anticipation'
+			}),
+		'wc-opener-early-goal': () =>
+			bgFlagVert({ c1: '#006847', c2: '#F2ECDC', c3: '#CE1126' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#006847',
+				shirtShadow: '#00432E',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-canada-md1': () =>
+			bgFlagVert({ c1: '#FF0000', c2: '#F2ECDC', c3: '#FF0000' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: '#D80621',
+				shirtShadow: '#8A0010',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-usa-md1': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F2ECDC', c3: '#0A3161' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'cap',
+				shirt: WC_SHIRT.usaW,
+				shirtShadow: '#B0A480',
+				stripe: '#C8102E',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-brazil-clean-md1': () =>
+			bgFlagDiag({ c1: '#FFD800', c2: '#0F8C3A', c3: '#0033A0' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 230, cy: 62, r: 6 }),
+		'wc-england-md1': () =>
+			bgFlagHoriz({ c1: '#F2ECDC', c2: '#C8102E', c3: '#F2ECDC' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: '#F2ECDC',
+				shirtShadow: '#C2BBA8',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-md1-redcard': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 120,
+				cy: 50,
+				skin: 'almond',
+				hair: 'charcoal',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.ref,
+				shirtShadow: '#0E0D0B',
+				emotion: 'defeat'
+			}) +
+			redCardProp({ cx: 186, cy: 38, rot: -15 }),
+		'wc-md1-hattrick': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 78,
+				cy: 50,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 176, cy: 54, r: 7 }) +
+			ballProp({ cx: 212, cy: 40, r: 5 }) +
+			ballProp({ cx: 240, cy: 64, r: 5 }),
+		'wc-debutant-upset': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'mahog',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-argentina-2wins': () =>
+			bgFlagHoriz({ c1: '#75AADB', c2: '#F2ECDC', c3: '#75AADB' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'olive',
+				hair: 'brown',
+				hairStyle: 'curly',
+				shirt: WC_SHIRT.arg,
+				shirtShadow: '#5189B8',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-france-top-group': () =>
+			bgFlagVert({ c1: '#0055A4', c2: '#F2ECDC', c3: '#EF4135' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'sand',
+				hair: 'auburn',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.france,
+				shirtShadow: '#003A78',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-spain-9pts': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F1BF00', c3: '#C8102E' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.spain,
+				shirtShadow: '#8A0E20',
+				emotion: 'focus'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-group-0-0': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'dread'
+			}),
+		'wc-late-qualify-goal': () =>
+			bgStands('#E2B842') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-hosts-all-advance': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F2ECDC', c3: '#0A3161' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'cap',
+				shirt: WC_SHIRT.usaW,
+				shirtShadow: '#B0A480',
+				stripe: '#C8102E',
+				emotion: 'joy'
+			}),
+		'wc-africa-2-advance': () =>
+			bgFlagHoriz({ c1: '#1F8A5B', c2: '#F2ECDC', c3: '#D4A017' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'mahog',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#1F8A5B',
+				shirtShadow: '#145F3E',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-asia-knockouts': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F2ECDC', c3: '#C8102E' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'almond',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#C8102E',
+				shirtShadow: '#8A0E20',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-debutant-knockout': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-group-goals-avg': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 78,
+				cy: 50,
+				skin: 'olive',
+				hair: 'gray',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 176, cy: 54, r: 7 }) +
+			ballProp({ cx: 214, cy: 42, r: 5 }) +
+			ballProp({ cx: 242, cy: 64, r: 5 }),
+		'wc-r32-penalties': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'mahog',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'dread'
+			}) +
+			ballProp({ cx: 206, cy: 70, r: 7 }),
+		'wc-mexico-r16': () =>
+			bgFlagVert({ c1: '#006847', c2: '#F2ECDC', c3: '#CE1126' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#006847',
+				shirtShadow: '#00432E',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-favorite-out-r32': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.spain,
+				shirtShadow: '#8A0E20',
+				emotion: 'defeat'
+			}),
+		'wc-r32-comeback': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'olive',
+				hair: 'brown',
+				hairStyle: 'curly',
+				shirt: WC_SHIRT.arg,
+				shirtShadow: '#5189B8',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-spain-qf': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F1BF00', c3: '#C8102E' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.spain,
+				shirtShadow: '#8A0E20',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-england-qf': () =>
+			bgFlagHoriz({ c1: '#F2ECDC', c2: '#C8102E', c3: '#F2ECDC' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: '#F2ECDC',
+				shirtShadow: '#C2BBA8',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 232, cy: 62, r: 6 }),
+		'wc-host-in-qf': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F2ECDC', c3: '#0A3161' }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'bronze',
+				hair: 'brown',
+				hairStyle: 'cap',
+				shirt: WC_SHIRT.usaW,
+				shirtShadow: '#B0A480',
+				stripe: '#C8102E',
+				emotion: 'anticipation'
+			}),
+		'wc-r16-extra-time': () =>
+			bgStands('#E2B842') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'anticipation'
+			}),
+		'wc-qf-shootout': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'dread'
+			}) +
+			ballProp({ cx: 206, cy: 70, r: 7 }),
+		'wc-samerica-sf': () =>
+			bgFlagDiag({ c1: '#FFD800', c2: '#0F8C3A', c3: '#75AADB' }) +
+			wcFace({
+				cx: 140,
+				cy: 44,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 230, cy: 64, r: 6 }),
+		'wc-all-top8-sf': () =>
+			bgSpotlight({ c1: WC_SHIRT.gold, c2: WC_SHIRT.cream }) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'focus'
+			}) +
+			trophyIcon({ cx: 210, cy: 54, scale: 0.8 }),
+		'wc-surprise-sf': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'mahog',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 228, cy: 60, r: 6 }),
+		'wc-brazil-final': () =>
+			bgFlagDiag({ c1: '#FFD800', c2: '#0F8C3A', c3: '#0033A0' }) +
+			wcFace({
+				cx: 120,
+				cy: 44,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.brazil,
+				shirtShadow: '#C4A300',
+				emotion: 'anticipation'
+			}) +
+			trophyIcon({ cx: 214, cy: 52, scale: 0.9 }),
+		'wc-eur-vs-sam-final': () =>
+			bgFlagDiag({ c1: '#0055A4', c2: '#F2ECDC', c3: '#FFD800' }) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.france,
+				shirtShadow: '#003A78',
+				emotion: 'focus'
+			}) +
+			trophyIcon({ cx: 214, cy: 54, scale: 0.85 }),
+		'wc-sf-both-90': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'focus'
+			}),
+		'wc-3rd-place-goals': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 96,
+				cy: 50,
+				skin: 'olive',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.jersey,
+				shirtShadow: '#1F3A1A',
+				emotion: 'joy'
+			}) +
+			ballProp({ cx: 190, cy: 54, r: 7 }) +
+			ballProp({ cx: 224, cy: 40, r: 5 }) +
+			ballProp({ cx: 252, cy: 64, r: 5 }),
+		'wc-final-1h-goal': () =>
+			bgSpotlight({ c1: WC_SHIRT.gold, c2: WC_SHIRT.cream }) +
+			wcFace({
+				cx: 140,
+				cy: 46,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'anticipation'
+			}) +
+			ballProp({ cx: 226, cy: 62, r: 6 }),
+		'wc-golden-ball-fwd': () =>
+			bgCircle({ color: WC_SHIRT.gold, cx: 198, cy: 50, r: 52 }) +
+			wcFace({
+				cx: 122,
+				cy: 46,
+				skin: 'umber',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'focus'
+			}) +
+			trophyIcon({ cx: 214, cy: 54, scale: 0.7 }),
+		'wc-young-player-eur': () =>
+			bgCircle({ color: WC_SHIRT.gold, cx: 198, cy: 50, r: 50 }) +
+			wcFace({
+				cx: 124,
+				cy: 46,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.france,
+				shirtShadow: '#003A78',
+				emotion: 'focus'
+			}),
+		'wc-topscorer-6': () =>
+			bgCircle({ color: WC_SHIRT.gold, cx: 70, cy: 50, r: 50 }) +
+			wcFace({
+				cx: 150,
+				cy: 46,
+				skin: 'mahog',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.dark,
+				shirtShadow: '#100B07',
+				emotion: 'focus'
+			}) +
+			goldenBoot({ cx: 214, cy: 58, scale: 0.95 }),
+		'wc-new-champion-conf': () =>
+			bgPerspective(WC_SHIRT.cream) +
+			wcFace({
+				cx: 120,
+				cy: 48,
+				skin: 'mahog',
+				hair: 'jet',
+				hairStyle: 'short',
+				shirt: '#1F8A5B',
+				shirtShadow: '#145F3E',
+				emotion: 'joy'
+			}) +
+			trophyIcon({ cx: 212, cy: 54, scale: 0.85 }),
+		'wc-mascot-meme': () =>
+			bgFlagHoriz({ c1: '#C8102E', c2: '#F1BF00', c3: '#C8102E' }) +
+			wcFace({
+				cx: 120,
+				cy: 44,
+				skin: 'almond',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.spain,
+				shirtShadow: '#8A0E20',
+				emotion: 'focus'
+			}) +
+			trophyIcon({ cx: 214, cy: 52, scale: 0.9 }),
+		'wc-pitch-invader': () =>
+			bgStands('#7E7A75') +
+			wcFace({
+				cx: 140,
+				cy: 50,
+				skin: 'sand',
+				hair: 'brown',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.cream,
+				shirtShadow: '#B0A480',
+				emotion: 'playful'
+			}) +
+			ballProp({ cx: 232, cy: 64, r: 6 }),
+		'wc-commentator-cry': () =>
+			bgTV(WC_SHIRT.gold) +
+			wcFace({
+				cx: 64,
+				cy: 50,
+				skin: 'almond',
+				hair: 'gray',
+				hairStyle: 'short',
+				shirt: WC_SHIRT.suit,
+				shirtShadow: '#0E1626',
+				emotion: 'defeat'
 			})
 	};
 
