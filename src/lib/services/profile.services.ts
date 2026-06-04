@@ -494,14 +494,14 @@ export const calculateAndSyncStats = async ({
 	// clearing `Settled` event already carries. A settlement's signed
 	// `qty` IS the realized `cashflow_usd` in `USD_DECIMALS` base units
 	// (see `resolved-position.utils.ts` / the `ResolvedPosition` docs) —
-	// not a contract quantity to re-multiply by price. NOT clamped:
-	// lifetime P&L is net and must include losing settlements.
-	const realizedPnl = history
-		.filter(isSettled)
-		.reduce(
-			(acc, event) => acc + decimalFixedValueToNumber({ value: event.qty, decimals: USD_DECIMALS }),
-			0
-		);
+	// not a contract quantity to re-multiply by price. Summed as `bigint`
+	// base units and decoded once at the end, so the conversion is exact
+	// (no per-event float accumulation). NOT clamped: lifetime P&L is net
+	// and must include losing settlements.
+	const realizedPnl = decimalFixedValueToNumber({
+		value: history.filter(isSettled).reduce((acc, event) => acc + event.qty, ZERO),
+		decimals: USD_DECIMALS
+	});
 
 	const totalTrades = history.filter(isExecuted).length;
 	const winRate = settledTradesCount > 0 ? (wins / settledTradesCount) * 100 : 0;
