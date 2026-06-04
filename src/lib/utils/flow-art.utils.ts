@@ -3196,7 +3196,11 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 			{ shirt: WC_SHIRT.cream, shadow: '#B0A480' }
 		];
 
-		const skins = Object.keys(WC_SKIN);
+		// `WC_SKIN` is a `Record<string, …>`, so its key type is `string`
+		// and an `as` cast here is a no-op (eslint strips it) — annotate
+		// instead. `WC_HAIR` is `as const`, so it needs the assertion to
+		// recover the literal union from `Object.keys`' `string[]`.
+		const skins: (keyof typeof WC_SKIN)[] = Object.keys(WC_SKIN);
 		const hairs = Object.keys(WC_HAIR) as (keyof typeof WC_HAIR)[];
 		const hairStyles: WCHairStyle[] = ['short', 'curly', 'mohawk', 'cap', 'bun', 'bald'];
 		const emotions: WCEmotion[] = ['joy', 'focus', 'anticipation', 'dread', 'defeat', 'playful'];
