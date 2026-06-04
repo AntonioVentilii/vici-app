@@ -13,12 +13,14 @@ import { nonNullish } from '@dfinity/utils';
 /**
  * @throws Error when the premium isn't a valid ViciXp stake-ladder rung.
  *
- * No max-payout floor is enforced: a winning call already nets at least
- * 1 VXP via `vxpNetWin`, so gating on gross payout (`stake / price`) added
- * nothing — it only made any side priced above 0.5 unplaceable at the
- * smallest stake, e.g. a 50-VXP premium on a 50/50 market, which left
- * first-call users (locked to the smallest rung, market orders) with no
- * placeable side at all.
+ * No max-payout floor is enforced: a winning call always nets a positive
+ * amount (the settlement cashflow is `stake·(1/price − 1)`, above zero for
+ * any price < 1), so gating on gross payout (`stake / price`) added nothing
+ * — it only made any side priced above 0.5 unplaceable at the smallest
+ * stake, e.g. a 50-VXP premium on a 50/50 market, which left first-call
+ * users (locked to the smallest rung, market orders) with no placeable side
+ * at all. Heavy favourites net a real sub-1 amount; the UI shows that
+ * honestly as "<1" rather than over-promising a "+1" (see `vxpNetWin`).
  */
 export const assertViciXpHumanPremium = ({ amountStr }: { amountStr: string }): void => {
 	const premiumHuman = Number(String(amountStr).trim());

@@ -23,6 +23,7 @@
 	import { flowSummary } from '$lib/utils/flow-sound.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	interface Props {
@@ -37,6 +38,10 @@
 	// Any right call earns the celebration hit, even on a net-negative batch
 	// (the burst itself only fires when `positive` too — see the template).
 	const celebrate = $derived(data.wins > 0);
+	// A batch that nets a real but sub-1 VXP swing (e.g. only heavy-favourite
+	// wins) can't count up to a whole number — it would land on a misleading
+	// "0". Show "<1" statically instead (mirrors the per-row treatment).
+	const subOneNet = $derived(Math.abs(data.netVxp) > 0 && Math.abs(data.netVxp) < 1);
 
 	// Count-up the net VXP (eased). Reduced-motion users get the final value.
 	let shown = $state(0);
@@ -51,8 +56,8 @@
 		const vxpLabel = t({ locale: $localeStore, key: 'flow.reso.vxp' });
 
 		if (prefersReducedMotion() || target === 0) {
-			shown = target;
-			announcedVxp = `${sign}${target} ${vxpLabel}`;
+			shown = Math.round(target);
+			announcedVxp = `${sign}${formatWholeVxpMagnitude(data.netVxp)} ${vxpLabel}`;
 		} else {
 			let raf: number;
 			const start = performance.now();
@@ -66,7 +71,7 @@
 					raf = requestAnimationFrame(tick);
 				} else {
 					// Count-up done — announce the final value once.
-					announcedVxp = `${sign}${target} ${vxpLabel}`;
+					announcedVxp = `${sign}${formatWholeVxpMagnitude(data.netVxp)} ${vxpLabel}`;
 				}
 			};
 
@@ -138,7 +143,7 @@
 		</div>
 		<div class="reso-digest-head">{headline}</div>
 		<div class="reso-net num {positive ? 'win' : 'loss'}">
-			{positive ? '+' : '−'}{shown}
+			{positive ? '+' : '−'}{subOneNet ? '<1' : shown}
 			<small>{t({ locale: $localeStore, key: 'flow.reso.vxp' })}</small>
 		</div>
 		<div class="reso-tally">
@@ -171,7 +176,11 @@
 					<span class="reso-row-side {it.sideKey}">{it.side}</span>
 					<span class="reso-row-q">{it.question}</span>
 					<span class="reso-row-out num {it.result}">
-						{it.net > 0 ? `+${it.net}` : it.net < 0 ? `−${Math.abs(it.net)}` : '0'}
+						{it.net > 0
+							? `+${formatWholeVxpMagnitude(it.net)}`
+							: it.net < 0
+								? `−${formatWholeVxpMagnitude(it.net)}`
+								: '0'}
 					</span>
 				</div>
 			{/each}
