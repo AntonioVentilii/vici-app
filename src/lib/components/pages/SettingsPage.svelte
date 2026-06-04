@@ -8,7 +8,7 @@
 		Eye,
 		Globe,
 		Info,
-		KeyRound,
+		Key,
 		LineChart,
 		Lock,
 		Mail,
@@ -333,7 +333,7 @@
 			<SettingsIdentityCard {joinedLabel} {profile} />
 
 			<SetRow
-				icon={KeyRound}
+				icon={Key}
 				label={t({ locale: $localeStore, key: 'settings.account.signin_method' })}
 				onclick={() => goto(resolve(AppPath.AccountSettings))}
 				sub={signinMethodSub}
