@@ -1591,6 +1591,7 @@ export const ptMessages = {
 	'profile.dashboard.affiliations.title': 'Afiliações',
 	'profile.dashboard.affiliations.university': 'Alma Mater',
 	'profile.dashboard.affiliations.verify_soon': 'Verificação — em breve',
+	'profile.dashboard.affiliations.verify_cta': 'Verifique sua universidade →',
 	'profile.dashboard.all': 'Todas',
 	'profile.dashboard.calls': 'previsões',
 	'profile.dashboard.cancel': 'Cancelar',

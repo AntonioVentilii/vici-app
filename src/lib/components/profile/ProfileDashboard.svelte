@@ -12,6 +12,7 @@
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { SCHOOL_PASS2_ENABLED } from '$lib/constants/school-picker.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
@@ -195,6 +196,9 @@
 	/* Affiliations ----------------------------------------------------- */
 
 	let pickerKind = $state<AffiliationKind | null>(null);
+	/* When the picker is opened from an unverified Alma Mater slot, this
+	   carries the school id so the sheet opens straight on its verify step. */
+	let pickerVerifyId = $state<string | null>(null);
 
 	// Read the caller's affiliations from the shared cache (populated by
 	// `refreshMyAffiliations`). Only the caller's own profile surfaces
@@ -327,6 +331,12 @@
 			return;
 		}
 
+		// From an unverified university slot (Pass-2 on), jump the picker
+		// straight to that school's email-verification step.
+		pickerVerifyId =
+			SCHOOL_PASS2_ENABLED && slot.kind === 'university' && slot.status === 'unverified'
+				? slot.affiliationIdentifier
+				: null;
 		pickerKind = slot.kind;
 	};
 
@@ -705,21 +715,22 @@
 							{t({ locale: $localeStore, key: 'profile.dashboard.affiliations.status_pending' })}
 						</span>
 					{:else if slot.status === 'unverified'}
-						<!-- Until the membership-email verification flow ships (#351,
-						     gated behind `SCHOOL_PASS2_ENABLED`), a freshly picked
-						     school can only ever read `unverified`. Surfacing a bare
-						     "Unverified" pill on every Alma Mater reads as a defect, so
-						     we render a subtle, non-actionable "verification — coming
-						     soon" hint instead. Unlike the short verified / pending
-						     pills it is too long to pin to the top-right corner without
-						     overflowing the tile, so it flows in-line as a quiet
-						     footnote at the bottom of the slot. It carries no control:
-						     the slot still just re-opens the picker, whose verify path
-						     is itself gated off. -->
-						<span class="affil-slot-hint num">
+						<!-- Unverified Alma Mater. When membership-email verification
+						     is live ({@link SCHOOL_PASS2_ENABLED}), surface an
+						     actionable "Verify your school →" footnote — the slot is
+						     a button, so tapping it opens the picker straight on this
+						     school's verify step (see `handleSlotClick`). When the flow
+						     is gated off, fall back to a subtle, non-actionable
+						     "verification — coming soon" hint (a bare "Unverified" pill
+						     on every Alma Mater would read as a defect). Either way it
+						     flows in-line as a footnote — too long for the top-right
+						     pill slot used by the verified / pending badges. -->
+						<span class="affil-slot-hint num" class:affil-slot-cta={SCHOOL_PASS2_ENABLED}>
 							{t({
 								locale: $localeStore,
-								key: 'profile.dashboard.affiliations.verify_soon'
+								key: SCHOOL_PASS2_ENABLED
+									? 'profile.dashboard.affiliations.verify_cta'
+									: 'profile.dashboard.affiliations.verify_soon'
 							})}
 						</span>
 					{/if}
@@ -789,11 +800,16 @@
 {#if pickerKind !== null}
 	<AffiliationPickerModal
 		current={{ university: myUni, country: myCountry }}
+		initialVerifyId={pickerVerifyId ?? undefined}
 		isOpen={true}
 		kind={pickerKind}
-		onClose={() => (pickerKind = null)}
+		onClose={() => {
+			pickerKind = null;
+			pickerVerifyId = null;
+		}}
 		onPicked={() => {
 			pickerKind = null;
+			pickerVerifyId = null;
 			void refreshMyAffiliations();
 		}}
 	/>
@@ -1380,6 +1396,15 @@
 		letter-spacing: 0.02em;
 		line-height: 1.25;
 		opacity: 0.85;
+	}
+
+	/* When membership-email verification is live, the footnote is an
+	   actionable CTA (the slot opens the picker on its verify step), so it
+	   reads with the accent colour + full opacity instead of the passive
+	   muted hint. */
+	.affil-slot-hint.affil-slot-cta {
+		color: var(--color-primary);
+		opacity: 1;
 	}
 
 	.affil-slot-badge-pending {

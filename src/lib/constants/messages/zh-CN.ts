@@ -1517,6 +1517,7 @@ export const zhCnMessages = {
 	'profile.dashboard.affiliations.title': '归属',
 	'profile.dashboard.affiliations.university': '母校',
 	'profile.dashboard.affiliations.verify_soon': '验证 — 即将推出',
+	'profile.dashboard.affiliations.verify_cta': '验证你的学校 →',
 	'profile.dashboard.all': '全部',
 	'profile.dashboard.calls': '次预测',
 	'profile.dashboard.cancel': '取消',
