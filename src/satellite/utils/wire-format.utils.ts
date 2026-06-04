@@ -522,6 +522,57 @@ export const toWireLeague = (league: {
 	image_url: league.imageUrl
 });
 
+// camelCase shape for `j.optional(...)` (`lookupLeagueByInvite`). An
+// `Option<NestedStruct>` result is wrapped by Sputnik's
+// `#[json_data(nested)]` mirror, so its wire format is camelCase — unlike
+// the snake_case `LeagueWireSchema` / `toWireLeague` above, which exist
+// only for the `j.array(...)` league endpoints. Wrapping an Option result
+// in `toWireLeague` re-introduces snake_case keys and traps with
+// `missing field 'inviteCode'`. See the module header (`When to apply`).
+export const LeagueOptionWireSchema = j.strictObject({
+	id: j.string(),
+	name: j.string(),
+	description: j.string().optional(),
+	inviteCode: j.string(),
+	owner: PrincipalTextSchema,
+	createdAtMs: j.number(),
+	accentColor: j.string().optional(),
+	emblem: j.string().optional(),
+	privacy: j.enum(LeaguePrivacy).default(LeaguePrivacy.OPEN),
+	imageUrl: j.string().optional()
+});
+
+export type OptionWireLeague = j.infer<typeof LeagueOptionWireSchema>;
+
+export const toOptionWireLeague = (league: {
+	id: string;
+	name: string;
+	description?: string;
+	inviteCode: string;
+	owner: string;
+	createdAtMs: number;
+	accentColor?: string;
+	emblem?: string;
+	privacy?: LeaguePrivacy;
+	/** Legacy boolean still carried by rows written before the 3-way
+	 *  model; mapped to a concrete `privacy` below so an old private
+	 *  league doesn't serialize as `open`. */
+	private?: boolean;
+	imageUrl?: string;
+}): OptionWireLeague => ({
+	id: league.id,
+	name: league.name,
+	description: league.description,
+	inviteCode: league.inviteCode,
+	owner: league.owner,
+	createdAtMs: league.createdAtMs,
+	accentColor: league.accentColor,
+	emblem: league.emblem,
+	// Same legacy-privacy normalisation as `toWireLeague` (see above).
+	privacy: league.privacy ?? (league.private === true ? LeaguePrivacy.INVITE : LeaguePrivacy.OPEN),
+	imageUrl: league.imageUrl
+});
+
 export const toWireLeagueWithRole = (entry: {
 	league: Parameters<typeof toWireLeague>[0];
 	role: 'owner' | 'admin' | 'member';
