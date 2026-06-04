@@ -83,14 +83,18 @@ const settlementPrice = (event: ClearingDid.Event): number =>
 	});
 
 /**
- * Realized VXP for a single settlement, in whole VXP. `qty` is in
- * 1e8-scaled contract units (mirrors the lifetime-P&L product in
- * `calculateAndSyncStats`); a winning settlement clears at its
- * execution `price`, so `(qty / 1e8) × price` is the payout. Rounded to
- * a whole VXP for the Oracle insight headline; never negative.
+ * Realized VXP for a single settlement. `qty` is in 1e8-scaled contract
+ * units (mirrors the lifetime-P&L product in `calculateAndSyncStats`); a
+ * winning settlement clears at its execution `price`, so `(qty / 1e8) ×
+ * price` is the payout. Never negative.
+ *
+ * Kept at full precision (no rounding) — a heavy-favourite win can clear
+ * for a real sub-1 VXP amount, and rounding here would zero it before the
+ * Oracle insight headline ever sees it ("+0 VXP"). The display layer rounds
+ * via `formatWholeVxpMagnitude`, which surfaces a sub-1 win as `<1`.
  */
 const settlementVxp = (event: ClearingDid.Event): number =>
-	Math.max(0, Math.round((Number(event.qty) / 1e8) * settlementPrice(event)));
+	Math.max(0, (Number(event.qty) / 1e8) * settlementPrice(event));
 
 /**
  * Build a `UserStatsDoc` payload from raw clearing history plus the
