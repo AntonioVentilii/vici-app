@@ -234,7 +234,7 @@
 			<p class="account-hint num">
 				{t({ locale: $localeStore, key: 'account.email.used_for' })}
 			</p>
-			<button class="account-ghost" onclick={startEdit} type="button">
+			<button class="account-ghost account-email-change" onclick={startEdit} type="button">
 				<span class="account-ghost-label">
 					{t({ locale: $localeStore, key: 'account.email.change' })}
 				</span>
@@ -473,6 +473,25 @@
 
 	.account-ghost {
 		margin-top: 0.75rem;
+	}
+
+	/* Change-email button hugs its label instead of spanning the card
+	   width: a compact, content-sized rounded control (corner radius
+	   inherited from the shared `.account-ghost` 12-px rule) anchored to
+	   the start of the column. The shared full-width `.account-switch`
+	   and the 50/50 `.account-edit-cancel` are untouched — only this
+	   secondary action collapses to its content. */
+	.account-email-change {
+		width: auto;
+		align-self: flex-start;
+		gap: 0.5rem;
+		padding: 0.625rem 1rem;
+	}
+
+	/* The label no longer needs to fill a full-width track once the
+	   button hugs its content, so drop the flex-grow for this button. */
+	.account-email-change .account-ghost-label {
+		flex: 0 0 auto;
 	}
 
 	/* ── Email edit ──────────────────────────────────────────── */
