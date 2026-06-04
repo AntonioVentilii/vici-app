@@ -32,6 +32,7 @@
 	import type { ResolutionRevealData } from '$lib/types/flow';
 	import { flowBeat, flowSummary } from '$lib/utils/flow-sound.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	interface Props {
@@ -223,7 +224,7 @@
 			<div class="orcfloat-sm"><OracleChar animate size={44} /></div>
 			<div class="eyebrow-mute">{t({ locale: $localeStore, key: 'flow.entry.away_eyebrow' })}</div>
 			<div class="away-net">
-				{positive ? '+' : '−'}{Math.abs(digest.netVxp).toLocaleString()}
+				{positive ? '+' : '−'}{formatWholeVxpMagnitude(digest.netVxp)}
 				{t({ locale: $localeStore, key: 'flow.reso.vxp' })}
 			</div>
 			<div class="away-sub">
@@ -244,7 +245,7 @@
 						<span class="resdot {it.result}" aria-hidden="true"></span>
 						<span class="resq">{it.question}</span>
 						<span class="resv {it.result}"
-							>{it.net > 0 ? '+' : it.net < 0 ? '−' : ''}{Math.abs(it.net)}</span
+							>{it.net > 0 ? '+' : it.net < 0 ? '−' : ''}{formatWholeVxpMagnitude(it.net)}</span
 						>
 					</div>
 				{/each}
