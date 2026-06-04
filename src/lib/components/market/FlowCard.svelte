@@ -990,14 +990,37 @@
 		padding: 14px 0;
 	}
 
+	/* Single-line row: a fixed-size avatar stack followed by the
+	   trailing predictor/followed-lean text. `min-width: 0` lets the
+	   flex children shrink below their intrinsic width so a long
+	   trailing string truncates with an ellipsis (see `.flow-social
+	   > span`) instead of being chopped at the right edge by the
+	   `.flow-face { overflow: hidden }` clip. The avatar stack is
+	   pinned with `flex-shrink: 0` so the circles always stay fully
+	   visible. */
 	.flow-social {
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		min-width: 0;
 		padding: 0 1.1rem;
 		font-size: var(--t-12);
 		color: var(--text-muted);
 		letter-spacing: 0.02em;
+	}
+
+	.flow-social :global(.seeded-avatar-stack) {
+		flex-shrink: 0;
+	}
+
+	/* Trailing text (predictors-count fallback or followed-lean
+	   line). Truncates with an ellipsis when the row runs out of
+	   width rather than overflowing the card body. */
+	.flow-social > span {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.flow-followed-lean {
