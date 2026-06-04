@@ -10,6 +10,7 @@
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import AccountReturnGate from '$lib/components/settings/AccountReturnGate.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import NotifToastHost from '$lib/components/ui/NotifToastHost.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import {
@@ -19,7 +20,7 @@
 	} from '$lib/constants/referral.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
-	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
+	import { authBusy, userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import { joinLeagueByInvite } from '$lib/services/leagues.services';
 	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
 	import { claimReferralFriendship, redeemReferralCode } from '$lib/services/referral.services';
@@ -86,6 +87,20 @@
 	// terms / privacy links in `OnboardingBeat3`). Treat them as a
 	// public route alongside the markets exemption above.
 	const isPublicInfoRoute = $derived(page.url.pathname.startsWith('/info/'));
+
+	// Auth-hydration window. After a provider resolves (notably the
+	// Internet Identity multi-account path), `goto(Flow)` can mount this
+	// shell while `onAuthStateChange` is still hydrating the profile —
+	// `authBusy` is true, or the session is present but `profile` hasn't
+	// landed yet. In that window neither redirect effect below should fire
+	// (they'd bounce mid-hydration) and the shell must not paint an empty
+	// child. Render a loader instead. Public browse surfaces are exempt:
+	// an anonymous visitor there is legitimate and gets real content.
+	const authResolving = $derived(
+		!isPublicMarketsRoute &&
+			!isPublicInfoRoute &&
+			($authBusy || ($userSignedIn && !$userStore.profile))
+	);
 
 	let applyingPendingOnboarding = $state(false);
 
@@ -184,6 +199,14 @@
 		}
 
 		if (isPublicMarketsRoute || isPublicInfoRoute) {
+			return;
+		}
+
+		// Never bounce to /signin while the handshake is in flight. This is
+		// implied by `userSignedOutResolved` (which is `!authBusy && !user`),
+		// but stating it explicitly keeps the precondition obvious and aligned
+		// with the forced-onboarding gate below.
+		if ($authBusy) {
 			return;
 		}
 
@@ -627,6 +650,10 @@
 	$effect(() => {
 		if (
 			!browser ||
+			// Don't redirect mid-hydration: while `authBusy` is still set the
+			// session/profile is settling (e.g. just after II resolves), and
+			// bouncing to /signup here is the blank-shell race we guard against.
+			$authBusy ||
 			applyingPendingOnboarding ||
 			!$userSignedIn ||
 			!$userStore.profile ||
@@ -671,16 +698,34 @@
 	<DesktopAppNav />
 
 	<main class="screen-scroll">
-		{#key page.url.pathname}
+		{#if authResolving}
+			<!--
+				Auth-hydration window — show a loader rather than the child
+				snippet. After a provider resolves (notably the Internet Identity
+				multi-account path), this shell can mount while the session /
+				profile is still settling; painting `children()` here risks a
+				blank shell, and the redirect effects above are held off too.
+			-->
 			<div
 				class="app-shell-content"
-				data-tid={TestId.AppMain}
-				in:fade={{ duration: 100, delay: 100 }}
-				out:fade={{ duration: 100 }}
+				aria-label={t({ locale: $localeStore, key: 'authn.checking.aria' })}
+				aria-live="polite"
+				role="status"
 			>
-				{@render children()}
+				<LoadingSpinner size="md" />
 			</div>
-		{/key}
+		{:else}
+			{#key page.url.pathname}
+				<div
+					class="app-shell-content"
+					data-tid={TestId.AppMain}
+					in:fade={{ duration: 100, delay: 100 }}
+					out:fade={{ duration: 100 }}
+				>
+					{@render children()}
+				</div>
+			{/key}
+		{/if}
 
 		<Loaders />
 	</main>
