@@ -432,7 +432,15 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 			const backfilled: UserProfile = { ...existing.data, email: providerEmail };
 
 			try {
-				await upsertProfile({ key: principal, data: backfilled });
+				// Write against the version we just read (optimistic concurrency)
+				// rather than via `upsertProfile`, which re-reads and overlays this
+				// full snapshot onto the latest doc — that would clobber any other
+				// field changed in between. A stale version makes `setDoc` fail, so
+				// a concurrent write wins; this best-effort backfill just no-ops.
+				await setDoc({
+					collection: Collection.PROFILES,
+					doc: { key: principal, version: existing.version, data: backfilled }
+				});
 
 				return { profile: backfilled, existed: true };
 			} catch (err: unknown) {
