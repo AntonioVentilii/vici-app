@@ -112,16 +112,14 @@ export const spFindCloseMatches = ({
 };
 
 /**
- * Consumer mailbox providers that never count as a school address.
- * Matched against the email's host (or any parent of it).
- *
- * NOTE: tokens here match the email host's leading label, so they must
- * be specific enough not to swallow legitimate university subdomains.
- * In particular the `mail.ru` / `mail.com` providers are listed as full
- * domains (NOT a bare `mail` token) — a bare `mail` would wrongly flag
- * every `mail.<university>` student domain (e.g. `mail.polimi.it`,
- * `mail.utoronto.ca`) as a consumer mailbox and reject it before the
- * directory match runs.
+ * Consumer mailbox providers that never count as a school address — used
+ * by the "add your own school" flow so a personal inbox can't be turned
+ * into a new school. This blocklist is checked AFTER the directory match
+ * (see {@link spMatchEmail}), so a listed school's own subdomain is never
+ * mis-flagged. `mail.ru` / `mail.com` are listed as full domains (NOT a
+ * bare `mail` token) so that an *unlisted* school's `mail.<uni>` address
+ * still falls through to the add-your-own path rather than being rejected
+ * as a consumer mailbox.
  */
 const SP_CONSUMER_DOMAINS =
 	/^(gmail|googlemail|yahoo|hotmail|outlook|live|icloud|me|aol|protonmail|proton|gmx|web|t-online|qq|163|126|mail\.(ru|com)|sina|naver|hanmail|daum|rambler|rediffmail)(\.|$)/i;
@@ -161,16 +159,21 @@ export const spMatchEmail = ({
 
 	const [, domain] = parsed;
 
-	if (SP_CONSUMER_DOMAINS.test(domain)) {
-		return { kind: 'consumer' };
-	}
-
+	// Known-school match FIRST: a domain that is (or is a subdomain of) a
+	// listed school domain always resolves to that school — even if its
+	// leading label resembles a consumer provider (e.g. `mail.polimi.it`
+	// under `polimi.it`). Only domains no school claims fall through to
+	// the personal-mailbox blocklist below.
 	for (const option of directory) {
 		for (const known of option.domains ?? []) {
 			if (domain === known || domain.endsWith(`.${known}`)) {
 				return { kind: 'match', option, domain };
 			}
 		}
+	}
+
+	if (SP_CONSUMER_DOMAINS.test(domain)) {
+		return { kind: 'consumer' };
 	}
 
 	return { kind: 'unknown-domain', domain };
