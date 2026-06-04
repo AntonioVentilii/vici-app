@@ -107,6 +107,7 @@ import {
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
 import { assertSetRole } from '$satellite/services/roles.services';
+import { submitSchoolFn, verifySchoolCodeFn } from '$satellite/services/school.services';
 import {
 	assertSetTournament,
 	assertSetTournamentMatch,
@@ -638,6 +639,51 @@ export const listAffiliationChampionships = defineQuery({
 			toWireAffiliationChampionship
 		)
 	})
+});
+
+// ─── School-email verification (backend item B.1) ───────────────
+//
+// `submitSchool` re-runs the domain gate server-side, rate-limits, mints
+// a `raw_rand` 6-digit code, stores only its digest (~30-min TTL +
+// attempt cap), and mails it via a single HTTPS outcall to the
+// `vici-courier` relay. `verifySchoolCode` checks the digest and, on
+// success, bumps the school's verified-member count (public at 3) and
+// flips the owner's profile `schoolStatus`. Unreachable in shipped
+// builds until `SCHOOL_PASS2_ENABLED` is flipped (see
+// `school-picker.constants.ts`).
+export const submitSchool = defineUpdate({
+	args: j.strictObject({
+		name: j.string(),
+		country: j.optional(j.string()),
+		schoolId: j.optional(j.string()),
+		email: j.string(),
+		locale: j.string()
+	}),
+	result: j.strictObject({
+		submissionId: j.string()
+	}),
+	handler: (args) =>
+		submitSchoolFn({
+			name: args.name,
+			country: args.country ?? null,
+			schoolId: args.schoolId,
+			email: args.email,
+			locale: args.locale
+		})
+});
+
+export const verifySchoolCode = defineUpdate({
+	args: j.strictObject({
+		submissionId: j.string(),
+		code: j.string()
+	}),
+	result: j.strictObject({
+		ok: j.boolean(),
+		schoolId: j.optional(j.string()),
+		status: j.optional(j.enum(['pending', 'public'])),
+		message: j.optional(j.string())
+	}),
+	handler: (args) => verifySchoolCodeFn(args)
 });
 
 // Calibration reward — pays a fixed VXP bonus when a recovering user

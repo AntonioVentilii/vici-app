@@ -1,32 +1,53 @@
 /**
- * School membership verification — submit + 6-digit code.
+ * School membership verification — submit + 6-digit code (backend B.1).
  *
- * ⚠️ BACKEND BOUNDARY (B.1 — NOT YET BUILT). The two calls below are
- * the only network surface the "add your own university" pass needs.
- * They map to two endpoints that have not been implemented yet:
+ * Thin FE wrapper over the two satellite endpoints:
  *
- *   POST /schools/submit  ({ name, country, email }) -> { submissionId }
- *     · emails a 6-digit numeric code to `email`
- *     · persists the submission (status awaiting-verification, TTL ~30m)
+ *   functions.submitSchool({ name, country?, schoolId?, email, locale })
+ *     -> { submissionId }
+ *     · the satellite re-runs the `spMatchEmail` domain gate, rate-limits,
+ *       mints a `raw_rand` 6-digit code, stores its digest (~30-min TTL +
+ *       attempt cap), and mails it via the `vici-courier` relay.
  *
- *   POST /schools/verify  ({ submissionId, code }) -> { ok, schoolId?, status? }
- *     · on success attaches the school to the user and bumps its
- *       verified-member count; the school goes public at 3 verified
+ *   functions.verifySchoolCode({ submissionId, code })
+ *     -> { ok, schoolId?, status?, message? }
+ *     · on success the satellite attaches the school (bumps the verified-
+ *       member count, public at 3) and flips the owner's profile
+ *       `schoolStatus`.
  *
- * Both are stubbed to throw so the gated UI never silently "succeeds"
- * against a backend that can't honour it. The add-your-own pass is
- * additionally gated by `SCHOOL_PASS2_ENABLED` (default `false`), so
- * these throwers are unreachable in shipped builds until B.1 lands and
- * the flag is flipped.
+ * Both round-trips are wrapped in a hard timeout (mirroring
+ * `worlds.services.ts`) so the picker's "Sending…" / "Verifying…"
+ * spinners can never hang indefinitely. The call signatures are kept so
+ * the picker only has to pass the active `locale`.
  *
- * When B.1 is built, replace the bodies with the real round-trips
- * (wrap them in `withTimeout` like the rest of `worlds.services.ts`)
- * and keep the call signatures so the picker needs no changes.
+ * Reachable only when `SCHOOL_PASS2_ENABLED` is `true` — keep it `false`
+ * until the `vici-courier` relay is deployed and its `app_config` doc is
+ * set (otherwise `submitSchool` resolves to a "relay not configured"
+ * error rather than a real send).
  */
 
-const NOT_IMPLEMENTED =
-	'School verification endpoints are not implemented yet (backend item B.1). ' +
-	'Keep SCHOOL_PASS2_ENABLED off until /schools/submit and /schools/verify ship.';
+import { functions } from '$declarations/satellite/satellite.api';
+import type { AppLocale } from '$lib/constants/locale.constants';
+
+/** Hard timeout for either verification round-trip. */
+const SCHOOL_VERIFY_TIMEOUT_MS = 15_000;
+
+const withTimeout = <T>({
+	operation,
+	label
+}: {
+	operation: Promise<T>;
+	label: string;
+}): Promise<T> =>
+	Promise.race<T>([
+		operation,
+		new Promise<T>((_, reject) => {
+			setTimeout(
+				() => reject(new Error(`${label} timed out after ${SCHOOL_VERIFY_TIMEOUT_MS}ms`)),
+				SCHOOL_VERIFY_TIMEOUT_MS
+			);
+		})
+	]);
 
 export interface SchoolSubmitInput {
 	/** School display name as the user typed / picked it. */
@@ -37,6 +58,8 @@ export interface SchoolSubmitInput {
 	email: string;
 	/** Set when verifying membership of an existing directory school. */
 	schoolId?: string;
+	/** Active UI locale — forwarded so the emailed code is localized. */
+	locale: AppLocale;
 }
 
 export interface SchoolSubmitResult {
@@ -54,22 +77,58 @@ export interface SchoolVerifyResult {
 	ok: boolean;
 	/** Present on success — the canonical school id to attach. */
 	schoolId?: string;
-	/** Present on success — the resulting membership status. */
+	/** Present on success — the resulting school visibility. */
 	status?: 'pending' | 'public';
-	/** Present on failure — a human-readable reason. */
+	/** Present on failure — a machine-readable reason. */
 	message?: string;
 }
 
 /**
- * Stub for `POST /schools/submit`. Throws until B.1 is wired —
- * unreachable while `SCHOOL_PASS2_ENABLED` is `false`.
+ * `POST /schools/submit`. Asks the satellite to mail a fresh 6-digit code
+ * to `email`. Throws on transport failure / timeout / server rejection
+ * (bad domain, rate limit, relay unconfigured) — the picker maps that to
+ * its "couldn't send" copy.
  */
-export const submitSchool = (_input: SchoolSubmitInput): Promise<SchoolSubmitResult> =>
-	Promise.reject(new Error(NOT_IMPLEMENTED));
+export const submitSchool = async ({
+	name,
+	country,
+	email,
+	schoolId,
+	locale
+}: SchoolSubmitInput): Promise<SchoolSubmitResult> => {
+	const { submissionId } = await withTimeout({
+		operation: functions.submitSchool({
+			name,
+			country: country ?? undefined,
+			schoolId: schoolId ?? undefined,
+			email,
+			locale
+		}),
+		label: 'submitSchool'
+	});
+
+	return { submissionId };
+};
 
 /**
- * Stub for `POST /schools/verify`. Throws until B.1 is wired —
- * unreachable while `SCHOOL_PASS2_ENABLED` is `false`.
+ * `POST /schools/verify`. Submits the entered code. Resolves to
+ * `{ ok: false, message }` on a wrong / expired / capped code (the picker
+ * keeps the user on the same screen) and `{ ok: true, schoolId, status }`
+ * on success.
  */
-export const verifySchoolCode = (_input: SchoolVerifyInput): Promise<SchoolVerifyResult> =>
-	Promise.reject(new Error(NOT_IMPLEMENTED));
+export const verifySchoolCode = async ({
+	submissionId,
+	code
+}: SchoolVerifyInput): Promise<SchoolVerifyResult> => {
+	const result = await withTimeout({
+		operation: functions.verifySchoolCode({ submissionId, code }),
+		label: 'verifySchoolCode'
+	});
+
+	return {
+		ok: result.ok,
+		schoolId: result.schoolId,
+		status: result.status,
+		message: result.message
+	};
+};
