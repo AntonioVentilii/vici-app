@@ -150,20 +150,28 @@ time. They all mutate the same satellite canister, and `functions upgrade`
 rejected with `Canister … is stopped` (IC0508). The shared queue serializes
 every satellite mutation; runs wait for the previous one instead of racing.
 
-**The satellite is always built / mutated with the npm-pinned `@junobuild/cli`,
-never `junobuild/juno-action@full`.** The action's image bundles its own
-toolchain that fails to enumerate the `defineQuery` / `defineUpdate` exports
-from `src/satellite/index.ts` — it emits `satellite_extension.did` as
-`service : {}`, shipping a satellite with **no custom endpoints** (surfaces as
-"method" errors only via CI, never locally). Every workflow that builds
-functions or mutates the satellite (`checks.yml`'s `satellite-schema`,
-`e2e.yml`, `upgrade.yml`, `publish.yml`, `config.yml`) installs the CLI via the
+**Building the satellite needs three tools, not just the CLI.**
+`juno functions build` (TS / Sputnik) runs esbuild → generate API/candid
+(`@icp-sdk/bindgen`) → assemble the satellite wasm (`ic-wasm`, which embeds the
+compiled functions). If `ic-wasm` or `bindgen` are missing, the CLI prompts to
+install them and — under `--headless` — auto-declines and **silently skips the
+wasm-assembly stage while still exiting 0**. A downstream `functions upgrade`
+then ships a satellite with **none of its custom endpoints**, so the app fails
+at runtime with `IC0536 — Canister has no query method '…'` (only via CI; a
+local build works because dev machines already have the tools). The
+`satellite-schema` drift check stays green because it only needs the `.did`
+(the bindgen stage), never the wasm — so it does **not** catch a missing
+`ic-wasm`. Every workflow that builds the satellite (`checks.yml`'s
+`satellite-schema`, `e2e.yml`, `upgrade.yml`, `publish.yml`, `config.yml`)
+installs the full toolchain via the
 [`install-juno-cli`](../../.github/actions/install-juno-cli/action.yml)
-composite action — the **single source of truth for the pin** — then runs
-`npm run juno:functions:build` / `juno … --headless`. The action is only kept
-for steps that need its OIDC token exchange (`publish.yml`'s `functions
-publish`), which upload the already-built wasm without rebuilding. Bump the pin
-in [`install-juno-cli`](../../.github/actions/install-juno-cli/action.yml) in
+composite action — the **single source of truth** for the pinned CLI +
+`ic-wasm` + `bindgen` versions — then runs `npm run juno:functions:build` /
+`juno … --headless`. The `junobuild/juno-action@full` image bakes these tools;
+we drive the CLI directly instead so the build matches the local toolchain, and
+keep the action only for steps that need its OIDC token exchange (`publish.yml`'s
+`functions publish`). Bump these versions in
+[`install-juno-cli`](../../.github/actions/install-juno-cli/action.yml) in
 lockstep with the dependabot `juno-kit` `@junobuild/functions` bumps.
 
 If your change is doc-only, the `format` and `lint` jobs still run because

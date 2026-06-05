@@ -1,19 +1,32 @@
-name: Install Juno CLI
-description: Install the pinned Juno CLI globally — the single source of truth for the @junobuild/cli version used by every workflow that builds the satellite functions or mutates the satellite.
+name: Install Juno build toolchain
+description: Install the pinned Juno CLI plus the external tools `juno functions build` needs to assemble the satellite wasm — ic-wasm and @icp-sdk/bindgen. Single source of truth for these pinned versions.
 
-# Why the pinned CLI instead of `junobuild/juno-action@full`: the action's image
-# bundles a stale `@icp-sdk/bindgen` that drops the `defineQuery` / `defineUpdate`
-# exports, emitting `satellite_extension.did` as `service : {}` — a satellite with
-# NO custom endpoints (the "method" errors that only surfaced via CI). The npm CLI
-# builds against our own `node_modules` and reproduces the local build.
-# Upstream: https://github.com/junobuild/juno-action/issues/108
-#
-# This is the ONE place the pin lives. Bump it in lockstep with the dependabot
-# `juno-kit` `@junobuild/functions` bumps so the CLI and JS package stay aligned.
+# `juno functions build` (TS / Sputnik) runs three stages: esbuild bundle ->
+# generate the API/candid (`@icp-sdk/bindgen`) -> assemble the satellite wasm
+# (`ic-wasm`, which embeds the compiled functions into the satellite). If
+# ic-wasm or bindgen are missing the CLI prompts to install them, and under
+# `--headless` it auto-declines and SILENTLY skips the wasm-assembly stage while
+# still exiting 0 — so a downstream `juno functions upgrade` ships a satellite
+# with NONE of its custom endpoints (runtime "Canister has no query method ...",
+# IC0536). The junobuild/juno-action image bakes these tools; when we drive the
+# CLI directly we must install them ourselves so CI matches the local dev
+# toolchain. This is the ONE place these versions live — bump them together with
+# the dependabot juno-kit `@junobuild/functions` bumps.
 
 runs:
   using: composite
   steps:
-    - name: Install Juno CLI
+    - name: Install Juno CLI and bindgen
       shell: bash
-      run: npm i -g @junobuild/cli@0.15.4
+      run: npm i -g @junobuild/cli@0.15.4 @icp-sdk/bindgen@0.4.0
+
+    - name: Install ic-wasm
+      shell: bash
+      run: |
+        version=0.9.11
+        url="https://github.com/dfinity/ic-wasm/releases/download/${version}/ic-wasm-x86_64-unknown-linux-gnu.tar.xz"
+        curl --fail --location --silent --show-error "$url" -o /tmp/ic-wasm.tar.xz
+        mkdir -p /tmp/ic-wasm
+        tar -xJf /tmp/ic-wasm.tar.xz -C /tmp/ic-wasm
+        sudo install -m 0755 "$(find /tmp/ic-wasm -type f -name ic-wasm | head -1)" /usr/local/bin/ic-wasm
+        ic-wasm --version
