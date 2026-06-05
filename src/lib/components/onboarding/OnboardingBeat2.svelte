@@ -50,6 +50,16 @@
 	let poolPick: string | null = $state(null);
 	let custom: string = $state('');
 
+	// Live, debounced availability probe for the custom input. Pool draws
+	// are pre-filtered through the same query at display time, so only the
+	// free-form path needs an as-you-type check. `idle` covers both "no
+	// candidate yet" and the gap before the debounce fires.
+	type LiveAvailability = 'idle' | 'checking' | 'available' | 'taken' | 'failed';
+	let liveAvailability = $state<LiveAvailability>('idle');
+	let checkToken = 0;
+	let checkTimer: ReturnType<typeof setTimeout> | undefined;
+	const CHECK_DEBOUNCE_MS = 350;
+
 	// Suggestions shown in the pool grid — replaced on every `reshuffle`.
 	let sampled: string[] = $state([]);
 	let isReshuffling = $state(false);
@@ -166,6 +176,82 @@
 		});
 	});
 
+	// Format/length gate for the custom candidate — the local checks the
+	// live probe must clear before hitting the satellite. Mirrors the
+	// rules in `availability` below. Only meaningful in custom mode; pool
+	// picks are pre-filtered and skip the probe entirely.
+	const customFormatValid = $derived.by(
+		() =>
+			mode === 'custom' &&
+			selectedName.length >= MIN_NICKNAME_LENGTH &&
+			selectedName.length <= 16 &&
+			/^[a-z0-9._-]+$/.test(selectedName)
+	);
+
+	// Debounced live availability probe for the custom input. Cancels the
+	// in-flight check on every keystroke via a monotonic token, guards
+	// empty / malformed candidates, and stays offline-tolerant: a probe
+	// failure surfaces as `failed` but never blocks the claim, since the
+	// claim-time re-check and the satellite assertion are the authority.
+	$effect(() => {
+		const candidate = selectedName;
+		const probe = customFormatValid;
+
+		if (checkTimer) {
+			clearTimeout(checkTimer);
+		}
+
+		checkToken += 1;
+		const token = checkToken;
+
+		if (!probe) {
+			liveAvailability = 'idle';
+
+			return;
+		}
+
+		// Already confirmed taken this session — skip the round-trip.
+		if (sessionTaken.has(candidate)) {
+			liveAvailability = 'taken';
+
+			return;
+		}
+
+		liveAvailability = 'checking';
+
+		checkTimer = setTimeout(() => {
+			void (async () => {
+				try {
+					const res = await checkNicknameAvailability({ nickname: candidate });
+
+					if (token !== checkToken) {
+						return;
+					}
+
+					if (res.available) {
+						liveAvailability = 'available';
+					} else {
+						sessionTaken.add(candidate);
+						liveAvailability = 'taken';
+					}
+				} catch (err) {
+					if (token !== checkToken) {
+						return;
+					}
+
+					console.warn(`Live availability check failed for "${candidate}":`, err);
+					liveAvailability = 'failed';
+				}
+			})();
+		}, CHECK_DEBOUNCE_MS);
+
+		return () => {
+			if (checkTimer) {
+				clearTimeout(checkTimer);
+			}
+		};
+	});
+
 	interface Availability {
 		ok: boolean;
 		reasonKey?: MessageKey;
@@ -198,10 +284,30 @@
 			return { ok: false, reasonKey: 'onboarding.beat2.avail.taken' };
 		}
 
+		// Custom mode gates on the live probe. Block while it's in flight
+		// (or about to be), reject a confirmed collision, and otherwise
+		// stay optimistic — `failed`/`available` both clear the claim, and
+		// the claim-time re-check guards the commit.
+		if (mode === 'custom') {
+			if (liveAvailability === 'idle' || liveAvailability === 'checking') {
+				return { ok: false, reasonKey: 'onboarding.beat2.avail.checking' };
+			}
+
+			if (liveAvailability === 'taken') {
+				return { ok: false, reasonKey: 'onboarding.beat2.avail.taken' };
+			}
+		}
+
 		return { ok: true };
 	});
 
 	const canClaim = $derived(availability.ok && !isClaiming);
+
+	// The live probe is mid-flight — render the hint as neutral (not an
+	// error) while we wait for the satellite to answer.
+	const isCheckingAvailability = $derived(
+		availability.reasonKey === 'onboarding.beat2.avail.checking'
+	);
 
 	const event = $derived($featuredEvent);
 	const team = $derived(
@@ -341,7 +447,13 @@
 	{/if}
 
 	{#if selectedName}
-		<div class="ob2-avail" class:no={!availability.ok} class:ok={availability.ok}>
+		<div
+			class="ob2-avail"
+			class:checking={isCheckingAvailability}
+			class:no={!availability.ok && !isCheckingAvailability}
+			class:ok={availability.ok}
+			aria-live="polite"
+		>
 			{#if availability.ok}
 				{t({ locale: $localeStore, key: 'onboarding.beat2.avail_ok_prefix' })}
 				<span class="serif-italic">@{selectedName}</span>

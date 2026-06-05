@@ -1494,6 +1494,7 @@ export const enMessages = {
 		'Following the tournament. Swipe YES if you think {team} takes it all.',
 	'onboarding.beat2.affil_eyebrow': 'Your profile',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
+	'onboarding.beat2.avail.checking': 'Checking availability…',
 	'onboarding.beat2.avail.invalid': 'Letters, numbers, . _ - only',
 	'onboarding.beat2.avail.just_taken': 'Just claimed — pick another',
 	'onboarding.beat2.avail.taken': 'Taken — try a variant',
