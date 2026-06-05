@@ -127,6 +127,7 @@ import { assertSetUserStats } from '$satellite/services/user-stats.services';
 import { onProfileSetForAchievementAward } from '$satellite/services/vxp-achievement-awards.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimCalibrationRewardFn } from '$satellite/services/vxp-calibration.services';
+import { onProfileSetForComebackRestore } from '$satellite/services/vxp-comeback-awards.services';
 import {
 	onProfileSetForVxpOnboarding,
 	onTradeActivityForVxpOnboarding
@@ -1133,6 +1134,7 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	onProfileSetForReferralCode(context);
 	await onProfileSetForStreakAward(context);
 	await onProfileSetForAchievementAward(context);
+	await onProfileSetForComebackRestore(context);
 	onProfileSetForAffiliationStats(context);
 	onProfileSetForLeagueStats(context);
 };
