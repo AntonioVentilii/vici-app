@@ -40,10 +40,8 @@
 	const stakeIdx = $derived(VXP_STAKE_LADDER.indexOf(currentStake));
 	const stakePct = $derived(stakeIdx >= 0 ? (stakeIdx / (VXP_STAKE_LADDER.length - 1)) * 100 : 0);
 	const atCap = $derived(currentStake === VXP_STAKE_LADDER[VXP_STAKE_LADDER.length - 1]);
-	// Preview the payout off the order-book execution price (best ask for YES,
-	// 1 − best bid for NO) — the same price `executeOutcomeTrade` sizes the
-	// order from — not the consensus mid. On a thin / one-sided book the mid
-	// over-promised the "+X VXP" the placed order could never deliver.
+	// Price off the execution price (the ask), like the order placed — not the
+	// consensus mid, which over-promises on a thin book.
 	const stakeYesWin = $derived(
 		vxpNetWin({
 			stake: currentStake,

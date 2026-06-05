@@ -130,20 +130,11 @@ export const calculateProbability = ({
 };
 
 /**
- * Resolves the execution price (0..1) of *buying* `action` on a market — the
- * price a market order would pay right now. A buy lifts the book, so it pays
- * the ask, not the consensus mid: YES pays the best ask, NO pays `1 − bestBid`
- * (buying NO is selling YES at the bid). Falls back to the consensus
- * probability only when that side of the book is empty; a categorical outcome
- * uses its own probability. Floored at `0.01` so a degenerate empty book can
- * never divide by zero. A LIMIT order executes at its own `limitPrice`.
- *
- * Single source of truth for the order-book execution price: it sizes the
- * order (`qty = collateral / price`, see `executeOutcomeTrade`) **and** drives
- * the "+X VXP" payout preview (`TradeModal`, `FlowStake`), so the figure the
- * user sees can never drift from the order actually placed. This is the
- * order-book-aware replacement for previewing off the consensus mid, which
- * ignored the spread and over-promised the payout on thin / one-sided books.
+ * Execution price (0..1) of *buying* `action` now. A buy lifts the book, so it
+ * pays the ask — best ask for YES, `1 − bestBid` for NO — not the consensus
+ * mid (used only when that side is empty; LIMIT uses `limitPrice`; floored at
+ * 0.01). Single source of truth: both order sizing and the payout preview call
+ * this, so the previewed "+X VXP" can't drift from the order placed.
  */
 export const resolveOutcomeExecutionPrice = ({
 	market,

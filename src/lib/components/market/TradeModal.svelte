@@ -77,11 +77,8 @@
 		selectedOutcome === 'YES' ? tr({ key: 'outcome.yes' }) : tr({ key: 'outcome.no' })
 	);
 
-	// Execution price of the chosen side (0..1) that sizes the payout
-	// preview. Shared with `executeOutcomeTrade` via
-	// `resolveOutcomeExecutionPrice` (best ask for YES, `1 - bestBid` for NO,
-	// consensus probability only when that side of the book is empty), so the
-	// displayed "+X VXP" stays in step with the order that is actually placed.
+	// Execution price of the chosen side, shared with `executeOutcomeTrade` so
+	// the previewed "+X VXP" matches the order placed.
 	const sideExecutionPrice = $derived(
 		resolveOutcomeExecutionPrice({ market, action: selectedOutcome })
 	);

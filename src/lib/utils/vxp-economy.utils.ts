@@ -33,13 +33,7 @@ export const vxpNetWin = ({
 }: {
 	/** User's stake on the call, in VXP. */
 	stake: number;
-	/**
-	 * Order-book execution price of the user's chosen side at commit time,
-	 * 0–1 — the price a market buy actually pays (best ask for YES,
-	 * `1 − best bid` for NO via `resolveOutcomeExecutionPrice`), **not** the
-	 * consensus mid. Pricing off the mid over-promised the payout on a thin
-	 * or one-sided book.
-	 */
+	/** Execution price of the chosen side, 0–1 (the ask via `resolveOutcomeExecutionPrice`, not the consensus mid). */
 	pWin: number;
 }): number => {
 	const safeP = Math.max(VXP_P_WIN_FLOOR, pWin);
