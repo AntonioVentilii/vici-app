@@ -26,6 +26,7 @@ import {
 	resumeMyAccountFn,
 	sweepExpiredDeletionsFn
 } from '$satellite/services/account.services';
+import { assertSetActivity } from '$satellite/services/activity.services';
 import {
 	assertSetAffiliationStats,
 	onProfileSetForAffiliationStats
@@ -1045,6 +1046,7 @@ export const getMonthlyLeaderboard = defineQuery({
 });
 
 const assertSetDocCollections = [
+	Collection.ACTIVITIES,
 	Collection.PROFILES,
 	Collection.ROLES,
 	Collection.REFERRAL_CODES,
@@ -1069,6 +1071,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 	collections: assertSetDocCollections,
 	assert: (context) => {
 		const fn: Record<AssertSetDocCollection, (ctx: AssertSetDocContext) => void> = {
+			[Collection.ACTIVITIES]: assertSetActivity,
 			[Collection.PROFILES]: assertValidNickname,
 			[Collection.ROLES]: assertSetRole,
 			[Collection.REFERRAL_CODES]: assertSetReferralCode,
