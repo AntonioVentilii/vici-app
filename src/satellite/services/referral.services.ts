@@ -339,7 +339,7 @@ const writeConfirmedFriendship = ({
 	});
 };
 
-export const redeemReferralCodeFn = ({ code }: { code: string }): void => {
+export const redeemReferralCodeFn = async ({ code }: { code: string }): Promise<void> => {
 	const caller = msgCaller();
 	const callerBytes = caller.toUint8Array();
 	const callerText = caller.toText();
@@ -430,6 +430,21 @@ export const redeemReferralCodeFn = ({ code }: { code: string }): void => {
 		message: 'referral_redeemed',
 		detail: { referee: callerText, referrer, code: normalized }
 	});
+
+	// Pay out INLINE — not via the `onReferralSetForVxpPayout` hook. Juno only fires `onSetDoc` for
+	// client `set_doc` writes; the `setDocStore` write above (a serverless write) never triggers it
+	// (see api/db.rs vs db/store.rs in junobuild/juno). Relying on the hook left every referral
+	// bonus permanently `owed`. Best-effort: a transfer hiccup must not fail the redeem (the row +
+	// friendship are already committed and the payout self-heals via {@link settleReferralFn}).
+	try {
+		await settleReferralPayout({ caller: callerBytes, refereeKey: callerText });
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		logError({
+			message: 'referral_inline_settle_error',
+			detail: { referee: callerText, error: msg }
+		});
+	}
 };
 
 /**
@@ -648,7 +663,11 @@ const transferReferralBonus = async ({
  * in flight (`owed` / `processing` / `paid`) counts toward both caps so racing redemptions can't
  * slip past either by being mid-transfer.
  *
- * Both totals exclude the row being processed (`excludeKey`).
+ * Counts only redemptions that happened *before* the row being processed — `redeemedAtMs <
+ * referenceMs`, tie-broken by key so equal timestamps are deterministic — and excludes the row
+ * itself (`excludeKey`). The "prior only" ordering makes a given row's prior-paid count (and thus
+ * its diminishing-curve reward) **stable regardless of when settlement runs**: a later redemption
+ * can never retroactively inflate an earlier row's count and shrink its reward on a delayed retry.
  */
 const countReferrerCredits = ({
 	caller,
@@ -678,7 +697,12 @@ const countReferrerCredits = ({
 			try {
 				const doc = decodeDocData<ReferralDoc>(item.data);
 
-				if (doc.referrer === referrer && doc.referrerPayout.status !== 'none') {
+				// Prior redemptions only — earlier in time, or same instant with a lower key. Keeps
+				// each row's tier derivation stable across retries (see the doc comment above).
+				const isPrior =
+					doc.redeemedAtMs < referenceMs || (doc.redeemedAtMs === referenceMs && key < excludeKey);
+
+				if (doc.referrer === referrer && doc.referrerPayout.status !== 'none' && isPrior) {
 					const inMonth = doc.redeemedAtMs >= monthStartMs;
 
 					return {
@@ -747,6 +771,20 @@ const parseStoredAmount = (raw: string): bigint => {
 		return parsed > ZERO ? parsed : ZERO;
 	} catch {
 		return ZERO;
+	}
+};
+
+/**
+ * Guarded decode of a referral row. The `referrals` collection is user-writable, so a
+ * tampered/malformed row could make `decodeDocData` throw. Returning `undefined` (logged) instead
+ * of trapping keeps the payout path — including the auth-free `settleReferral` endpoint — robust.
+ */
+const decodeReferralRow = (data: Parameters<typeof decodeDocData>[0]): ReferralDoc | undefined => {
+	try {
+		return decodeDocData<ReferralDoc>(data);
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		logError({ message: 'referral_decode_failed', detail: { error: msg } });
 	}
 };
 
@@ -1020,14 +1058,116 @@ const armReferrerPayoutIfFirstFire = ({
 	}
 };
 
+/**
+ * Drives both referral payouts to completion for a single referee row: arms the referrer reward
+ * (first run only, within caps), then transfers the flat referee bonus and the curve-keyed referrer
+ * reward. Reads and writes the row AS `caller`, which MUST be the referee principal so
+ * `assertSetReferral`'s "only the referee may update their record" guard passes.
+ *
+ * Idempotent and retry-safe: every step short-circuits once its side is `paid` / `processing`, so
+ * re-running only advances what is still `owed`. Never throws on a transfer failure — the failing
+ * side is recorded back as `owed` with `lastError` for a later retry.
+ *
+ * Invoked **inline** from {@link redeemReferralCodeFn} and the `settleReferral` endpoint — NOT from
+ * a post-write hook. Juno only fires `onSetDoc` for client `set_doc` writes, never for the
+ * serverless `setDocStore` write that creates the row (see `api/db.rs` calling `invoke_on_set_doc`
+ * vs `db/store.rs` which does not, in junobuild/juno).
+ */
+const settleReferralPayout = async ({
+	caller,
+	refereeKey
+}: {
+	caller: Uint8Array;
+	refereeKey: string;
+}): Promise<void> => {
+	const snapshot = getDocStore({
+		collection: Collection.REFERRALS,
+		key: refereeKey,
+		caller
+	});
+
+	if (isNullish(snapshot)) {
+		return;
+	}
+
+	const doc = decodeReferralRow(snapshot.data);
+
+	if (isNullish(doc)) {
+		return;
+	}
+
+	// Fast-exit once both sides have settled (paid / in-flight, or referrer skipped over the cap).
+	const refereeSettled =
+		doc.refereePayout.status === 'paid' || doc.refereePayout.status === 'processing';
+	const referrerSettled =
+		doc.referrerPayout.status === 'paid' ||
+		doc.referrerPayout.status === 'processing' ||
+		(doc.referrerPayout.status === 'none' && doc.withinReferrerCap === false);
+
+	if (refereeSettled && referrerSettled) {
+		return;
+	}
+
+	armReferrerPayoutIfFirstFire({ caller, refereeKey });
+
+	const ledger = new IcrcLedgerCanister({
+		canisterId: Principal.fromText(VXP_LEDGER_CANISTER_ID)
+	});
+
+	// SECURITY: both expected amounts are recomputed server-side here and passed to the transfer
+	// path — never read from the (user-writable) referral doc. The referee bonus is the flat
+	// constant; the referrer reward is re-derived from the diminishing curve keyed on the *same*
+	// authoritative prior-paid count that the arming step (`armReferrerPayoutIfFirstFire`) used.
+	await driveSidePayout({
+		ledger,
+		caller,
+		refereeKey,
+		side: 'referee',
+		recipient: refereeKey,
+		memoLabel: 'referee',
+		expectedAmount: REFERRAL_VXP_BONUS_BASE_UNITS
+	});
+
+	// Re-read after the referee transfer: the referrer side is only worth a (full-collection) scan +
+	// transfer when it is actually `owed`. On retries where it is already paid / processing — or was
+	// skipped over the cap (`none`) — bail before the scan. This bounds the cost of the auth-free
+	// `settleReferral` endpoint to a cheap re-read once a row's referrer side is settled.
+	const latest = getDocStore({ collection: Collection.REFERRALS, key: refereeKey, caller });
+	const latestDoc = nonNullish(latest) ? decodeReferralRow(latest.data) : undefined;
+
+	if (isNullish(latestDoc) || latestDoc.referrerPayout.status !== 'owed') {
+		return;
+	}
+
+	const { lifetime: referrerPriorPaidCount } = countReferrerCredits({
+		caller,
+		referrer: latestDoc.referrer,
+		excludeKey: refereeKey,
+		referenceMs: latestDoc.redeemedAtMs
+	});
+
+	await driveSidePayout({
+		ledger,
+		caller,
+		refereeKey,
+		side: 'referrer',
+		recipient: latestDoc.referrer,
+		memoLabel: 'referrer',
+		expectedAmount: referrerRewardBaseUnits(referrerPriorPaidCount)
+	});
+};
+
+/**
+ * Post-write hook for the referrals collection. NOTE: in practice this never fires — the referral
+ * row is created by the `redeemReferralCode` serverless endpoint via `setDocStore`, and Juno only
+ * invokes `onSetDoc` for client `set_doc` writes. It stays wired (delegating to the same idempotent
+ * {@link settleReferralPayout} the endpoint uses) purely as a safety net, in case a referral row is
+ * ever written through the public datastore API.
+ */
 export const onReferralSetForVxpPayout = async (ctx: OnSetDocContext): Promise<void> => {
 	const {
 		caller,
-		data: {
-			collection,
-			key,
-			data: { after }
-		}
+		data: { collection, key }
 	} = ctx;
 
 	if (collection !== Collection.REFERRALS) {
@@ -1035,55 +1175,7 @@ export const onReferralSetForVxpPayout = async (ctx: OnSetDocContext): Promise<v
 	}
 
 	try {
-		// Fast-exit on the post-payout self-write: both sides have settled, nothing to do.
-		const doc = decodeDocData<ReferralDoc>(after.data);
-		const refereeSettled =
-			doc.refereePayout.status === 'paid' || doc.refereePayout.status === 'processing';
-		const referrerSettled =
-			doc.referrerPayout.status === 'paid' ||
-			doc.referrerPayout.status === 'processing' ||
-			(doc.referrerPayout.status === 'none' && doc.withinReferrerCap === false);
-
-		if (refereeSettled && referrerSettled) {
-			return;
-		}
-
-		armReferrerPayoutIfFirstFire({ caller, refereeKey: key });
-
-		const ledger = new IcrcLedgerCanister({
-			canisterId: Principal.fromText(VXP_LEDGER_CANISTER_ID)
-		});
-
-		// SECURITY: both expected amounts are recomputed server-side here and passed to the transfer
-		// path — never read from the (user-writable) referral doc. The referee bonus is the flat
-		// constant; the referrer reward is re-derived from the diminishing curve keyed on the *same*
-		// authoritative prior-paid count that the arming step (`armReferrerPayoutIfFirstFire`) used.
-		await driveSidePayout({
-			ledger,
-			caller,
-			refereeKey: key,
-			side: 'referee',
-			recipient: key,
-			memoLabel: 'referee',
-			expectedAmount: REFERRAL_VXP_BONUS_BASE_UNITS
-		});
-
-		const { lifetime: referrerPriorPaidCount } = countReferrerCredits({
-			caller,
-			referrer: doc.referrer,
-			excludeKey: key,
-			referenceMs: doc.redeemedAtMs
-		});
-
-		await driveSidePayout({
-			ledger,
-			caller,
-			refereeKey: key,
-			side: 'referrer',
-			recipient: doc.referrer,
-			memoLabel: 'referrer',
-			expectedAmount: referrerRewardBaseUnits(referrerPriorPaidCount)
-		});
+		await settleReferralPayout({ caller, refereeKey: key });
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
 		logError({
@@ -1092,4 +1184,28 @@ export const onReferralSetForVxpPayout = async (ctx: OnSetDocContext): Promise<v
 		});
 		throw e;
 	}
+};
+
+/**
+ * Settles — or retries — the VXP payout for a single referral row, keyed by the referee principal.
+ * Drives the same idempotent {@link settleReferralPayout} used inline at redeem time, so it is safe
+ * to call repeatedly: it only ever advances an `owed` side to `paid`, paying the server-computed
+ * amount to the row's own referee / referrer. Used by the FE to self-heal a payout that failed (or
+ * that predates the inline-payout fix), and for operator backfills.
+ *
+ * Auth: intentionally NOT gated on `msgCaller`. Recipients and amounts come entirely from the
+ * already-validated row plus server constants, and the per-side `processing` lock + version checks
+ * block double-pay — so an arbitrary caller can at most complete a legitimate, one-time payout. The
+ * row is read/written AS the referee so `assertSetReferral` accepts the update.
+ */
+export const settleReferralFn = async ({ referee }: { referee: string }): Promise<void> => {
+	let refereeBytes: Uint8Array;
+
+	try {
+		refereeBytes = Principal.fromText(referee).toUint8Array();
+	} catch {
+		throw new Error('Invalid referee principal.');
+	}
+
+	await settleReferralPayout({ caller: refereeBytes, refereeKey: referee });
 };

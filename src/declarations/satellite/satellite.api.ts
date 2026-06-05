@@ -1399,6 +1399,19 @@ const sendFriendRequest = async (
 	await app_send_friend_request(idlArgs);
 };
 
+const AppSettleReferralArgsSchema = j.strictObject({ referee: j.string() });
+
+const settleReferral = async (args: j.infer<typeof AppSettleReferralArgsSchema>): Promise<void> => {
+	const parsedArgs = AppSettleReferralArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppSettleReferralArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_settle_referral']>[0];
+
+	const { app_settle_referral } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	await app_settle_referral(idlArgs);
+};
+
 const AppSubmitSchoolArgsSchema = j.strictObject({
 	name: j.string(),
 	country: j.optional(j.string()),
@@ -1679,6 +1692,7 @@ export const functions = {
 	resolveTournamentRound,
 	resumeMyAccount,
 	sendFriendRequest,
+	settleReferral,
 	submitSchool,
 	sweepExpiredDeletions,
 	transferLeagueOwnership,
