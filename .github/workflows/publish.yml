@@ -24,15 +24,14 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
-      # Build with the pinned Juno CLI, NOT the action (see `upgrade.yml` and the
-      # `satellite-schema` job in `checks.yml` for the rationale: the action's image
-      # rewrites `satellite_extension.did` as `service : {}`, dropping every custom
-      # endpoint). The publish step keeps the action because it relies on the action's
-      # OIDC token exchange (id-token: write); `functions publish` only uploads the
-      # already-built local WASM, it does not rebuild, so it inherits the CLI-built
-      # artifact from the step above.
+      # Build with the pinned Juno CLI, NOT the action (the action ships a
+      # satellite with no custom endpoints — see the install-juno-cli action for
+      # the full rationale). The publish step keeps the action because it relies on
+      # the action's OIDC token exchange (id-token: write); `functions publish` only
+      # uploads the already-built local WASM, it does not rebuild, so it inherits the
+      # CLI-built artifact from the step above.
       - name: Install Juno CLI
-        run: npm i -g @junobuild/cli@0.15.4
+        uses: ./.github/actions/install-juno-cli
 
       - name: Build functions
         run: npm run juno:functions:build

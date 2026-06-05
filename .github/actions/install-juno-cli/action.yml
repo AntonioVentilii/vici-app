@@ -1,0 +1,23 @@
+name: Install Juno CLI
+description: Install the pinned Juno CLI globally — the single source of truth for the @junobuild/cli version used by every workflow that builds the satellite functions or mutates the satellite.
+
+# Why a pinned global CLI instead of `junobuild/juno-action@full`:
+# the action's docker image bundles its own toolchain that (a) ships an older
+# `@icp-sdk/bindgen` than our `package.json` devDep, and (b) fails to enumerate
+# the `defineQuery` / `defineUpdate` exports from `src/satellite/index.ts`,
+# emitting `satellite_extension.did` as `service : {}` — i.e. a satellite with
+# NO custom endpoints (the "method" errors that only ever surfaced via CI, never
+# locally). The npm-installed CLI runs against our own `node_modules` and
+# reproduces the local build byte-for-byte.
+#
+# Bump this version deliberately, in lockstep with the `@junobuild/functions`
+# bumps that the dependabot `juno-kit` group opens — keeping the build CLI and
+# the JS package on the same Juno release line. This is the ONE place the pin
+# lives; all workflows reference this action.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Juno CLI
+      shell: bash
+      run: npm i -g @junobuild/cli@0.15.4

@@ -171,17 +171,12 @@ jobs:
             ${{ runner.os }}-eslint-cache-quality-main-
             ${{ runner.os }}-eslint-cache-quality-
 
-      # Install the juno CLI directly instead of using `junobuild/juno-action@full`.
-      # The docker image bundles its own toolchain — at the time of writing it
-      # ships `@icp-sdk/bindgen@0.3.0` while our `package.json` devDep is `^0.4.0`,
-      # AND it fails to enumerate the `defineQuery` / `defineUpdate` exports from
-      # `src/satellite/index.ts` (it rewrites `satellite_extension.did` as
-      # `service : {}`). Both make the drift check a permanent false positive.
-      # The npm-installed CLI runs against our own `node_modules`, picks up the
-      # right bindgen, and reproduces the local build output byte-for-byte.
-      # Pin to a known-good version (same as `e2e.yml`); bump deliberately.
+      # Install the pinned juno CLI instead of `junobuild/juno-action@full`,
+      # whose image would make this drift check a permanent false positive (it
+      # ships a stale bindgen and emits `satellite_extension.did` as
+      # `service : {}`). See the install-juno-cli action for the full rationale.
       - name: Install Juno CLI
-        run: npm i -g @junobuild/cli@0.15.4
+        uses: ./.github/actions/install-juno-cli
 
       - name: Regenerate satellite Candid surface
         run: npm run juno:functions:build

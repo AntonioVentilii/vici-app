@@ -150,16 +150,21 @@ time. They all mutate the same satellite canister, and `functions upgrade`
 rejected with `Canister … is stopped` (IC0508). The shared queue serializes
 every satellite mutation; runs wait for the previous one instead of racing.
 
-**Functions are always built with the npm-pinned `@junobuild/cli`, never
-`junobuild/juno-action@full`.** The action's image bundles its own toolchain
-that fails to enumerate the `defineQuery` / `defineUpdate` exports from
-`src/satellite/index.ts` — it emits `satellite_extension.did` as `service : {}`,
-shipping a satellite with **no custom endpoints** (surfaces as "method" errors
-only via CI, never locally). `checks.yml` (`satellite-schema`), `upgrade.yml`,
-`publish.yml`, and `e2e.yml` all `npm i -g @junobuild/cli@<pinned>` then build
-via `npm run juno:functions:build`; the action is only kept for steps that need
-its OIDC token exchange (`functions publish`), which upload the already-built
-wasm without rebuilding. Keep the pin in sync with the local CLI.
+**The satellite is always built / mutated with the npm-pinned `@junobuild/cli`,
+never `junobuild/juno-action@full`.** The action's image bundles its own
+toolchain that fails to enumerate the `defineQuery` / `defineUpdate` exports
+from `src/satellite/index.ts` — it emits `satellite_extension.did` as
+`service : {}`, shipping a satellite with **no custom endpoints** (surfaces as
+"method" errors only via CI, never locally). Every workflow that builds
+functions or mutates the satellite (`checks.yml`'s `satellite-schema`,
+`e2e.yml`, `upgrade.yml`, `publish.yml`, `config.yml`) installs the CLI via the
+[`install-juno-cli`](../../.github/actions/install-juno-cli/action.yml)
+composite action — the **single source of truth for the pin** — then runs
+`npm run juno:functions:build` / `juno … --headless`. The action is only kept
+for steps that need its OIDC token exchange (`publish.yml`'s `functions
+publish`), which upload the already-built wasm without rebuilding. Bump the pin
+in [`install-juno-cli`](../../.github/actions/install-juno-cli/action.yml) in
+lockstep with the dependabot `juno-kit` `@junobuild/functions` bumps.
 
 If your change is doc-only, the `format` and `lint` jobs still run because
 they cover the whole repo. The `check` job covers `*.svelte` / `*.ts` only,

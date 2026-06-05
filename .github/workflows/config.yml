@@ -43,9 +43,14 @@ jobs:
       # unlike publish/upgrade. Rewriting security rules + auth config is an
       # administrative operation, so it uses the Administrator JUNO_TOKEN (like
       # upgrade.yml), not OIDC. Production is the CLI's default mode.
+      #
+      # Uses the pinned CLI rather than `junobuild/juno-action@full` for parity
+      # with upgrade.yml — `config apply` is token-authenticated (not OIDC), so it
+      # needs nothing the action provides. See the install-juno-cli action.
+      - name: Install Juno CLI
+        uses: ./.github/actions/install-juno-cli
+
       - name: Apply config
-        uses: junobuild/juno-action@full
-        with:
-          args: config apply
+        run: juno config apply --headless
         env:
           JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
