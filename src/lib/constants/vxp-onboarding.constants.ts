@@ -3,15 +3,15 @@ import { parseToken } from '$lib/utils/parse.utils';
 
 /**
  * Total VXP granted per user through the new-user ladder (onboarding reserve).
- * Explicit amounts (1,500 + 4,000 + 5,000 = 10,500 VXP): registration, first call, five calls.
+ * Explicit amounts (500 + 500 + 500 = 1,500 VXP): registration, first call, five calls.
  */
 export const NEW_USER_VXP_TOTAL_BASE_UNITS = parseToken({
-	value: '10500',
+	value: '1500',
 	unitName: VXP_TOKEN.decimals
 });
 
-const MILESTONE_1_VXP = parseToken({ value: '1500', unitName: VXP_TOKEN.decimals });
-const MILESTONE_2_VXP = parseToken({ value: '4000', unitName: VXP_TOKEN.decimals });
+const MILESTONE_1_VXP = parseToken({ value: '500', unitName: VXP_TOKEN.decimals });
+const MILESTONE_2_VXP = parseToken({ value: '500', unitName: VXP_TOKEN.decimals });
 
 export const newUserVxpAmountMilestone1BaseUnits = (): bigint => MILESTONE_1_VXP;
 
