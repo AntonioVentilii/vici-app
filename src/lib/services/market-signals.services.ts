@@ -2,7 +2,7 @@ import type { RegistryDid } from '$declarations';
 import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { getFollowedLean } from '$lib/services/followed-lean.services';
 import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
-import { getFollowing } from '$lib/services/relation.services';
+import { getFollowing } from '$lib/services/relation-queries.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import type { MarketId } from '$lib/types/market';
 import type { UserMarketSignals } from '$lib/types/market-signals';
