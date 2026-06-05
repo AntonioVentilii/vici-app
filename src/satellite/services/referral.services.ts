@@ -1023,9 +1023,10 @@ const armReferrerPayoutIfFirstFire = ({
 /**
  * Whether the referee has made at least one prediction. The referral bonus is gated on the referred
  * user's first prediction (a `trade` activity), so redeeming a code alone never pays — it only
- * records the `owed` row. Counts the caller's own `activities` rows; when called from the activity
- * hook the just-written trade is already included. Guarded: a count failure reads as "not yet"
- * rather than throwing the payout path.
+ * records the `owed` row. Counts only the caller's own **trade** activity rows: `logActivity` keys
+ * them `${user}#${timestamp}#${type}`, so a key ending in `#trade` is a prediction. Non-trade
+ * activities (settlement / comment / follow / vote) must NOT satisfy the gate. Guarded: a count
+ * failure reads as "not yet" rather than throwing the payout path.
  */
 const refereeHasTraded = (caller: Uint8Array): boolean => {
 	try {
@@ -1033,7 +1034,7 @@ const refereeHasTraded = (caller: Uint8Array): boolean => {
 			countDocsStore({
 				collection: Collection.ACTIVITIES,
 				caller,
-				params: { owner: caller, order: { field: 'keys', desc: false } }
+				params: { owner: caller, matcher: { key: `#${ActivityType.TRADE}$` } }
 			}) > ZERO
 		);
 	} catch {
@@ -1055,10 +1056,11 @@ const refereeHasTraded = (caller: Uint8Array): boolean => {
  * re-running only advances what is still `owed`. Never throws on a transfer failure — the failing
  * side is recorded back as `owed` with `lastError` for a later retry.
  *
- * Invoked **inline** from {@link redeemReferralCodeFn} and the `settleReferral` endpoint — NOT from
- * a post-write hook. Juno only fires `onSetDoc` for client `set_doc` writes, never for the
- * serverless `setDocStore` write that creates the row (see `api/db.rs` calling `invoke_on_set_doc`
- * vs `db/store.rs` which does not, in junobuild/juno).
+ * Invoked from {@link onTradeActivityForReferral} (the `activities` post-write hook — its trigger
+ * doc is client-written, so its `onSetDoc` genuinely fires) and from the `settleReferral` endpoint
+ * (manual retry/backfill). NOT invoked from `redeemReferralCodeFn`, and NOT from a hook on the
+ * referrals row itself — that row is written via serverless `setDocStore`, which never fires
+ * `onSetDoc` (see `api/db.rs` calling `invoke_on_set_doc` vs `db/store.rs` which does not).
  */
 const settleReferralPayout = async ({
 	caller,
@@ -1182,10 +1184,11 @@ export const onReferralSetForVxpPayout = async (ctx: OnSetDocContext): Promise<v
 
 /**
  * Settles — or retries — the VXP payout for a single referral row, keyed by the referee principal.
- * Drives the same idempotent {@link settleReferralPayout} used inline at redeem time, so it is safe
+ * Drives the same idempotent {@link settleReferralPayout} the `activities` hook uses, so it is safe
  * to call repeatedly: it only ever advances an `owed` side to `paid`, paying the server-computed
- * amount to the row's own referee / referrer. Used by the FE to self-heal a payout that failed (or
- * that predates the inline-payout fix), and for operator backfills.
+ * amount to the row's own referee / referrer (and only once the referee has actually traded). Used
+ * by the FE to self-heal a payout whose triggering activity hook didn't complete, and for operator
+ * backfills.
  *
  * Auth: intentionally NOT gated on `msgCaller`. Recipients and amounts come entirely from the
  * already-validated row plus server constants, and the per-side `processing` lock + version checks

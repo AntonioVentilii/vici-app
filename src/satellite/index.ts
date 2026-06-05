@@ -448,9 +448,9 @@ export const redeemReferralCode = defineUpdate({
 
 /**
  * Settles — or retries — the VXP payout for a referral row, keyed by the referee principal. The
- * bonus is normally driven by the referred user's first prediction; this exists so a payout that
- * failed (or predates the
- * inline-payout fix) can be driven to completion by the FE or an operator. Idempotent.
+ * bonus is normally driven by the referred user's first prediction (the `activities` hook); this
+ * endpoint exists so a payout that failed (or whose triggering activity hook didn't complete) can
+ * be driven to completion by the FE or an operator. Idempotent.
  */
 export const settleReferral = defineUpdate({
 	args: SettleReferralArgsSchema,
