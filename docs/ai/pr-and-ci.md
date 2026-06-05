@@ -138,17 +138,24 @@ fixes back to your branch on PRs from non-forks; you should still run
 | `checks.yml`  | `check`            | `npm run check` (`svelte-check`).                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `checks.yml`  | `satellite-schema` | `juno functions build --lang ts` then fails if `src/satellite/{satellite,satellite_extension}.did`, `api-schemas.ts`, or `src/declarations/satellite/**` drift. Run `npm run juno:functions:build` locally and commit the result.                                                                                                                                                                                                                                                      |
 | `checks.yml`  | `checks-pass`      | Aggregator — must be green to merge.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `deploy.yml`  | deploy             | `hosting deploy` (OIDC). Runs on every push to `main`, on `v*` tags, and via manual dispatch. Don't bypass.                                                                                                                                                                                                                                                                                                                                                                            |
+| `deploy.yml`  | deploy             | `functions build` + `functions upgrade` (Administrator `JUNO_TOKEN`) **then** `hosting deploy` (OIDC), in one sequential job — upgrades the satellite functions and ships the frontend. Runs on every push to `main`, on `v*` tags, and via manual dispatch. Don't bypass.                                                                                                                                                                                                             |
 | `publish.yml` | publish            | `functions build` + `functions publish` (OIDC) — stages the functions wasm to the satellite CDN. Runs on `v*` tags and manual dispatch.                                                                                                                                                                                                                                                                                                                                                |
-| `upgrade.yml` | upgrade            | `functions build` + `functions upgrade` — **applies** the new functions wasm to the running satellite. Runs on every push to `main`, on `v*` tags, and via manual dispatch (same triggers as `deploy.yml`). Needs the Administrator `JUNO_TOKEN` repo secret (not OIDC).                                                                                                                                                                                                               |
 | `config.yml`  | config             | `config apply` — **applies** `juno.config.ts` (collection rules + authentication config) to the production satellite. Reads the config only, no wasm build. Runs on every push to `main`, on `v*` tags, and via manual dispatch. Rewriting security rules / auth config is administrative, so it needs the same Administrator `JUNO_TOKEN` repo secret (not OIDC). Repo is source of truth: a run re-syncs the satellite to `juno.config.ts`, reverting any out-of-band Console edits. |
 
-`deploy.yml`, `publish.yml`, `upgrade.yml`, and `config.yml` share one concurrency group
+`deploy.yml`, `publish.yml`, and `config.yml` share one concurrency group
 (`juno-satellite`, `cancel-in-progress: false`) so they never run at the same
 time. They all mutate the same satellite canister, and `functions upgrade`
-**stops** it mid-upgrade — a concurrent `hosting deploy` would otherwise be
-rejected with `Canister … is stopped` (IC0508). The shared queue serializes
-every satellite mutation; runs wait for the previous one instead of racing.
+**stops** it mid-upgrade — a concurrent mutation would otherwise be rejected with
+`Canister … is stopped` (IC0508). The shared queue serializes every satellite
+mutation; a running one is never cancelled.
+
+`functions build` + `functions upgrade` live **inside** `deploy.yml` (not a
+separate workflow) on purpose: GitHub keeps only one _pending_ run per
+concurrency group, so when three juno workflows fired on the same push the queued
+one got cancelled (`Canceling since a higher priority waiting request for
+juno-satellite exists`). Folding upgrade into deploy means a push to `main`
+triggers only two members of the group (`deploy`, `config`) → one runs, one
+queues, none dropped.
 
 If your change is doc-only, the `format` and `lint` jobs still run because
 they cover the whole repo. The `check` job covers `*.svelte` / `*.ts` only,

@@ -8,10 +8,14 @@ on:
     tags:
       - v*
 
-# Shared across deploy / publish / upgrade: all three mutate the same
-# satellite canister, and `functions upgrade` stops it mid-upgrade — a
-# concurrent `hosting deploy` would be rejected with "Canister is stopped".
-# One queue serializes every satellite mutation.
+# Shared `juno-satellite` group with config.yml / publish.yml: all mutate the
+# same satellite canister and must not overlap (`functions upgrade` stops it
+# mid-run, so a concurrent mutation is rejected with "Canister is stopped").
+# `functions build` + `functions upgrade` run in THIS workflow (folded in from
+# the former upgrade.yml) and before `hosting deploy`, so the canister is
+# stopped and restarted within one job instead of racing a separate Upgrade
+# workflow — which is what let a 3rd queued run cancel a waiting deploy.
+# cancel-in-progress: false → queue, never cancel a running one.
 concurrency:
   group: juno-satellite
   cancel-in-progress: false
@@ -20,13 +24,37 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       id-token: write
     steps:
+      - name: Verify JUNO_TOKEN is set
+        env:
+          JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
+        run: |
+          if [ -z "$JUNO_TOKEN" ]; then
+            echo "::error::JUNO_TOKEN secret is not set. Generate an Administrator access key in the Juno Console and add it as the JUNO_TOKEN repo secret (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
       - name: Check out the repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Prepare
         uses: ./.github/actions/prepare
+
+      - name: Build functions
+        uses: junobuild/juno-action@full
+        with:
+          args: functions build
+
+      - name: Upgrade functions
+        uses: junobuild/juno-action@full
+        with:
+          args: functions upgrade
+        env:
+          JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
 
       - name: Deploy to Juno
         uses: junobuild/juno-action@main
