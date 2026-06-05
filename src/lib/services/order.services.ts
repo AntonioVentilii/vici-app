@@ -205,7 +205,7 @@ export const placeOrder = async ({
 			user: userText,
 			marketId,
 			title: `Placed ${side} ${type} order`,
-			details: `${side} ${qty} on ${outcome} @ ${price}`
+			details: `${side} ${qty} on ${outcome} @ ${Number(price.toFixed(PRICE_DECIMALS))}`
 		});
 		await recordActivity(userText);
 	} catch (e: unknown) {
