@@ -277,7 +277,16 @@
 
 	.avatar-editor {
 		position: fixed;
-		inset: 0;
+		/* Size to the *dynamic* viewport (`dvh`), not `inset: 0`. A fixed
+		 * `inset: 0` resolves against iOS's *large* layout viewport (toolbars
+		 * retracted), so the bottom-anchored footer — the Done button — lands
+		 * behind the bottom toolbar and disappears. `100dvh` tracks the
+		 * visible height so the sticky footer stays in view. */
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 100vh; /* fallback for engines without `dvh` */
+		height: 100dvh;
 		z-index: 120;
 		display: flex;
 		flex-direction: column;
