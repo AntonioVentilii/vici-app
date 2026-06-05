@@ -1,4 +1,3 @@
-import { clearInboxState } from '$lib/stores/inbox.store';
 import { clearDailyGoalMirror } from '$lib/utils/daily-goal.utils';
 import { resetMotionState } from '$lib/utils/motion-engine.utils';
 import { clearOnboardingSeenFlags } from '$lib/utils/onboarding-flags.utils';
@@ -18,6 +17,11 @@ const STORAGE_OWNER_KEY = 'vici.storage-owner.v1';
  * a refresh after a dropped server write). Scope is local-authoritative state
  * with no server copy to reload from; server-backed caches are handled
  * separately in `Authn`.
+ *
+ * First observation (no persisted owner yet) counts as a change and clears:
+ * that's intentional, so already-affected devices from before this guard
+ * shipped get cleaned on the next sign-in rather than keeping their leak. The
+ * daily-goal profile reconcile re-establishes the real count immediately.
  */
 export const reconcileIdentityScopedStorage = ({
 	ownerKey
@@ -32,8 +36,14 @@ export const reconcileIdentityScopedStorage = ({
 
 	clearDailyGoalMirror();
 	resetMotionState();
-	clearInboxState();
 	clearOnboardingSeenFlags();
+	// `inbox.store` starts a long-lived toast subscription at import, so load
+	// it lazily — keep it off the signed-out/marketing cold path that mounts
+	// <Authn> (root layout) but no inbox UI. On a real identity change the
+	// store is already loaded (or about to be) by the in-app toast host.
+	void import('$lib/stores/inbox.store').then(({ clearInboxState }) => {
+		clearInboxState();
+	});
 
 	if (ownerKey === undefined) {
 		del({ key: STORAGE_OWNER_KEY });
