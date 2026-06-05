@@ -1497,6 +1497,8 @@ export const itMessages = {
 	'onboarding.beat1b.skip_sub': 'Segui il torneo. Vai su SÌ se pensi che {team} la porti a casa.',
 	'onboarding.beat2.affil_eyebrow': 'Il tuo profilo',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
+	'onboarding.beat2.avail.check_failed': 'Verifica non riuscita — prova comunque',
+	'onboarding.beat2.avail.checking': 'Verifica disponibilità…',
 	'onboarding.beat2.avail.invalid': 'Solo lettere, numeri, . _ -',
 	'onboarding.beat2.avail.just_taken': 'Appena preso — scegline un altro',
 	'onboarding.beat2.avail.taken': 'Già preso — prova una variante',

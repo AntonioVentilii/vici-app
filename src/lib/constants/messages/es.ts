@@ -1499,6 +1499,8 @@ export const esMessages = {
 	'onboarding.beat1b.skip_sub': 'Sigues el torneo. Marca SÍ si crees que {team} se lo lleva todo.',
 	'onboarding.beat2.affil_eyebrow': 'Tu perfil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
+	'onboarding.beat2.avail.check_failed': 'No se pudo verificar — pruébalo igual',
+	'onboarding.beat2.avail.checking': 'Comprobando disponibilidad…',
 	'onboarding.beat2.avail.invalid': 'Solo letras, números, . _ -',
 	'onboarding.beat2.avail.just_taken': 'Acaban de cogerlo — elige otro',
 	'onboarding.beat2.avail.taken': 'Ya está cogido — prueba una variante',

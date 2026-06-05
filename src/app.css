@@ -5857,6 +5857,11 @@ a.title-action::after {
 	background: color-mix(in srgb, var(--no) 8%, transparent);
 	border: 1px solid color-mix(in srgb, var(--no) 20%, transparent);
 }
+.ob2-avail.checking {
+	color: var(--text-muted);
+	background: color-mix(in srgb, var(--text-muted) 6%, transparent);
+	border: 1px solid color-mix(in srgb, var(--text-muted) 16%, transparent);
+}
 
 .ob2-affil-preview {
 	display: flex;

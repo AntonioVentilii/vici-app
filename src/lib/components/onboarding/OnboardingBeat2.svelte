@@ -5,7 +5,11 @@
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { HANDLE_POOL } from '$lib/constants/handle-pool.constants';
-	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
+	import {
+		MAX_NICKNAME_LENGTH,
+		MIN_NICKNAME_LENGTH,
+		NICKNAME_PATTERN
+	} from '$lib/constants/profile.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { checkNicknameAvailability } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -46,9 +50,17 @@
 	const MAX_RESHUFFLE_ATTEMPTS = 3;
 
 	type Mode = 'pool' | 'custom';
-	let mode: Mode = $state('pool');
+	let mode = $state<Mode>('pool');
 	let poolPick: string | null = $state(null);
 	let custom: string = $state('');
+
+	// Live availability probe for the custom input. Pool draws are already
+	// pre-filtered at display time, so only the free-form path needs it.
+	type LiveAvailability = 'idle' | 'checking' | 'available' | 'taken' | 'failed';
+	let liveAvailability = $state<LiveAvailability>('idle');
+	let checkToken = 0;
+	let checkTimer: ReturnType<typeof setTimeout> | undefined;
+	const CHECK_DEBOUNCE_MS = 350;
 
 	// Suggestions shown in the pool grid — replaced on every `reshuffle`.
 	let sampled: string[] = $state([]);
@@ -166,8 +178,84 @@
 		});
 	});
 
+	// Local format checks the live probe must clear before hitting the
+	// satellite. Custom mode only — pool picks are pre-filtered.
+	const customFormatValid = $derived(
+		mode === 'custom' &&
+			selectedName.length >= MIN_NICKNAME_LENGTH &&
+			selectedName.length <= MAX_NICKNAME_LENGTH &&
+			NICKNAME_PATTERN.test(selectedName)
+	);
+
+	// Debounced live probe. A monotonic token cancels the in-flight check
+	// on each keystroke so stale results are dropped. Offline-tolerant: a
+	// failure surfaces as `failed` but never blocks the claim — the
+	// claim-time re-check and satellite assertion are the authority.
+	$effect(() => {
+		const candidate = selectedName;
+		const probe = customFormatValid;
+
+		if (checkTimer) {
+			clearTimeout(checkTimer);
+		}
+
+		checkToken += 1;
+		const token = checkToken;
+
+		if (!probe) {
+			liveAvailability = 'idle';
+
+			return;
+		}
+
+		// Already confirmed taken this session — skip the round-trip.
+		if (sessionTaken.has(candidate)) {
+			liveAvailability = 'taken';
+
+			return;
+		}
+
+		liveAvailability = 'checking';
+
+		checkTimer = setTimeout(() => {
+			void (async () => {
+				try {
+					const res = await checkNicknameAvailability({ nickname: candidate });
+
+					if (token !== checkToken) {
+						return;
+					}
+
+					if (res.available) {
+						liveAvailability = 'available';
+					} else {
+						sessionTaken.add(candidate);
+						liveAvailability = 'taken';
+					}
+				} catch (err) {
+					if (token !== checkToken) {
+						return;
+					}
+
+					console.warn(`Live availability check failed for "${candidate}":`, err);
+					liveAvailability = 'failed';
+				}
+			})();
+		}, CHECK_DEBOUNCE_MS);
+
+		return () => {
+			if (checkTimer) {
+				clearTimeout(checkTimer);
+			}
+		};
+	});
+
 	interface Availability {
+		// Whether the handle can be claimed.
 		ok: boolean;
+		// How to render the hint: confirmed-available (green), a hard error
+		// (red), or a neutral in-between (probing / couldn't verify).
+		tone: 'ok' | 'neutral' | 'error';
 		reasonKey?: MessageKey;
 	}
 
@@ -175,30 +263,48 @@
 		const name = selectedName;
 
 		if (!name) {
-			return { ok: false };
+			return { ok: false, tone: 'error' };
 		}
 
 		if (name.length < MIN_NICKNAME_LENGTH) {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.too_short' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.too_short' };
 		}
 
-		if (name.length > 16) {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.too_long' };
+		if (name.length > MAX_NICKNAME_LENGTH) {
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.too_long' };
 		}
 
-		if (!/^[a-z0-9._-]+$/.test(name)) {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.invalid' };
+		if (!NICKNAME_PATTERN.test(name)) {
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.invalid' };
 		}
 
 		if (claimError === 'taken') {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.just_taken' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.just_taken' };
 		}
 
 		if (sessionTaken.has(name)) {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.taken' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.taken' };
 		}
 
-		return { ok: true };
+		// Custom mode gates on the live probe: block while it's in flight,
+		// reject a confirmed collision. On probe failure stay claimable but
+		// neutral — never the green "Available", since it wasn't confirmed;
+		// the claim-time re-check and satellite assertion are the authority.
+		if (mode === 'custom') {
+			if (liveAvailability === 'idle' || liveAvailability === 'checking') {
+				return { ok: false, tone: 'neutral', reasonKey: 'onboarding.beat2.avail.checking' };
+			}
+
+			if (liveAvailability === 'taken') {
+				return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.taken' };
+			}
+
+			if (liveAvailability === 'failed') {
+				return { ok: true, tone: 'neutral', reasonKey: 'onboarding.beat2.avail.check_failed' };
+			}
+		}
+
+		return { ok: true, tone: 'ok' };
 	});
 
 	const canClaim = $derived(availability.ok && !isClaiming);
@@ -331,7 +437,7 @@
 				autocapitalize="off"
 				autocomplete="off"
 				autofocus
-				maxlength="16"
+				maxlength={MAX_NICKNAME_LENGTH}
 				placeholder={t({ locale: $localeStore, key: 'onboarding.beat2.placeholder' })}
 				spellcheck="false"
 				type="text"
@@ -341,8 +447,14 @@
 	{/if}
 
 	{#if selectedName}
-		<div class="ob2-avail" class:no={!availability.ok} class:ok={availability.ok}>
-			{#if availability.ok}
+		<div
+			class="ob2-avail"
+			class:checking={availability.tone === 'neutral'}
+			class:no={availability.tone === 'error'}
+			class:ok={availability.tone === 'ok'}
+			aria-live="polite"
+		>
+			{#if availability.tone === 'ok'}
 				{t({ locale: $localeStore, key: 'onboarding.beat2.avail_ok_prefix' })}
 				<span class="serif-italic">@{selectedName}</span>
 			{:else if availability.reasonKey}
