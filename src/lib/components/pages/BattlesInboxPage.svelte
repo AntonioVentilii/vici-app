@@ -35,6 +35,7 @@
 	import { formatMonthName } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
+	import { BATTLES_INTRO_SEEN_KEY } from '$lib/utils/onboarding-flags.utils';
 
 	/**
 	 * Battles inbox — institutional + tournament surfaces only.
@@ -94,11 +95,12 @@
 	let matches = $state<TournamentMatchDoc[]>([]);
 
 	// ─── Intro card dismissal ───────────────────────────────────────
-	// Persisted via the `vici.battles-intro-seen` localStorage flag.
-	// Future migration to cross-device preferences is deferred — adding
-	// a new field to the satellite preferences schema requires a
-	// Candid + Rust binding regen scoped outside this work.
-	const BATTLES_INTRO_KEY = 'vici.battles-intro-seen';
+	// Persisted via the `vici.battles-intro-seen` localStorage flag (the
+	// key lives in `onboarding-flags.utils` so the auth-transition reconcile
+	// can clear it on an identity change). Future migration to cross-device
+	// preferences is deferred — adding a new field to the satellite
+	// preferences schema requires a Candid + Rust binding regen scoped
+	// outside this work.
 	let battlesIntroSeen = $state(false);
 
 	// Create-a-battle wizard — opened from the intro CTA and the slim
@@ -128,7 +130,7 @@
 	onMount(() => {
 		if (browser) {
 			try {
-				battlesIntroSeen = localStorage.getItem(BATTLES_INTRO_KEY) === '1';
+				battlesIntroSeen = localStorage.getItem(BATTLES_INTRO_SEEN_KEY) === '1';
 			} catch {
 				// Storage unavailable — keep the intro visible.
 			}
@@ -143,7 +145,7 @@
 
 		if (browser) {
 			try {
-				localStorage.setItem(BATTLES_INTRO_KEY, '1');
+				localStorage.setItem(BATTLES_INTRO_SEEN_KEY, '1');
 			} catch {
 				// Storage unavailable — dismissal won't survive a reload.
 			}

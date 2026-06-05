@@ -290,6 +290,23 @@ pins `VICI_ENGINE_ID` is
   is WebAuthn under the hood it shares the passkey button's gating
   (`isWebAuthnAvailable` + production-only). The settings "Sign-in method" row
   reads `profile.email` to label these accounts.
+- **Identity-scoped browser storage must be dropped on a principal change.**
+  `localStorage` is device-wide and shared across accounts on the same
+  browser. Any key holding state that belongs to a specific signed-in user
+  (caps, counters, read-state, "seen" flags) WILL bleed into the next
+  account unless it is cleared on the auth transition. The single chokepoint
+  is
+  [`reconcileIdentityScopedStorage`](../../../src/lib/services/identity-storage.services.ts),
+  called from
+  [`Authn.svelte`](../../../src/lib/components/authn/Authn.svelte) on every
+  `onAuthStateChange`. It compares the new principal against a persisted
+  owner (`vici.storage-owner.v1`) and wipes the identity-scoped caches
+  **only when the owner actually changes** — never on a same-user reload,
+  so the offline-resilient daily-goal mirror survives a refresh. When you
+  add a new user-scoped persisted key, register its reset there (and prefer
+  routing genuinely cross-device state through `profile.preferences`
+  instead — that store already resets on sign-out). Device-level keys
+  (theme, locale, last-open tab) intentionally stay put.
 
 ## Tailwind v4 + design tokens
 

@@ -4,6 +4,7 @@
 	import { onMount, type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { reconcileIdentityScopedStorage } from '$lib/services/identity-storage.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { ensureProfile, calculateAndSyncStats } from '$lib/services/profile.services';
 	import { clearAffiliations } from '$lib/stores/affiliations.store';
@@ -65,6 +66,15 @@
 		followingStore.set(undefined);
 		positionsStore.set(undefined);
 		tradeHistoryStore.set(undefined);
+
+		// Drop identity-scoped LOCAL caches — the daily-goal cap mirror,
+		// motion-engine state, inbox read-state, and onboarding "seen"
+		// flags — but only when the signed-in principal actually changes,
+		// so user A's state never bleeds into user B's session on a shared
+		// device. Guarded against a same-user reload (unlike the
+		// server-backed caches above) so the offline-resilient daily-goal
+		// mirror survives a refresh.
+		reconcileIdentityScopedStorage({ ownerKey: user?.owner });
 
 		try {
 			if (isNullish(user)) {

@@ -1,4 +1,4 @@
-import { get as storageGet, set as storageSet } from '$lib/utils/storage.utils';
+import { del as storageDel, get as storageGet, set as storageSet } from '$lib/utils/storage.utils';
 import { todayKey } from '$lib/utils/streak.utils';
 import { nonNullish } from '@dfinity/utils';
 
@@ -87,6 +87,17 @@ export const readDailyGoalMirror = (): DailyGoalState | undefined => {
 /** Write the localStorage mirror. Best-effort (see `storage.utils`). */
 export const writeDailyGoalMirror = (state: DailyGoalState): void => {
 	storageSet({ key: DAILY_GOAL_STORAGE_KEY, value: state });
+};
+
+/**
+ * Drop the localStorage mirror entirely. Called on an identity change /
+ * sign-out (see `reconcileIdentityScopedStorage`) so the cap count never
+ * carries from one principal into the next on a shared device. NOT called
+ * on a same-user reload — the mirror's whole point is to survive that (the
+ * `max`-wins reconcile then re-gates on the real count).
+ */
+export const clearDailyGoalMirror = (): void => {
+	storageDel({ key: DAILY_GOAL_STORAGE_KEY });
 };
 
 /**

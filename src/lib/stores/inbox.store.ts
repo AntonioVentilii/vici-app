@@ -22,7 +22,7 @@ import {
 } from '$lib/utils/format.utils';
 import { t } from '$lib/utils/i18n.utils';
 import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
-import { get, set as setStorage } from '$lib/utils/storage.utils';
+import { del as delStorage, get, set as setStorage } from '$lib/utils/storage.utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
 
@@ -514,4 +514,21 @@ const markAllSettledRead = (): void => {
 export const markAllInboxRead = (): void => {
 	markAllSeedInboxRead();
 	markAllSettledRead();
+};
+
+/**
+ * Drop every identity-scoped inbox cache. Called from the auth-transition
+ * reconcile (`reconcileIdentityScopedStorage`) when the signed-in principal
+ * changes, so user A's read-state — the seed/history cards and the
+ * acknowledged Settled events — never carries into user B's session on a
+ * shared device. Resets both the persisted mirrors and the in-memory
+ * stores, and forgets the toast baseline so the next identity's cold-start
+ * unreads don't replay as arrival toasts.
+ */
+export const clearInboxState = (): void => {
+	baseInboxStore.reset({ key: INBOX_STORAGE_KEY });
+	delStorage({ key: SETTLED_READ_STORAGE_KEY });
+	settledReadStore.set(new Set());
+	seenInboxIds = undefined;
+	clearInboxToast();
 };
