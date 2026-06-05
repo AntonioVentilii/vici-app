@@ -1,0 +1,29 @@
+name: Upgrade Serverless Functions
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Prepare
+        uses: ./.github/actions/prepare
+
+      - name: Build
+        uses: junobuild/juno-action@full
+        with:
+          args: functions build
+
+      - name: Upgrade
+        uses: junobuild/juno-action@full
+        with:
+          args: functions upgrade
+        env:
+          JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
