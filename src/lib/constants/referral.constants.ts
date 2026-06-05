@@ -44,7 +44,9 @@ const REFERRAL_REWARD_TIERS: ReadonlyArray<{ throughIndex: number; value: string
 	{ throughIndex: 5, value: '500' },
 	{ throughIndex: 10, value: '250' },
 	{ throughIndex: 20, value: '100' },
-	{ throughIndex: 1000, value: '50' }
+	// Final (floor) bracket — its upper bound IS the hard cap, so derive it from
+	// `REFERRAL_MAX_PAID` to keep the two structurally in lockstep (no duplicated literal).
+	{ throughIndex: REFERRAL_MAX_PAID, value: '50' }
 ];
 
 /**
