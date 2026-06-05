@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - v*
 
 # Shared group with deploy.yml / publish.yml — serializes all mutations of
 # the satellite canister so an upgrade (which stops it) never overlaps a deploy.
