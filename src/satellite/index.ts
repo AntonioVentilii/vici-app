@@ -123,6 +123,7 @@ import {
 	getMonthlyLeaderboardFn
 } from '$satellite/services/user-monthly-stats.services';
 import { assertSetUserStats } from '$satellite/services/user-stats.services';
+import { onProfileSetForAchievementAward } from '$satellite/services/vxp-achievement-awards.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimCalibrationRewardFn } from '$satellite/services/vxp-calibration.services';
 import {
@@ -1129,6 +1130,7 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onProfileSetForVxpOnboarding(context);
 	onProfileSetForReferralCode(context);
 	await onProfileSetForStreakAward(context);
+	await onProfileSetForAchievementAward(context);
 	onProfileSetForAffiliationStats(context);
 	onProfileSetForLeagueStats(context);
 };
