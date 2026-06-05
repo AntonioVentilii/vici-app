@@ -1510,6 +1510,8 @@ export const frMessages = {
 	'onboarding.beat1b.skip_sub': 'Tu suis le tournoi. Swipe OUI si tu vois {team} tout rafler.',
 	'onboarding.beat2.affil_eyebrow': 'Ton profil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
+	'onboarding.beat2.avail.check_failed': 'Vérification impossible — tente quand même',
+	'onboarding.beat2.avail.checking': 'Vérification de la disponibilité…',
 	'onboarding.beat2.avail.invalid': 'Lettres, chiffres, . _ - uniquement',
 	'onboarding.beat2.avail.just_taken': 'Tout juste pris — choisis-en un autre',
 	'onboarding.beat2.avail.taken': 'Déjà pris — essaie une variante',
