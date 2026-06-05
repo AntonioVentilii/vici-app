@@ -171,10 +171,8 @@ jobs:
             ${{ runner.os }}-eslint-cache-quality-main-
             ${{ runner.os }}-eslint-cache-quality-
 
-      # Install the pinned juno CLI instead of `junobuild/juno-action@full`,
-      # whose image would make this drift check a permanent false positive (it
-      # ships a stale bindgen and emits `satellite_extension.did` as
-      # `service : {}`). See the install-juno-cli action for the full rationale.
+      # The pinned CLI is required here: the action's bundled bindgen would make
+      # this drift check a permanent false positive (see the install-juno-cli action).
       - name: Install Juno CLI
         uses: ./.github/actions/install-juno-cli
 

@@ -38,18 +38,12 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
-      # Applies juno.config.ts (collection rules + authentication config) to
-      # the production satellite. Reads the config only — no wasm build needed,
-      # unlike publish/upgrade. Rewriting security rules + auth config is an
-      # administrative operation, so it uses the Administrator JUNO_TOKEN (like
-      # upgrade.yml), not OIDC. Production is the CLI's default mode.
-      #
-      # Uses the pinned CLI rather than `junobuild/juno-action@full` for parity
-      # with upgrade.yml — `config apply` is token-authenticated (not OIDC), so it
-      # needs nothing the action provides. See the install-juno-cli action.
       - name: Install Juno CLI
         uses: ./.github/actions/install-juno-cli
 
+      # Applies juno.config.ts (collection rules + auth config) to the production
+      # satellite — config only, no wasm build. Administrative, so it uses the
+      # Administrator JUNO_TOKEN (not OIDC). Production is the CLI's default mode.
       - name: Apply config
         run: juno config apply --headless
         env:

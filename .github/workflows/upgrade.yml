@@ -37,9 +37,6 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
-      # Build + upgrade with the pinned Juno CLI, NOT `junobuild/juno-action@full`
-      # (the action ships a satellite with no custom endpoints — see the
-      # install-juno-cli action for the full rationale).
       - name: Install Juno CLI
         uses: ./.github/actions/install-juno-cli
 

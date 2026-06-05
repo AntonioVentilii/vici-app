@@ -24,18 +24,15 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
-      # Build with the pinned Juno CLI, NOT the action (the action ships a
-      # satellite with no custom endpoints — see the install-juno-cli action for
-      # the full rationale). The publish step keeps the action because it relies on
-      # the action's OIDC token exchange (id-token: write); `functions publish` only
-      # uploads the already-built local WASM, it does not rebuild, so it inherits the
-      # CLI-built artifact from the step above.
       - name: Install Juno CLI
         uses: ./.github/actions/install-juno-cli
 
       - name: Build functions
         run: npm run juno:functions:build
 
+      # publish keeps junobuild/juno-action only for its OIDC token exchange
+      # (id-token: write); `functions publish` uploads the wasm built above
+      # without rebuilding, so it inherits the CLI-built artifact.
       - name: Publish
         uses: junobuild/juno-action@full
         with:
