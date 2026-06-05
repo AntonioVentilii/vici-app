@@ -6,8 +6,10 @@ on:
     tags:
       - v*
 
+# Shared group with deploy.yml / upgrade.yml — serializes all mutations of
+# the satellite canister so an upgrade (which stops it) never overlaps a deploy.
 concurrency:
-  group: ${{ github.workflow }}
+  group: juno-satellite
   cancel-in-progress: false
 
 jobs:
