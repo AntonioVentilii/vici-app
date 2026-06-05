@@ -35,15 +35,25 @@
 	}: Props = $props();
 
 	const overlap = $derived(Math.round(size * 0.36));
+
+	// Paint order, not z-index, sets the stacking: the visually-leftmost
+	// avatar must sit on top, so it has to be painted LAST → it goes last
+	// in the DOM. We reverse the roster for the DOM and lay it back out
+	// left-to-right with `row-reverse` (see the style block). Avoiding `z-index`
+	// here is load-bearing: a flex item with `z-index` creates a stacking
+	// context, and iOS/WebKit hoists such children out of an ancestor's
+	// `backface-visibility: hidden` culling — which made this stack "flip
+	// and stay" visible through the back of the FlowCard on iPhone while
+	// Chrome/Android/desktop culled it correctly.
+	const ordered = $derived([...seeds].reverse());
 </script>
 
 <div class="seeded-avatar-stack" aria-hidden="true">
-	{#each seeds as s, i (s)}
+	{#each ordered as s, i (s)}
 		<span
 			style:width="{size}px"
 			style:height="{size}px"
-			style:margin-left={i === 0 ? '0' : `-${overlap}px`}
-			style:z-index={seeds.length - i}
+			style:margin-right={i === 0 ? '0' : `-${overlap}px`}
 			style:border={`1.5px solid ${borderColor}`}
 			class="seeded-avatar"
 		>
@@ -55,6 +65,11 @@
 <style lang="postcss">
 	.seeded-avatar-stack {
 		display: inline-flex;
+		/* `row-reverse` so the reversed DOM roster reads left-to-right in
+		   the original order while the first-listed avatar (last in the
+		   DOM) paints on top — overlap is driven by paint order, never
+		   `z-index` (see the note in the script block). */
+		flex-direction: row-reverse;
 		align-items: center;
 	}
 
