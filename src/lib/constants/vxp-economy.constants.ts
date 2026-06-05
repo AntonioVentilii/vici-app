@@ -112,6 +112,32 @@ export const CALIBRATION_DEPLOY_FLOOR_BASE_UNITS = parseToken({
 });
 
 /**
+ * Comeback restore — a one-time "welcome back" top-up for a returning user whose stack has run dry.
+ * When a user returns after an absence of at least {@link COMEBACK_AWAY_DAYS} days and their free
+ * balance is below {@link COMEBACK_BALANCE_FLOOR_BASE_UNITS}, their balance is topped up *to* this
+ * target so they have stake to play again. In **base units** via `parseToken`. Tunable.
+ */
+export const COMEBACK_RESTORE_TARGET_BASE_UNITS = parseToken({
+	value: '250',
+	unitName: VXP_TOKEN.decimals
+});
+
+/**
+ * Balance floor (100 VXP) below which a returning user qualifies for the comeback restore, in
+ * **base units**. Compared directly against the ledger balance. Tunable.
+ */
+export const COMEBACK_BALANCE_FLOOR_BASE_UNITS = parseToken({
+	value: '100',
+	unitName: VXP_TOKEN.decimals
+});
+
+/**
+ * Minimum absence (in days) before a returning user qualifies for the comeback restore. Measured
+ * from the gap between their previous and current `lastActiveDay`. Tunable.
+ */
+export const COMEBACK_AWAY_DAYS = 7;
+
+/**
  * Maximum number of calibration rewards a single caller can earn within
  * a rolling 24-hour window. Server-enforced anti-farming bound, counted
  * off the caller's `calibration` award docs. Tunable.
