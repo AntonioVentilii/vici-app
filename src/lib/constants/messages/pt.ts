@@ -1494,6 +1494,7 @@ export const ptMessages = {
 	'onboarding.beat1b.skip_sub': 'Acompanha o torneio. Marque SIM se acha que {team} leva tudo.',
 	'onboarding.beat2.affil_eyebrow': 'Seu perfil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
+	'onboarding.beat2.avail.check_failed': 'Não foi possível verificar — tente mesmo assim',
 	'onboarding.beat2.avail.checking': 'A verificar disponibilidade…',
 	'onboarding.beat2.avail.invalid': 'Só letras, números, . _ -',
 	'onboarding.beat2.avail.just_taken': 'Acabaram de pegar — escolha outro',

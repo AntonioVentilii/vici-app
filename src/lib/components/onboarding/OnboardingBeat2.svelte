@@ -5,7 +5,11 @@
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { HANDLE_POOL } from '$lib/constants/handle-pool.constants';
-	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
+	import {
+		MAX_NICKNAME_LENGTH,
+		MIN_NICKNAME_LENGTH,
+		NICKNAME_PATTERN
+	} from '$lib/constants/profile.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { checkNicknameAvailability } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -179,8 +183,8 @@
 	const customFormatValid = $derived(
 		mode === 'custom' &&
 			selectedName.length >= MIN_NICKNAME_LENGTH &&
-			selectedName.length <= 16 &&
-			/^[a-z0-9._-]+$/.test(selectedName)
+			selectedName.length <= MAX_NICKNAME_LENGTH &&
+			NICKNAME_PATTERN.test(selectedName)
 	);
 
 	// Debounced live probe. A monotonic token cancels the in-flight check
@@ -247,7 +251,11 @@
 	});
 
 	interface Availability {
+		// Whether the handle can be claimed.
 		ok: boolean;
+		// How to render the hint: confirmed-available (green), a hard error
+		// (red), or a neutral in-between (probing / couldn't verify).
+		tone: 'ok' | 'neutral' | 'error';
 		reasonKey?: MessageKey;
 	}
 
@@ -255,50 +263,51 @@
 		const name = selectedName;
 
 		if (!name) {
-			return { ok: false };
+			return { ok: false, tone: 'error' };
 		}
 
 		if (name.length < MIN_NICKNAME_LENGTH) {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.too_short' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.too_short' };
 		}
 
-		if (name.length > 16) {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.too_long' };
+		if (name.length > MAX_NICKNAME_LENGTH) {
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.too_long' };
 		}
 
-		if (!/^[a-z0-9._-]+$/.test(name)) {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.invalid' };
+		if (!NICKNAME_PATTERN.test(name)) {
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.invalid' };
 		}
 
 		if (claimError === 'taken') {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.just_taken' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.just_taken' };
 		}
 
 		if (sessionTaken.has(name)) {
-			return { ok: false, reasonKey: 'onboarding.beat2.avail.taken' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.taken' };
 		}
 
 		// Custom mode gates on the live probe: block while it's in flight,
-		// reject a confirmed collision. `available`/`failed` fall through.
+		// reject a confirmed collision. On probe failure stay claimable but
+		// neutral — never the green "Available", since it wasn't confirmed;
+		// the claim-time re-check and satellite assertion are the authority.
 		if (mode === 'custom') {
 			if (liveAvailability === 'idle' || liveAvailability === 'checking') {
-				return { ok: false, reasonKey: 'onboarding.beat2.avail.checking' };
+				return { ok: false, tone: 'neutral', reasonKey: 'onboarding.beat2.avail.checking' };
 			}
 
 			if (liveAvailability === 'taken') {
-				return { ok: false, reasonKey: 'onboarding.beat2.avail.taken' };
+				return { ok: false, tone: 'error', reasonKey: 'onboarding.beat2.avail.taken' };
+			}
+
+			if (liveAvailability === 'failed') {
+				return { ok: true, tone: 'neutral', reasonKey: 'onboarding.beat2.avail.check_failed' };
 			}
 		}
 
-		return { ok: true };
+		return { ok: true, tone: 'ok' };
 	});
 
 	const canClaim = $derived(availability.ok && !isClaiming);
-
-	// Renders the hint as neutral rather than an error while probing.
-	const isCheckingAvailability = $derived(
-		availability.reasonKey === 'onboarding.beat2.avail.checking'
-	);
 
 	const event = $derived($featuredEvent);
 	const team = $derived(
@@ -428,7 +437,7 @@
 				autocapitalize="off"
 				autocomplete="off"
 				autofocus
-				maxlength="16"
+				maxlength={MAX_NICKNAME_LENGTH}
 				placeholder={t({ locale: $localeStore, key: 'onboarding.beat2.placeholder' })}
 				spellcheck="false"
 				type="text"
@@ -440,12 +449,12 @@
 	{#if selectedName}
 		<div
 			class="ob2-avail"
-			class:checking={isCheckingAvailability}
-			class:no={!availability.ok && !isCheckingAvailability}
-			class:ok={availability.ok}
+			class:checking={availability.tone === 'neutral'}
+			class:no={availability.tone === 'error'}
+			class:ok={availability.tone === 'ok'}
 			aria-live="polite"
 		>
-			{#if availability.ok}
+			{#if availability.tone === 'ok'}
 				{t({ locale: $localeStore, key: 'onboarding.beat2.avail_ok_prefix' })}
 				<span class="serif-italic">@{selectedName}</span>
 			{:else if availability.reasonKey}

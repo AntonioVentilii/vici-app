@@ -1510,6 +1510,7 @@ export const deMessages = {
 	'onboarding.beat1b.skip_sub': 'Du verfolgst das Turnier. Wische JA, wenn {team} alles holt.',
 	'onboarding.beat2.affil_eyebrow': 'Dein Profil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
+	'onboarding.beat2.avail.check_failed': 'Nicht prüfbar — trotzdem versuchen',
 	'onboarding.beat2.avail.checking': 'Verfügbarkeit wird geprüft…',
 	'onboarding.beat2.avail.invalid': 'Nur Buchstaben, Zahlen, . _ -',
 	'onboarding.beat2.avail.just_taken': 'Gerade vergeben — wähle einen anderen',
