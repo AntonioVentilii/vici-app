@@ -8,13 +8,13 @@ on:
     tags:
       - v*
 
-# Shared `juno-satellite` group with config.yml / publish.yml: all mutate the
-# same satellite canister and must not overlap (`functions upgrade` stops it
-# mid-run, so a concurrent mutation is rejected with "Canister is stopped").
-# `functions build` + `functions upgrade` run in THIS workflow (folded in from
-# the former upgrade.yml) and before `hosting deploy`, so the canister is
-# stopped and restarted within one job instead of racing a separate Upgrade
-# workflow — which is what let a 3rd queued run cancel a waiting deploy.
+# Shared `juno-satellite` group with publish.yml: both mutate the same satellite
+# canister and must not overlap (`functions upgrade` stops it mid-run, so a
+# concurrent mutation is rejected with "Canister is stopped"). `functions build`
+# + `functions upgrade` run in THIS workflow (folded in from the former
+# upgrade.yml) and before `hosting deploy`, so the canister is stopped and
+# restarted within one job instead of racing a separate Upgrade workflow — which
+# is what let a 3rd queued run cancel a waiting deploy.
 # cancel-in-progress: false → queue, never cancel a running one.
 concurrency:
   group: juno-satellite
