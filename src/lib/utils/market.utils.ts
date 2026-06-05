@@ -1,7 +1,7 @@
 import type { ClearingDid, RegistryDid } from '$declarations';
 import { MILLISECOND_IN_NANOSECONDS, ZERO } from '$lib/constants/app.constants';
 import type { Market, MarketStatus, Outcome, TradingAccessUI } from '$lib/types/market';
-import type { OrderBookLevel } from '$lib/types/order';
+import type { OrderBookLevel, OrderType } from '$lib/types/order';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { resolveMarketDisplayToken } from '$lib/utils/market-token.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
@@ -127,6 +127,54 @@ export const calculateProbability = ({
 	}
 
 	return asks[0].price;
+};
+
+/**
+ * Resolves the execution price (0..1) of *buying* `action` on a market — the
+ * price a market order would pay right now. A buy lifts the book, so it pays
+ * the ask, not the consensus mid: YES pays the best ask, NO pays `1 − bestBid`
+ * (buying NO is selling YES at the bid). Falls back to the consensus
+ * probability only when that side of the book is empty; a categorical outcome
+ * uses its own probability. Floored at `0.01` so a degenerate empty book can
+ * never divide by zero. A LIMIT order executes at its own `limitPrice`.
+ *
+ * Single source of truth for the order-book execution price: it sizes the
+ * order (`qty = collateral / price`, see `executeOutcomeTrade`) **and** drives
+ * the "+X VXP" payout preview (`TradeModal`, `FlowStake`), so the figure the
+ * user sees can never drift from the order actually placed. This is the
+ * order-book-aware replacement for previewing off the consensus mid, which
+ * ignored the spread and over-promised the payout on thin / one-sided books.
+ */
+export const resolveOutcomeExecutionPrice = ({
+	market,
+	action,
+	orderType = 'MARKET',
+	limitPrice
+}: {
+	market: Market;
+	action: Outcome;
+	orderType?: OrderType;
+	limitPrice?: number;
+}): number => {
+	const executionPrice = (): number => {
+		if (orderType === 'LIMIT' && nonNullish(limitPrice)) {
+			return limitPrice;
+		}
+
+		if (action === 'YES') {
+			return market.bestAsk ?? market.yesProbability;
+		}
+
+		if (action === 'NO') {
+			return nonNullish(market.bestBid) ? 1 - market.bestBid : market.noProbability;
+		}
+
+		const outcome = market.outcomes?.find((o) => o.id === action);
+
+		return outcome?.probability ?? 0.5;
+	};
+
+	return Math.max(executionPrice(), 0.01);
 };
 
 /**
