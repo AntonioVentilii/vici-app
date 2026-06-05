@@ -174,7 +174,15 @@
 
 	.sheet-scrim {
 		position: fixed;
-		inset: 0;
+		/* Size to the *dynamic* viewport (`dvh`), not `inset: 0`. On iOS the
+		 * layout viewport a fixed `inset: 0` resolves against is the *large*
+		 * viewport (toolbars retracted), so its bottom edge — where the sheet
+		 * docks via `flex-end` — sits behind the bottom toolbar, clipping the
+		 * footer CTA. `100dvh` tracks the currently-visible height instead. */
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 100dvh;
 		z-index: 80;
 		display: flex;
 		flex-direction: column;
@@ -199,10 +207,11 @@
 		 * so the hooks are inert until something sets `--kb-inset`. */
 		margin-bottom: var(--kb-inset, 0px);
 		/* A large `--kb-inset` can drive the `calc()` negative, collapsing
-		 * the cap; floor it at `0px` via `max()`. The plain `92vh` above is
-		 * the fallback for engines without `max()`. */
-		max-height: 92vh;
-		max-height: max(0px, calc(92vh - var(--kb-inset, 0px)));
+		 * the cap; floor it at `0px` via `max()`. The plain `92dvh` above is
+		 * the fallback for engines without `max()`. `dvh` (not `vh`) so the
+		 * cap tracks the visible height under the iOS dynamic toolbar. */
+		max-height: 92dvh;
+		max-height: max(0px, calc(92dvh - var(--kb-inset, 0px)));
 		transition: margin-bottom 0.22s var(--ease-vici);
 		/* Side inset defaults to the shared 1.1rem; hosts can override just
 		 * the horizontal padding via `--sheet-side-padding` (the `sidePadding`

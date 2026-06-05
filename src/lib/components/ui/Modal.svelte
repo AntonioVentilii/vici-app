@@ -85,13 +85,11 @@
 		overflow: hidden;
 	}
 
+	/* `dvh`, not `vh`: on iOS `vh` is the large layout viewport (toolbars
+	 * retracted), so a `90vh` panel can overflow the visible area. `90dvh`
+	 * tracks the currently-visible height. This supersedes the old
+	 * `-webkit-fill-available` iOS workaround. */
 	.wrapper {
-		max-height: 90vh;
-	}
-
-	@supports (-webkit-touch-callout: none) {
-		.wrapper {
-			max-height: -webkit-fill-available;
-		}
+		max-height: 90dvh;
 	}
 </style>
