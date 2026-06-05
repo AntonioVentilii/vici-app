@@ -37,14 +37,21 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
-      - name: Build
-        uses: junobuild/juno-action@full
-        with:
-          args: functions build
+      # Build + upgrade with the pinned Juno CLI, NOT `junobuild/juno-action@full`.
+      # The action's image bundles its own toolchain and fails to enumerate the
+      # `defineQuery` / `defineUpdate` exports from `src/satellite/index.ts` — it
+      # rewrites `satellite_extension.did` as `service : {}`, so the satellite it
+      # builds is missing every custom endpoint (the "method" errors that only show
+      # up via CI). The npm-installed CLI runs against our own `node_modules` and
+      # reproduces the local build byte-for-byte. Same rationale + pin as the
+      # `satellite-schema` job in `checks.yml` and `e2e.yml`; bump deliberately.
+      - name: Install Juno CLI
+        run: npm i -g @junobuild/cli@0.15.4
 
-      - name: Upgrade
-        uses: junobuild/juno-action@full
-        with:
-          args: functions upgrade
+      - name: Build functions
+        run: npm run juno:functions:build
+
+      - name: Upgrade functions
+        run: juno functions upgrade --headless
         env:
           JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
