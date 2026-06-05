@@ -16,6 +16,8 @@ import type { Principal } from '@icp-sdk/core/principal';
  *                      time; mints the achievement's catalog XP value as
  *                      real VXP. One-time per account (the
  *                      `unlockedAchievements` array is append-only).
+ *  - `comeback`      — one-time top-up for a returning user whose stack
+ *                      ran dry (away ≥ N days, balance below the floor).
  */
 export type VxpAwardType =
 	| 'streak'
@@ -23,7 +25,8 @@ export type VxpAwardType =
 	| 'referral'
 	| 'worlds_podium'
 	| 'tournament_prize'
-	| 'achievement';
+	| 'achievement'
+	| 'comeback';
 
 /**
  * Payout lifecycle for a single award. Once `paid`, the doc is immutable
