@@ -167,6 +167,13 @@ import type { _SERVICE as ClearingService } from '$declarations/clearing/clearin
   `t({ locale: $localeStore, key })` from `$lib/utils/i18n.utils`. The
   ESLint rule `local-rules/no-bare-svelte-text` flags this in components
   that already import `i18n.utils`. See [`i18n.md`](./i18n.md).
+- **Runtime `await import('$lib/…')` to dodge a circular dependency.** A
+  cycle means a symbol lives in the wrong module — extract the shared piece
+  into its own scoped module so both sides import it statically (e.g.
+  read-only queries split from their mutation layer in
+  [`relation-queries.services.ts`](../../../src/lib/services/relation-queries.services.ts)
+  vs `relation.services.ts`). Dynamic `import()` is for genuine code-split
+  /lazy-load only, not for laundering an import graph.
 
 ## Where to put new files (decision tree)
 

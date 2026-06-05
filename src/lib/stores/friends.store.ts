@@ -1,8 +1,9 @@
+import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 import {
 	getFriendRequests,
 	getFriends,
 	getSentFriendRequests
-} from '$lib/services/relation.services';
+} from '$lib/services/relation-queries.services';
 import { userStore } from '$lib/stores/user.store';
 import type { Relation } from '$lib/types/relation';
 import type { Doc } from '@junobuild/core';
@@ -81,13 +82,11 @@ const runRefresh = async (): Promise<void> => {
 	friendsRelationsLoadedStore.set(true);
 
 	// Hydrate the shared `profilesStore` for every counterpart of the
-	// viewer. Lazy import avoids a circular reference between
-	// profile.services → friends.store → profile.services. Fire-and-forget
-	// so the refresh promise resolves as soon as the relation lists are
-	// in the stores — keeping `inFlight` open while profiles trickle in
-	// would otherwise let a post-mutation `refreshFriendRelations()` reuse
-	// the pre-mutation fetch (stale data) instead of issuing a new one.
-	const { loadProfilesByPrincipals } = await import('$lib/services/profile.services');
+	// viewer. Fire-and-forget so the refresh promise resolves as soon as the
+	// relation lists are in the stores — keeping `inFlight` open while
+	// profiles trickle in would otherwise let a post-mutation
+	// `refreshFriendRelations()` reuse the pre-mutation fetch (stale data)
+	// instead of issuing a new one.
 	const viewer = get(userStore).user?.owner;
 	const principals = collectCounterparts({ viewer, friends, requests, sent });
 	void loadProfilesByPrincipals({ principals });

@@ -16,7 +16,7 @@ import { Permission } from '$lib/enums/permission';
 import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
-import { getFriends } from '$lib/services/relation.services';
+import { getFollowers, getFriends } from '$lib/services/relation-queries.services';
 import { isNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
@@ -336,7 +336,6 @@ export const getOrCreateFollowersGroup = async (): Promise<string> => {
 		throw new Error('Failed to retrieve followers group after creation');
 	}
 
-	const { getFollowers } = await import('$lib/services/relation.services');
 	const followerPrincipals = await getFollowers();
 
 	const currentMembers = followersGroup.members.map((m) => m.toText());
