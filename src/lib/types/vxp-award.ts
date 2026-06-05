@@ -12,13 +12,18 @@ import type { Principal } from '@icp-sdk/core/principal';
  *                      completion. Capped per calendar month.
  *  - `worlds_podium` — recipient's school finished top-3 in the monthly
  *                      battle. Awarded at month rollover.
+ *  - `achievement`   — an Album achievement was unlocked for the first
+ *                      time; mints the achievement's catalog XP value as
+ *                      real VXP. One-time per account (the
+ *                      `unlockedAchievements` array is append-only).
  */
 export type VxpAwardType =
 	| 'streak'
 	| 'calibration'
 	| 'referral'
 	| 'worlds_podium'
-	| 'tournament_prize';
+	| 'tournament_prize'
+	| 'achievement';
 
 /**
  * Payout lifecycle for a single award. Once `paid`, the doc is immutable
