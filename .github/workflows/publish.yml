@@ -6,8 +6,9 @@ on:
     tags:
       - v*
 
-# Shared group with deploy.yml / upgrade.yml — serializes all mutations of
-# the satellite canister so an upgrade (which stops it) never overlaps a deploy.
+# Shared group with deploy.yml / config.yml — serializes all mutations of the
+# satellite canister so a publish never overlaps deploy.yml's `functions upgrade`
+# (which stops the canister) or its `hosting deploy`.
 concurrency:
   group: juno-satellite
   cancel-in-progress: false

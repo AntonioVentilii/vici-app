@@ -8,9 +8,9 @@ on:
     tags:
       - v*
 
-# Shared group with deploy.yml / publish.yml / upgrade.yml — serializes all
-# mutations of the satellite canister so a `config apply` never overlaps a
-# `functions upgrade` (which stops the canister) or a `hosting deploy`.
+# Shared group with deploy.yml / publish.yml — serializes all mutations of the
+# satellite canister so a `config apply` never overlaps deploy.yml's
+# `functions upgrade` (which stops the canister) or its `hosting deploy`.
 concurrency:
   group: juno-satellite
   cancel-in-progress: false
@@ -40,9 +40,9 @@ jobs:
 
       # Applies juno.config.ts (collection rules + authentication config) to
       # the production satellite. Reads the config only — no wasm build needed,
-      # unlike publish/upgrade. Rewriting security rules + auth config is an
-      # administrative operation, so it uses the Administrator JUNO_TOKEN (like
-      # upgrade.yml), not OIDC. Production is the CLI's default mode.
+      # unlike publish / deploy's functions upgrade. Rewriting security rules +
+      # auth config is an administrative operation, so it uses the Administrator
+      # JUNO_TOKEN, not OIDC. Production is the CLI's default mode.
       - name: Apply config
         uses: junobuild/juno-action@full
         with:
