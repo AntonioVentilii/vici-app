@@ -33,7 +33,7 @@ export const vxpNetWin = ({
 }: {
 	/** User's stake on the call, in VXP. */
 	stake: number;
-	/** Consensus probability of the user's chosen side at commit time, 0–1. */
+	/** Execution price of the chosen side, 0–1 (the ask via `resolveOutcomeExecutionPrice`, not the consensus mid). */
 	pWin: number;
 }): number => {
 	const safeP = Math.max(VXP_P_WIN_FLOOR, pWin);

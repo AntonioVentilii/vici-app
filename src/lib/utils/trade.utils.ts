@@ -3,6 +3,7 @@ import { placeOrder } from '$lib/services/order.services';
 import type { Market } from '$lib/types/market';
 import type { OrderType } from '$lib/types/order';
 import { isViciXp } from '$lib/utils/balance-domain.utils';
+import { resolveOutcomeExecutionPrice } from '$lib/utils/market.utils';
 import {
 	parseToken,
 	parseUsdBaseUnitsFromDecimal,
@@ -45,37 +46,6 @@ export interface TradeParams {
 }
 
 /**
- * Resolves execution probability (price of the bought outcome) used to size the order
- * (clearing margin and quantity) before `placeOrder` adjusts binary NO prices.
- */
-const resolveOutcomeExecutionPriceForSizing = ({
-	market,
-	action,
-	orderType = 'MARKET',
-	limitPrice
-}: Pick<TradeParams, 'market' | 'action' | 'orderType' | 'limitPrice'>): number => {
-	const computeExecutionPrice = (): number => {
-		if (orderType === 'LIMIT' && nonNullish(limitPrice)) {
-			return limitPrice;
-		}
-
-		if (action === 'YES') {
-			return market.bestAsk ?? market.yesProbability;
-		}
-
-		if (action === 'NO') {
-			return nonNullish(market.bestBid) ? 1 - market.bestBid : market.noProbability;
-		}
-
-		const outcome = market.outcomes?.find((o) => o.id === action);
-
-		return outcome?.probability ?? 0.5;
-	};
-
-	return Math.max(computeExecutionPrice(), 0.01);
-};
-
-/**
  * Computes execution price and quantity, then submits a buy via `placeOrder`.
  */
 export const executeOutcomeTrade = async ({
@@ -108,7 +78,7 @@ export const executeOutcomeTrade = async ({
 
 	const type = resolveOrderType();
 
-	const finalPrice = resolveOutcomeExecutionPriceForSizing({
+	const finalPrice = resolveOutcomeExecutionPrice({
 		market,
 		action,
 		orderType,
