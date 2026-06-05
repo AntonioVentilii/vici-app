@@ -663,7 +663,11 @@ const transferReferralBonus = async ({
  * in flight (`owed` / `processing` / `paid`) counts toward both caps so racing redemptions can't
  * slip past either by being mid-transfer.
  *
- * Both totals exclude the row being processed (`excludeKey`).
+ * Counts only redemptions that happened *before* the row being processed — `redeemedAtMs <
+ * referenceMs`, tie-broken by key so equal timestamps are deterministic — and excludes the row
+ * itself (`excludeKey`). The "prior only" ordering makes a given row's prior-paid count (and thus
+ * its diminishing-curve reward) **stable regardless of when settlement runs**: a later redemption
+ * can never retroactively inflate an earlier row's count and shrink its reward on a delayed retry.
  */
 const countReferrerCredits = ({
 	caller,
@@ -693,7 +697,12 @@ const countReferrerCredits = ({
 			try {
 				const doc = decodeDocData<ReferralDoc>(item.data);
 
-				if (doc.referrer === referrer && doc.referrerPayout.status !== 'none') {
+				// Prior redemptions only — earlier in time, or same instant with a lower key. Keeps
+				// each row's tier derivation stable across retries (see the doc comment above).
+				const isPrior =
+					doc.redeemedAtMs < referenceMs || (doc.redeemedAtMs === referenceMs && key < excludeKey);
+
+				if (doc.referrer === referrer && doc.referrerPayout.status !== 'none' && isPrior) {
 					const inMonth = doc.redeemedAtMs >= monthStartMs;
 
 					return {
@@ -762,6 +771,20 @@ const parseStoredAmount = (raw: string): bigint => {
 		return parsed > ZERO ? parsed : ZERO;
 	} catch {
 		return ZERO;
+	}
+};
+
+/**
+ * Guarded decode of a referral row. The `referrals` collection is user-writable, so a
+ * tampered/malformed row could make `decodeDocData` throw. Returning `undefined` (logged) instead
+ * of trapping keeps the payout path — including the auth-free `settleReferral` endpoint — robust.
+ */
+const decodeReferralRow = (data: Parameters<typeof decodeDocData>[0]): ReferralDoc | undefined => {
+	try {
+		return decodeDocData<ReferralDoc>(data);
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		logError({ message: 'referral_decode_failed', detail: { error: msg } });
 	}
 };
 
@@ -1067,7 +1090,11 @@ const settleReferralPayout = async ({
 		return;
 	}
 
-	const doc = decodeDocData<ReferralDoc>(snapshot.data);
+	const doc = decodeReferralRow(snapshot.data);
+
+	if (isNullish(doc)) {
+		return;
+	}
 
 	// Fast-exit once both sides have settled (paid / in-flight, or referrer skipped over the cap).
 	const refereeSettled =
@@ -1101,11 +1128,22 @@ const settleReferralPayout = async ({
 		expectedAmount: REFERRAL_VXP_BONUS_BASE_UNITS
 	});
 
+	// Re-read after the referee transfer: the referrer side is only worth a (full-collection) scan +
+	// transfer when it is actually `owed`. On retries where it is already paid / processing — or was
+	// skipped over the cap (`none`) — bail before the scan. This bounds the cost of the auth-free
+	// `settleReferral` endpoint to a cheap re-read once a row's referrer side is settled.
+	const latest = getDocStore({ collection: Collection.REFERRALS, key: refereeKey, caller });
+	const latestDoc = nonNullish(latest) ? decodeReferralRow(latest.data) : undefined;
+
+	if (isNullish(latestDoc) || latestDoc.referrerPayout.status !== 'owed') {
+		return;
+	}
+
 	const { lifetime: referrerPriorPaidCount } = countReferrerCredits({
 		caller,
-		referrer: doc.referrer,
+		referrer: latestDoc.referrer,
 		excludeKey: refereeKey,
-		referenceMs: doc.redeemedAtMs
+		referenceMs: latestDoc.redeemedAtMs
 	});
 
 	await driveSidePayout({
@@ -1113,7 +1151,7 @@ const settleReferralPayout = async ({
 		caller,
 		refereeKey,
 		side: 'referrer',
-		recipient: doc.referrer,
+		recipient: latestDoc.referrer,
 		memoLabel: 'referrer',
 		expectedAmount: referrerRewardBaseUnits(referrerPriorPaidCount)
 	});

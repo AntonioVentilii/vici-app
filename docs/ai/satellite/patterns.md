@@ -227,7 +227,7 @@ Consequences:
 
 - A hook only works if its trigger collection is written **by the
   browser** (e.g. `profiles` via FE `setDoc` → the profile hooks fire).
-- **A "an endpoint writes a row → a hook fans out" design is broken** —
+- **An "endpoint writes a row → a hook fans out" design is broken** —
   the hook never fires. Either write the trigger row from the client, or
   do the work **inline in the endpoint** (make the handler `async` and
   call the logic directly). This is exactly what bit the referral VXP
