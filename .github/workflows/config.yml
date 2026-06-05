@@ -46,6 +46,10 @@ jobs:
       - name: Apply config
         uses: junobuild/juno-action@full
         with:
-          args: config apply
+          # `--force`: CI is non-interactive, and `config apply` otherwise bails
+          # ("Non-interactive mode detected. Re-run with --force to overwrite
+          # without checks."). Forcing is the intent here — repo is the source of
+          # truth, this re-syncs the satellite to juno.config.ts.
+          args: config apply --force
         env:
           JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
