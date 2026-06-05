@@ -142,6 +142,13 @@ fixes back to your branch on PRs from non-forks; you should still run
 | `publish.yml` | publish            | `functions build` + `functions publish` (OIDC) — stages the functions wasm to the satellite CDN. Runs on `v*` tags and manual dispatch.                                                                                           |
 | `upgrade.yml` | upgrade            | `functions build` + `functions upgrade` — **applies** the new functions wasm to the running satellite. Runs on every push to `main` and manual dispatch. Needs the Administrator `JUNO_TOKEN` repo secret (not OIDC).             |
 
+`deploy.yml`, `publish.yml`, and `upgrade.yml` share one concurrency group
+(`juno-satellite`, `cancel-in-progress: false`) so they never run at the same
+time. They all mutate the same satellite canister, and `functions upgrade`
+**stops** it mid-upgrade — a concurrent `hosting deploy` would otherwise be
+rejected with `Canister … is stopped` (IC0508). The shared queue serializes
+every satellite mutation; runs wait for the previous one instead of racing.
+
 If your change is doc-only, the `format` and `lint` jobs still run because
 they cover the whole repo. The `check` job covers `*.svelte` / `*.ts` only,
 so doc-only changes typically pass it trivially.
