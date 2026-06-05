@@ -15,7 +15,6 @@
 	import { REFERRAL_MAX_PAID, referrerRewardBaseUnits } from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-	import { VXP_REFERRAL_MONTHLY_CAP } from '$lib/constants/vxp-economy.constants';
 	import { globalActivities } from '$lib/derived/activities.derived';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -198,32 +197,11 @@
 	});
 	const referralVxpEarnedLabel = $derived(formatVxpBalance({ value: referralVxpEarnedBaseUnits }));
 
-	// Rewarded-invites-left line must honour BOTH the lifetime hard cap and the separate monthly
-	// cap — the satellite stops paying when EITHER is hit. The FE row carries both the credited
-	// flag (`referrerPayout.status`) and `redeemedAtMs`, so we can mirror the satellite's
-	// `countReferrerCredits` two-tally scan locally: count this calendar month's credited rows
-	// against `VXP_REFERRAL_MONTHLY_CAP`, count all credited rows against `REFERRAL_MAX_PAID`, and
-	// surface the binding (smaller) remainder. Anchored on the UTC month start to match the
-	// satellite's `currentMonthStartUtcMs` boundary so the two never disagree on whether the month
-	// has rolled over.
-	const currentMonthPaidCount = $derived.by(() => {
-		const now = new Date();
-		const monthStartMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
-
-		return myReferrals.filter(
-			({ referrerPayout, redeemedAtMs }) =>
-				referrerPayout.status !== 'none' && redeemedAtMs >= monthStartMs
-		).length;
-	});
-	const referralsRemaining = $derived(
-		Math.max(
-			0,
-			Math.min(
-				REFERRAL_MAX_PAID - referralPaidCount,
-				VXP_REFERRAL_MONTHLY_CAP - currentMonthPaidCount
-			)
-		)
-	);
+	// Rewarded-invites-left line mirrors the satellite's single cap: the lifetime hard cap
+	// (`REFERRAL_MAX_PAID`). A row counts as credited once its `referrerPayout.status` is anything
+	// other than `none` (anything in flight still consumes a slot), matching `countReferrerCredits`.
+	// The diminishing curve + this lifetime cap self-limit, so there is no separate monthly cap.
+	const referralsRemaining = $derived(Math.max(0, REFERRAL_MAX_PAID - referralPaidCount));
 	let copied = $state(false);
 	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
 
