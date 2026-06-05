@@ -143,12 +143,23 @@ fixes back to your branch on PRs from non-forks; you should still run
 | `upgrade.yml` | upgrade            | `functions build` + `functions upgrade` — **applies** the new functions wasm to the running satellite. Runs on every push to `main`, on `v*` tags, and via manual dispatch (same triggers as `deploy.yml`). Needs the Administrator `JUNO_TOKEN` repo secret (not OIDC).                                                                                                                                                                                                               |
 | `config.yml`  | config             | `config apply` — **applies** `juno.config.ts` (collection rules + authentication config) to the production satellite. Reads the config only, no wasm build. Runs on every push to `main`, on `v*` tags, and via manual dispatch. Rewriting security rules / auth config is administrative, so it needs the same Administrator `JUNO_TOKEN` repo secret (not OIDC). Repo is source of truth: a run re-syncs the satellite to `juno.config.ts`, reverting any out-of-band Console edits. |
 
-`deploy.yml`, `publish.yml`, `upgrade.yml`, and `config.yml` share one concurrency group
-(`juno-satellite`, `cancel-in-progress: false`) so they never run at the same
-time. They all mutate the same satellite canister, and `functions upgrade`
-**stops** it mid-upgrade — a concurrent `hosting deploy` would otherwise be
-rejected with `Canister … is stopped` (IC0508). The shared queue serializes
-every satellite mutation; runs wait for the previous one instead of racing.
+`deploy.yml`, `publish.yml`, `upgrade.yml`, and `config.yml` each use their **own
+per-workflow** concurrency group (`juno-satellite-deploy` / `-publish` /
+`-upgrade` / `-config`), all with `cancel-in-progress: false`. So each kind of
+satellite mutation queues only against its own kind — never cancel a running one,
+queue the next — and a `deploy` is never cancelled just because an `upgrade` (or
+any other juno workflow) was queued. Previously all four shared one
+`juno-satellite` group; that serialized everything but meant any newly-queued
+juno run cancelled a different one already waiting.
+
+**Tradeoff to keep in mind:** per-workflow groups no longer serialize across
+kinds, so on a push to `main` (which fires `upgrade` + `deploy` + `config`
+together) they can now overlap. `functions upgrade` **stops** the canister
+mid-upgrade, so a concurrent `hosting deploy` / `config apply` can be rejected
+with `Canister … is stopped` (IC0508) — the original reason for the single shared
+group. If that race actually bites, reintroduce cross-kind serialization with a
+no-cancel mutex (a "wait-your-turn" step) rather than a shared `cancel`-ing
+concurrency group.
 
 If your change is doc-only, the `format` and `lint` jobs still run because
 they cover the whole repo. The `check` job covers `*.svelte` / `*.ts` only,

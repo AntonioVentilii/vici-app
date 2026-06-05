@@ -8,12 +8,11 @@ on:
     tags:
       - v*
 
-# Shared across deploy / publish / upgrade: all three mutate the same
-# satellite canister, and `functions upgrade` stops it mid-upgrade — a
-# concurrent `hosting deploy` would be rejected with "Canister is stopped".
-# One queue serializes every satellite mutation.
+# Per-workflow queue: serialize Deploy runs only with each other — never cancel
+# a running deploy, queue the next. Its own group, so a deploy is never
+# cancelled by (nor cancels) an upgrade / publish / config run.
 concurrency:
-  group: juno-satellite
+  group: juno-satellite-deploy
   cancel-in-progress: false
 
 jobs:

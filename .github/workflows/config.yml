@@ -8,11 +8,11 @@ on:
     tags:
       - v*
 
-# Shared group with deploy.yml / publish.yml / upgrade.yml — serializes all
-# mutations of the satellite canister so a `config apply` never overlaps a
-# `functions upgrade` (which stops the canister) or a `hosting deploy`.
+# Per-workflow queue: serialize Config-apply runs only with each other — never
+# cancel a running config apply, queue the next. Its own group, independent of
+# upgrade / deploy / publish.
 concurrency:
-  group: juno-satellite
+  group: juno-satellite-config
   cancel-in-progress: false
 
 jobs:

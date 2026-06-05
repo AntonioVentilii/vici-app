@@ -6,10 +6,11 @@ on:
     tags:
       - v*
 
-# Shared group with deploy.yml / upgrade.yml — serializes all mutations of
-# the satellite canister so an upgrade (which stops it) never overlaps a deploy.
+# Per-workflow queue: serialize Publish runs only with each other — never cancel
+# a running publish, queue the next. Its own group, independent of
+# upgrade / deploy / config.
 concurrency:
-  group: juno-satellite
+  group: juno-satellite-publish
   cancel-in-progress: false
 
 jobs:
