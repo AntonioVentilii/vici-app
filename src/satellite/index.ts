@@ -92,6 +92,7 @@ import {
 	lookupReferralCodeFn,
 	onProfileSetForReferralCode,
 	onReferralSetForVxpPayout,
+	onTradeActivityForReferral,
 	redeemReferralCodeFn,
 	settleReferralFn
 } from '$satellite/services/referral.services';
@@ -439,16 +440,17 @@ export const listMyReferrals = defineQuery({
 
 export const redeemReferralCode = defineUpdate({
 	args: RedeemReferralCodeArgsSchema,
-	// MUST be `async`: `redeemReferralCodeFn` now awaits the inline VXP payout (the post-write hook
-	// never fires for this serverless write). A plain arrow returning the promise would let the
-	// Sputnik runtime resolve the call before the transfers complete.
-	handler: async (args) => await redeemReferralCodeFn(args)
+	// Synchronous: redeeming only records the `owed` referral row + friendship. The VXP bonus is
+	// deferred to the referee's first prediction (driven by the `activities` hook), so there's no
+	// inline async transfer here.
+	handler: redeemReferralCodeFn
 });
 
 /**
  * Settles — or retries — the VXP payout for a referral row, keyed by the referee principal. The
- * redeem endpoint already pays inline; this exists so a payout that failed (or predates the
- * inline-payout fix) can be driven to completion by the FE or an operator. Idempotent.
+ * bonus is normally driven by the referred user's first prediction (the `activities` hook); this
+ * endpoint exists so a payout that failed (or whose triggering activity hook didn't complete) can
+ * be driven to completion by the FE or an operator. Idempotent.
  */
 export const settleReferral = defineUpdate({
 	args: SettleReferralArgsSchema,
@@ -1133,12 +1135,20 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	onProfileSetForLeagueStats(context);
 };
 
+// A trade activity drives both the new-user onboarding milestones and the referral first-prediction
+// payout. Onboarding runs first; referral settlement is best-effort (it logs and swallows its own
+// errors) so it can't disrupt the onboarding payout.
+const onActivitySetComposed: RunFunction<OnSetDocContext> = async (context) => {
+	await onTradeActivityForVxpOnboarding(context);
+	await onTradeActivityForReferral(context);
+};
+
 export const onSetDoc = defineHook<OnSetDoc>({
 	collections: setDocCollections,
 	run: async (context) => {
 		const fn: Record<OnSetDocCollection, RunFunction<OnSetDocContext>> = {
 			[Collection.PROFILES]: onProfileSetComposed,
-			[Collection.ACTIVITIES]: onTradeActivityForVxpOnboarding,
+			[Collection.ACTIVITIES]: onActivitySetComposed,
 			[Collection.ROLES]: syncRoleToEngineOnSet,
 			[Collection.REFERRALS]: onReferralSetForVxpPayout
 		};
