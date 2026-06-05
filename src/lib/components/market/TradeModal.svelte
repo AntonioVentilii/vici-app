@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { isNullish } from '@dfinity/utils';
 	import { X } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
@@ -19,6 +19,7 @@
 	import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
 	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { resolveOutcomeExecutionPrice } from '$lib/utils/market.utils';
 	import {
 		formatAvailableMarginForUi,
 		intuitiveAvailableMarginUsd,
@@ -76,19 +77,10 @@
 		selectedOutcome === 'YES' ? tr({ key: 'outcome.yes' }) : tr({ key: 'outcome.no' })
 	);
 
-	// Execution price of the chosen side (0..1) used to size the payout
-	// preview. This mirrors `resolveOutcomeExecutionPriceForSizing` in
-	// `executeOutcomeTrade`: a market buy is sized from order-book depth
-	// (`bestAsk` for YES, `1 - bestBid` for NO) when present, falling back
-	// to the consensus probability only when depth is absent. Sizing from
-	// the same source keeps the displayed "+X VXP" in step with the order
-	// that is actually placed.
+	// Execution price of the chosen side, shared with `executeOutcomeTrade` so
+	// the previewed "+X VXP" matches the order placed.
 	const sideExecutionPrice = $derived(
-		selectedOutcome === 'YES'
-			? (market.bestAsk ?? market.yesProbability)
-			: nonNullish(market.bestBid)
-				? 1 - market.bestBid
-				: market.noProbability
+		resolveOutcomeExecutionPrice({ market, action: selectedOutcome })
 	);
 
 	const payout = $derived.by(() => {

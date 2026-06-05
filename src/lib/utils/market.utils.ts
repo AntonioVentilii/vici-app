@@ -1,7 +1,7 @@
 import type { ClearingDid, RegistryDid } from '$declarations';
 import { MILLISECOND_IN_NANOSECONDS, ZERO } from '$lib/constants/app.constants';
 import type { Market, MarketStatus, Outcome, TradingAccessUI } from '$lib/types/market';
-import type { OrderBookLevel } from '$lib/types/order';
+import type { OrderBookLevel, OrderType } from '$lib/types/order';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { resolveMarketDisplayToken } from '$lib/utils/market-token.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
@@ -127,6 +127,45 @@ export const calculateProbability = ({
 	}
 
 	return asks[0].price;
+};
+
+/**
+ * Execution price (0..1) of *buying* `action` now. A buy lifts the book, so it
+ * pays the ask — best ask for YES, `1 − bestBid` for NO — not the consensus
+ * mid (used only when that side is empty; LIMIT uses `limitPrice`; floored at
+ * 0.01). Single source of truth: both order sizing and the payout preview call
+ * this, so the previewed "+X VXP" can't drift from the order placed.
+ */
+export const resolveOutcomeExecutionPrice = ({
+	market,
+	action,
+	orderType = 'MARKET',
+	limitPrice
+}: {
+	market: Market;
+	action: Outcome;
+	orderType?: OrderType;
+	limitPrice?: number;
+}): number => {
+	const executionPrice = (): number => {
+		if (orderType === 'LIMIT' && nonNullish(limitPrice)) {
+			return limitPrice;
+		}
+
+		if (action === 'YES') {
+			return market.bestAsk ?? market.yesProbability;
+		}
+
+		if (action === 'NO') {
+			return nonNullish(market.bestBid) ? 1 - market.bestBid : market.noProbability;
+		}
+
+		const outcome = market.outcomes?.find((o) => o.id === action);
+
+		return outcome?.probability ?? 0.5;
+	};
+
+	return Math.max(executionPrice(), 0.01);
 };
 
 /**
