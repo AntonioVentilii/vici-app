@@ -170,10 +170,6 @@ export const updateInterests = async ({
 	principal: PrincipalText;
 	interests: string[];
 }): Promise<void> => {
-	// Patch only `interests` onto the freshest doc (serialized) rather than
-	// re-sending a whole snapshot — a full-snapshot write would drag stale
-	// `nickname` / `handleLastChangeMs` along and can trip the handle-cooldown
-	// assert (or clobber a field changed since the read).
 	await patchProfile({ principal, patch: { interests } });
 };
 
@@ -721,13 +717,9 @@ export const calculateAndSyncStats = async ({
 	const adjustedPoints = totalPoints + bonusXp;
 	const level = Math.floor(adjustedPoints / 500) + 1;
 
-	// Patch only the computed stat fields onto the freshest doc (serialized via
-	// `patchProfile`). The previous full-snapshot write re-sent the snapshot
-	// captured at the top of this function — including `nickname` /
-	// `handleLastChangeMs` — across seconds of async work. If the handle was
-	// changed in between (e.g. picking a handle during onboarding), that stale
-	// snapshot tried to revert it, tripping the server handle-cooldown assert
-	// ("The handle was changed recently …") and failing the whole sync.
+	// Patch (not full-snapshot write): the profile read at the top is stale by
+	// now — re-sending it would revert a handle picked during onboarding mid-sync
+	// and trip the server handle-cooldown assert.
 	await patchProfile({
 		principal,
 		patch: {
@@ -822,11 +814,8 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 	const points = (profileDoc.data.points ?? 0) + bonusXp;
 	const level = bonusXp > 0 ? Math.floor(points / 500) + 1 : (profileDoc.data.level ?? 1);
 
-	// Patch only the fields this path owns (serialized via `patchProfile`)
-	// rather than re-sending the whole snapshot read above — that would drag
-	// stale `nickname` / `handleLastChangeMs` along and clobber any field
-	// changed since the read. Serialization also orders this against the
-	// overlapping `persistDailyStreak` writer on the same trade.
+	// Patch via the shared queue so this orders against the overlapping
+	// `persistDailyStreak` writer on the same trade.
 	await patchProfile({
 		principal,
 		patch: {
