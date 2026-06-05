@@ -64,4 +64,11 @@ export const assertSetActivity = ({
 	) {
 		throw new Error('Activity key must be `${caller}#${timestamp}#${type}`.');
 	}
+
+	// `timestamp` drives UI rendering (`new Date(...)`) and client-side ordering, so reject a
+	// malformed value (string / NaN / Infinity). It must be a safe integer and equal the key's
+	// timestamp segment — the shape `logActivity` writes (`Date.now()` in both places).
+	if (!Number.isSafeInteger(activity.timestamp) || `${activity.timestamp}` !== parts[1]) {
+		throw new Error('Activity timestamp must be a safe integer matching the key.');
+	}
 };
