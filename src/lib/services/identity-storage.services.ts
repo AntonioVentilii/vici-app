@@ -1,3 +1,4 @@
+import { INBOX_SETTLED_READ_STORAGE_KEY, INBOX_STORAGE_KEY } from '$lib/constants/inbox.constants';
 import { clearDailyGoalMirror } from '$lib/utils/daily-goal.utils';
 import { resetMotionState } from '$lib/utils/motion-engine.utils';
 import { clearOnboardingSeenFlags } from '$lib/utils/onboarding-flags.utils';
@@ -37,13 +38,13 @@ export const reconcileIdentityScopedStorage = ({
 	clearDailyGoalMirror();
 	resetMotionState();
 	clearOnboardingSeenFlags();
-	// `inbox.store` starts a long-lived toast subscription at import, so load
-	// it lazily — keep it off the signed-out/marketing cold path that mounts
-	// <Authn> (root layout) but no inbox UI. On a real identity change the
-	// store is already loaded (or about to be) by the in-app toast host.
-	void import('$lib/stores/inbox.store').then(({ clearInboxState }) => {
-		clearInboxState();
-	});
+	// Inbox read-state: delete the persisted keys directly. We deliberately
+	// don't import `inbox.store` (it starts a long-lived toast subscription
+	// at import, and <Authn> is in the root layout that also wraps the
+	// signed-out/marketing path). The in-memory inbox stores re-read these
+	// keys on their next load, which is when the next identity opens the app.
+	del({ key: INBOX_STORAGE_KEY });
+	del({ key: INBOX_SETTLED_READ_STORAGE_KEY });
 
 	if (ownerKey === undefined) {
 		del({ key: STORAGE_OWNER_KEY });
