@@ -50,10 +50,8 @@
 	let poolPick: string | null = $state(null);
 	let custom: string = $state('');
 
-	// Live, debounced availability probe for the custom input. Pool draws
-	// are pre-filtered through the same query at display time, so only the
-	// free-form path needs an as-you-type check. `idle` covers both "no
-	// candidate yet" and the gap before the debounce fires.
+	// Live availability probe for the custom input. Pool draws are already
+	// pre-filtered at display time, so only the free-form path needs it.
 	type LiveAvailability = 'idle' | 'checking' | 'available' | 'taken' | 'failed';
 	let liveAvailability = $state<LiveAvailability>('idle');
 	let checkToken = 0;
@@ -176,10 +174,8 @@
 		});
 	});
 
-	// Format/length gate for the custom candidate — the local checks the
-	// live probe must clear before hitting the satellite. Mirrors the
-	// rules in `availability` below. Only meaningful in custom mode; pool
-	// picks are pre-filtered and skip the probe entirely.
+	// Local format checks the live probe must clear before hitting the
+	// satellite. Custom mode only — pool picks are pre-filtered.
 	const customFormatValid = $derived(
 		mode === 'custom' &&
 			selectedName.length >= MIN_NICKNAME_LENGTH &&
@@ -187,11 +183,10 @@
 			/^[a-z0-9._-]+$/.test(selectedName)
 	);
 
-	// Debounced live availability probe for the custom input. Cancels the
-	// in-flight check on every keystroke via a monotonic token, guards
-	// empty / malformed candidates, and stays offline-tolerant: a probe
-	// failure surfaces as `failed` but never blocks the claim, since the
-	// claim-time re-check and the satellite assertion are the authority.
+	// Debounced live probe. A monotonic token cancels the in-flight check
+	// on each keystroke so stale results are dropped. Offline-tolerant: a
+	// failure surfaces as `failed` but never blocks the claim — the
+	// claim-time re-check and satellite assertion are the authority.
 	$effect(() => {
 		const candidate = selectedName;
 		const probe = customFormatValid;
@@ -283,10 +278,8 @@
 			return { ok: false, reasonKey: 'onboarding.beat2.avail.taken' };
 		}
 
-		// Custom mode gates on the live probe. Block while it's in flight
-		// (or about to be), reject a confirmed collision, and otherwise
-		// stay optimistic — `failed`/`available` both clear the claim, and
-		// the claim-time re-check guards the commit.
+		// Custom mode gates on the live probe: block while it's in flight,
+		// reject a confirmed collision. `available`/`failed` fall through.
 		if (mode === 'custom') {
 			if (liveAvailability === 'idle' || liveAvailability === 'checking') {
 				return { ok: false, reasonKey: 'onboarding.beat2.avail.checking' };
@@ -302,8 +295,7 @@
 
 	const canClaim = $derived(availability.ok && !isClaiming);
 
-	// The live probe is mid-flight — render the hint as neutral (not an
-	// error) while we wait for the satellite to answer.
+	// Renders the hint as neutral rather than an error while probing.
 	const isCheckingAvailability = $derived(
 		availability.reasonKey === 'onboarding.beat2.avail.checking'
 	);
