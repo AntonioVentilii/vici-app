@@ -46,7 +46,7 @@
 	const MAX_RESHUFFLE_ATTEMPTS = 3;
 
 	type Mode = 'pool' | 'custom';
-	let mode: Mode = $state('pool');
+	let mode = $state<Mode>('pool');
 	let poolPick: string | null = $state(null);
 	let custom: string = $state('');
 
@@ -180,9 +180,8 @@
 	// live probe must clear before hitting the satellite. Mirrors the
 	// rules in `availability` below. Only meaningful in custom mode; pool
 	// picks are pre-filtered and skip the probe entirely.
-	const customFormatValid = $derived.by(
-		() =>
-			mode === 'custom' &&
+	const customFormatValid = $derived(
+		mode === 'custom' &&
 			selectedName.length >= MIN_NICKNAME_LENGTH &&
 			selectedName.length <= 16 &&
 			/^[a-z0-9._-]+$/.test(selectedName)
