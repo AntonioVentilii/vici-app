@@ -8,6 +8,7 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import type { Market } from '$lib/types/market';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
+	import { resolveOutcomeExecutionPrice } from '$lib/utils/market.utils';
 	import { snapToStakeLadder, vxpNetWin } from '$lib/utils/vxp-economy.utils';
 
 	interface Props {
@@ -39,8 +40,17 @@
 	const stakeIdx = $derived(VXP_STAKE_LADDER.indexOf(currentStake));
 	const stakePct = $derived(stakeIdx >= 0 ? (stakeIdx / (VXP_STAKE_LADDER.length - 1)) * 100 : 0);
 	const atCap = $derived(currentStake === VXP_STAKE_LADDER[VXP_STAKE_LADDER.length - 1]);
-	const stakeYesWin = $derived(vxpNetWin({ stake: currentStake, pWin: market.yesProbability }));
-	const stakeNoWin = $derived(vxpNetWin({ stake: currentStake, pWin: 1 - market.yesProbability }));
+	// Price off the execution price (the ask), like the order placed — not the
+	// consensus mid, which over-promises on a thin book.
+	const stakeYesWin = $derived(
+		vxpNetWin({
+			stake: currentStake,
+			pWin: resolveOutcomeExecutionPrice({ market, action: 'YES' })
+		})
+	);
+	const stakeNoWin = $derived(
+		vxpNetWin({ stake: currentStake, pWin: resolveOutcomeExecutionPrice({ market, action: 'NO' }) })
+	);
 
 	const selectStake = (rung: VxpStake) => {
 		if (onStakeChange === undefined) {
