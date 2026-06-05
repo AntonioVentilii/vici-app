@@ -1608,6 +1608,7 @@ export const frMessages = {
 	'profile.dashboard.affiliations.title': 'Affiliations',
 	'profile.dashboard.affiliations.university': 'Alma Mater',
 	'profile.dashboard.affiliations.verify_soon': 'Vérification — bientôt',
+	'profile.dashboard.affiliations.verify_cta': 'Vérifiez votre université →',
 	'profile.dashboard.all': 'Tous',
 	'profile.dashboard.calls': 'pronostics',
 	'profile.dashboard.cancel': 'Annuler',

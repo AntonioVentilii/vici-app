@@ -51,7 +51,7 @@
 	const APPLE_LOGIN_ENABLED = true;
 	const GOOGLE_LOGIN_ENABLED = true;
 	const EMAIL_LOGIN_ENABLED = true;
-	const INTERNET_IDENTITY_LOGIN_ENABLED = true;
+	const INTERNET_IDENTITY_LOGIN_ENABLED = false;
 	const PASSKEY_LOGIN_ENABLED = true;
 	const DEV_LOGIN_ENABLED = true;
 
