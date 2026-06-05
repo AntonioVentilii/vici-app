@@ -126,13 +126,6 @@ export const CALIBRATION_DAILY_CAP = 15;
 export const CALIBRATION_HOURLY_CAP = 6;
 
 /**
- * Maximum number of referral payouts the referrer can receive within a
- * single calendar month. Server-enforced; surfaced in UI so users see
- * the cap rather than hitting a silent floor.
- */
-export const VXP_REFERRAL_MONTHLY_CAP = 10;
-
-/**
  * Worlds podium awards for the monthly battle — 1st / 2nd / 3rd place.
  * Server-validated; surfaced in UI on the Worlds standings.
  */
