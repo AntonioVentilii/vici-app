@@ -170,15 +170,7 @@ export const updateInterests = async ({
 	principal: PrincipalText;
 	interests: string[];
 }): Promise<void> => {
-	const profileDoc = await getProfile(principal);
-
-	await upsertProfile({
-		...profileDoc,
-		data: {
-			...profileDoc.data,
-			interests
-		}
-	});
+	await patchProfile({ principal, patch: { interests } });
 };
 
 // Serializes the fire-and-forget profile writers (daily streak + daily
@@ -725,10 +717,12 @@ export const calculateAndSyncStats = async ({
 	const adjustedPoints = totalPoints + bonusXp;
 	const level = Math.floor(adjustedPoints / 500) + 1;
 
-	await upsertProfile({
-		...profileDoc,
-		data: {
-			...profileDoc.data,
+	// Patch (not full-snapshot write): the profile read at the top is stale by
+	// now — re-sending it would revert a handle picked during onboarding mid-sync
+	// and trip the server handle-cooldown assert.
+	await patchProfile({
+		principal,
+		patch: {
 			totalTrades,
 			winRate,
 			pnl: realizedPnl,
@@ -820,10 +814,11 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 	const points = (profileDoc.data.points ?? 0) + bonusXp;
 	const level = bonusXp > 0 ? Math.floor(points / 500) + 1 : (profileDoc.data.level ?? 1);
 
-	await upsertProfile({
-		...profileDoc,
-		data: {
-			...profileDoc.data,
+	// Patch via the shared queue so this orders against the overlapping
+	// `persistDailyStreak` writer on the same trade.
+	await patchProfile({
+		principal,
+		patch: {
 			dailyStreak: bump.streak,
 			// Keep the personal-best in lock-step with the bump (same
 			// high-water-mark rule as `persistDailyStreak`).
