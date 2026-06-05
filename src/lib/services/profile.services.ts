@@ -708,33 +708,42 @@ export const calculateAndSyncStats = async ({
 		wonBoldCallerMonth
 	});
 
-	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({
-		previouslyUnlocked: profileDoc.data.unlockedAchievements ?? [],
-		evaluations
-	});
-
-	const bonusXp = newlyUnlocked.reduce((acc, evaluation) => acc + evaluation.def.xp, 0);
-	const adjustedPoints = totalPoints + bonusXp;
-	const level = Math.floor(adjustedPoints / 500) + 1;
-
 	// Patch (not full-snapshot write): the profile read at the top is stale by
 	// now — re-sending it would revert a handle picked during onboarding mid-sync
-	// and trip the server handle-cooldown assert.
+	// and trip the server handle-cooldown assert. The append-only fields (unlock
+	// set, points/level) are re-derived from the freshest `current` inside the
+	// queued turn so a concurrent writer's sticky unlock or points bump (e.g.
+	// `recordActivity`'s `marathon`) isn't clobbered by this stale snapshot.
+	let newlyUnlocked: ReturnType<typeof mergeUnlockedAchievements>['newlyUnlocked'] = [];
+
 	await patchProfile({
 		principal,
-		patch: {
-			totalTrades,
-			winRate,
-			pnl: realizedPnl,
-			streak: resolvedStreak,
-			accuracy,
-			points: adjustedPoints,
-			level,
-			contrarianWins,
-			topDecileStreak,
-			lastTopDecileDay,
-			sharpestEyeBestTier,
-			unlockedAchievements: unlocked
+		patch: (current) => {
+			const { unlocked, newlyUnlocked: newly } = mergeUnlockedAchievements({
+				previouslyUnlocked: current.unlockedAchievements ?? [],
+				evaluations
+			});
+			newlyUnlocked = newly;
+
+			const bonusXp = newly.reduce((acc, evaluation) => acc + evaluation.def.xp, 0);
+			// Points are monotonic XP — never let this pass regress a concurrent bump.
+			const points = Math.max(current.points ?? 0, totalPoints + bonusXp);
+			const level = Math.floor(points / 500) + 1;
+
+			return {
+				totalTrades,
+				winRate,
+				pnl: realizedPnl,
+				streak: resolvedStreak,
+				accuracy,
+				points,
+				level,
+				contrarianWins,
+				topDecileStreak,
+				lastTopDecileDay,
+				sharpestEyeBestTier,
+				unlockedAchievements: unlocked
+			};
 		}
 	});
 
@@ -805,28 +814,37 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 		wonBoldCallerMonth: (profileDoc.data.unlockedAchievements ?? []).includes('bold-caller')
 	});
 
-	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({
-		previouslyUnlocked: profileDoc.data.unlockedAchievements ?? [],
-		evaluations
-	});
-
-	const bonusXp = newlyUnlocked.reduce((acc, evaluation) => acc + evaluation.def.xp, 0);
-	const points = (profileDoc.data.points ?? 0) + bonusXp;
-	const level = bonusXp > 0 ? Math.floor(points / 500) + 1 : (profileDoc.data.level ?? 1);
-
 	// Patch via the shared queue so this orders against the overlapping
-	// `persistDailyStreak` writer on the same trade.
+	// `persistDailyStreak` writer on the same trade. The append-only fields
+	// (unlock set, points/level) are derived from the freshest `current` inside
+	// the queued turn — XP applied as a delta on `current.points`, the unlock set
+	// unioned — so a concurrent writer (e.g. login `calculateAndSyncStats`) isn't
+	// clobbered.
+	let newlyUnlocked: ReturnType<typeof mergeUnlockedAchievements>['newlyUnlocked'] = [];
+
 	await patchProfile({
 		principal,
-		patch: {
-			dailyStreak: bump.streak,
-			// Keep the personal-best in lock-step with the bump (same
-			// high-water-mark rule as `persistDailyStreak`).
-			longestStreak: Math.max(profileDoc.data.longestStreak ?? 0, bump.streak),
-			lastActiveDay: bump.lastActiveDay,
-			points,
-			level,
-			unlockedAchievements: unlocked
+		patch: (current) => {
+			const { unlocked, newlyUnlocked: newly } = mergeUnlockedAchievements({
+				previouslyUnlocked: current.unlockedAchievements ?? [],
+				evaluations
+			});
+			newlyUnlocked = newly;
+
+			const bonusXp = newly.reduce((acc, evaluation) => acc + evaluation.def.xp, 0);
+			const points = (current.points ?? 0) + bonusXp;
+			const level = bonusXp > 0 ? Math.floor(points / 500) + 1 : (current.level ?? 1);
+
+			return {
+				dailyStreak: bump.streak,
+				// Keep the personal-best in lock-step with the bump (same
+				// high-water-mark rule as `persistDailyStreak`).
+				longestStreak: Math.max(current.longestStreak ?? 0, bump.streak),
+				lastActiveDay: bump.lastActiveDay,
+				points,
+				level,
+				unlockedAchievements: unlocked
+			};
 		}
 	});
 
