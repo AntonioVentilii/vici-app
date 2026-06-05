@@ -285,6 +285,7 @@
 		top: 0;
 		left: 0;
 		right: 0;
+		height: 100vh; /* fallback for engines without `dvh` */
 		height: 100dvh;
 		z-index: 120;
 		display: flex;

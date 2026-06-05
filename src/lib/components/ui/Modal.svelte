@@ -90,6 +90,7 @@
 	 * tracks the currently-visible height. This supersedes the old
 	 * `-webkit-fill-available` iOS workaround. */
 	.wrapper {
+		max-height: 90vh; /* fallback for engines without `dvh` */
 		max-height: 90dvh;
 	}
 </style>

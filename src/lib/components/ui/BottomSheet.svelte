@@ -182,6 +182,7 @@
 		top: 0;
 		left: 0;
 		right: 0;
+		height: 100vh; /* fallback for engines without `dvh` */
 		height: 100dvh;
 		z-index: 80;
 		display: flex;
@@ -206,10 +207,12 @@
 		 * shrinks in step so the body still scrolls. Defaults to `0px`,
 		 * so the hooks are inert until something sets `--kb-inset`. */
 		margin-bottom: var(--kb-inset, 0px);
-		/* A large `--kb-inset` can drive the `calc()` negative, collapsing
-		 * the cap; floor it at `0px` via `max()`. The plain `92dvh` above is
-		 * the fallback for engines without `max()`. `dvh` (not `vh`) so the
-		 * cap tracks the visible height under the iOS dynamic toolbar. */
+		/* Layered fallbacks, weakest first: `92vh` for engines without `dvh`;
+		 * `92dvh` (tracks the visible height under the iOS dynamic toolbar) for
+		 * those without `max()`; the floored `calc()` for the rest. A large
+		 * `--kb-inset` can drive the `calc()` negative, collapsing the cap —
+		 * `max()` floors it at `0px`. */
+		max-height: 92vh;
 		max-height: 92dvh;
 		max-height: max(0px, calc(92dvh - var(--kb-inset, 0px)));
 		transition: margin-bottom 0.22s var(--ease-vici);
