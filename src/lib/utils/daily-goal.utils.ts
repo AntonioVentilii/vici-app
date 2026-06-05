@@ -89,13 +89,7 @@ export const writeDailyGoalMirror = (state: DailyGoalState): void => {
 	storageSet({ key: DAILY_GOAL_STORAGE_KEY, value: state });
 };
 
-/**
- * Drop the localStorage mirror entirely. Called on an identity change /
- * sign-out (see `reconcileIdentityScopedStorage`) so the cap count never
- * carries from one principal into the next on a shared device. NOT called
- * on a same-user reload — the mirror's whole point is to survive that (the
- * `max`-wins reconcile then re-gates on the real count).
- */
+/** Drop the localStorage mirror. See `reconcileIdentityScopedStorage`. */
 export const clearDailyGoalMirror = (): void => {
 	storageDel({ key: DAILY_GOAL_STORAGE_KEY });
 };

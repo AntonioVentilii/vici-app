@@ -95,12 +95,10 @@
 	let matches = $state<TournamentMatchDoc[]>([]);
 
 	// ─── Intro card dismissal ───────────────────────────────────────
-	// Persisted via the `vici.battles-intro-seen` localStorage flag (the
-	// key lives in `onboarding-flags.utils` so the auth-transition reconcile
-	// can clear it on an identity change). Future migration to cross-device
-	// preferences is deferred — adding a new field to the satellite
-	// preferences schema requires a Candid + Rust binding regen scoped
-	// outside this work.
+	// Persisted via the `BATTLES_INTRO_SEEN_KEY` localStorage flag. Future
+	// migration to cross-device preferences is deferred — adding a new field
+	// to the satellite preferences schema requires a Candid + Rust binding
+	// regen scoped outside this work.
 	let battlesIntroSeen = $state(false);
 
 	// Create-a-battle wizard — opened from the intro CTA and the slim

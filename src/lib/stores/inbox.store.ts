@@ -517,13 +517,9 @@ export const markAllInboxRead = (): void => {
 };
 
 /**
- * Drop every identity-scoped inbox cache. Called from the auth-transition
- * reconcile (`reconcileIdentityScopedStorage`) when the signed-in principal
- * changes, so user A's read-state — the seed/history cards and the
- * acknowledged Settled events — never carries into user B's session on a
- * shared device. Resets both the persisted mirrors and the in-memory
- * stores, and forgets the toast baseline so the next identity's cold-start
- * unreads don't replay as arrival toasts.
+ * Drop every inbox cache (persisted mirrors + in-memory stores + the toast
+ * baseline) so one principal's read-state never carries into the next on a
+ * shared device. See `reconcileIdentityScopedStorage`.
  */
 export const clearInboxState = (): void => {
 	baseInboxStore.reset({ key: INBOX_STORAGE_KEY });

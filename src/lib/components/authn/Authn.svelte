@@ -67,13 +67,9 @@
 		positionsStore.set(undefined);
 		tradeHistoryStore.set(undefined);
 
-		// Drop identity-scoped LOCAL caches — the daily-goal cap mirror,
-		// motion-engine state, inbox read-state, and onboarding "seen"
-		// flags — but only when the signed-in principal actually changes,
-		// so user A's state never bleeds into user B's session on a shared
-		// device. Guarded against a same-user reload (unlike the
-		// server-backed caches above) so the offline-resilient daily-goal
-		// mirror survives a refresh.
+		// Same idea for the identity-scoped localStorage caches, except
+		// those are local-authoritative (not server-backed) — see
+		// `reconcileIdentityScopedStorage`.
 		reconcileIdentityScopedStorage({ ownerKey: user?.owner });
 
 		try {
