@@ -339,7 +339,14 @@
 
 	.confirm-scrim {
 		position: fixed;
-		inset: 0;
+		/* `100dvh` rather than a fixed `inset: 0`: on iOS the large layout
+		 * viewport that `inset: 0` resolves against pushes the bottom-docked
+		 * panel behind the dynamic bottom toolbar, clipping its CTA. */
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 100vh; /* fallback for engines without `dvh` */
+		height: 100dvh;
 		z-index: 80;
 		display: flex;
 		flex-direction: column;
@@ -356,7 +363,8 @@
 		flex-direction: column;
 		width: 100%;
 		max-width: 32rem;
-		max-height: 92vh;
+		max-height: 92vh; /* fallback for engines without `dvh` */
+		max-height: 92dvh;
 		padding: 0.5rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
 		overflow-y: auto;
 		background: var(--bg-popover);
@@ -377,7 +385,8 @@
 
 		.confirm-panel {
 			max-width: 28rem;
-			max-height: 90vh;
+			max-height: 90vh; /* fallback for engines without `dvh` */
+			max-height: 90dvh;
 			padding: 1.5rem;
 			border: 1px solid var(--border-base);
 			border-radius: 12px;
