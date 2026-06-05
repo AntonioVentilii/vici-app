@@ -2,16 +2,22 @@ import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import { parseToken } from '$lib/utils/parse.utils';
 
 /**
- * Total VXP granted per user through the new-user ladder (onboarding reserve).
- * Explicit amounts (1,500 + 4,000 + 5,000 = 10,500 VXP): registration, first call, five calls.
+ * Total VXP granted per user as the new-user starter (onboarding reserve): a single
+ * **1,500 VXP** grant at registration. Sized to ~3 daily goals so a new user can reach their
+ * first prediction → resolution → payout loop before hitting any wall.
+ *
+ * The starter is granted in full on registration (milestone 1). The two call-gated milestones
+ * (`m2`/`m3`) are retained at **0** — the payout path skips any milestone whose amount is ≤ 0 —
+ * so there is no engagement-gated drip. Making predictions is rewarded by gameplay payouts, the
+ * first-call achievement, and the referral bonus instead.
  */
 export const NEW_USER_VXP_TOTAL_BASE_UNITS = parseToken({
-	value: '10500',
+	value: '1500',
 	unitName: VXP_TOKEN.decimals
 });
 
 const MILESTONE_1_VXP = parseToken({ value: '1500', unitName: VXP_TOKEN.decimals });
-const MILESTONE_2_VXP = parseToken({ value: '4000', unitName: VXP_TOKEN.decimals });
+const MILESTONE_2_VXP = parseToken({ value: '0', unitName: VXP_TOKEN.decimals });
 
 export const newUserVxpAmountMilestone1BaseUnits = (): bigint => MILESTONE_1_VXP;
 
