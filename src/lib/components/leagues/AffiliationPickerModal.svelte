@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ArrowLeft, Check, Mail, Search, X } from '@lucide/svelte/icons';
+	import { untrack } from 'svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import {
@@ -73,11 +74,23 @@
 		 *  "no members yet" state; a row with members but `monthRank`
 		 *  unset (not ranked yet) renders the count without a rank. */
 		schoolStats?: Readonly<Record<string, { members: number; monthRank?: number }>>;
+		/** When set (a university id) and Pass-2 is on, the sheet opens
+		 *  straight into the email-verification step for that school — the
+		 *  "Verify your school" entry from the profile's Alma Mater slot. */
+		initialVerifyId?: string;
 		onClose: () => void;
 		onPicked?: () => void;
 	}
 
-	const { isOpen, kind, current, schoolStats = {}, onClose, onPicked }: Props = $props();
+	const {
+		isOpen,
+		kind,
+		current,
+		schoolStats = {},
+		initialVerifyId,
+		onClose,
+		onPicked
+	}: Props = $props();
 
 	const roster = $derived<readonly WorldsAffiliationOption[]>(
 		kind === 'university' ? WORLDS_UNIVERSITIES : WORLDS_COUNTRIES
@@ -85,6 +98,20 @@
 
 	const isUniversity = $derived(kind === 'university');
 	const pass2 = $derived(isUniversity && SCHOOL_PASS2_ENABLED);
+
+	// When launched via the profile's "Verify your school" CTA, resolve the
+	// school to verify so the sheet can open directly on its email step
+	// (only for a verifiable directory university — Pass-2 on + has domains).
+	// `untrack`: this is a deliberate mount-time snapshot (the sheet is
+	// remounted per open), not reactive — it seeds the initial `mode` /
+	// `verifyTarget` below.
+	const initialVerifyTarget: WorldsAffiliationOption | null = untrack(() =>
+		initialVerifyId !== undefined && kind === 'university' && SCHOOL_PASS2_ENABLED
+			? (WORLDS_UNIVERSITIES.find(
+					(o) => o.id === initialVerifyId && (o.domains?.length ?? 0) > 0
+				) ?? null)
+			: null
+	);
 
 	const subKey: MessageKey = 'worlds.picker.lock_hint';
 	const searchPlaceholderKey = $derived<MessageKey>(
@@ -97,7 +124,7 @@
 	 * reachable only when {@link SCHOOL_PASS2_ENABLED} is on.
 	 */
 	type Mode = 'browse' | 'verify-existing' | 'add-confirm' | 'add-form' | 'add-verifying';
-	let mode = $state<Mode>('browse');
+	let mode = $state<Mode>(initialVerifyTarget !== null ? 'verify-existing' : 'browse');
 
 	let query = $state('');
 	let selected = $state<string | null>(null);
@@ -111,7 +138,7 @@
 	let verifyEmail = $state('');
 	let code = $state('');
 	let submissionId = $state<string | null>(null);
-	let verifyTarget = $state<WorldsAffiliationOption | null>(null);
+	let verifyTarget = $state<WorldsAffiliationOption | null>(initialVerifyTarget);
 	let verifyError = $state<string | null>(null);
 	let submitting = $state(false);
 

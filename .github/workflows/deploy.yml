@@ -3,8 +3,18 @@ name: Deploy to Juno
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - v*
+
+# Shared across deploy / publish / upgrade: all three mutate the same
+# satellite canister, and `functions upgrade` stops it mid-upgrade — a
+# concurrent `hosting deploy` would be rejected with "Canister is stopped".
+# One queue serializes every satellite mutation.
+concurrency:
+  group: juno-satellite
+  cancel-in-progress: false
 
 jobs:
   deploy:

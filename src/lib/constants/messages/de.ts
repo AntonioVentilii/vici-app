@@ -1607,6 +1607,7 @@ export const deMessages = {
 	'profile.dashboard.affiliations.title': 'Zugehörigkeiten',
 	'profile.dashboard.affiliations.university': 'Alma Mater',
 	'profile.dashboard.affiliations.verify_soon': 'Verifizierung — bald',
+	'profile.dashboard.affiliations.verify_cta': 'Uni verifizieren →',
 	'profile.dashboard.all': 'Alle',
 	'profile.dashboard.calls': 'Calls',
 	'profile.dashboard.cancel': 'Abbrechen',

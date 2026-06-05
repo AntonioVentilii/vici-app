@@ -14,7 +14,8 @@ import { UserProfileSchema } from '$lib/schema/profile.schema';
 import {
 	ClaimReferralFriendshipArgsSchema,
 	LookupReferralCodeArgsSchema,
-	RedeemReferralCodeArgsSchema
+	RedeemReferralCodeArgsSchema,
+	SettleReferralArgsSchema
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
 import {
@@ -91,7 +92,8 @@ import {
 	lookupReferralCodeFn,
 	onProfileSetForReferralCode,
 	onReferralSetForVxpPayout,
-	redeemReferralCodeFn
+	redeemReferralCodeFn,
+	settleReferralFn
 } from '$satellite/services/referral.services';
 import {
 	acceptFriendRequest as acceptFriendRequestFn,
@@ -437,7 +439,20 @@ export const listMyReferrals = defineQuery({
 
 export const redeemReferralCode = defineUpdate({
 	args: RedeemReferralCodeArgsSchema,
-	handler: redeemReferralCodeFn
+	// MUST be `async`: `redeemReferralCodeFn` now awaits the inline VXP payout (the post-write hook
+	// never fires for this serverless write). A plain arrow returning the promise would let the
+	// Sputnik runtime resolve the call before the transfers complete.
+	handler: async (args) => await redeemReferralCodeFn(args)
+});
+
+/**
+ * Settles — or retries — the VXP payout for a referral row, keyed by the referee principal. The
+ * redeem endpoint already pays inline; this exists so a payout that failed (or predates the
+ * inline-payout fix) can be driven to completion by the FE or an operator. Idempotent.
+ */
+export const settleReferral = defineUpdate({
+	args: SettleReferralArgsSchema,
+	handler: async (args) => await settleReferralFn(args)
 });
 
 /**
