@@ -2,13 +2,6 @@ name: Upgrade Serverless Functions
 
 on:
   workflow_dispatch:
-  # Auto-upgrade on every push to `main` is DISABLED on purpose. CI-deployed
-  # functions ship a satellite that is missing its custom query methods —
-  # production sign-in fails with IC0536 "Canister has no query method
-  # 'app_get_profile'" — whereas upgrading from a local machine works. Until
-  # the CI upgrade is fixed, upgrade manually via `workflow_dispatch` or
-  # locally (`juno functions upgrade`). Do NOT re-add the `main` push trigger
-  # before the root cause is resolved.
   push:
     tags:
       - v*
