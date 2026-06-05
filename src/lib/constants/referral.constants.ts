@@ -24,7 +24,7 @@ export const REFERRAL_VXP_BONUS_BASE_UNITS = parseToken({
  * final bracket of {@link REFERRAL_REWARD_TIERS} — the curve yields `0` past this many prior paid
  * redemptions.
  */
-export const REFERRAL_MAX_PAID = 30;
+export const REFERRAL_MAX_PAID = 1000;
 
 /**
  * Diminishing referrer-reward curve, keyed by the referrer's count of **prior** paid redemptions
@@ -32,11 +32,11 @@ export const REFERRAL_MAX_PAID = 30;
  * reward shrinks as a code is reused, then drops to zero past {@link REFERRAL_MAX_PAID}.
  *
  * Redemption index (1-based, per referrer):
- * - 1–5   → 500 VXP
- * - 6–10  → 250 VXP
- * - 11–20 → 100 VXP
- * - 21–30 →  50 VXP
- * - >30   →   0 VXP (hard cap)
+ * - 1–5      → 500 VXP
+ * - 6–10     → 250 VXP
+ * - 11–20    → 100 VXP
+ * - 21–1000  →  50 VXP
+ * - >1000    →   0 VXP (hard cap)
  *
  * Expressed as `{ throughIndex, value }` upper bounds so the lookup is a simple ascending scan.
  */
@@ -44,7 +44,7 @@ const REFERRAL_REWARD_TIERS: ReadonlyArray<{ throughIndex: number; value: string
 	{ throughIndex: 5, value: '500' },
 	{ throughIndex: 10, value: '250' },
 	{ throughIndex: 20, value: '100' },
-	{ throughIndex: 30, value: '50' }
+	{ throughIndex: 1000, value: '50' }
 ];
 
 /**
