@@ -53,6 +53,16 @@ export const redeemReferralCode = async ({ code }: { code: string }): Promise<vo
 };
 
 /**
+ * Drives (or retries) the VXP payout for a referral row, keyed by the referee principal. The redeem
+ * call already pays out inline; this is the self-heal / retry path for a payout that failed or that
+ * predates the inline-payout fix. Idempotent server-side — safe to call for one's own principal on
+ * every load.
+ */
+export const settleReferral = async ({ referee }: { referee: PrincipalText }): Promise<void> => {
+	await functions.settleReferral({ referee });
+};
+
+/**
  * Friendship-only path for users who use a referral link past the signup grace period or who
  * have already redeemed a different code. No VXP transfer; only writes a bilateral confirmed
  * friendship between the caller and the code owner. Idempotent if a relation already exists.

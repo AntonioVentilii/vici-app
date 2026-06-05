@@ -143,6 +143,8 @@ type AppResumeMyAccountResult = record { ok : bool; resumed : bool };
 
 type AppSendFriendRequestArgs = record { target : text };
 
+type AppSettleReferralArgs = record { referee : text };
+
 type AppSubmitSchoolArgs = record { name : text; country : opt text; school_id : opt text; email : text; locale : text };
 
 type AppSubmitSchoolResult = record { submission_id : text };
@@ -218,6 +220,7 @@ service : {
 	app_resolve_tournament_round : (AppResolveTournamentRoundArgs) -> (AppResolveTournamentRoundResult);
 	app_resume_my_account : () -> (AppResumeMyAccountResult);
 	app_send_friend_request : (AppSendFriendRequestArgs) -> ();
+	app_settle_referral : (AppSettleReferralArgs) -> ();
 	app_submit_school : (AppSubmitSchoolArgs) -> (AppSubmitSchoolResult);
 	app_sweep_expired_deletions : () -> (AppSweepExpiredDeletionsResult);
 	app_transfer_league_ownership : (AppTransferLeagueOwnershipArgs) -> (AppTransferLeagueOwnershipResult);

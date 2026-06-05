@@ -1,4 +1,4 @@
-import { j } from '@junobuild/schema';
+import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 /**
  * Args for {@link redeemReferralCode}. Code is normalised to uppercase by the satellite before
@@ -23,4 +23,13 @@ export const LookupReferralCodeArgsSchema = j.strictObject({
  */
 export const ClaimReferralFriendshipArgsSchema = j.strictObject({
 	code: j.string()
+});
+
+/**
+ * Args for {@link settleReferral}. Keyed by the referee principal (the referral row key). Drives —
+ * or retries — the VXP payout for that row; used by the FE to self-heal a payout that failed or
+ * predates the inline-payout fix, and for operator backfills.
+ */
+export const SettleReferralArgsSchema = j.strictObject({
+	referee: PrincipalTextSchema
 });

@@ -211,6 +211,36 @@ Why this shape:
 `defineAssert<AssertSetDoc>` and the `onDeleteDoc` hook follow the same
 pattern — keep them consistent.
 
+## Hooks fire ONLY for client writes, never for serverless `setDocStore`
+
+`onSetDoc` / `onDeleteDoc` run **only** when the document is written
+through the public client API (`@junobuild/core` `setDoc` from the
+browser). A write made from inside the satellite via
+`@junobuild/functions/sdk` `setDocStore` / `deleteDocStore` — i.e. from
+an endpoint handler or another hook — does **not** trigger the hook.
+(In junobuild/juno: `api/db.rs` `set_doc` calls `set_doc_store` _then_
+`invoke_on_set_doc`; the SDK `set_doc_store` in `db/store.rs` runs
+asserts + insert and stops there. Asserts still run on serverless
+writes — only the post-write hook is skipped.)
+
+Consequences:
+
+- A hook only works if its trigger collection is written **by the
+  browser** (e.g. `profiles` via FE `setDoc` → the profile hooks fire).
+- **An "endpoint writes a row → a hook fans out" design is broken** —
+  the hook never fires. Either write the trigger row from the client, or
+  do the work **inline in the endpoint** (make the handler `async` and
+  call the logic directly). This is exactly what bit the referral VXP
+  payout: `redeemReferralCode` (endpoint) created the `referrals` row via
+  `setDocStore` expecting `onReferralSetForVxpPayout` to pay both bonuses,
+  so every bonus sat permanently `owed`. Fixed by paying inline from the
+  endpoint (`settleReferralPayout`) plus a `settleReferral` retry endpoint;
+  the hook stays wired only as a harmless safety net for client writes.
+- Make the inline work **idempotent + retry-safe** (lock → act →
+  finalize, short-circuit on already-done), and expose a settle/retry
+  endpoint so a failed transfer can be re-driven — there is no hook replay
+  to fall back on.
+
 ## Pair every `defineAssert` with a `defineQuery` probe
 
 Write-time guards (`defineAssert`) reject collisions at the door, but
