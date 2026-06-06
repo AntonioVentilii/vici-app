@@ -13,9 +13,14 @@
 		// computations diverging on float rounding).
 		crowdPct: number;
 		crowdSide: CallSide;
+		// Real, market-wide 7d price history (0–100 YES series, oldest first)
+		// from the clearing canister. Absent until FlowMode resolves it for the
+		// focused card — the sparkline and the weekly delta then fall back to
+		// the seed-based shape / prior heuristic.
+		points?: number[];
 	}
 
-	const { market, metadata, crowdPct, crowdSide }: Props = $props();
+	const { market, metadata, crowdPct, crowdSide, points }: Props = $props();
 
 	const yesPct = $derived(crowdPct);
 	const noPct = $derived(100 - yesPct);
@@ -23,6 +28,23 @@
 	// label shows. `crowdPct` is always the YES share, so a NO-leaning
 	// market needs `noPct` here or the figure contradicts its own label.
 	const crowdSidePct = $derived(crowdSide === 'YES' ? yesPct : noPct);
+
+	// Weekly change: when real 7d history has resolved, the true move (last
+	// close − first close of the window); otherwise the prior heuristic, so an
+	// unloaded / untraded card reads exactly as before.
+	const weekChange = $derived.by(() => {
+		if (points === undefined || points.length < 2) {
+			return;
+		}
+
+		return points[points.length - 1] - points[0];
+	});
+	const weekUp = $derived(weekChange === undefined ? yesPct >= 50 : weekChange >= 0);
+	const weekDeltaPct = $derived(
+		weekChange === undefined
+			? Math.abs(yesPct - Math.max(5, yesPct - 12))
+			: Math.abs(Math.round(weekChange))
+	);
 </script>
 
 <section class="flow-back-block flow-community">
@@ -31,21 +53,19 @@
 			{crowdSidePct}%
 			<span class="flow-community-side">{crowdSide}</span>
 		</span>
-		<span class={`flow-community-delta num ${yesPct >= 50 ? 'flow-delta-yes' : 'flow-delta-no'}`}>
-			{yesPct >= 50 ? '▲' : '▼'}
-			{Math.abs(yesPct - Math.max(5, yesPct - 12))}% {t({
+		<span class={`flow-community-delta num ${weekUp ? 'flow-delta-yes' : 'flow-delta-no'}`}>
+			{weekUp ? '▲' : '▼'}
+			{weekDeltaPct}% {t({
 				locale: $localeStore,
 				key: 'card.back.this_week'
 			})}
 		</span>
 	</div>
-	<!-- The Flow deck sparkline stays on the seed-based shape (no real
-	     `points`): the back face is only ever seen after a flip, and a
-	     market-wide history fetch per card during a swipe session would turn
-	     the deck into N blocking queries. Real market-wide history is wired
-	     into the market-detail chart instead, where a single focused fetch
-	     is cheap. -->
-	<FlowCardSparkline events={metadata?.events} seed={market.id} yesPercent={yesPct} />
+	<!-- Real market-wide history when FlowMode has resolved it for this card
+	     (one bounded candle query, fetched only for the focused card); until
+	     then `points` is absent and the sparkline falls back to its seed-based
+	     shape. -->
+	<FlowCardSparkline events={metadata?.events} {points} seed={market.id} yesPercent={yesPct} />
 </section>
 
 <style lang="postcss">

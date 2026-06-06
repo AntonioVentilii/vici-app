@@ -49,6 +49,10 @@
 		categoryAcc?: CategoryAccuracySignal;
 		priorCall?: PriorCallSignal;
 		followedLean?: FollowedLeanSignal;
+		// Real, market-wide price history (0–100 YES series, oldest first)
+		// for the back-face sparkline. Absent until FlowMode resolves it for
+		// the focused card — the back face falls back to its seed shape.
+		points?: number[];
 		// Stake-ladder change callback. Wired through to FlowCardBack so a
 		// tap on a rung writes back to FlowMode's bound stake.
 		onStakeChange?: (next: string) => void;
@@ -74,6 +78,7 @@
 		categoryAcc,
 		priorCall,
 		followedLean,
+		points,
 		onStakeChange,
 		guided = false
 	}: Props = $props();
@@ -709,6 +714,7 @@
 					{metadata}
 					onClose={closeBack}
 					{onStakeChange}
+					{points}
 					{priorCall}
 					{tradeAmount}
 				/>
