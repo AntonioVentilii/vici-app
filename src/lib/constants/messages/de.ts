@@ -185,7 +185,7 @@ export const deMessages = {
 	'flow.share.whatsapp': 'WhatsApp',
 	'flow.share.twitter': 'X',
 	'flow.share.text_pre': '"{title}" — {yes}% JA auf VICI. Wie tippst du?',
-	'flow.share.text_post': 'Ich habe {side} auf "{title}" getippt — verfolge meine Bilanz auf VICI.',
+	'flow.share.text_post': 'Ich habe gerade diese Vorhersage zur WM gemacht — was meinst du?',
 	'flow.share.telegram': 'Telegram',
 	'flow.share.eyebrow': 'PROGNOSE TEILEN',
 	'flow.share.instagram': 'Instagram',
@@ -783,7 +783,8 @@ export const deMessages = {
 	'flow.invite.copy_tail': 'beim ersten Call.',
 	'flow.invite.copy_vxp': '+{vxp} VXP',
 	'flow.invite.share': 'Teilen',
-	'flow.invite.share_text': 'Vorhersagen mit der Geschwindigkeit eines Gedankens. Komm zu VICI.',
+	'flow.invite.share_text':
+		'Bist du bereit für die WM? Ich habe gerade hier meine Vorhersagen abgegeben.',
 	'flow.invite.title': 'Bring einen Freund mit',
 	'flow.invite.toast_code_copied': 'Code kopiert',
 	'flow.invite.toast_copy_failed': 'Kopieren fehlgeschlagen',
@@ -1201,7 +1202,7 @@ export const deMessages = {
 	'leagues.role.admin': 'Admin',
 	'leagues.role.member': 'Mitglied',
 	'leagues.role.owner': 'Inhaber',
-	'leagues.share_text': 'Tritt meiner Liga {name} auf VICI bei!',
+	'leagues.share_text': 'Tritt meiner Liga bei und lass uns gemeinsam die WM tippen.',
 	'leagues.title': 'Ligen',
 	'leagues.transfer.cta': 'Inhaberschaft übertragen',
 	'leagues.transfer.empty':
