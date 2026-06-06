@@ -45,7 +45,10 @@
 	import type { FollowedLeanSignal, PriorCallSignal } from '$lib/types/market-signals';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
-	import type { PriceHistoryPeriod } from '$lib/utils/market-price-history.utils';
+	import type {
+		MarketPriceSeries,
+		PriceHistoryPeriod
+	} from '$lib/utils/market-price-history.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
@@ -74,7 +77,7 @@
 	// window (true cold-start flat line) and absent while it hasn't resolved
 	// yet, so the chart falls back to its seed shape rather than flashing a
 	// misleading flat line.
-	let priceHistoryByPeriod = $state<Partial<Record<PriceHistoryPeriod, number[]>>>({});
+	let priceHistoryByPeriod = $state<Partial<Record<PriceHistoryPeriod, MarketPriceSeries>>>({});
 	const chartPriceHistory = $derived(priceHistoryByPeriod[chartPeriod]);
 
 	let loading = $state(true);
@@ -512,7 +515,8 @@
 			marketId={market.id}
 			onPeriodChange={(period) => (chartPeriod = period)}
 			period={chartPeriod}
-			points={chartPriceHistory}
+			pointXs={chartPriceHistory?.xs}
+			points={chartPriceHistory?.yes}
 			{yesPercent}
 		/>
 

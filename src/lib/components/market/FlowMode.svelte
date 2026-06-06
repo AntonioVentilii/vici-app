@@ -64,6 +64,7 @@
 	} from '$lib/utils/flow-sound.utils';
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import type { MarketPriceSeries } from '$lib/utils/market-price-history.utils';
 	import {
 		DAILY_HARD_CAP,
 		recordMotionSwipe,
@@ -150,12 +151,19 @@
 	// (which uses the *primary* tag — see `primaryMarketTag`).
 	let marketTagMap = $state<Record<string, string[]>>({});
 	let marketMetadataMap = $state<Map<MarketId, MarketMetadata>>(new Map());
-	// Real, market-wide 7d price history (0–100 YES series) for the cards the
-	// viewer actually lands on, keyed by market id. Only the focused card
-	// renders, so this fills one bounded candle query at a time (never the
-	// whole deck up front), and a market the viewer never reaches is never
-	// fetched. Absent entries leave the back-face sparkline on its seed shape.
-	const priceHistoryById = new SvelteMap<MarketId, number[]>();
+	// Real, market-wide 7d price history (0–100 YES series + time-axis
+	// x-fractions) for the cards the viewer actually lands on, keyed by market
+	// id. Only the focused card renders, so this fills one bounded candle
+	// query at a time (never the whole deck up front), and a market the viewer
+	// never reaches is never fetched. Absent entries leave the back-face
+	// sparkline on its seed shape.
+	const priceHistoryById = new SvelteMap<MarketId, MarketPriceSeries>();
+	// Markets with a price-history fetch in flight. The cache key only lands
+	// once the request resolves, so without this an away-and-back swipe could
+	// re-fire the effect and issue a duplicate query for the same market. Read
+	// via `untrack` below so add/delete don't themselves re-trigger the effect
+	// (a tracked delete would re-fire and refetch on persistent failure).
+	const priceHistoryInFlight = new SvelteSet<MarketId>();
 	let userSignals = $state<UserMarketSignals>({
 		categoryAcc: {},
 		priorCalls: {},
@@ -878,9 +886,11 @@
 	$effect(() => {
 		const id = currentCard?.id;
 
-		if (isNullish(id) || priceHistoryById.has(id)) {
+		if (isNullish(id) || priceHistoryById.has(id) || untrack(() => priceHistoryInFlight.has(id))) {
 			return;
 		}
+
+		priceHistoryInFlight.add(id);
 
 		void loadMarketPriceCandles({
 			seriesId: id,
@@ -888,9 +898,13 @@
 			onLoad: ({ response }) => {
 				priceHistoryById.set(id, response);
 			}
-		}).catch(() => {
-			// Leave the entry absent → back face keeps its seed sparkline.
-		});
+		})
+			.catch(() => {
+				// Leave the entry absent → back face keeps its seed sparkline.
+			})
+			.finally(() => {
+				priceHistoryInFlight.delete(id);
+			});
 	});
 
 	// Trickster appears on the active card when the YES probability is
@@ -1015,7 +1029,7 @@
 						marketId: currentCard.id
 					})}
 					{@const metadata = marketMetadataMap.get(currentCard.id)}
-					{@const priceHistory = priceHistoryById.get(currentCard.id)}
+					{@const priceSeries = priceHistoryById.get(currentCard.id)}
 					{@const priorCall = userSignals.priorCalls[currentCard.id]}
 					{@const followedLean = userSignals.followedLean[currentCard.id]}
 					{@const categoryAcc = userSignals.categoryAcc[flowCategory]}
@@ -1044,7 +1058,8 @@
 										onStakeChange={(next) => {
 											tradeAmount = next;
 										}}
-										points={priceHistory}
+										pointXs={priceSeries?.xs}
+										points={priceSeries?.yes}
 										{priorCall}
 										signedIn={nonNullish($userStore.user)}
 										{tradeAmount}

@@ -11,8 +11,9 @@ import { fetchMarketsLite } from '$lib/services/market.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
 import {
-	deriveMarketPriceCandles,
+	deriveMarketPriceSeries,
 	priceHistoryQueryWindow,
+	type MarketPriceSeries,
 	type PriceHistoryPeriod
 } from '$lib/utils/market-price-history.utils';
 import { isNullish } from '@dfinity/utils';
@@ -154,10 +155,11 @@ export const loadUserTradeHistory = async ({
  * — rather than the viewer's own fills. `period` selects the query window
  * (resolution + lower bound; see {@link priceHistoryQueryWindow}) so the
  * `1d / 7d / 30d / all` chips re-scope the chart instead of replotting the
- * same window. {@link deriveMarketPriceCandles} maps each bucket's close
- * into the 0–100 series. The series is empty until the first trade lands in
- * the window (true cold-start), which the sparkline reads as a flat line.
- * Fails open: any error leaves the caller on its cold-start / seed fallback.
+ * same window. {@link deriveMarketPriceSeries} maps each bucket's close into
+ * the 0–100 series and onto the time axis. The series is empty until the
+ * first trade lands in the window (true cold-start), which the sparkline
+ * reads as a flat line. Fails open: any error leaves the caller on its
+ * cold-start / seed fallback.
  */
 export const loadMarketPriceCandles = ({
 	seriesId,
@@ -167,10 +169,10 @@ export const loadMarketPriceCandles = ({
 }: {
 	seriesId: string;
 	period: PriceHistoryPeriod;
-	onLoad: (options: { certified: boolean; response: number[] }) => void;
+	onLoad: (options: { certified: boolean; response: MarketPriceSeries }) => void;
 	onUpdateError?: (error: unknown) => void;
 }): Promise<void> => {
-	const { interval, startTimeNs } = priceHistoryQueryWindow(period);
+	const { interval, startTimeNs, endTimeNs } = priceHistoryQueryWindow(period);
 
 	return loadWithCertification<ClearingDid.SeriesPriceCandle[]>({
 		request: ({ certified, identity: reqIdentity }) =>
@@ -182,7 +184,19 @@ export const loadMarketPriceCandles = ({
 				certified
 			}),
 		onLoad: ({ certified, response }) => {
-			onLoad({ certified, response: deriveMarketPriceCandles(response) });
+			// `all` has no lower query bound, so anchor the x-axis to the
+			// earliest returned candle; bounded periods anchor to the requested
+			// window start.
+			const windowStartNs = startTimeNs ?? response[0]?.bucket_start_ns ?? endTimeNs;
+
+			onLoad({
+				certified,
+				response: deriveMarketPriceSeries({
+					candles: response,
+					windowStartNs,
+					windowEndNs: endTimeNs
+				})
+			});
 		},
 		onUpdateError
 	});

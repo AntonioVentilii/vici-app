@@ -43,6 +43,9 @@
 		// Real, market-wide price history (0–100 YES series) for the
 		// community-read sparkline. Absent → seed-based fallback shape.
 		points?: number[];
+		// Parallel x-fractions (0–1) placing each `points` entry on the time
+		// axis. Present alongside real history; absent for the seed shape.
+		pointXs?: number[];
 	}
 
 	const {
@@ -58,7 +61,8 @@
 		interactive = true,
 		tradeAmount,
 		onStakeChange,
-		points
+		points,
+		pointXs
 	}: Props = $props();
 
 	const catColor = $derived(tagColor(category));
@@ -76,7 +80,7 @@
 
 		<FlowResolutionBlock {market} />
 
-		<FlowCommunityRead {crowdPct} {crowdSide} {market} {metadata} {points} />
+		<FlowCommunityRead {crowdPct} {crowdSide} {market} {metadata} {pointXs} {points} />
 
 		<FlowStake {market} {noPct} {onStakeChange} {tradeAmount} {yesPct} />
 
