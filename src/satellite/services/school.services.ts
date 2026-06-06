@@ -51,8 +51,8 @@ import {
 import { spMatchEmail, spNormalize } from '$lib/utils/school-picker.utils';
 import { logInfo } from '$satellite/utils/logger.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
-import { IDL } from '@icp-sdk/core/candid';
 import { Principal } from '@icp-sdk/core/principal';
+import { IcManagementIdl } from '@junobuild/functions/canisters/ic-management';
 import { call, httpRequest, msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
@@ -239,7 +239,7 @@ const generateCode = async (): Promise<{ code: string; salt: string; nonce: stri
 		canisterId: Principal.fromText(MANAGEMENT_CANISTER_ID),
 		method: 'raw_rand',
 		args: [],
-		result: IDL.Vec(IDL.Nat8)
+		result: IcManagementIdl.raw_rand_result
 	});
 
 	const bytes = Array.from(random as ArrayLike<number>);

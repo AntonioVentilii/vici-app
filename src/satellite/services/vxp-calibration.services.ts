@@ -1,4 +1,4 @@
-import type { ClearingDid } from '$declarations';
+import type { ClearingDid, RegistryDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
 import {
 	CLEARING_CANISTER_ID,
@@ -16,9 +16,9 @@ import {
 import type { CallSide } from '$lib/types/market';
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
 import type { VxpOnboardingDoc } from '$lib/types/vxp-onboarding';
+import { candidMethod } from '$satellite/utils/candid.utils';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
 import { isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
-import { IDL } from '@icp-sdk/core/candid';
 import { Principal } from '@icp-sdk/core/principal';
 import {
 	IcrcLedgerCanister,
@@ -62,57 +62,6 @@ const CALIBRATION_AWARD_TYPE = 'calibration';
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
-
-/** Binary settlement is a `Price`; the engine rule is `price > 0 ⇒ YES`. */
-const PriceIdl = IDL.Record({
-	timestamp: IDL.Opt(IDL.Nat64),
-	oracle_id: IDL.Opt(IDL.Text),
-	decimal: IDL.Record({ decimals: IDL.Nat8, value: IDL.Nat })
-});
-
-const SettlementInputIdl = IDL.Variant({
-	Price: PriceIdl,
-	Outcome: IDL.Text
-});
-
-const PlanStatusIdl = IDL.Variant({
-	Finalised: IDL.Null,
-	Planned: IDL.Null,
-	Executing: IDL.Null
-});
-
-const BalanceDomainIdl = IDL.Variant({
-	ViciXp: IDL.Null,
-	Social: IDL.Null,
-	Playground: IDL.Null,
-	Settlement: IDL.Null
-});
-
-const SettlementStatusViewIdl = IDL.Record({
-	status: PlanStatusIdl,
-	series_id: IDL.Text,
-	fee_usd: IDL.Nat,
-	accounting_cursor: IDL.Nat64,
-	insurance_fee_usd: IDL.Nat,
-	accounting_applied: IDL.Bool,
-	balance_domain: BalanceDomainIdl,
-	oracle_source: IDL.Text,
-	total_positions: IDL.Nat64,
-	settlement: SettlementInputIdl
-});
-
-/** Only the two fields the market gate needs are decoded from `Series`. */
-const PayoffTypeIdl = IDL.Variant({
-	Put: IDL.Null,
-	Binary: IDL.Null,
-	Call: IDL.Null,
-	Categorical: IDL.Null
-});
-
-const SeriesGateIdl = IDL.Record({
-	engine_id: IDL.Opt(IDL.Text),
-	payoff_type: PayoffTypeIdl
-});
 
 type CalibrationReason =
 	| 'anonymous'
@@ -219,13 +168,15 @@ const hasEngaged = ({ caller, userKey }: { caller: Uint8Array; userKey: string }
  * reason to reject with, or `undefined` when the gate passes.
  */
 const checkMarketShape = async (seriesId: string): Promise<CalibrationReason | undefined> => {
-	const result = await call<
-		[] | [{ engine_id: [] | [string]; payoff_type: ClearingDid.PayoffType }]
-	>({
+	const { argTypes, result: resultType } = candidMethod({
+		canister: 'registry',
+		method: 'get_series'
+	});
+	const result = await call<[] | [RegistryDid.Series]>({
 		canisterId: REGISTRY_CANISTER_ID,
 		method: 'get_series',
-		args: [[IDL.Text, seriesId]],
-		result: IDL.Opt(SeriesGateIdl)
+		args: [[argTypes[0], seriesId]],
+		result: resultType
 	});
 
 	const [series] = result;
@@ -255,11 +206,15 @@ const checkMarketShape = async (seriesId: string): Promise<CalibrationReason | u
 const deriveWinningSide = async (
 	seriesId: string
 ): Promise<{ side: CallSide } | { reason: CalibrationReason }> => {
+	const { argTypes, result: resultType } = candidMethod({
+		canister: 'clearing',
+		method: 'get_settlement_status'
+	});
 	const result = await call<[] | [ClearingDid.SettlementStatusView]>({
 		canisterId: CLEARING_CANISTER_ID,
 		method: 'get_settlement_status',
-		args: [[IDL.Text, seriesId]],
-		result: IDL.Opt(SettlementStatusViewIdl)
+		args: [[argTypes[0], seriesId]],
+		result: resultType
 	});
 
 	const [view] = result;
