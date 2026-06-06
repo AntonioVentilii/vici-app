@@ -36,7 +36,9 @@ enum JunoDatastoreCollection {
 	USER_MONTHLY_STATS = 'user_monthly_stats',
 	SCHOOL_SUBMISSIONS = 'school_submissions',
 	SCHOOLS = 'schools',
-	APP_CONFIG = 'app_config'
+	APP_CONFIG = 'app_config',
+	EVENTS = 'events',
+	EVENT_ROLLUPS = 'event_rollups'
 }
 
 /**
@@ -253,6 +255,27 @@ export default defineConfig(({ mode }) => ({
 				// so it never needs to live in the repo.
 				{
 					collection: JunoDatastoreCollection.APP_CONFIG,
+					memory: 'stable',
+					read: 'controllers',
+					write: 'controllers'
+				},
+				// Product-analytics raw event log (cockpit DQ-1). Append-only,
+				// principal-keyed-but-pseudonymous. Controllers-only: the
+				// `trackEvents` endpoint is the sole writer (via the privileged
+				// *DocStore APIs as an admin) so clients can neither read other
+				// users' behaviour nor forge events; the cockpit reads aggregates
+				// through `getAnalyticsSummary`, never the raw collection.
+				{
+					collection: JunoDatastoreCollection.EVENTS,
+					memory: 'stable',
+					read: 'controllers',
+					write: 'controllers'
+				},
+				// Per-UTC-day rollup of event counts (one doc per epoch-day),
+				// bumped inline by `trackEvents`. Controllers-only; `getAnalyticsSummary`
+				// reads these so the cockpit never scans the raw event log.
+				{
+					collection: JunoDatastoreCollection.EVENT_ROLLUPS,
 					memory: 'stable',
 					read: 'controllers',
 					write: 'controllers'

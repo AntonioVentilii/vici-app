@@ -97,6 +97,94 @@ const getAffiliationStats = async (
 	return AppGetAffiliationStatsResultSchema.parse(result);
 };
 
+const AppGetAnalyticsSummaryArgsSchema = j.strictObject({ days: j.number() });
+const AppGetAnalyticsSummaryResultSchema = j.strictObject({
+	rows: j.array(
+		j.strictObject({
+			day: j.number(),
+			start: j.number(),
+			name: j.enum([
+				'session_started',
+				'signed_up',
+				'signed_in',
+				'signed_out',
+				'provider_linked',
+				'onboarding_started',
+				'onboarding_step',
+				'handle_checked',
+				'onboarding_completed',
+				'flow_session_started',
+				'flow_swipe',
+				'flow_card_expanded',
+				'flow_completed',
+				'flow_abandoned',
+				'sound_toggled',
+				'market_viewed',
+				'market_searched',
+				'market_shared',
+				'watchlist_added',
+				'watchlist_removed',
+				'orderbook_viewed',
+				'position_taken',
+				'position_closed',
+				'prediction_created',
+				'order_placed',
+				'order_cancelled',
+				'resolution_proposed',
+				'resolution_confirmed',
+				'resolution_disputed',
+				'payout_settled',
+				'referral_sent',
+				'referral_link_copied',
+				'referral_redeemed',
+				'referral_converted',
+				'vxp_awarded',
+				'streak_milestone',
+				'faucet_claimed',
+				'league_created',
+				'league_joined',
+				'league_invite_sent',
+				'battle_proposed',
+				'battle_accepted',
+				'battle_resolved',
+				'comment_posted',
+				'chat_sent',
+				'affiliation_set',
+				'affiliation_removed',
+				'school_picker_opened',
+				'school_picked',
+				'school_verify_email_submitted',
+				'school_verify_code_submitted',
+				'delete_flow_opened',
+				'delete_confirmed',
+				'delete_succeeded',
+				'exit_signal',
+				'app_error',
+				'perf_metric'
+			]),
+			count: j.number()
+		})
+	)
+});
+
+const getAnalyticsSummary = async (
+	args: j.infer<typeof AppGetAnalyticsSummaryArgsSchema>
+): Promise<j.infer<typeof AppGetAnalyticsSummaryResultSchema>> => {
+	const parsedArgs = AppGetAnalyticsSummaryArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetAnalyticsSummaryArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_analytics_summary']>[0];
+
+	const { app_get_analytics_summary } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_analytics_summary(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetAnalyticsSummaryResultSchema, value: idlResult });
+	return AppGetAnalyticsSummaryResultSchema.parse(result);
+};
+
 const AppGetCurrentTournamentResultSchema = j.strictObject({
 	tournament: j.optional(
 		j.strictObject({
@@ -1447,6 +1535,103 @@ const sweepExpiredDeletions = async (): Promise<
 	return AppSweepExpiredDeletionsResultSchema.parse(result);
 };
 
+const AppTrackEventsArgsSchema = j.strictObject({
+	events: j.array(
+		j.strictObject({
+			name: j.enum([
+				'session_started',
+				'signed_up',
+				'signed_in',
+				'signed_out',
+				'provider_linked',
+				'onboarding_started',
+				'onboarding_step',
+				'handle_checked',
+				'onboarding_completed',
+				'flow_session_started',
+				'flow_swipe',
+				'flow_card_expanded',
+				'flow_completed',
+				'flow_abandoned',
+				'sound_toggled',
+				'market_viewed',
+				'market_searched',
+				'market_shared',
+				'watchlist_added',
+				'watchlist_removed',
+				'orderbook_viewed',
+				'position_taken',
+				'position_closed',
+				'prediction_created',
+				'order_placed',
+				'order_cancelled',
+				'resolution_proposed',
+				'resolution_confirmed',
+				'resolution_disputed',
+				'payout_settled',
+				'referral_sent',
+				'referral_link_copied',
+				'referral_redeemed',
+				'referral_converted',
+				'vxp_awarded',
+				'streak_milestone',
+				'faucet_claimed',
+				'league_created',
+				'league_joined',
+				'league_invite_sent',
+				'battle_proposed',
+				'battle_accepted',
+				'battle_resolved',
+				'comment_posted',
+				'chat_sent',
+				'affiliation_set',
+				'affiliation_removed',
+				'school_picker_opened',
+				'school_picked',
+				'school_verify_email_submitted',
+				'school_verify_code_submitted',
+				'delete_flow_opened',
+				'delete_confirmed',
+				'delete_succeeded',
+				'exit_signal',
+				'app_error',
+				'perf_metric'
+			]),
+			sessionId: j.string(),
+			path: j.optional(j.string()),
+			marketId: j.optional(j.string()),
+			seriesId: j.optional(j.string()),
+			leagueId: j.optional(j.string()),
+			battleId: j.optional(j.string()),
+			source: j.optional(j.string()),
+			label: j.optional(j.string()),
+			step: j.optional(j.number()),
+			value: j.optional(j.number()),
+			count: j.optional(j.number()),
+			durationMs: j.optional(j.number()),
+			ok: j.optional(j.boolean()),
+			occurredAtMs: j.optional(j.number())
+		})
+	)
+});
+const AppTrackEventsResultSchema = j.strictObject({ accepted: j.number() });
+
+const trackEvents = async (
+	args: j.infer<typeof AppTrackEventsArgsSchema>
+): Promise<j.infer<typeof AppTrackEventsResultSchema>> => {
+	const parsedArgs = AppTrackEventsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppTrackEventsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_track_events']>[0];
+
+	const { app_track_events } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_track_events(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppTrackEventsResultSchema, value: idlResult });
+	return AppTrackEventsResultSchema.parse(result);
+};
+
 const AppTransferLeagueOwnershipArgsSchema = j.strictObject({
 	leagueId: j.string(),
 	newOwnerPrincipal: j.string()
@@ -1643,6 +1828,7 @@ export const functions = {
 	checkFriendship,
 	checkNicknameAvailability,
 	getAffiliationStats,
+	getAnalyticsSummary,
 	getCurrentTournament,
 	getMarketMetadata,
 	getMarketTranslation,
@@ -1691,6 +1877,7 @@ export const functions = {
 	settleReferral,
 	submitSchool,
 	sweepExpiredDeletions,
+	trackEvents,
 	transferLeagueOwnership,
 	triggerTournamentDraw,
 	upsertMarketMetadata,

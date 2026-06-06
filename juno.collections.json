@@ -24,5 +24,7 @@
 	"USER_MONTHLY_STATS": "user_monthly_stats",
 	"SCHOOL_SUBMISSIONS": "school_submissions",
 	"SCHOOLS": "schools",
-	"APP_CONFIG": "app_config"
+	"APP_CONFIG": "app_config",
+	"EVENTS": "events",
+	"EVENT_ROLLUPS": "event_rollups"
 }
