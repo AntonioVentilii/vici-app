@@ -26,6 +26,7 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
+	import { track } from '$lib/services/analytics.services';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { persistDailyGoal, persistDailyStreak } from '$lib/services/profile.services';
@@ -474,6 +475,9 @@
 		if (!currentMarket) {
 			return;
 		}
+
+		// Product analytics: the swipe is the core Layer Zero funnel step.
+		track({ name: 'flow_swipe', source: 'flow', marketId: currentMarket.id, label: action });
 
 		if (action === 'YES') {
 			exitX = 500;

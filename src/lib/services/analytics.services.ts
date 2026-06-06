@@ -1,0 +1,134 @@
+import { browser } from '$app/environment';
+import { functions } from '$declarations/satellite/satellite.api';
+import type {
+	AnalyticsEventName,
+	AnalyticsEventProps,
+	TrackEventInput
+} from '$lib/types/analytics-event';
+
+/**
+ * Client-side product-analytics buffer (cockpit DQ-1).
+ *
+ * `track()` is **fire-and-forget**: it pushes a behavioural event into an
+ * in-memory buffer and returns immediately — it never blocks a click or a
+ * render. The buffer flushes in batches (a short debounce, a size cap, or
+ * on tab-hide), and a flush failure is swallowed — analytics must never
+ * break the app.
+ *
+ * Nothing identifying is sent from the client: only the event name, a
+ * per-visit `sessionId`, the current route, and the bounded
+ * {@link AnalyticsEventProps} dimensions. The satellite derives the
+ * pseudonymous principal from the caller server-side, and the data lands in
+ * our own satellite — never a third party.
+ */
+
+const FLUSH_INTERVAL_MS = 5_000;
+const MAX_BUFFER = 20;
+const SESSION_STORAGE_KEY = 'vici.analytics.session';
+
+let buffer: TrackEventInput[] = [];
+let flushTimer: ReturnType<typeof setTimeout> | undefined;
+let initialized = false;
+
+/**
+ * A per-visit (per-tab) session id. Lives in `sessionStorage` so it groups
+ * one browsing session and resets on a fresh tab — the stitch key the
+ * server can later use to associate pre-auth events with a principal.
+ */
+const sessionId = (): string => {
+	const existing = sessionStorage.getItem(SESSION_STORAGE_KEY);
+
+	if (existing !== null) {
+		return existing;
+	}
+
+	const fresh = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+	sessionStorage.setItem(SESSION_STORAGE_KEY, fresh);
+
+	return fresh;
+};
+
+const scheduleFlush = (): void => {
+	if (flushTimer !== undefined) {
+		return;
+	}
+
+	flushTimer = setTimeout(() => {
+		flushTimer = undefined;
+		void flushEvents();
+	}, FLUSH_INTERVAL_MS);
+};
+
+/**
+ * Send the buffered events in one batched update call. Best-effort: on
+ * failure the batch is dropped rather than retried or surfaced.
+ */
+export const flushEvents = async (): Promise<void> => {
+	if (buffer.length === 0) {
+		return;
+	}
+
+	const events = buffer;
+	buffer = [];
+
+	if (flushTimer !== undefined) {
+		clearTimeout(flushTimer);
+		flushTimer = undefined;
+	}
+
+	try {
+		await functions.trackEvents({ events });
+	} catch (err) {
+		// Analytics is best-effort and must never break the app — drop the batch.
+		// eslint-disable-next-line no-console
+		console.debug('analytics flush failed', err);
+	}
+};
+
+/**
+ * Record a behavioural event. Safe to call from anywhere — a no-op during
+ * SSR, never throws, never blocks. The event is `{ name, ...dimensions }`,
+ * e.g. `track({ name: 'flow_swipe', source: 'flow', marketId })`.
+ */
+export const track = (event: { name: AnalyticsEventName } & AnalyticsEventProps): void => {
+	if (!browser) {
+		return;
+	}
+
+	const { name, ...props } = event;
+
+	buffer.push({
+		name,
+		sessionId: sessionId(),
+		path: window.location.pathname,
+		occurredAtMs: Date.now(),
+		...props
+	});
+
+	if (buffer.length >= MAX_BUFFER) {
+		void flushEvents();
+	} else {
+		scheduleFlush();
+	}
+};
+
+/**
+ * Wire the session-level listeners once, after the satellite is ready.
+ * Flushes on tab-hide (the last chance to land buffered events) and emits
+ * the opening `session_started` event.
+ */
+export const initAnalytics = (): void => {
+	if (!browser || initialized) {
+		return;
+	}
+
+	initialized = true;
+
+	document.addEventListener('visibilitychange', () => {
+		if (document.visibilityState === 'hidden') {
+			void flushEvents();
+		}
+	});
+
+	track({ name: 'session_started' });
+};

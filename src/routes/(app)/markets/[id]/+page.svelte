@@ -35,6 +35,7 @@
 		userIsAdminOrSolver,
 		userSignedIn
 	} from '$lib/derived/user.derived';
+	import { track } from '$lib/services/analytics.services';
 	import { getUserMarketSignals } from '$lib/services/market-signals.services';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
@@ -193,6 +194,8 @@
 
 	onMount(() => {
 		if (nonNullish($pageMarketId)) {
+			track({ name: 'market_viewed', source: 'market_detail', marketId: $pageMarketId });
+
 			fetchMarket({ id: $pageMarketId });
 
 			intervalId = setInterval(() => {
