@@ -158,6 +158,12 @@
 	// never reaches is never fetched. Absent entries leave the back-face
 	// sparkline on its seed shape.
 	const priceHistoryById = new SvelteMap<MarketId, MarketPriceSeries>();
+	// Markets with a price-history fetch in flight. The cache key only lands
+	// once the request resolves, so without this an away-and-back swipe could
+	// re-fire the effect and issue a duplicate query for the same market. Read
+	// via `untrack` below so add/delete don't themselves re-trigger the effect
+	// (a tracked delete would re-fire and refetch on persistent failure).
+	const priceHistoryInFlight = new SvelteSet<MarketId>();
 	let userSignals = $state<UserMarketSignals>({
 		categoryAcc: {},
 		priorCalls: {},
@@ -880,9 +886,11 @@
 	$effect(() => {
 		const id = currentCard?.id;
 
-		if (isNullish(id) || priceHistoryById.has(id)) {
+		if (isNullish(id) || priceHistoryById.has(id) || untrack(() => priceHistoryInFlight.has(id))) {
 			return;
 		}
+
+		priceHistoryInFlight.add(id);
 
 		void loadMarketPriceCandles({
 			seriesId: id,
@@ -890,9 +898,13 @@
 			onLoad: ({ response }) => {
 				priceHistoryById.set(id, response);
 			}
-		}).catch(() => {
-			// Leave the entry absent → back face keeps its seed sparkline.
-		});
+		})
+			.catch(() => {
+				// Leave the entry absent → back face keeps its seed sparkline.
+			})
+			.finally(() => {
+				priceHistoryInFlight.delete(id);
+			});
 	});
 
 	// Trickster appears on the active card when the YES probability is
