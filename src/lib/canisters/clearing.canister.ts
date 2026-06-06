@@ -338,53 +338,42 @@ export class ClearingCanister extends Canister<ClearingService> {
 	};
 
 	/**
-	 * Returns the market-wide executed-trade history for one series, draining the
-	 * clearing canister's stable, exclusive `event_id` cursor.
+	 * Returns one market's executed-trade history aggregated into fixed-width
+	 * OHLC + volume + trade-count candles, so a front end can render a
+	 * time-scoped consensus/price chart (the YES-probability sparkline)
+	 * directly instead of draining and re-bucketing the raw per-trade tape.
 	 *
-	 * Unlike {@link getTradeHistory} (caller-scoped) this surfaces every
-	 * participant's executed trades on `series_id`, so a front end can derive a
-	 * price-history series — the YES-probability sparkline — that reflects the
-	 * true market movement for all viewers rather than only the caller's fills.
-	 * Points are returned oldest-first (ascending `event_id`, i.e. execution
-	 * order). `maxPages` bounds the drain so a long-lived series can't fan out
-	 * into an unbounded number of round-trips.
+	 * Market-wide (every participant's fills, not just the caller's), so the
+	 * derived series reflects the true market movement for all viewers —
+	 * including signed-out visitors reading under the anonymous identity.
+	 * `interval` picks the resolution (hourly for short windows, daily for
+	 * long) and the optional `startTimeNs` / `endTimeNs` bounds (ns) request
+	 * just the window the chart draws. Candles come back ascending by
+	 * `bucket_start_ns`; empty buckets are omitted, so a young or untraded
+	 * series yields an empty vector rather than fabricated points.
 	 */
-	listSeriesTradeHistory = async ({
+	getSeriesPriceHistory = async ({
 		seriesId,
-		pageLimit,
-		maxPages,
+		interval,
+		startTimeNs,
+		endTimeNs,
 		...queryParams
 	}: {
 		seriesId: string;
-		pageLimit?: bigint;
-		maxPages?: number;
-	} & QueryParams): Promise<ClearingDid.SeriesTradePoint[]> => {
-		const { list_series_trade_history } = this.caller(queryParams);
+		interval: ClearingDid.PriceHistoryInterval;
+		startTimeNs?: bigint;
+		endTimeNs?: bigint;
+	} & QueryParams): Promise<ClearingDid.SeriesPriceCandle[]> => {
+		const { get_series_price_history } = this.caller(queryParams);
 
-		const items: ClearingDid.SeriesTradePoint[] = [];
-		let startAfter: [] | [bigint] = toNullable();
-		let pages = 0;
+		const { candles } = await get_series_price_history({
+			series_id: seriesId,
+			interval,
+			start_time: toNullable(startTimeNs),
+			end_time: toNullable(endTimeNs)
+		});
 
-		while (maxPages === undefined || pages < maxPages) {
-			const page = await list_series_trade_history({
-				series_id: seriesId,
-				start_after: startAfter,
-				limit: pageLimit === undefined ? toNullable() : toNullable(pageLimit)
-			});
-
-			items.push(...page.items);
-			pages += 1;
-
-			const next = fromNullable(page.next_cursor);
-
-			if (isNullish(next)) {
-				break;
-			}
-
-			startAfter = toNullable(next);
-		}
-
-		return items;
+		return candles;
 	};
 
 	mintCompleteSet = async ({

@@ -3,40 +3,41 @@
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import type { PriceHistoryPeriod } from '$lib/utils/market-price-history.utils';
 
 	interface Props {
 		marketId: string;
 		yesPercent: number;
 		/**
 		 * Real price-history series (0–100 YES percentages, oldest first)
-		 * loaded from the clearing canister's trade history. Empty until
-		 * the first trade lands (true cold-start). Optional so call sites
-		 * that haven't fetched history fall back to the seed-based shape.
+		 * loaded from the clearing canister's OHLC candles for {@link period}.
+		 * Empty until the first trade lands in the window (true cold-start).
+		 * Optional so call sites that haven't fetched history fall back to the
+		 * seed-based shape.
 		 */
 		points?: number[];
+		/** The active chart period chip. Owned by the page, which fetches the
+		 *  matching window of history. */
+		period: PriceHistoryPeriod;
+		/** Notifies the page to re-scope the chart to a different window. */
+		onPeriodChange: (period: PriceHistoryPeriod) => void;
 	}
 
-	const { marketId, yesPercent, points }: Props = $props();
+	const { marketId, yesPercent, points, period, onPeriodChange }: Props = $props();
 
 	// True cold-start: no real trade history for this market yet, so the
 	// line reads flat and the eyebrow note says so rather than implying
 	// movement that never happened.
 	const isColdStart = $derived(points !== undefined && points.length === 0);
 
-	type PeriodId = '1d' | '7d' | '30d' | 'all';
-
-	// The sparkline currently only resolves a single window (the
-	// satellite-side aggregator hasn't been promoted yet) — the chips
-	// surface as a visual switch today, and the period picker becomes
-	// the wiring point when the aggregator lands.
-	const periods: { id: PeriodId; label: MessageKey }[] = [
+	// Each chip re-scopes the chart: selecting one re-fetches that window of
+	// market-wide history (hourly candles for short windows, daily for long).
+	const periods: { id: PriceHistoryPeriod; label: MessageKey }[] = [
 		{ id: '1d', label: 'market.detail.chart.period.1d' },
 		{ id: '7d', label: 'market.detail.chart.period.7d' },
 		{ id: '30d', label: 'market.detail.chart.period.30d' },
 		{ id: 'all', label: 'market.detail.chart.period.all' }
 	];
-
-	let activePeriod = $state<PeriodId>('7d');
 
 	// Event markers are positioned against the seed-based fallback's
 	// fixed, day-indexed shape. Real-history mode (`points` supplied) has
@@ -60,16 +61,16 @@
 			</span>
 		{/if}
 		<div class="market-chart-chips" role="tablist">
-			{#each periods as period (period.id)}
+			{#each periods as periodOption (periodOption.id)}
 				<button
 					class="market-chart-chip"
-					class:is-active={activePeriod === period.id}
-					aria-selected={activePeriod === period.id}
-					onclick={() => (activePeriod = period.id)}
+					class:is-active={period === periodOption.id}
+					aria-selected={period === periodOption.id}
+					onclick={() => onPeriodChange(periodOption.id)}
 					role="tab"
 					type="button"
 				>
-					{t({ locale: $localeStore, key: period.label })}
+					{t({ locale: $localeStore, key: periodOption.label })}
 				</button>
 			{/each}
 		</div>
