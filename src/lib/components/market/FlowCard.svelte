@@ -53,6 +53,9 @@
 		// for the back-face sparkline. Absent until FlowMode resolves it for
 		// the focused card — the back face falls back to its seed shape.
 		points?: number[];
+		// Parallel x-fractions (0–1) placing each `points` entry on the time
+		// axis. Present alongside real history; absent for the seed shape.
+		pointXs?: number[];
 		// Stake-ladder change callback. Wired through to FlowCardBack so a
 		// tap on a rung writes back to FlowMode's bound stake.
 		onStakeChange?: (next: string) => void;
@@ -79,6 +82,7 @@
 		priorCall,
 		followedLean,
 		points,
+		pointXs,
 		onStakeChange,
 		guided = false
 	}: Props = $props();
@@ -714,6 +718,7 @@
 					{metadata}
 					onClose={closeBack}
 					{onStakeChange}
+					{pointXs}
 					{points}
 					{priorCall}
 					{tradeAmount}

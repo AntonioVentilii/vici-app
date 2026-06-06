@@ -58,6 +58,15 @@
 		 * e.g. the swipe deck) the seed-based fallback shape is used.
 		 */
 		points?: number[];
+		/**
+		 * Parallel x-fractions (0–1, same length as {@link points}) placing
+		 * each point on a real time axis across the chart window, so the line
+		 * spacing reflects elapsed time (gaps where no trades landed) and event
+		 * markers can be anchored by date. When present the line plots at these
+		 * x's instead of uniform per-index steps; when absent (seed fallback or
+		 * cold-start) the index-based spacing is used.
+		 */
+		pointXs?: number[];
 	}
 
 	const {
@@ -65,7 +74,8 @@
 		yesPercent,
 		events = [],
 		lineColor: lineColorProp,
-		points: pointsProp
+		points: pointsProp,
+		pointXs: pointXsProp
 	}: Props = $props();
 
 	// One dot per day on the sparkline. Multiple events landing on the
@@ -130,22 +140,65 @@
 		return [...pointsProp, yesPercent];
 	});
 
+	// Real time axis: only when we have non-empty history AND its parallel
+	// x-fractions. The seed fallback and the true cold-start (empty real
+	// series) keep uniform index spacing.
+	const timeAxis = $derived(
+		pointsProp !== undefined &&
+			pointsProp.length > 0 &&
+			pointXsProp !== undefined &&
+			pointXsProp.length === pointsProp.length
+	);
+
+	const yCoord = (pct: number): number => h - (pct / 100) * h - 2;
+
+	// X for the point at index `i`. On the time axis each real point sits at
+	// its fraction of the window; the live `yesPercent` appended as the last
+	// point is "now" (the right edge). Otherwise points are evenly spaced.
+	const xCoord = (i: number): number => {
+		if (timeAxis && pointXsProp !== undefined) {
+			return (i < pointXsProp.length ? pointXsProp[i] : 1) * w;
+		}
+
+		return (i / Math.max(points.length - 1, 1)) * w;
+	};
+
+	// Plotted points in render space — the single source for the line, the
+	// area fill, and the marker y-interpolation.
+	const xy = $derived(points.map((p, i) => ({ x: xCoord(i), y: yCoord(p) })));
+
 	// Build the line path: `M <x0> <y0> L <x1> <y1> ... L <xN> <yN>`
 	// with `y = h - (pct/100)*h - 2` so 100 % sits 2 px below the top.
-	const linePath = $derived(
-		points
-			.map((p, i) => {
-				const x = (i / Math.max(points.length - 1, 1)) * w;
-				const y = h - (p / 100) * h - 2;
-
-				return `${i === 0 ? 'M' : 'L'}${x} ${y}`;
-			})
-			.join(' ')
-	);
+	const linePath = $derived(xy.map(({ x, y }, i) => `${i === 0 ? 'M' : 'L'}${x} ${y}`).join(' '));
 
 	// Area path closes the line back to the bottom-left corner —
 	// `M…L… L${w} ${h} L0 ${h} Z`.
 	const areaPath = $derived(linePath.length > 0 ? `${linePath} L${w} ${h} L0 ${h} Z` : '');
+
+	// Line y at an arbitrary x, by linear interpolation over the plotted
+	// points — used to sit event markers on the line when their x comes from
+	// a date rather than a point index.
+	const yAtX = (targetX: number): number => {
+		if (xy.length === 0) {
+			return h;
+		}
+
+		if (targetX <= xy[0].x) {
+			return xy[0].y;
+		}
+
+		for (let i = 1; i < xy.length; i++) {
+			if (targetX <= xy[i].x) {
+				const a = xy[i - 1];
+				const b = xy[i];
+				const dx = b.x - a.x;
+
+				return dx === 0 ? b.y : a.y + ((b.y - a.y) * (targetX - a.x)) / dx;
+			}
+		}
+
+		return xy[xy.length - 1].y;
+	};
 
 	const lineColor = $derived(lineColorProp ?? (yesPercent >= 50 ? 'var(--yes)' : 'var(--no)'));
 
@@ -163,21 +216,25 @@
 
 	// Map an event's `day` field (1..7, 7 = today) to its index in the
 	// 15-point `points` array: `idx = (points.length-1) - (7 - day)` —
-	// i.e. the last 7 points are day 1..7.
+	// i.e. the last 7 points are day 1..7. Seed-fallback only.
 	const eventIndexForDay = (day: number): number =>
 		Math.max(0, Math.min(points.length - 1, points.length - 1 - (7 - day)));
 
+	// Event x. On the real time axis the window is the 7d "this week" span
+	// (day 7 = now = right edge), so the day maps directly to its fraction of
+	// the width. On the seed shape it maps through the point index instead.
 	const eventX = (day: number): number => {
-		const idx = eventIndexForDay(day);
+		if (timeAxis) {
+			return Math.max(0, Math.min(1, day / 7)) * w;
+		}
 
-		return (idx / Math.max(points.length - 1, 1)) * w;
+		return (eventIndexForDay(day) / Math.max(points.length - 1, 1)) * w;
 	};
 
-	const eventY = (day: number): number => {
-		const idx = eventIndexForDay(day);
-
-		return h - (points[idx] / 100) * h - 2;
-	};
+	// Event y sits on the line: interpolated at the marker's x on the time
+	// axis, or read straight off the indexed point on the seed shape.
+	const eventY = (day: number): number =>
+		timeAxis ? yAtX(eventX(day)) : yCoord(points[eventIndexForDay(day)]);
 
 	const toggleEvent = ({ index, ev }: { index: number; ev: Event }) => {
 		ev.stopPropagation();

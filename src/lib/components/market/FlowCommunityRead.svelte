@@ -18,9 +18,12 @@
 		// focused card — the sparkline and the weekly delta then fall back to
 		// the seed-based shape / prior heuristic.
 		points?: number[];
+		// Parallel x-fractions (0–1) placing each `points` entry on the time
+		// axis. Present alongside real history; absent for the seed shape.
+		pointXs?: number[];
 	}
 
-	const { market, metadata, crowdPct, crowdSide, points }: Props = $props();
+	const { market, metadata, crowdPct, crowdSide, points, pointXs }: Props = $props();
 
 	const yesPct = $derived(crowdPct);
 	const noPct = $derived(100 - yesPct);
@@ -64,11 +67,13 @@
 	<!-- Real market-wide history when FlowMode has resolved it for this card
 	     (one bounded candle query, fetched only for the focused card); until
 	     then `points` is absent and the sparkline falls back to its seed-based
-	     shape. Event markers are positioned against the seed shape's day
-	     index, so they're only fed through on that fallback — the real
-	     time-bucketed series would misplace them. -->
+	     shape. Event markers ("this week" days) are fed through on the seed
+	     fallback and on real history (the deck card is always the 7d window,
+	     so the sparkline anchors them on its time axis); the true cold-start
+	     (real but empty) suppresses them. -->
 	<FlowCardSparkline
-		events={points === undefined ? metadata?.events : []}
+		events={points === undefined || points.length > 0 ? metadata?.events : []}
+		{pointXs}
 		{points}
 		seed={market.id}
 		yesPercent={yesPct}
