@@ -57,10 +57,9 @@ export const listMyAffiliations = async (): Promise<{
 	university?: AffiliationDoc;
 	country?: AffiliationDoc;
 }> => {
-	// The `Option<NestedStruct>` endpoint emits camelCase keys (see
-	// `AffiliationOptionWireSchema`), so the wire shape already
-	// matches `AffiliationDoc` and no snake-case → camel-case
-	// projection is needed.
+	// The endpoint emits camelCase keys (see `AffiliationWireSchema`),
+	// so the wire shape already matches `AffiliationDoc` and no
+	// snake-case → camel-case projection is needed.
 	const { university, country } = await functions.listMyAffiliations();
 
 	return { university, country };

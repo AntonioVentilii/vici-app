@@ -138,22 +138,18 @@ import { claimWorldsPodiumPrizeFn } from '$satellite/services/vxp-worlds-podium.
 import {
 	AffiliationChampionshipWireSchema,
 	AffiliationMemberCountWireSchema,
-	AffiliationOptionWireSchema,
-	AffiliationStatsOptionWireSchema,
 	AffiliationStatsWireSchema,
 	AffiliationWireSchema,
 	BattleWireSchema,
 	BoldCallerEntryWireSchema,
 	FriendRecommendedLeagueWireSchema,
 	LeagueMemberWireSchema,
-	LeagueOptionWireSchema,
 	LeagueWireSchema,
 	LeagueWithRoleWireSchema,
 	MarketTranslationWireSchema,
 	MonthlyLeaderboardEntryWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
-	toOptionWireLeague,
 	TournamentMatchWireSchema,
 	TournamentWireSchema,
 	toWireAffiliation,
@@ -497,17 +493,12 @@ export const lookupLeagueByInvite = defineQuery({
 		inviteCode: j.string()
 	}),
 	result: j.strictObject({
-		league: j.optional(LeagueOptionWireSchema)
+		league: j.optional(LeagueWireSchema)
 	}),
-	// `Option<NestedStruct>` ⇒ camelCase JS via the JsonData mirror (same as
-	// `getProfile` / `getAffiliationStats`). Emit the camelCase
-	// `toOptionWireLeague` shape — the snake_case `LeagueWireSchema` /
-	// `toWireLeague` are for the `j.array(...)` league endpoints only, and
-	// wrapping an Option in them traps with `missing field 'inviteCode'`.
 	handler: ({ inviteCode }) => {
 		const league = lookupLeagueByInviteFn({ inviteCode });
 
-		return { league: league ? toOptionWireLeague(league) : undefined };
+		return { league: league ? toWireLeague(league) : undefined };
 	}
 });
 
@@ -567,14 +558,11 @@ export const listMyBattles = defineQuery({
 
 export const listMyAffiliations = defineQuery({
 	result: j.strictObject({
-		university: j.optional(AffiliationOptionWireSchema),
-		country: j.optional(AffiliationOptionWireSchema)
+		university: j.optional(AffiliationWireSchema),
+		country: j.optional(AffiliationWireSchema)
 	}),
-	// `AffiliationDoc` is already the camelCase shape required by the
-	// JsonData mirror for `Option<NestedStruct>`. Returning it directly
-	// (no `toWireAffiliation`) keeps the handoff in the case the macro
-	// expects. Wrapping in `toWire…` re-introduces snake_case keys and
-	// traps with `missing field 'affiliationIdentifier'`.
+	// `AffiliationDoc` already matches the camelCase wire shape, so the
+	// handler returns it directly (no `toWireAffiliation` projection).
 	handler: () => listMyAffiliationsFn()
 });
 
@@ -600,14 +588,10 @@ export const getAffiliationStats = defineQuery({
 		affiliationIdentifier: j.string()
 	}),
 	result: j.strictObject({
-		stats: j.optional(AffiliationStatsOptionWireSchema)
+		stats: j.optional(AffiliationStatsWireSchema)
 	}),
-	// `Option<NestedStruct>` ⇒ camelCase JS via the JsonData mirror.
-	// Returning the `AffiliationStatsDoc` shape directly matches the
-	// mirror's `rename_all = "camelCase"` expectation; the snake_case
-	// `toWireAffiliationStats` is reserved for the `j.array(...)`
-	// (`listAffiliationStats`) endpoint below where Vec items
-	// deserialize via the literal Rust field names.
+	// `AffiliationStatsDoc` already matches the camelCase wire shape, so
+	// the handler returns it directly (no `toWireAffiliationStats`).
 	handler: ({ kind, affiliationIdentifier }) => ({
 		stats: getAffiliationStatsFn({ kind, affiliationIdentifier })
 	})

@@ -484,57 +484,6 @@ export const toWireLeague = (league: {
 	imageUrl: league.imageUrl
 });
 
-// camelCase shape for `j.optional(...)` (`lookupLeagueByInvite`). An
-// `Option<NestedStruct>` result is wrapped by Sputnik's
-// `#[json_data(nested)]` mirror, so its wire format is camelCase — unlike
-// the snake_case `LeagueWireSchema` / `toWireLeague` above, which exist
-// only for the `j.array(...)` league endpoints. Wrapping an Option result
-// in `toWireLeague` re-introduces snake_case keys and traps with
-// `missing field 'inviteCode'`. See the module header (`When to apply`).
-export const LeagueOptionWireSchema = j.strictObject({
-	id: j.string(),
-	name: j.string(),
-	description: j.string().optional(),
-	inviteCode: j.string(),
-	owner: PrincipalTextSchema,
-	createdAtMs: j.number(),
-	accentColor: j.string().optional(),
-	emblem: j.string().optional(),
-	privacy: j.enum(LeaguePrivacy).default(LeaguePrivacy.OPEN),
-	imageUrl: j.string().optional()
-});
-
-export type OptionWireLeague = j.infer<typeof LeagueOptionWireSchema>;
-
-export const toOptionWireLeague = (league: {
-	id: string;
-	name: string;
-	description?: string;
-	inviteCode: string;
-	owner: string;
-	createdAtMs: number;
-	accentColor?: string;
-	emblem?: string;
-	privacy?: LeaguePrivacy;
-	/** Legacy boolean still carried by rows written before the 3-way
-	 *  model; mapped to a concrete `privacy` below so an old private
-	 *  league doesn't serialize as `open`. */
-	private?: boolean;
-	imageUrl?: string;
-}): OptionWireLeague => ({
-	id: league.id,
-	name: league.name,
-	description: league.description,
-	inviteCode: league.inviteCode,
-	owner: league.owner,
-	createdAtMs: league.createdAtMs,
-	accentColor: league.accentColor,
-	emblem: league.emblem,
-	// Same legacy-privacy normalisation as `toWireLeague` (see above).
-	privacy: league.privacy ?? (league.private === true ? LeaguePrivacy.INVITE : LeaguePrivacy.OPEN),
-	imageUrl: league.imageUrl
-});
-
 export const toWireLeagueWithRole = (entry: {
 	league: Parameters<typeof toWireLeague>[0];
 	role: 'owner' | 'admin' | 'member';
@@ -635,10 +584,10 @@ export const toWireBattle = (battle: {
 
 // ─── Affiliations ───────────────────────────────────────────────
 
-// Snake_case shape used for `j.array(...)` endpoints
-// (`listWorldsRoster`). Vec items don't get the `#[json_data(nested)]`
-// wrapper, so the inner JSON deserializer reads the Rust struct's
-// literal (snake_case) field names — see the file-level docstring.
+// Wire shape for both `j.array(...)` (`listWorldsRoster`) and
+// `j.optional(...)` (`listMyAffiliations`) endpoints — camelCase keys
+// matching the in-memory `AffiliationDoc`, so optional handlers can
+// return the projected doc directly without a `toWire` step.
 export const AffiliationWireSchema = j.strictObject({
 	member: PrincipalTextSchema,
 	kind: j.enum(['university', 'country']),
@@ -663,29 +612,10 @@ export const toWireAffiliation = (aff: {
 	lockedUntilMs: aff.lockedUntilMs
 });
 
-// camelCase shape required by `j.optional(...)` endpoints
-// (`listMyAffiliations`). Option nested structs get
-// `#[json_data(nested)]` which routes through the JsonData mirror
-// — that mirror is generated with `#[serde(rename_all = "camelCase")]`,
-// so the JS payload must use camelCase keys or
-// `from_json_data` traps with `missing field <camelCaseName>`. The
-// schema field names match the in-memory `AffiliationDoc` shape so
-// handlers can return the projected doc directly without a `toWire`
-// step.
-export const AffiliationOptionWireSchema = j.strictObject({
-	member: PrincipalTextSchema,
-	kind: j.enum(['university', 'country']),
-	affiliationIdentifier: j.string(),
-	joinedAtMs: j.number(),
-	lockedUntilMs: j.number()
-});
-
-export type OptionWireAffiliation = j.infer<typeof AffiliationOptionWireSchema>;
-
 // ─── Affiliation stats ──────────────────────────────────────────────
 
-// Snake_case shape for `j.array(...)` endpoints
-// (`listAffiliationStats`).
+// Wire shape for both `j.array(...)` (`listAffiliationStats`) and
+// `j.optional(...)` (`getAffiliationStats`) endpoints.
 export const AffiliationStatsWireSchema = j.strictObject({
 	affiliationIdentifier: j.string(),
 	kind: j.enum(['university', 'country']),
@@ -719,22 +649,8 @@ export const toWireAffiliationStats = (stats: {
 	updatedAtMs: stats.updatedAtMs
 });
 
-// camelCase shape for `j.optional(...)` (`getAffiliationStats`).
-export const AffiliationStatsOptionWireSchema = j.strictObject({
-	affiliationIdentifier: j.string(),
-	kind: j.enum(['university', 'country']),
-	totalCalls: j.number(),
-	wins: j.number(),
-	monthAnchor: j.string(),
-	monthTotalCalls: j.number(),
-	monthWins: j.number(),
-	updatedAtMs: j.number()
-});
-
-export type OptionWireAffiliationStats = j.infer<typeof AffiliationStatsOptionWireSchema>;
-
-// Per-affiliation real member tally, snake_case for the
-// `j.array(...)` member-count endpoint.
+// Per-affiliation real member tally for the `j.array(...)`
+// member-count endpoint.
 export const AffiliationMemberCountWireSchema = j.strictObject({
 	affiliationIdentifier: j.string(),
 	kind: j.enum(['university', 'country']),
@@ -753,8 +669,8 @@ export const toWireAffiliationMemberCount = (count: {
 	memberCount: count.memberCount
 });
 
-// A past month an affiliation finished first in its kind, snake_case
-// for the `j.array(...)` champion-history endpoint.
+// A past month an affiliation finished first in its kind, for the
+// `j.array(...)` champion-history endpoint.
 export const AffiliationChampionshipWireSchema = j.strictObject({
 	monthAnchor: j.string(),
 	accuracy: j.number(),
