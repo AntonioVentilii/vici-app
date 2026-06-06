@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Check, Shuffle, X } from '@lucide/svelte/icons';
 	import { untrack } from 'svelte';
+	import { browser } from '$app/environment';
 	import { saveMyAvatarParts } from '$lib/stores/avatar.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -33,6 +34,7 @@
 	let draft = $state<ViciAvatarParts>(untrack(() => normalizeParts(initial)));
 	let activeTab = $state<TabId>('skin');
 	let saving = $state(false);
+	let editorEl = $state<HTMLDivElement | undefined>();
 
 	type TabId = 'skin' | 'hair' | 'expr' | 'trait' | 'shirt' | 'bg';
 
@@ -132,6 +134,47 @@
 			options: { animate: false, frame: false, signature: false }
 		});
 
+	// Pin the editor height to the *actually visible* viewport on iOS. The CSS
+	// `100dvh` is the baseline, but iOS Chrome (WKWebView) doesn't always
+	// resolve it to the visible height — older engines fall back to `100vh`
+	// (the large viewport, toolbars retracted), pushing the sticky footer (the
+	// Done button) behind the bottom toolbar so it disappears (#551). Driving
+	// the height off `window.visualViewport` — the same source the bottom sheet
+	// uses for its keyboard inset — tracks the visible area reliably. No-op when
+	// `visualViewport` is unavailable (desktop / older engines): the CSS height
+	// stands.
+	$effect(() => {
+		if (!browser || !editorEl) {
+			return;
+		}
+
+		const viewport = window.visualViewport;
+
+		if (!viewport) {
+			return;
+		}
+
+		const el = editorEl;
+
+		const sync = () => {
+			el.style.height = `${viewport.height}px`;
+		};
+
+		// Passive: the listeners only read viewport metrics to set the height;
+		// they never call `preventDefault`.
+		const opts: AddEventListenerOptions = { passive: true };
+
+		sync();
+		viewport.addEventListener('resize', sync, opts);
+		viewport.addEventListener('scroll', sync, opts);
+
+		return () => {
+			viewport.removeEventListener('resize', sync, opts);
+			viewport.removeEventListener('scroll', sync, opts);
+			el.style.removeProperty('height');
+		};
+	});
+
 	// Escape dismisses the editor (discard — same as the X). Registered on the
 	// window so a key press anywhere closes it; SSR-safe via `$effect` (runs
 	// only in the browser) and torn down on unmount.
@@ -151,6 +194,7 @@
 </script>
 
 <div
+	bind:this={editorEl}
 	class="avatar-editor"
 	aria-label={t({ locale: $localeStore, key: 'profile.avatar.title' })}
 	aria-modal="true"
