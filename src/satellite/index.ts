@@ -193,15 +193,10 @@ import {
 import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 export const listLeaderboard = defineQuery({
-	// Uses the snake_case wire schema. Sputnik's codegen doesn't apply
-	// `#[json_data(nested)]` to `Vec<NestedStruct>` fields, so the wire
-	// format for items is whatever the inner Rust struct's original
-	// `Deserialize` impl expects — snake_case. See
-	// `src/satellite/utils/wire-format.utils.ts` for the full rationale.
-	// `.transform()` on the result schema is NOT an option: juno's codegen
-	// only accepts `ZodObject` and fails with "Unsupported type:
-	// unrepresentable schema" on `ZodEffects`, which silently kills the
-	// whole `juno functions build`.
+	// camelCase wire schema: with CLI ≥ 0.15.6 the codegen applies
+	// `#[json_data(nested)]` to `Vec<NestedStruct>` too, so array items
+	// serialise camelCase like the app-side domain types. See
+	// `src/satellite/utils/wire-format.utils.ts`.
 	result: j.strictObject({
 		items: j.array(UserProfileWireSchema)
 	}),

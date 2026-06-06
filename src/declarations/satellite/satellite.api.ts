@@ -101,30 +101,30 @@ const AppGetCurrentTournamentResultSchema = j.strictObject({
 	tournament: j.optional(
 		j.strictObject({
 			id: j.string(),
-			month_start_ms: j.number(),
-			month_end_ms: j.number(),
-			bracket_size: j.number(),
+			monthStartMs: j.number(),
+			monthEndMs: j.number(),
+			bracketSize: j.number(),
 			state: j.enum(['in_flight', 'concluded']),
-			seeded_league_ids: j.array(j.string()),
-			created_at_ms: j.number()
+			seededLeagueIds: j.array(j.string()),
+			createdAtMs: j.number()
 		})
 	),
 	matches: j.array(
 		j.strictObject({
-			tournament_id: j.string(),
+			tournamentId: j.string(),
 			round: j.enum(['r1', 'quarter', 'semifinal', 'final']),
 			index: j.number(),
-			from_league_id: j.optional(j.string()),
-			to_league_id: j.optional(j.string()),
-			from_start_calls: j.optional(j.number()),
-			from_start_wins: j.optional(j.number()),
-			to_start_calls: j.optional(j.number()),
-			to_start_wins: j.optional(j.number()),
-			from_acc: j.optional(j.number()),
-			to_acc: j.optional(j.number()),
-			winner_league_id: j.optional(j.string()),
-			start_ms: j.number(),
-			end_ms: j.number()
+			fromLeagueId: j.optional(j.string()),
+			toLeagueId: j.optional(j.string()),
+			fromStartCalls: j.optional(j.number()),
+			fromStartWins: j.optional(j.number()),
+			toStartCalls: j.optional(j.number()),
+			toStartWins: j.optional(j.number()),
+			fromAcc: j.optional(j.number()),
+			toAcc: j.optional(j.number()),
+			winnerLeagueId: j.optional(j.string()),
+			startMs: j.number(),
+			endMs: j.number()
 		})
 	)
 });
@@ -223,8 +223,8 @@ const AppGetMonthlyLeaderboardResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
 			owner: j.string(),
-			month_calls: j.number(),
-			month_wins: j.number(),
+			monthCalls: j.number(),
+			monthWins: j.number(),
 			accuracy: j.number(),
 			placement: j.number()
 		})
@@ -232,10 +232,10 @@ const AppGetMonthlyLeaderboardResultSchema = j.strictObject({
 	boldCallers: j.array(
 		j.strictObject({
 			owner: j.string(),
-			month_calls: j.number(),
-			month_wins: j.number(),
+			monthCalls: j.number(),
+			monthWins: j.number(),
 			accuracy: j.number(),
-			median_consensus: j.number()
+			medianConsensus: j.number()
 		})
 	)
 });
@@ -377,11 +377,7 @@ const AppListAffiliationChampionshipsArgsSchema = j.strictObject({
 });
 const AppListAffiliationChampionshipsResultSchema = j.strictObject({
 	items: j.array(
-		j.strictObject({
-			month_anchor: j.string(),
-			accuracy: j.number(),
-			month_total_calls: j.number()
-		})
+		j.strictObject({ monthAnchor: j.string(), accuracy: j.number(), monthTotalCalls: j.number() })
 	)
 });
 
@@ -413,14 +409,14 @@ const AppListAffiliationStatsArgsSchema = j.strictObject({
 const AppListAffiliationStatsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
-			affiliation_identifier: j.string(),
+			affiliationIdentifier: j.string(),
 			kind: j.enum(['university', 'country']),
-			total_calls: j.number(),
+			totalCalls: j.number(),
 			wins: j.number(),
-			month_anchor: j.string(),
-			month_total_calls: j.number(),
-			month_wins: j.number(),
-			updated_at_ms: j.number()
+			monthAnchor: j.string(),
+			monthTotalCalls: j.number(),
+			monthWins: j.number(),
+			updatedAtMs: j.number()
 		})
 	)
 });
@@ -449,13 +445,13 @@ const AppListChallengeableLeaguesResultSchema = j.strictObject({
 			id: j.string(),
 			name: j.string(),
 			description: j.optional(j.string()),
-			invite_code: j.string(),
+			inviteCode: j.string(),
 			owner: j.string(),
-			created_at_ms: j.number(),
-			accent_color: j.optional(j.string()),
+			createdAtMs: j.number(),
+			accentColor: j.optional(j.string()),
 			emblem: j.optional(j.string()),
 			privacy: j.enum(['open', 'invite', 'private']),
-			image_url: j.optional(j.string())
+			imageUrl: j.optional(j.string())
 		})
 	)
 });
@@ -481,9 +477,9 @@ const AppListFollowersResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewer_principal: j.optional(j.string()),
-			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			is_friend: j.optional(j.boolean())
+			viewerPrincipal: j.optional(j.string()),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -502,9 +498,9 @@ const AppListFollowingResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewer_principal: j.optional(j.string()),
-			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			is_friend: j.optional(j.boolean())
+			viewerPrincipal: j.optional(j.string()),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -524,16 +520,16 @@ const AppListFriendRecommendedLeaguesResultSchema = j.strictObject({
 				id: j.string(),
 				name: j.string(),
 				description: j.optional(j.string()),
-				invite_code: j.string(),
+				inviteCode: j.string(),
 				owner: j.string(),
-				created_at_ms: j.number(),
-				accent_color: j.optional(j.string()),
+				createdAtMs: j.number(),
+				accentColor: j.optional(j.string()),
 				emblem: j.optional(j.string()),
 				privacy: j.enum(['open', 'invite', 'private']),
-				image_url: j.optional(j.string())
+				imageUrl: j.optional(j.string())
 			}),
-			member_count: j.number(),
-			friend_members: j.array(j.string())
+			memberCount: j.number(),
+			friendMembers: j.array(j.string())
 		})
 	)
 });
@@ -559,9 +555,9 @@ const AppListFriendRequestsResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewer_principal: j.optional(j.string()),
-			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			is_friend: j.optional(j.boolean())
+			viewerPrincipal: j.optional(j.string()),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -582,9 +578,9 @@ const AppListFriendsResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewer_principal: j.optional(j.string()),
-			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			is_friend: j.optional(j.boolean())
+			viewerPrincipal: j.optional(j.string()),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -607,20 +603,20 @@ const AppListLeaderboardResultSchema = j.strictObject({
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
 			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			total_trades: j.number(),
-			win_rate: j.number(),
-			daily_streak: j.number(),
+			totalTrades: j.number(),
+			winRate: j.number(),
+			dailyStreak: j.number(),
 			streak: j.number(),
 			accuracy: j.number(),
 			points: j.number(),
 			level: j.number(),
 			archetype: j.string(),
 			interests: j.array(j.string()),
-			last_active_day: j.optional(j.string()),
-			unlocked_achievements: j.array(j.string()),
-			contrarian_wins: j.number(),
+			lastActiveDay: j.optional(j.string()),
+			unlockedAchievements: j.array(j.string()),
+			contrarianWins: j.number(),
 			preferences: j.optional(
-				j.strictObject({ default_amount: j.strictObject({ flow: j.string(), manual: j.string() }) })
+				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)
 		})
 	)
@@ -640,17 +636,17 @@ const AppListLeagueBattlesResultSchema = j.strictObject({
 		j.strictObject({
 			id: j.string(),
 			kind: j.enum(['league', 'duel']),
-			side_a: j.string(),
-			side_b: j.string(),
+			sideA: j.string(),
+			sideB: j.string(),
 			proposer: j.string(),
 			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
-			kickoff_ms: j.number(),
-			settle_ms: j.number(),
+			kickoffMs: j.number(),
+			settleMs: j.number(),
 			scope: j.optional(j.string()),
 			wager: j.optional(j.number()),
-			trash_talk: j.optional(j.string()),
-			score_a: j.optional(j.number()),
-			score_b: j.optional(j.number()),
+			trashTalk: j.optional(j.string()),
+			scoreA: j.optional(j.number()),
+			scoreB: j.optional(j.number()),
 			winner: j.optional(j.enum(['A', 'B', 'draw']))
 		})
 	)
@@ -678,9 +674,9 @@ const AppListLeagueMembersArgsSchema = j.strictObject({ leagueId: j.string() });
 const AppListLeagueMembersResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
-			league_id: j.string(),
+			leagueId: j.string(),
 			member: j.string(),
-			joined_at_ms: j.number(),
+			joinedAtMs: j.number(),
 			role: j.enum(['owner', 'admin', 'member'])
 		})
 	)
@@ -708,13 +704,13 @@ const AppListMarketTranslationsArgsSchema = j.strictObject({ seriesId: j.string(
 const AppListMarketTranslationsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
-			series_id: j.string(),
+			seriesId: j.string(),
 			locale: j.string(),
 			title: j.string(),
 			description: j.string(),
 			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
-			updated_at: j.number(),
-			updated_by: j.string()
+			updatedAt: j.number(),
+			updatedBy: j.string()
 		})
 	)
 });
@@ -773,17 +769,17 @@ const AppListMyBattlesResultSchema = j.strictObject({
 		j.strictObject({
 			id: j.string(),
 			kind: j.enum(['league', 'duel']),
-			side_a: j.string(),
-			side_b: j.string(),
+			sideA: j.string(),
+			sideB: j.string(),
 			proposer: j.string(),
 			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
-			kickoff_ms: j.number(),
-			settle_ms: j.number(),
+			kickoffMs: j.number(),
+			settleMs: j.number(),
 			scope: j.optional(j.string()),
 			wager: j.optional(j.number()),
-			trash_talk: j.optional(j.string()),
-			score_a: j.optional(j.number()),
-			score_b: j.optional(j.number()),
+			trashTalk: j.optional(j.string()),
+			scoreA: j.optional(j.number()),
+			scoreB: j.optional(j.number()),
 			winner: j.optional(j.enum(['A', 'B', 'draw']))
 		})
 	)
@@ -818,17 +814,17 @@ const AppListMyLeaguesResultSchema = j.strictObject({
 				id: j.string(),
 				name: j.string(),
 				description: j.optional(j.string()),
-				invite_code: j.string(),
+				inviteCode: j.string(),
 				owner: j.string(),
-				created_at_ms: j.number(),
-				accent_color: j.optional(j.string()),
+				createdAtMs: j.number(),
+				accentColor: j.optional(j.string()),
 				emblem: j.optional(j.string()),
 				privacy: j.enum(['open', 'invite', 'private']),
-				image_url: j.optional(j.string())
+				imageUrl: j.optional(j.string())
 			}),
 			role: j.enum(['owner', 'admin', 'member']),
-			joined_at_ms: j.number(),
-			member_count: j.number()
+			joinedAtMs: j.number(),
+			memberCount: j.number()
 		})
 	)
 });
@@ -847,19 +843,19 @@ const AppListMyReferralsResultSchema = j.strictObject({
 			referee: j.string(),
 			referrer: j.string(),
 			code: j.string(),
-			redeemed_at_ms: j.number(),
-			within_referrer_cap: j.boolean(),
-			referee_payout: j.strictObject({
+			redeemedAtMs: j.number(),
+			withinReferrerCap: j.boolean(),
+			refereePayout: j.strictObject({
 				status: j.enum(['none', 'owed', 'processing', 'paid']),
-				amount_base_units: j.string(),
-				block_index: j.optional(j.string()),
-				last_error: j.optional(j.string())
+				amountBaseUnits: j.string(),
+				blockIndex: j.optional(j.string()),
+				lastError: j.optional(j.string())
 			}),
-			referrer_payout: j.strictObject({
+			referrerPayout: j.strictObject({
 				status: j.enum(['none', 'owed', 'processing', 'paid']),
-				amount_base_units: j.string(),
-				block_index: j.optional(j.string()),
-				last_error: j.optional(j.string())
+				amountBaseUnits: j.string(),
+				blockIndex: j.optional(j.string()),
+				lastError: j.optional(j.string())
 			})
 		})
 	)
@@ -879,9 +875,9 @@ const AppListSentFriendRequestsResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewer_principal: j.optional(j.string()),
-			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			is_friend: j.optional(j.boolean())
+			viewerPrincipal: j.optional(j.string()),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -904,9 +900,9 @@ const AppListWorldsMemberCountsArgsSchema = j.strictObject({
 const AppListWorldsMemberCountsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
-			affiliation_identifier: j.string(),
+			affiliationIdentifier: j.string(),
 			kind: j.enum(['university', 'country']),
-			member_count: j.number()
+			memberCount: j.number()
 		})
 	)
 });
@@ -938,9 +934,9 @@ const AppListWorldsRosterResultSchema = j.strictObject({
 		j.strictObject({
 			member: j.string(),
 			kind: j.enum(['university', 'country']),
-			affiliation_identifier: j.string(),
-			joined_at_ms: j.number(),
-			locked_until_ms: j.number()
+			affiliationIdentifier: j.string(),
+			joinedAtMs: j.number(),
+			lockedUntilMs: j.number()
 		})
 	)
 });
@@ -1031,20 +1027,20 @@ const AppSearchProfilesResultSchema = j.strictObject({
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
 			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			total_trades: j.number(),
-			win_rate: j.number(),
-			daily_streak: j.number(),
+			totalTrades: j.number(),
+			winRate: j.number(),
+			dailyStreak: j.number(),
 			streak: j.number(),
 			accuracy: j.number(),
 			points: j.number(),
 			level: j.number(),
 			archetype: j.string(),
 			interests: j.array(j.string()),
-			last_active_day: j.optional(j.string()),
-			unlocked_achievements: j.array(j.string()),
-			contrarian_wins: j.number(),
+			lastActiveDay: j.optional(j.string()),
+			unlockedAchievements: j.array(j.string()),
+			contrarianWins: j.number(),
 			preferences: j.optional(
-				j.strictObject({ default_amount: j.strictObject({ flow: j.string(), manual: j.string() }) })
+				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)
 		})
 	)
