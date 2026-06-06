@@ -2,7 +2,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount, onDestroy, untrack } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
-	import { SvelteSet } from 'svelte/reactivity';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -29,6 +29,7 @@
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { persistDailyGoal, persistDailyStreak } from '$lib/services/profile.services';
+	import { loadMarketPriceCandles } from '$lib/services/trade.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
@@ -149,6 +150,12 @@
 	// (which uses the *primary* tag — see `primaryMarketTag`).
 	let marketTagMap = $state<Record<string, string[]>>({});
 	let marketMetadataMap = $state<Map<MarketId, MarketMetadata>>(new Map());
+	// Real, market-wide 7d price history (0–100 YES series) for the cards the
+	// viewer actually lands on, keyed by market id. Only the focused card
+	// renders, so this fills one bounded candle query at a time (never the
+	// whole deck up front), and a market the viewer never reaches is never
+	// fetched. Absent entries leave the back-face sparkline on its seed shape.
+	const priceHistoryById = new SvelteMap<MarketId, number[]>();
 	let userSignals = $state<UserMarketSignals>({
 		categoryAcc: {},
 		priorCalls: {},
@@ -863,6 +870,29 @@
 
 	const currentCard = $derived(markets[currentIndex]);
 
+	// Lazily fetch the focused card's real price history the first time it's
+	// reached (cached by id, so re-visiting is instant). Independent of the
+	// viewer — it's the same series for everyone, so it loads regardless of
+	// sign-in. Fails open: any error leaves the entry absent, so the back
+	// face stays on its seed-based sparkline.
+	$effect(() => {
+		const id = currentCard?.id;
+
+		if (isNullish(id) || priceHistoryById.has(id)) {
+			return;
+		}
+
+		void loadMarketPriceCandles({
+			seriesId: id,
+			period: '7d',
+			onLoad: ({ response }) => {
+				priceHistoryById.set(id, response);
+			}
+		}).catch(() => {
+			// Leave the entry absent → back face keeps its seed sparkline.
+		});
+	});
+
 	// Trickster appears on the active card when the YES probability is
 	// strongly skewed (≤ 25 % or ≥ 75 %) — i.e. when committing on this
 	// card would put the user in the minority on a contrarian call.
@@ -985,6 +1015,7 @@
 						marketId: currentCard.id
 					})}
 					{@const metadata = marketMetadataMap.get(currentCard.id)}
+					{@const priceHistory = priceHistoryById.get(currentCard.id)}
 					{@const priorCall = userSignals.priorCalls[currentCard.id]}
 					{@const followedLean = userSignals.followedLean[currentCard.id]}
 					{@const categoryAcc = userSignals.categoryAcc[flowCategory]}
@@ -1013,6 +1044,7 @@
 										onStakeChange={(next) => {
 											tradeAmount = next;
 										}}
+										points={priceHistory}
 										{priorCall}
 										signedIn={nonNullish($userStore.user)}
 										{tradeAmount}
