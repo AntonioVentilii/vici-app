@@ -542,9 +542,11 @@ const series = await call<[] | [RegistryDid.Series]>({
 });
 ```
 
-- The `IDL` namespace appears in exactly one place outside
-  `src/declarations/**`: `candid.utils.ts`. Everything else stays typed
-  against `$declarations` (`RegistryDid` / `ClearingDid`).
+- The `IDL` namespace must live in exactly one place outside
+  `src/declarations/**`: `candid.utils.ts`. Every other satellite file stays
+  typed against `$declarations` (`RegistryDid` / `ClearingDid`) and routes its
+  runtime Candid types through `candidMethod` — a new `import { IDL }` in a
+  service is the smell this pattern exists to prevent.
 - Need a method the canister exposes but `candidMethod` can't find? It
   throws — regenerate bindings (`npm run did`) rather than reaching for an
   inline definition.

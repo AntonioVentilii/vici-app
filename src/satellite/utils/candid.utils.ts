@@ -49,9 +49,10 @@ const serviceFor = (canister: CanisterInterface): IDL.ServiceClass => {
  * the single `result` type (for `call({ result })`) of a canister method,
  * derived from the generated IDL factory.
  *
- * @throws if the method is absent from the generated interface, or carries no
- * return type — both signal that the call site is out of sync with the current
- * `.did`.
+ * @throws if the method is absent from the generated interface, or does not
+ * return exactly one value — both signal that the call site is out of sync with
+ * the current `.did` (`call({ result })` decodes a single `IDL.Type`, so a
+ * multi-value or void return can't be represented here).
  */
 export const candidMethod = ({
 	canister,
@@ -67,10 +68,16 @@ export const candidMethod = ({
 	}
 
 	const [, func] = field;
-	const [result] = func.retTypes;
+	const { retTypes } = func;
+	const [result, ...rest] = retTypes;
 
-	if (isNullish(result)) {
-		throw new Error(`Candid method '${method}' on '${canister}' returns no value.`);
+	// `call({ result })` decodes a single `IDL.Type`. Enforce exactly one return
+	// type so a method that returns none (void) or several values fails loudly
+	// here rather than silently dropping the extras at decode time.
+	if (isNullish(result) || rest.length > 0) {
+		throw new Error(
+			`Candid method '${method}' on '${canister}' must return exactly one value (got ${retTypes.length}).`
+		);
 	}
 
 	return { argTypes: func.argTypes, result };
