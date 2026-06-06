@@ -23,12 +23,26 @@ const STORAGE_OWNER_KEY = 'vici.storage-owner.v1';
  * that's intentional, so already-affected devices from before this guard
  * shipped get cleaned on the next sign-in rather than keeping their leak. The
  * daily-goal profile reconcile re-establishes the real count immediately.
+ *
+ * The signed-out transition (`ownerKey === undefined`) is a no-op: it neither
+ * clears nor forgets the persisted owner. `onAuthStateChange` emits a transient
+ * `null` user during bootstrap *before* the restored session resolves, so
+ * clearing here would wipe a returning user's local-authoritative state (e.g.
+ * inbox "mark all read") on every single sign-in. Cross-account safety is
+ * unaffected: the next *defined* owner is compared against the still-remembered
+ * previous owner, so a genuine account switch (A → B) still clears.
  */
 export const reconcileIdentityScopedStorage = ({
 	ownerKey
 }: {
 	ownerKey: string | undefined;
 }): void => {
+	// Ignore the signed-out / bootstrap `null` transition — keep the remembered
+	// owner so a same-user re-auth is recognised and not treated as a switch.
+	if (ownerKey === undefined) {
+		return;
+	}
+
 	const previousOwner = get<string>({ key: STORAGE_OWNER_KEY });
 
 	if (previousOwner === ownerKey) {
@@ -46,9 +60,5 @@ export const reconcileIdentityScopedStorage = ({
 	del({ key: INBOX_STORAGE_KEY });
 	del({ key: INBOX_SETTLED_READ_STORAGE_KEY });
 
-	if (ownerKey === undefined) {
-		del({ key: STORAGE_OWNER_KEY });
-	} else {
-		set({ key: STORAGE_OWNER_KEY, value: ownerKey });
-	}
+	set({ key: STORAGE_OWNER_KEY, value: ownerKey });
 };
