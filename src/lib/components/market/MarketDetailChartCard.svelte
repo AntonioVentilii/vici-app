@@ -16,6 +16,11 @@
 		 * seed-based shape.
 		 */
 		points?: number[];
+		/**
+		 * Parallel x-fractions (0–1) placing each {@link points} entry on the
+		 * time axis. Present alongside real history; absent for the seed shape.
+		 */
+		pointXs?: number[];
 		/** The active chart period chip. Owned by the page, which fetches the
 		 *  matching window of history. */
 		period: PriceHistoryPeriod;
@@ -23,7 +28,7 @@
 		onPeriodChange: (period: PriceHistoryPeriod) => void;
 	}
 
-	const { marketId, yesPercent, points, period, onPeriodChange }: Props = $props();
+	const { marketId, yesPercent, points, pointXs, period, onPeriodChange }: Props = $props();
 
 	// True cold-start: no real trade history for this market yet, so the
 	// line reads flat and the eyebrow note says so rather than implying
@@ -39,11 +44,13 @@
 		{ id: 'all', label: 'market.detail.chart.period.all' }
 	];
 
-	// Event markers are positioned against the seed-based fallback's
-	// fixed, day-indexed shape. Real-history mode (`points` supplied) has
-	// its own irregular trade-ordered series, so the markers would land on
-	// the wrong x-positions — only feed them through for the seed fallback.
-	const events = $derived(points === undefined ? ($marketMetadata[marketId]?.events ?? []) : []);
+	// Event markers are authored against a relative "this week" day index, so
+	// they only line up on the 7d window: feed them through for the seed
+	// fallback (no real `points`) and for real history on the 7d period (the
+	// sparkline anchors them on its time axis there). Other periods — and the
+	// true cold-start (real but empty) — suppress them.
+	const showEvents = $derived(points === undefined || (period === '7d' && points.length > 0));
+	const events = $derived(showEvents ? ($marketMetadata[marketId]?.events ?? []) : []);
 </script>
 
 <!-- Price-history chart card with multi-period chips.
@@ -77,7 +84,14 @@
 	</div>
 
 	<div class="market-chart-spark">
-		<FlowCardSparkline {events} lineColor="var(--laurel)" {points} seed={marketId} {yesPercent} />
+		<FlowCardSparkline
+			{events}
+			lineColor="var(--laurel)"
+			{pointXs}
+			{points}
+			seed={marketId}
+			{yesPercent}
+		/>
 	</div>
 </div>
 

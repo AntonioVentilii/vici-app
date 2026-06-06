@@ -64,6 +64,7 @@
 	} from '$lib/utils/flow-sound.utils';
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import type { MarketPriceSeries } from '$lib/utils/market-price-history.utils';
 	import {
 		DAILY_HARD_CAP,
 		recordMotionSwipe,
@@ -150,12 +151,13 @@
 	// (which uses the *primary* tag — see `primaryMarketTag`).
 	let marketTagMap = $state<Record<string, string[]>>({});
 	let marketMetadataMap = $state<Map<MarketId, MarketMetadata>>(new Map());
-	// Real, market-wide 7d price history (0–100 YES series) for the cards the
-	// viewer actually lands on, keyed by market id. Only the focused card
-	// renders, so this fills one bounded candle query at a time (never the
-	// whole deck up front), and a market the viewer never reaches is never
-	// fetched. Absent entries leave the back-face sparkline on its seed shape.
-	const priceHistoryById = new SvelteMap<MarketId, number[]>();
+	// Real, market-wide 7d price history (0–100 YES series + time-axis
+	// x-fractions) for the cards the viewer actually lands on, keyed by market
+	// id. Only the focused card renders, so this fills one bounded candle
+	// query at a time (never the whole deck up front), and a market the viewer
+	// never reaches is never fetched. Absent entries leave the back-face
+	// sparkline on its seed shape.
+	const priceHistoryById = new SvelteMap<MarketId, MarketPriceSeries>();
 	let userSignals = $state<UserMarketSignals>({
 		categoryAcc: {},
 		priorCalls: {},
@@ -1015,7 +1017,7 @@
 						marketId: currentCard.id
 					})}
 					{@const metadata = marketMetadataMap.get(currentCard.id)}
-					{@const priceHistory = priceHistoryById.get(currentCard.id)}
+					{@const priceSeries = priceHistoryById.get(currentCard.id)}
 					{@const priorCall = userSignals.priorCalls[currentCard.id]}
 					{@const followedLean = userSignals.followedLean[currentCard.id]}
 					{@const categoryAcc = userSignals.categoryAcc[flowCategory]}
@@ -1044,7 +1046,8 @@
 										onStakeChange={(next) => {
 											tradeAmount = next;
 										}}
-										points={priceHistory}
+										pointXs={priceSeries?.xs}
+										points={priceSeries?.yes}
 										{priorCall}
 										signedIn={nonNullish($userStore.user)}
 										{tradeAmount}
