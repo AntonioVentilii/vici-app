@@ -101,7 +101,12 @@ const startOfUtcDayMs = (nowMs: number): number => {
  *
  * The returned events are filtered to `event.user === user` regardless, so
  * the counts are correct-by-construction for whatever set the query
- * returns and never over-count a different principal's trades.
+ * returns and never over-count a different principal's trades. As a guard
+ * against premature consumption, a *non-empty* response that contains no
+ * events for `user` (the strong signal of caller-scoping — we received
+ * someone else's history) throws rather than returning a silent
+ * `{ 0, 0 }`, which a consumer could not tell apart from a real
+ * zero-trade user and could mis-gate on.
  *
  * @param user The principal whose Executed counts to derive.
  * @param nowMs Current time in epoch milliseconds, used to bound "today
@@ -122,24 +127,46 @@ export const getExecutedCounts = async ({
 
 	const userText = user.toText();
 
-	// Executed events for this user only. `event.user` is the on-chain owner
-	// of the event, so this filter is the spoof-proof scoping the profile
-	// field cannot provide.
-	const executed = events.filter(
-		(event) => 'Executed' in event.event_type && event.user.toText() === userText
-	);
-
-	const lifetimeExecutedCount = executed.length;
-
 	const dayStartMs = startOfUtcDayMs(nowMs);
 	const dayStartNs = BigInt(dayStartMs) * NS_PER_MS;
 	const dayEndNs = BigInt(dayStartMs + MS_PER_DAY) * NS_PER_MS;
 
-	// `timestamp` is protocol nanoseconds; bucket by the current UTC day in
-	// the ns domain so no precision is lost converting per-event.
-	const executedCountTodayUtc = executed.filter(
-		(event) => event.timestamp >= dayStartNs && event.timestamp < dayEndNs
-	).length;
+	// Single pass over the history: count this user's Executed trades
+	// (lifetime + current UTC day) and note whether the response contained
+	// any event for `user` at all. `event.user` is the on-chain owner of the
+	// event, so this scoping is the spoof-proof check the profile field
+	// cannot provide. `timestamp` is protocol nanoseconds; the day bounds are
+	// compared in the ns domain so no precision is lost per event.
+	let lifetimeExecutedCount = 0;
+	let executedCountTodayUtc = 0;
+	let userEventSeen = false;
+
+	for (const event of events) {
+		if (event.user.toText() === userText) {
+			userEventSeen = true;
+
+			if ('Executed' in event.event_type) {
+				lifetimeExecutedCount += 1;
+
+				if (event.timestamp >= dayStartNs && event.timestamp < dayEndNs) {
+					executedCountTodayUtc += 1;
+				}
+			}
+		}
+	}
+
+	// Caller-scoping guard (see the doc comment): `get_trade_history` returns
+	// the *caller's* events, so a non-empty response with nothing for `user`
+	// means we read a different principal's history. Fail loudly rather than
+	// return a `{ 0, 0 }` that a consumer would read as a genuine zero-trade
+	// user. Collapses to a no-op once a principal-scoped clearing query lands.
+	if (events.length > 0 && !userEventSeen) {
+		throw new Error(
+			`getExecutedCounts: clearing returned ${events.length} event(s), none for ${userText} — ` +
+				`get_trade_history is caller-scoped; a principal-scoped clearing query is required ` +
+				`before this helper can derive another user's counts.`
+		);
+	}
 
 	return { lifetimeExecutedCount, executedCountTodayUtc };
 };
