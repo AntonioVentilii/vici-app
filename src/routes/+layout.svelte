@@ -6,6 +6,7 @@
 	import Authn from '$lib/components/authn/Authn.svelte';
 	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
+	import { initAnalytics } from '$lib/services/analytics.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { previousPathStore } from '$lib/stores/previous-path.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -29,6 +30,10 @@
 		});
 
 		satelliteInitialized = true;
+
+		// Start product-analytics capture once the satellite is ready (sets up
+		// the tab-hide flush + emits `session_started`). Fire-and-forget.
+		initAnalytics();
 	};
 
 	$effect(() => {
