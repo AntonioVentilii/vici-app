@@ -225,11 +225,15 @@
 		{/if}
 
 		{#if opponent}
+			<!-- Real submit button linked to the form via the `form` attribute —
+				 it lives in the sheet's non-scrolling footer (outside the <form>)
+				 but keeps native submit semantics (Enter / implicit submission /
+				 assistive tech). -->
 			<button
 				class="create-bout-btn is-primary"
 				disabled={!canSend}
-				onclick={() => void handleSubmit()}
-				type="button"
+				form="create-bout-form"
+				type="submit"
 			>
 				{submitting
 					? t({ locale: $localeStore, key: 'leagues.battle.propose.submitting' })
@@ -284,7 +288,7 @@
 				{t({ locale: $localeStore, key: 'battles.create.cancel' })}
 			</button>
 		{:else}
-			<form class="create-bout-form" onsubmit={handleSubmit}>
+			<form id="create-bout-form" class="create-bout-form" onsubmit={handleSubmit}>
 				<!-- Step 1 · Your league (the challenger side) -->
 				{#if ownedLeagues.length > 1}
 					<fieldset class="create-bout-field">
