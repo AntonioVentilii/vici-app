@@ -22,6 +22,25 @@ type MethodDescription = InstanceType<(typeof IDL)['FuncClass']>;
 
 type IdlFactory = (args: { IDL: typeof IDL }) => ServiceDescription;
 
+// Building the service description walks the entire generated IDL graph. The
+// result is immutable for a given factory, so memoise it per factory: a single
+// cross-canister call typically asks for both `callArgs` and `callResultType`,
+// and without the cache each would rebuild the whole graph.
+const serviceCache = new WeakMap<IdlFactory, ServiceDescription>();
+
+const serviceFor = (idlFactory: IdlFactory): ServiceDescription => {
+	const cached = serviceCache.get(idlFactory);
+
+	if (cached !== undefined) {
+		return cached;
+	}
+
+	const service = idlFactory({ IDL });
+	serviceCache.set(idlFactory, service);
+
+	return service;
+};
+
 const funcFor = ({
 	idlFactory,
 	method
@@ -29,7 +48,7 @@ const funcFor = ({
 	idlFactory: IdlFactory;
 	method: string;
 }): MethodDescription => {
-	const field = idlFactory({ IDL })._fields.find(([name]) => name === method);
+	const field = serviceFor(idlFactory)._fields.find(([name]) => name === method);
 
 	if (field === undefined) {
 		throw new Error(`Method "${method}" is not part of the canister interface`);
@@ -46,13 +65,15 @@ export const callResultType = ({
 	idlFactory: IdlFactory;
 	method: string;
 }): IDL.Type => {
-	const [retType] = funcFor({ idlFactory, method }).retTypes;
+	const { retTypes } = funcFor({ idlFactory, method });
 
-	if (retType === undefined) {
-		throw new Error(`Method "${method}" does not return a value`);
+	if (retTypes.length !== 1) {
+		throw new Error(
+			`Method "${method}" must return exactly one value to decode (interface declares ${retTypes.length})`
+		);
 	}
 
-	return retType;
+	return retTypes[0];
 };
 
 /** Pairs each generated arg type with its caller-supplied value for `call({ args })`. */
@@ -64,5 +85,14 @@ export const callArgs = ({
 	idlFactory: IdlFactory;
 	method: string;
 	values: readonly unknown[];
-}): [IDL.Type, unknown][] =>
-	funcFor({ idlFactory, method }).argTypes.map((type, index) => [type, values[index]]);
+}): [IDL.Type, unknown][] => {
+	const { argTypes } = funcFor({ idlFactory, method });
+
+	if (values.length !== argTypes.length) {
+		throw new Error(
+			`Method "${method}" expects ${argTypes.length} argument(s), received ${values.length}`
+		);
+	}
+
+	return argTypes.map((type, index) => [type, values[index]]);
+};
