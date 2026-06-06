@@ -248,7 +248,7 @@
 			</button>
 		{:else}
 			<form class="create-bout-form" onsubmit={handleSubmit}>
-				<!-- Step 1 · Pick your league (only when owning more than one) -->
+				<!-- Step 1 · Your league (the challenger side) -->
 				{#if ownedLeagues.length > 1}
 					<fieldset class="create-bout-field">
 						<legend class="allcaps create-bout-label">
@@ -267,6 +267,22 @@
 							{/each}
 						</div>
 					</fieldset>
+				{:else if fromLeague}
+					<!-- Exactly one owned league: it's auto-selected as the
+						 challenger. Surface it read-only so the caller sees their
+						 league IS in the battle — otherwise the step is invisible and
+						 they look for their league in the opponent list (where it is
+						 correctly excluded, since a league can't challenge itself). -->
+					<div class="create-bout-field">
+						<span class="allcaps create-bout-label">
+							{t({ locale: $localeStore, key: 'battles.create.label_your_league' })}
+						</span>
+						<div class="create-bout-resolved">
+							<div class="create-bout-resolved-text">
+								<span class="create-bout-resolved-name">{fromLeague.name}</span>
+							</div>
+						</div>
+					</div>
 				{/if}
 
 				{#if fromLeague}
