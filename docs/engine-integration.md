@@ -4,6 +4,11 @@ This document describes how the Vici app integrates with the `icdc-core` predict
 registry as an **Engine**, and how user roles in Juno are automatically reflected as role
 grants on that engine.
 
+> **Liquidity / pricing:** markets are priced by the icdc-core `clearing` CLOB, so a new
+> market has no price until someone posts orders. The **`vici-maker`** liquidity service
+> provides that — see [`market-maker.md`](./market-maker.md) for what the vici-app /
+> clearing / VXP-minter side must provide.
+
 ## icdc-core deployments: `staging` and production (`ic`)
 
 icdc-core runs **two** deployments, each with its own canister IDs (see icdc-core's
