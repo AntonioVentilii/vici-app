@@ -49,10 +49,10 @@ import {
 	type SchoolSubmissionDoc
 } from '$lib/types/school-submission';
 import { spMatchEmail, spNormalize } from '$lib/utils/school-picker.utils';
-import { candidMethod } from '$satellite/utils/candid.utils';
 import { logInfo } from '$satellite/utils/logger.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
+import { IcManagementIdl } from '@junobuild/functions/canisters/ic-management';
 import { call, httpRequest, msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
@@ -235,12 +235,11 @@ const toHex = (bytes: number[]): string =>
  * overwritten).
  */
 const generateCode = async (): Promise<{ code: string; salt: string; nonce: string }> => {
-	const { result: resultType } = candidMethod({ canister: 'management', method: 'raw_rand' });
 	const random = await call<Uint8Array | number[]>({
 		canisterId: Principal.fromText(MANAGEMENT_CANISTER_ID),
 		method: 'raw_rand',
 		args: [],
-		result: resultType
+		result: IcManagementIdl.raw_rand_result
 	});
 
 	const bytes = Array.from(random as ArrayLike<number>);

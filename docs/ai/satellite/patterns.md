@@ -544,15 +544,16 @@ const series = await call<[] | [RegistryDid.Series]>({
 
 - The `IDL` namespace appears in exactly one place outside
   `src/declarations/**`: `candid.utils.ts`. Everything else stays typed
-  against `$declarations` (`RegistryDid` / `ClearingDid` / `ManagementDid`).
+  against `$declarations` (`RegistryDid` / `ClearingDid`).
 - Need a method the canister exposes but `candidMethod` can't find? It
   throws — regenerate bindings (`npm run did`) rather than reaching for an
   inline definition.
-- The IC management canister (`aaaaa-aa`, e.g. `raw_rand`) has no upstream
-  `.did` in our generation source, so a **minimal subset** is vendored at
-  [`src/declarations/management/management.did`](../../../src/declarations/management/management.did)
-  and compiled by the same pipeline. Add a method there (then `npm run
-did`) when the satellite needs another management endpoint.
+- For **IC system canisters** (management `aaaaa-aa`, ledgers, CMC, …) don't
+  vendor or derive anything: Juno ships named runtime IDL types under
+  `@junobuild/functions/canisters/*`. school's `raw_rand` uses
+  `result: IcManagementIdl.raw_rand_result` (from
+  `@junobuild/functions/canisters/ic-management`); the icrc ledger calls use
+  the `IcrcLedgerCanister` wrapper.
 
 ## HTTPS outcalls + off-chain relay (the `vici-courier` email service)
 

@@ -1,4 +1,4 @@
-import { idlFactoryClearing, idlFactoryManagement, idlFactoryRegistry } from '$declarations';
+import { idlFactoryClearing, idlFactoryRegistry } from '$declarations';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { IDL } from '@icp-sdk/core/candid';
 
@@ -22,8 +22,7 @@ import { IDL } from '@icp-sdk/core/candid';
 
 const FACTORIES = {
 	registry: idlFactoryRegistry,
-	clearing: idlFactoryClearing,
-	management: idlFactoryManagement
+	clearing: idlFactoryClearing
 } satisfies Record<string, IDL.InterfaceFactory>;
 
 type CanisterInterface = keyof typeof FACTORIES;
