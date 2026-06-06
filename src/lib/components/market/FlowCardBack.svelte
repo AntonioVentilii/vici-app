@@ -40,6 +40,9 @@
 		// Stake-ladder change callback. Fires when a rung or the
 		// native range input changes.
 		onStakeChange?: (next: string) => void;
+		// Real, market-wide price history (0–100 YES series) for the
+		// community-read sparkline. Absent → seed-based fallback shape.
+		points?: number[];
 	}
 
 	const {
@@ -54,7 +57,8 @@
 		onClose,
 		interactive = true,
 		tradeAmount,
-		onStakeChange
+		onStakeChange,
+		points
 	}: Props = $props();
 
 	const catColor = $derived(tagColor(category));
@@ -72,7 +76,7 @@
 
 		<FlowResolutionBlock {market} />
 
-		<FlowCommunityRead {crowdPct} {crowdSide} {market} {metadata} />
+		<FlowCommunityRead {crowdPct} {crowdSide} {market} {metadata} {points} />
 
 		<FlowStake {market} {noPct} {onStakeChange} {tradeAmount} {yesPct} />
 
