@@ -1,0 +1,246 @@
+/**
+ * Product-analytics capture + read (cockpit DQ-1).
+ *
+ * Two `defineUpdate` / `defineQuery` endpoints, wired in `src/satellite/index.ts`:
+ *
+ *   trackEvents({ events }) -> { accepted }
+ *     · the FE batches behavioural events and flushes them here
+ *     · the server stamps the authoritative timestamp and derives the
+ *       pseudonymous `principal` from the caller (anonymous before sign-in)
+ *     · writes one append-only doc per event to `events`
+ *     · best-effort bumps the day's `event_rollups` counter doc inline
+ *       (a rollup failure never blocks event capture)
+ *
+ *   getAnalyticsSummary({ days }) -> { rows: [{ day, start, name, count }] }
+ *     · admin-gated (the cockpit's founder principal)
+ *     · returns the trailing `days` daily rollups, flattened to rows
+ *
+ * Both `events` and `event_rollups` are controllers-scoped collections, so
+ * the privileged `*DocStore` APIs run as an admin (the invoking user is not
+ * a controller). Bodies are behavioural only — never PII; the only identity
+ * stored is the principal, which is pseudonymous and never leaves the
+ * satellite.
+ */
+
+import { Collection } from '$lib/constants/collections.constants';
+import {
+	ANALYTICS_PROP_KEYS,
+	type AnalyticsEventDoc,
+	type AnalyticsEventName,
+	type AnalyticsEventProps,
+	type EventCount,
+	type EventRollupDoc,
+	type TrackEventInput
+} from '$lib/types/analytics-event';
+import { isAdmin } from '$satellite/services/_authz';
+import { logError } from '$satellite/utils/logger.utils';
+import { isNullish } from '@dfinity/utils';
+import { Principal } from '@icp-sdk/core/principal';
+import { msgCaller, time } from '@junobuild/functions/ic-cdk';
+import {
+	decodeDocData,
+	encodeDocData,
+	getAdminAccessKeys,
+	getDocStore,
+	listDocsStore,
+	setDocStore
+} from '@junobuild/functions/sdk';
+
+const MS_PER_NS = 1_000_000n;
+const MS_PER_DAY = 86_400_000;
+
+/** Defensive cap so one call can't write an unbounded number of docs. */
+const MAX_EVENTS_PER_BATCH = 100;
+
+const nowMs = (): number => Number(time() / MS_PER_NS);
+
+/**
+ * Re-nest the flat wire dimensions back into a `props` object, dropping
+ * undefined keys. Returns `undefined` when no dimension was set so the
+ * stored doc stays lean.
+ */
+const propsFromInput = (event: TrackEventInput): AnalyticsEventProps | undefined => {
+	const props: AnalyticsEventProps = {};
+	let present = false;
+
+	const copy = <K extends keyof AnalyticsEventProps>(key: K): void => {
+		const value = event[key];
+
+		if (value !== undefined) {
+			props[key] = value;
+			present = true;
+		}
+	};
+
+	ANALYTICS_PROP_KEYS.forEach((key) => copy(key));
+
+	return present ? props : undefined;
+};
+
+/**
+ * A satellite controller principal, used as the `caller` for the
+ * server-owned, controllers-scoped analytics collections. The `*DocStore`
+ * APIs enforce the collection rule against the `caller` they're given, and
+ * the end user is not a controller — so we read/write as an admin.
+ */
+const adminCaller = (): Uint8Array => {
+	const first = getAdminAccessKeys()[0]?.[0];
+
+	if (isNullish(first)) {
+		throw new Error('No satellite controller available for analytics capture.');
+	}
+
+	return first;
+};
+
+/**
+ * Best-effort inline rollup. Bumps the day's per-event-name counts so the
+ * cockpit reads cheap aggregates. Wrapped so any failure (e.g. a rare
+ * version race under concurrent writes) is logged and swallowed — the raw
+ * `events` log is the source of truth and must never be blocked by this.
+ */
+const bumpRollup = ({
+	admin,
+	tsMs,
+	names
+}: {
+	admin: Uint8Array;
+	tsMs: number;
+	names: AnalyticsEventName[];
+}): void => {
+	try {
+		const epochDay = Math.floor(tsMs / MS_PER_DAY);
+		const key = `${epochDay}`;
+
+		const current = getDocStore({
+			collection: Collection.EVENT_ROLLUPS,
+			key,
+			caller: admin
+		});
+
+		const existing = isNullish(current) ? undefined : decodeDocData<EventRollupDoc>(current.data);
+
+		const counts: Record<string, number> = {};
+		existing?.counts.forEach(({ name, count }) => {
+			counts[name] = count;
+		});
+		names.forEach((name) => {
+			counts[name] = (counts[name] ?? 0) + 1;
+		});
+
+		const rollup: EventRollupDoc = {
+			epochDay,
+			dayStartMs: epochDay * MS_PER_DAY,
+			counts: Object.keys(counts).map(
+				(name): EventCount => ({ name: name as AnalyticsEventName, count: counts[name] })
+			),
+			updatedAtMs: tsMs
+		};
+
+		setDocStore({
+			collection: Collection.EVENT_ROLLUPS,
+			key,
+			caller: admin,
+			doc: {
+				version: current?.version,
+				data: encodeDocData<EventRollupDoc>(rollup)
+			}
+		});
+	} catch (err) {
+		logError({
+			message: 'analytics rollup bump failed (events still captured)',
+			detail: { error: err instanceof Error ? err.message : `${err}` }
+		});
+	}
+};
+
+export const trackEventsFn = ({ events }: { events: TrackEventInput[] }): { accepted: number } => {
+	if (events.length === 0) {
+		return { accepted: 0 };
+	}
+
+	const batch = events.slice(0, MAX_EVENTS_PER_BATCH);
+
+	const caller = msgCaller();
+	const principalText = caller.toText();
+	const isAnonymous = principalText === Principal.anonymous().toText();
+	const admin = adminCaller();
+	const tsMs = nowMs();
+	const stamp = time();
+
+	batch.forEach((event, index) => {
+		const props = propsFromInput(event);
+		const doc: AnalyticsEventDoc = {
+			name: event.name,
+			tsMs,
+			sessionId: event.sessionId,
+			...(isAnonymous ? {} : { principal: principalText }),
+			...(event.path === undefined ? {} : { path: event.path }),
+			...(props === undefined ? {} : { props })
+		};
+
+		// Key is unique within the batch (index) and across callers/calls
+		// (ns stamp + sessionId); the collection is append-only.
+		setDocStore({
+			collection: Collection.EVENTS,
+			key: `${stamp}-${event.sessionId}-${index}`,
+			caller: admin,
+			doc: {
+				data: encodeDocData<AnalyticsEventDoc>(doc)
+			}
+		});
+	});
+
+	bumpRollup({ admin, tsMs, names: batch.map(({ name }) => name) });
+
+	return { accepted: batch.length };
+};
+
+/** One flat `(day, name, count)` row in the summary result. */
+interface SummaryRow {
+	day: number;
+	start: number;
+	name: AnalyticsEventName;
+	count: number;
+}
+
+export const getAnalyticsSummaryFn = ({ days }: { days: number }): { rows: SummaryRow[] } => {
+	const caller = msgCaller();
+
+	if (!isAdmin({ caller })) {
+		throw new Error('Analytics is restricted to admins.');
+	}
+
+	const admin = adminCaller();
+
+	const { items } = listDocsStore({
+		collection: Collection.EVENT_ROLLUPS,
+		caller: admin,
+		params: {}
+	});
+
+	const rollups: EventRollupDoc[] = [];
+	items.forEach(([, doc]) => {
+		try {
+			rollups.push(decodeDocData<EventRollupDoc>(doc.data));
+		} catch (err) {
+			logError({
+				message: 'analytics rollup decode failed',
+				detail: { error: err instanceof Error ? err.message : `${err}` }
+			});
+		}
+	});
+
+	const trimmed = rollups
+		.sort((a, b) => b.epochDay - a.epochDay)
+		.slice(0, Math.max(0, Math.floor(days)));
+
+	const rows: SummaryRow[] = [];
+	trimmed.forEach(({ epochDay, dayStartMs, counts }) => {
+		counts.forEach(({ name, count }: EventCount) => {
+			rows.push({ day: epochDay, start: dayStartMs, name, count });
+		});
+	});
+
+	return { rows };
+};
