@@ -18,6 +18,11 @@ import type { Principal } from '@icp-sdk/core/principal';
  *                      `unlockedAchievements` array is append-only).
  *  - `comeback`      — one-time top-up for a returning user whose stack
  *                      ran dry (away ≥ N days, balance below the floor).
+ *  - `flow_milestone`— user's lifetime call count crossed a volume
+ *                      milestone (10 / 100 / 500 / 1000). Once per
+ *                      threshold ever.
+ *  - `flow_overtime` — user reached 15+ calls in a UTC day (overtime
+ *                      finish). Once per UTC day.
  */
 export type VxpAwardType =
 	| 'streak'
@@ -26,7 +31,9 @@ export type VxpAwardType =
 	| 'worlds_podium'
 	| 'tournament_prize'
 	| 'achievement'
-	| 'comeback';
+	| 'comeback'
+	| 'flow_milestone'
+	| 'flow_overtime';
 
 /**
  * Payout lifecycle for a single award. Once `paid`, the doc is immutable
@@ -55,6 +62,8 @@ export interface VxpAwardDoc {
 	 *  - `calibration`   — the resolved market's `seriesId` (one per market).
 	 *  - `referral`      — the referee principal text.
 	 *  - `worlds_podium` — `'<YYYY-MM>_gold' | '<YYYY-MM>_silver' | '<YYYY-MM>_bronze'`.
+	 *  - `flow_milestone`— the crossed threshold as text: `'10' | '100' | '500' | '1000'`.
+	 *  - `flow_overtime` — the UTC day bucket: `'<YYYY-MM-DD>'`.
 	 */
 	awardKey: string;
 	/** Payout amount in VXP base units, decimal string. */
