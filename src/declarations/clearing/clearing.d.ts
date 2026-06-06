@@ -737,6 +737,37 @@ export interface GetPositionParams {
 	series_id: string;
 }
 /**
+ * Input parameters for
+ * [`get_series_price_history`](super::get_series_price_history).
+ *
+ * Returns a series' executed trades aggregated into fixed-width
+ * [`PriceHistoryInterval`] time buckets (OHLC + volume + trade count), so a
+ * front end can render a time-scoped consensus/price chart directly instead of
+ * fetching and re-bucketing the raw per-trade tape. The optional time bounds
+ * let the caller request just the window it draws (e.g. the last day) and the
+ * `interval` picks the resolution (hourly for short windows, daily for long).
+ */
+export interface GetSeriesPriceHistoryParams {
+	/**
+	 * Bucket width: one candle per hour or per day.
+	 */
+	interval: PriceHistoryInterval;
+	/**
+	 * The derivative series whose executed trades to aggregate.
+	 */
+	series_id: string;
+	/**
+	 * Exclusive upper bound on a trade's timestamp (ns). `None` runs through
+	 * the series' latest trade.
+	 */
+	end_time: [] | [bigint];
+	/**
+	 * Inclusive lower bound on a trade's timestamp (ns). `None` starts from the
+	 * series' earliest trade.
+	 */
+	start_time: [] | [bigint];
+}
+/**
  * Represents an incoming HTTP request to the canister.
  */
 export interface HttpRequest {
@@ -1212,6 +1243,33 @@ export interface Price {
 	 */
 	decimal: DecimalValue;
 }
+/**
+ * The fixed-width time bucket a [`get_series_price_history`] call aggregates a
+ * series' executed trades into.
+ *
+ * Buckets are **fixed-width and epoch-aligned** (each bucket is `[k * width,
+ * (k + 1) * width)` ns since the Unix epoch), not rolling spans, so the same
+ * instant always falls in the same bucket regardless of when the query runs —
+ * two calls over an overlapping range return byte-identical candles for the
+ * shared buckets. Hourly resolution backs the short windows the front end
+ * renders (1d / 7d) and daily resolution the long ones (30d / all) without the
+ * caller having to fetch and re-bucket the raw per-trade tape.
+ *
+ * [`get_series_price_history`]: crate::api::trade::get_series_price_history
+ */
+export type PriceHistoryInterval =
+	| {
+			/**
+			 * One candle per UTC day.
+			 */
+			Day: null;
+	  }
+	| {
+			/**
+			 * One candle per UTC hour.
+			 */
+			Hour: null;
+	  };
 export type RefreshIcrcAssetMetadataError =
 	| { AssetNotFound: null }
 	| { NotAnIcrcAsset: null }
@@ -1348,6 +1406,62 @@ export interface Series {
 	 * If this series was forked from another, the source series ID.
 	 */
 	forked_from: [] | [string];
+}
+/**
+ * One aggregated price-history candle: every executed trade on a series whose
+ * timestamp falls in a single fixed-width bucket, summarized into the
+ * open/high/low/close + volume a chart plots.
+ *
+ * `close` is the bucket's consensus the front end maps to a 0..1 YES
+ * probability (the last trade price in the bucket); `open`/`high`/`low` let it
+ * draw candles. Prices on one series share the series' precision, so `high` and
+ * `low` are the per-bucket max and min by numeric value.
+ */
+export interface SeriesPriceCandle {
+	/**
+	 * Lowest trade price in the bucket.
+	 */
+	low: Price;
+	/**
+	 * Highest trade price in the bucket.
+	 */
+	high: Price;
+	/**
+	 * Price of the last trade in the bucket (latest timestamp, ties broken by
+	 * execution order) — the consensus a sparkline/chart plots.
+	 */
+	close: Price;
+	/**
+	 * Price of the first trade in the bucket (earliest timestamp, ties broken
+	 * by execution order).
+	 */
+	open: Price;
+	/**
+	 * Total traded quantity in the bucket (sum of each trade's positive `qty`).
+	 */
+	volume: bigint;
+	/**
+	 * Number of executed trades in the bucket.
+	 */
+	trade_count: bigint;
+	/**
+	 * Start of the bucket (ns since the Unix epoch); see
+	 * [`PriceHistoryInterval::bucket_start`]. Candles are returned ascending by
+	 * this field.
+	 */
+	bucket_start_ns: bigint;
+}
+/**
+ * A series' executed-trade history aggregated into fixed-width time buckets.
+ */
+export interface SeriesPriceHistory {
+	/**
+	 * Buckets that contain at least one trade, ascending by `bucket_start_ns`.
+	 * Empty buckets are omitted (the series simply had no trades then), so a
+	 * young or untraded market returns an empty vector rather than fabricated
+	 * points.
+	 */
+	candles: Array<SeriesPriceCandle>;
 }
 /**
  * A page of executed trades scoped to a single series.
@@ -2115,6 +2229,29 @@ export interface _SERVICE {
 	 * Returns the principal of the Series Registry canister.
 	 */
 	get_registry_canister: ActorMethod<[], Principal>;
+	/**
+	 * Returns a single series' executed trades aggregated into fixed-width
+	 * [`PriceHistoryInterval`] candles (open/high/low/close + volume + trade
+	 * count), time-ordered, so a front end can render a time-scoped consensus/price
+	 * chart without fetching and re-bucketing the raw per-trade tape that
+	 * [`list_series_trade_history`] returns.
+	 *
+	 * `start_time`/`end_time` window the trades considered (inclusive lower,
+	 * exclusive upper), letting the caller request just the window it draws; the
+	 * `interval` selects hourly or daily resolution. Buckets with no trades are
+	 * omitted — a young or untraded market returns an empty history rather than
+	 * fabricated points — and the result is capped at [`MAX_PRICE_HISTORY_POINTS`]
+	 * most-recent candles.
+	 *
+	 * Served from the same `SERIES_TRADE_HISTORY` index as
+	 * [`list_series_trade_history`], so it adds no write-path cost and no persisted
+	 * state. Aggregation scans newest-first and stops once it has filled
+	 * [`MAX_PRICE_HISTORY_POINTS`] buckets, so both the work and the payload are
+	 * bounded even when `start_time`/`end_time` are open-ended (see
+	 * [`aggregate_price_history`]). Guarded by `caller_is_not_anonymous`, matching
+	 * the other series-scoped reads.
+	 */
+	get_series_price_history: ActorMethod<[GetSeriesPriceHistoryParams], SeriesPriceHistory>;
 	/**
 	 * Returns the full settlement plan including per-position accounting details (admin only).
 	 */

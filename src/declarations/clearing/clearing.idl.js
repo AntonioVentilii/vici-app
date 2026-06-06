@@ -236,6 +236,28 @@ export const idlFactory = ({ IDL }) => {
 		user: IDL.Principal,
 		reserved_margin_usd: IDL.Nat
 	});
+	const PriceHistoryInterval = IDL.Variant({
+		Day: IDL.Null,
+		Hour: IDL.Null
+	});
+	const GetSeriesPriceHistoryParams = IDL.Record({
+		interval: PriceHistoryInterval,
+		series_id: IDL.Text,
+		end_time: IDL.Opt(IDL.Nat64),
+		start_time: IDL.Opt(IDL.Nat64)
+	});
+	const SeriesPriceCandle = IDL.Record({
+		low: Price,
+		high: Price,
+		close: Price,
+		open: Price,
+		volume: IDL.Int,
+		trade_count: IDL.Nat64,
+		bucket_start_ns: IDL.Nat64
+	});
+	const SeriesPriceHistory = IDL.Record({
+		candles: IDL.Vec(SeriesPriceCandle)
+	});
 	const PlanStatus = IDL.Variant({
 		Finalised: IDL.Null,
 		Planned: IDL.Null,
@@ -635,6 +657,11 @@ export const idlFactory = ({ IDL }) => {
 		get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], ['query']),
 		get_positions: IDL.Func([], [IDL.Vec(Position)], ['query']),
 		get_registry_canister: IDL.Func([], [IDL.Principal], ['query']),
+		get_series_price_history: IDL.Func(
+			[GetSeriesPriceHistoryParams],
+			[SeriesPriceHistory],
+			['query']
+		),
 		get_settlement_plan: IDL.Func([IDL.Text], [IDL.Opt(SettlementPlan)], ['query']),
 		get_settlement_status: IDL.Func([IDL.Text], [IDL.Opt(SettlementStatusView)], ['query']),
 		get_trade_history: IDL.Func([], [IDL.Vec(Event)], ['query']),
