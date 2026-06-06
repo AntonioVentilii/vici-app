@@ -57,10 +57,9 @@ export const listMyAffiliations = async (): Promise<{
 	university?: AffiliationDoc;
 	country?: AffiliationDoc;
 }> => {
-	// The `Option<NestedStruct>` endpoint emits camelCase keys (see
-	// `AffiliationOptionWireSchema`), so the wire shape already
-	// matches `AffiliationDoc` and no snake-case → camel-case
-	// projection is needed.
+	// The endpoint emits camelCase keys (see `AffiliationWireSchema`),
+	// so the wire shape already matches `AffiliationDoc` and no
+	// snake-case → camel-case projection is needed.
 	const { university, country } = await functions.listMyAffiliations();
 
 	return { university, country };
@@ -249,23 +248,23 @@ export const affiliationDaysLeft = ({
  * stats to FE camelCase.
  */
 const projectStatsWire = (s: {
-	affiliation_identifier: string;
+	affiliationIdentifier: string;
 	kind: AffiliationKind;
-	total_calls: number;
+	totalCalls: number;
 	wins: number;
-	month_anchor: string;
-	month_total_calls: number;
-	month_wins: number;
-	updated_at_ms: number;
+	monthAnchor: string;
+	monthTotalCalls: number;
+	monthWins: number;
+	updatedAtMs: number;
 }): AffiliationStatsDoc => ({
-	affiliationIdentifier: s.affiliation_identifier,
+	affiliationIdentifier: s.affiliationIdentifier,
 	kind: s.kind,
-	totalCalls: s.total_calls,
+	totalCalls: s.totalCalls,
 	wins: s.wins,
-	monthAnchor: s.month_anchor,
-	monthTotalCalls: s.month_total_calls,
-	monthWins: s.month_wins,
-	updatedAtMs: s.updated_at_ms
+	monthAnchor: s.monthAnchor,
+	monthTotalCalls: s.monthTotalCalls,
+	monthWins: s.monthWins,
+	updatedAtMs: s.updatedAtMs
 });
 
 /**
@@ -323,7 +322,7 @@ export const listWorldsMemberCounts = async ({
 	const { items } = await functions.listWorldsMemberCounts({ kind });
 
 	return items.reduce<Record<string, number>>((acc, item) => {
-		acc[item.affiliation_identifier] = item.member_count;
+		acc[item.affiliationIdentifier] = item.memberCount;
 
 		return acc;
 	}, {});
@@ -345,9 +344,9 @@ export const listAffiliationChampionships = async ({
 	const { items } = await functions.listAffiliationChampionships({ kind, affiliationIdentifier });
 
 	return items.map((item) => ({
-		monthAnchor: item.month_anchor,
+		monthAnchor: item.monthAnchor,
 		accuracy: item.accuracy,
-		monthTotalCalls: item.month_total_calls
+		monthTotalCalls: item.monthTotalCalls
 	}));
 };
 

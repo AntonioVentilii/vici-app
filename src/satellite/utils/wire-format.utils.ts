@@ -10,58 +10,20 @@ import { visibilityFromProfile } from '$lib/utils/visibility.utils';
 import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 /**
- * Snake_case wire-format schemas + converters for Sputnik typed queries
- * that return arrays of nested structs.
+ * Wire-format schemas + converters for Sputnik typed queries.
  *
- * # Background
+ * Since junobuild/juno-js#895 + the juno#2814 macro fix (juno ≥ `v0.0.78`,
+ * CLI ≥ 0.15.6), the codegen emits `#[json_data(nested)]` for
+ * `Vec<NestedStruct>` as well as `Option<…>`, so **both** serialise nested
+ * structs in camelCase on the wire. These schemas therefore use camelCase keys
+ * matching the app-side domain types, identically for `j.array(...)` and
+ * `j.optional(...)` results — no more snake_case parallel schemas. The
+ * `toWire…` converters just project the domain shape (defaults / enum
+ * normalisation); `fromWire…` re-narrows loose wire string unions back to the
+ * app enums.
  *
- * Juno's Sputnik codegen always emits Rust struct fields in snake_case and
- * the `JsonData` derive macro normally builds a mirror struct with
- * `#[serde(rename_all = "camelCase")]` so the JSON↔Rust handoff uses
- * camelCase on the wire. But that mirror only wraps fields explicitly
- * marked `#[json_data(nested)]`, and the codegen does **not** add that
- * attribute to `Vec<NestedStruct>` fields. For example:
- *
- * ```rust
- * // ✅ getProfile — `profile` IS nested, so wire format is camelCase
- * pub struct AppGetProfileResult {
- *     #[json_data(nested)]
- *     pub profile: Option<AppGetProfileResultProfile>,
- * }
- *
- * // ❌ listLeaderboard — `items` is NOT nested, so the wire format reverts
- * //   to the inner struct's original `Deserialize` impl which has no
- * //   rename_all attribute — i.e. snake_case.
- * pub struct AppListLeaderboardResult {
- *     pub items: Vec<AppListLeaderboardResultItems>,
- * }
- * ```
- *
- * Every `Vec<…Items>` endpoint therefore expects snake_case keys on the
- * wire, but our app-side schemas (e.g. `UserProfileSchema`) declare camelCase
- * keys (matching the TypeScript app convention). Without intervention the
- * `JsonData → Candid` deserializer traps on every read with
- * `'Error converting from js JsonData into type Candid: missing field
- * <snake_case_name>'`.
- *
- * # Why the schemas below are duplicated
- *
- * We can't fix this with `.transform()` on the result schema — that produces
- * a `ZodEffects`, and juno's schema → Rust codegen only accepts `ZodObject`
- * (it fails with "Unsupported type: unrepresentable schema" and the whole
- * `juno functions build` exits silently with code 1).
- *
- * Instead, each `Vec<NestedStruct>` endpoint uses a parallel **wire
- * schema** declared here in snake_case. juno's codegen reads the declared
- * field names verbatim, the Rust struct is byte-identical to before, and the
- * runtime handler emits snake_case via the matching `toWire…` converter so
- * Zod parse succeeds with the same shape it then serializes to JSON.
- *
- * # When to apply
- *
- * Apply on **every** `j.array(NestedStruct)` result. For `Option<NestedStruct>`
- * endpoints (e.g. `getProfile`'s `profile`) the wire is already camelCase via
- * the `#[json_data(nested)]` mirror — keep those camelCase as-is.
+ * Requires juno CLI ≥ 0.15.6 to build/deploy — older toolchains expect
+ * snake_case for `Vec` results and will trap at runtime.
  */
 
 // ─── UserProfile wire format ─────────────────────────────────────────────
@@ -74,21 +36,21 @@ export const UserProfileWireSchema = j.strictObject({
 	pnl: j.number().default(0),
 	visibility: j.enum(ProfileVisibility).default(ProfileVisibility.FRIENDS_ONLY),
 	role: j.enum(UserRole).optional(),
-	total_trades: j.number().default(0),
-	win_rate: j.number().default(0),
-	daily_streak: j.number().default(0),
+	totalTrades: j.number().default(0),
+	winRate: j.number().default(0),
+	dailyStreak: j.number().default(0),
 	streak: j.number().default(0),
 	accuracy: j.number().default(0),
 	points: j.number().default(0),
 	level: j.number().default(1),
 	archetype: j.string().default(''),
 	interests: j.array(j.string()).default([]),
-	last_active_day: j.string().optional(),
-	unlocked_achievements: j.array(j.string()).default([]),
-	contrarian_wins: j.number().default(0),
+	lastActiveDay: j.string().optional(),
+	unlockedAchievements: j.array(j.string()).default([]),
+	contrarianWins: j.number().default(0),
 	preferences: j
 		.strictObject({
-			default_amount: j
+			defaultAmount: j
 				.strictObject({
 					flow: j.string().default('0'),
 					manual: j.string().default('0')
@@ -134,21 +96,21 @@ export const toWireProfile = (profile: AppProfileLike): WireUserProfile => ({
 	pnl: profile.pnl ?? 0,
 	visibility: profile.visibility,
 	role: profile.role,
-	total_trades: profile.totalTrades ?? 0,
-	win_rate: profile.winRate ?? 0,
-	daily_streak: profile.dailyStreak ?? 0,
+	totalTrades: profile.totalTrades ?? 0,
+	winRate: profile.winRate ?? 0,
+	dailyStreak: profile.dailyStreak ?? 0,
 	streak: profile.streak ?? 0,
 	accuracy: profile.accuracy ?? 0,
 	points: profile.points ?? 0,
 	level: profile.level ?? 1,
 	archetype: profile.archetype ?? '',
 	interests: profile.interests ?? [],
-	last_active_day: profile.lastActiveDay,
-	unlocked_achievements: profile.unlockedAchievements ?? [],
-	contrarian_wins: profile.contrarianWins ?? 0,
+	lastActiveDay: profile.lastActiveDay,
+	unlockedAchievements: profile.unlockedAchievements ?? [],
+	contrarianWins: profile.contrarianWins ?? 0,
 	preferences: profile.preferences
 		? {
-				default_amount: {
+				defaultAmount: {
 					flow: profile.preferences.defaultAmount?.flow ?? '0',
 					manual: profile.preferences.defaultAmount?.manual ?? '0'
 				}
@@ -174,20 +136,20 @@ export interface ApiWireProfile {
 	pnl: number;
 	visibility: `${ProfileVisibility}`;
 	role?: `${UserRole}`;
-	total_trades: number;
-	win_rate: number;
-	daily_streak: number;
+	totalTrades: number;
+	winRate: number;
+	dailyStreak: number;
 	streak: number;
 	accuracy: number;
 	points: number;
 	level: number;
 	archetype: string;
 	interests: string[];
-	last_active_day?: string;
-	unlocked_achievements: string[];
-	contrarian_wins: number;
+	lastActiveDay?: string;
+	unlockedAchievements: string[];
+	contrarianWins: number;
 	preferences?: {
-		default_amount: { flow: string; manual: string };
+		defaultAmount: { flow: string; manual: string };
 	};
 }
 
@@ -212,9 +174,9 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	pnl: profile.pnl,
 	visibility: profile.visibility as ProfileVisibility,
 	role: profile.role as UserRole | undefined,
-	totalTrades: profile.total_trades,
-	winRate: profile.win_rate,
-	dailyStreak: profile.daily_streak,
+	totalTrades: profile.totalTrades,
+	winRate: profile.winRate,
+	dailyStreak: profile.dailyStreak,
 	// `longestStreak` / daily goal aren't carried on the leaderboard /
 	// search wire (those surfaces don't read them), so default them like
 	// the other non-wire fields below to keep the rebuilt UserProfile fully
@@ -227,9 +189,9 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	level: profile.level,
 	archetype: profile.archetype,
 	interests: profile.interests,
-	lastActiveDay: profile.last_active_day,
-	unlockedAchievements: profile.unlocked_achievements,
-	contrarianWins: profile.contrarian_wins,
+	lastActiveDay: profile.lastActiveDay,
+	unlockedAchievements: profile.unlockedAchievements,
+	contrarianWins: profile.contrarianWins,
 	// Top-decile streak state isn't carried on the leaderboard / search
 	// wire (those surfaces don't read it), so default it like the other
 	// non-wire fields below to keep the rebuilt UserProfile fully shaped.
@@ -241,8 +203,8 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	// initial values so the rebuilt UserProfile is fully shaped.
 	preferences: {
 		defaultAmount: {
-			flow: profile.preferences?.default_amount?.flow ?? '0',
-			manual: profile.preferences?.default_amount?.manual ?? '0'
+			flow: profile.preferences?.defaultAmount?.flow ?? '0',
+			manual: profile.preferences?.defaultAmount?.manual ?? '0'
 		},
 		notify: {
 			streakReminder: true,
@@ -277,9 +239,9 @@ export const RelationWireSchema = j.strictObject({
 	category: j.enum(RelationCategory),
 	state: j.enum(RelationState),
 	participants: j.array(PrincipalTextSchema),
-	viewer_principal: PrincipalTextSchema.optional(),
-	viewer_role: j.enum(UserRole).optional(),
-	is_friend: j.boolean().optional()
+	viewerPrincipal: PrincipalTextSchema.optional(),
+	viewerRole: j.enum(UserRole).optional(),
+	isFriend: j.boolean().optional()
 });
 
 export type WireRelation = j.infer<typeof RelationWireSchema>;
@@ -289,7 +251,7 @@ interface AppRelationLike {
 	state: WireRelation['state'];
 	participants: string[];
 	viewerPrincipal?: string;
-	viewerRole?: WireRelation['viewer_role'];
+	viewerRole?: WireRelation['viewerRole'];
 	isFriend?: boolean;
 }
 
@@ -297,9 +259,9 @@ export const toWireRelation = (relation: AppRelationLike): WireRelation => ({
 	category: relation.category,
 	state: relation.state,
 	participants: relation.participants,
-	viewer_principal: relation.viewerPrincipal,
-	viewer_role: relation.viewerRole,
-	is_friend: relation.isFriend
+	viewerPrincipal: relation.viewerPrincipal,
+	viewerRole: relation.viewerRole,
+	isFriend: relation.isFriend
 });
 
 // ─── MarketTranslation wire format ───────────────────────────────────────
@@ -310,13 +272,13 @@ export const OutcomeTranslationWireSchema = j.strictObject({
 });
 
 export const MarketTranslationWireSchema = j.strictObject({
-	series_id: j.string(),
+	seriesId: j.string(),
 	locale: j.string(),
 	title: j.string(),
 	description: j.string(),
 	outcomes: j.array(OutcomeTranslationWireSchema).default([]),
-	updated_at: j.number(),
-	updated_by: PrincipalTextSchema
+	updatedAt: j.number(),
+	updatedBy: PrincipalTextSchema
 });
 
 export type WireMarketTranslation = j.infer<typeof MarketTranslationWireSchema>;
@@ -334,13 +296,13 @@ interface AppMarketTranslationLike {
 export const toWireMarketTranslation = (
 	translation: AppMarketTranslationLike
 ): WireMarketTranslation => ({
-	series_id: translation.seriesId,
+	seriesId: translation.seriesId,
 	locale: translation.locale,
 	title: translation.title,
 	description: translation.description,
 	outcomes: translation.outcomes ?? [],
-	updated_at: translation.updatedAt,
-	updated_by: translation.updatedBy
+	updatedAt: translation.updatedAt,
+	updatedBy: translation.updatedBy
 });
 
 /**
@@ -352,32 +314,32 @@ export const toWireMarketTranslation = (
 export const fromWireMarketTranslation = (
 	translation: WireMarketTranslation
 ): MarketTranslation => ({
-	seriesId: translation.series_id,
+	seriesId: translation.seriesId,
 	locale: translation.locale,
 	title: translation.title,
 	description: translation.description,
 	outcomes: translation.outcomes,
-	updatedAt: translation.updated_at,
-	updatedBy: translation.updated_by
+	updatedAt: translation.updatedAt,
+	updatedBy: translation.updatedBy
 });
 
 // ─── Referral wire format ────────────────────────────────────────────────
 
 const VxpMilestoneStateWireSchema = j.strictObject({
 	status: j.enum(['none', 'owed', 'processing', 'paid']),
-	amount_base_units: j.string(),
-	block_index: j.string().optional(),
-	last_error: j.string().optional()
+	amountBaseUnits: j.string(),
+	blockIndex: j.string().optional(),
+	lastError: j.string().optional()
 });
 
 export const ReferralWireSchema = j.strictObject({
 	referee: PrincipalTextSchema,
 	referrer: PrincipalTextSchema,
 	code: j.string(),
-	redeemed_at_ms: j.number(),
-	within_referrer_cap: j.boolean(),
-	referee_payout: VxpMilestoneStateWireSchema,
-	referrer_payout: VxpMilestoneStateWireSchema
+	redeemedAtMs: j.number(),
+	withinReferrerCap: j.boolean(),
+	refereePayout: VxpMilestoneStateWireSchema,
+	referrerPayout: VxpMilestoneStateWireSchema
 });
 
 export type WireReferral = j.infer<typeof ReferralWireSchema>;
@@ -385,19 +347,19 @@ export type WireVxpMilestoneState = j.infer<typeof VxpMilestoneStateWireSchema>;
 
 const toWireMilestone = (state: VxpMilestoneState): WireVxpMilestoneState => ({
 	status: state.status,
-	amount_base_units: state.amountBaseUnits,
-	block_index: state.blockIndex,
-	last_error: state.lastError
+	amountBaseUnits: state.amountBaseUnits,
+	blockIndex: state.blockIndex,
+	lastError: state.lastError
 });
 
 export const toWireReferral = (referral: ReferralListItem): WireReferral => ({
 	referee: referral.referee,
 	referrer: referral.referrer,
 	code: referral.code,
-	redeemed_at_ms: referral.redeemedAtMs,
-	within_referrer_cap: referral.withinReferrerCap,
-	referee_payout: toWireMilestone(referral.refereePayout),
-	referrer_payout: toWireMilestone(referral.referrerPayout)
+	redeemedAtMs: referral.redeemedAtMs,
+	withinReferrerCap: referral.withinReferrerCap,
+	refereePayout: toWireMilestone(referral.refereePayout),
+	referrerPayout: toWireMilestone(referral.referrerPayout)
 });
 
 /**
@@ -410,27 +372,27 @@ export interface ApiWireReferral {
 	referee: string;
 	referrer: string;
 	code: string;
-	redeemed_at_ms: number;
-	within_referrer_cap: boolean;
-	referee_payout: {
+	redeemedAtMs: number;
+	withinReferrerCap: boolean;
+	refereePayout: {
 		status: 'none' | 'owed' | 'processing' | 'paid';
-		amount_base_units: string;
-		block_index?: string;
-		last_error?: string;
+		amountBaseUnits: string;
+		blockIndex?: string;
+		lastError?: string;
 	};
-	referrer_payout: {
+	referrerPayout: {
 		status: 'none' | 'owed' | 'processing' | 'paid';
-		amount_base_units: string;
-		block_index?: string;
-		last_error?: string;
+		amountBaseUnits: string;
+		blockIndex?: string;
+		lastError?: string;
 	};
 }
 
-const fromWireMilestone = (state: ApiWireReferral['referee_payout']): VxpMilestoneState => ({
+const fromWireMilestone = (state: ApiWireReferral['refereePayout']): VxpMilestoneState => ({
 	status: state.status,
-	amountBaseUnits: state.amount_base_units,
-	blockIndex: state.block_index,
-	lastError: state.last_error
+	amountBaseUnits: state.amountBaseUnits,
+	blockIndex: state.blockIndex,
+	lastError: state.lastError
 });
 
 /**
@@ -442,10 +404,10 @@ export const fromWireReferral = (referral: ApiWireReferral): ReferralListItem =>
 	referee: referral.referee,
 	referrer: referral.referrer,
 	code: referral.code,
-	redeemedAtMs: referral.redeemed_at_ms,
-	withinReferrerCap: referral.within_referrer_cap,
-	refereePayout: fromWireMilestone(referral.referee_payout),
-	referrerPayout: fromWireMilestone(referral.referrer_payout)
+	redeemedAtMs: referral.redeemedAtMs,
+	withinReferrerCap: referral.withinReferrerCap,
+	refereePayout: fromWireMilestone(referral.refereePayout),
+	referrerPayout: fromWireMilestone(referral.referrerPayout)
 });
 
 // ─── Leagues ────────────────────────────────────────────────────
@@ -458,16 +420,16 @@ export const LeagueWireSchema = j.strictObject({
 	id: j.string(),
 	name: j.string(),
 	description: j.string().optional(),
-	invite_code: j.string(),
+	inviteCode: j.string(),
 	owner: PrincipalTextSchema,
-	created_at_ms: j.number(),
-	accent_color: j.string().optional(),
+	createdAtMs: j.number(),
+	accentColor: j.string().optional(),
 	emblem: j.string().optional(),
 	// Three-way visibility. `toWireLeague` always emits a concrete value
 	// (mapping the legacy `private` boolean: `true` → `invite`, else
 	// `open`), so this default only guards a genuinely absent field.
 	privacy: j.enum(LeaguePrivacy).default(LeaguePrivacy.OPEN),
-	image_url: j.string().optional()
+	imageUrl: j.string().optional()
 });
 
 export type WireLeague = j.infer<typeof LeagueWireSchema>;
@@ -475,16 +437,16 @@ export type WireLeague = j.infer<typeof LeagueWireSchema>;
 export const LeagueWithRoleWireSchema = j.strictObject({
 	league: LeagueWireSchema,
 	role: j.enum(['owner', 'admin', 'member']),
-	joined_at_ms: j.number(),
-	member_count: j.number().default(1)
+	joinedAtMs: j.number(),
+	memberCount: j.number().default(1)
 });
 
 export type WireLeagueWithRole = j.infer<typeof LeagueWithRoleWireSchema>;
 
 export const LeagueMemberWireSchema = j.strictObject({
-	league_id: j.string(),
+	leagueId: j.string(),
 	member: PrincipalTextSchema,
-	joined_at_ms: j.number(),
+	joinedAtMs: j.number(),
 	role: j.enum(['owner', 'admin', 'member'])
 });
 
@@ -509,66 +471,15 @@ export const toWireLeague = (league: {
 	id: league.id,
 	name: league.name,
 	description: league.description,
-	invite_code: league.inviteCode,
-	owner: league.owner,
-	created_at_ms: league.createdAtMs,
-	accent_color: league.accentColor,
-	emblem: league.emblem,
-	// Emit a concrete privacy on the wire. Legacy rows (no `privacy`) map
-	// from the old boolean: `private === true` (code-gated + hidden from
-	// public lists) → `invite` so it's never leaked as Open; otherwise →
-	// `open` (the old publicly-listed default).
-	privacy: league.privacy ?? (league.private === true ? LeaguePrivacy.INVITE : LeaguePrivacy.OPEN),
-	image_url: league.imageUrl
-});
-
-// camelCase shape for `j.optional(...)` (`lookupLeagueByInvite`). An
-// `Option<NestedStruct>` result is wrapped by Sputnik's
-// `#[json_data(nested)]` mirror, so its wire format is camelCase — unlike
-// the snake_case `LeagueWireSchema` / `toWireLeague` above, which exist
-// only for the `j.array(...)` league endpoints. Wrapping an Option result
-// in `toWireLeague` re-introduces snake_case keys and traps with
-// `missing field 'inviteCode'`. See the module header (`When to apply`).
-export const LeagueOptionWireSchema = j.strictObject({
-	id: j.string(),
-	name: j.string(),
-	description: j.string().optional(),
-	inviteCode: j.string(),
-	owner: PrincipalTextSchema,
-	createdAtMs: j.number(),
-	accentColor: j.string().optional(),
-	emblem: j.string().optional(),
-	privacy: j.enum(LeaguePrivacy).default(LeaguePrivacy.OPEN),
-	imageUrl: j.string().optional()
-});
-
-export type OptionWireLeague = j.infer<typeof LeagueOptionWireSchema>;
-
-export const toOptionWireLeague = (league: {
-	id: string;
-	name: string;
-	description?: string;
-	inviteCode: string;
-	owner: string;
-	createdAtMs: number;
-	accentColor?: string;
-	emblem?: string;
-	privacy?: LeaguePrivacy;
-	/** Legacy boolean still carried by rows written before the 3-way
-	 *  model; mapped to a concrete `privacy` below so an old private
-	 *  league doesn't serialize as `open`. */
-	private?: boolean;
-	imageUrl?: string;
-}): OptionWireLeague => ({
-	id: league.id,
-	name: league.name,
-	description: league.description,
 	inviteCode: league.inviteCode,
 	owner: league.owner,
 	createdAtMs: league.createdAtMs,
 	accentColor: league.accentColor,
 	emblem: league.emblem,
-	// Same legacy-privacy normalisation as `toWireLeague` (see above).
+	// Emit a concrete privacy on the wire. Legacy rows (no `privacy`) map
+	// from the old boolean: `private === true` (code-gated + hidden from
+	// public lists) → `invite` so it's never leaked as Open; otherwise →
+	// `open` (the old publicly-listed default).
 	privacy: league.privacy ?? (league.private === true ? LeaguePrivacy.INVITE : LeaguePrivacy.OPEN),
 	imageUrl: league.imageUrl
 });
@@ -581,14 +492,14 @@ export const toWireLeagueWithRole = (entry: {
 }): WireLeagueWithRole => ({
 	league: toWireLeague(entry.league),
 	role: entry.role,
-	joined_at_ms: entry.joinedAtMs,
-	member_count: entry.memberCount
+	joinedAtMs: entry.joinedAtMs,
+	memberCount: entry.memberCount
 });
 
 export const FriendRecommendedLeagueWireSchema = j.strictObject({
 	league: LeagueWireSchema,
-	member_count: j.number().default(1),
-	friend_members: j.array(PrincipalTextSchema)
+	memberCount: j.number().default(1),
+	friendMembers: j.array(PrincipalTextSchema)
 });
 
 export type WireFriendRecommendedLeague = j.infer<typeof FriendRecommendedLeagueWireSchema>;
@@ -599,8 +510,8 @@ export const toWireFriendRecommendedLeague = (entry: {
 	friendMembers: string[];
 }): WireFriendRecommendedLeague => ({
 	league: toWireLeague(entry.league),
-	member_count: entry.memberCount,
-	friend_members: entry.friendMembers
+	memberCount: entry.memberCount,
+	friendMembers: entry.friendMembers
 });
 
 export const toWireLeagueMember = (member: {
@@ -609,9 +520,9 @@ export const toWireLeagueMember = (member: {
 	joinedAtMs: number;
 	role: 'owner' | 'admin' | 'member';
 }): WireLeagueMember => ({
-	league_id: member.leagueId,
+	leagueId: member.leagueId,
 	member: member.member,
-	joined_at_ms: member.joinedAtMs,
+	joinedAtMs: member.joinedAtMs,
 	role: member.role
 });
 
@@ -620,20 +531,20 @@ export const toWireLeagueMember = (member: {
 export const BattleWireSchema = j.strictObject({
 	id: j.string(),
 	kind: j.enum(['league', 'duel']),
-	side_a: j.string(),
-	side_b: j.string(),
+	sideA: j.string(),
+	sideB: j.string(),
 	proposer: PrincipalTextSchema,
 	state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
-	kickoff_ms: j.number(),
-	settle_ms: j.number(),
+	kickoffMs: j.number(),
+	settleMs: j.number(),
 	// Scope is a loose string on the wire (not a j.enum) so legacy rows
 	// without the field, and any future category tag, decode without a
 	// migration. The FE re-narrows via `isBattleScope`.
 	scope: j.string().optional(),
 	wager: j.number().optional(),
-	trash_talk: j.string().optional(),
-	score_a: j.number().optional(),
-	score_b: j.number().optional(),
+	trashTalk: j.string().optional(),
+	scoreA: j.number().optional(),
+	scoreB: j.number().optional(),
 	winner: j.enum(['A', 'B', 'draw']).optional()
 });
 
@@ -657,32 +568,32 @@ export const toWireBattle = (battle: {
 }): WireBattle => ({
 	id: battle.id,
 	kind: battle.kind,
-	side_a: battle.sideA,
-	side_b: battle.sideB,
+	sideA: battle.sideA,
+	sideB: battle.sideB,
 	proposer: battle.proposer,
 	state: battle.state,
-	kickoff_ms: battle.kickoffMs,
-	settle_ms: battle.settleMs,
+	kickoffMs: battle.kickoffMs,
+	settleMs: battle.settleMs,
 	scope: battle.scope,
 	wager: battle.wager,
-	trash_talk: battle.trashTalk,
-	score_a: battle.scoreA,
-	score_b: battle.scoreB,
+	trashTalk: battle.trashTalk,
+	scoreA: battle.scoreA,
+	scoreB: battle.scoreB,
 	winner: battle.winner
 });
 
 // ─── Affiliations ───────────────────────────────────────────────
 
-// Snake_case shape used for `j.array(...)` endpoints
-// (`listWorldsRoster`). Vec items don't get the `#[json_data(nested)]`
-// wrapper, so the inner JSON deserializer reads the Rust struct's
-// literal (snake_case) field names — see the file-level docstring.
+// Wire shape for both `j.array(...)` (`listWorldsRoster`) and
+// `j.optional(...)` (`listMyAffiliations`) endpoints — camelCase keys
+// matching the in-memory `AffiliationDoc`, so optional handlers can
+// return the projected doc directly without a `toWire` step.
 export const AffiliationWireSchema = j.strictObject({
 	member: PrincipalTextSchema,
 	kind: j.enum(['university', 'country']),
-	affiliation_identifier: j.string(),
-	joined_at_ms: j.number(),
-	locked_until_ms: j.number()
+	affiliationIdentifier: j.string(),
+	joinedAtMs: j.number(),
+	lockedUntilMs: j.number()
 });
 
 export type WireAffiliation = j.infer<typeof AffiliationWireSchema>;
@@ -696,43 +607,24 @@ export const toWireAffiliation = (aff: {
 }): WireAffiliation => ({
 	member: aff.member,
 	kind: aff.kind,
-	affiliation_identifier: aff.affiliationIdentifier,
-	joined_at_ms: aff.joinedAtMs,
-	locked_until_ms: aff.lockedUntilMs
+	affiliationIdentifier: aff.affiliationIdentifier,
+	joinedAtMs: aff.joinedAtMs,
+	lockedUntilMs: aff.lockedUntilMs
 });
-
-// camelCase shape required by `j.optional(...)` endpoints
-// (`listMyAffiliations`). Option nested structs get
-// `#[json_data(nested)]` which routes through the JsonData mirror
-// — that mirror is generated with `#[serde(rename_all = "camelCase")]`,
-// so the JS payload must use camelCase keys or
-// `from_json_data` traps with `missing field <camelCaseName>`. The
-// schema field names match the in-memory `AffiliationDoc` shape so
-// handlers can return the projected doc directly without a `toWire`
-// step.
-export const AffiliationOptionWireSchema = j.strictObject({
-	member: PrincipalTextSchema,
-	kind: j.enum(['university', 'country']),
-	affiliationIdentifier: j.string(),
-	joinedAtMs: j.number(),
-	lockedUntilMs: j.number()
-});
-
-export type OptionWireAffiliation = j.infer<typeof AffiliationOptionWireSchema>;
 
 // ─── Affiliation stats ──────────────────────────────────────────────
 
-// Snake_case shape for `j.array(...)` endpoints
-// (`listAffiliationStats`).
+// Wire shape for both `j.array(...)` (`listAffiliationStats`) and
+// `j.optional(...)` (`getAffiliationStats`) endpoints.
 export const AffiliationStatsWireSchema = j.strictObject({
-	affiliation_identifier: j.string(),
+	affiliationIdentifier: j.string(),
 	kind: j.enum(['university', 'country']),
-	total_calls: j.number(),
+	totalCalls: j.number(),
 	wins: j.number(),
-	month_anchor: j.string(),
-	month_total_calls: j.number(),
-	month_wins: j.number(),
-	updated_at_ms: j.number()
+	monthAnchor: j.string(),
+	monthTotalCalls: j.number(),
+	monthWins: j.number(),
+	updatedAtMs: j.number()
 });
 
 export type WireAffiliationStats = j.infer<typeof AffiliationStatsWireSchema>;
@@ -747,36 +639,22 @@ export const toWireAffiliationStats = (stats: {
 	monthWins: number;
 	updatedAtMs: number;
 }): WireAffiliationStats => ({
-	affiliation_identifier: stats.affiliationIdentifier,
+	affiliationIdentifier: stats.affiliationIdentifier,
 	kind: stats.kind,
-	total_calls: stats.totalCalls,
+	totalCalls: stats.totalCalls,
 	wins: stats.wins,
-	month_anchor: stats.monthAnchor,
-	month_total_calls: stats.monthTotalCalls,
-	month_wins: stats.monthWins,
-	updated_at_ms: stats.updatedAtMs
+	monthAnchor: stats.monthAnchor,
+	monthTotalCalls: stats.monthTotalCalls,
+	monthWins: stats.monthWins,
+	updatedAtMs: stats.updatedAtMs
 });
 
-// camelCase shape for `j.optional(...)` (`getAffiliationStats`).
-export const AffiliationStatsOptionWireSchema = j.strictObject({
+// Per-affiliation real member tally for the `j.array(...)`
+// member-count endpoint.
+export const AffiliationMemberCountWireSchema = j.strictObject({
 	affiliationIdentifier: j.string(),
 	kind: j.enum(['university', 'country']),
-	totalCalls: j.number(),
-	wins: j.number(),
-	monthAnchor: j.string(),
-	monthTotalCalls: j.number(),
-	monthWins: j.number(),
-	updatedAtMs: j.number()
-});
-
-export type OptionWireAffiliationStats = j.infer<typeof AffiliationStatsOptionWireSchema>;
-
-// Per-affiliation real member tally, snake_case for the
-// `j.array(...)` member-count endpoint.
-export const AffiliationMemberCountWireSchema = j.strictObject({
-	affiliation_identifier: j.string(),
-	kind: j.enum(['university', 'country']),
-	member_count: j.number()
+	memberCount: j.number()
 });
 
 export type WireAffiliationMemberCount = j.infer<typeof AffiliationMemberCountWireSchema>;
@@ -786,17 +664,17 @@ export const toWireAffiliationMemberCount = (count: {
 	kind: 'university' | 'country';
 	memberCount: number;
 }): WireAffiliationMemberCount => ({
-	affiliation_identifier: count.affiliationIdentifier,
+	affiliationIdentifier: count.affiliationIdentifier,
 	kind: count.kind,
-	member_count: count.memberCount
+	memberCount: count.memberCount
 });
 
-// A past month an affiliation finished first in its kind, snake_case
-// for the `j.array(...)` champion-history endpoint.
+// A past month an affiliation finished first in its kind, for the
+// `j.array(...)` champion-history endpoint.
 export const AffiliationChampionshipWireSchema = j.strictObject({
-	month_anchor: j.string(),
+	monthAnchor: j.string(),
 	accuracy: j.number(),
-	month_total_calls: j.number()
+	monthTotalCalls: j.number()
 });
 
 export type WireAffiliationChampionship = j.infer<typeof AffiliationChampionshipWireSchema>;
@@ -806,21 +684,21 @@ export const toWireAffiliationChampionship = (cup: {
 	accuracy: number;
 	monthTotalCalls: number;
 }): WireAffiliationChampionship => ({
-	month_anchor: cup.monthAnchor,
+	monthAnchor: cup.monthAnchor,
 	accuracy: cup.accuracy,
-	month_total_calls: cup.monthTotalCalls
+	monthTotalCalls: cup.monthTotalCalls
 });
 
 // ─── Tournament + matches ───────────────────────────────────────────
 
 export const TournamentWireSchema = j.strictObject({
 	id: j.string(),
-	month_start_ms: j.number(),
-	month_end_ms: j.number(),
-	bracket_size: j.number(),
+	monthStartMs: j.number(),
+	monthEndMs: j.number(),
+	bracketSize: j.number(),
 	state: j.enum(['in_flight', 'concluded']),
-	seeded_league_ids: j.array(j.string()),
-	created_at_ms: j.number()
+	seededLeagueIds: j.array(j.string()),
+	createdAtMs: j.number()
 });
 
 export type WireTournament = j.infer<typeof TournamentWireSchema>;
@@ -835,29 +713,29 @@ export const toWireTournament = (doc: {
 	createdAtMs: number;
 }): WireTournament => ({
 	id: doc.id,
-	month_start_ms: doc.monthStartMs,
-	month_end_ms: doc.monthEndMs,
-	bracket_size: doc.bracketSize,
+	monthStartMs: doc.monthStartMs,
+	monthEndMs: doc.monthEndMs,
+	bracketSize: doc.bracketSize,
 	state: doc.state,
-	seeded_league_ids: doc.seededLeagueIds,
-	created_at_ms: doc.createdAtMs
+	seededLeagueIds: doc.seededLeagueIds,
+	createdAtMs: doc.createdAtMs
 });
 
 export const TournamentMatchWireSchema = j.strictObject({
-	tournament_id: j.string(),
+	tournamentId: j.string(),
 	round: j.enum(['r1', 'quarter', 'semifinal', 'final']),
 	index: j.number(),
-	from_league_id: j.optional(j.string()),
-	to_league_id: j.optional(j.string()),
-	from_start_calls: j.optional(j.number()),
-	from_start_wins: j.optional(j.number()),
-	to_start_calls: j.optional(j.number()),
-	to_start_wins: j.optional(j.number()),
-	from_acc: j.optional(j.number()),
-	to_acc: j.optional(j.number()),
-	winner_league_id: j.optional(j.string()),
-	start_ms: j.number(),
-	end_ms: j.number()
+	fromLeagueId: j.optional(j.string()),
+	toLeagueId: j.optional(j.string()),
+	fromStartCalls: j.optional(j.number()),
+	fromStartWins: j.optional(j.number()),
+	toStartCalls: j.optional(j.number()),
+	toStartWins: j.optional(j.number()),
+	fromAcc: j.optional(j.number()),
+	toAcc: j.optional(j.number()),
+	winnerLeagueId: j.optional(j.string()),
+	startMs: j.number(),
+	endMs: j.number()
 });
 
 export type WireTournamentMatch = j.infer<typeof TournamentMatchWireSchema>;
@@ -878,20 +756,20 @@ export const toWireTournamentMatch = (doc: {
 	startMs: number;
 	endMs: number;
 }): WireTournamentMatch => ({
-	tournament_id: doc.tournamentId,
+	tournamentId: doc.tournamentId,
 	round: doc.round,
 	index: doc.index,
-	from_league_id: doc.fromLeagueId ?? undefined,
-	to_league_id: doc.toLeagueId ?? undefined,
-	from_start_calls: doc.fromStartCalls ?? undefined,
-	from_start_wins: doc.fromStartWins ?? undefined,
-	to_start_calls: doc.toStartCalls ?? undefined,
-	to_start_wins: doc.toStartWins ?? undefined,
-	from_acc: doc.fromAcc ?? undefined,
-	to_acc: doc.toAcc ?? undefined,
-	winner_league_id: doc.winnerLeagueId ?? undefined,
-	start_ms: doc.startMs,
-	end_ms: doc.endMs
+	fromLeagueId: doc.fromLeagueId ?? undefined,
+	toLeagueId: doc.toLeagueId ?? undefined,
+	fromStartCalls: doc.fromStartCalls ?? undefined,
+	fromStartWins: doc.fromStartWins ?? undefined,
+	toStartCalls: doc.toStartCalls ?? undefined,
+	toStartWins: doc.toStartWins ?? undefined,
+	fromAcc: doc.fromAcc ?? undefined,
+	toAcc: doc.toAcc ?? undefined,
+	winnerLeagueId: doc.winnerLeagueId ?? undefined,
+	startMs: doc.startMs,
+	endMs: doc.endMs
 });
 
 // ─── Monthly leaderboard wire format ─────────────────────────────────────
@@ -904,8 +782,8 @@ export const toWireTournamentMatch = (doc: {
 
 export const MonthlyLeaderboardEntryWireSchema = j.strictObject({
 	owner: PrincipalTextSchema,
-	month_calls: j.number(),
-	month_wins: j.number(),
+	monthCalls: j.number(),
+	monthWins: j.number(),
 	accuracy: j.number(),
 	placement: j.number()
 });
@@ -920,18 +798,18 @@ export const toWireMonthlyLeaderboardEntry = (entry: {
 	placement: number;
 }): WireMonthlyLeaderboardEntry => ({
 	owner: entry.owner,
-	month_calls: entry.monthCalls,
-	month_wins: entry.monthWins,
+	monthCalls: entry.monthCalls,
+	monthWins: entry.monthWins,
 	accuracy: entry.accuracy,
 	placement: entry.placement
 });
 
 export const BoldCallerEntryWireSchema = j.strictObject({
 	owner: PrincipalTextSchema,
-	month_calls: j.number(),
-	month_wins: j.number(),
+	monthCalls: j.number(),
+	monthWins: j.number(),
 	accuracy: j.number(),
-	median_consensus: j.number()
+	medianConsensus: j.number()
 });
 
 export type WireBoldCallerEntry = j.infer<typeof BoldCallerEntryWireSchema>;
@@ -944,8 +822,8 @@ export const toWireBoldCallerEntry = (entry: {
 	medianConsensus: number;
 }): WireBoldCallerEntry => ({
 	owner: entry.owner,
-	month_calls: entry.monthCalls,
-	month_wins: entry.monthWins,
+	monthCalls: entry.monthCalls,
+	monthWins: entry.monthWins,
 	accuracy: entry.accuracy,
-	median_consensus: entry.medianConsensus
+	medianConsensus: entry.medianConsensus
 });
