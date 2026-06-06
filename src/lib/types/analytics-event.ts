@@ -1,3 +1,5 @@
+import type { PrincipalText } from '@junobuild/schema';
+
 /**
  * Product analytics event taxonomy — the typed contract every captured
  * event is validated against (cockpit spec DQ-1, "versioned event
@@ -201,10 +203,12 @@ export interface AnalyticsEventDoc {
 	 */
 	sessionId: string;
 	/**
-	 * Pseudonymous on-chain identity (principal text). Absent before
-	 * sign-in. Never an email / name — the principal is not PII.
+	 * Pseudonymous on-chain identity. Absent before sign-in. Never an
+	 * email / name — the principal is not PII. Typed `PrincipalText` (the
+	 * codebase's validated principal-string type) so it can't be mixed with
+	 * arbitrary strings; mirrors `AnalyticsEventSchema`'s `PrincipalTextSchema`.
 	 */
-	principal?: string;
+	principal?: PrincipalText;
 	/** Route / screen the event fired on, for funnels. No query strings, no PII. */
 	path?: string;
 	/** Bounded behavioural context. */
