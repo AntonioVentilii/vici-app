@@ -64,8 +64,15 @@
 	<!-- Real market-wide history when FlowMode has resolved it for this card
 	     (one bounded candle query, fetched only for the focused card); until
 	     then `points` is absent and the sparkline falls back to its seed-based
-	     shape. -->
-	<FlowCardSparkline events={metadata?.events} {points} seed={market.id} yesPercent={yesPct} />
+	     shape. Event markers are positioned against the seed shape's day
+	     index, so they're only fed through on that fallback — the real
+	     time-bucketed series would misplace them. -->
+	<FlowCardSparkline
+		events={points === undefined ? metadata?.events : []}
+		{points}
+		seed={market.id}
+		yesPercent={yesPct}
+	/>
 </section>
 
 <style lang="postcss">
