@@ -155,14 +155,21 @@ concurrent mutation would otherwise be rejected with `Canister … is stopped`
 (IC0508). The shared queue serializes every satellite mutation; a running one is
 never cancelled.
 
-Only **one** workflow fires into this group per `main` push (`deploy.yml`;
+Only **one** workflow fires into this group on a `main` push (`deploy.yml`;
 `publish.yml` is `v*`-tag-only). That matters because GitHub keeps only one
 _pending_ run per concurrency group: whenever **two** group members queued behind
 a still-running one, the older pending run was silently cancelled (`Canceling
 since a higher priority waiting request for juno-satellite exists`). This bit us
 twice — first the standalone `upgrade.yml` (folded into `deploy.yml`), then the
-push-triggered `config.yml` (now manual-only). Keep it at one push-triggered
-member: don't add another `push: main` workflow to this group.
+push-triggered `config.yml` (now manual-only).
+
+The remaining overlap is **`v*` tags**: a tag push fires both `deploy.yml` and
+`publish.yml`, so two group members queue and — if a `main`-push run is still
+holding the group — one can still be cancelled. That's tolerated because tag
+pushes are rare, deliberate release events done in isolation (no concurrent
+`main` push), not the every-merge cadence that made the `config.yml` race bite.
+Don't widen it: keep `main` pushes at one group member, and don't add a third
+`v*`-triggered workflow to the group.
 
 If your change is doc-only, the `format` and `lint` jobs still run because
 they cover the whole repo. The `check` job covers `*.svelte` / `*.ts` only,
