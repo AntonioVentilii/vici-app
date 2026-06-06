@@ -3,6 +3,7 @@
 	import { onAuthStateChange, type User } from '@junobuild/core';
 	import { onMount, type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
+	import { SIGNED_IN_FLAG_KEY } from '$lib/constants/app.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { reconcileIdentityScopedStorage } from '$lib/services/identity-storage.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -17,16 +18,14 @@
 	import { userStore } from '$lib/stores/user.store';
 
 	/**
-	 * Persistent hint that the user has an authenticated session on this
-	 * device. Read by the inline `<head>` script in `app.html` to do a
-	 * no-flash redirect from `/` to `/app` for signed-in cold loads (so
-	 * the marketing surface never paints before SvelteKit hydrates and
-	 * the real auth state resolves). Wrapped in try/catch for SSR /
-	 * private-mode safety — a missing flag just means the regular
-	 * in-page gate handles the redirect.
+	 * Write (or clear) the `SIGNED_IN_FLAG_KEY` hint that this device has an
+	 * authenticated session. Read by the inline `<head>` script in `app.html`
+	 * to do a no-flash redirect from `/` to `/flow` for signed-in cold loads
+	 * (so the marketing surface never paints before SvelteKit hydrates and the
+	 * real auth state resolves). Wrapped in try/catch for SSR / private-mode
+	 * safety — a missing flag just means the regular in-page gate handles the
+	 * redirect.
 	 */
-	const SIGNED_IN_FLAG_KEY = 'vici.signed-in';
-
 	const setSignedInFlag = (signedIn: boolean): void => {
 		if (!browser) {
 			return;
