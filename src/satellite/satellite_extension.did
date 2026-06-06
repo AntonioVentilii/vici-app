@@ -13,6 +13,10 @@ type AppGetAffiliationStatsArgs = record { kind : variant { university; country 
 
 type AppGetAffiliationStatsResult = record { stats : opt record { affiliation_identifier : text; kind : variant { university; country }; total_calls : float64; wins : float64; month_anchor : text; month_total_calls : float64; month_wins : float64; updated_at_ms : float64 } };
 
+type AppGetAnalyticsSummaryArgs = record { days : float64 };
+
+type AppGetAnalyticsSummaryResult = record { rows : vec record { day : float64; start : float64; name : variant { session_started; signed_up; signed_in; signed_out; provider_linked; onboarding_started; onboarding_step; handle_checked; onboarding_completed; flow_session_started; flow_swipe; flow_card_expanded; flow_completed; flow_abandoned; sound_toggled; market_viewed; market_searched; market_shared; watchlist_added; watchlist_removed; orderbook_viewed; position_taken; position_closed; prediction_created; order_placed; order_cancelled; resolution_proposed; resolution_confirmed; resolution_disputed; payout_settled; referral_sent; referral_link_copied; referral_redeemed; referral_converted; vxp_awarded; streak_milestone; faucet_claimed; league_created; league_joined; league_invite_sent; battle_proposed; battle_accepted; battle_resolved; comment_posted; chat_sent; affiliation_set; affiliation_removed; school_picker_opened; school_picked; school_verify_email_submitted; school_verify_code_submitted; delete_flow_opened; delete_confirmed; delete_succeeded; exit_signal; app_error; perf_metric }; count : float64 } };
+
 type AppGetCurrentTournamentResult = record { tournament : opt record { id : text; month_start_ms : float64; month_end_ms : float64; bracket_size : float64; state : variant { in_flight; concluded }; seeded_league_ids : vec text; created_at_ms : float64 }; matches : vec record { tournament_id : text; round : variant { r1; quarter; semifinal; final }; index : float64; from_league_id : opt text; to_league_id : opt text; from_start_calls : opt float64; from_start_wins : opt float64; to_start_calls : opt float64; to_start_wins : opt float64; from_acc : opt float64; to_acc : opt float64; winner_league_id : opt text; start_ms : float64; end_ms : float64 } };
 
 type AppGetMarketMetadataArgs = record { series_id : text };
@@ -151,6 +155,10 @@ type AppSubmitSchoolResult = record { submission_id : text };
 
 type AppSweepExpiredDeletionsResult = record { swept : float64 };
 
+type AppTrackEventsArgs = record { events : vec record { name : variant { session_started; signed_up; signed_in; signed_out; provider_linked; onboarding_started; onboarding_step; handle_checked; onboarding_completed; flow_session_started; flow_swipe; flow_card_expanded; flow_completed; flow_abandoned; sound_toggled; market_viewed; market_searched; market_shared; watchlist_added; watchlist_removed; orderbook_viewed; position_taken; position_closed; prediction_created; order_placed; order_cancelled; resolution_proposed; resolution_confirmed; resolution_disputed; payout_settled; referral_sent; referral_link_copied; referral_redeemed; referral_converted; vxp_awarded; streak_milestone; faucet_claimed; league_created; league_joined; league_invite_sent; battle_proposed; battle_accepted; battle_resolved; comment_posted; chat_sent; affiliation_set; affiliation_removed; school_picker_opened; school_picked; school_verify_email_submitted; school_verify_code_submitted; delete_flow_opened; delete_confirmed; delete_succeeded; exit_signal; app_error; perf_metric }; session_id : text; path : opt text; market_id : opt text; series_id : opt text; league_id : opt text; battle_id : opt text; source : opt text; label : opt text; step : opt float64; value : opt float64; count : opt float64; duration_ms : opt float64; ok : opt bool; occurred_at_ms : opt float64 } };
+
+type AppTrackEventsResult = record { accepted : float64 };
+
 type AppTransferLeagueOwnershipArgs = record { league_id : text; new_owner_principal : text };
 
 type AppTransferLeagueOwnershipResult = record { ok : bool; reason : opt variant { not_owner; league_not_found; new_owner_not_member; new_owner_is_caller; invalid_input } };
@@ -175,6 +183,7 @@ service : {
 	app_check_friendship : (AppCheckFriendshipArgs) -> (AppCheckFriendshipResult) query;
 	app_check_nickname_availability : (AppCheckNicknameAvailabilityArgs) -> (AppCheckNicknameAvailabilityResult) query;
 	app_get_affiliation_stats : (AppGetAffiliationStatsArgs) -> (AppGetAffiliationStatsResult) query;
+	app_get_analytics_summary : (AppGetAnalyticsSummaryArgs) -> (AppGetAnalyticsSummaryResult) query;
 	app_get_current_tournament : () -> (AppGetCurrentTournamentResult) query;
 	app_get_market_metadata : (AppGetMarketMetadataArgs) -> (AppGetMarketMetadataResult) query;
 	app_get_market_translation : (AppGetMarketTranslationArgs) -> (AppGetMarketTranslationResult) query;
@@ -223,6 +232,7 @@ service : {
 	app_settle_referral : (AppSettleReferralArgs) -> ();
 	app_submit_school : (AppSubmitSchoolArgs) -> (AppSubmitSchoolResult);
 	app_sweep_expired_deletions : () -> (AppSweepExpiredDeletionsResult);
+	app_track_events : (AppTrackEventsArgs) -> (AppTrackEventsResult);
 	app_transfer_league_ownership : (AppTransferLeagueOwnershipArgs) -> (AppTransferLeagueOwnershipResult);
 	app_trigger_tournament_draw : (AppTriggerTournamentDrawArgs) -> (AppTriggerTournamentDrawResult);
 	app_upsert_market_metadata : (AppUpsertMarketMetadataArgs) -> (AppUpsertMarketMetadataResult);

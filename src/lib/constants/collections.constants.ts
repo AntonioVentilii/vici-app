@@ -137,7 +137,22 @@ export const Collection = {
 	 * as the `vici-courier` email-relay URL + bearer token, set by a controller after deploy so no
 	 * secret ever lands in git.
 	 */
-	APP_CONFIG: collections.APP_CONFIG
+	APP_CONFIG: collections.APP_CONFIG,
+	/**
+	 * Product-analytics raw event log (cockpit DQ-1, "versioned event taxonomy"). Append-only,
+	 * one doc per captured event. Controllers-scoped: the satellite `trackEvents` endpoint is the
+	 * sole writer (it writes as an admin via the privileged `*DocStore` APIs), so clients can
+	 * neither read other users' behaviour nor forge events. Bodies are behavioural only — a
+	 * pseudonymous `principal` (absent pre-auth) plus the bounded `AnalyticsEventProps` vocabulary,
+	 * never PII.
+	 */
+	EVENTS: collections.EVENTS,
+	/**
+	 * Per-UTC-day rollup of per-event-name counts (one doc keyed by epoch-day), bumped inline by
+	 * `trackEvents` as events land so the cockpit reads cheap aggregates via `getAnalyticsSummary`
+	 * instead of scanning the raw {@link Collection.EVENTS} log. Controllers-scoped.
+	 */
+	EVENT_ROLLUPS: collections.EVENT_ROLLUPS
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];
