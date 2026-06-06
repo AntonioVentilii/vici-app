@@ -982,6 +982,7 @@
 										avatar={memberAvatar(member.member)}
 										nickname={memberNickname(member.member)}
 										owner={member.member}
+										self={member.member === selfPrincipal}
 									/>
 								</span>
 							{/each}
@@ -1177,6 +1178,7 @@
 									avatar={memberAvatar(member.member)}
 									nickname={memberNickname(member.member)}
 									owner={member.member}
+									self={member.member === selfPrincipal}
 								/>
 								<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
 								<span class="league-detail-lb-streak num allcaps">
@@ -1210,6 +1212,7 @@
 							avatar={memberAvatar(youMember.member)}
 							nickname={memberNickname(youMember.member)}
 							owner={youMember.member}
+							self={youMember.member === selfPrincipal}
 						/>
 						<span class="league-detail-lb-name">
 							{t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
@@ -1342,6 +1345,7 @@
 					avatar={memberAvatar(openMember.member)}
 					nickname={memberNickname(openMember.member)}
 					owner={openMember.member}
+					self={openMember.member === selfPrincipal}
 				/>
 				<div class="league-detail-member-sheet-id">
 					<span class="league-detail-member-sheet-name">{memberHandle(openMember.member)}</span>
