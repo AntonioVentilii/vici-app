@@ -70,6 +70,26 @@ export const VXP_STREAK_BONUSES: Readonly<Record<number, number>> = Object.freez
 });
 
 /**
+ * Flow volume-milestone bonuses, in VXP. Keyed by the lifetime call-count
+ * threshold; granted once ever when the user's lifetime call count *crosses*
+ * that threshold. Server-validated — these constants are surfaced to UI for
+ * preview only. Calls 1 and 25 are deliberately not milestones.
+ */
+export const VXP_FLOW_MILESTONES: Readonly<Record<number, number>> = Object.freeze({
+	10: 50,
+	100: 100,
+	500: 250,
+	1000: 500
+});
+
+/**
+ * Flow overtime bonus (25 VXP). Granted once per UTC day when the user
+ * reaches 15+ calls in that day (an "overtime" finish). The only repeatable
+ * flow mint. Server-validated — surfaced to UI for preview only.
+ */
+export const VXP_FLOW_OVERTIME_BONUS = 25;
+
+/**
  * Calibration reward (20 VXP), in **base units**. Paid once per finalised
  * Vici binary market a recovering user calls correctly. Small and fixed —
  * it is a recovery nudge that rewards reading a market right, not a payout
