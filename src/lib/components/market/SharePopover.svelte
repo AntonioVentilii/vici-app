@@ -84,8 +84,7 @@
 		priorCall !== null && priorCall !== undefined
 			? t({
 					locale: $localeStore,
-					key: 'flow.share.text_post',
-					params: { side: priorCall.side, title: market.title }
+					key: 'flow.share.text_post'
 				})
 			: t({
 					locale: $localeStore,

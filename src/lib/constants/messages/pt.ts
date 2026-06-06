@@ -184,7 +184,7 @@ export const ptMessages = {
 	'flow.share.whatsapp': 'WhatsApp',
 	'flow.share.twitter': 'X',
 	'flow.share.text_pre': '"{title}" — {yes}% SIM na VICI. E você?',
-	'flow.share.text_post': 'Previ {side} em "{title}" — acompanhe meu histórico na VICI.',
+	'flow.share.text_post': 'Acabei de fazer esta previsão sobre a Copa do Mundo, o que você acha?',
 	'flow.share.telegram': 'Telegram',
 	'flow.share.eyebrow': 'COMPARTILHAR PREVISÃO',
 	'flow.share.instagram': 'Instagram',
@@ -780,7 +780,8 @@ export const ptMessages = {
 	'flow.invite.copy_tail': 'na primeira previsão dele.',
 	'flow.invite.copy_vxp': '+{vxp} VXP',
 	'flow.invite.share': 'Compartilhar',
-	'flow.invite.share_text': 'Preveja na velocidade do pensamento. Junte-se a mim na VICI.',
+	'flow.invite.share_text':
+		'Você está pronto para a Copa do Mundo? Acabei de fazer minhas previsões aqui.',
 	'flow.invite.title': 'Traga um amigo',
 	'flow.invite.toast_code_copied': 'Código copiado',
 	'flow.invite.toast_copy_failed': 'Falha ao copiar',
@@ -1191,7 +1192,7 @@ export const ptMessages = {
 	'leagues.role.admin': 'Admin',
 	'leagues.role.member': 'Membro',
 	'leagues.role.owner': 'Dono',
-	'leagues.share_text': 'Junte-se à minha liga {name} na VICI!',
+	'leagues.share_text': 'Junte-se à minha liga e vamos prever a Copa do Mundo juntos.',
 	'leagues.title': 'Ligas',
 	'leagues.transfer.cta': 'Transferir propriedade',
 	'leagues.transfer.empty':
