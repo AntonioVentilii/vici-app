@@ -10,8 +10,10 @@ const STORAGE_OWNER_KEY = 'vici.storage-owner.v1';
 
 /**
  * Drop the browser-persisted, identity-scoped caches when the signed-in
- * principal changes (sign-in as a different user, sign-out, account switch),
- * so one identity's state never bleeds into the next on a shared device.
+ * principal changes to a different *defined* owner (sign-in as a different
+ * user, account switch), so one identity's state never bleeds into the next
+ * on a shared device. The signed-out (`undefined`) transition does NOT clear
+ * — see the note below.
  *
  * Only clears on an actual owner change — NOT on a same-user reload, which
  * would defeat the offline-resilient daily-goal mirror (it exists to survive
