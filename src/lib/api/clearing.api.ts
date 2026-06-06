@@ -209,25 +209,33 @@ export const getTradeHistory = async ({
 };
 
 /**
- * Market-wide executed-trade history for one series — every participant's
- * fills, not just the caller's. Drains the canister's stable cursor; see
- * {@link ClearingCanister.listSeriesTradeHistory}.
+ * Market-wide price history for one series as fixed-width OHLC candles —
+ * every participant's fills, not just the caller's. See
+ * {@link ClearingCanister.getSeriesPriceHistory}.
  */
-export const listSeriesTradeHistory = async ({
+export const getSeriesPriceHistory = async ({
 	identity,
 	seriesId,
-	pageLimit,
-	maxPages,
+	interval,
+	startTimeNs,
+	endTimeNs,
 	...queryParams
 }: {
 	identity: Identity;
 	seriesId: string;
-	pageLimit?: bigint;
-	maxPages?: number;
-} & QueryParams): Promise<ClearingDid.SeriesTradePoint[]> => {
-	const { listSeriesTradeHistory } = await clearingCanister({ identity });
+	interval: ClearingDid.PriceHistoryInterval;
+	startTimeNs?: bigint;
+	endTimeNs?: bigint;
+} & QueryParams): Promise<ClearingDid.SeriesPriceCandle[]> => {
+	const { getSeriesPriceHistory } = await clearingCanister({ identity });
 
-	return await listSeriesTradeHistory({ seriesId, pageLimit, maxPages, ...queryParams });
+	return await getSeriesPriceHistory({
+		seriesId,
+		interval,
+		startTimeNs,
+		endTimeNs,
+		...queryParams
+	});
 };
 
 export const listOrders = async ({

@@ -38,13 +38,14 @@
 	import { getUserMarketSignals } from '$lib/services/market-signals.services';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
-	import { loadMarketPriceHistory } from '$lib/services/trade.services';
+	import { loadMarketPriceCandles } from '$lib/services/trade.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CallSide, Market, MarketId } from '$lib/types/market';
 	import type { FollowedLeanSignal, PriorCallSignal } from '$lib/types/market-signals';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
+	import type { PriceHistoryPeriod } from '$lib/utils/market-price-history.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
@@ -61,14 +62,20 @@
 	let followedLean = $state<FollowedLeanSignal | undefined>();
 	let priorCall = $state<PriorCallSignal | undefined>();
 
+	// Chart period chip selection. Drives which window of market-wide price
+	// history the chart fetches and plots (see priceHistoryByPeriod).
+	let chartPeriod = $state<PriceHistoryPeriod>('7d');
+
 	// Real, market-wide price-history series for this market, derived from
-	// the clearing canister's market-wide trade history (every participant's
-	// fills, not just the viewer's). Reflects the true market movement for
-	// all viewers, including signed-out visitors. Empty until the first
-	// trade lands — the chart reads this as a true cold-start flat line.
-	// `undefined` while we haven't resolved it yet, so the chart falls back
-	// to its seed shape rather than flashing a misleading flat line.
-	let priceHistory = $state<number[] | undefined>();
+	// the clearing canister's OHLC candles (every participant's fills, not
+	// just the viewer's). Reflects the true market movement for all viewers,
+	// including signed-out visitors. Cached per period so re-selecting a chip
+	// is instant; a period is empty once it resolves with no trades in the
+	// window (true cold-start flat line) and absent while it hasn't resolved
+	// yet, so the chart falls back to its seed shape rather than flashing a
+	// misleading flat line.
+	let priceHistoryByPeriod = $state<Partial<Record<PriceHistoryPeriod, number[]>>>({});
+	const chartPriceHistory = $derived(priceHistoryByPeriod[chartPeriod]);
 
 	let loading = $state(true);
 
@@ -81,8 +88,9 @@
 			loading = true;
 			// Drop any history from the previously-viewed market so the
 			// chart falls back to its seed shape until the new series
-			// resolves, rather than briefly plotting stale prices.
-			priceHistory = undefined;
+			// resolves, rather than briefly plotting stale prices. The
+			// per-period fetch effect repopulates the active period.
+			priceHistoryByPeriod = {};
 		}
 
 		const [marketRes, positionsRes] = await Promise.all([getMarket(id), getPositionsForMarket(id)]);
@@ -100,35 +108,54 @@
 		// friend activity every tick.
 		if (!silent) {
 			void fetchSignals(marketRes);
-			// Real market-wide price history is independent of the viewer
-			// (it's the same series for everyone), so it loads regardless of
-			// sign-in. Like signals, it rides on the foreground load only.
-			void fetchPriceHistory(marketRes);
 		}
 	};
 
-	// Real, market-wide price history for the chart. Independent of the
-	// viewer — works signed-out — and fails open: any error simply leaves
-	// the chart on its seed-based fallback.
-	const fetchPriceHistory = async (m: Market | undefined) => {
-		if (isNullish(m)) {
-			priceHistory = undefined;
+	// Fetch the active period's market-wide price history the first time
+	// it's needed (and after a market change clears the cache). Independent
+	// of the viewer — it's the same series for everyone, so it loads
+	// regardless of sign-in. Cache-aware: re-selecting a chip is instant and
+	// the 30s consensus poll's market refresh doesn't refetch every tick.
+	$effect(() => {
+		const id = market?.id;
+		const period = chartPeriod;
 
+		if (isNullish(id) || period in priceHistoryByPeriod) {
 			return;
 		}
 
+		void fetchPriceHistory({ id, period });
+	});
+
+	// Real, market-wide price history for one chart period. Fails open: any
+	// error simply leaves the period uncached, so the chart stays on its
+	// seed-based fallback and a later trigger can retry.
+	const fetchPriceHistory = async ({
+		id,
+		period
+	}: {
+		id: MarketId;
+		period: PriceHistoryPeriod;
+	}) => {
 		try {
-			await loadMarketPriceHistory({
-				seriesId: m.id,
+			await loadMarketPriceCandles({
+				seriesId: id,
+				period,
 				onLoad: ({ response }) => {
-					priceHistory = response;
-				},
-				onUpdateError: () => {
-					priceHistory = undefined;
+					// Guard against a late response from a previously-viewed
+					// market: the cache is keyed by period and cleared on market
+					// change, so writing here without re-checking the id could
+					// repopulate it with the prior market's series after the user
+					// navigated away. Drop it if the market changed meanwhile.
+					if (market?.id !== id) {
+						return;
+					}
+
+					priceHistoryByPeriod = { ...priceHistoryByPeriod, [period]: response };
 				}
 			});
 		} catch {
-			priceHistory = undefined;
+			// Leave the period uncached → chart falls back to its seed shape.
 		}
 	};
 
@@ -199,14 +226,15 @@
 		if (nonNullish(market)) {
 			fetchMarket({ id: market.id, silent: true });
 
-			// The silent refresh deliberately skips `fetchSignals` /
-			// `fetchPriceHistory` (the 30s consensus poll shouldn't re-pull
-			// trade history every tick), but the viewer just traded — so the
-			// chart's real price history and the prior-call / followed-lean
-			// signals are now stale. Re-pull them explicitly here, on top of
-			// the silent market refetch.
+			// The silent refresh deliberately skips `fetchSignals` and the
+			// price-history fetch (the 30s consensus poll shouldn't re-pull
+			// either every tick), but the viewer just traded — so the chart's
+			// real price history and the prior-call / followed-lean signals
+			// are now stale. Re-pull signals explicitly, and clear the
+			// price-history cache so the fetch effect re-resolves the active
+			// period (other periods refetch lazily when reselected).
 			void fetchSignals(market);
-			void fetchPriceHistory(market);
+			priceHistoryByPeriod = {};
 		}
 	};
 
@@ -480,7 +508,13 @@
 
 		<MarketDetailProbHero {noPercent} resolved={isResolved} {resolvedOutcome} {yesPercent} />
 
-		<MarketDetailChartCard marketId={market.id} points={priceHistory} {yesPercent} />
+		<MarketDetailChartCard
+			marketId={market.id}
+			onPeriodChange={(period) => (chartPeriod = period)}
+			period={chartPeriod}
+			points={chartPriceHistory}
+			{yesPercent}
+		/>
 
 		<MarketDetailStatsGrid {market} {positions} {resolvedForMarket} />
 

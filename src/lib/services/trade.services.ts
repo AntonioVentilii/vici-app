@@ -1,8 +1,8 @@
 import type { ClearingDid, RegistryDid } from '$declarations';
 import {
 	getPositions as getPositionsApi,
+	getSeriesPriceHistory as getSeriesPriceHistoryApi,
 	getTradeHistory as getTradeHistoryApi,
-	listSeriesTradeHistory as listSeriesTradeHistoryApi,
 	mintCompleteSet as mintCompleteSetApi,
 	redeemCompleteSet as redeemCompleteSetApi
 } from '$lib/api/clearing.api';
@@ -10,15 +10,13 @@ import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.service
 import { fetchMarketsLite } from '$lib/services/market.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
-import { deriveMarketPriceHistory } from '$lib/utils/market-price-history.utils';
+import {
+	deriveMarketPriceCandles,
+	priceHistoryQueryWindow,
+	type PriceHistoryPeriod
+} from '$lib/utils/market-price-history.utils';
 import { isNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
-
-// Cap on how many trade-history pages a single sparkline load drains. The
-// canister returns all remaining trades when `limit` is unset, so one page
-// is normally enough; the bound is a guard against a pathologically long
-// series fanning out into unbounded round-trips.
-const PRICE_HISTORY_MAX_PAGES = 8;
 
 /**
  * Core fetch for a single-series position: threads identity + certified so it
@@ -147,40 +145,48 @@ export const loadUserTradeHistory = async ({
 };
 
 /**
- * Real, market-wide price-history series for one market, sourced from the
- * clearing canister's `list_series_trade_history` query.
+ * Real, market-wide price-history series for one market and chart period,
+ * sourced from the clearing canister's `get_series_price_history` query.
  *
  * The query is market-wide (not caller-scoped), so the derived
  * YES-percentage series reflects the TRUE market movement for every viewer
  * — including signed-out visitors, who read it under the anonymous identity
- * — rather than the viewer's own fills. {@link deriveMarketPriceHistory}
- * maps each executed trade's price into the 0–100 series. The series is
- * empty until the first trade lands on the market (true cold-start), which
- * the sparkline reads as a flat line. Fails open: any error leaves the
- * caller on its cold-start / seed fallback.
+ * — rather than the viewer's own fills. `period` selects the query window
+ * (resolution + lower bound; see {@link priceHistoryQueryWindow}) so the
+ * `1d / 7d / 30d / all` chips re-scope the chart instead of replotting the
+ * same window. {@link deriveMarketPriceCandles} maps each bucket's close
+ * into the 0–100 series. The series is empty until the first trade lands in
+ * the window (true cold-start), which the sparkline reads as a flat line.
+ * Fails open: any error leaves the caller on its cold-start / seed fallback.
  */
-export const loadMarketPriceHistory = ({
+export const loadMarketPriceCandles = ({
 	seriesId,
+	period,
 	onLoad,
 	onUpdateError
 }: {
 	seriesId: string;
+	period: PriceHistoryPeriod;
 	onLoad: (options: { certified: boolean; response: number[] }) => void;
 	onUpdateError?: (error: unknown) => void;
-}): Promise<void> =>
-	loadWithCertification<ClearingDid.SeriesTradePoint[]>({
+}): Promise<void> => {
+	const { interval, startTimeNs } = priceHistoryQueryWindow(period);
+
+	return loadWithCertification<ClearingDid.SeriesPriceCandle[]>({
 		request: ({ certified, identity: reqIdentity }) =>
-			listSeriesTradeHistoryApi({
+			getSeriesPriceHistoryApi({
 				identity: reqIdentity,
 				seriesId,
-				maxPages: PRICE_HISTORY_MAX_PAGES,
+				interval,
+				startTimeNs,
 				certified
 			}),
 		onLoad: ({ certified, response }) => {
-			onLoad({ certified, response: deriveMarketPriceHistory(response) });
+			onLoad({ certified, response: deriveMarketPriceCandles(response) });
 		},
 		onUpdateError
 	});
+};
 
 /**
  * Mints a complete YES/NO set on clearing for `qty`.
