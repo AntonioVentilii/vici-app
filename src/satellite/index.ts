@@ -1,5 +1,11 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
+	AnalyticsSummarySchema,
+	GetAnalyticsSummaryArgsSchema,
+	TrackEventsArgsSchema,
+	TrackEventsResultSchema
+} from '$lib/schema/analytics-event.schema';
+import {
 	GetMarketMetadataArgsSchema,
 	MarketMetadataSchema,
 	UpsertMarketMetadataArgsSchema
@@ -35,6 +41,7 @@ import {
 	assertDeleteAffiliation,
 	assertSetAffiliation
 } from '$satellite/services/affiliation.services';
+import { getAnalyticsSummaryFn, trackEventsFn } from '$satellite/services/analytics.services';
 import { assertDeleteBattle, assertSetBattle } from '$satellite/services/battle.services';
 import {
 	getAffiliationStatsFn,
@@ -459,6 +466,31 @@ export const settleReferral = defineUpdate({
 export const claimReferralFriendship = defineUpdate({
 	args: ClaimReferralFriendshipArgsSchema,
 	handler: claimReferralFriendshipFn
+});
+
+// ─── Product analytics (cockpit DQ-1) ───────────────────────────
+
+/**
+ * Batch event capture. The FE flushes behavioural events here; the server
+ * stamps the timestamp + derives the pseudonymous principal, writes the
+ * append-only `events` docs, and bumps the day's rollup inline. Anyone
+ * (incl. anonymous, pre-auth) may call — events are validated against the
+ * taxonomy and carry no PII.
+ */
+export const trackEvents = defineUpdate({
+	args: TrackEventsArgsSchema,
+	result: TrackEventsResultSchema,
+	handler: (args) => trackEventsFn(args)
+});
+
+/**
+ * Admin-gated read for the cockpit: the trailing `days` daily rollups of
+ * per-event-name counts.
+ */
+export const getAnalyticsSummary = defineQuery({
+	args: GetAnalyticsSummaryArgsSchema,
+	result: AnalyticsSummarySchema,
+	handler: (args) => getAnalyticsSummaryFn(args)
 });
 
 // ─── Social cohorts ─────────────────────────────────────────────

@@ -166,8 +166,12 @@ export interface AnalyticsEventProps {
 	battleId?: string;
 	/** Where the action originated (e.g. 'flow' | 'profile' | 'onboarding'). */
 	source?: string;
-	/** A/B variant or a small categorical label (e.g. swipe direction). */
-	variant?: string;
+	/**
+	 * A small categorical label — A/B variant, swipe direction, etc.
+	 * Named `label` (not `variant`) because `variant` is a Candid reserved
+	 * keyword that breaks the satellite API codegen.
+	 */
+	label?: string;
 	/** Ordinal index — e.g. onboarding step, deck position. */
 	step?: number;
 	/** Generic numeric value tied to the event (e.g. price bucket, %). */
@@ -205,4 +209,64 @@ export interface AnalyticsEventDoc {
 	path?: string;
 	/** Bounded behavioural context. */
 	props?: AnalyticsEventProps;
+}
+
+/**
+ * Client → satellite wire shape sent to the `trackEvents` endpoint. The
+ * server stamps `tsMs` and derives `principal` from the caller (never
+ * trusted from the client), so neither appears here.
+ *
+ * The {@link AnalyticsEventProps} dimensions are flattened onto this input
+ * (it `extends` them) rather than nested under a `props` key, because the
+ * Sputnik codegen rejects a nested optional object inside an array element.
+ * The satellite re-nests them into `props` for storage; the FE `track()`
+ * helper flattens an ergonomic `props` object into this shape.
+ */
+export interface TrackEventInput extends AnalyticsEventProps {
+	/** Event name from the taxonomy. */
+	name: AnalyticsEventName;
+	/** Anonymous per-visit session id (stitch key for the principal). */
+	sessionId: string;
+	/** Route / screen the event fired on. */
+	path?: string;
+	/** Client-side event time (ms) — advisory only; the server time wins. */
+	occurredAtMs?: number;
+}
+
+/** The {@link AnalyticsEventProps} dimension keys — used to re-nest the flat wire input. */
+export const ANALYTICS_PROP_KEYS = [
+	'marketId',
+	'seriesId',
+	'leagueId',
+	'battleId',
+	'source',
+	'label',
+	'step',
+	'value',
+	'count',
+	'durationMs',
+	'ok'
+] as const satisfies readonly (keyof AnalyticsEventProps)[];
+
+/** One event-name → count pair within a daily rollup. */
+export interface EventCount {
+	name: AnalyticsEventName;
+	count: number;
+}
+
+/**
+ * Per-day rollup doc (collection `event_rollups`, keyed by epoch-day =
+ * `floor(tsMs / 86_400_000)`). Bumped inline by the `trackEvents` endpoint
+ * as events land; read by `getAnalyticsSummary` so the cockpit gets cheap
+ * aggregates without scanning the raw log.
+ */
+export interface EventRollupDoc {
+	/** Epoch-day index — `floor(tsMs / 86_400_000)`. Also the doc key. */
+	epochDay: number;
+	/** Start-of-day in ms (`epochDay * 86_400_000`) for easy display. */
+	dayStartMs: number;
+	/** Per-event-name counts accumulated for the day. */
+	counts: EventCount[];
+	/** Last bump time (ms). */
+	updatedAtMs: number;
 }

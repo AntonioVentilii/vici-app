@@ -130,6 +130,75 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppGetAnalyticsSummaryArgs = IDL.Record({ days: IDL.Float64 });
+	const AppGetAnalyticsSummaryResult = IDL.Record({
+		rows: IDL.Vec(
+			IDL.Record({
+				day: IDL.Float64,
+				name: IDL.Variant({
+					delete_confirmed: IDL.Null,
+					school_picked: IDL.Null,
+					resolution_disputed: IDL.Null,
+					streak_milestone: IDL.Null,
+					school_verify_email_submitted: IDL.Null,
+					market_shared: IDL.Null,
+					flow_completed: IDL.Null,
+					flow_card_expanded: IDL.Null,
+					affiliation_removed: IDL.Null,
+					league_invite_sent: IDL.Null,
+					position_taken: IDL.Null,
+					flow_abandoned: IDL.Null,
+					watchlist_removed: IDL.Null,
+					delete_succeeded: IDL.Null,
+					referral_link_copied: IDL.Null,
+					comment_posted: IDL.Null,
+					flow_swipe: IDL.Null,
+					referral_converted: IDL.Null,
+					school_verify_code_submitted: IDL.Null,
+					signed_in: IDL.Null,
+					signed_up: IDL.Null,
+					order_placed: IDL.Null,
+					order_cancelled: IDL.Null,
+					onboarding_started: IDL.Null,
+					payout_settled: IDL.Null,
+					battle_proposed: IDL.Null,
+					perf_metric: IDL.Null,
+					provider_linked: IDL.Null,
+					battle_accepted: IDL.Null,
+					vxp_awarded: IDL.Null,
+					league_joined: IDL.Null,
+					exit_signal: IDL.Null,
+					referral_sent: IDL.Null,
+					resolution_proposed: IDL.Null,
+					app_error: IDL.Null,
+					resolution_confirmed: IDL.Null,
+					flow_session_started: IDL.Null,
+					school_picker_opened: IDL.Null,
+					onboarding_completed: IDL.Null,
+					watchlist_added: IDL.Null,
+					position_closed: IDL.Null,
+					handle_checked: IDL.Null,
+					battle_resolved: IDL.Null,
+					market_searched: IDL.Null,
+					sound_toggled: IDL.Null,
+					league_created: IDL.Null,
+					onboarding_step: IDL.Null,
+					market_viewed: IDL.Null,
+					delete_flow_opened: IDL.Null,
+					affiliation_set: IDL.Null,
+					session_started: IDL.Null,
+					referral_redeemed: IDL.Null,
+					prediction_created: IDL.Null,
+					faucet_claimed: IDL.Null,
+					chat_sent: IDL.Null,
+					orderbook_viewed: IDL.Null,
+					signed_out: IDL.Null
+				}),
+				count: IDL.Float64,
+				start: IDL.Float64
+			})
+		)
+	});
 	const AppGetCurrentTournamentResult = IDL.Record({
 		tournament: IDL.Opt(
 			IDL.Record({
@@ -887,6 +956,86 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AppSubmitSchoolResult = IDL.Record({ submission_id: IDL.Text });
 	const AppSweepExpiredDeletionsResult = IDL.Record({ swept: IDL.Float64 });
+	const AppTrackEventsArgs = IDL.Record({
+		events: IDL.Vec(
+			IDL.Record({
+				ok: IDL.Opt(IDL.Bool),
+				battle_id: IDL.Opt(IDL.Text),
+				league_id: IDL.Opt(IDL.Text),
+				session_id: IDL.Text,
+				value: IDL.Opt(IDL.Float64),
+				source: IDL.Opt(IDL.Text),
+				occurred_at_ms: IDL.Opt(IDL.Float64),
+				market_id: IDL.Opt(IDL.Text),
+				series_id: IDL.Opt(IDL.Text),
+				name: IDL.Variant({
+					delete_confirmed: IDL.Null,
+					school_picked: IDL.Null,
+					resolution_disputed: IDL.Null,
+					streak_milestone: IDL.Null,
+					school_verify_email_submitted: IDL.Null,
+					market_shared: IDL.Null,
+					flow_completed: IDL.Null,
+					flow_card_expanded: IDL.Null,
+					affiliation_removed: IDL.Null,
+					league_invite_sent: IDL.Null,
+					position_taken: IDL.Null,
+					flow_abandoned: IDL.Null,
+					watchlist_removed: IDL.Null,
+					delete_succeeded: IDL.Null,
+					referral_link_copied: IDL.Null,
+					comment_posted: IDL.Null,
+					flow_swipe: IDL.Null,
+					referral_converted: IDL.Null,
+					school_verify_code_submitted: IDL.Null,
+					signed_in: IDL.Null,
+					signed_up: IDL.Null,
+					order_placed: IDL.Null,
+					order_cancelled: IDL.Null,
+					onboarding_started: IDL.Null,
+					payout_settled: IDL.Null,
+					battle_proposed: IDL.Null,
+					perf_metric: IDL.Null,
+					provider_linked: IDL.Null,
+					battle_accepted: IDL.Null,
+					vxp_awarded: IDL.Null,
+					league_joined: IDL.Null,
+					exit_signal: IDL.Null,
+					referral_sent: IDL.Null,
+					resolution_proposed: IDL.Null,
+					app_error: IDL.Null,
+					resolution_confirmed: IDL.Null,
+					flow_session_started: IDL.Null,
+					school_picker_opened: IDL.Null,
+					onboarding_completed: IDL.Null,
+					watchlist_added: IDL.Null,
+					position_closed: IDL.Null,
+					handle_checked: IDL.Null,
+					battle_resolved: IDL.Null,
+					market_searched: IDL.Null,
+					sound_toggled: IDL.Null,
+					league_created: IDL.Null,
+					onboarding_step: IDL.Null,
+					market_viewed: IDL.Null,
+					delete_flow_opened: IDL.Null,
+					affiliation_set: IDL.Null,
+					session_started: IDL.Null,
+					referral_redeemed: IDL.Null,
+					prediction_created: IDL.Null,
+					faucet_claimed: IDL.Null,
+					chat_sent: IDL.Null,
+					orderbook_viewed: IDL.Null,
+					signed_out: IDL.Null
+				}),
+				path: IDL.Opt(IDL.Text),
+				count: IDL.Opt(IDL.Float64),
+				step: IDL.Opt(IDL.Float64),
+				label: IDL.Opt(IDL.Text),
+				duration_ms: IDL.Opt(IDL.Float64)
+			})
+		)
+	});
+	const AppTrackEventsResult = IDL.Record({ accepted: IDL.Float64 });
 	const AppTransferLeagueOwnershipArgs = IDL.Record({
 		new_owner_principal: IDL.Text,
 		league_id: IDL.Text
@@ -1038,6 +1187,11 @@ export const idlFactory = ({ IDL }) => {
 			[AppGetAffiliationStatsResult],
 			['query']
 		),
+		app_get_analytics_summary: IDL.Func(
+			[AppGetAnalyticsSummaryArgs],
+			[AppGetAnalyticsSummaryResult],
+			['query']
+		),
 		app_get_current_tournament: IDL.Func([], [AppGetCurrentTournamentResult], ['query']),
 		app_get_market_metadata: IDL.Func(
 			[AppGetMarketMetadataArgs],
@@ -1138,6 +1292,7 @@ export const idlFactory = ({ IDL }) => {
 		app_settle_referral: IDL.Func([AppSettleReferralArgs], [], []),
 		app_submit_school: IDL.Func([AppSubmitSchoolArgs], [AppSubmitSchoolResult], []),
 		app_sweep_expired_deletions: IDL.Func([], [AppSweepExpiredDeletionsResult], []),
+		app_track_events: IDL.Func([AppTrackEventsArgs], [AppTrackEventsResult], []),
 		app_transfer_league_ownership: IDL.Func(
 			[AppTransferLeagueOwnershipArgs],
 			[AppTransferLeagueOwnershipResult],
