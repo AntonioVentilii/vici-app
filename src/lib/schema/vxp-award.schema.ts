@@ -12,7 +12,9 @@ export const VxpAwardTypeSchema = j.enum([
 	'worlds_podium',
 	'tournament_prize',
 	'achievement',
-	'comeback'
+	'comeback',
+	'flow_milestone',
+	'flow_overtime'
 ]);
 
 export const VxpAwardStatusSchema = j.enum(['pending', 'paid', 'failed']);
