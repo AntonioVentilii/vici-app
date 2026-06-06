@@ -20,7 +20,7 @@
 
 	let query = $state('');
 	let results = $state<UserProfile[]>([]);
-	let status = $state<'idle' | 'searching' | 'done'>('idle');
+	let status = $state<'idle' | 'searching' | 'done' | 'error'>('idle');
 
 	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 	// Monotonic token drops stale responses when the input changes mid-flight.
@@ -67,7 +67,7 @@
 
 					console.error(`Admin principal search failed for "${candidate}":`, err);
 					results = [];
-					status = 'done';
+					status = 'error';
 				}
 			})();
 		}, SEARCH_DEBOUNCE_MS);
@@ -108,6 +108,10 @@
 	{#if status === 'searching'}
 		<p class="text-muted-foreground mt-4 text-sm">
 			{t({ locale: $localeStore, key: 'admin.roles.search.searching' })}
+		</p>
+	{:else if status === 'error'}
+		<p class="text-destructive mt-4 text-sm">
+			{t({ locale: $localeStore, key: 'common.error.generic' })}
 		</p>
 	{:else if status === 'done' && results.length === 0}
 		<p class="text-muted-foreground mt-4 text-sm">
