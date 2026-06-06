@@ -520,6 +520,43 @@ When a hook calls another canister (typically the icdc-core registry):
   guard. If the registry is down, log + return; the next write will
   retrigger.
 
+### Candid encode/decode — derive from the generated factory, never hand-roll
+
+A satellite `call({ args, result })` needs the `IDL.Type`s for the
+method's arguments and return value. **Never hand-write them** (no
+`IDL.Record({ … })` / `IDL.Variant({ … })` inline in a service file): a
+copy of an icdc-core struct silently drifts from the real interface the
+moment the upstream `.did` changes, and a Candid decode trap is the only
+warning you get.
+
+Instead read them straight off the generated `idlFactory` via
+[`candidMethod`](../../../src/satellite/utils/candid.utils.ts):
+
+```ts
+const { argTypes, result } = candidMethod({ canister: 'registry', method: 'get_series' });
+const series = await call<[] | [RegistryDid.Series]>({
+	canisterId: REGISTRY_CANISTER_ID,
+	method: 'get_series',
+	args: [[argTypes[0], seriesId]],
+	result
+});
+```
+
+- The `IDL` namespace must live in exactly one place outside
+  `src/declarations/**`: `candid.utils.ts`. Every other satellite file stays
+  typed against `$declarations` (`RegistryDid` / `ClearingDid`) and routes its
+  runtime Candid types through `candidMethod` — a new `import { IDL }` in a
+  service is the smell this pattern exists to prevent.
+- Need a method the canister exposes but `candidMethod` can't find? It
+  throws — regenerate bindings (`npm run did`) rather than reaching for an
+  inline definition.
+- For **IC system canisters** (management `aaaaa-aa`, ledgers, CMC, …) don't
+  vendor or derive anything: Juno ships named runtime IDL types under
+  `@junobuild/functions/canisters/*`. school's `raw_rand` uses
+  `result: IcManagementIdl.raw_rand_result` (from
+  `@junobuild/functions/canisters/ic-management`); the icrc ledger calls use
+  the `IcrcLedgerCanister` wrapper.
+
 ## HTTPS outcalls + off-chain relay (the `vici-courier` email service)
 
 When the satellite must reach the public internet (e.g. send a
