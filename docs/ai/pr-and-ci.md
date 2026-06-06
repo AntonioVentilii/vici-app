@@ -140,22 +140,29 @@ fixes back to your branch on PRs from non-forks; you should still run
 | `checks.yml`  | `checks-pass`      | Aggregator — must be green to merge.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `deploy.yml`  | deploy             | `functions build` + `functions upgrade` (Administrator `JUNO_TOKEN`) **then** `hosting deploy` (OIDC), in one sequential job — upgrades the satellite functions and ships the frontend. Runs on every push to `main`, on `v*` tags, and via manual dispatch. Don't bypass.                                                                                                                                                                                                             |
 | `publish.yml` | publish            | `functions build` + `functions publish` (OIDC) — stages the functions wasm to the satellite CDN. Runs on `v*` tags and manual dispatch.                                                                                                                                                                                                                                                                                                                                                |
-| `config.yml`  | config             | `config apply` — **applies** `juno.config.ts` (collection rules + authentication config) to the production satellite. Reads the config only, no wasm build. Runs on every push to `main`, on `v*` tags, and via manual dispatch. Rewriting security rules / auth config is administrative, so it needs the same Administrator `JUNO_TOKEN` repo secret (not OIDC). Repo is source of truth: a run re-syncs the satellite to `juno.config.ts`, reverting any out-of-band Console edits. |
 
-`deploy.yml`, `publish.yml`, and `config.yml` share one concurrency group
-(`juno-satellite`, `cancel-in-progress: false`) so they never run at the same
-time. They all mutate the same satellite canister, and `functions upgrade`
-**stops** it mid-upgrade — a concurrent mutation would otherwise be rejected with
-`Canister … is stopped` (IC0508). The shared queue serializes every satellite
-mutation; a running one is never cancelled.
+`config apply` (**applies** `juno.config.ts` — collection rules + authentication
+config — to the production satellite) is **run manually**, not in CI. Use
+`juno config apply` locally with the Administrator `JUNO_TOKEN`. The repo stays
+source of truth: a run re-syncs the satellite to `juno.config.ts`, reverting any
+out-of-band Console edits. It used to be a push-triggered `config.yml` sharing
+the `juno-satellite` group — see why that was removed below.
 
-`functions build` + `functions upgrade` live **inside** `deploy.yml` (not a
-separate workflow) on purpose: GitHub keeps only one _pending_ run per
-concurrency group, so when three juno workflows fired on the same push the queued
-one got cancelled (`Canceling since a higher priority waiting request for
-juno-satellite exists`). Folding upgrade into deploy means a push to `main`
-triggers only two members of the group (`deploy`, `config`) → one runs, one
-queues, none dropped.
+`deploy.yml` and `publish.yml` share one concurrency group (`juno-satellite`,
+`cancel-in-progress: false`) so they never run at the same time. They mutate the
+same satellite canister, and `functions upgrade` **stops** it mid-upgrade — a
+concurrent mutation would otherwise be rejected with `Canister … is stopped`
+(IC0508). The shared queue serializes every satellite mutation; a running one is
+never cancelled.
+
+Only **one** workflow fires into this group per `main` push (`deploy.yml`;
+`publish.yml` is `v*`-tag-only). That matters because GitHub keeps only one
+_pending_ run per concurrency group: whenever **two** group members queued behind
+a still-running one, the older pending run was silently cancelled (`Canceling
+since a higher priority waiting request for juno-satellite exists`). This bit us
+twice — first the standalone `upgrade.yml` (folded into `deploy.yml`), then the
+push-triggered `config.yml` (now manual-only). Keep it at one push-triggered
+member: don't add another `push: main` workflow to this group.
 
 If your change is doc-only, the `format` and `lint` jobs still run because
 they cover the whole repo. The `check` job covers `*.svelte` / `*.ts` only,
