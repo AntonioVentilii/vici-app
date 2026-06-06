@@ -1,6 +1,15 @@
 import { DAY_IN_MS } from '$lib/constants/app.constants';
 
+/**
+ * Client-side nickname rules for the onboarding handle picker — looser
+ * than the stricter {@link HandleEditor} handle rules (3–15, `[a-z0-9_]`
+ * only): 2–16 chars, lowercase letters/digits and `. _ -`. The satellite
+ * enforces only the minimum; these bound the picker, the live-probe gate
+ * and the claim-time gate so all three stay in sync.
+ */
 export const MIN_NICKNAME_LENGTH = 2;
+export const MAX_NICKNAME_LENGTH = 16;
+export const NICKNAME_PATTERN = /^[a-z0-9._-]+$/;
 
 export const PENDING_ONBOARDING_STORAGE_KEY = 'vici:pending-onboarding';
 

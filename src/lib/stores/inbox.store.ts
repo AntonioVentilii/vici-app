@@ -1,4 +1,5 @@
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+import { INBOX_SETTLED_READ_STORAGE_KEY, INBOX_STORAGE_KEY } from '$lib/constants/inbox.constants';
 import { AppPath } from '$lib/constants/routes.constants';
 import { markets } from '$lib/derived/markets.derived';
 import {
@@ -25,8 +26,6 @@ import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 import { get, set as setStorage } from '$lib/utils/storage.utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
-
-const INBOX_STORAGE_KEY = 'vici.inbox.v1';
 
 // The seed used to include a mock `resolve` card; that's now sourced from
 // real Settled events via `settledInboxStore`, so it's been removed here.
@@ -144,10 +143,8 @@ const friendRequestInboxStore: Readable<InboxNotification[]> = derived(
 
 // ── Settled-event notifications ─────────────────────────────────────────────
 
-const SETTLED_READ_STORAGE_KEY = 'vici.inbox.resolves.read.v1';
-
 const loadSettledReadSet = (): Set<bigint> => {
-	const raw = get<string[]>({ key: SETTLED_READ_STORAGE_KEY });
+	const raw = get<string[]>({ key: INBOX_SETTLED_READ_STORAGE_KEY });
 
 	if (raw === undefined) {
 		return new Set();
@@ -162,7 +159,7 @@ const loadSettledReadSet = (): Set<bigint> => {
 
 const persistSettledReadSet = (set: Set<bigint>): void => {
 	setStorage({
-		key: SETTLED_READ_STORAGE_KEY,
+		key: INBOX_SETTLED_READ_STORAGE_KEY,
 		value: Array.from(set, (id) => id.toString())
 	});
 };

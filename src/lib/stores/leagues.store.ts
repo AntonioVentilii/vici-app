@@ -6,6 +6,7 @@ import {
 	type FriendRecommendedLeague,
 	type LeagueWithRole
 } from '$lib/services/leagues.services';
+import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 import type { BattleDoc } from '$lib/types/battle';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
 import { writable } from 'svelte/store';
@@ -133,7 +134,6 @@ const runRefresh = async (): Promise<void> => {
 	}
 
 	if (allMembers.size > 0) {
-		const { loadProfilesByPrincipals } = await import('$lib/services/profile.services');
 		void loadProfilesByPrincipals({ principals: [...allMembers] });
 	}
 };

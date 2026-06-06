@@ -3,6 +3,10 @@
 	import { browser } from '$app/environment';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import {
+		COACH_FLOW_SEEN_KEY,
+		COACH_ONBOARDING_SEEN_KEY
+	} from '$lib/utils/onboarding-flags.utils';
 
 	/**
 	 * FlowCoach — first-run gesture coach overlay. Cycles through five
@@ -31,7 +35,7 @@
 	const { surface = 'flow' }: Props = $props();
 
 	const storageKey = $derived(
-		surface === 'onboarding' ? 'vici.coach-onboarding-seen' : 'vici.coach-flow-seen'
+		surface === 'onboarding' ? COACH_ONBOARDING_SEEN_KEY : COACH_FLOW_SEEN_KEY
 	);
 	const cardSelector = $derived(surface === 'onboarding' ? '.ob-card' : '.flow-card');
 

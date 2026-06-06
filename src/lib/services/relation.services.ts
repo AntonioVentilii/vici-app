@@ -1,5 +1,6 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
+import { syncGroupAdminsAfterUnfriend } from '$lib/services/group.services';
 import type { Relation } from '$lib/types/relation';
 import { toRelationId } from '$lib/utils/relation.utils';
 import { isNullish } from '@dfinity/utils';
@@ -132,44 +133,11 @@ export const unfriendUser = async (params: {
 			doc
 		});
 
-		const { syncGroupAdminsAfterUnfriend } = await import('$lib/services/group.services');
 		await syncGroupAdminsAfterUnfriend({ userA: params.sender, userB: params.target });
 	} catch (e: unknown) {
 		console.error('Failed to unfriend', e);
 		throw e;
 	}
-};
-
-export const getFriends = async (): Promise<Relation[]> => {
-	const { items } = await functions.listFriends();
-
-	return items as Relation[];
-};
-
-export const getFriendRequests = async (): Promise<Doc<Relation>[]> => {
-	const { items } = await functions.listFriendRequests();
-
-	return items.map((r) => {
-		const relation = r as Relation;
-
-		return {
-			key: [...relation.participants].sort().join('#'),
-			data: relation
-		};
-	});
-};
-
-export const getSentFriendRequests = async (): Promise<Doc<Relation>[]> => {
-	const { items } = await functions.listSentFriendRequests();
-
-	return items.map((r) => {
-		const relation = r as Relation;
-
-		return {
-			key: [...relation.participants].sort().join('#'),
-			data: relation
-		};
-	});
 };
 
 export const followUser = async ({
@@ -204,16 +172,4 @@ export const unfollowUser = async (params: {
 	} catch (e: unknown) {
 		console.error('Failed to unfollow', e);
 	}
-};
-
-export const getFollowing = async (): Promise<PrincipalText[]> => {
-	const { items } = await functions.listFollowing();
-
-	return items.map((r) => r.participants[1]);
-};
-
-export const getFollowers = async (): Promise<PrincipalText[]> => {
-	const { items } = await functions.listFollowers();
-
-	return items.map((r) => r.participants[0]);
 };

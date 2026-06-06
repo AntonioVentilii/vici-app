@@ -4,6 +4,7 @@
 	import { onMount, type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { reconcileIdentityScopedStorage } from '$lib/services/identity-storage.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { ensureProfile, calculateAndSyncStats } from '$lib/services/profile.services';
 	import { clearAffiliations } from '$lib/stores/affiliations.store';
@@ -65,6 +66,11 @@
 		followingStore.set(undefined);
 		positionsStore.set(undefined);
 		tradeHistoryStore.set(undefined);
+
+		// Same idea for the identity-scoped localStorage caches, except
+		// those are local-authoritative (not server-backed) — see
+		// `reconcileIdentityScopedStorage`.
+		reconcileIdentityScopedStorage({ ownerKey: user?.owner });
 
 		try {
 			if (isNullish(user)) {
