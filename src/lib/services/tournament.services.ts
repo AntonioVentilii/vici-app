@@ -21,20 +21,20 @@ import {
  */
 const projectTournamentWire = (wire: {
 	id: string;
-	month_start_ms: number;
-	month_end_ms: number;
-	bracket_size: number;
+	monthStartMs: number;
+	monthEndMs: number;
+	bracketSize: number;
 	state: 'in_flight' | 'concluded';
-	seeded_league_ids: string[];
-	created_at_ms: number;
+	seededLeagueIds: string[];
+	createdAtMs: number;
 }): TournamentDoc => ({
 	id: wire.id,
-	monthStartMs: wire.month_start_ms,
-	monthEndMs: wire.month_end_ms,
-	bracketSize: wire.bracket_size,
+	monthStartMs: wire.monthStartMs,
+	monthEndMs: wire.monthEndMs,
+	bracketSize: wire.bracketSize,
 	state: wire.state,
-	seededLeagueIds: wire.seeded_league_ids,
-	createdAtMs: wire.created_at_ms
+	seededLeagueIds: wire.seededLeagueIds,
+	createdAtMs: wire.createdAtMs
 });
 
 /**
@@ -44,35 +44,35 @@ const projectTournamentWire = (wire: {
  * detect "TBD" slots.
  */
 const projectMatchWire = (wire: {
-	tournament_id: string;
+	tournamentId: string;
 	round: TournamentRound;
 	index: number;
-	from_league_id?: string;
-	to_league_id?: string;
-	from_start_calls?: number;
-	from_start_wins?: number;
-	to_start_calls?: number;
-	to_start_wins?: number;
-	from_acc?: number;
-	to_acc?: number;
-	winner_league_id?: string;
-	start_ms: number;
-	end_ms: number;
+	fromLeagueId?: string;
+	toLeagueId?: string;
+	fromStartCalls?: number;
+	fromStartWins?: number;
+	toStartCalls?: number;
+	toStartWins?: number;
+	fromAcc?: number;
+	toAcc?: number;
+	winnerLeagueId?: string;
+	startMs: number;
+	endMs: number;
 }): TournamentMatchDoc => ({
-	tournamentId: wire.tournament_id,
+	tournamentId: wire.tournamentId,
 	round: wire.round,
 	index: wire.index,
-	fromLeagueId: wire.from_league_id ?? null,
-	toLeagueId: wire.to_league_id ?? null,
-	fromStartCalls: wire.from_start_calls ?? null,
-	fromStartWins: wire.from_start_wins ?? null,
-	toStartCalls: wire.to_start_calls ?? null,
-	toStartWins: wire.to_start_wins ?? null,
-	fromAcc: wire.from_acc ?? null,
-	toAcc: wire.to_acc ?? null,
-	winnerLeagueId: wire.winner_league_id ?? null,
-	startMs: wire.start_ms,
-	endMs: wire.end_ms
+	fromLeagueId: wire.fromLeagueId ?? null,
+	toLeagueId: wire.toLeagueId ?? null,
+	fromStartCalls: wire.fromStartCalls ?? null,
+	fromStartWins: wire.fromStartWins ?? null,
+	toStartCalls: wire.toStartCalls ?? null,
+	toStartWins: wire.toStartWins ?? null,
+	fromAcc: wire.fromAcc ?? null,
+	toAcc: wire.toAcc ?? null,
+	winnerLeagueId: wire.winnerLeagueId ?? null,
+	startMs: wire.startMs,
+	endMs: wire.endMs
 });
 
 /**

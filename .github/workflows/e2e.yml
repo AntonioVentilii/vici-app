@@ -98,7 +98,7 @@ jobs:
         # Pin to a known-good version. Bump deliberately when @junobuild/cli
         # ships a release we want to track; an unpinned `latest` would let
         # an upstream breaking change silently red the whole pipeline.
-        run: npm i -g @junobuild/cli@0.15.5
+        run: npm i -g @junobuild/cli@0.15.6
 
       - name: Install dfx
         # Match the version pinned in dfx.json. dfx.json's `local` network

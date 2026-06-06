@@ -616,7 +616,7 @@ export const listMyAffiliationsFn = (): {
  *    comparisons in `listWorldsRosterFn`)
  *
  * Callers skip the row rather than emit a malformed wire shape that
- * would trap the `j.optional(AffiliationOptionWireSchema)` parse or
+ * would trap the `j.optional(AffiliationWireSchema)` parse or
  * the JsonData → Candid conversion.
  */
 export const readAffiliationDoc = (data: Uint8Array): AffiliationDoc | undefined => {
