@@ -181,7 +181,7 @@ jobs:
       # right bindgen, and reproduces the local build output byte-for-byte.
       # Pin to a known-good version (same as `e2e.yml`); bump deliberately.
       - name: Install Juno CLI
-        run: npm i -g @junobuild/cli@0.15.5
+        run: npm i -g @junobuild/cli@0.15.6
 
       - name: Regenerate satellite Candid surface
         run: npm run juno:functions:build
