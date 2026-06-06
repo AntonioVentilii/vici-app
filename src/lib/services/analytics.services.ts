@@ -42,7 +42,10 @@ const sessionId = (): string => {
 		return existing;
 	}
 
-	const fresh = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+	// `crypto.randomUUID()` (not `Math.random()`) so the id is collision-free
+	// and CodeQL doesn't flag insecure randomness — it's just an opaque
+	// grouping key, but there's no reason to use a weak RNG.
+	const fresh = crypto.randomUUID();
 	sessionStorage.setItem(SESSION_STORAGE_KEY, fresh);
 
 	return fresh;
