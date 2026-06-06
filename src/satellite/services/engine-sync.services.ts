@@ -1,63 +1,16 @@
-import type { RegistryDid } from '$declarations';
+import { idlFactoryRegistry, type RegistryDid } from '$declarations';
 import { VICI_ORACLE_V1 } from '$lib/constants/app.constants';
 import { REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
 import { UserRole } from '$lib/enums/user';
+import { callArgs, callResultType } from '$satellite/utils/canister-call.utils';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
-import { IDL } from '@icp-sdk/core/candid';
 import { Principal } from '@icp-sdk/core/principal';
 import type { OnDeleteDocContext, OnSetDocContext } from '@junobuild/functions';
 import { call } from '@junobuild/functions/ic-cdk';
 import { decodeDocData } from '@junobuild/functions/sdk';
-
-// Minimal IDL definitions for the subset of the registry interface we call from the
-// satellite. Kept local (rather than imported from the generated declarations) because the
-// generated file carries `// @ts-nocheck` and so its named exports are not visible to TS.
-// Source of truth: src/declarations/registry/registry.idl.js.
-const EngineRoleIdl = IDL.Variant({
-	OracleAdmin: IDL.Null,
-	Creator: IDL.Null
-});
-const EngineErrorIdl = IDL.Variant({
-	RoleAlreadyGranted: IDL.Null,
-	EngineNotFound: IDL.Null,
-	EngineAlreadyExists: IDL.Null,
-	CannotRemoveCreator: IDL.Null,
-	RoleNotAllowed: IDL.Null,
-	RoleNotGranted: IDL.Null,
-	Unauthorized: IDL.Null,
-	NameTooLong: IDL.Null
-});
-const EngineResultIdl = IDL.Variant({
-	Ok: IDL.Null,
-	Err: EngineErrorIdl
-});
-const GrantEngineRoleParamsIdl = IDL.Record({
-	grantee: IDL.Principal,
-	engine_id: IDL.Text,
-	role: EngineRoleIdl
-});
-const RevokeEngineRoleParamsIdl = IDL.Record({
-	grantee: IDL.Principal,
-	engine_id: IDL.Text,
-	role: EngineRoleIdl
-});
-const ManageOraclePrincipalsParamsIdl = IDL.Record({
-	oracle_id: IDL.Text,
-	add_principals: IDL.Vec(IDL.Principal),
-	remove_principals: IDL.Vec(IDL.Principal)
-});
-const OracleErrorIdl = IDL.Variant({
-	UnauthorizedOracleManager: IDL.Null,
-	OracleAlreadyExists: IDL.Null,
-	OracleNotFound: IDL.Null
-});
-const OracleResultIdl = IDL.Variant({
-	Ok: IDL.Null,
-	Err: OracleErrorIdl
-});
 
 type EngineRoleVariant = RegistryDid.EngineRole;
 
@@ -140,17 +93,18 @@ const manageOraclePrincipal = async ({
 	const result = await call<RegistryDid.OracleResult>({
 		canisterId: REGISTRY_CANISTER_ID,
 		method: 'manage_oracle_principals',
-		args: [
-			[
-				ManageOraclePrincipalsParamsIdl,
+		args: callArgs({
+			idlFactory: idlFactoryRegistry,
+			method: 'manage_oracle_principals',
+			values: [
 				{
 					oracle_id: VICI_ORACLE_V1,
 					add_principals: action === 'add' ? [principal] : [],
 					remove_principals: action === 'remove' ? [principal] : []
 				}
 			]
-		],
-		result: OracleResultIdl
+		}),
+		result: callResultType({ idlFactory: idlFactoryRegistry, method: 'manage_oracle_principals' })
 	});
 
 	if ('Ok' in result) {
@@ -195,17 +149,18 @@ const grantEngineRole = async ({
 	const result = await call<RegistryDid.EngineResult>({
 		canisterId: REGISTRY_CANISTER_ID,
 		method: 'grant_engine_role',
-		args: [
-			[
-				GrantEngineRoleParamsIdl,
+		args: callArgs({
+			idlFactory: idlFactoryRegistry,
+			method: 'grant_engine_role',
+			values: [
 				{
 					grantee: principal,
 					engine_id: VICI_ENGINE_ID,
 					role
 				}
 			]
-		],
-		result: EngineResultIdl
+		}),
+		result: callResultType({ idlFactory: idlFactoryRegistry, method: 'grant_engine_role' })
 	});
 
 	if ('Ok' in result) {
@@ -247,17 +202,18 @@ const revokeEngineRole = async ({
 	const result = await call<RegistryDid.EngineResult>({
 		canisterId: REGISTRY_CANISTER_ID,
 		method: 'revoke_engine_role',
-		args: [
-			[
-				RevokeEngineRoleParamsIdl,
+		args: callArgs({
+			idlFactory: idlFactoryRegistry,
+			method: 'revoke_engine_role',
+			values: [
 				{
 					grantee: principal,
 					engine_id: VICI_ENGINE_ID,
 					role
 				}
 			]
-		],
-		result: EngineResultIdl
+		}),
+		result: callResultType({ idlFactory: idlFactoryRegistry, method: 'revoke_engine_role' })
 	});
 
 	if ('Ok' in result) {

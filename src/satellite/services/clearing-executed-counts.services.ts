@@ -1,6 +1,6 @@
-import type { ClearingDid } from '$declarations';
+import { idlFactoryClearing, type ClearingDid } from '$declarations';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
-import { IDL } from '@icp-sdk/core/candid';
+import { callResultType } from '$satellite/utils/canister-call.utils';
 import type { Principal } from '@icp-sdk/core/principal';
 import { call } from '@junobuild/functions/ic-cdk';
 
@@ -35,42 +35,6 @@ export interface ExecutedCounts {
 	 */
 	executedCountTodayUtc: number;
 }
-
-/**
- * IDL for the clearing `Price` record. Mirrors the generated
- * `ClearingDid.Price` shape; only the fields needed to decode an `Event`
- * are declared. Kept local (like the other clearing IDLs in the satellite)
- * so the hand-written decode stays self-contained.
- */
-const PriceIdl = IDL.Record({
-	timestamp: IDL.Opt(IDL.Nat64),
-	oracle_id: IDL.Opt(IDL.Text),
-	decimal: IDL.Record({ decimals: IDL.Nat8, value: IDL.Nat })
-});
-
-/** IDL for the clearing `EventType` variant. */
-const EventTypeIdl = IDL.Variant({
-	OrderPlaced: IDL.Null,
-	Executed: IDL.Null,
-	Liquidated: IDL.Null,
-	Settled: IDL.Null
-});
-
-/**
- * IDL for the clearing `Event` record, matching the generated
- * `ClearingDid.Event`. `timestamp` is protocol nanoseconds since the UNIX
- * epoch (`Nat64`).
- */
-const EventIdl = IDL.Record({
-	qty: IDL.Int,
-	series_id: IDL.Text,
-	user: IDL.Principal,
-	timestamp: IDL.Nat64,
-	event_id: IDL.Nat64,
-	price: PriceIdl,
-	event_type: EventTypeIdl,
-	clearing_id: IDL.Principal
-});
 
 const NS_PER_MS = 1_000_000n;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -122,7 +86,7 @@ export const getExecutedCounts = async ({
 	const events = await call<ClearingDid.Event[]>({
 		canisterId: CLEARING_CANISTER_ID,
 		method: 'get_trade_history',
-		result: IDL.Vec(EventIdl)
+		result: callResultType({ idlFactory: idlFactoryClearing, method: 'get_trade_history' })
 	});
 
 	const userText = user.toText();
