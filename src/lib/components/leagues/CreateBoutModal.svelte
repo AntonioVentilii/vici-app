@@ -109,6 +109,12 @@
 			opponent.id !== fromLeague.id
 	);
 
+	// The wizard's actions dock in the sheet's non-scrolling footer (so the
+	// CTA never gets clipped on short iOS viewports — same treatment as the
+	// affiliation picker). Only the ready form state has docked actions; the
+	// loading / error / no-leagues states keep their own short body buttons.
+	const showFooter = $derived.by(() => loadState === 'ready' && ownedLeagues.length > 0);
+
 	const load = async () => {
 		loadState = 'loading';
 
@@ -175,8 +181,8 @@
 		opponentSearch = '';
 	};
 
-	const handleSubmit = async (event: Event) => {
-		event.preventDefault();
+	const handleSubmit = async (event?: Event) => {
+		event?.preventDefault();
 
 		if (!canSend || fromLeague === undefined || opponent === undefined) {
 			return;
@@ -210,7 +216,42 @@
 	};
 </script>
 
-<BottomSheet {isOpen} onClose={handleClose}>
+{#snippet boutFooter()}
+	<div class="create-bout-foot">
+		{#if submitError !== null}
+			<p class="create-bout-error" role="alert">
+				{t({ locale: $localeStore, key: submitError })}
+			</p>
+		{/if}
+
+		{#if opponent}
+			<!-- Real submit button linked to the form via the `form` attribute —
+				 it lives in the sheet's non-scrolling footer (outside the <form>)
+				 but keeps native submit semantics (Enter / implicit submission /
+				 assistive tech). -->
+			<button
+				class="create-bout-btn is-primary"
+				disabled={!canSend}
+				form="create-bout-form"
+				type="submit"
+			>
+				{submitting
+					? t({ locale: $localeStore, key: 'leagues.battle.propose.submitting' })
+					: `${t({
+							locale: $localeStore,
+							key: 'battles.create.send_to',
+							params: { name: opponent.name }
+						})} →`}
+			</button>
+		{/if}
+
+		<button class="create-bout-btn is-ghost" onclick={handleClose} type="button">
+			{t({ locale: $localeStore, key: 'battles.create.cancel' })}
+		</button>
+	</div>
+{/snippet}
+
+<BottomSheet footer={showFooter ? boutFooter : undefined} {isOpen} onClose={handleClose}>
 	<div class="create-bout">
 		<header class="create-bout-head">
 			<h2>{t({ locale: $localeStore, key: 'battles.create.title' })}</h2>
@@ -247,8 +288,8 @@
 				{t({ locale: $localeStore, key: 'battles.create.cancel' })}
 			</button>
 		{:else}
-			<form class="create-bout-form" onsubmit={handleSubmit}>
-				<!-- Step 1 · Pick your league (only when owning more than one) -->
+			<form id="create-bout-form" class="create-bout-form" onsubmit={handleSubmit}>
+				<!-- Step 1 · Your league (the challenger side) -->
 				{#if ownedLeagues.length > 1}
 					<fieldset class="create-bout-field">
 						<legend class="allcaps create-bout-label">
@@ -267,6 +308,22 @@
 							{/each}
 						</div>
 					</fieldset>
+				{:else if fromLeague}
+					<!-- Exactly one owned league: it's auto-selected as the
+						 challenger. Surface it read-only so the caller sees their
+						 league IS in the battle — otherwise the step is invisible and
+						 they look for their league in the opponent list (where it is
+						 correctly excluded, since a league can't challenge itself). -->
+					<div class="create-bout-field">
+						<span class="allcaps create-bout-label">
+							{t({ locale: $localeStore, key: 'battles.create.label_your_league' })}
+						</span>
+						<div class="create-bout-resolved">
+							<div class="create-bout-resolved-text">
+								<span class="create-bout-resolved-name">{fromLeague.name}</span>
+							</div>
+						</div>
+					</div>
 				{/if}
 
 				{#if fromLeague}
@@ -439,28 +496,8 @@
 								{/each}
 							</div>
 						</fieldset>
-
-						{#if submitError !== null}
-							<p class="create-bout-error" role="alert">
-								{t({ locale: $localeStore, key: submitError })}
-							</p>
-						{/if}
-
-						<button class="create-bout-btn is-primary" disabled={!canSend} type="submit">
-							{submitting
-								? t({ locale: $localeStore, key: 'leagues.battle.propose.submitting' })
-								: `${t({
-										locale: $localeStore,
-										key: 'battles.create.send_to',
-										params: { name: opponent.name }
-									})} →`}
-						</button>
 					{/if}
 				{/if}
-
-				<button class="create-bout-btn is-ghost" onclick={handleClose} type="button">
-					{t({ locale: $localeStore, key: 'battles.create.cancel' })}
-				</button>
 			</form>
 		{/if}
 	</div>
@@ -620,8 +657,10 @@
 		margin: 0.1rem 0 0;
 		padding: 0;
 		list-style: none;
-		max-height: 14rem;
-		overflow-y: auto;
+		/* No inner max-height / overflow: the sheet body is the single
+		 * scroller, so the whole opponent list is reachable by scrolling.
+		 * A nested scroll region traps the wheel/touch on iOS and hides the
+		 * lower leagues (#552). */
 	}
 
 	.create-bout-opponent {
@@ -733,6 +772,12 @@
 		border: 0;
 		cursor: pointer;
 		text-decoration: underline;
+	}
+
+	.create-bout-foot {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 
 	.create-bout-btn {
