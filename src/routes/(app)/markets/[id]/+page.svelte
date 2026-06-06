@@ -142,6 +142,15 @@
 				seriesId: id,
 				period,
 				onLoad: ({ response }) => {
+					// Guard against a late response from a previously-viewed
+					// market: the cache is keyed by period and cleared on market
+					// change, so writing here without re-checking the id could
+					// repopulate it with the prior market's series after the user
+					// navigated away. Drop it if the market changed meanwhile.
+					if (market?.id !== id) {
+						return;
+					}
+
 					priceHistoryByPeriod = { ...priceHistoryByPeriod, [period]: response };
 				}
 			});
