@@ -1,0 +1,14 @@
+// Vendored subset of the IC management canister (`aaaaa-aa`) interface.
+//
+// Unlike registry.did / clearing.did — downloaded from icdc-core by
+// scripts/import-candid.sh — the management canister is an IC system canister
+// with no upstream .did in our generation source, so it is vendored here. We
+// keep only the methods the satellite actually calls so the generated bindings
+// (and the Sputnik wasm) don't carry the entire IC interface. Add a method
+// here, then re-run `npm run did`, when the satellite needs another endpoint.
+
+service : {
+  // 32 bytes of cryptographic randomness. Backs school verification's
+  // unpredictable code / salt / nonce derivation (see school.services.ts).
+  raw_rand : () -> (blob);
+}

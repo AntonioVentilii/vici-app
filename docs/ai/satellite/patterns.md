@@ -520,6 +520,40 @@ When a hook calls another canister (typically the icdc-core registry):
   guard. If the registry is down, log + return; the next write will
   retrigger.
 
+### Candid encode/decode — derive from the generated factory, never hand-roll
+
+A satellite `call({ args, result })` needs the `IDL.Type`s for the
+method's arguments and return value. **Never hand-write them** (no
+`IDL.Record({ … })` / `IDL.Variant({ … })` inline in a service file): a
+copy of an icdc-core struct silently drifts from the real interface the
+moment the upstream `.did` changes, and a Candid decode trap is the only
+warning you get.
+
+Instead read them straight off the generated `idlFactory` via
+[`candidMethod`](../../../src/satellite/utils/candid.utils.ts):
+
+```ts
+const { argTypes, result } = candidMethod({ canister: 'registry', method: 'get_series' });
+const series = await call<[] | [RegistryDid.Series]>({
+	canisterId: REGISTRY_CANISTER_ID,
+	method: 'get_series',
+	args: [[argTypes[0], seriesId]],
+	result
+});
+```
+
+- The `IDL` namespace appears in exactly one place outside
+  `src/declarations/**`: `candid.utils.ts`. Everything else stays typed
+  against `$declarations` (`RegistryDid` / `ClearingDid` / `ManagementDid`).
+- Need a method the canister exposes but `candidMethod` can't find? It
+  throws — regenerate bindings (`npm run did`) rather than reaching for an
+  inline definition.
+- The IC management canister (`aaaaa-aa`, e.g. `raw_rand`) has no upstream
+  `.did` in our generation source, so a **minimal subset** is vendored at
+  [`src/declarations/management/management.did`](../../../src/declarations/management/management.did)
+  and compiled by the same pipeline. Add a method there (then `npm run
+did`) when the satellite needs another management endpoint.
+
 ## HTTPS outcalls + off-chain relay (the `vici-courier` email service)
 
 When the satellite must reach the public internet (e.g. send a
