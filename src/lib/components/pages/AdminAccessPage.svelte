@@ -4,6 +4,7 @@
 	import AdminAddForm from '$lib/components/admin/AdminAddForm.svelte';
 	import AdminList from '$lib/components/admin/AdminList.svelte';
 	import AdminOracleManager from '$lib/components/admin/AdminOracleManager.svelte';
+	import AdminPrincipalSearch from '$lib/components/admin/AdminPrincipalSearch.svelte';
 	import AdminSubPageHeader from '$lib/components/admin/AdminSubPageHeader.svelte';
 	import { UserRole } from '$lib/enums/user';
 	import { getProfile } from '$lib/services/profile.services';
@@ -111,6 +112,8 @@
 
 	<div class="grid grid-cols-1 gap-12 lg:grid-cols-2">
 		<section class="space-y-8">
+			<AdminPrincipalSearch onSelect={(principal) => (newRolePrincipal = principal)} />
+
 			<AdminAddForm
 				isAssigning={isAssigningRole}
 				onAddRole={handleAddRole}
