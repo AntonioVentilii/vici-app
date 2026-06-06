@@ -34,7 +34,7 @@
 	let draft = $state<ViciAvatarParts>(untrack(() => normalizeParts(initial)));
 	let activeTab = $state<TabId>('skin');
 	let saving = $state(false);
-	let editorEl = $state<HTMLDivElement>();
+	let editorEl = $state<HTMLDivElement | undefined>();
 
 	type TabId = 'skin' | 'hair' | 'expr' | 'trait' | 'shirt' | 'bg';
 
