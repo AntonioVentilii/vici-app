@@ -12,12 +12,13 @@ import {
 	resolveFlowArtCategory,
 	type FlowArtCategory
 } from '$lib/utils/flow-art.utils';
-import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+import {
+	eventExecutionPrice,
+	isExecutedEvent,
+	isSettledEvent,
+	isWinningSettledEvent
+} from '$lib/utils/resolved-position.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
-
-const isExecuted = (event: ClearingDid.Event): boolean => 'Executed' in event.event_type;
-const isSettled = (event: ClearingDid.Event): boolean => 'Settled' in event.event_type;
-const isWin = (event: ClearingDid.Event): boolean => isSettled(event) && event.qty > ZERO;
 
 const eventSide = (event: ClearingDid.Event): CallSide => (event.qty >= ZERO ? 'YES' : 'NO');
 
@@ -49,10 +50,7 @@ const formatWhen = (timestampNs: bigint): string => {
 };
 
 const eventConsensus = (event: ClearingDid.Event): number | undefined => {
-	const value = decimalFixedValueToNumber({
-		value: event.price.decimal.value,
-		decimals: event.price.decimal.decimals
-	});
+	const value = eventExecutionPrice(event);
 
 	if (!Number.isFinite(value)) {
 		return;
@@ -70,11 +68,11 @@ export const deriveCategoryAccuracySignals = ({
 }): Partial<Record<FlowArtCategory, CategoryAccuracySignal>> => {
 	const bucket = new Map<FlowArtCategory, { calls: number; wins: number }>();
 
-	for (const event of events.filter(isSettled)) {
+	for (const event of events.filter(isSettledEvent)) {
 		const category = eventCategory({ event, tagsBySeries: tagMappings });
 		const current = bucket.get(category) ?? { calls: 0, wins: 0 };
 		current.calls += 1;
-		current.wins += isWin(event) ? 1 : 0;
+		current.wins += isWinningSettledEvent(event) ? 1 : 0;
 		bucket.set(category, current);
 	}
 
@@ -99,7 +97,7 @@ export const derivePriorCallSignals = (
 	const latestTimestampByMarket = new Map<MarketId, bigint>();
 
 	for (const event of events) {
-		if (isExecuted(event)) {
+		if (isExecutedEvent(event)) {
 			const marketId = parseMarketId(event.series_id);
 			const previous = latestTimestampByMarket.get(marketId);
 
@@ -130,7 +128,7 @@ export const derivePriorCallSignals = (
 export const deriveCalledMarketIds = (events: ClearingDid.Event[]): Set<MarketId> => {
 	const ids = new Set<MarketId>();
 
-	for (const event of events.filter(isExecuted)) {
+	for (const event of events.filter(isExecutedEvent)) {
 		try {
 			ids.add(parseMarketId(event.series_id));
 		} catch {

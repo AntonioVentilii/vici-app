@@ -2,13 +2,38 @@ import type { ClearingDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
 import type { Market, MarketId, OutcomeId } from '$lib/types/market';
 import type { ResolvedPosition } from '$lib/types/position';
+import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 
 /**
- * `EventType` shape from `@dfinity/candid` is a tagged union. This guard
- * keeps the call sites readable without sprinkling `'Settled' in` checks
- * everywhere.
+ * `EventType` shape from `@dfinity/candid` is a tagged union. These guards
+ * keep the call sites readable without sprinkling `'Settled' in` /
+ * `'Executed' in` checks everywhere.
  */
 export const isSettledEvent = (event: ClearingDid.Event): boolean => 'Settled' in event.event_type;
+
+export const isExecutedEvent = (event: ClearingDid.Event): boolean =>
+	'Executed' in event.event_type;
+
+/**
+ * A settled event the user won — settlement plus positive realized
+ * cashflow on the signed `qty`. Centralised so the win rule can't drift
+ * across the profile stats, monthly buckets, and market-signal aggregates.
+ */
+export const isWinningSettledEvent = (event: ClearingDid.Event): boolean =>
+	isSettledEvent(event) && event.qty > ZERO;
+
+/**
+ * Execution / settlement price of an event in [0, 1] probability units —
+ * the price the user's side cleared at (and the value the `contrarian`
+ * achievement reads as consensus-at-call). Decodes the candid
+ * fixed-decimal `price`; may be non-finite for a malformed event, so
+ * finite-sensitive callers guard the result themselves.
+ */
+export const eventExecutionPrice = (event: ClearingDid.Event): number =>
+	decimalFixedValueToNumber({
+		value: event.price.decimal.value,
+		decimals: event.price.decimal.decimals
+	});
 
 /**
  * Maps a clearing-canister `Settled` event into a {@link ResolvedPosition}.
