@@ -18,14 +18,11 @@ import type { Relation } from '$lib/types/relation';
 import type { Activity } from '$lib/types/social';
 import type { VxpMilestoneState } from '$lib/types/vxp-onboarding';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
-import { isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
+import { transferWithBadFeeRetry } from '$satellite/utils/vxp-payout.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext, OnSetDocContext } from '@junobuild/functions';
-import {
-	IcrcLedgerCanister,
-	type Account,
-	type TransferError
-} from '@junobuild/functions/canisters/ledger/icrc';
+import { IcrcLedgerCanister } from '@junobuild/functions/canisters/ledger/icrc';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	countDocsStore,
@@ -594,55 +591,6 @@ export const assertSetReferral = ({
 
 // ─── Payout hook ─────────────────────────────────────────────────────────
 
-const transferErrorText = (err: TransferError): string => {
-	if ('InsufficientFunds' in err) {
-		return `InsufficientFunds(balance=${err.InsufficientFunds.balance})`;
-	}
-
-	if ('BadFee' in err) {
-		return `BadFee(expected_fee=${err.BadFee.expected_fee})`;
-	}
-
-	return JSON.stringify(err, jsonReplacer);
-};
-
-const transferReferralBonus = async ({
-	ledger,
-	toOwner,
-	amount,
-	memoLabel
-}: {
-	ledger: IcrcLedgerCanister;
-	toOwner: Principal;
-	amount: bigint;
-	memoLabel: string;
-}): Promise<{ ok: true; blockIndex: bigint } | { ok: false; error: string }> => {
-	const to: Account = { owner: toOwner };
-	const memoBytes = new TextEncoder().encode(`vxp:referral:${memoLabel}`);
-
-	const tryTransfer = (fee?: bigint) =>
-		ledger.icrc1Transfer({
-			args: {
-				to,
-				amount,
-				fee,
-				memo: memoBytes
-			}
-		});
-
-	const firstAttempt = await tryTransfer();
-	const finalAttempt =
-		'Err' in firstAttempt && 'BadFee' in firstAttempt.Err
-			? await tryTransfer(firstAttempt.Err.BadFee.expected_fee)
-			: firstAttempt;
-
-	if ('Ok' in finalAttempt) {
-		return { ok: true, blockIndex: finalAttempt.Ok };
-	}
-
-	return { ok: false, error: transferErrorText(finalAttempt.Err) };
-};
-
 /**
  * Counts how many redemptions already credited the given referrer. This lifetime tally is the
  * authoritative prior-paid count that feeds {@link referrerRewardBaseUnits} (the diminishing reward
@@ -826,11 +774,11 @@ const driveSidePayout = async ({
 		return;
 	}
 
-	const result = await transferReferralBonus({
+	const result = await transferWithBadFeeRetry({
 		ledger,
 		toOwner: Principal.fromText(recipient),
 		amount,
-		memoLabel
+		memo: `vxp:referral:${memoLabel}`
 	});
 
 	if (result.ok) {

@@ -8,13 +8,10 @@ import {
 	readAffiliationDoc
 } from '$satellite/services/cohort.services';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
-import { isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
+import { transferWithBadFeeRetry } from '$satellite/utils/vxp-payout.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
-import {
-	IcrcLedgerCanister,
-	type Account,
-	type TransferError
-} from '@junobuild/functions/canisters/ledger/icrc';
+import { IcrcLedgerCanister } from '@junobuild/functions/canisters/ledger/icrc';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import { encodeDocData, getDocStore, listDocsStore, setDocStore } from '@junobuild/functions/sdk';
 
@@ -68,18 +65,6 @@ const monthAnchorFromMs = (ms: number): string => {
 	const d = new Date(ms);
 
 	return `${d.getUTCFullYear()}-${(d.getUTCMonth() + 1).toString().padStart(2, '0')}`;
-};
-
-const transferErrorText = (err: TransferError): string => {
-	if ('InsufficientFunds' in err) {
-		return `InsufficientFunds(balance=${err.InsufficientFunds.balance})`;
-	}
-
-	if ('BadFee' in err) {
-		return `BadFee(expected_fee=${err.BadFee.expected_fee})`;
-	}
-
-	return JSON.stringify(err, jsonReplacer);
 };
 
 export interface ClaimWorldsPodiumPrizeResult {
@@ -233,10 +218,14 @@ const processAward = async ({
 		}
 	});
 
-	const transferResult = await transferPrize({
+	const ledger = new IcrcLedgerCanister({
+		canisterId: Principal.fromText(VXP_LEDGER_CANISTER_ID)
+	});
+	const transferResult = await transferWithBadFeeRetry({
+		ledger,
 		toOwner: caller,
 		amount,
-		memoLabel: awardKey
+		memo: `vxp:worlds_podium:${awardKey}`
 	});
 
 	// Re-read the doc to pick up the version stamp from the
@@ -337,49 +326,4 @@ const readMyAffiliation = ({
 			}
 		}
 	}
-};
-
-const transferPrize = async ({
-	toOwner,
-	amount,
-	memoLabel
-}: {
-	toOwner: Principal;
-	amount: bigint;
-	memoLabel: string;
-}): Promise<{ ok: true; blockIndex: bigint } | { ok: false; error: string }> => {
-	const ledger = new IcrcLedgerCanister({
-		canisterId: Principal.fromText(VXP_LEDGER_CANISTER_ID)
-	});
-	const to: Account = { owner: toOwner };
-	const memoBytes = new TextEncoder().encode(`vxp:worlds_podium:${memoLabel}`);
-
-	const tryTransfer = (fee?: bigint) =>
-		ledger.icrc1Transfer({
-			args: {
-				to,
-				amount,
-				fee,
-				memo: memoBytes
-			}
-		});
-
-	const first = await tryTransfer();
-
-	if ('Err' in first) {
-		// One BadFee retry; otherwise propagate the error.
-		if ('BadFee' in first.Err) {
-			const retry = await tryTransfer(first.Err.BadFee.expected_fee);
-
-			if ('Ok' in retry) {
-				return { ok: true, blockIndex: retry.Ok };
-			}
-
-			return { ok: false, error: transferErrorText(retry.Err) };
-		}
-
-		return { ok: false, error: transferErrorText(first.Err) };
-	}
-
-	return { ok: true, blockIndex: first.Ok };
 };
