@@ -8,6 +8,7 @@ import {
 	type AffiliationKind
 } from '$lib/types/affiliation';
 import type { AffiliationChampionship, AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+import { withTimeout } from '$lib/utils/async.utils';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 
 /**
@@ -19,22 +20,6 @@ import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
  * `finally { saving = null }` branch unreachable.
  */
 const AFFILIATION_WRITE_TIMEOUT_MS = 15_000;
-
-const withTimeout = <T>({
-	operation,
-	timeoutMs,
-	label
-}: {
-	operation: Promise<T>;
-	timeoutMs: number;
-	label: string;
-}): Promise<T> =>
-	Promise.race<T>([
-		operation,
-		new Promise<T>((_, reject) => {
-			setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
-		})
-	]);
 
 /**
  * Worlds affiliations — thin FE service wrapping the satellite
