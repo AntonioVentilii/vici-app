@@ -10,9 +10,10 @@
 	import LeagueListCard from '$lib/components/leagues/LeagueListCard.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import type { LeagueWithRole } from '$lib/services/leagues.services';
+	import { loadLeaguesByIds, type LeagueWithRole } from '$lib/services/leagues.services';
 	import { findOwnStanding, getLeagueStandings } from '$lib/services/standings.services';
 	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
+	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 	import {
 		friendRecommendedLeaguesStore,
 		leagueBattlesStore,
@@ -25,6 +26,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleState } from '$lib/types/battle';
+	import { shortLeagueId } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -111,6 +113,17 @@
 			} satisfies LeagueRow;
 		})
 	);
+
+	// Hydrate the directory for every opponent named in the preview line.
+	$effect(() => {
+		const opponentIds = rows
+			.map((row) => row.latestBattle?.opponentId)
+			.filter((id): id is string => id !== undefined);
+
+		if (opponentIds.length > 0) {
+			void loadLeaguesByIds({ ids: opponentIds });
+		}
+	});
 
 	const friendPrincipals = $derived.by(() => {
 		const me = selfPrincipal;
@@ -258,21 +271,20 @@
 	const trendFor = (row: LeagueRow): number => leagueTrends.get(row.league.id) ?? 0;
 
 	/**
-	 * Translate the latest battle into a short "activity preview"
-	 * line ("Live battle vs {opponent}", "Proposed battle vs
-	 * {opponent}", …). Returns undefined when no battle exists.
-	 *
-	 * Opponent is resolved against the other leagues the caller
-	 * is in first (cheap, no network); leagues outside the caller's
-	 * membership fall through to a truncated id.
+	 * Translate the latest battle into a short "activity preview" line
+	 * ("Live battle vs {opponent}", …), or undefined when none exists.
+	 * Opponent resolves own memberships → directory cache → shortened id.
 	 */
 	const activityPreviewFor = (row: LeagueRow): string | undefined => {
 		if (!row.latestBattle) {
 			return;
 		}
 
-		const opponent = rows.find((r) => r.league.id === row.latestBattle?.opponentId);
-		const opponentName = opponent?.league.name ?? `${row.latestBattle.opponentId.slice(0, 8)}…`;
+		const { opponentId } = row.latestBattle;
+		const opponentName =
+			rows.find((r) => r.league.id === opponentId)?.league.name ??
+			$leagueDirectoryStore.get(opponentId)?.name ??
+			shortLeagueId(opponentId);
 		const stateLabel = STATE_LABELS[row.latestBattle.state];
 
 		return t({
