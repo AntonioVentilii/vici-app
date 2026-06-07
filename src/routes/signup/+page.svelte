@@ -5,7 +5,10 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import OnboardingFlow from '$lib/components/onboarding/OnboardingFlow.svelte';
-	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
+	import {
+		nicknameUniqueKey,
+		PENDING_ONBOARDING_STORAGE_KEY
+	} from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
@@ -221,8 +224,7 @@
 					// principal) almost always differs from the handle they pick,
 					// which is exactly the case that was failing.
 					const handleChanged =
-						result.handle.trim().toLowerCase() !==
-						(currentProfile.nickname ?? '').trim().toLowerCase();
+						nicknameUniqueKey(result.handle) !== nicknameUniqueKey(currentProfile.nickname ?? '');
 
 					nextProfile = {
 						...baseUpdated,

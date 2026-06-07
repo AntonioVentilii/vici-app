@@ -12,7 +12,10 @@
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import NotifToastHost from '$lib/components/ui/NotifToastHost.svelte';
-	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
+	import {
+		nicknameUniqueKey,
+		PENDING_ONBOARDING_STORAGE_KEY
+	} from '$lib/constants/profile.constants';
 	import {
 		REFERRAL_CODE_REGEX,
 		REFERRAL_EXISTING_USER_REASON,
@@ -581,8 +584,7 @@
 					// The bootstrapped nickname almost always differs from the
 					// picked handle, which is the case that was failing.
 					const handleChanged =
-						pending.handle.trim().toLowerCase() !==
-						(currentProfile.nickname ?? '').trim().toLowerCase();
+						nicknameUniqueKey(pending.handle) !== nicknameUniqueKey(currentProfile.nickname ?? '');
 
 					nextProfile = {
 						...baseUpdated,
