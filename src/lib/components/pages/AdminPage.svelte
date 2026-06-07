@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, Gavel, TrendingUp, UsersRound } from '@lucide/svelte/icons';
+	import { ChevronRight, Gavel, TrendingUp, UsersRound, Vibrate } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -119,4 +119,29 @@
 			</li>
 		{/each}
 	</ul>
+
+	<!-- eslint-disable local-rules/no-bare-svelte-text -- admin-only dev diagnostics labels, intentionally not localized. -->
+	<section class="space-y-3">
+		<h2 class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">Diagnostics</h2>
+		<button
+			class="border-border bg-card hover:border-primary/40 hover:bg-card/80 flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all"
+			onclick={() => goto(resolve(AppPath.AdminHaptics))}
+			type="button"
+		>
+			<span
+				class="bg-primary/10 text-primary flex h-10 w-10 items-center justify-center rounded-xl"
+				aria-hidden="true"
+			>
+				<Vibrate size={18} strokeWidth={1.8} />
+			</span>
+			<span class="flex-1">
+				<span class="text-foreground block text-sm font-semibold">Haptics smoke-test</span>
+				<span class="text-muted-foreground block text-xs"
+					>Device-QA the vibration vocabulary on a real phone.</span
+				>
+			</span>
+			<ChevronRight class="text-muted-foreground" aria-hidden="true" size={18} strokeWidth={1.8} />
+		</button>
+	</section>
+	<!-- eslint-enable local-rules/no-bare-svelte-text -->
 </div>
