@@ -14,14 +14,11 @@ import type {
 	VxpOnboardingDoc
 } from '$lib/types/vxp-onboarding';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
-import { isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
+import { transferWithBadFeeRetry } from '$satellite/utils/vxp-payout.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { OnSetDocContext } from '@junobuild/functions';
-import {
-	IcrcLedgerCanister,
-	type Account,
-	type TransferError
-} from '@junobuild/functions/canisters/ledger/icrc';
+import { IcrcLedgerCanister } from '@junobuild/functions/canisters/ledger/icrc';
 import {
 	countDocsStore,
 	decodeDocData,
@@ -53,59 +50,6 @@ const amountForMilestone = (key: VxpNewUserMilestoneKey): bigint => {
 			return _;
 		}
 	}
-};
-
-const transferErrorText = (err: TransferError): string => {
-	if ('InsufficientFunds' in err) {
-		return `InsufficientFunds(balance=${err.InsufficientFunds.balance})`;
-	}
-
-	if ('BadFee' in err) {
-		return `BadFee(expected_fee=${err.BadFee.expected_fee})`;
-	}
-
-	return JSON.stringify(err, jsonReplacer);
-};
-
-const payoutMilestone = async ({
-	ledger,
-	toOwner,
-	amount,
-	memoLabel
-}: {
-	ledger: IcrcLedgerCanister;
-	toOwner: Principal;
-	amount: bigint;
-	memoLabel: string;
-}): Promise<{ ok: true; blockIndex: bigint } | { ok: false; error: string }> => {
-	const to: Account = {
-		owner: toOwner
-	};
-
-	const memoBytes = new TextEncoder().encode(`vxp:new-user:${memoLabel}`);
-
-	const tryTransfer = (fee?: bigint) =>
-		ledger.icrc1Transfer({
-			args: {
-				to,
-				amount,
-				fee,
-				memo: memoBytes
-			}
-		});
-
-	const firstAttempt = await tryTransfer();
-
-	const finalAttempt =
-		'Err' in firstAttempt && 'BadFee' in firstAttempt.Err
-			? await tryTransfer(firstAttempt.Err.BadFee.expected_fee)
-			: firstAttempt;
-
-	if ('Ok' in finalAttempt) {
-		return { ok: true, blockIndex: finalAttempt.Ok };
-	}
-
-	return { ok: false, error: transferErrorText(finalAttempt.Err) };
 };
 
 const persistOnboarding = ({
@@ -368,11 +312,11 @@ const payOutMilestoneIfNeeded = async ({
 		return;
 	}
 
-	const result = await payoutMilestone({
+	const result = await transferWithBadFeeRetry({
 		ledger,
 		toOwner: Principal.fromText(userKey),
 		amount: needed.transferAmount,
-		memoLabel: needed.memoLabel
+		memo: `vxp:new-user:${needed.memoLabel}`
 	});
 
 	if (result.ok) {

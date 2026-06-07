@@ -8,14 +8,11 @@ import {
 } from '$lib/constants/vxp-economy.constants';
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
-import { isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
+import { transferWithBadFeeRetry } from '$satellite/utils/vxp-payout.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { OnSetDocContext } from '@junobuild/functions';
-import {
-	IcrcLedgerCanister,
-	type Account,
-	type TransferError
-} from '@junobuild/functions/canisters/ledger/icrc';
+import { IcrcLedgerCanister } from '@junobuild/functions/canisters/ledger/icrc';
 import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobuild/functions/sdk';
 
 /**
@@ -63,53 +60,6 @@ const daysBetween = ({
 	}
 
 	return Math.floor((toMs - fromMs) / MS_PER_DAY);
-};
-
-const transferErrorText = (err: TransferError): string => {
-	if ('InsufficientFunds' in err) {
-		return `InsufficientFunds(balance=${err.InsufficientFunds.balance})`;
-	}
-
-	if ('BadFee' in err) {
-		return `BadFee(expected_fee=${err.BadFee.expected_fee})`;
-	}
-
-	return JSON.stringify(err, jsonReplacer);
-};
-
-const transferRestore = async ({
-	ledger,
-	toOwner,
-	amount
-}: {
-	ledger: IcrcLedgerCanister;
-	toOwner: Principal;
-	amount: bigint;
-}): Promise<{ ok: true; blockIndex: bigint } | { ok: false; error: string }> => {
-	const to: Account = { owner: toOwner };
-	const memoBytes = new TextEncoder().encode(`vxp:comeback:${COMEBACK_AWARD_KEY}`);
-
-	const tryTransfer = (fee?: bigint) =>
-		ledger.icrc1Transfer({
-			args: {
-				to,
-				amount,
-				fee,
-				memo: memoBytes
-			}
-		});
-
-	const firstAttempt = await tryTransfer();
-	const finalAttempt =
-		'Err' in firstAttempt && 'BadFee' in firstAttempt.Err
-			? await tryTransfer(firstAttempt.Err.BadFee.expected_fee)
-			: firstAttempt;
-
-	if ('Ok' in finalAttempt) {
-		return { ok: true, blockIndex: finalAttempt.Ok };
-	}
-
-	return { ok: false, error: transferErrorText(finalAttempt.Err) };
 };
 
 const persistAward = ({
@@ -259,10 +209,11 @@ export const onProfileSetForComebackRestore = async (ctx: OnSetDocContext): Prom
 			return;
 		}
 
-		const result = await transferRestore({
+		const result = await transferWithBadFeeRetry({
 			ledger,
 			toOwner: Principal.fromText(callerText),
-			amount
+			amount,
+			memo: `vxp:comeback:${COMEBACK_AWARD_KEY}`
 		});
 
 		if (result.ok) {

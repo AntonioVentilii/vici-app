@@ -19,7 +19,8 @@ src/satellite/
 │   ├── roles.services.ts           Role doc validation
 │   └── vxp-onboarding.services.ts  VXP onboarding hooks
 └── utils/
-    └── logger.utils.ts             Structured logging wrapper
+    ├── logger.utils.ts             Structured logging wrapper
+    └── vxp-payout.utils.ts         Shared VXP ledger transfer + error mapping
 ```
 
 ## What goes where
