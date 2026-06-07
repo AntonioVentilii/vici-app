@@ -665,6 +665,7 @@ export const ptMessages = {
 	'dash.dz.trend_tag_day0': 'PENDENTE',
 	'dash.dz.trend_tag_day1': 'PENDENTE',
 	'dash.header_eyebrow_standard': 'sequência de {count} dias · janela {window}',
+	'dash.holdings.available': 'Disponível',
 	'dash.holdings.backed': 'Empenhado',
 	'dash.holdings.eyebrow': 'Holdings',
 	'dash.holdings.invite_cta': 'Convidar →',
