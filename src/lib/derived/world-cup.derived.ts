@@ -1,7 +1,9 @@
+import { DAY_IN_MS } from '$lib/constants/app.constants';
 import { CURRENT_FEATURED_EVENT } from '$lib/constants/featured-event.constants';
 import { featuredEventActive } from '$lib/derived/featured-event.derived';
+import { minuteTick_ms } from '$lib/derived/time.derived';
 import { preferencesStore } from '$lib/stores/preferences.store';
-import { derived, readable, type Readable } from 'svelte/store';
+import { derived, type Readable } from 'svelte/store';
 
 /**
  * World-Cup mode foundation.
@@ -76,19 +78,7 @@ export type WorldCupPhase = 'off' | 'wc-focus' | 'bridge' | 'open';
  * "Beyond the Cup" rail time to land before the deck would otherwise fall
  * off the cliff at resolution.
  */
-const BRIDGE_WINDOW_MS = 14 * 86_400_000;
-
-/**
- * Phase-arc heartbeat. Mirrors `featured-event.derived`'s 1-minute tick so
- * the phase flips live as the date thresholds pass — sub-minute precision
- * buys nothing for a date-driven arc, and a shared cadence keeps the two
- * date-reactive surfaces in step.
- */
-const phaseNow_ms: Readable<number> = readable(Date.now(), (set) => {
-	const id = setInterval(() => set(Date.now()), 60_000);
-
-	return () => clearInterval(id);
-});
+const BRIDGE_WINDOW_MS = 14 * DAY_IN_MS;
 
 /**
  * The current phase of the retention arc. `off` whenever the user hasn't
@@ -97,7 +87,7 @@ const phaseNow_ms: Readable<number> = readable(Date.now(), (set) => {
  * settles on `open` regardless of the clock.
  */
 export const worldCupPhase: Readable<WorldCupPhase> = derived(
-	[worldCupMode, worldCupNotArchived, phaseNow_ms],
+	[worldCupMode, worldCupNotArchived, minuteTick_ms],
 	([optedIn, notArchived, t]): WorldCupPhase => {
 		if (!optedIn) {
 			return 'off';
