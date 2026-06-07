@@ -11,6 +11,7 @@
 	import ProfileOracleInsight from '$lib/components/profile/ProfileOracleInsight.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
+	import { nicknameUniqueKey } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { SCHOOL_PASS2_ENABLED } from '$lib/constants/school-picker.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
@@ -69,10 +70,16 @@
 		// update back verbatim if the persist fails.
 		const previousProfile = profile;
 
-		// Stamp the change time so the server-authoritative cooldown starts and
-		// the editor reflects the new window. The set-profile assertion
-		// validates this is ~now (the message time) on a handle change.
-		const updatedData = { ...profile, nickname: handle, handleLastChangeMs: Date.now() };
+		// Stamp the change time only on a real (folded) change — a pure
+		// re-casing folds to the same key, where the assertion rejects a moved
+		// stamp. On a real change the assertion validates it's ~now and starts
+		// the cooldown.
+		const handleChanged = nicknameUniqueKey(handle) !== nicknameUniqueKey(profile.nickname ?? '');
+		const updatedData = {
+			...profile,
+			nickname: handle,
+			...(handleChanged && { handleLastChangeMs: Date.now() })
+		};
 
 		// Optimistic local update so the identity card reflects the new
 		// handle immediately, then persist.

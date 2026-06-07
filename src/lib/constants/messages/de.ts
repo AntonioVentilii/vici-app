@@ -1738,7 +1738,7 @@ export const deMessages = {
 	'profile.handle.error_short': 'Mindestens 3 Zeichen',
 	'profile.handle.error_taken': 'Dieses Handle ist bereits vergeben',
 	'profile.handle.error_unchanged': 'Das ist bereits dein Handle',
-	'profile.handle.hint': 'Kleinbuchstaben, Zahlen und Unterstriche.',
+	'profile.handle.hint': 'Buchstaben, Zahlen und Unterstriche.',
 	'profile.handle.locked':
 		'Du hast dein Handle kürzlich geändert. Du kannst es in {days} Tagen wieder ändern.',
 	'profile.handle.locked_one':

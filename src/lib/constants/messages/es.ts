@@ -1728,7 +1728,7 @@ export const esMessages = {
 	'profile.handle.error_short': 'Al menos 3 caracteres',
 	'profile.handle.error_taken': 'Ese handle ya está en uso',
 	'profile.handle.error_unchanged': 'Ese ya es tu handle',
-	'profile.handle.hint': 'Letras minúsculas, números y guiones bajos.',
+	'profile.handle.hint': 'Letras, números y guiones bajos.',
 	'profile.handle.locked':
 		'Cambiaste tu handle hace poco. Podrás cambiarlo de nuevo en {days} días.',
 	'profile.handle.locked_one':

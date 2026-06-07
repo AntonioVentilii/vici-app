@@ -8,6 +8,7 @@
 		HANDLE_COOLDOWN_DAYS,
 		MAX_HANDLE_LENGTH,
 		MIN_HANDLE_LENGTH,
+		nicknameUniqueKey,
 		RESERVED_HANDLES
 	} from '$lib/constants/profile.constants';
 	import { checkNicknameAvailability } from '$lib/services/profile.services';
@@ -58,10 +59,11 @@
 	let value = $state(initialHandle);
 	const clean = $derived(cleanHandle(value));
 
-	const currentLower = $derived(initialHandle.toLowerCase());
 	const tooShort = $derived(clean.length < MIN_HANDLE_LENGTH);
-	const unchanged = $derived(clean === currentLower);
-	const reserved = $derived(RESERVED_HANDLES.has(clean));
+	// Exact (not folded) so re-casing/re-accenting your own handle is saveable.
+	const unchanged = $derived(clean === initialHandle);
+	// Folded so "Admin" / "ádmin" can't slip past the reserved set.
+	const reserved = $derived(RESERVED_HANDLES.has(nicknameUniqueKey(clean)));
 
 	type ErrorKey = MessageKey | null;
 
