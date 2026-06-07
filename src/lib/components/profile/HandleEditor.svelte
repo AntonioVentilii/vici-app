@@ -8,6 +8,7 @@
 		HANDLE_COOLDOWN_DAYS,
 		MAX_HANDLE_LENGTH,
 		MIN_HANDLE_LENGTH,
+		nicknameUniqueKey,
 		RESERVED_HANDLES
 	} from '$lib/constants/profile.constants';
 	import { checkNicknameAvailability } from '$lib/services/profile.services';
@@ -58,10 +59,14 @@
 	let value = $state(initialHandle);
 	const clean = $derived(cleanHandle(value));
 
-	const currentLower = $derived(initialHandle.toLowerCase());
 	const tooShort = $derived(clean.length < MIN_HANDLE_LENGTH);
-	const unchanged = $derived(clean === currentLower);
-	const reserved = $derived(RESERVED_HANDLES.has(clean));
+	// Exact (not folded) so the owner can still re-case / re-accent their own
+	// handle ("jose" → "José") and save it — the backend treats that as the
+	// same handle (no cooldown) but the stored display value updates.
+	const unchanged = $derived(clean === initialHandle);
+	// Reserved names are matched case- + accent-insensitively, so "Admin" or
+	// "ádmin" can't slip past the lowercase reserved set.
+	const reserved = $derived(RESERVED_HANDLES.has(nicknameUniqueKey(clean)));
 
 	type ErrorKey = MessageKey | null;
 

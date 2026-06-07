@@ -1724,7 +1724,7 @@ export const itMessages = {
 	'profile.handle.error_short': 'Almeno 3 caratteri',
 	'profile.handle.error_taken': 'Questo handle è già in uso',
 	'profile.handle.error_unchanged': 'È già il tuo handle',
-	'profile.handle.hint': 'Lettere minuscole, numeri e trattini bassi.',
+	'profile.handle.hint': 'Lettere, numeri e trattini bassi.',
 	'profile.handle.locked':
 		'Hai cambiato l’handle di recente. Potrai cambiarlo di nuovo tra {days} giorni.',
 	'profile.handle.locked_one':

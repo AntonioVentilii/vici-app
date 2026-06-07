@@ -1731,7 +1731,7 @@ export const enMessages = {
 	'profile.handle.error_short': 'At least 3 characters',
 	'profile.handle.error_taken': 'That handle is taken',
 	'profile.handle.error_unchanged': 'That’s already your handle',
-	'profile.handle.hint': 'Lowercase letters, numbers and underscores.',
+	'profile.handle.hint': 'Letters, numbers and underscores.',
 	'profile.handle.locked':
 		'You changed your handle recently. You can change it again in {days} days.',
 	'profile.handle.locked_one':
