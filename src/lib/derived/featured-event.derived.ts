@@ -1,18 +1,8 @@
+import { DAY_IN_MS, HOUR_IN_MS } from '$lib/constants/app.constants';
 import { CURRENT_FEATURED_EVENT } from '$lib/constants/featured-event.constants';
+import { minuteTick_ms } from '$lib/derived/time.derived';
 import type { FeaturedEvent, FeaturedEventStatus } from '$lib/types/featured-event';
 import { derived, readable, type Readable } from 'svelte/store';
-
-/**
- * Heartbeat that the featured-event status derives off. One-minute tick is
- * plenty for "is the event live?" — sub-minute precision doesn't help any
- * surface we render. Tests can substitute a mock store by importing from a
- * different module.
- */
-const now_ms: Readable<number> = readable(Date.now(), (set) => {
-	const id = setInterval(() => set(Date.now()), 60_000);
-
-	return () => clearInterval(id);
-});
 
 /**
  * The featured-event constant, exposed as a store so call sites can opt
@@ -26,7 +16,7 @@ export const featuredEvent: Readable<FeaturedEvent> = readable(CURRENT_FEATURED_
  * the Worlds event-battle is visible.
  */
 export const featuredEventStatus: Readable<FeaturedEventStatus> = derived(
-	[featuredEvent, now_ms],
+	[featuredEvent, minuteTick_ms],
 	([event, t]) => statusFor({ event, now_ms: t })
 );
 
@@ -45,7 +35,7 @@ export const featuredEventActive: Readable<boolean> = derived(
  * has started — UI should switch to "live" copy in that branch.
  */
 export const daysToKickoff: Readable<number | null> = derived(
-	[featuredEvent, now_ms],
+	[featuredEvent, minuteTick_ms],
 	([event, t]) => {
 		if (t >= event.kickoffAt_ms) {
 			return null;
@@ -53,7 +43,7 @@ export const daysToKickoff: Readable<number | null> = derived(
 
 		const delta_ms = event.kickoffAt_ms - t;
 
-		return Math.max(0, Math.floor(delta_ms / 86_400_000));
+		return Math.max(0, Math.floor(delta_ms / DAY_IN_MS));
 	}
 );
 
@@ -64,7 +54,7 @@ export const daysToKickoff: Readable<number | null> = derived(
  * the app uses. `null` once the event has started.
  */
 export const hoursToKickoff: Readable<number | null> = derived(
-	[featuredEvent, now_ms],
+	[featuredEvent, minuteTick_ms],
 	([event, t]) => {
 		if (t >= event.kickoffAt_ms) {
 			return null;
@@ -72,7 +62,7 @@ export const hoursToKickoff: Readable<number | null> = derived(
 
 		const delta_ms = event.kickoffAt_ms - t;
 
-		return Math.floor((delta_ms % 86_400_000) / 3_600_000);
+		return Math.floor((delta_ms % DAY_IN_MS) / HOUR_IN_MS);
 	}
 );
 
@@ -83,7 +73,7 @@ export const hoursToKickoff: Readable<number | null> = derived(
  * once the event has wrapped — UI should switch to archival copy.
  */
 export const daysToFinal: Readable<number | null> = derived(
-	[featuredEvent, now_ms],
+	[featuredEvent, minuteTick_ms],
 	([event, t]) => {
 		if (t >= event.finalAt_ms) {
 			return null;
@@ -91,7 +81,7 @@ export const daysToFinal: Readable<number | null> = derived(
 
 		const delta_ms = event.finalAt_ms - t;
 
-		return Math.max(0, Math.ceil(delta_ms / 86_400_000));
+		return Math.max(0, Math.ceil(delta_ms / DAY_IN_MS));
 	}
 );
 
