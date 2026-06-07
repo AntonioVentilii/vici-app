@@ -28,26 +28,10 @@
 
 import { functions } from '$declarations/satellite/satellite.api';
 import type { AppLocale } from '$lib/constants/locale.constants';
+import { withTimeout } from '$lib/utils/async.utils';
 
 /** Hard timeout for either verification round-trip. */
 const SCHOOL_VERIFY_TIMEOUT_MS = 15_000;
-
-const withTimeout = <T>({
-	operation,
-	label
-}: {
-	operation: Promise<T>;
-	label: string;
-}): Promise<T> =>
-	Promise.race<T>([
-		operation,
-		new Promise<T>((_, reject) => {
-			setTimeout(
-				() => reject(new Error(`${label} timed out after ${SCHOOL_VERIFY_TIMEOUT_MS}ms`)),
-				SCHOOL_VERIFY_TIMEOUT_MS
-			);
-		})
-	]);
 
 export interface SchoolSubmitInput {
 	/** School display name as the user typed / picked it. */
@@ -104,6 +88,7 @@ export const submitSchool = async ({
 			email,
 			locale
 		}),
+		timeoutMs: SCHOOL_VERIFY_TIMEOUT_MS,
 		label: 'submitSchool'
 	});
 
@@ -122,6 +107,7 @@ export const verifySchoolCode = async ({
 }: SchoolVerifyInput): Promise<SchoolVerifyResult> => {
 	const result = await withTimeout({
 		operation: functions.verifySchoolCode({ submissionId, code }),
+		timeoutMs: SCHOOL_VERIFY_TIMEOUT_MS,
 		label: 'verifySchoolCode'
 	});
 
