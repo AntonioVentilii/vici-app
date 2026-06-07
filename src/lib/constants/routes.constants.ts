@@ -22,6 +22,7 @@ export enum AppPath {
 	AdminAccess = '/admin/access',
 	AdminMarkets = '/admin/markets',
 	AdminResolutions = '/admin/resolutions',
+	AdminHaptics = '/admin/haptics',
 	Dash = '/dash',
 	Portfolio = '/portfolio',
 	Arena = '/arena',
