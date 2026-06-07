@@ -2,6 +2,7 @@ import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
 import { LeaguePrivacy } from '$lib/enums/league';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
 	BATTLE_WAGER_MAX,
@@ -23,6 +24,7 @@ import {
 	type LeagueMemberRole
 } from '$lib/types/league-member';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
+import { get } from 'svelte/store';
 
 /**
  * Thin service layer wrapping the satellite's social-cohort
@@ -169,6 +171,67 @@ export const lookupLeagueByInvite = async ({
 	}
 
 	return projectLeagueWire(league);
+};
+
+/**
+ * Read a league by id from the public `leagues` collection, or
+ * `undefined` if none exists. Reads the datastore doc directly (it's
+ * stored as a `LeagueDoc`, so no wire projection) rather than via a
+ * typed query like `lookupLeagueByInvite`.
+ */
+export const getLeagueById = async ({ id }: { id: string }): Promise<LeagueDoc | undefined> => {
+	const existing = await getDoc<LeagueDoc>({
+		collection: Collection.LEAGUES,
+		key: id
+	});
+
+	return existing?.data;
+};
+
+/**
+ * Hydrate `leagueDirectoryStore` for any uncached ids — call it from any
+ * surface that names a counterpart league. Mirrors
+ * `loadProfilesByPrincipals`: per-id failures are swallowed (UI falls
+ * back to a shortened id) and fetches run in bounded batches so a large
+ * caller can't saturate the browser's connection pool.
+ */
+const LEAGUE_HYDRATION_CONCURRENCY = 25;
+
+export const loadLeaguesByIds = async ({ ids }: { ids: string[] }): Promise<void> => {
+	const cached = get(leagueDirectoryStore);
+	const unique = Array.from(new Set(ids)).filter((id) => id.length > 0 && !cached.has(id));
+
+	if (unique.length === 0) {
+		return;
+	}
+
+	const docs: (LeagueDoc | undefined)[] = [];
+
+	for (let start = 0; start < unique.length; start += LEAGUE_HYDRATION_CONCURRENCY) {
+		const batch = unique.slice(start, start + LEAGUE_HYDRATION_CONCURRENCY);
+
+		// Batches run sequentially to cap concurrency; within a batch the
+		// per-id fetches are parallel.
+		const settled = await Promise.all(
+			batch.map((id) => getLeagueById({ id }).catch(() => undefined))
+		);
+
+		docs.push(...settled);
+	}
+
+	leagueDirectoryStore.update((current) => {
+		const next = new Map(current);
+
+		for (let i = 0; i < unique.length; i++) {
+			const doc = docs[i];
+
+			if (doc) {
+				next.set(unique[i], doc);
+			}
+		}
+
+		return next;
+	});
 };
 
 // ─── Writes ──────────────────────────────────────────────────────────────
