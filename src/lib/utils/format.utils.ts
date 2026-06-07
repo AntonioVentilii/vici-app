@@ -301,6 +301,13 @@ export const shortenWithMiddleEllipsis = ({
 export const shortenPrincipal = (principal: string): string =>
 	principal.length > 12 ? `${principal.slice(0, 5)}…${principal.slice(-5)}` : principal;
 
+/**
+ * Compact league id (`giorgi…87499`) — last-resort fallback for when a
+ * league's current name can't be resolved (deleted / not yet hydrated).
+ */
+export const shortLeagueId = (id: string): string =>
+	id.length > 14 ? `${id.slice(0, 6)}…${id.slice(-5)}` : id;
+
 // =============================================================
 //  Locale-aware Intl wrappers
 // =============================================================
