@@ -8,7 +8,7 @@ import {
 	userMonthlyStatsKey,
 	type UserMonthlyStatsDoc
 } from '$lib/types/user-monthly-stats';
-import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+import { eventExecutionPrice, isSettledEvent } from '$lib/utils/resolved-position.utils';
 import { nonNullish } from '@dfinity/utils';
 import { getDoc, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
@@ -52,7 +52,7 @@ interface MonthBucket {
  */
 export const bucketMonthlyStats = (history: ClearingDid.Event[]): Record<string, MonthBucket> => {
 	const settled = history
-		.filter((event) => 'Settled' in event.event_type)
+		.filter(isSettledEvent)
 		// Newest first so, once a month's consensus array hits the cap, the
 		// retained samples are the most recent calls.
 		.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
@@ -72,10 +72,7 @@ export const bucketMonthlyStats = (history: ClearingDid.Event[]): Record<string,
 		}
 
 		if (bucket.consensus.length < MONTHLY_CONSENSUS_LIMIT) {
-			const price = decimalFixedValueToNumber({
-				value: event.price.decimal.value,
-				decimals: event.price.decimal.decimals
-			});
+			const price = eventExecutionPrice(event);
 
 			// Skip non-finite prices (NaN / ±Infinity from a malformed event)
 			// before clamping — Math.max/min leave NaN intact, so we'd otherwise
