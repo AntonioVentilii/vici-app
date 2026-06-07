@@ -60,12 +60,9 @@
 	const clean = $derived(cleanHandle(value));
 
 	const tooShort = $derived(clean.length < MIN_HANDLE_LENGTH);
-	// Exact (not folded) so the owner can still re-case / re-accent their own
-	// handle ("jose" → "José") and save it — the backend treats that as the
-	// same handle (no cooldown) but the stored display value updates.
+	// Exact (not folded) so re-casing/re-accenting your own handle is saveable.
 	const unchanged = $derived(clean === initialHandle);
-	// Reserved names are matched case- + accent-insensitively, so "Admin" or
-	// "ádmin" can't slip past the lowercase reserved set.
+	// Folded so "Admin" / "ádmin" can't slip past the reserved set.
 	const reserved = $derived(RESERVED_HANDLES.has(nicknameUniqueKey(clean)));
 
 	type ErrorKey = MessageKey | null;

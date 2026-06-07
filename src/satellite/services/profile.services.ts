@@ -299,21 +299,15 @@ export const checkNicknameAvailabilityFn = ({
 		return { available: false, reason: 'too_short' };
 	}
 
-	// Charset guard — reject anything outside the stored charset (letters of
-	// any language + digits + `. _ -`). Tested on the case-preserved value:
-	// the pattern allows upper/lowercase, so we must NOT lowercase first.
-	// Crucially this catches whitespace in the MIDDLE of the handle
-	// (leading/trailing was already removed by `trim()`) plus `@` and other
-	// symbols, which the client strips but a direct `setDoc` could otherwise
-	// smuggle past. Server-authoritative half of the rule the FE enforces at
-	// input time.
+	// Charset guard (server-authoritative): reject whitespace, `@` and other
+	// out-of-charset chars a direct `setDoc` could smuggle past the FE. Tested
+	// on the case-preserved value — the pattern allows upper/lowercase.
 	if (!NICKNAME_PATTERN.test(trimmedNickname)) {
 		return { available: false, reason: 'invalid' };
 	}
 
-	// Uniqueness is case- AND accent-insensitive: fold both sides to the same
-	// key so `José`, `JOSE` and `jose` collide. The STORED value keeps the
-	// owner's chosen form — only this comparison is normalized.
+	// Uniqueness folds case + accents (`José` = `JOSE` = `jose`); the stored
+	// value keeps the owner's form.
 	const proposedKey = nicknameUniqueKey(trimmedNickname);
 
 	const caller = msgCaller();
@@ -354,10 +348,9 @@ export const checkNicknameAvailabilityFn = ({
  */
 const HANDLE_LAST_CHANGE_TOLERANCE_MS = 5 * 60 * 1000;
 
-// Handle-change detection uses the same case- + accent-insensitive fold as
-// uniqueness, so re-casing or re-accenting your own handle ("jose" → "José")
-// is NOT treated as a change: it doesn't burn the cooldown and doesn't
-// require a new `handleLastChangeMs` stamp. The stored value still updates.
+// Handle-change detection uses the uniqueness fold, so re-casing/re-accenting
+// your own handle isn't a "change" (no cooldown, no new stamp) — the stored
+// value still updates.
 const normalizeNickname = (nickname: string | undefined | null): string =>
 	nicknameUniqueKey((nickname ?? '').trim());
 

@@ -1,41 +1,25 @@
 import { DAY_IN_MS } from '$lib/constants/app.constants';
 
 /**
- * Nickname (= handle) rules. The STORED value is preserved as the user
- * typed it — **case and accents are kept** (`José`, `CaféOwner`). The only
- * hard rule on what may be stored is the charset: letters of any language,
- * digits, and the separators `. _ -`. Everything else — whitespace, `@`,
- * other punctuation/symbols, emoji — is forbidden.
- *
- * Uniqueness is case- AND accent-insensitive: see {@link nicknameUniqueKey}.
- * `José`, `JOSE` and `jose` are the same handle and cannot coexist; the
- * stored form is whichever the owner chose.
- *
- * 2–16 chars. These bound the onboarding picker, the live-probe gate and
- * the claim-time gate so all three stay in sync; the satellite is the
- * authority (rejects anything failing {@link NICKNAME_PATTERN} / shorter
- * than {@link MIN_NICKNAME_LENGTH}).
+ * Nickname (= handle) rules. The STORED value keeps the owner's form — case
+ * and accents preserved (`José`, `CaféOwner`). Allowed charset: letters (any
+ * language) + digits + `. _ -`; everything else (whitespace, `@`, symbols,
+ * emoji) is forbidden. Uniqueness is case- AND accent-insensitive — see
+ * {@link nicknameUniqueKey}. 2–16 chars; the satellite is the authority.
  */
 export const MIN_NICKNAME_LENGTH = 2;
 export const MAX_NICKNAME_LENGTH = 16;
 
 /**
- * Validates the stored charset: letters (any language, case + accents
- * preserved) + digits + `. _ -`. Rejects whitespace, `@`, every other
- * symbol/punctuation, and emoji.
- *
- * Built via `new RegExp` inside a guard ON PURPOSE: a `\p{L}` literal would
- * be a *parse-time* SyntaxError on a JS engine without Unicode property
- * escapes — which, in the satellite, would take down the whole module on
- * load. If the engine can't compile it we degrade to ASCII + the Latin
- * accent ranges (Latin-1 Supplement / Latin Extended-A/B) so the common
- * European accents still pass. Browsers always take the precise branch.
+ * Validates the stored charset (letters + digits + `. _ -`). Built via
+ * guarded `new RegExp` because a `\p{L}` *literal* is a parse-time crash on a
+ * JS engine without property escapes — fatal at module load in the satellite.
+ * Falls back to ASCII + Latin accent ranges if the engine can't compile it.
  */
 const buildNicknamePattern = (): RegExp => {
 	try {
 		return new RegExp('^[\\p{L}\\p{M}0-9._-]+$', 'u');
 	} catch {
-		// ASCII + Latin-1 Supplement / Latin Extended-A/B accented letters.
 		return new RegExp('^[A-Za-z0-9._\\u00C0-\\u024F-]+$');
 	}
 };
@@ -43,15 +27,10 @@ const buildNicknamePattern = (): RegExp => {
 export const NICKNAME_PATTERN = buildNicknamePattern();
 
 /**
- * Strips every character a handle may not contain while **preserving case
- * and accents** — the input-time inverse of {@link NICKNAME_PATTERN}.
- * NFC-normalises first so the stored value is canonical (a precomposed `é`,
- * not `e` + a combining accent), then drops anything outside
- * `[letters · marks · digits · . _ -]` (this is what removes all
- * whitespace, including spaces in the middle, plus `@` and other symbols),
- * then clamps to {@link MAX_NICKNAME_LENGTH}. FE-only (the satellite
- * rejects via {@link NICKNAME_PATTERN}), so the `\p{L}` literal is safe.
- * Shared by the onboarding picker and the sign-in bootstrap.
+ * Input-time inverse of {@link NICKNAME_PATTERN}: NFC-normalise, strip the
+ * forbidden chars (whitespace, `@`, symbols), clamp to
+ * {@link MAX_NICKNAME_LENGTH} — **keeping case + accents**. FE-only, so the
+ * `\p{L}` literal is safe. Used by the onboarding picker + sign-in bootstrap.
  */
 export const sanitizeNickname = (raw: string): string =>
 	raw
@@ -60,15 +39,10 @@ export const sanitizeNickname = (raw: string): string =>
 		.slice(0, MAX_NICKNAME_LENGTH);
 
 /**
- * Folds a handle to its **uniqueness key** — case- and accent-insensitive.
- * `NFKD` decomposes accented letters into base + combining mark, the range
- * strip removes the marks (Combining Diacritical Marks, U+0300–U+036F — a
- * plain range with no Unicode property escape, so it runs in the satellite
- * engine too), and `toLowerCase` removes case. `José` / `JOSE` / `jose` all
- * fold to `jose`. Separators `. _ -` are KEPT (they're meaningful), so
- * `a_b` ≠ `ab`. Used for collision detection AND handle-change detection on
- * both the client and the satellite, so they always agree on what counts as
- * "the same handle".
+ * Case- + accent-insensitive uniqueness key: `José` / `JOSE` / `jose` →
+ * `jose`. NFKD then strip combining marks (U+0300–U+036F range — engine-safe,
+ * no property escape) then lowercase. Separators `. _ -` are kept (`a_b` ≠
+ * `ab`). Used for collisions AND handle-change detection, client + satellite.
  */
 const COMBINING_DIACRITICAL_MARKS = new RegExp('[\\u0300-\\u036f]', 'g');
 export const nicknameUniqueKey = (raw: string): string =>
@@ -77,13 +51,10 @@ export const nicknameUniqueKey = (raw: string): string =>
 export const PENDING_ONBOARDING_STORAGE_KEY = 'vici:pending-onboarding';
 
 /**
- * Handle (public @-name) editing rules. The handle is the same field as
- * the profile nickname, surfaced through the dedicated {@link
- * HandleEditor} sheet with a slightly stricter client-side charset than the
- * onboarding picker — letters (any language, case + accents preserved),
- * numbers and underscores only (no `.` / `-`), 3–15 characters. Like the
- * nickname, the STORED value keeps case + accents and uniqueness folds them
- * ({@link nicknameUniqueKey}).
+ * Handle (public @-name) editing rules — the same field as the nickname,
+ * surfaced through the {@link HandleEditor} sheet with a slightly stricter
+ * charset (no `.` / `-`), 3–15 chars. Case + accents are preserved like the
+ * nickname; uniqueness folds them ({@link nicknameUniqueKey}).
  */
 export const MIN_HANDLE_LENGTH = 3;
 export const MAX_HANDLE_LENGTH = 15;
@@ -121,13 +92,10 @@ export const RESERVED_HANDLES: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Normalises raw input into a valid handle candidate, **preserving case and
- * accents** (the stored handle keeps the owner's form). NFC-normalise, strip
- * anything outside `[letters · marks · digits · _]` — removing whitespace,
- * `@` and every other symbol — then clamp to {@link MAX_HANDLE_LENGTH}.
- * FE-only (the satellite rejects via {@link NICKNAME_PATTERN}), so the
- * `\p{L}` literal is safe. Uniqueness still folds case + accents via
- * {@link nicknameUniqueKey}.
+ * {@link sanitizeNickname} for the HandleEditor: same idea (NFC, strip
+ * forbidden chars, keep case + accents) but a stricter charset (no `.` / `-`)
+ * and clamped to {@link MAX_HANDLE_LENGTH}. FE-only, so the `\p{L}` literal is
+ * safe.
  */
 export const cleanHandle = (raw: string): string =>
 	raw

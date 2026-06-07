@@ -70,13 +70,10 @@
 		// update back verbatim if the persist fails.
 		const previousProfile = profile;
 
-		// Stamp the change time ONLY on a real handle change — i.e. when the
-		// case- + accent-insensitive key differs. A pure re-casing /
-		// re-accenting ("jose" → "José") folds to the same key: the assertion
-		// treats it as unchanged and would REJECT a moved `handleLastChangeMs`,
-		// so we leave the stamp alone and just persist the new display value.
-		// On a real change the assertion validates the stamp is ~now and starts
-		// the server-authoritative cooldown.
+		// Stamp the change time only on a real (folded) change — a pure
+		// re-casing folds to the same key, where the assertion rejects a moved
+		// stamp. On a real change the assertion validates it's ~now and starts
+		// the cooldown.
 		const handleChanged = nicknameUniqueKey(handle) !== nicknameUniqueKey(profile.nickname ?? '');
 		const updatedData = {
 			...profile,
