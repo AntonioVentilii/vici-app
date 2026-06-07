@@ -23,6 +23,7 @@ export const idlFactory = ({ IDL }) => {
 		reason: IDL.Opt(
 			IDL.Variant({
 				taken: IDL.Null,
+				invalid: IDL.Null,
 				required: IDL.Null,
 				too_short: IDL.Null
 			})
