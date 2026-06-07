@@ -1,4 +1,4 @@
-import type { ClearingDid, RegistryDid } from '$declarations';
+import type { RegistryDid } from '$declarations';
 import { functions } from '$declarations/satellite/satellite.api';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
@@ -24,6 +24,12 @@ import {
 	mergeUnlockedAchievements
 } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+import {
+	eventExecutionPrice,
+	isExecutedEvent,
+	isSettledEvent,
+	isWinningSettledEvent
+} from '$lib/utils/resolved-position.utils';
 import { applyDailyStreakBump, todayKey } from '$lib/utils/streak.utils';
 import { visibilityFromProfile } from '$lib/utils/visibility.utils';
 import { fromWireProfile } from '$satellite/utils/wire-format.utils';
@@ -544,12 +550,8 @@ export const calculateAndSyncStats = async ({
 	const principal = identity.getPrincipal().toText();
 	const history = await getUserTradeHistory(domain);
 
-	const isSettled = (event: ClearingDid.Event): boolean => 'Settled' in event.event_type;
-	const isExecuted = (event: ClearingDid.Event): boolean => 'Executed' in event.event_type;
-	const isWin = (event: ClearingDid.Event): boolean => isSettled(event) && event.qty > ZERO;
-
-	const settledTradesCount = history.filter(isSettled).length;
-	const wins = history.filter(isWin).length;
+	const settledTradesCount = history.filter(isSettledEvent).length;
+	const wins = history.filter(isWinningSettledEvent).length;
 
 	// Lifetime realized P&L: sum the signed realized cashflow each
 	// clearing `Settled` event already carries. A settlement's signed
@@ -560,17 +562,19 @@ export const calculateAndSyncStats = async ({
 	// (no per-event float accumulation). NOT clamped: lifetime P&L is net
 	// and must include losing settlements.
 	const realizedPnl = decimalFixedValueToNumber({
-		value: history.filter(isSettled).reduce((acc, event) => acc + event.qty, ZERO),
+		value: history.filter(isSettledEvent).reduce((acc, event) => acc + event.qty, ZERO),
 		decimals: USD_DECIMALS
 	});
 
-	const totalTrades = history.filter(isExecuted).length;
+	const totalTrades = history.filter(isExecutedEvent).length;
 	const winRate = settledTradesCount > 0 ? (wins / settledTradesCount) * 100 : 0;
 
 	const sortedHistory = [...history].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
-	const currentStreak = sortedHistory.filter(isSettled).findIndex((event) => event.qty <= ZERO);
+	const currentStreak = sortedHistory
+		.filter(isSettledEvent)
+		.findIndex((event) => event.qty <= ZERO);
 	const resolvedStreak =
-		currentStreak === -1 ? sortedHistory.filter(isSettled).length : currentStreak;
+		currentStreak === -1 ? sortedHistory.filter(isSettledEvent).length : currentStreak;
 
 	const accuracy = winRate;
 
@@ -578,29 +582,21 @@ export const calculateAndSyncStats = async ({
 	// at execution price ≤ CONTRARIAN_PRICE_THRESHOLD means the market
 	// priced their side as a long shot when they took it.
 	const contrarianWins = history.filter((event) => {
-		if (!isWin(event)) {
+		if (!isWinningSettledEvent(event)) {
 			return false;
 		}
 
-		const price = decimalFixedValueToNumber({
-			value: event.price.decimal.value,
-			decimals: event.price.decimal.decimals
-		});
-
-		return price <= CONTRARIAN_PRICE_THRESHOLD;
+		return eventExecutionPrice(event) <= CONTRARIAN_PRICE_THRESHOLD;
 	}).length;
 
 	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
 
 	const { totalPoints } = chronoHistory.reduce<{ totalPoints: number; runningStreak: number }>(
 		(acc, event) => {
-			if (isSettled(event)) {
+			if (isSettledEvent(event)) {
 				if (event.qty > ZERO) {
 					const nextStreak = acc.runningStreak + 1;
-					const priceVal = decimalFixedValueToNumber({
-						value: event.price.decimal.value,
-						decimals: event.price.decimal.decimals
-					});
+					const priceVal = eventExecutionPrice(event);
 					const weight = priceVal > 0 ? 1.0 / priceVal : 1.0;
 					const multiplier = Math.pow(1.1, nextStreak - 1);
 
@@ -613,7 +609,7 @@ export const calculateAndSyncStats = async ({
 				return { totalPoints: acc.totalPoints, runningStreak: 0 };
 			}
 
-			if (isExecuted(event)) {
+			if (isExecutedEvent(event)) {
 				return { totalPoints: acc.totalPoints + 10, runningStreak: acc.runningStreak };
 			}
 
