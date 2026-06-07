@@ -22,6 +22,7 @@
 		consensusSide,
 		formatWhyNowChip
 	} from '$lib/utils/flow-card-display.utils';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
@@ -91,11 +92,10 @@
 
 	// Swipe physics — rotation damping of 18 (drag.x / 18), commit
 	// threshold of 100 px, settle delay of 220 ms after pointer-up
-	// before the trade fires, vibrate 12 ms on commit.
+	// before the trade fires, firm-tap haptic on commit.
 	const SWIPE_THRESHOLD = 100;
 	const SKIP_THRESHOLD = 110;
 	const SETTLE_MS = 220;
-	const VIBRATE_MS = 12;
 	const TAP_PX = 6;
 
 	// Resolved category — single source of truth across the surface so
@@ -275,16 +275,6 @@
 		committedRef = false;
 	});
 
-	const vibrate = (ms: number) => {
-		if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
-			try {
-				navigator.vibrate(ms);
-			} catch {
-				// no-op
-			}
-		}
-	};
-
 	const fire = (side: FlowAction) => {
 		if (committedRef) {
 			return;
@@ -359,7 +349,7 @@
 		dragY = exitY;
 		dragging = false;
 		settling = true;
-		vibrate(VIBRATE_MS);
+		haptic('firm-tap');
 		setTimeout(() => fire(side), SETTLE_MS);
 	};
 
