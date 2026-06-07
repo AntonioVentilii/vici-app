@@ -114,10 +114,7 @@
 		})
 	);
 
-	// Hydrate the shared league-directory cache for every battle opponent
-	// surfaced in the activity-preview line. Opponents the caller is also
-	// a member of resolve without a fetch; only ids outside the caller's
-	// memberships hit the network.
+	// Hydrate the directory for every opponent named in the preview line.
 	$effect(() => {
 		const opponentIds = rows
 			.map((row) => row.latestBattle?.opponentId)
@@ -274,15 +271,9 @@
 	const trendFor = (row: LeagueRow): number => leagueTrends.get(row.league.id) ?? 0;
 
 	/**
-	 * Translate the latest battle into a short "activity preview"
-	 * line ("Live battle vs {opponent}", "Proposed battle vs
-	 * {opponent}", …). Returns undefined when no battle exists.
-	 *
-	 * Opponent is resolved against the other leagues the caller is in
-	 * first (cheap, no network), then the shared league-directory cache
-	 * (hydrated by the effect below) so opponents outside the caller's
-	 * membership still read their current official name; an unknown /
-	 * deleted league falls through to a shortened id.
+	 * Translate the latest battle into a short "activity preview" line
+	 * ("Live battle vs {opponent}", …), or undefined when none exists.
+	 * Opponent resolves own memberships → directory cache → shortened id.
 	 */
 	const activityPreviewFor = (row: LeagueRow): string | undefined => {
 		if (!row.latestBattle) {

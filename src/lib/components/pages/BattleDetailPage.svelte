@@ -87,11 +87,8 @@
 		return map;
 	});
 
-	// Resolve a side's league id to its current official name. The
-	// caller's own leagues resolve from the membership map; the opponent
-	// league resolves from the shared directory cache (hydrated below).
-	// An unknown / deleted league falls back to a shortened id rather
-	// than the raw slug. For 'duel' battles the side is a principal, not
+	// Resolve a side's league id to its current name (membership →
+	// directory cache → shortened id). A 'duel' side is a principal, not
 	// a league id, so both lookups miss and the shortened id stands.
 	const sideLabel = (sideId: string): string =>
 		membershipByLeagueId.get(sideId)?.league.name ??
@@ -103,9 +100,7 @@
 		$leagueDirectoryStore.get(sideId)?.accentColor ??
 		'var(--laurel)';
 
-	// Hydrate the shared directory cache for the opponent side so its name
-	// + accent resolve even when the caller isn't a member. The side the
-	// caller owns already resolves from `membershipByLeagueId`.
+	// Hydrate the directory so the opponent side resolves too.
 	$effect(() => {
 		if (!battle) {
 			return;

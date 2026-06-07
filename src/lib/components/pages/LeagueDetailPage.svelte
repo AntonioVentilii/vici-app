@@ -589,21 +589,14 @@
 		}
 	});
 
-	// Resolve a referenced league id (a battle opponent) to its current
-	// official name. Checks the caller's own memberships first (the
-	// opponent may be another league the caller is in), then the shared
-	// directory cache hydrated below, and finally falls back to a
-	// shortened id for an unknown / deleted league. Battles store only
-	// league ids, so this always reflects the latest name after a rename.
+	// A battle stores only the opponent's league id; resolve it to the
+	// current name (own memberships → directory cache → shortened id).
 	const leagueName = (id: string): string =>
 		$myLeaguesStore.find((m) => m.league.id === id)?.league.name ??
 		$leagueDirectoryStore.get(id)?.name ??
 		shortLeagueId(id);
 
-	// Hydrate the shared league-directory cache for every opponent this
-	// league has faced — covers the active battle headline/meta and the
-	// activity feed. Own memberships resolve without a fetch; only ids
-	// outside the cache hit the network.
+	// Hydrate the directory for every opponent this league has faced.
 	$effect(() => {
 		const opponentIds = battles.map((b) => (b.sideA === leagueId ? b.sideB : b.sideA));
 

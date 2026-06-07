@@ -174,15 +174,10 @@ export const lookupLeagueByInvite = async ({
 };
 
 /**
- * Read a single league straight from the public `leagues` collection by
- * id, or `undefined` if no league carries that id (e.g. it was deleted).
- *
- * Unlike `lookupLeagueByInvite`, this reads the datastore doc directly
- * rather than going through a typed query endpoint — the doc is written
- * as a `LeagueDoc` by `createLeague` / `updateLeague`, so no wire
- * projection is needed. Used to resolve the *current* official name of a
- * league the caller isn't a member of (battle opponents), so a rename is
- * always reflected.
+ * Read a league by id from the public `leagues` collection, or
+ * `undefined` if none exists. Reads the datastore doc directly (it's
+ * stored as a `LeagueDoc`, so no wire projection) rather than via a
+ * typed query like `lookupLeagueByInvite`.
  */
 export const getLeagueById = async ({ id }: { id: string }): Promise<LeagueDoc | undefined> => {
 	const existing = await getDoc<LeagueDoc>({
@@ -194,15 +189,11 @@ export const getLeagueById = async ({ id }: { id: string }): Promise<LeagueDoc |
 };
 
 /**
- * Populate `leagueDirectoryStore` with the league ids that aren't already
- * cached. Use this from any surface that names a counterpart league
- * (battle headline / meta, activity feed, battle detail, leagues-list
- * preview) instead of rendering a raw id.
- *
- * Mirrors `loadProfilesByPrincipals`: failures for individual ids are
- * swallowed (the cache simply won't have an entry and the UI falls back
- * to a shortened id), and fetches run in bounded batches so a large
- * caller can't saturate the browser's per-host connection pool.
+ * Hydrate `leagueDirectoryStore` for any uncached ids — call it from any
+ * surface that names a counterpart league. Mirrors
+ * `loadProfilesByPrincipals`: per-id failures are swallowed (UI falls
+ * back to a shortened id) and fetches run in bounded batches so a large
+ * caller can't saturate the browser's connection pool.
  */
 const LEAGUE_HYDRATION_CONCURRENCY = 25;
 
