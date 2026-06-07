@@ -6,7 +6,7 @@ import { getUserTradeHistory } from '$lib/services/trade.services';
 import type { Market, MarketId } from '$lib/types/market';
 import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { UserMarketSignals } from '$lib/types/market-signals';
-import { derivePriorCallSignals } from '$lib/utils/market-signals.utils';
+import { deriveCalledMarketIds } from '$lib/utils/market-signals.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
@@ -81,9 +81,7 @@ export const prepareFlow = async ({
 	const tradeHistoryPromise: Promise<ClearingDid.Event[]> = signedIn
 		? getUserTradeHistory(domain).catch(() => [])
 		: Promise.resolve([]);
-	const priorCallIdsPromise = tradeHistoryPromise.then(
-		(events) => new Set<string>(Object.keys(derivePriorCallSignals(events)))
-	);
+	const priorCallIdsPromise = tradeHistoryPromise.then(deriveCalledMarketIds);
 
 	// Compose the deck (featured scope → prior-call exclude → seen exclude →
 	// slice) up front so `deckIds` — which scopes the followed-lean fan-out —
