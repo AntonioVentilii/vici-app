@@ -1640,7 +1640,7 @@ export const zhCnMessages = {
 	'profile.handle.error_short': '至少 3 个字符',
 	'profile.handle.error_taken': '该 handle 已被占用',
 	'profile.handle.error_unchanged': '这已经是你的 handle',
-	'profile.handle.hint': '仅限小写字母、数字和下划线。',
+	'profile.handle.hint': '仅限字母、数字和下划线。',
 	'profile.handle.locked': '你最近刚修改过 handle，{days} 天后可再次修改。',
 	'profile.handle.locked_one': '你最近刚修改过 handle，{days} 天后可再次修改。',
 	'profile.handle.placeholder': 'yourhandle',

@@ -2,7 +2,8 @@ import { Collection } from '$lib/constants/collections.constants';
 import {
 	handleCooldownDaysLeft,
 	MIN_NICKNAME_LENGTH,
-	NICKNAME_PATTERN
+	NICKNAME_PATTERN,
+	nicknameUniqueKey
 } from '$lib/constants/profile.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
@@ -298,16 +299,17 @@ export const checkNicknameAvailabilityFn = ({
 		return { available: false, reason: 'too_short' };
 	}
 
-	const normalizedNickname = trimmedNickname.toLowerCase();
-
-	// Charset guard — reject anything outside `[a-z0-9._-]`. Crucially this
-	// catches whitespace in the MIDDLE of the handle (leading/trailing was
-	// already removed by `trim()`), which the client strips but a direct
-	// `setDoc` could otherwise smuggle past. This is the server-authoritative
-	// half of the no-whitespace rule the FE enforces at input time.
-	if (!NICKNAME_PATTERN.test(normalizedNickname)) {
+	// Charset guard (server-authoritative): reject whitespace, `@` and other
+	// out-of-charset chars a direct `setDoc` could smuggle past the FE. Tested
+	// on the RAW value (the stored one) — not `trimmedNickname` — so surrounding
+	// whitespace is rejected too. The pattern allows upper/lowercase + accents.
+	if (!NICKNAME_PATTERN.test(nickname)) {
 		return { available: false, reason: 'invalid' };
 	}
+
+	// Uniqueness folds case + accents (`José` = `JOSE` = `jose`); the stored
+	// value keeps the owner's form.
+	const proposedKey = nicknameUniqueKey(nickname);
 
 	const caller = msgCaller();
 
@@ -323,7 +325,7 @@ export const checkNicknameAvailabilityFn = ({
 			try {
 				const existingProfile = decodeDocData<UserProfile>(item.data);
 
-				return existingProfile.nickname?.trim().toLowerCase() === normalizedNickname;
+				return nicknameUniqueKey(existingProfile.nickname ?? '') === proposedKey;
 			} catch (_: unknown) {
 				return false;
 			}
@@ -347,8 +349,11 @@ export const checkNicknameAvailabilityFn = ({
  */
 const HANDLE_LAST_CHANGE_TOLERANCE_MS = 5 * 60 * 1000;
 
+// Handle-change detection uses the uniqueness fold, so re-casing/re-accenting
+// your own handle isn't a "change" (no cooldown, no new stamp) — the stored
+// value still updates.
 const normalizeNickname = (nickname: string | undefined | null): string =>
-	(nickname ?? '').trim().toLowerCase();
+	nicknameUniqueKey(nickname ?? '');
 
 /**
  * Set-profile assertion for the `profiles` collection. Two concerns:
