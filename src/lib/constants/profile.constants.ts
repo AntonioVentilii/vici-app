@@ -11,6 +11,23 @@ export const MIN_NICKNAME_LENGTH = 2;
 export const MAX_NICKNAME_LENGTH = 16;
 export const NICKNAME_PATTERN = /^[a-z0-9._-]+$/;
 
+/**
+ * Normalises raw input into a valid nickname candidate: lowercase, strip
+ * anything outside the nickname charset (`[a-z0-9._-]` — crucially this
+ * removes ALL whitespace, including spaces in the middle), clamp to
+ * {@link MAX_NICKNAME_LENGTH}. Shared by the onboarding handle picker
+ * (live input sanitisation) and the sign-in bootstrap (so a seeded OAuth
+ * display name like `"John Doe"` becomes a valid `johndoe`). The
+ * satellite assertion is the authority and rejects anything that still
+ * fails {@link NICKNAME_PATTERN}; this helper keeps the client from ever
+ * producing such a value in the first place.
+ */
+export const sanitizeNickname = (raw: string): string =>
+	raw
+		.toLowerCase()
+		.replace(/[^a-z0-9._-]/g, '')
+		.slice(0, MAX_NICKNAME_LENGTH);
+
 export const PENDING_ONBOARDING_STORAGE_KEY = 'vici:pending-onboarding';
 
 /**

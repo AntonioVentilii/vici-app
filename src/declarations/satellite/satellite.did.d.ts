@@ -28,7 +28,7 @@ export interface AppCheckNicknameAvailabilityArgs {
 }
 export interface AppCheckNicknameAvailabilityResult {
 	available: boolean;
-	reason: [] | [{ taken: null } | { required: null } | { too_short: null }];
+	reason: [] | [{ taken: null } | { invalid: null } | { required: null } | { too_short: null }];
 }
 export interface AppClaimCalibrationRewardArgs {
 	series_id: string;
