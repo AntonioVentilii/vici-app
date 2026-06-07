@@ -119,6 +119,30 @@ export const derivePriorCallSignals = (
 };
 
 /**
+ * The set of market ids the viewer has an executed call on — the
+ * deck-exclusion input for Flow (`prepareFlow`). Deliberately lighter than
+ * {@link derivePriorCallSignals}: it skips the per-market latest-event
+ * resolution, date formatting, and consensus conversion that only the
+ * card back face needs, keeping just the ids. Fails open per event (a
+ * malformed `series_id` is skipped, not thrown) so one bad legacy event
+ * can't crash the deck build.
+ */
+export const deriveCalledMarketIds = (events: ClearingDid.Event[]): Set<MarketId> => {
+	const ids = new Set<MarketId>();
+
+	for (const event of events.filter(isExecuted)) {
+		try {
+			ids.add(parseMarketId(event.series_id));
+		} catch {
+			// Skip a malformed/legacy `series_id` rather than crashing a
+			// derivation that iterates the viewer's whole trade history.
+		}
+	}
+
+	return ids;
+};
+
+/**
  * Trade-history-derived signals (category accuracy + prior calls). The
  * friends-lean signal is sourced separately from the clearing canister's
  * privacy-preserving `aggregate_lean` query — see

@@ -38,7 +38,7 @@ type HapticValue = number | readonly number[];
  * `navigator.vibrate` (single number = single buzz; array = pulse
  * sequence with alternating buzz / silence).
  */
-const HAPTIC_PATTERNS: Record<HapticPattern, HapticValue> = {
+export const HAPTIC_PATTERNS: Record<HapticPattern, HapticValue> = {
 	// Background / ambient feedback. Very brief.
 	'light-tap': 8,
 	// Negative-state — skip, soft pass-through. Lighter than commit.
@@ -79,6 +79,37 @@ const HAPTIC_PATTERNS: Record<HapticPattern, HapticValue> = {
 };
 
 /**
+ * Android vibration floor. Most Android motors (ERM, and many LRA)
+ * can't render a buzz shorter than ~20 ms — the motor barely spins up
+ * before it's told to stop, so the crisp sub-20 ms taps our vocabulary
+ * leans on are inaudible to the hand even though `navigator.vibrate`
+ * dutifully returns `true`. We raise every *buzz* up to this floor on
+ * Android so the feedback is actually felt. iOS Safari has no
+ * Vibration API at all (sound is its only channel), so this never
+ * affects it; non-Android UAs keep the original crisp values.
+ */
+export const ANDROID_BUZZ_FLOOR_MS = 25;
+
+/** True on Android UAs, where the buzz floor above applies. */
+export const isAndroid = (): boolean =>
+	typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
+
+/**
+ * Raise sub-floor *buzzes* to {@link ANDROID_BUZZ_FLOOR_MS}, leaving
+ * pauses untouched. Per the Web Vibration API an array alternates
+ * buzz / pause starting with a buzz, so even indexes are buzzes (and a
+ * lone number is a single buzz). Exported so the diagnostics page can
+ * show the resolved envelope.
+ */
+export const applyAndroidFloor = (value: HapticValue): number | number[] => {
+	if (typeof value === 'number') {
+		return Math.max(value, ANDROID_BUZZ_FLOOR_MS);
+	}
+
+	return value.map((ms, i) => (i % 2 === 0 ? Math.max(ms, ANDROID_BUZZ_FLOOR_MS) : ms));
+};
+
+/**
  * Best-effort haptic. Safe to call from server-rendered or
  * iOS-Safari contexts (where `navigator.vibrate` doesn't exist) —
  * silently no-ops and never throws.
@@ -94,8 +125,10 @@ export const haptic = (pattern: HapticPattern): void => {
 		return;
 	}
 
+	const value = HAPTIC_PATTERNS[pattern];
+
 	try {
-		navigator.vibrate(HAPTIC_PATTERNS[pattern] as number | number[]);
+		navigator.vibrate(isAndroid() ? applyAndroidFloor(value) : (value as number | number[]));
 	} catch {
 		// Vibration API can throw on hostile UA shims (e.g. some
 		// in-app browsers). The feedback is non-essential — swallow.
