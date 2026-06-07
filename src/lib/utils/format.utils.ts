@@ -301,6 +301,17 @@ export const shortenWithMiddleEllipsis = ({
 export const shortenPrincipal = (principal: string): string =>
 	principal.length > 12 ? `${principal.slice(0, 5)}…${principal.slice(-5)}` : principal;
 
+/**
+ * Compact league id for inline display when the league's official name
+ * can't be resolved (e.g. a deleted opponent league, or one not yet
+ * hydrated into the directory cache). Keeps the leading 6 and trailing
+ * 5 characters: `giorgi…87499`. Short ids (≤ 14 chars) are returned
+ * untouched. This is a last-resort fallback — prefer the current league
+ * name everywhere a league is referenced.
+ */
+export const shortLeagueId = (id: string): string =>
+	id.length > 14 ? `${id.slice(0, 6)}…${id.slice(-5)}` : id;
+
 // =============================================================
 //  Locale-aware Intl wrappers
 // =============================================================

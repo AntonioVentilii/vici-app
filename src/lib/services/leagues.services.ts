@@ -2,6 +2,7 @@ import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
 import { LeaguePrivacy } from '$lib/enums/league';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
 	BATTLE_WAGER_MAX,
@@ -23,6 +24,7 @@ import {
 	type LeagueMemberRole
 } from '$lib/types/league-member';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
+import { get } from 'svelte/store';
 
 /**
  * Thin service layer wrapping the satellite's social-cohort
@@ -169,6 +171,76 @@ export const lookupLeagueByInvite = async ({
 	}
 
 	return projectLeagueWire(league);
+};
+
+/**
+ * Read a single league straight from the public `leagues` collection by
+ * id, or `undefined` if no league carries that id (e.g. it was deleted).
+ *
+ * Unlike `lookupLeagueByInvite`, this reads the datastore doc directly
+ * rather than going through a typed query endpoint — the doc is written
+ * as a `LeagueDoc` by `createLeague` / `updateLeague`, so no wire
+ * projection is needed. Used to resolve the *current* official name of a
+ * league the caller isn't a member of (battle opponents), so a rename is
+ * always reflected.
+ */
+export const getLeagueById = async ({ id }: { id: string }): Promise<LeagueDoc | undefined> => {
+	const existing = await getDoc<LeagueDoc>({
+		collection: Collection.LEAGUES,
+		key: id
+	});
+
+	return existing?.data;
+};
+
+/**
+ * Populate `leagueDirectoryStore` with the league ids that aren't already
+ * cached. Use this from any surface that names a counterpart league
+ * (battle headline / meta, activity feed, battle detail, leagues-list
+ * preview) instead of rendering a raw id.
+ *
+ * Mirrors `loadProfilesByPrincipals`: failures for individual ids are
+ * swallowed (the cache simply won't have an entry and the UI falls back
+ * to a shortened id), and fetches run in bounded batches so a large
+ * caller can't saturate the browser's per-host connection pool.
+ */
+const LEAGUE_HYDRATION_CONCURRENCY = 25;
+
+export const loadLeaguesByIds = async ({ ids }: { ids: string[] }): Promise<void> => {
+	const cached = get(leagueDirectoryStore);
+	const unique = Array.from(new Set(ids)).filter((id) => id.length > 0 && !cached.has(id));
+
+	if (unique.length === 0) {
+		return;
+	}
+
+	const docs: (LeagueDoc | undefined)[] = [];
+
+	for (let start = 0; start < unique.length; start += LEAGUE_HYDRATION_CONCURRENCY) {
+		const batch = unique.slice(start, start + LEAGUE_HYDRATION_CONCURRENCY);
+
+		// Batches run sequentially to cap concurrency; within a batch the
+		// per-id fetches are parallel.
+		const settled = await Promise.all(
+			batch.map((id) => getLeagueById({ id }).catch(() => undefined))
+		);
+
+		docs.push(...settled);
+	}
+
+	leagueDirectoryStore.update((current) => {
+		const next = new Map(current);
+
+		for (let i = 0; i < unique.length; i++) {
+			const doc = docs[i];
+
+			if (doc) {
+				next.set(unique[i], doc);
+			}
+		}
+
+		return next;
+	});
 };
 
 // ─── Writes ──────────────────────────────────────────────────────────────

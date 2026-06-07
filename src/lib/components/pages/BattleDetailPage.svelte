@@ -14,9 +14,11 @@
 		kickoffBattle,
 		listMyBattles,
 		listMyLeagues,
+		loadLeaguesByIds,
 		retractBattle,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
+	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import {
 		BATTLE_SCOPE_DEFAULT,
@@ -24,7 +26,7 @@
 		type BattleScope,
 		type BattleState
 	} from '$lib/types/battle';
-	import { formatDate } from '$lib/utils/format.utils';
+	import { formatDate, shortLeagueId } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
@@ -85,14 +87,32 @@
 		return map;
 	});
 
-	const sideLabel = (sideId: string): string => {
-		const mine = membershipByLeagueId.get(sideId);
-
-		return mine?.league.name ?? sideId;
-	};
+	// Resolve a side's league id to its current official name. The
+	// caller's own leagues resolve from the membership map; the opponent
+	// league resolves from the shared directory cache (hydrated below).
+	// An unknown / deleted league falls back to a shortened id rather
+	// than the raw slug. For 'duel' battles the side is a principal, not
+	// a league id, so both lookups miss and the shortened id stands.
+	const sideLabel = (sideId: string): string =>
+		membershipByLeagueId.get(sideId)?.league.name ??
+		$leagueDirectoryStore.get(sideId)?.name ??
+		shortLeagueId(sideId);
 
 	const sideAccent = (sideId: string): string =>
-		membershipByLeagueId.get(sideId)?.league.accentColor ?? 'var(--laurel)';
+		membershipByLeagueId.get(sideId)?.league.accentColor ??
+		$leagueDirectoryStore.get(sideId)?.accentColor ??
+		'var(--laurel)';
+
+	// Hydrate the shared directory cache for the opponent side so its name
+	// + accent resolve even when the caller isn't a member. The side the
+	// caller owns already resolves from `membershipByLeagueId`.
+	$effect(() => {
+		if (!battle) {
+			return;
+		}
+
+		void loadLeaguesByIds({ ids: [battle.sideA, battle.sideB] });
+	});
 
 	const ownedSide = $derived.by((): string | undefined => {
 		if (!battle) {

@@ -27,12 +27,14 @@
 		acceptBattle,
 		kickoffBattle,
 		leaveLeague,
+		loadLeaguesByIds,
 		retractBattle,
 		updateLeague,
 		validateLeagueDraft
 	} from '$lib/services/leagues.services';
 	import { findOwnStanding, getLeagueStandings } from '$lib/services/standings.services';
 	import { deleteLeagueImageByUrl, uploadLeagueImage } from '$lib/services/storage.services';
+	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 	import {
 		leagueBattlesStore,
 		leagueMembersStore,
@@ -52,7 +54,12 @@
 	} from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
 	import type { StandingsWindow } from '$lib/types/standings';
-	import { formatDate, formatLocalePercent, shortenPrincipal } from '$lib/utils/format.utils';
+	import {
+		formatDate,
+		formatLocalePercent,
+		shortLeagueId,
+		shortenPrincipal
+	} from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
@@ -582,11 +589,28 @@
 		}
 	});
 
-	// Friendly opponent label inside the active battle headline. The
-	// satellite hands us a raw league id; we trim long slugs so the
-	// headline stays on one visual line.
-	const shortLeagueId = (id: string): string =>
-		id.length > 14 ? `${id.slice(0, 6)}…${id.slice(-5)}` : id;
+	// Resolve a referenced league id (a battle opponent) to its current
+	// official name. Checks the caller's own memberships first (the
+	// opponent may be another league the caller is in), then the shared
+	// directory cache hydrated below, and finally falls back to a
+	// shortened id for an unknown / deleted league. Battles store only
+	// league ids, so this always reflects the latest name after a rename.
+	const leagueName = (id: string): string =>
+		$myLeaguesStore.find((m) => m.league.id === id)?.league.name ??
+		$leagueDirectoryStore.get(id)?.name ??
+		shortLeagueId(id);
+
+	// Hydrate the shared league-directory cache for every opponent this
+	// league has faced — covers the active battle headline/meta and the
+	// activity feed. Own memberships resolve without a fetch; only ids
+	// outside the cache hit the network.
+	$effect(() => {
+		const opponentIds = battles.map((b) => (b.sideA === leagueId ? b.sideB : b.sideA));
+
+		if (opponentIds.length > 0) {
+			void loadLeaguesByIds({ ids: opponentIds });
+		}
+	});
 
 	// Meta line under the active battle headline:
 	//   Proposed         → "Awaiting acceptance from {opponent}".
@@ -601,7 +625,7 @@
 			return t({
 				locale: $localeStore,
 				key: 'leagues.detail.battle_meta_awaiting',
-				params: { opponent: shortLeagueId(activeBattleOpponentId) }
+				params: { opponent: leagueName(activeBattleOpponentId) }
 			});
 		}
 
@@ -1041,7 +1065,7 @@
 					<div class="league-detail-battle-headline">
 						<span>{league.name}</span>
 						<span class="serif-italic league-detail-battle-vs">vs</span>
-						<span class="num">{shortLeagueId(activeBattleOpponentId)}</span>
+						<span>{leagueName(activeBattleOpponentId)}</span>
 					</div>
 					{#if activeBattleMetaLine}
 						<p class="league-detail-battle-meta num">{activeBattleMetaLine}</p>
@@ -1273,7 +1297,7 @@
 									{t({
 										locale: $localeStore,
 										key: row.verbKey,
-										params: { opponent: row.opponentId }
+										params: { opponent: leagueName(row.opponentId) }
 									})}
 								</span>
 								<span class="league-detail-activity-when num">{formatDate(row.ts)}</span>
