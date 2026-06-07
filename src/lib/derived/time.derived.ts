@@ -14,6 +14,12 @@ import { readable, type Readable } from 'svelte/store';
  * different module.
  */
 export const minuteTick_ms: Readable<number> = readable(Date.now(), (set) => {
+	// The seed value was captured at module-evaluation time, which can be
+	// many minutes stale by the time a surface first subscribes. Refresh
+	// immediately so the first subscriber gets the real `now`, not the
+	// module-load timestamp, before the first interval tick lands.
+	set(Date.now());
+
 	const id = setInterval(() => set(Date.now()), MINUTE_IN_MS);
 
 	return () => clearInterval(id);

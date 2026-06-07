@@ -24,7 +24,7 @@ export const SECOND_IN_NANOSECONDS = 1_000_000_000n;
 export const MILLISECOND_IN_NANOSECONDS = 1_000_000n;
 
 /** One minute in milliseconds. */
-export const MINUTE_IN_MS = 60 * 1000;
+export const MINUTE_IN_MS = 60_000;
 /** One hour in milliseconds. */
 export const HOUR_IN_MS = 60 * MINUTE_IN_MS;
 /** One day in milliseconds — `24 × 60 × 60 × 1000`. */
