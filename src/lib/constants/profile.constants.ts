@@ -12,18 +12,30 @@ export const MAX_NICKNAME_LENGTH = 16;
 export const NICKNAME_PATTERN = /^[a-z0-9._-]+$/;
 
 /**
- * Normalises raw input into a valid nickname candidate: lowercase, strip
- * anything outside the nickname charset (`[a-z0-9._-]` — crucially this
- * removes ALL whitespace, including spaces in the middle), clamp to
- * {@link MAX_NICKNAME_LENGTH}. Shared by the onboarding handle picker
- * (live input sanitisation) and the sign-in bootstrap (so a seeded OAuth
- * display name like `"John Doe"` becomes a valid `johndoe`). The
- * satellite assertion is the authority and rejects anything that still
- * fails {@link NICKNAME_PATTERN}; this helper keeps the client from ever
- * producing such a value in the first place.
+ * Normalises raw input into a valid nickname candidate. In order:
+ *
+ * 1. **Unicode NFKD + strip diacritics** — fold accents / compatibility
+ *    forms onto their base letter so `"José"` → `jose`, `"Müller"` →
+ *    `muller`, `"ﬁx"` → `fix`. This runs FIRST so the result is the same
+ *    regardless of whether the input arrived precomposed (`é`, U+00E9) or
+ *    decomposed (`e` + combining accent) — without it the charset strip
+ *    below would drop a precomposed `é` entirely (`jos`) but keep the base
+ *    `e` of a decomposed one (`jose`).
+ * 2. **lowercase**, then **strip anything outside `[a-z0-9._-]`** — removes
+ *    ALL whitespace (including spaces in the middle), `@`, and any
+ *    surviving non-Latin character.
+ * 3. **clamp** to {@link MAX_NICKNAME_LENGTH}.
+ *
+ * Shared by the onboarding handle picker (live input sanitisation) and the
+ * sign-in bootstrap (so a seeded OAuth display name like `"John Doe"`
+ * becomes a valid `johndoe`). The satellite assertion is the authority and
+ * rejects anything that still fails {@link NICKNAME_PATTERN}; this helper
+ * keeps the client from ever producing such a value in the first place.
  */
 export const sanitizeNickname = (raw: string): string =>
 	raw
+		.normalize('NFKD')
+		.replace(/\p{Diacritic}/gu, '')
 		.toLowerCase()
 		.replace(/[^a-z0-9._-]/g, '')
 		.slice(0, MAX_NICKNAME_LENGTH);
