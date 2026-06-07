@@ -7,7 +7,7 @@ type AppCheckFriendshipResult = record { is_friend : bool };
 
 type AppCheckNicknameAvailabilityArgs = record { nickname : text; exclude_principal_str : text };
 
-type AppCheckNicknameAvailabilityResult = record { available : bool; reason : opt variant { required; too_short; taken } };
+type AppCheckNicknameAvailabilityResult = record { available : bool; reason : opt variant { required; too_short; invalid; taken } };
 
 type AppGetAffiliationStatsArgs = record { kind : variant { university; country }; affiliation_identifier : text };
 

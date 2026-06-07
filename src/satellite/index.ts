@@ -269,7 +269,7 @@ export const checkNicknameAvailability = defineQuery({
 	}),
 	result: j.strictObject({
 		available: j.boolean(),
-		reason: j.optional(j.enum(['required', 'too_short', 'taken']))
+		reason: j.optional(j.enum(['required', 'too_short', 'invalid', 'taken']))
 	}),
 	handler: ({ nickname, excludePrincipalStr }) => {
 		const result = checkNicknameAvailabilityFn({
