@@ -1,4 +1,4 @@
-import type { RegistryDid } from '$declarations';
+import type { ClearingDid, RegistryDid } from '$declarations';
 import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { getFollowedLean } from '$lib/services/followed-lean.services';
 import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
@@ -21,18 +21,26 @@ import { deriveUserMarketSignals } from '$lib/utils/market-signals.utils';
  * already hold tags from another fetch (e.g. `prepareFlow` shares
  * them with the queue ranking) can pass them in to avoid a
  * duplicate satellite round-trip.
+ *
+ * `tradeHistory` is likewise an optional pre-fetched input: callers
+ * that already derived the viewer's executed events for another
+ * purpose (e.g. `prepareFlow` excludes already-called markets from
+ * the deck) pass them in so the certified history round-trip isn't
+ * issued twice.
  */
 export const getUserMarketSignals = async ({
 	domain,
 	marketIds,
-	tagMappings
+	tagMappings,
+	tradeHistory
 }: {
 	domain: RegistryDid.BalanceDomain;
 	marketIds: MarketId[] | Promise<MarketId[]>;
 	tagMappings?: Record<string, MarketTag[]> | Promise<Record<string, MarketTag[]>>;
+	tradeHistory?: ClearingDid.Event[] | Promise<ClearingDid.Event[]>;
 }): Promise<UserMarketSignals> => {
 	const [events, resolvedTags, following] = await Promise.all([
-		getUserTradeHistory(domain),
+		tradeHistory ?? getUserTradeHistory(domain),
 		tagMappings ?? listMarketTagsBySeries().catch(() => ({})),
 		getFollowing().catch(() => [])
 	]);
