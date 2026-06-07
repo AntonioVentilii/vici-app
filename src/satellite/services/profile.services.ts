@@ -301,14 +301,15 @@ export const checkNicknameAvailabilityFn = ({
 
 	// Charset guard (server-authoritative): reject whitespace, `@` and other
 	// out-of-charset chars a direct `setDoc` could smuggle past the FE. Tested
-	// on the case-preserved value — the pattern allows upper/lowercase.
-	if (!NICKNAME_PATTERN.test(trimmedNickname)) {
+	// on the RAW value (the stored one) — not `trimmedNickname` — so surrounding
+	// whitespace is rejected too. The pattern allows upper/lowercase + accents.
+	if (!NICKNAME_PATTERN.test(nickname)) {
 		return { available: false, reason: 'invalid' };
 	}
 
 	// Uniqueness folds case + accents (`José` = `JOSE` = `jose`); the stored
 	// value keeps the owner's form.
-	const proposedKey = nicknameUniqueKey(trimmedNickname);
+	const proposedKey = nicknameUniqueKey(nickname);
 
 	const caller = msgCaller();
 
@@ -324,7 +325,7 @@ export const checkNicknameAvailabilityFn = ({
 			try {
 				const existingProfile = decodeDocData<UserProfile>(item.data);
 
-				return nicknameUniqueKey((existingProfile.nickname ?? '').trim()) === proposedKey;
+				return nicknameUniqueKey(existingProfile.nickname ?? '') === proposedKey;
 			} catch (_: unknown) {
 				return false;
 			}
@@ -352,7 +353,7 @@ const HANDLE_LAST_CHANGE_TOLERANCE_MS = 5 * 60 * 1000;
 // your own handle isn't a "change" (no cooldown, no new stamp) — the stored
 // value still updates.
 const normalizeNickname = (nickname: string | undefined | null): string =>
-	nicknameUniqueKey((nickname ?? '').trim());
+	nicknameUniqueKey(nickname ?? '');
 
 /**
  * Set-profile assertion for the `profiles` collection. Two concerns:

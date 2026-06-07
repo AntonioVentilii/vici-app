@@ -40,13 +40,15 @@ export const sanitizeNickname = (raw: string): string =>
 
 /**
  * Case- + accent-insensitive uniqueness key: `José` / `JOSE` / `jose` →
- * `jose`. NFKD then strip combining marks (U+0300–U+036F range — engine-safe,
- * no property escape) then lowercase. Separators `. _ -` are kept (`a_b` ≠
- * `ab`). Used for collisions AND handle-change detection, client + satellite.
+ * `jose`. Trim, NFKD, strip combining marks (U+0300–U+036F range — engine-safe,
+ * no property escape), lowercase. Separators `. _ -` are kept (`a_b` ≠ `ab`).
+ * Trimming here keeps folding identical for raw and `.trim()`ed call sites
+ * (client passes raw, satellite trimmed) so both agree on "the same handle".
+ * Used for collisions AND handle-change detection, client + satellite.
  */
 const COMBINING_DIACRITICAL_MARKS = new RegExp('[\\u0300-\\u036f]', 'g');
 export const nicknameUniqueKey = (raw: string): string =>
-	raw.normalize('NFKD').replace(COMBINING_DIACRITICAL_MARKS, '').toLowerCase();
+	raw.trim().normalize('NFKD').replace(COMBINING_DIACRITICAL_MARKS, '').toLowerCase();
 
 export const PENDING_ONBOARDING_STORAGE_KEY = 'vici:pending-onboarding';
 
