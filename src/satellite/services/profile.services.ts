@@ -1,5 +1,9 @@
 import { Collection } from '$lib/constants/collections.constants';
-import { handleCooldownDaysLeft, MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
+import {
+	handleCooldownDaysLeft,
+	MIN_NICKNAME_LENGTH,
+	NICKNAME_PATTERN
+} from '$lib/constants/profile.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
 import { visibilityFromProfile } from '$lib/utils/visibility.utils';
@@ -260,11 +264,13 @@ export const searchProfiles = (query: string): UserProfile[] => {
  * `reason` is set only when `available` is `false`:
  * - `required`  — empty / whitespace.
  * - `too_short` — under `MIN_NICKNAME_LENGTH`.
+ * - `invalid`   — contains characters outside `NICKNAME_PATTERN`
+ *                 (`[a-z0-9._-]`), e.g. a space in the middle.
  * - `taken`     — another principal already owns this nickname.
  */
 export type NicknameAvailability =
 	| { available: true }
-	| { available: false; reason: 'required' | 'too_short' | 'taken' };
+	| { available: false; reason: 'required' | 'too_short' | 'invalid' | 'taken' };
 
 /**
  * Shared nickname validator. Used by both the `setDoc` assertion (write-time
@@ -293,6 +299,15 @@ export const checkNicknameAvailabilityFn = ({
 	}
 
 	const normalizedNickname = trimmedNickname.toLowerCase();
+
+	// Charset guard — reject anything outside `[a-z0-9._-]`. Crucially this
+	// catches whitespace in the MIDDLE of the handle (leading/trailing was
+	// already removed by `trim()`), which the client strips but a direct
+	// `setDoc` could otherwise smuggle past. This is the server-authoritative
+	// half of the no-whitespace rule the FE enforces at input time.
+	if (!NICKNAME_PATTERN.test(normalizedNickname)) {
+		return { available: false, reason: 'invalid' };
+	}
 
 	const caller = msgCaller();
 
@@ -365,6 +380,19 @@ export const assertValidNickname = ({
 	const proposedProfile = decodeDocData<UserProfile>(proposed.data);
 	const { nickname } = proposedProfile;
 
+	const currentProfile = nonNullish(current) ? decodeDocData<UserProfile>(current.data) : undefined;
+
+	// A first write (no stored doc) seeds the handle; an update where the
+	// normalized nickname differs sets a NEW handle. Both must clear the
+	// charset/format guard. An update that leaves the nickname untouched
+	// must NOT — so a legacy profile whose stored nickname predates this
+	// rule (e.g. one already containing a space) can still edit unrelated
+	// fields without being locked out. They are only forced to clean it up
+	// the moment they actually change the handle.
+	const settingNewHandle =
+		isNullish(currentProfile) ||
+		normalizeNickname(proposedProfile.nickname) !== normalizeNickname(currentProfile.nickname);
+
 	const result = checkNicknameAvailabilityFn({ nickname, excludeKey: documentKey });
 
 	if (!result.available) {
@@ -376,7 +404,17 @@ export const assertValidNickname = ({
 			throw new Error(`Nickname must be at least ${MIN_NICKNAME_LENGTH} characters.`);
 		}
 
-		throw new Error(`The nickname "${nickname}" is already taken.`);
+		if (result.reason === 'invalid') {
+			// Grandfather an unchanged legacy nickname; reject only when this
+			// write actually sets the bad handle.
+			if (settingNewHandle) {
+				throw new Error(
+					`The handle "${nickname}" contains invalid characters — use lowercase letters, numbers and . _ - only (no spaces).`
+				);
+			}
+		} else {
+			throw new Error(`The nickname "${nickname}" is already taken.`);
+		}
 	}
 
 	const proposedLastChangeMs = proposedProfile.handleLastChangeMs;
@@ -385,7 +423,7 @@ export const assertValidNickname = ({
 	// First write (account creation): there is no stored handle yet, so this
 	// is not a cooldown-gated change. Only guard against a forged future /
 	// stale stamp if the client set one at all.
-	if (isNullish(current)) {
+	if (isNullish(currentProfile)) {
 		if (
 			nonNullish(proposedLastChangeMs) &&
 			Math.abs(proposedLastChangeMs - nowMs) > HANDLE_LAST_CHANGE_TOLERANCE_MS
@@ -396,13 +434,9 @@ export const assertValidNickname = ({
 		return;
 	}
 
-	const currentProfile = decodeDocData<UserProfile>(current.data);
 	const currentLastChangeMs = currentProfile.handleLastChangeMs;
 
-	const handleChanged =
-		normalizeNickname(proposedProfile.nickname) !== normalizeNickname(currentProfile.nickname);
-
-	if (!handleChanged) {
+	if (!settingNewHandle) {
 		// Nickname unchanged → the cooldown stamp is immutable. Treat absent
 		// on both sides as equal.
 		if ((proposedLastChangeMs ?? null) !== (currentLastChangeMs ?? null)) {

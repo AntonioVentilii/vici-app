@@ -8,7 +8,8 @@
 	import {
 		MAX_NICKNAME_LENGTH,
 		MIN_NICKNAME_LENGTH,
-		NICKNAME_PATTERN
+		NICKNAME_PATTERN,
+		sanitizeNickname
 	} from '$lib/constants/profile.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { checkNicknameAvailability } from '$lib/services/profile.services';
@@ -166,7 +167,19 @@
 		void reshuffle();
 	});
 
-	const selectedName = $derived(mode === 'pool' ? (poolPick ?? '') : custom.trim().toLowerCase());
+	// Sanitised view of the free-form input — lowercased, with all
+	// whitespace and out-of-charset characters stripped (no spaces can
+	// survive in the middle). The input renders this cleaned value, so the
+	// user never sees an invalid character stick, and it is what gets
+	// probed and claimed.
+	const customClean = $derived(sanitizeNickname(custom));
+	const selectedName = $derived(mode === 'pool' ? (poolPick ?? '') : customClean);
+
+	const onCustomInput = (event: Event) => {
+		if (event.currentTarget instanceof HTMLInputElement) {
+			custom = event.currentTarget.value;
+		}
+	};
 
 	// Clear the claim-time error whenever the selection changes — stops
 	// the "just got claimed" message from sticking around after the user
@@ -438,10 +451,11 @@
 				autocomplete="off"
 				autofocus
 				maxlength={MAX_NICKNAME_LENGTH}
+				oninput={onCustomInput}
 				placeholder={t({ locale: $localeStore, key: 'onboarding.beat2.placeholder' })}
 				spellcheck="false"
 				type="text"
-				bind:value={custom}
+				value={customClean}
 			/>
 		</div>
 	{/if}

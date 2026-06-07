@@ -2,6 +2,7 @@ import type { ClearingDid, RegistryDid } from '$declarations';
 import { functions } from '$declarations/satellite/satellite.api';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
+import { MIN_NICKNAME_LENGTH, sanitizeNickname } from '$lib/constants/profile.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
@@ -319,7 +320,7 @@ export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
  */
 export type NicknameAvailability =
 	| { available: true }
-	| { available: false; reason: 'required' | 'too_short' | 'taken' };
+	| { available: false; reason: 'required' | 'too_short' | 'invalid' | 'taken' };
 
 /**
  * Pre-flight check for the create-account and profile-edit flows.
@@ -446,7 +447,18 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	const fullName = nonNullish(openid)
 		? (openid.name ?? [openid.givenName, openid.familyName].filter(Boolean).join(' '))
 		: '';
-	const nickname = fullName.trim().length > 0 ? fullName : profileDoc.data.nickname;
+
+	// Seed a VALID handle on first touch. Both candidates carry characters
+	// the handle charset forbids — the OAuth display name (`"John Doe"`) has
+	// spaces, the shortened-principal default carries an `…` ellipsis — and
+	// the satellite now rejects those. Sanitise to `[a-z0-9._-]`; if nothing
+	// usable survives (e.g. a non-latin display name sanitises to empty),
+	// fall back to the raw principal, which is all lowercase/digits/hyphens
+	// and clears the charset guard. The user can refine it later from the
+	// profile dashboard.
+	const seedSource = fullName.trim().length > 0 ? fullName : profileDoc.data.nickname;
+	const sanitizedSeed = sanitizeNickname(seedSource);
+	const nickname = sanitizedSeed.length >= MIN_NICKNAME_LENGTH ? sanitizedSeed : principal;
 
 	const data: UserProfile = {
 		...profileDoc.data,
