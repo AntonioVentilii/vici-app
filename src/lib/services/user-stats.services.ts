@@ -11,6 +11,7 @@ import {
 } from '$lib/types/user-stats';
 import { CONTRARIAN_PRICE_THRESHOLD } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+import { eventExecutionPrice, isSettledEvent } from '$lib/utils/resolved-position.utils';
 import { getDoc, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
@@ -72,17 +73,6 @@ const tagForSeries = ({
 };
 
 /**
- * Execution price of a settlement event in [0, 1] probability units —
- * the price the user's side cleared at. Used to classify a win as a
- * `contrarian` long shot (same rule the `contrarian` achievement counts on).
- */
-const settlementPrice = (event: ClearingDid.Event): number =>
-	decimalFixedValueToNumber({
-		value: event.price.decimal.value,
-		decimals: event.price.decimal.decimals
-	});
-
-/**
  * Realized VXP for a single settlement — the signed cashflow the clearing
  * `Settled` event carries on its `qty` field, in `USD_DECIMALS` base units
  * (see `settledEventToResolvedPosition` and the `ResolvedPosition` docs).
@@ -120,7 +110,7 @@ export const computeUserStatsSnapshot = ({
 }): UserStatsDoc => {
 	const categoryStats = emptyCategoryStats();
 
-	const settled = history.filter((event) => 'Settled' in event.event_type);
+	const settled = history.filter(isSettledEvent);
 
 	for (const event of settled) {
 		const tag = tagForSeries({ seriesId: event.series_id, metadata });
@@ -154,7 +144,7 @@ export const computeUserStatsSnapshot = ({
 				// user's side cleared at ≤ the long-shot threshold), i.e. they
 				// were right against the crowd. Same rule the `contrarian`
 				// achievement counts on.
-				contrarian: win && settlementPrice(event) <= CONTRARIAN_PRICE_THRESHOLD
+				contrarian: win && eventExecutionPrice(event) <= CONTRARIAN_PRICE_THRESHOLD
 			};
 		});
 
