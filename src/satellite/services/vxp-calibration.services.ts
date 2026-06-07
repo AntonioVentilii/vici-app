@@ -18,13 +18,10 @@ import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
 import type { VxpOnboardingDoc } from '$lib/types/vxp-onboarding';
 import { candidMethod } from '$satellite/utils/candid.utils';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
-import { isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
+import { transferWithBadFeeRetry } from '$satellite/utils/vxp-payout.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
-import {
-	IcrcLedgerCanister,
-	type Account,
-	type TransferError
-} from '@junobuild/functions/canisters/ledger/icrc';
+import { IcrcLedgerCanister } from '@junobuild/functions/canisters/ledger/icrc';
 import { call, msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
@@ -91,50 +88,6 @@ export interface CalibrationRewardResult {
 	reason?: CalibrationReason;
 	errorMessage?: string;
 }
-
-const transferErrorText = (err: TransferError): string => {
-	if ('InsufficientFunds' in err) {
-		return `InsufficientFunds(balance=${err.InsufficientFunds.balance})`;
-	}
-
-	if ('BadFee' in err) {
-		return `BadFee(expected_fee=${err.BadFee.expected_fee})`;
-	}
-
-	return JSON.stringify(err, jsonReplacer);
-};
-
-const transferReward = async ({
-	ledger,
-	toOwner,
-	amount,
-	seriesId
-}: {
-	ledger: IcrcLedgerCanister;
-	toOwner: Principal;
-	amount: bigint;
-	seriesId: string;
-}): Promise<{ ok: true; blockIndex: bigint } | { ok: false; error: string }> => {
-	const to: Account = { owner: toOwner };
-	const memoBytes = new TextEncoder().encode(`vxp:calibration:${seriesId}`);
-
-	const tryTransfer = (fee?: bigint) =>
-		ledger.icrc1Transfer({
-			args: { to, amount, fee, memo: memoBytes }
-		});
-
-	const firstAttempt = await tryTransfer();
-	const finalAttempt =
-		'Err' in firstAttempt && 'BadFee' in firstAttempt.Err
-			? await tryTransfer(firstAttempt.Err.BadFee.expected_fee)
-			: firstAttempt;
-
-	if ('Ok' in finalAttempt) {
-		return { ok: true, blockIndex: finalAttempt.Ok };
-	}
-
-	return { ok: false, error: transferErrorText(finalAttempt.Err) };
-};
 
 /**
  * Engagement gate: the caller has at least one paid VXP-onboarding
@@ -429,7 +382,12 @@ export const claimCalibrationRewardFn = async ({
 		return { correct: true, paidNow: false, alreadyClaimed: true };
 	}
 
-	const result = await transferReward({ ledger, toOwner: callerPrincipal, amount, seriesId });
+	const result = await transferWithBadFeeRetry({
+		ledger,
+		toOwner: callerPrincipal,
+		amount,
+		memo: `vxp:calibration:${seriesId}`
+	});
 
 	const latest = getDocStore({
 		collection: Collection.VXP_AWARDS,
