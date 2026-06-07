@@ -734,6 +734,18 @@ These signals are client-derived. They are not persisted in the
 metadata collection and do not affect clearing, settlement, or profile
 statistics.
 
+`priorCalls` also gates the Flow deck: `prepareFlow`
+([`flow-prep.services.ts`](../../../src/lib/services/flow-prep.services.ts))
+drops every market the viewer has already called from the swipe queue —
+a card you predicted on never re-enters Flow. This is a **hard** filter
+(no recycle): if you've called every open market the deck legitimately
+empties to the caught-up state, unlike the per-deck `exclude` set (which
+only spans the immediately-previous deck and recycles when it would
+otherwise empty a small inventory). The exclusion is keyed off the full
+trade history, so a call from any earlier day or session counts — the
+history fetch is shared with `getUserMarketSignals` via its optional
+`tradeHistory` input so it is issued once per deck build.
+
 ---
 
 ## 11. Featured event & World-Cup mode
