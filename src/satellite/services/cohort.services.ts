@@ -38,7 +38,8 @@ import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/
  * The lifetime surface feeds `wins / totalCalls` + `totalCalls`; the
  * monthly surfaces feed `monthWins / monthTotalCalls` + `monthTotalCalls`.
  * Both pass the matching accessors here so the three ranking surfaces
- * provably can't diverge. Pure — no I/O, no captured state.
+ * provably can't diverge. Pure — no I/O; the returned comparator closes
+ * over the provided accessors and nothing else.
  */
 const compareAffiliationRank =
 	({
@@ -48,7 +49,7 @@ const compareAffiliationRank =
 		accuracyOf: (doc: AffiliationStatsDoc) => number;
 		callsOf: (doc: AffiliationStatsDoc) => number;
 	}): ((a: AffiliationStatsDoc, b: AffiliationStatsDoc) => number) =>
-	// eslint-disable-next-line local-rules/prefer-object-params -- Compare functions are more readable with primitive params
+	// eslint-disable-next-line local-rules/prefer-object-params -- Array.sort comparators take two positional args by contract
 	(a, b) => {
 		const aAcc = accuracyOf(a);
 		const bAcc = accuracyOf(b);
