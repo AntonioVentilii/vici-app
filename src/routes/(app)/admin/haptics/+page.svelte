@@ -54,7 +54,22 @@
 		lastFired = `${pattern} via haptic() — pref ${$preferencesStore.hapticsEnabled ? 'on' : 'OFF (no-op)'}`;
 	};
 
-	let customMs = $state(200);
+	// Svelte coerces a `type="number"` bind to a number, but a cleared
+	// field binds `null` — normalize + validate before firing so the
+	// tester never hands `navigator.vibrate` a NaN / 0 no-op.
+	let customMs = $state<number | null>(200);
+
+	const fireCustom = (): void => {
+		const ms = Number(customMs);
+
+		if (!Number.isFinite(ms) || ms <= 0) {
+			lastFired = 'custom — enter a positive ms value';
+
+			return;
+		}
+
+		fireRaw({ value: ms, label: `custom ${ms}ms` });
+	};
 
 	const toggleHaptics = (): void => {
 		preferencesStore.update((c) => ({ ...c, hapticsEnabled: !c.hapticsEnabled }));
@@ -125,7 +140,7 @@
 					/>
 					<button
 						class="border-border hover:bg-foreground/5 rounded-full border px-4 py-2 text-sm font-semibold"
-						onclick={() => fireRaw({ value: customMs, label: `custom ${customMs}ms` })}
+						onclick={fireCustom}
 						type="button"
 					>
 						Fire custom ms
