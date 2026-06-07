@@ -36,7 +36,7 @@ const AppCheckNicknameAvailabilityArgsSchema = j.strictObject({
 });
 const AppCheckNicknameAvailabilityResultSchema = j.strictObject({
 	available: j.boolean(),
-	reason: j.optional(j.enum(['required', 'too_short', 'taken']))
+	reason: j.optional(j.enum(['required', 'too_short', 'invalid', 'taken']))
 });
 
 const checkNicknameAvailability = async (
