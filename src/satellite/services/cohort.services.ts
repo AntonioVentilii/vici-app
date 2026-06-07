@@ -27,6 +27,50 @@ import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/
  * via the assert path — this file is read-only.
  */
 
+/**
+ * Shared affiliation-rank comparator factory. The Worlds leaderboard,
+ * the monthly podium fan-out, and the per-affiliation championship
+ * history all rank stats docs by the SAME rule:
+ *
+ *   accuracy desc → calls desc (rewards depth) → affiliationIdentifier asc
+ *   (deterministic tie-break across re-runs)
+ *
+ * The lifetime surface feeds `wins / totalCalls` + `totalCalls`; the
+ * monthly surfaces feed `monthWins / monthTotalCalls` + `monthTotalCalls`.
+ * Both pass the matching accessors here so the three ranking surfaces
+ * provably can't diverge. Pure — no I/O, no captured state.
+ */
+const compareAffiliationRank =
+	({
+		accuracyOf,
+		callsOf
+	}: {
+		accuracyOf: (doc: AffiliationStatsDoc) => number;
+		callsOf: (doc: AffiliationStatsDoc) => number;
+	}): ((a: AffiliationStatsDoc, b: AffiliationStatsDoc) => number) =>
+	// eslint-disable-next-line local-rules/prefer-object-params -- Compare functions are more readable with primitive params
+	(a, b) => {
+		const aAcc = accuracyOf(a);
+		const bAcc = accuracyOf(b);
+
+		if (aAcc !== bAcc) {
+			return bAcc - aAcc;
+		}
+
+		const aCalls = callsOf(a);
+		const bCalls = callsOf(b);
+
+		if (aCalls !== bCalls) {
+			return bCalls - aCalls;
+		}
+
+		return a.affiliationIdentifier < b.affiliationIdentifier
+			? -1
+			: a.affiliationIdentifier > b.affiliationIdentifier
+				? 1
+				: 0;
+	};
+
 /** Hydrated `LeagueDoc` paired with the caller's role inside it. */
 export interface LeagueWithRole {
 	league: LeagueDoc;
@@ -846,24 +890,12 @@ export const listAffiliationChampionshipsFn = ({
 	for (const [monthAnchor, bucket] of byMonth.entries()) {
 		// Same tie-break as the podium / leaderboard: accuracy desc →
 		// monthTotalCalls desc → affiliationIdentifier asc.
-		bucket.sort((a, b) => {
-			const aAcc = a.monthWins / a.monthTotalCalls;
-			const bAcc = b.monthWins / b.monthTotalCalls;
-
-			if (aAcc !== bAcc) {
-				return bAcc - aAcc;
-			}
-
-			if (a.monthTotalCalls !== b.monthTotalCalls) {
-				return b.monthTotalCalls - a.monthTotalCalls;
-			}
-
-			return a.affiliationIdentifier < b.affiliationIdentifier
-				? -1
-				: a.affiliationIdentifier > b.affiliationIdentifier
-					? 1
-					: 0;
-		});
+		bucket.sort(
+			compareAffiliationRank({
+				accuracyOf: (doc) => doc.monthWins / doc.monthTotalCalls,
+				callsOf: (doc) => doc.monthTotalCalls
+			})
+		);
 
 		const [winner] = bucket;
 
@@ -960,24 +992,12 @@ export const listAffiliationStatsFn = ({
 		}
 	}
 
-	stats.sort((a, b) => {
-		const aAcc = a.wins / a.totalCalls;
-		const bAcc = b.wins / b.totalCalls;
-
-		if (aAcc !== bAcc) {
-			return bAcc - aAcc;
-		}
-
-		if (a.totalCalls !== b.totalCalls) {
-			return b.totalCalls - a.totalCalls;
-		}
-
-		return a.affiliationIdentifier < b.affiliationIdentifier
-			? -1
-			: a.affiliationIdentifier > b.affiliationIdentifier
-				? 1
-				: 0;
-	});
+	stats.sort(
+		compareAffiliationRank({
+			accuracyOf: (doc) => doc.wins / doc.totalCalls,
+			callsOf: (doc) => doc.totalCalls
+		})
+	);
 
 	if (nonNullish(limit) && limit > 0) {
 		return stats.slice(0, limit);
@@ -1037,24 +1057,12 @@ export const listAffiliationStatsForMonthFn = ({
 		}
 	}
 
-	stats.sort((a, b) => {
-		const aAcc = a.monthWins / a.monthTotalCalls;
-		const bAcc = b.monthWins / b.monthTotalCalls;
-
-		if (aAcc !== bAcc) {
-			return bAcc - aAcc;
-		}
-
-		if (a.monthTotalCalls !== b.monthTotalCalls) {
-			return b.monthTotalCalls - a.monthTotalCalls;
-		}
-
-		return a.affiliationIdentifier < b.affiliationIdentifier
-			? -1
-			: a.affiliationIdentifier > b.affiliationIdentifier
-				? 1
-				: 0;
-	});
+	stats.sort(
+		compareAffiliationRank({
+			accuracyOf: (doc) => doc.monthWins / doc.monthTotalCalls,
+			callsOf: (doc) => doc.monthTotalCalls
+		})
+	);
 
 	return stats;
 };
