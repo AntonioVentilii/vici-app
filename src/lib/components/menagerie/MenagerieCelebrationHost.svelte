@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import MenagerieReveal from '$lib/components/menagerie/MenagerieReveal.svelte';
 	import MenagerieSprite from '$lib/components/menagerie/MenagerieSprite.svelte';
 	import { persistEarnedMenagerie } from '$lib/services/profile.services';
+	import { listMyReferrals } from '$lib/services/referral.services';
 	import { flowBeatActiveStore } from '$lib/stores/flow-beat.store';
 	import {
 		advanceMenagerieCelebration,
@@ -9,6 +11,7 @@
 		menagerieCelebrationStore,
 		resetMenagerieCelebrations
 	} from '$lib/stores/menagerie-celebration.store';
+	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { detectNewMenagerieTiers, menagerieStatsFromProfile } from '$lib/utils/menagerie.utils';
 
@@ -24,12 +27,45 @@
 	//   4. Render the reveal, HELD while a Flow character beat is on screen so the
 	//      two never collide (card → character beat → trophy).
 	//
-	// The celebration only reads stats carried on the profile doc; the
-	// achievements screen layers in referral count + global rank for the full
-	// grid, but those animals' crossings simply celebrate the next time the host
-	// sees the updated ledger — keeping this always-mounted host cheap.
+	// Beyond the stats carried on the profile doc, the host best-effort sources
+	// the same live signals the achievements screen (`AlbumPage`) uses — referral
+	// count + global rank — so Parrot / Goat / Badger can also celebrate from the
+	// always-mounted host instead of only on the grid. Any source that's missing
+	// just leaves its animal at baseline; it never blocks the host.
 
 	const profile = $derived($userStore.profile);
+
+	// Referral count (Parrot) — loaded once; the profile doc doesn't carry it.
+	let referralCount = $state(0);
+
+	onMount(() => {
+		void (async () => {
+			try {
+				const referrals = await listMyReferrals();
+				referralCount = referrals.length;
+			} catch {
+				// Best-effort: Parrot just stays at its baseline if this fails.
+			}
+		})();
+	});
+
+	// Global rank (Goat) from the cached "all" leaderboard window, when loaded.
+	const selfRank = $derived.by((): { rank: number; total: number } | undefined => {
+		const result = $globalStandingsStore.get('all');
+		const owner = profile?.owner;
+
+		if (!result || !owner) {
+			return;
+		}
+
+		const self = result.entries.find((entry) => entry.owner === owner);
+
+		if (!self) {
+			return;
+		}
+
+		return { rank: self.rank, total: result.entries.length };
+	});
 
 	// Guard so the seed / detect pass runs once per distinct earned-set + ledger
 	// state, not on every unrelated profile tick.
@@ -45,12 +81,20 @@
 			return;
 		}
 
-		const stats = menagerieStatsFromProfile({ profile: current });
+		const stats = menagerieStatsFromProfile({
+			profile: current,
+			signals: {
+				referrals: referralCount,
+				rank: selfRank?.rank,
+				totalRanked: selfRank?.total
+			}
+		});
 		const diff = detectNewMenagerieTiers({ stats, celebrated: current.earnedMenagerie });
 
 		// Signature = the earned-set + whether the ledger was seeded. Re-running
 		// only when one of these changes avoids reacting to unrelated profile
-		// writes (avatar, settings, …).
+		// writes (avatar, settings, …); the earned-set already folds in the live
+		// signals, so a referral/rank change that crosses a tier re-triggers here.
 		const signature = `${current.earnedMenagerie == null ? 'seed' : 'set'}:${diff.all.join(',')}`;
 
 		if (signature === lastSignature) {
@@ -70,9 +114,13 @@
 			return;
 		}
 
-		// Mark everything currently earned as celebrated so a crossing never
-		// re-fires, then queue the reveals (highest new tier per animal).
-		void persistEarnedMenagerie({ owner: current.owner, keys: diff.all });
+		// The ledger is append-only ("already celebrated"). Persist the UNION of
+		// the existing ledger and the currently-earned set, never `diff.all` alone:
+		// a regressed stat (e.g. a dropped streak) shrinks the earned set, and
+		// writing it raw would erase past keys → re-celebration, plus could drop
+		// keys written by another surface. Then queue the reveals.
+		const ledger = Array.from(new Set([...(current.earnedMenagerie ?? []), ...diff.all]));
+		void persistEarnedMenagerie({ owner: current.owner, keys: ledger });
 		enqueueMenagerieCelebrations(diff.celebrate);
 	});
 

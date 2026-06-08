@@ -165,7 +165,17 @@
 				class="men-sheet"
 				aria-modal="true"
 				onclick={(e) => e.stopPropagation()}
-				onkeydown={(e) => e.stopPropagation()}
+				onkeydown={(e) => {
+					// Handle Escape-to-close even when focus is inside the sheet; other
+					// keys stay scoped so they don't reach the backdrop button.
+					if (e.key === 'Escape') {
+						openSlug = null;
+
+						return;
+					}
+
+					e.stopPropagation();
+				}}
 				role="dialog"
 				tabindex="-1"
 			>

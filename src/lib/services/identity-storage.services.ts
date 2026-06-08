@@ -1,4 +1,9 @@
-import { INBOX_SETTLED_READ_STORAGE_KEY, INBOX_STORAGE_KEY } from '$lib/constants/inbox.constants';
+import {
+	INBOX_DISMISSED_STORAGE_KEY,
+	INBOX_READ_STORAGE_KEY,
+	INBOX_SETTLED_READ_STORAGE_KEY,
+	INBOX_STORAGE_KEY
+} from '$lib/constants/inbox.constants';
 import { clearDailyGoalMirror } from '$lib/utils/daily-goal.utils';
 import { resetMotionState } from '$lib/utils/motion-engine.utils';
 import { clearOnboardingSeenFlags } from '$lib/utils/onboarding-flags.utils';
@@ -61,6 +66,8 @@ export const reconcileIdentityScopedStorage = ({
 	// keys on their next load, which is when the next identity opens the app.
 	del({ key: INBOX_STORAGE_KEY });
 	del({ key: INBOX_SETTLED_READ_STORAGE_KEY });
+	del({ key: INBOX_READ_STORAGE_KEY });
+	del({ key: INBOX_DISMISSED_STORAGE_KEY });
 
 	set({ key: STORAGE_OWNER_KEY, value: ownerKey });
 };
