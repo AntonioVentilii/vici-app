@@ -6097,3 +6097,40 @@ a.title-action::after {
 	line-height: 1;
 	flex-shrink: 0;
 }
+
+/* ─── Friends sheets — shared CTA button styles ─── */
+/* Used by both FriendProfileSheet (Remove/Close) and AddFriendSheet
+   (Submit = remove+primary / Close). Centralised here so the two sheets
+   can't drift apart. */
+.friends-sheet-remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	padding: 0.75rem;
+	border: 1px solid var(--border-base);
+	border-radius: var(--r-pill);
+	background: var(--bg-surface);
+	color: var(--no);
+	font-size: var(--t-13);
+	font-weight: 700;
+}
+.friends-sheet-primary {
+	border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
+	background: var(--color-primary);
+	color: var(--color-primary-foreground, white);
+}
+.friends-sheet-close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	padding: 0.65rem;
+	margin-top: 0.4rem;
+	border: 0;
+	border-radius: var(--r-pill);
+	background: transparent;
+	color: var(--text-muted);
+	font-size: var(--t-13);
+	font-weight: 700;
+}
