@@ -1,3 +1,4 @@
+import { DAY_IN_MS } from '$lib/constants/app.constants';
 import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 
 /**
@@ -75,3 +76,19 @@ export const compareAffiliationByMonth = affiliationRankComparator({
 	accuracyOf: affiliationMonthlyAccuracy,
 	callsOf: (stats) => stats.monthTotalCalls
 });
+
+/**
+ * Pure helper for the UI — days remaining on a lock. Returns 0 once
+ * the lock has expired so the FE can flip the CTA to "Leave".
+ */
+export const affiliationDaysLeft = ({
+	lockedUntilMs,
+	nowMs = Date.now()
+}: {
+	lockedUntilMs: number;
+	nowMs?: number;
+}): number => {
+	const remaining = lockedUntilMs - nowMs;
+
+	return remaining <= 0 ? 0 : Math.ceil(remaining / DAY_IN_MS);
+};

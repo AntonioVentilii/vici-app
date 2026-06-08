@@ -17,13 +17,10 @@
 		type WorldsAffiliationOption
 	} from '$lib/constants/worlds-affiliations.constants';
 	import { submitSchool, verifySchoolCode } from '$lib/services/school-verification.services';
-	import {
-		affiliationDaysLeft,
-		joinAffiliation,
-		switchAffiliation
-	} from '$lib/services/worlds.services';
+	import { joinAffiliation, switchAffiliation } from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
+	import { affiliationDaysLeft } from '$lib/utils/affiliation-stats.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { detectUserCountryCode } from '$lib/utils/locale-country.utils';
