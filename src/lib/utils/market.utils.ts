@@ -370,3 +370,23 @@ export const getOutcomeVariant = (
 
 	return 'default';
 };
+
+/**
+ * Parses the settlement `outcome` out of an activity's stringified JSON details
+ * (`{ outcome, price }`). Fail-soft: malformed/missing JSON yields `undefined`
+ * (logged, never thrown) so the market still renders as resolved without an
+ * outcome label.
+ */
+export const parseSettlementOutcome = (details?: string): string | undefined => {
+	try {
+		const parsed = JSON.parse(details ?? '{}');
+
+		return typeof parsed?.outcome === 'string' && parsed.outcome.length > 0
+			? parsed.outcome
+			: undefined;
+	} catch (e: unknown) {
+		// Malformed JSON should not block rendering; log and fall through so the
+		// market still appears resolved, just without an outcome label.
+		console.error('Failed to parse settlement details', e);
+	}
+};
