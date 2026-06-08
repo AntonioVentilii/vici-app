@@ -50,3 +50,16 @@ export const resolvedPositions: Readable<ResolvedPosition[]> = derived(
  * show a skeleton instead of an "empty resolved list" flash.
  */
 export const resolvedPositionsNotInitialized: Readable<boolean> = tradeHistoryNotInitialized;
+
+/**
+ * Count of the viewer's *decisive* resolved predictions — won or lost,
+ * excluding break-even `neutral` settlements. Drives the "no predictions
+ * settled yet" empty state for the headline accuracy figure (see
+ * `displayAccuracyPct`): `0` here means the user can't have been wrong yet, so
+ * their accuracy renders an optimistic 100% rather than a misleading 0%.
+ */
+export const decisiveSettledCount: Readable<number> = derived(
+	resolvedPositions,
+	($resolvedPositions) =>
+		$resolvedPositions.filter((position) => position.result !== 'neutral').length
+);
