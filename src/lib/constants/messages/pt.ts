@@ -456,7 +456,7 @@ export const ptMessages = {
 	'admin.markets.bulk.download_template': 'Baixar modelo',
 	'admin.markets.bulk.error.invalid_date': 'Formato de data inválido: {date}',
 	'admin.markets.bulk.error.missing_fields':
-		'Cada mercado precisa ter título, descrição e data de expiração.',
+		'Cada mercado precisa ter título, resolution e data de expiração.',
 	'admin.markets.bulk.error.not_array': 'O JSON deve ser uma lista de objetos de mercado.',
 	'admin.markets.bulk.error.not_json': 'Envie um arquivo JSON.',
 	'admin.markets.bulk.error.outcome_not_string':
@@ -464,6 +464,10 @@ export const ptMessages = {
 	'admin.markets.bulk.error.outcomes_not_array':
 		'Os resultados devem ser uma lista para o mercado: {title}',
 	'admin.markets.bulk.error.parse_failed': 'Falha ao processar JSON: {message}',
+	'admin.markets.bulk.error.resolution_not_string':
+		'A resolução deve ser uma string para o mercado: {title}',
+	'admin.markets.bulk.error.resolution_too_long':
+		'A resolução excede {max} caracteres para o mercado: {title}',
 	'admin.markets.bulk.error.tag_not_string': 'Cada tag deve ser uma string para o mercado: {title}',
 	'admin.markets.bulk.error.tags_not_array': 'As tags devem ser uma lista para o mercado: {title}',
 	'admin.markets.bulk.error.too_few_outcomes':
@@ -486,11 +490,20 @@ export const ptMessages = {
 	'admin.markets.form.domain.label': 'Domínio de saldo',
 	'admin.markets.form.domain.social': 'Social (Fun Dare)',
 	'admin.markets.form.domain.vici_xp': 'ViciXp (Playground)',
+	'admin.markets.form.error.resolution_required':
+		'É necessária uma cláusula de resolução — descreva como o mercado é liquidado.',
+	'admin.markets.form.error.resolution_too_long':
+		'A cláusula de resolução deve ter no máximo {max} caracteres.',
 	'admin.markets.form.field.description': 'Descrição',
 	'admin.markets.form.field.description_placeholder':
-		'Forneça critérios detalhados para a resolução...',
+		'Opcional — descreva brevemente do que se trata este mercado...',
 	'admin.markets.form.field.expiry_date': 'Data de expiração',
 	'admin.markets.form.field.market_type': 'Tipo de mercado',
+	'admin.markets.form.field.resolution': 'Resolução',
+	'admin.markets.form.field.resolution_hint':
+		'Até {max} caracteres. É a cláusula de liquidação vinculativa exibida aos participantes.',
+	'admin.markets.form.field.resolution_placeholder':
+		'Especifique os critérios exatos que determinam como este mercado é resolvido...',
 	'admin.markets.form.field.title': 'Título do mercado',
 	'admin.markets.form.field.title_placeholder': 'Ex.: O Bitcoin chegará a $100k até 2027?',
 	'admin.markets.form.outcomes.add': '+ Adicionar resultado',

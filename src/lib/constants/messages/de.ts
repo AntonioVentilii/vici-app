@@ -458,7 +458,7 @@ export const deMessages = {
 	'admin.markets.bulk.download_template': 'Vorlage herunterladen',
 	'admin.markets.bulk.error.invalid_date': 'Ungültiges Datumsformat: {date}',
 	'admin.markets.bulk.error.missing_fields':
-		'Jeder Markt muss einen title, eine description und ein expiryDate haben.',
+		'Jeder Markt muss einen title, eine resolution und ein expiryDate haben.',
 	'admin.markets.bulk.error.not_array': 'JSON muss ein Array aus Marktobjekten sein.',
 	'admin.markets.bulk.error.not_json': 'Bitte eine JSON-Datei hochladen.',
 	'admin.markets.bulk.error.outcome_not_string':
@@ -466,6 +466,10 @@ export const deMessages = {
 	'admin.markets.bulk.error.outcomes_not_array':
 		'Ergebnisse müssen ein Array sein für Markt: {title}',
 	'admin.markets.bulk.error.parse_failed': 'JSON konnte nicht verarbeitet werden: {message}',
+	'admin.markets.bulk.error.resolution_not_string':
+		'Die Auflösung muss ein String sein für Markt: {title}',
+	'admin.markets.bulk.error.resolution_too_long':
+		'Die Auflösung überschreitet {max} Zeichen für Markt: {title}',
 	'admin.markets.bulk.error.tag_not_string': 'Jeder Tag muss ein String sein für Markt: {title}',
 	'admin.markets.bulk.error.tags_not_array': 'Tags müssen ein Array sein für Markt: {title}',
 	'admin.markets.bulk.error.too_few_outcomes':
@@ -488,11 +492,20 @@ export const deMessages = {
 	'admin.markets.form.domain.label': 'Balance-Domain',
 	'admin.markets.form.domain.social': 'Social (Spaß-Mutprobe)',
 	'admin.markets.form.domain.vici_xp': 'ViciXp (Playground)',
+	'admin.markets.form.error.resolution_required':
+		'Eine Auflösungsklausel ist erforderlich – beschreibe, wie der Markt abgerechnet wird.',
+	'admin.markets.form.error.resolution_too_long':
+		'Die Auflösungsklausel darf höchstens {max} Zeichen lang sein.',
 	'admin.markets.form.field.description': 'Beschreibung',
 	'admin.markets.form.field.description_placeholder':
-		'Gib detaillierte Kriterien für die Auflösung an...',
+		'Optional – beschreibe kurz, worum es in diesem Markt geht...',
 	'admin.markets.form.field.expiry_date': 'Ablaufdatum',
 	'admin.markets.form.field.market_type': 'Markttyp',
+	'admin.markets.form.field.resolution': 'Auflösung',
+	'admin.markets.form.field.resolution_hint':
+		'Bis zu {max} Zeichen. Dies ist die verbindliche Abrechnungsklausel, die den Teilnehmern angezeigt wird.',
+	'admin.markets.form.field.resolution_placeholder':
+		'Lege die genauen Kriterien fest, nach denen sich dieser Markt auflöst...',
 	'admin.markets.form.field.title': 'Markttitel',
 	'admin.markets.form.field.title_placeholder': 'z. B. Erreicht Bitcoin bis 2027 100.000 $?',
 	'admin.markets.form.outcomes.add': '+ Ergebnis hinzufügen',

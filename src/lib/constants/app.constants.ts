@@ -17,6 +17,14 @@ export const USD_DECIMALS = 4;
 
 export const VICI_ORACLE_V1 = 'VICI_ORACLE_V1';
 
+/**
+ * Maximum length of a series' resolution clause (`Resolution.clause`). Mirrors
+ * the `icdc-core` registry bound — a clause beyond this is rejected with
+ * `ResolutionClauseTooLong`. Used to validate the admin form and to cap the
+ * clause sent in `add_series` / `fork_series`.
+ */
+export const RESOLUTION_CLAUSE_MAX_LENGTH = 1024;
+
 /** Em-dash placeholder for an absent / not-yet-served value in the UI. */
 export const EM_DASH = '—';
 
