@@ -3007,7 +3007,10 @@
 	}
 	.lpc-hero-grid {
 		grid-template-columns: 1fr;
-		gap: 18px;
+		/* A touch more breathing room between the headline copy block and the
+		   stacked stage/character zone (the swipe-guide pill) on narrow
+		   viewports — the single-column row gap is the headline↔pill spacing. */
+		gap: 24px;
 		grid-template-areas: 'copy' 'stage' 'tail';
 		align-items: stretch;
 	}

@@ -380,10 +380,7 @@
 				<div class="lp-pill-body">
 					<div class="lp-trust lp-trust-hero">
 						<Lock size={14} strokeWidth={1.8} />
-						<span>
-							{t({ locale: $localeStore, key: 'welcome.nav.free_prefix' })}
-							<b>{t({ locale: $localeStore, key: 'welcome.nav.public_data' })}</b>
-						</span>
+						<span>{t({ locale: $localeStore, key: 'welcome.nav.disclosure' })}</span>
 					</div>
 
 					<div class="lp-eyebrow-bridge">

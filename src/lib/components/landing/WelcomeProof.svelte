@@ -55,14 +55,15 @@
 	// Locale-aware grouped count, shared by the big number and the label.
 	const countLabel = $derived(count.toLocaleString($localeStore));
 
-	// The live count is interpolated into the label sentence; render the
-	// sentence with the formatted count substituted in.
+	// The figure lives only in the big `.lpc-proof-num`; the sentence
+	// substitutes an empty `{count}` so it reads as plain prose under the
+	// number. Trim the leading space the empty placeholder leaves behind.
 	const liveLabel = $derived(
 		t({
 			locale: $localeStore,
 			key: 'welcome.proof.live',
-			params: { count: countLabel }
-		})
+			params: { count: '' }
+		}).trim()
 	);
 </script>
 
