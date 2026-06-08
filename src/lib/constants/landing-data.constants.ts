@@ -282,7 +282,7 @@ export const LANDING_WORLDS_UNIVERSITIES_COUNT = 64;
  * The single demo market a first-time visitor can swipe in the hero.
  * Mirrors a real Flow card: a World-Cup binary with a published YES
  * consensus. Kept deliberately simple — the question text resolves
- * from i18n (`welcome.v2.hero.card_q`), only the artwork seed + YES%
+ * from i18n (`welcome.hero.card_q`), only the artwork seed + YES%
  * live here.
  */
 export const LANDING_HERO_CARD = {

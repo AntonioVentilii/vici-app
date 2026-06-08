@@ -24,15 +24,15 @@
 
 <section id="faq" class="lp-section lp-root">
 	<div class="lp-section-inner">
-		<div style="gap:14px; max-width:680px;" class="col">
-			<span class="eyebrow acc">{t({ locale: $localeStore, key: 'welcome.faq.eyebrow' })}</span>
-			<h2 class="lp-h2">
+		<div class="lpc-section-head">
+			<span class="lpc-kicker">{t({ locale: $localeStore, key: 'welcome.faq.eyebrow' })}</span>
+			<h2 class="lpc-h2">
 				{t({ locale: $localeStore, key: 'welcome.faq.title_a' })}
-				<span class="serif-italic acc">
+				<span class="acc">
 					{t({ locale: $localeStore, key: 'welcome.faq.title_b' })}
 				</span>
 			</h2>
-			<p style="color:var(--fg-dim);" class="lp-lede">
+			<p class="lpc-lede">
 				{t({ locale: $localeStore, key: 'welcome.faq.sub' })}
 			</p>
 		</div>
