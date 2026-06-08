@@ -56,7 +56,7 @@
 	import type { UserProfile } from '$lib/types/profile';
 	import type { RecentSettlementSnapshot, UserStatsDoc } from '$lib/types/user-stats';
 	import { DAILY_GOAL_TARGET } from '$lib/utils/daily-goal.utils';
-	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+	import { decimalFixedValueToNumber, formatRelativeAgoShort } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { formatVxpBalance, formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
@@ -455,25 +455,6 @@
 	);
 
 	// ─── Formatters ────────────────────────────────────────────────────
-	const fmtRelativeShort = (ms: number): string => {
-		const delta = Date.now() - ms;
-		const minutes = Math.floor(delta / 60_000);
-
-		if (minutes < 60) {
-			return `${Math.max(1, minutes)}m`;
-		}
-
-		const hours = Math.floor(minutes / 60);
-
-		if (hours < 24) {
-			return `${hours}h`;
-		}
-
-		const days = Math.floor(hours / 24);
-
-		return `${days}d`;
-	};
-
 	/**
 	 * Past-prediction row PnL → "+240 VXP" / "−180 VXP". `pnlUsdMicroUnits`
 	 * is the signed `cashflow_usd` carried on the `Settled` event in
@@ -853,14 +834,14 @@
 												key: 'dash.past.row_ctx_side_when',
 												params: {
 													side: h.sideLabel,
-													when: fmtRelativeShort(h.settledAtMs)
+													when: formatRelativeAgoShort({ timestampMs: h.settledAtMs })
 												}
 											})}
 										{:else}
 											{t({
 												locale: $localeStore,
 												key: 'dash.past.row_ctx_when',
-												params: { when: fmtRelativeShort(h.settledAtMs) }
+												params: { when: formatRelativeAgoShort({ timestampMs: h.settledAtMs }) }
 											})}
 										{/if}
 									</div>
