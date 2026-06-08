@@ -630,6 +630,7 @@ export const zhCnMessages = {
 	'dash.dz.trend_tag_day0': '待结算',
 	'dash.dz.trend_tag_day1': '待结算',
 	'dash.header_eyebrow_standard': '{count} 天连胜 · {window} 窗口',
+	'dash.holdings.available': '可用',
 	'dash.holdings.backed': '已投入',
 	'dash.holdings.eyebrow': '持仓',
 	'dash.holdings.invite_cta': '邀请 →',
