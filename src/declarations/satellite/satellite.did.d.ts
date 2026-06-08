@@ -368,6 +368,7 @@ export interface AppGetMyRivalResult {
 					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
 					daily_streak: number;
 					unlocked_achievements: Array<string>;
+					earned_menagerie: [] | [Array<string>];
 					deleted_at_ms: [] | [number];
 					points: number;
 					avatar: string;
@@ -435,6 +436,7 @@ export interface AppGetProfileResult {
 					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
 					daily_streak: number;
 					unlocked_achievements: Array<string>;
+					earned_menagerie: [] | [Array<string>];
 					deleted_at_ms: [] | [number];
 					points: number;
 					avatar: string;

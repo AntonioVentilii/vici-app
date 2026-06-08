@@ -390,6 +390,7 @@ const AppGetMyRivalResultSchema = j.strictObject({
 			lastTopDecileDay: j.optional(j.string()),
 			sharpestEyeBestTier: j.optional(j.string()),
 			schoolStatus: j.optional(j.string()),
+			earnedMenagerie: j.optional(j.array(j.string())),
 			handleLastChangeMs: j.optional(j.number()),
 			preferences: j.strictObject({
 				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),
@@ -461,6 +462,7 @@ const AppGetProfileResultSchema = j.strictObject({
 			lastTopDecileDay: j.optional(j.string()),
 			sharpestEyeBestTier: j.optional(j.string()),
 			schoolStatus: j.optional(j.string()),
+			earnedMenagerie: j.optional(j.array(j.string())),
 			handleLastChangeMs: j.optional(j.number()),
 			preferences: j.strictObject({
 				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),

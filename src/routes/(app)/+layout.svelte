@@ -8,6 +8,7 @@
 	import DesktopAppNav from '$lib/components/layout/DesktopAppNav.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
+	import MenagerieCelebrationHost from '$lib/components/menagerie/MenagerieCelebrationHost.svelte';
 	import AccountReturnGate from '$lib/components/settings/AccountReturnGate.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -381,6 +382,16 @@
 	{/if}
 
 	<CompanionOverlay />
+
+	<!--
+		Menagerie achievement layer — mounts the glyph sprite once and drives the
+		one-at-a-time celebration reveal when the owner crosses a new animal tier.
+		First-ever load seeds the celebrated-keys ledger silently; the reveal is
+		held while a Flow character beat is on screen so the two never collide.
+	-->
+	{#if $userSignedIn}
+		<MenagerieCelebrationHost />
+	{/if}
 
 	<!--
 		Slide-in notification toast. Mounted at the shell level so it
