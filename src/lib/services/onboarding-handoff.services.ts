@@ -1,3 +1,4 @@
+import { browser } from '$app/environment';
 import type { AppLocale } from '$lib/constants/locale.constants';
 import {
 	nicknameUniqueKey,
@@ -244,6 +245,14 @@ const joinPendingLeagueIfAny = async ({
 };
 
 /**
+ * Cheap synchronous peek: is there a pending-onboarding payload stashed? Lets the caller skip
+ * arming its mid-drain guard when there's nothing to drain (so the forced-onboarding redirect
+ * isn't held off on the common empty path). Browser-guarded — `false` in any non-browser context.
+ */
+export const hasPendingOnboarding = (): boolean =>
+	browser && localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY) !== null;
+
+/**
  * Drains the pre-auth onboarding payload for a freshly signed-in session: parses the stash,
  * branches on returning-vs-new user, applies the profile upsert (with a nickname-collision
  * probe), clears the storage slot, and kicks off the best-effort referral redeem + league
@@ -266,6 +275,10 @@ export const drainPendingOnboarding = async ({
 	profile: UserProfile;
 	profileExisted: boolean;
 }): Promise<DrainOutcome> => {
+	if (!browser) {
+		return { kind: 'noop' };
+	}
+
 	const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
 
 	if (!raw) {

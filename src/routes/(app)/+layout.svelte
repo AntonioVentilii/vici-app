@@ -17,7 +17,10 @@
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authBusy, userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
-	import { drainPendingOnboarding } from '$lib/services/onboarding-handoff.services';
+	import {
+		drainPendingOnboarding,
+		hasPendingOnboarding
+	} from '$lib/services/onboarding-handoff.services';
 	import { initFlowPrewarm } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -216,7 +219,13 @@
 	// the await so re-entry while the drain is in flight is impossible, and the
 	// forced-onboarding gate below stays held off until it settles.
 	$effect(() => {
-		if (!browser || applyingPendingOnboarding || !$userSignedIn || !$userStore.profile) {
+		if (
+			!browser ||
+			applyingPendingOnboarding ||
+			!$userSignedIn ||
+			!$userStore.profile ||
+			!hasPendingOnboarding()
+		) {
 			return;
 		}
 
