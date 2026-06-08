@@ -366,6 +366,3 @@ export const LANDING_PROOF_CHIPS: readonly LandingProofChip[] = [
 	{ who: 'dani', side: 'NO', q: 'Defending champ exits early' },
 	{ who: 'okonkwo', side: 'YES', q: 'Opening match over 2.5 goals' }
 ] as const;
-
-/** Seed value the live proof counter ticks up from. */
-export const LANDING_PROOF_COUNT_SEED = 12431;
