@@ -29,6 +29,7 @@
 		affiliationRankComparator,
 		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
+	import { formatMonthAnchorLabel } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -157,22 +158,6 @@
 	const headerTitle = $derived(
 		isCountry && option?.glyph ? `${option.glyph} ${headerName}` : headerName
 	);
-
-	/**
-	 * Render a `YYYY-MM` anchor as a localized "Month YYYY" label for
-	 * the champion-history list.
-	 */
-	const formatMonthAnchor = (anchor: string): string => {
-		const [year, month] = anchor.split('-').map((n) => Number(n));
-
-		if (!Number.isFinite(year) || !Number.isFinite(month)) {
-			return anchor;
-		}
-
-		const fmt = new Intl.DateTimeFormat($localeStore, { month: 'long', year: 'numeric' });
-
-		return fmt.format(new Date(Date.UTC(year, month - 1, 1)));
-	};
 
 	const championCount = $derived(championships.length);
 
@@ -398,7 +383,9 @@
 			<ul class="worlds-detail-champions-list">
 				{#each championships as cup (cup.monthAnchor)}
 					<li class="row-between worlds-detail-champions-row">
-						<span class="worlds-detail-champions-month">{formatMonthAnchor(cup.monthAnchor)}</span>
+						<span class="worlds-detail-champions-month"
+							>{formatMonthAnchorLabel({ anchor: cup.monthAnchor, locale: $localeStore })}</span
+						>
 						<span class="num worlds-detail-champions-acc worlds-detail-acc">
 							{formatAccuracyPercent(cup.accuracy)}
 						</span>
