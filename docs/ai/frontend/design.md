@@ -53,6 +53,16 @@ easing curve are present. Outstanding items:
 | Named oversize type (`--t-88`, `--t-128`)                                              | ✅ Done     | Available for hand-tuned editorial moments via `var(--t-88)` etc.                                                                                                                             |
 | Z-index scale (`--z-overlay`, `--z-modal`, `--z-dropdown`, `--z-toast`, `--z-tooltip`) | ❓ Implicit | Audit existing modals / popovers; if z-index is inlined per-component, extract to `@theme` once during a primitive pass.                                                                      |
 
+Three large-radius / edge-spacing surfaces sit just off the standard
+scale and are named for the surface they belong to, so call-sites read
+the intent rather than a bare literal: `--radius-frame` (18px — elevated
+framed surfaces, e.g. the swipeable onboarding card), `--radius-nav`
+(28px — the floating bottom-nav pill shell only), and `--spacing-edge`
+(20px — the screen-edge horizontal gutter, owned by `ScreenHeader`).
+`--text-micro` (10px) is the hard type-size floor for dense data labels —
+nothing renders smaller. `--r-xl` is a back-compat alias of
+`--radius-frame`.
+
 For spacing, sizing, radii, and most typography use Tailwind v4 utilities
 (`p-*`, `gap-*`, `text-*`, `tracking-*`, `leading-*`, `rounded-*`).
 Utility classes already exposed in `src/app.css`: `.eyebrow`, `.allcaps`,
