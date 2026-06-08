@@ -730,6 +730,7 @@ export const frMessages = {
 	'dash.disclosure.contrarian_empty': 'Aucune victoire à contre-courant pour l’instant.',
 	'dash.disclosure.contrarian_title': 'Victoires à contre-courant · {count}',
 	'dash.disclosure.rival_gap': '{points} pts d’avance',
+	'dash.disclosure.rival_gap_behind': 'En tête de {points} pts',
 	'dash.disclosure.rival_gap_unknown': 'Données de rivalité bientôt disponibles',
 	'dash.disclosure.rival_title': 'Votre rival · {handle}',
 	'dash.disclosure.rival_title_unknown': 'Votre rival · —',
