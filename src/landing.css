@@ -2836,6 +2836,21 @@
 .lpc-proof-num .acc {
 	color: var(--accent);
 }
+/* Placeholder dash shown until the real World-Cup caller count resolves. A
+   gentle opacity pulse signals "loading" without ever rendering a number;
+   gated off under reduced-motion below. */
+.lpc-proof-num.is-loading {
+	animation: lpc-proof-pulse 1.6s ease-in-out infinite;
+}
+@keyframes lpc-proof-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.35;
+	}
+}
 .lpc-proof-label {
 	font-size: 16px;
 	color: var(--fg-dim);
@@ -3116,7 +3131,8 @@
 	.lpc-climb,
 	.lpc-climb-row.you,
 	.lpc-payoff.climbed .lpc-payoff-line,
-	.lpc-ticker-track {
+	.lpc-ticker-track,
+	.lpc-proof-num.is-loading {
 		animation: none;
 		opacity: 1;
 		transform: none;

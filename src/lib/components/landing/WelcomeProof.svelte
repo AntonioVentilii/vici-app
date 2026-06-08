@@ -3,15 +3,14 @@
 	 * Proof band: a 3-step "How it works" micro-strip, a real count of
 	 * people calling the World Cup, and a marquee ticker of @handles making
 	 * calls. The count is the live aggregate of executed predictions on the
-	 * World-Cup markets, read anonymously after first paint (with a synthetic
-	 * seed as a silent fallback); the ticker is decorative (aria-hidden) and
-	 * scrolls via CSS (paused under reduced-motion).
+	 * World-Cup markets, read anonymously after first paint. Until that real
+	 * figure resolves — and on any failure / no-WC-markets / 0 — the big
+	 * number stays a pulsing dash placeholder; we never render a fake number.
+	 * The ticker is decorative (aria-hidden) and scrolls via CSS (paused
+	 * under reduced-motion).
 	 */
 	import { onMount } from 'svelte';
-	import {
-		LANDING_PROOF_CHIPS,
-		LANDING_PROOF_COUNT_SEED
-	} from '$lib/constants/landing-data.constants';
+	import { LANDING_PROOF_CHIPS } from '$lib/constants/landing-data.constants';
 	import { getWorldCupCallerCount } from '$lib/services/landing-proof.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -28,12 +27,11 @@
 	// Doubled so the CSS marquee loops seamlessly.
 	const track = [...LANDING_PROOF_CHIPS, ...LANDING_PROOF_CHIPS];
 
-	// Seeded with the synthetic figure so the band renders immediately and
-	// never flashes 0/blank. After first paint we swap in the real aggregate
-	// (executed predictions across the World-Cup markets, read anonymously).
-	// Any failure / no-WC-markets / 0 leaves the seed in place — silent
-	// fallback, never a spinner, blank, or thrown error.
-	let count = $state(LANDING_PROOF_COUNT_SEED);
+	// `undefined` until the first successful real fetch. We never seed a
+	// synthetic figure — a fake number that diverged from the real one would
+	// be misleading. On any failure / no-WC-markets / 0 it stays `undefined`
+	// and the big number keeps its pulsing dash placeholder.
+	let count = $state<number | undefined>(undefined);
 
 	onMount(() => {
 		void getWorldCupCallerCount().then((real) => {
@@ -43,18 +41,11 @@
 		});
 	});
 
-	// Locale-aware grouped count, shared by the big number and the label.
-	const countLabel = $derived(count.toLocaleString($localeStore));
+	// Locale-aware grouped figure once resolved; `undefined` while loading.
+	const countLabel = $derived(count?.toLocaleString($localeStore));
 
-	// The live count is interpolated into the label sentence; render the
-	// sentence with the formatted count substituted in.
-	const liveLabel = $derived(
-		t({
-			locale: $localeStore,
-			key: 'welcome.proof.live',
-			params: { count: countLabel }
-		})
-	);
+	// Standalone caption rendered under the big number — carries no count.
+	const liveLabel = $derived(tt('welcome.proof.live'));
 </script>
 
 <section class="lpc-proof">
@@ -68,7 +59,13 @@
 	</div>
 
 	<div class="lpc-wrap lpc-proof-inner">
-		<div class="lpc-proof-num"><span class="acc">{countLabel}</span></div>
+		<div class="lpc-proof-num" class:is-loading={countLabel === undefined}>
+			{#if countLabel === undefined}
+				<span class="acc" aria-hidden="true">—</span>
+			{:else}
+				<span class="acc">{countLabel}</span>
+			{/if}
+		</div>
 		<div class="lpc-proof-label" aria-live="off">
 			{liveLabel}
 			{tt('welcome.proof.label')}

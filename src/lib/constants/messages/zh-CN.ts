@@ -2279,7 +2279,7 @@ export const zhCnMessages = {
 	'welcome.how.s2': '依据公开数据结算',
 	'welcome.how.s3': '在排行榜上攀升',
 	'welcome.proof.label': '你又在什么位置?',
-	'welcome.proof.live': '此刻有 {count} 人正在预测世界杯。',
+	'welcome.proof.live': '人正在预测世界杯',
 	'welcome.status.body':
 		'每个判断都会记入你的战绩。判断对了,你就上升 — 超越你的群聊、你的城市、整个世界。排行榜不在乎谁嗓门最大,只看谁判断得最准。',
 	'welcome.status.cap_friends': '你的群聊,排出高下。',

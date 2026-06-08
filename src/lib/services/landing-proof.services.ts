@@ -34,7 +34,7 @@ let cached: number | undefined;
  * Resolves the real aggregate count of executed predictions across the
  * World-Cup markets, anonymously. Returns `undefined` when the figure can't
  * be derived (no WC markets, no trades, or any error) so the caller keeps its
- * synthetic seed rather than ever rendering 0 / blank.
+ * placeholder dash rather than ever rendering a fake number / 0 / blank.
  *
  * Cached for the session: repeated mounts reuse the first resolved value.
  */
@@ -100,8 +100,8 @@ export const getWorldCupCallerCount = async (): Promise<number | undefined> => {
 		return cached;
 	} catch (err: unknown) {
 		// Pre-auth marketing surface: never throw, never block render. Fall
-		// through to the implicit `undefined` so the caller keeps its synthetic
-		// seed on any failure.
+		// through to the implicit `undefined` so the caller keeps its placeholder
+		// dash on any failure.
 		console.error('Failed to derive World Cup caller count', err);
 	}
 };
