@@ -2,6 +2,7 @@
 	{
 		"title": "Will Brazil win the 2026 World Cup?",
 		"description": "Resolves YES if Brazil lifts the 2026 World Cup trophy on July 19, 2026.",
+		"resolution": "Resolves YES if Brazil lifts the 2026 World Cup trophy on July 19, 2026.",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -12,6 +13,7 @@
 	{
 		"title": "Will Spain win the 2026 World Cup?",
 		"description": "Resolves YES if Spain lifts the 2026 World Cup trophy on July 19, 2026.",
+		"resolution": "Resolves YES if Spain lifts the 2026 World Cup trophy on July 19, 2026.",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -22,6 +24,7 @@
 	{
 		"title": "Will France win the 2026 World Cup?",
 		"description": "Resolves YES if France lifts the 2026 World Cup trophy on July 19, 2026.",
+		"resolution": "Resolves YES if France lifts the 2026 World Cup trophy on July 19, 2026.",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -32,6 +35,7 @@
 	{
 		"title": "Will Argentina defend their World Cup title?",
 		"description": "Resolves YES if Argentina lifts the 2026 World Cup trophy on July 19, 2026.",
+		"resolution": "Resolves YES if Argentina lifts the 2026 World Cup trophy on July 19, 2026.",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -42,6 +46,7 @@
 	{
 		"title": "Will Mbappé win the Golden Boot?",
 		"description": "Resolves YES if Kylian Mbappé is named 2026 Golden Boot winner. Ties broken by FIFA criteria.",
+		"resolution": "Resolves YES if Kylian Mbappé is named 2026 Golden Boot winner. Ties broken by FIFA criteria.",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -52,6 +57,7 @@
 	{
 		"title": "Will the USA reach the quarterfinals on home soil?",
 		"description": "Resolves YES if the USA Men’s team advances to the quarterfinals or beyond.",
+		"resolution": "Resolves YES if the USA Men’s team advances to the quarterfinals or beyond.",
 		"expiryDate": "2026-07-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -62,6 +68,7 @@
 	{
 		"title": "Will the final have over 3 goals?",
 		"description": "Resolves YES if the 2026 final has 4 or more goals at full time (excl. penalty shoot-out).",
+		"resolution": "Resolves YES if the 2026 final has 4 or more goals at full time (excl. penalty shoot-out).",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -72,6 +79,7 @@
 	{
 		"title": "Will Germany exit in the group stage again?",
 		"description": "Resolves YES if Germany finishes 3rd or lower in its group and does not advance.",
+		"resolution": "Resolves YES if Germany finishes 3rd or lower in its group and does not advance.",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -82,6 +90,7 @@
 	{
 		"title": "Will Neymar dive in the opener?",
 		"description": "Resolves YES if a qualified-panel flag identifies a simulation in Brazil’s opening match. Definition published with the market.",
+		"resolution": "Resolves YES if a qualified-panel flag identifies a simulation in Brazil’s opening match. Definition published with the market.",
 		"expiryDate": "2026-06-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -92,6 +101,7 @@
 	{
 		"title": "Will a player debut a new haircut during the group stage?",
 		"description": "Resolves YES if any player in the tournament has a substantially different on-pitch hairstyle vs. their club photo within 30 days prior to kickoff.",
+		"resolution": "Resolves YES if any player in the tournament has a substantially different on-pitch hairstyle vs. their club photo within 30 days prior to kickoff.",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -102,6 +112,7 @@
 	{
 		"title": "Will the trophy be dropped during the ceremony?",
 		"description": "Resolves YES if the trophy is dropped at any point during the official lifting ceremony on July 19, 2026.",
+		"resolution": "Resolves YES if the trophy is dropped at any point during the official lifting ceremony on July 19, 2026.",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -112,6 +123,7 @@
 	{
 		"title": "Will a coach get sent to the stands?",
 		"description": "Resolves YES if any tournament head coach is sent off and ordered to the stands by the match official.",
+		"resolution": "Resolves YES if any tournament head coach is sent off and ordered to the stands by the match official.",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -122,6 +134,7 @@
 	{
 		"title": "Will a player propose on the pitch?",
 		"description": "Resolves YES if a player or staff member is recorded proposing marriage on the pitch within 60 minutes of any match’s final whistle.",
+		"resolution": "Resolves YES if a player or staff member is recorded proposing marriage on the pitch within 60 minutes of any match’s final whistle.",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -132,6 +145,7 @@
 	{
 		"title": "Will VAR overturn the final's first goal?",
 		"description": "Resolves YES if VAR review overturns the first goal scored in the 2026 final (either disallowed or awarded after review).",
+		"resolution": "Resolves YES if VAR review overturns the first goal scored in the 2026 final (either disallowed or awarded after review).",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -142,6 +156,7 @@
 	{
 		"title": "Will a player do \"the dance\" celebration?",
 		"description": "Resolves YES if a defined-criteria choreographed celebration occurs during the tournament. Definition published with the market.",
+		"resolution": "Resolves YES if a defined-criteria choreographed celebration occurs during the tournament. Definition published with the market.",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -152,6 +167,7 @@
 	{
 		"title": "Will Mexico win the opening match?",
 		"description": "Hosts open in Mexico City · Estadio Azteca",
+		"resolution": "Hosts open in Mexico City · Estadio Azteca",
 		"expiryDate": "2026-06-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -162,6 +178,7 @@
 	{
 		"title": "Will the opening match see a goal before the 30th minute?",
 		"description": "Openers run cagey · only 2 of last 5 did",
+		"resolution": "Openers run cagey · only 2 of last 5 did",
 		"expiryDate": "2026-06-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -172,6 +189,7 @@
 	{
 		"title": "Will Canada win their opening match?",
 		"description": "Co-hosts · first home WC game ever",
+		"resolution": "Co-hosts · first home WC game ever",
 		"expiryDate": "2026-06-12T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -182,6 +200,7 @@
 	{
 		"title": "Will the USA win their opening match?",
 		"description": "Home crowd · favourable seeding",
+		"resolution": "Home crowd · favourable seeding",
 		"expiryDate": "2026-06-12T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -192,6 +211,7 @@
 	{
 		"title": "Will Brazil keep a clean sheet in their opener?",
 		"description": "Solid back line · soft group draw",
+		"resolution": "Solid back line · soft group draw",
 		"expiryDate": "2026-06-13T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -202,6 +222,7 @@
 	{
 		"title": "Will England win their group opener?",
 		"description": "Strong squad · favourites in their group",
+		"resolution": "Strong squad · favourites in their group",
 		"expiryDate": "2026-06-13T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -212,6 +233,7 @@
 	{
 		"title": "Will a red card be shown on opening weekend?",
 		"description": "48 teams · nerves run high early",
+		"resolution": "48 teams · nerves run high early",
 		"expiryDate": "2026-06-14T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -222,6 +244,7 @@
 	{
 		"title": "Will any player score a hat-trick in the first round of games?",
 		"description": "Mismatches early · happens ~40% of WCs",
+		"resolution": "Mismatches early · happens ~40% of WCs",
 		"expiryDate": "2026-06-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -232,6 +255,7 @@
 	{
 		"title": "Will Portugal's talisman score in the group stage?",
 		"description": "Three games · penalty duties his",
+		"resolution": "Three games · penalty duties his",
 		"expiryDate": "2026-06-17T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -242,6 +266,7 @@
 	{
 		"title": "Will a debutant nation beat a former champion in the group stage?",
 		"description": "Expanded field · more first-timers",
+		"resolution": "Expanded field · more first-timers",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -252,6 +277,7 @@
 	{
 		"title": "Will Argentina win their first two group games?",
 		"description": "Holders · should clear the group early",
+		"resolution": "Holders · should clear the group early",
 		"expiryDate": "2026-06-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -262,6 +288,7 @@
 	{
 		"title": "Will France top their group?",
 		"description": "Deepest squad in the tournament",
+		"resolution": "Deepest squad in the tournament",
 		"expiryDate": "2026-06-20T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -272,6 +299,7 @@
 	{
 		"title": "Will Spain take all 9 points from the group stage?",
 		"description": "Euro champs · only 1 in 4 sides manage it",
+		"resolution": "Euro champs · only 1 in 4 sides manage it",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -282,6 +310,7 @@
 	{
 		"title": "Will any final-matchday group game finish 0–0?",
 		"description": "Dead rubbers breed caution",
+		"resolution": "Dead rubbers breed caution",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -292,6 +321,7 @@
 	{
 		"title": "Will a stoppage-time goal decide a team's qualification?",
 		"description": "Final-round simultaneity = chaos",
+		"resolution": "Final-round simultaneity = chaos",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -302,6 +332,7 @@
 	{
 		"title": "Will Germany advance from the group stage?",
 		"description": "Out in 2018 & 2022 · redemption arc",
+		"resolution": "Out in 2018 & 2022 · redemption arc",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -312,6 +343,7 @@
 	{
 		"title": "Will all three host nations reach the knockouts?",
 		"description": "USA, Mexico, Canada · home advantage",
+		"resolution": "USA, Mexico, Canada · home advantage",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -322,6 +354,7 @@
 	{
 		"title": "Will two or more African nations reach the Round of 32?",
 		"description": "Bigger field · more CAF places",
+		"resolution": "Bigger field · more CAF places",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -332,6 +365,7 @@
 	{
 		"title": "Will an Asian nation reach the knockout rounds?",
 		"description": "Japan & Korea pedigree · 8 AFC entrants",
+		"resolution": "Japan & Korea pedigree · 8 AFC entrants",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -342,6 +376,7 @@
 	{
 		"title": "Will a World Cup debutant reach the knockouts?",
 		"description": "First expanded field · room for newcomers",
+		"resolution": "First expanded field · room for newcomers",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -352,6 +387,7 @@
 	{
 		"title": "Will the group stage average over 2.8 goals per game?",
 		"description": "2022 ran 2.5 · attacking sides this cycle",
+		"resolution": "2022 ran 2.5 · attacking sides this cycle",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -362,6 +398,7 @@
 	{
 		"title": "Will a Round of 32 tie be decided on penalties?",
 		"description": "16 knockout ties · shootouts loom",
+		"resolution": "16 knockout ties · shootouts loom",
 		"expiryDate": "2026-07-01T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -372,6 +409,7 @@
 	{
 		"title": "Will the USA reach the Round of 16?",
 		"description": "Co-hosts · winnable bracket path",
+		"resolution": "Co-hosts · winnable bracket path",
 		"expiryDate": "2026-06-29T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -382,6 +420,7 @@
 	{
 		"title": "Will Mexico reach the Round of 16?",
 		"description": "Eighth straight last-16 the target",
+		"resolution": "Eighth straight last-16 the target",
 		"expiryDate": "2026-06-30T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -392,6 +431,7 @@
 	{
 		"title": "Will a pre-tournament top-five favorite exit in the Round of 32?",
 		"description": "Knockout from R32 = early landmines",
+		"resolution": "Knockout from R32 = early landmines",
 		"expiryDate": "2026-07-03T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -402,6 +442,7 @@
 	{
 		"title": "Will a team win a Round of 32 tie after going two goals down?",
 		"description": "Win-or-go-home brings the drama",
+		"resolution": "Win-or-go-home brings the drama",
 		"expiryDate": "2026-07-02T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -412,6 +453,7 @@
 	{
 		"title": "Will France reach the quarterfinals?",
 		"description": "Back-to-back finalists · loaded squad",
+		"resolution": "Back-to-back finalists · loaded squad",
 		"expiryDate": "2026-07-05T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -422,6 +464,7 @@
 	{
 		"title": "Will Spain reach the quarterfinals?",
 		"description": "Euro champions · in-form generation",
+		"resolution": "Euro champions · in-form generation",
 		"expiryDate": "2026-07-05T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -432,6 +475,7 @@
 	{
 		"title": "Will Brazil reach the quarterfinals?",
 		"description": "Five-time winners · always deep runs",
+		"resolution": "Five-time winners · always deep runs",
 		"expiryDate": "2026-07-06T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -442,6 +486,7 @@
 	{
 		"title": "Will England reach the quarterfinals?",
 		"description": "QF or better in 3 of last 4 majors",
+		"resolution": "QF or better in 3 of last 4 majors",
 		"expiryDate": "2026-07-06T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -452,6 +497,7 @@
 	{
 		"title": "Will Argentina reach the quarterfinals?",
 		"description": "Defending champions · proven knockout core",
+		"resolution": "Defending champions · proven knockout core",
 		"expiryDate": "2026-07-07T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -462,6 +508,7 @@
 	{
 		"title": "Will at least one host nation reach the quarterfinals?",
 		"description": "USA / Mexico / Canada · home roar",
+		"resolution": "USA / Mexico / Canada · home roar",
 		"expiryDate": "2026-07-07T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -472,6 +519,7 @@
 	{
 		"title": "Will three or more Round-of-16 ties go to extra time?",
 		"description": "Tighter margins deep in the draw",
+		"resolution": "Tighter margins deep in the draw",
 		"expiryDate": "2026-07-07T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -482,6 +530,7 @@
 	{
 		"title": "Will a quarterfinal be decided by a shootout?",
 		"description": "Stakes tighten · cagey football",
+		"resolution": "Stakes tighten · cagey football",
 		"expiryDate": "2026-07-10T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -492,6 +541,7 @@
 	{
 		"title": "Will a South American nation reach the semifinals?",
 		"description": "Brazil & Argentina carry the flag",
+		"resolution": "Brazil & Argentina carry the flag",
 		"expiryDate": "2026-07-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -502,6 +552,7 @@
 	{
 		"title": "Will all four semifinalists come from the top eight seeds?",
 		"description": "Seedings rarely hold all the way",
+		"resolution": "Seedings rarely hold all the way",
 		"expiryDate": "2026-07-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -512,6 +563,7 @@
 	{
 		"title": "Will an unseeded nation reach the semifinals?",
 		"description": "Croatia 2018, Morocco 2022 · it happens",
+		"resolution": "Croatia 2018, Morocco 2022 · it happens",
 		"expiryDate": "2026-07-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -522,6 +574,7 @@
 	{
 		"title": "Will Brazil reach the final?",
 		"description": "Title favourites · path opens up",
+		"resolution": "Title favourites · path opens up",
 		"expiryDate": "2026-07-14T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -532,6 +585,7 @@
 	{
 		"title": "Will a host nation reach the final?",
 		"description": "No host has since France 1998",
+		"resolution": "No host has since France 1998",
 		"expiryDate": "2026-07-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -542,6 +596,7 @@
 	{
 		"title": "Will the final be Europe vs. South America?",
 		"description": "The classic continental clash",
+		"resolution": "The classic continental clash",
 		"expiryDate": "2026-07-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -552,6 +607,7 @@
 	{
 		"title": "Will both semifinals be decided inside 90 minutes?",
 		"description": "Semis often grind to extra time",
+		"resolution": "Semis often grind to extra time",
 		"expiryDate": "2026-07-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -562,6 +618,7 @@
 	{
 		"title": "Will the third-place playoff have three or more goals?",
 		"description": "No pressure, all freedom · usually open",
+		"resolution": "No pressure, all freedom · usually open",
 		"expiryDate": "2026-07-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -572,6 +629,7 @@
 	{
 		"title": "Will there be a goal in the first half of the final?",
 		"description": "Finals start tense · 4 of last 6 stayed level",
+		"resolution": "Finals start tense · 4 of last 6 stayed level",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -582,6 +640,7 @@
 	{
 		"title": "Will the final be decided on penalties?",
 		"description": "2 of the last 4 finals went to spot-kicks",
+		"resolution": "2 of the last 4 finals went to spot-kicks",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -592,6 +651,7 @@
 	{
 		"title": "Will the Golden Ball go to a forward?",
 		"description": "Best-player award skews to attackers",
+		"resolution": "Best-player award skews to attackers",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -602,6 +662,7 @@
 	{
 		"title": "Will the Best Young Player be European?",
 		"description": "European academies dominate the shortlist",
+		"resolution": "European academies dominate the shortlist",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -612,6 +673,7 @@
 	{
 		"title": "Will the tournament top scorer reach six or more goals?",
 		"description": "7 games possible · only the elite get there",
+		"resolution": "7 games possible · only the elite get there",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -622,6 +684,7 @@
 	{
 		"title": "Will a nation win the World Cup for the first time?",
 		"description": "Only 8 nations have ever lifted it",
+		"resolution": "Only 8 nations have ever lifted it",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -632,6 +695,7 @@
 	{
 		"title": "Will a non-European, non-South-American nation reach the final?",
 		"description": "No CONCACAF/AFC/CAF side ever has",
+		"resolution": "No CONCACAF/AFC/CAF side ever has",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -642,6 +706,7 @@
 	{
 		"title": "Will the official mascot become a viral meme?",
 		"description": "Every tournament breeds one",
+		"resolution": "Every tournament breeds one",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -652,6 +717,7 @@
 	{
 		"title": "Will a pitch invader interrupt a knockout match?",
 		"description": "Big stages attract the bold",
+		"resolution": "Big stages attract the bold",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -662,6 +728,7 @@
 	{
 		"title": "Will a commentator break down in tears during the final?",
 		"description": "Emotion runs over when it matters most",
+		"resolution": "Emotion runs over when it matters most",
 		"expiryDate": "2026-07-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -672,6 +739,7 @@
 	{
 		"title": "Will the Fed cut rates in June?",
 		"description": "Resolves YES if the FOMC announces any rate cut at the June 18 meeting.",
+		"resolution": "Resolves YES if the FOMC announces any rate cut at the June 18 meeting.",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["macro"],
 		"inviteOnly": false,
@@ -682,6 +750,7 @@
 	{
 		"title": "Will BTC close above $150K by year-end?",
 		"description": "Resolves YES if BTC closes above $150,000 on Dec 31, 2026 (Coinbase Spot).",
+		"resolution": "Resolves YES if BTC closes above $150,000 on Dec 31, 2026 (Coinbase Spot).",
 		"expiryDate": "2026-12-31T21:59:59.000Z",
 		"categories": ["crypto"],
 		"inviteOnly": false,
@@ -692,6 +761,7 @@
 	{
 		"title": "Will OpenAI release GPT-6 before Q4?",
 		"description": "Resolves YES if OpenAI publicly releases a model named GPT-6 before Sep 30, 2026.",
+		"resolution": "Resolves YES if OpenAI publicly releases a model named GPT-6 before Sep 30, 2026.",
 		"expiryDate": "2026-09-30T21:59:59.000Z",
 		"categories": ["tech"],
 		"inviteOnly": false,
@@ -702,6 +772,7 @@
 	{
 		"title": "Will the 49ers win the Super Bowl?",
 		"description": "Resolves YES if the San Francisco 49ers win Super Bowl LXI.",
+		"resolution": "Resolves YES if the San Francisco 49ers win Super Bowl LXI.",
 		"expiryDate": "2027-02-08T21:59:59.000Z",
 		"categories": ["sports"],
 		"inviteOnly": false,
@@ -712,6 +783,7 @@
 	{
 		"title": "Will the EU pass the AI Liability Act this session?",
 		"description": "Resolves YES if the Council passes the AI Liability Act in the current session.",
+		"resolution": "Resolves YES if the Council passes the AI Liability Act in the current session.",
 		"expiryDate": "2026-07-12T21:59:59.000Z",
 		"categories": ["politics"],
 		"inviteOnly": false,
@@ -722,6 +794,7 @@
 	{
 		"title": "Will ETH market cap exceed BTC by 2027?",
 		"description": "Resolves YES if ETH market cap exceeds BTC at any point before Jan 1, 2027.",
+		"resolution": "Resolves YES if ETH market cap exceeds BTC at any point before Jan 1, 2027.",
 		"expiryDate": "2027-01-01T21:59:59.000Z",
 		"categories": ["crypto"],
 		"inviteOnly": false,
@@ -732,6 +805,7 @@
 	{
 		"title": "Will Apple ship Vision Pro 2 in 2026?",
 		"description": "Resolves YES if Apple announces and ships Vision Pro 2 hardware in 2026.",
+		"resolution": "Resolves YES if Apple announces and ships Vision Pro 2 hardware in 2026.",
 		"expiryDate": "2026-12-31T21:59:59.000Z",
 		"categories": ["tech"],
 		"inviteOnly": false,
@@ -742,6 +816,7 @@
 	{
 		"title": "Will NVIDIA announce another stock split?",
 		"description": "Resolves YES if NVIDIA announces a stock split before Dec 31, 2026.",
+		"resolution": "Resolves YES if NVIDIA announces a stock split before Dec 31, 2026.",
 		"expiryDate": "2026-12-31T21:59:59.000Z",
 		"categories": ["tech"],
 		"inviteOnly": false,
@@ -752,6 +827,7 @@
 	{
 		"title": "Will Taylor Swift announce a 2027 tour by August?",
 		"description": "Resolves YES if a 2027 tour is announced before Aug 31, 2026.",
+		"resolution": "Resolves YES if a 2027 tour is announced before Aug 31, 2026.",
 		"expiryDate": "2026-08-31T21:59:59.000Z",
 		"categories": ["culture"],
 		"inviteOnly": false,
@@ -762,6 +838,7 @@
 	{
 		"title": "Will China GDP growth print above 5.0% for Q2?",
 		"description": "Resolves YES if the NBS Q2 GDP print is above 5.0% year-over-year.",
+		"resolution": "Resolves YES if the NBS Q2 GDP print is above 5.0% year-over-year.",
 		"expiryDate": "2026-07-15T21:59:59.000Z",
 		"categories": ["macro"],
 		"inviteOnly": false,
