@@ -26,6 +26,7 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
+	import { minuteTick_ms } from '$lib/derived/time.derived';
 	import { track } from '$lib/services/analytics.services';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
@@ -145,10 +146,11 @@
 	// stat. Accumulates each committed YES / NO stake; reset on continuation.
 	let sessionStaked = $state(0);
 	let completed = $state(false);
-	// `nowMs` ticks once per second while the session is in flight so the
-	// daily-goal chip rolls over to 0 the instant a session crosses local
-	// midnight (see the rollover ticker below).
-	let nowMs = $state(Date.now());
+	// `nowMs` tracks the shared one-minute heartbeat so the daily-goal chip
+	// rolls over to 0 when a session left open crosses local midnight. Minute
+	// precision is plenty for a day rollover — the only consumers are the
+	// rollover checks below.
+	const nowMs = $derived($minuteTick_ms);
 	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
 	// the FlowCard render loop to drive the per-card generative artwork
 	// (which uses the *primary* tag — see `primaryMarketTag`).
@@ -239,22 +241,6 @@
 	// from `haptics.utils.ts`. Naming kept minimal so existing call
 	// sites read the same way.
 	const vibrate = haptic;
-
-	// Day-rollover ticker. 1 s cadence keeps `nowMs` fresh so the daily-goal
-	// chip rolls over to 0 the moment a session left open crosses local
-	// midnight — without waiting for the next prediction. Stops when
-	// `completed` flips true (the deck is done; the chip no longer updates).
-	$effect(() => {
-		if (completed) {
-			return;
-		}
-
-		const id = setInterval(() => {
-			nowMs = Date.now();
-		}, 1000);
-
-		return () => clearInterval(id);
-	});
 
 	// Daily-goal progress for the top-bar chip. Roll over against the live
 	// `nowMs` tick (not just the stored values) so a session left open across
