@@ -456,7 +456,7 @@ export const esMessages = {
 	'admin.markets.bulk.download_template': 'Descargar plantilla',
 	'admin.markets.bulk.error.invalid_date': 'Formato de fecha inválido: {date}',
 	'admin.markets.bulk.error.missing_fields':
-		'Cada mercado debe tener un título, descripción y expiryDate.',
+		'Cada mercado debe tener un título, resolution y expiryDate.',
 	'admin.markets.bulk.error.not_array': 'El JSON debe ser un arreglo de objetos de mercado.',
 	'admin.markets.bulk.error.not_json': 'Por favor sube un archivo JSON.',
 	'admin.markets.bulk.error.outcome_not_string':
@@ -498,7 +498,7 @@ export const esMessages = {
 		'La cláusula de resolución debe tener {max} caracteres o menos.',
 	'admin.markets.form.field.description': 'Descripción',
 	'admin.markets.form.field.description_placeholder':
-		'Describe brevemente de qué trata este mercado...',
+		'Opcional: describe brevemente de qué trata este mercado...',
 	'admin.markets.form.field.expiry_date': 'Fecha de expiración',
 	'admin.markets.form.field.market_type': 'Tipo de mercado',
 	'admin.markets.form.field.resolution': 'Resolución',

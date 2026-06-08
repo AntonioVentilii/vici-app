@@ -455,7 +455,7 @@ export const enMessages = {
 	'admin.markets.bulk.download_template': 'Download Template',
 	'admin.markets.bulk.error.invalid_date': 'Invalid date format: {date}',
 	'admin.markets.bulk.error.missing_fields':
-		'Each market must have a title, description, and expiryDate.',
+		'Each market must have a title, resolution, and expiryDate.',
 	'admin.markets.bulk.error.not_array': 'JSON must be an array of market objects.',
 	'admin.markets.bulk.error.not_json': 'Please upload a JSON file.',
 	'admin.markets.bulk.error.outcome_not_string':
@@ -494,7 +494,7 @@ export const enMessages = {
 		'The resolution clause must be {max} characters or fewer.',
 	'admin.markets.form.field.description': 'Description',
 	'admin.markets.form.field.description_placeholder':
-		'Briefly describe what this market is about...',
+		'Optional — briefly describe what this market is about...',
 	'admin.markets.form.field.expiry_date': 'Expiry Date',
 	'admin.markets.form.field.market_type': 'Market Type',
 	'admin.markets.form.field.resolution': 'Resolution',
