@@ -25,6 +25,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import { probabilityToPercent } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	interface FirstCall {
@@ -73,7 +74,7 @@
 
 	// Crowd YES probability as a whole-percent integer, from live market
 	// consensus rather than a hardcoded narrative number.
-	const yesPct = (market: Market): number => Math.round(market.yesProbability * 100);
+	const yesPct = (market: Market): number => probabilityToPercent(market.yesProbability);
 
 	// Actual count of "Today in Flow" markets rendered — 1 featured + up to 2
 	// compact — so the header badge reflects the real list, not a hardcoded 3.

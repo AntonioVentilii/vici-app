@@ -69,6 +69,7 @@
 		resumeFlowSound,
 		unlockFlowSound
 	} from '$lib/utils/flow-sound.utils';
+	import { probabilityToPercent } from '$lib/utils/format.utils';
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import type { MarketPriceSeries } from '$lib/utils/market-price-history.utils';
@@ -937,7 +938,7 @@
 			return;
 		}
 
-		const minorityPct = Math.round(Math.min(yes, 1 - yes) * 100);
+		const minorityPct = probabilityToPercent(Math.min(yes, 1 - yes));
 		showCompanion({
 			who: 'trickster',
 			line: t({
