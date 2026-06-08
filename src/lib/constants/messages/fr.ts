@@ -2378,10 +2378,10 @@ export const frMessages = {
 	'welcome.flowcard.trickster': "{minority}% d'accord · 2× VXP",
 	'welcome.flowcard.yes': 'YES',
 	'welcome.nav.already_member': 'Déjà membre ?',
+	'welcome.nav.disclosure':
+		'VICI est un jeu de pronostics gratuit. Le marché se résout sur des données publiques.',
 	'welcome.nav.explore': 'Explorer',
-	'welcome.nav.free_prefix': 'VICI est gratuit -',
 	'welcome.nav.latin_motto': 'Veni · Vidi ·',
-	'welcome.nav.public_data': 'résolution sur données publiques',
 	'welcome.nav.skip_to_content': 'Aller au contenu',
 	'welcome.trust.tagline': 'Veni. Vidi. Vici.',
 	'welcome.universities.fifa_tag': 'COUPE DU MONDE FIFA',
