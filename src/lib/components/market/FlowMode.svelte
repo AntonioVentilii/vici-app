@@ -146,11 +146,19 @@
 	// stat. Accumulates each committed YES / NO stake; reset on continuation.
 	let sessionStaked = $state(0);
 	let completed = $state(false);
-	// `nowMs` tracks the shared one-minute heartbeat so the daily-goal chip
-	// rolls over to 0 when a session left open crosses local midnight. Minute
-	// precision is plenty for a day rollover — the only consumers are the
-	// rollover checks below.
-	const nowMs = $derived($minuteTick_ms);
+	// `nowMs` tracks the shared one-minute heartbeat while the session is in
+	// flight (minute precision is plenty for a day rollover), but freezes once
+	// `completed` flips true so the FlowEnd takeover's Push-to-15 eligibility
+	// (a `dailyGoalDone` consumer) can't shift under the user near midnight —
+	// matching the prior 1s ticker that stopped on `completed`.
+	let nowMs = $state(Date.now());
+	$effect(() => {
+		if (completed) {
+			return;
+		}
+
+		nowMs = $minuteTick_ms;
+	});
 	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
 	// the FlowCard render loop to drive the per-card generative artwork
 	// (which uses the *primary* tag — see `primaryMarketTag`).
