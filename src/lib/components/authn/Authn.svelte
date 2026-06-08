@@ -143,8 +143,9 @@
 		setCachedProfile({ principal: user.owner, profile });
 	});
 
-	// eslint-disable-next-line no-console
-	const automaticSignOut = () => console.log('Automatically signed out because session expired');
+	// No-op: the auth-timer event clears the session via the auth state
+	// change above; nothing extra to do here.
+	const automaticSignOut = (): void => {};
 </script>
 
 <svelte:window onjunoSignOutAuthTimer={automaticSignOut} />

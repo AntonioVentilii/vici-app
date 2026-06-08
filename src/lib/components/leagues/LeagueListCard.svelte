@@ -137,7 +137,7 @@
 		});
 	});
 
-	const handleCopy = async (event: MouseEvent) => {
+	const handleCopy = async (event: MouseEvent | KeyboardEvent) => {
 		event.stopPropagation();
 
 		try {
@@ -254,7 +254,7 @@
 				onkeydown={(e) => {
 					if (e.key === 'Enter' || e.key === ' ') {
 						e.preventDefault();
-						void handleCopy(e as unknown as MouseEvent);
+						void handleCopy(e);
 					}
 				}}
 				role="button"
