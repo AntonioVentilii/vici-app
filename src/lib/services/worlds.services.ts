@@ -1,4 +1,5 @@
 import { functions } from '$declarations/satellite/satellite.api';
+import { DAY_IN_MS } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import {
@@ -7,7 +8,11 @@ import {
 	type AffiliationDoc,
 	type AffiliationKind
 } from '$lib/types/affiliation';
-import type { AffiliationChampionship, AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+import {
+	monthAnchorFromMs,
+	type AffiliationChampionship,
+	type AffiliationStatsDoc
+} from '$lib/types/affiliation-stats';
 import { withTimeout } from '$lib/utils/async.utils';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 
@@ -182,7 +187,7 @@ export const switchAffiliation = async ({
 	nextAffiliationIdentifier: string;
 }): Promise<AffiliationDoc> => {
 	if (Date.now() < currentLockedUntilMs) {
-		const daysLeft = Math.ceil((currentLockedUntilMs - Date.now()) / (24 * 60 * 60 * 1000));
+		const daysLeft = Math.ceil((currentLockedUntilMs - Date.now()) / DAY_IN_MS);
 
 		throw new Error(`affiliations lock active — cannot switch for another ${daysLeft} day(s).`);
 	}
@@ -210,22 +215,6 @@ export const switchAffiliation = async ({
 
 		throw joinErr;
 	}
-};
-
-/**
- * Pure helper for the UI — days remaining on a lock. Returns 0 once
- * the lock has expired so the FE can flip the CTA to "Leave".
- */
-export const affiliationDaysLeft = ({
-	lockedUntilMs,
-	nowMs = Date.now()
-}: {
-	lockedUntilMs: number;
-	nowMs?: number;
-}): number => {
-	const remaining = lockedUntilMs - nowMs;
-
-	return remaining <= 0 ? 0 : Math.ceil(remaining / (24 * 60 * 60 * 1000));
 };
 
 /**
@@ -367,10 +356,9 @@ export const claimWorldsPodiumPrize = ({
  * "claim last month's podium on this month's first visit" pattern.
  */
 export const previousMonthAnchor = (nowMs: number = Date.now()): string => {
-	const d = new Date(nowMs);
-	d.setUTCDate(1);
-	d.setUTCHours(0, 0, 0, 0);
-	d.setUTCMonth(d.getUTCMonth() - 1);
+	const now = new Date(nowMs);
+	// First day of the current month minus one ms lands in the prior month.
+	const firstOfMonth = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
 
-	return `${d.getUTCFullYear()}-${(d.getUTCMonth() + 1).toString().padStart(2, '0')}`;
+	return monthAnchorFromMs(firstOfMonth - 1);
 };
