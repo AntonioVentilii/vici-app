@@ -1,8 +1,10 @@
 import { VXP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { Collection } from '$lib/constants/collections.constants';
+import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
+import { parseToken } from '$lib/utils/parse.utils';
 import {
 	listAffiliationStatsForMonthFn,
 	readAffiliationDoc
@@ -50,13 +52,21 @@ import { encodeDocData, getDocStore, listDocsStore, setDocStore } from '@junobui
  * leaderboard and the claim agree on who's gold/silver/bronze.
  */
 
+// `VXP_WORLDS_PODIUM` holds the human-readable whole-VXP prizes
+// (400 / 200 / 100 — the same values the FE renders). VXP has 4 decimals
+// and this award pays the ledger inline (see `processAward`), so the
+// amounts must be base units sized via `parseToken` — `BigInt(400)` would
+// transfer 400 base units = 0.04 VXP, a 10⁴x under-pay.
+const podiumAmountBaseUnits = (wholeVxp: number): bigint =>
+	parseToken({ value: wholeVxp.toString(), unitName: VXP_TOKEN.decimals });
+
 const PODIUM_PLACES: ReadonlyArray<{
 	place: 'gold' | 'silver' | 'bronze';
 	amount: bigint;
 }> = [
-	{ place: 'gold', amount: BigInt(VXP_WORLDS_PODIUM.gold) },
-	{ place: 'silver', amount: BigInt(VXP_WORLDS_PODIUM.silver) },
-	{ place: 'bronze', amount: BigInt(VXP_WORLDS_PODIUM.bronze) }
+	{ place: 'gold', amount: podiumAmountBaseUnits(VXP_WORLDS_PODIUM.gold) },
+	{ place: 'silver', amount: podiumAmountBaseUnits(VXP_WORLDS_PODIUM.silver) },
+	{ place: 'bronze', amount: podiumAmountBaseUnits(VXP_WORLDS_PODIUM.bronze) }
 ] as const;
 
 const KINDS: ReadonlyArray<AffiliationKind> = ['university', 'country'] as const;
