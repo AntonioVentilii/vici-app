@@ -15,9 +15,10 @@
 	 * Pointer events cover both touch and mouse-drag. A drag that crossed the
 	 * move slop suppresses the tap so swiping never accidentally opens the row.
 	 *
-	 * A11y: the card body is a real `<button>`; the dot is a labelled
-	 * `role="button"` with a 28px box that, nested in the row's padding, clears
-	 * a 44px effective target, plus keyboard support. Decorative icons are
+	 * A11y: the row-open action and the mark-read dot are two separate real
+	 * `<button>`s (never nested), so keyboard and assistive tech see two
+	 * distinct controls. The dot is a labelled 28px box that, nudged into the
+	 * row's padding, clears a 44px effective target. Decorative icons are
 	 * `aria-hidden`.
 	 */
 	interface Props {
@@ -52,6 +53,10 @@
 		startX = event.clientX;
 		moved = false;
 		dragging = true;
+		// Capture so move/up are still delivered if the pointer leaves the row
+		// mid-swipe; without this a release outside the element strands
+		// `dragging`/`startX`/`dx`.
+		(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
 	};
 
 	const onPointerMove = (event: PointerEvent) => {
@@ -68,7 +73,9 @@
 		dx = delta < 0 ? Math.max(delta, -MAX_PULL_PX) : delta * RIGHT_PULL_RESISTANCE;
 	};
 
-	const onPointerUp = () => {
+	const onPointerUp = (event: PointerEvent) => {
+		(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId);
+
 		if (startX === undefined) {
 			return;
 		}
@@ -105,17 +112,11 @@
 		onOpen(notification);
 	};
 
-	const markRead = () => {
+	const markRead = (event: MouseEvent) => {
+		// Stop the dot tap from bubbling into the row-open action.
+		event.stopPropagation();
 		haptic('light-tap');
 		onMarkRead(notification);
-	};
-
-	const onDotKeyDown = (event: KeyboardEvent) => {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			event.stopPropagation();
-			markRead();
-		}
 	};
 </script>
 
@@ -123,43 +124,42 @@
 	<div class="notif-swipe-bg" class:is-armed={armed} aria-hidden="true">
 		<X size={16} strokeWidth={1.8} />
 	</div>
-	<button
+	<!-- The swipe container owns the drag gesture (pointer-captured on down so a
+	     release outside the row still settles it); the row-open action and the
+	     mark-read dot are separate real buttons inside it, never nested. -->
+	<div
 		style:transform={`translateX(${dx}px)`}
 		style:transition={dragging ? 'none' : `transform ${EXIT_MS}ms var(--ease-vici)`}
 		class="notif-row"
 		class:is-unread={notification.unread}
-		onclick={onTap}
 		onpointercancel={onPointerUp}
 		onpointerdown={onPointerDown}
 		onpointermove={onPointerMove}
 		onpointerup={onPointerUp}
-		type="button"
+		role="presentation"
 	>
-		<span class="notif-row-icon" aria-hidden="true">
-			<KindIcon size={16} strokeWidth={1.8} />
-		</span>
-		<span class="notif-row-copy">
-			<span class="notif-row-title">{notification.title}</span>
-			<span class="notif-row-body">{notification.body}</span>
-			<span class="notif-row-when num">{notification.when}</span>
-		</span>
+		<button class="notif-row-action" onclick={onTap} type="button">
+			<span class="notif-row-icon" aria-hidden="true">
+				<KindIcon size={16} strokeWidth={1.8} />
+			</span>
+			<span class="notif-row-copy">
+				<span class="notif-row-title">{notification.title}</span>
+				<span class="notif-row-body">{notification.body}</span>
+				<span class="notif-row-when num">{notification.when}</span>
+			</span>
+		</button>
 		{#if notification.unread}
-			<span
+			<button
 				class="notif-dot-tap"
 				aria-label={t({ locale: $localeStore, key: 'notifications.mark_read_one' })}
-				onclick={(event) => {
-					event.stopPropagation();
-					markRead();
-				}}
-				onkeydown={onDotKeyDown}
+				onclick={markRead}
 				onpointerdown={(event) => event.stopPropagation()}
-				role="button"
-				tabindex="0"
+				type="button"
 			>
 				<span class="notif-unread-dot"></span>
-			</span>
+			</button>
 		{/if}
-	</button>
+	</div>
 </div>
 
 <style lang="postcss">
@@ -209,7 +209,7 @@
 		z-index: 1;
 		will-change: transform;
 		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto;
+		grid-template-columns: minmax(0, 1fr) auto;
 		gap: 0.625rem;
 		align-items: flex-start;
 		width: 100%;
@@ -220,9 +220,27 @@
 		box-shadow: var(--shadow-card);
 		color: var(--text-base);
 		text-align: left;
+		touch-action: pan-y;
+	}
+
+	/* The row-open action: an unstyled button that re-creates the original
+	   icon + copy grid so the card chrome (border/bg/shadow on `.notif-row`)
+	   and the dot stay siblings. */
+	.notif-row-action {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 0.625rem;
+		align-items: flex-start;
+		min-width: 0;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: inherit;
+		font: inherit;
+		text-align: left;
 		appearance: none;
 		cursor: pointer;
-		touch-action: pan-y;
 	}
 
 	.notif-row.is-unread {
@@ -280,7 +298,11 @@
 		width: 28px;
 		height: 28px;
 		margin: -6px -8px 0 0;
+		padding: 0;
+		border: 0;
 		border-radius: 50%;
+		background: none;
+		appearance: none;
 		flex: 0 0 auto;
 		cursor: pointer;
 	}

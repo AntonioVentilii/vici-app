@@ -357,7 +357,15 @@ export const markResolutionsSeen = (): void => {
 // away-digest banner and the bell badge stay in lockstep — the read overlay
 // here is purely additive on top of that.
 
-const loadStringSet = (key: string): Set<string> => new Set(get<string[]>({ key }) ?? []);
+const loadStringSet = (key: string): Set<string> => {
+	const raw = get<unknown>({ key });
+
+	if (!Array.isArray(raw) || !raw.every((id) => typeof id === 'string')) {
+		return new Set();
+	}
+
+	return new Set(raw);
+};
 
 const persistStringSet = ({ key, set }: { key: string; set: Set<string> }): void => {
 	setStorage({ key, value: Array.from(set) });
