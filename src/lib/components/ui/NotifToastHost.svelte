@@ -93,8 +93,9 @@
 	// subscription once on mount and tear it down on destroy. Keeping this
 	// here (rather than at module scope in `inbox.store.ts`) means the
 	// side-effecting diff only runs while the host is mounted — pages that
-	// never render the toast host pay nothing. The empty dependency closure
-	// means the effect runs a single time for the host's lifetime.
+	// never render the toast host pay nothing. The effect body reads no
+	// reactive state, so it runs a single time for the host's lifetime, and
+	// the teardown it returns unsubscribes on destroy.
 	$effect(() => initInboxToasts());
 
 	const open = () => {
