@@ -11,6 +11,7 @@
 		Users,
 		X
 	} from '@lucide/svelte/icons';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { clearInboxToast, initInboxToasts, latestInboxToast } from '$lib/stores/inbox.store';
@@ -89,14 +90,9 @@
 		return clearTimers;
 	});
 
-	// Own the arrival-toast diff lifecycle: wire the inbox-snapshot
-	// subscription once on mount and tear it down on destroy. Keeping this
-	// here (rather than at module scope in `inbox.store.ts`) means the
-	// side-effecting diff only runs while the host is mounted — pages that
-	// never render the toast host pay nothing. The effect body reads no
-	// reactive state, so it runs a single time for the host's lifetime, and
-	// the teardown it returns unsubscribes on destroy.
-	$effect(() => initInboxToasts());
+	// Start the arrival-toast diff on mount, unsubscribe on destroy, so it
+	// only runs while the host is rendered (not at module scope).
+	onMount(() => initInboxToasts());
 
 	const open = () => {
 		// `href` may be a dynamic path (e.g. `/markets/<id>`), so we route
