@@ -51,7 +51,9 @@
 			autocomplete="off"
 			autocorrect="off"
 			onkeydown={(event) => {
-				if (event.key === 'Enter') {
+				// Mirror the CTA's disabled/pending guard so the keyboard path
+				// can't fire a duplicate (or empty) submission.
+				if (event.key === 'Enter' && !adding && value.trim().length > 0) {
 					onSubmit();
 				}
 			}}
@@ -133,39 +135,6 @@
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 	}
-
-	:global(.friends-sheet-remove) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		padding: 0.75rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-		color: var(--no);
-		font-size: var(--t-13);
-		font-weight: 700;
-	}
-
-	:global(.friends-sheet-primary) {
-		border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
-		background: var(--color-primary);
-		color: var(--color-primary-foreground, white);
-	}
-
-	:global(.friends-sheet-close) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		padding: 0.65rem;
-		margin-top: 0.4rem;
-		border: 0;
-		border-radius: var(--r-pill);
-		background: transparent;
-		color: var(--text-muted);
-		font-size: var(--t-13);
-		font-weight: 700;
-	}
+	/* Shared `.friends-sheet-remove` / `-primary` / `-close` button styles
+	   live in app.css (used by both friends sheets). */
 </style>

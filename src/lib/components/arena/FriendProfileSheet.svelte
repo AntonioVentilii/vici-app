@@ -24,9 +24,9 @@
 		isOpen: boolean;
 		profile: UserProfile | undefined;
 		friendId: string;
-		accuracyLabel: string;
+		accuracyValue: string;
 		streak: number;
-		vxpLabel: string;
+		vxpValue: string;
 		h2hAhead: boolean;
 		h2hValue: string;
 		removing: boolean;
@@ -38,9 +38,9 @@
 		isOpen,
 		profile,
 		friendId,
-		accuracyLabel,
+		accuracyValue,
 		streak,
-		vxpLabel,
+		vxpValue,
 		h2hAhead,
 		h2hValue,
 		removing,
@@ -74,7 +74,7 @@
 			<span class="friends-sheet-lbl">
 				{t({ locale: $localeStore, key: 'arena.friends.sheet.accuracy' })}
 			</span>
-			<span class="friends-sheet-val num">{accuracyLabel}</span>
+			<span class="friends-sheet-val num">{accuracyValue}</span>
 		</div>
 		<div class="friends-sheet-stat">
 			<span class="friends-sheet-lbl">
@@ -86,7 +86,7 @@
 			<span class="friends-sheet-lbl">
 				{t({ locale: $localeStore, key: 'arena.friends.sheet.vxp' })}
 			</span>
-			<span class="friends-sheet-val num">{vxpLabel}</span>
+			<span class="friends-sheet-val num">{vxpValue}</span>
 		</div>
 	</div>
 
@@ -219,32 +219,6 @@
 		color: var(--no);
 	}
 
-	:global(.friends-sheet-remove) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		padding: 0.75rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-		color: var(--no);
-		font-size: var(--t-13);
-		font-weight: 700;
-	}
-
-	:global(.friends-sheet-close) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		padding: 0.65rem;
-		margin-top: 0.4rem;
-		border: 0;
-		border-radius: var(--r-pill);
-		background: transparent;
-		color: var(--text-muted);
-		font-size: var(--t-13);
-		font-weight: 700;
-	}
+	/* Shared `.friends-sheet-remove` / `-close` button styles live in
+	   app.css (used by both friends sheets). */
 </style>

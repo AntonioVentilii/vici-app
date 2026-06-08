@@ -942,7 +942,7 @@
 	{@const row = openProfile}
 	{@const h2h = formatH2h(row.accuracy)}
 	<FriendProfileSheet
-		accuracyLabel={formatPct(row.accuracy)}
+		accuracyValue={formatPct(row.accuracy)}
 		friendId={row.friendId}
 		h2hAhead={h2h.ahead}
 		h2hValue={h2h.value}
@@ -952,7 +952,7 @@
 		profile={row.profile}
 		removing={removingFriendId === row.friendId}
 		streak={row.streak}
-		vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(row.points) })}
+		vxpValue={formatVxpBalance({ value: vxpBaseUnitsFromPoints(row.points) })}
 	/>
 {/if}
 
