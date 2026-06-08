@@ -20,3 +20,58 @@ export const affiliationMonthlyAccuracy = (stats: AffiliationStatsDoc): number =
  */
 export const formatAccuracyPercent = (accuracy: number): string =>
 	`${(accuracy * 100).toFixed(1)}%`;
+
+/**
+ * Build the canonical affiliation-leaderboard comparator: accuracy
+ * descending → call count descending → `affiliationIdentifier`
+ * ascending (stable `localeCompare` tie-break).
+ *
+ * The accuracy basis (`accuracyOf`) and the call-count tie-break field
+ * (`callsOf`) are passed separately because they do not always travel
+ * together: a scope toggle may rank by monthly accuracy while still
+ * tie-breaking on lifetime `totalCalls`.
+ */
+export const affiliationRankComparator =
+	({
+		accuracyOf,
+		callsOf
+	}: {
+		accuracyOf: (stats: AffiliationStatsDoc) => number;
+		callsOf: (stats: AffiliationStatsDoc) => number;
+	}) =>
+	// eslint-disable-next-line local-rules/prefer-object-params -- Array.sort comparators take two positional args by contract
+	(a: AffiliationStatsDoc, b: AffiliationStatsDoc): number => {
+		const accuracyA = accuracyOf(a);
+		const accuracyB = accuracyOf(b);
+
+		if (accuracyA !== accuracyB) {
+			return accuracyB - accuracyA;
+		}
+
+		const callsA = callsOf(a);
+		const callsB = callsOf(b);
+
+		if (callsA !== callsB) {
+			return callsB - callsA;
+		}
+
+		return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
+	};
+
+/**
+ * Lifetime affiliation-leaderboard comparator: lifetime accuracy →
+ * lifetime `totalCalls` → identifier.
+ */
+export const compareAffiliationByLifetime = affiliationRankComparator({
+	accuracyOf: affiliationLifetimeAccuracy,
+	callsOf: (stats) => stats.totalCalls
+});
+
+/**
+ * Monthly affiliation-leaderboard comparator: monthly accuracy →
+ * monthly `monthTotalCalls` → identifier.
+ */
+export const compareAffiliationByMonth = affiliationRankComparator({
+	accuracyOf: affiliationMonthlyAccuracy,
+	callsOf: (stats) => stats.monthTotalCalls
+});

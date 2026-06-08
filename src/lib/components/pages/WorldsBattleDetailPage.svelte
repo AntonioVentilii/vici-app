@@ -20,6 +20,7 @@
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
+		affiliationRankComparator,
 		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
 	import { formatMonthName } from '$lib/utils/format.utils';
@@ -104,21 +105,16 @@
 
 	const sortedForScope = $derived.by(() => {
 		const list = [...stats];
+		const activeScope = scope;
 
-		list.sort((a, b) => {
-			const da = accForScope({ row: a, scope });
-			const db = accForScope({ row: b, scope });
-
-			if (da !== db) {
-				return db - da;
-			}
-
-			if (a.totalCalls !== b.totalCalls) {
-				return b.totalCalls - a.totalCalls;
-			}
-
-			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
-		});
+		// Accuracy basis follows the active scope; the tie-break always
+		// uses lifetime `totalCalls`.
+		list.sort(
+			affiliationRankComparator({
+				accuracyOf: (row) => accForScope({ row, scope: activeScope }),
+				callsOf: (row) => row.totalCalls
+			})
+		);
 
 		return list;
 	});
