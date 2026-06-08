@@ -102,6 +102,7 @@ export const idlFactory = ({ IDL }) => {
 		Asset: Asset,
 		NonMonetary: NonMonetaryUnit
 	});
+	const Resolution = IDL.Record({ clause: IDL.Text });
 	const Outcome = IDL.Record({
 		id: IDL.Text,
 		title: IDL.Text,
@@ -129,6 +130,7 @@ export const idlFactory = ({ IDL }) => {
 		underlying: IDL.Text,
 		locale: IDL.Opt(IDL.Text),
 		description: Description,
+		resolution: Resolution,
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		icon_url: IDL.Opt(IDL.Text),
 		trading_access: IDL.Vec(TradingAccess),
@@ -150,7 +152,9 @@ export const idlFactory = ({ IDL }) => {
 		ForkMustBeRestricted: IDL.Null,
 		UnsupportedPayoutUnit: IDL.Null,
 		InvalidLocale: IDL.Null,
+		ResolutionClauseEmpty: IDL.Null,
 		SocialRateLimitExceeded: IDL.Null,
+		ResolutionClauseTooLong: IDL.Null,
 		SeriesAlreadyExists: IDL.Null,
 		SourceSeriesNotFound: IDL.Null,
 		RewardTitleTooLong: IDL.Null,
@@ -172,6 +176,7 @@ export const idlFactory = ({ IDL }) => {
 		engine_id: IDL.Opt(IDL.Text),
 		locale: IDL.Opt(IDL.Text),
 		description: IDL.Opt(Description),
+		resolution: IDL.Opt(Resolution),
 		trading_access: IDL.Vec(TradingAccess)
 	});
 	const EngineRole = IDL.Variant({
@@ -234,6 +239,7 @@ export const idlFactory = ({ IDL }) => {
 		underlying: IDL.Text,
 		locale: IDL.Opt(IDL.Text),
 		description: Description,
+		resolution: Resolution,
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		created_at_ns: IDL.Nat64,
 		icon_url: IDL.Opt(IDL.Text),
