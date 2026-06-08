@@ -1033,6 +1033,16 @@
 [data-theme='peach'] .lp-pill {
 	background: rgba(250, 224, 204, 0.82);
 }
+/* Seamless at the very top: the pill carries no slab over the hero — it only
+   frosts in once the page is scrolled (the base .lp-pill frost + the
+   .is-scrolled darken below), fading via the .lp-pill `background` transition. */
+.lp-nav:not(.is-scrolled) .lp-pill {
+	background: transparent;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	border-color: transparent;
+	box-shadow: none;
+}
 .lp-nav.is-scrolled .lp-pill {
 	background: rgba(20, 18, 15, 0.92);
 	box-shadow: 0 14px 32px -16px rgba(0, 0, 0, 0.55);
@@ -1490,17 +1500,14 @@
 		box-shadow 200ms var(--ease),
 		backdrop-filter 200ms var(--ease);
 }
+/* Desktop nav stays fully transparent even when scrolled — the logo, links and
+   CTA float cleanly over the page rather than on a full-width frosted band. */
 .dnav.is-scrolled {
-	background: rgba(20, 18, 15, 0.78);
-	backdrop-filter: blur(18px);
-	-webkit-backdrop-filter: blur(18px);
-	border-bottom-color: var(--border);
-	box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.4);
-}
-[data-theme='light'] .dnav.is-scrolled,
-[data-theme='peach'] .dnav.is-scrolled {
-	background: rgba(242, 236, 220, 0.85);
-	border-bottom-color: rgba(14, 13, 11, 0.1);
+	background: transparent;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	border-bottom-color: transparent;
+	box-shadow: none;
 }
 .dnav-skip {
 	position: absolute;
