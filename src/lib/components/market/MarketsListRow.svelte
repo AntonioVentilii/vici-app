@@ -7,7 +7,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { formatToken, probabilityToPercent } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
@@ -25,7 +25,7 @@
 
 	const { market, tag }: Props = $props();
 
-	const yes = $derived(Math.round(market.yesProbability * 100));
+	const yes = $derived(probabilityToPercent(market.yesProbability));
 	// Cold-start: a market with no real volume yet reads "New" instead of
 	// "0 vol" — framing the empty market as an opportunity, never a synthetic
 	// crowd. Uses our real volume field only.

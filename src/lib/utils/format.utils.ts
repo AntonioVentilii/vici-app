@@ -322,7 +322,9 @@ export const formatPrice = (price: ClearingDid.Price): string =>
 		}) * 100
 	)}%`;
 
-export const formatProbability = (prob: number): string => `${Math.round(prob * 100)}%`;
+export const probabilityToPercent = (prob: number): number => Math.round(prob * 100);
+
+export const formatProbability = (prob: number): string => `${probabilityToPercent(prob)}%`;
 
 export const formatDate = (date: bigint | number): string =>
 	new Date(Number(date)).toLocaleDateString();
