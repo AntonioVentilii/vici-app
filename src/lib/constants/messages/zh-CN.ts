@@ -441,8 +441,7 @@ export const zhCnMessages = {
 	'admin.markets.bulk.creating': '正在创建市场',
 	'admin.markets.bulk.download_template': '下载模板',
 	'admin.markets.bulk.error.invalid_date': '无效的日期格式:{date}',
-	'admin.markets.bulk.error.missing_fields':
-		'每个市场都必须包含 title、description 与 expiryDate。',
+	'admin.markets.bulk.error.missing_fields': '每个市场都必须包含 title、resolution 与 expiryDate。',
 	'admin.markets.bulk.error.not_array': 'JSON 必须是市场对象的数组。',
 	'admin.markets.bulk.error.not_json': '请上传 JSON 文件。',
 	'admin.markets.bulk.error.outcome_not_string': '每个结果必须为字符串,市场：{title}',
@@ -473,7 +472,7 @@ export const zhCnMessages = {
 	'admin.markets.form.error.resolution_required': '需要裁定条款——请描述该市场如何结算。',
 	'admin.markets.form.error.resolution_too_long': '裁定条款不得超过 {max} 个字符。',
 	'admin.markets.form.field.description': '描述',
-	'admin.markets.form.field.description_placeholder': '简要描述此市场的内容……',
+	'admin.markets.form.field.description_placeholder': '可选——简要描述此市场的内容……',
 	'admin.markets.form.field.expiry_date': '到期日期',
 	'admin.markets.form.field.market_type': '市场类型',
 	'admin.markets.form.field.resolution': '裁定',

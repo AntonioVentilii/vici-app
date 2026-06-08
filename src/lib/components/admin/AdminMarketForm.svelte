@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
+	import { isEmptyString } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import type { RegistryDid } from '$declarations';
 	import SocialPremiumPicker from '$lib/components/arena/SocialPremiumPicker.svelte';
@@ -60,7 +60,9 @@
 	};
 
 	const onCreate = async () => {
-		if (isNullish(title) || isNullish(description) || isNullish(expiryDate)) {
+		// `resolution` is the compulsory settlement clause; `description` is an
+		// optional blurb (the service falls back to the clause when it's blank).
+		if (isEmptyString(title) || isEmptyString(expiryDate)) {
 			return;
 		}
 
@@ -69,7 +71,7 @@
 		// a localized message instead of an opaque `add_series` error.
 		const resolutionTrimmed = resolution.trim();
 
-		if (resolutionTrimmed.length === 0) {
+		if (isEmptyString(resolutionTrimmed)) {
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'wallet.send.error_title' }),
 				message: t({ locale: $localeStore, key: 'admin.markets.form.error.resolution_required' }),
@@ -196,26 +198,6 @@
 		<div class="space-y-2">
 			<label
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
-				for="market-description"
-			>
-				{t({ locale: $localeStore, key: 'admin.markets.form.field.description' })}
-			</label>
-			<textarea
-				id="market-description"
-				class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-2xl border-none px-6 py-4 ring-1 ring-inset focus:ring-2"
-				oninput={(e) => (description = e.currentTarget.value)}
-				placeholder={t({
-					locale: $localeStore,
-					key: 'admin.markets.form.field.description_placeholder'
-				})}
-				rows="4"
-				value={description}
-			></textarea>
-		</div>
-
-		<div class="space-y-2">
-			<label
-				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="market-resolution"
 			>
 				{t({ locale: $localeStore, key: 'admin.markets.form.field.resolution' })}
@@ -239,6 +221,26 @@
 					params: { max: RESOLUTION_CLAUSE_MAX_LENGTH }
 				})}
 			</p>
+		</div>
+
+		<div class="space-y-2">
+			<label
+				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
+				for="market-description"
+			>
+				{t({ locale: $localeStore, key: 'admin.markets.form.field.description' })}
+			</label>
+			<textarea
+				id="market-description"
+				class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-2xl border-none px-6 py-4 ring-1 ring-inset focus:ring-2"
+				oninput={(e) => (description = e.currentTarget.value)}
+				placeholder={t({
+					locale: $localeStore,
+					key: 'admin.markets.form.field.description_placeholder'
+				})}
+				rows="4"
+				value={description}
+			></textarea>
 		</div>
 
 		<div class="space-y-2">

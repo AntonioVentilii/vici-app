@@ -458,7 +458,7 @@ export const deMessages = {
 	'admin.markets.bulk.download_template': 'Vorlage herunterladen',
 	'admin.markets.bulk.error.invalid_date': 'Ungültiges Datumsformat: {date}',
 	'admin.markets.bulk.error.missing_fields':
-		'Jeder Markt muss einen title, eine description und ein expiryDate haben.',
+		'Jeder Markt muss einen title, eine resolution und ein expiryDate haben.',
 	'admin.markets.bulk.error.not_array': 'JSON muss ein Array aus Marktobjekten sein.',
 	'admin.markets.bulk.error.not_json': 'Bitte eine JSON-Datei hochladen.',
 	'admin.markets.bulk.error.outcome_not_string':
@@ -498,7 +498,7 @@ export const deMessages = {
 		'Die Auflösungsklausel darf höchstens {max} Zeichen lang sein.',
 	'admin.markets.form.field.description': 'Beschreibung',
 	'admin.markets.form.field.description_placeholder':
-		'Beschreibe kurz, worum es in diesem Markt geht...',
+		'Optional – beschreibe kurz, worum es in diesem Markt geht...',
 	'admin.markets.form.field.expiry_date': 'Ablaufdatum',
 	'admin.markets.form.field.market_type': 'Markttyp',
 	'admin.markets.form.field.resolution': 'Auflösung',
