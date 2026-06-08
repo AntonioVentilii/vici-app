@@ -345,7 +345,7 @@ export const LANDING_STATUS_FRIENDS: readonly LandingStatusRow[] = [
 const LANDING_STATUS_UNIVERSITIES_BY_LANG: Record<string, readonly string[]> = {
 	en: ['Stanford', 'Harvard', 'MIT', 'NYU'],
 	es: ['UNAM', 'Buenos Aires (UBA)', 'Complutense Madrid', 'Andes'],
-	pt: ['USP', 'Unicamp', 'UFRJ', 'PUC-Rio'],
+	pt: ['USP', 'Lisboa', 'Unicamp', 'Porto'],
 	it: ['Politecnico Milano', 'Sapienza Roma', 'Bocconi', 'Torino'],
 	fr: ['Sorbonne', 'Sciences Po', 'PSL', 'Polytechnique'],
 	de: ['TU München', 'LMU München', 'Heidelberg', 'Humboldt Berlin']
