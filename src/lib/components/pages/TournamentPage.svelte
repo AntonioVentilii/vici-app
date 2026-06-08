@@ -20,6 +20,7 @@
 		type TournamentMatchDoc,
 		type TournamentRound
 	} from '$lib/types/tournament';
+	import { formatIsoDateUtc } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
@@ -132,15 +133,6 @@
 	 * `docs/ai/frontend/brand.md §2.3`.
 	 */
 	const placeGlyph = (place: 1 | 2 | 3): string => `${place}`;
-
-	const fmtDate = (ms: number): string => {
-		const d = new Date(ms);
-		const year = d.getUTCFullYear();
-		const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
-		const day = d.getUTCDate().toString().padStart(2, '0');
-
-		return `${year}-${month}-${day}`;
-	};
 
 	const refresh = async () => {
 		try {
@@ -404,7 +396,9 @@
 									</div>
 									<div class="tournament-match-meta num">
 										{#if concluded}
-											<span class="tournament-match-date">{fmtDate(match.endMs)}</span>
+											<span class="tournament-match-date"
+												>{formatIsoDateUtc({ timestampMs: match.endMs })}</span
+											>
 											<span class="tournament-match-winner">
 												{match.winnerLeagueId} →
 											</span>
@@ -413,7 +407,7 @@
 												{t({
 													locale: $localeStore,
 													key: 'tournament.match.live',
-													params: { date: fmtDate(match.endMs) }
+													params: { date: formatIsoDateUtc({ timestampMs: match.endMs }) }
 												})}
 											</span>
 										{:else}
@@ -421,7 +415,7 @@
 												{t({
 													locale: $localeStore,
 													key: 'tournament.match.upcoming',
-													params: { date: fmtDate(match.endMs) }
+													params: { date: formatIsoDateUtc({ timestampMs: match.endMs }) }
 												})}
 											</span>
 										{/if}
