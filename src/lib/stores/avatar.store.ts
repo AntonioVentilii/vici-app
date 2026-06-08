@@ -13,8 +13,19 @@ import { derived, get, writable, type Readable } from 'svelte/store';
  * the session so an edit never vanishes mid-session even when the persist
  * never lands. It is intentionally module-scoped (lives for the page session,
  * cleared on reload) and never written to disk.
+ *
+ * Keyed to the committing account's `owner` (principal text) so it only ever
+ * applies to the account that made the edit. Without the key, a sign-out /
+ * sign-in (or switching to a different account that never saved parts) would
+ * resolve {@link myAvatarParts} to the previous account's cached face — a
+ * cross-account state leak, and permanently wrong for accounts with no saved
+ * picks. The serialized form is stored so the parse only re-runs on change.
  */
-const sessionAvatarParts = writable<ViciAvatarParts | undefined>(undefined);
+interface CachedAvatarParts {
+	owner: string;
+	serialized: string;
+}
+const sessionAvatarParts = writable<CachedAvatarParts | undefined>(undefined);
 
 /**
  * The logged-in user's saved avatar parts, derived from the live profile in
@@ -24,18 +35,31 @@ const sessionAvatarParts = writable<ViciAvatarParts | undefined>(undefined);
  * straight back out here. `undefined` means the user has never saved picks
  * (the surface falls back to a deterministic principal-seeded face).
  *
- * Narrowed to the raw serialized string first so the `JSON.parse` in
- * {@link parseParts} only re-runs when that string actually changes, not on
- * every unrelated `userStore` tick (`authBusy`, balance, …).
+ * Narrowed to the raw serialized parts + the active `owner` first so the
+ * `JSON.parse` in {@link parseParts} only re-runs when those actually change,
+ * not on every unrelated `userStore` tick (`authBusy`, balance, …).
  */
-const myAvatarPartsRaw: Readable<string | undefined> = derived(
+const myAvatarPartsRaw: Readable<{ owner: string | undefined; raw: string | undefined }> = derived(
 	userStore,
-	({ profile }) => profile?.avatarParts
+	({ profile }) => ({ owner: profile?.owner, raw: profile?.avatarParts })
 );
 
 export const myAvatarParts: Readable<ViciAvatarParts | undefined> = derived(
 	[myAvatarPartsRaw, sessionAvatarParts],
-	([raw, session]) => parseParts(raw) ?? session
+	([{ owner, raw }, session]) => {
+		const saved = parseParts(raw);
+
+		if (saved !== undefined) {
+			return saved;
+		}
+
+		// Fall back to the session cache only when it belongs to the active
+		// account — never let one account see another's cached picks. Otherwise
+		// resolve to nothing so the surface uses the principal-seeded default.
+		return session !== undefined && session.owner === owner
+			? parseParts(session.serialized)
+			: undefined;
+	}
 );
 
 /**
@@ -56,11 +80,12 @@ export const saveMyAvatarParts = async (parts: ViciAvatarParts): Promise<void> =
 	const previous = profile;
 	const updated = { ...profile, avatarParts: serialized };
 
-	// Seed the session-durable cache first: even if the optimistic profile
-	// write is rolled back on a persist failure below, `myAvatarParts` keeps
-	// resolving to these picks for the rest of the session, so the user's edit
-	// never silently reverts.
-	sessionAvatarParts.set(parts);
+	// Seed the session-durable cache first, keyed to this account's `owner`:
+	// even if the optimistic profile write is rolled back on a persist failure
+	// below, `myAvatarParts` keeps resolving to these picks for the rest of the
+	// session (for THIS account only), so the user's edit never silently
+	// reverts.
+	sessionAvatarParts.set({ owner, serialized });
 
 	userStore.update((curr) => ({ ...curr, profile: updated }));
 

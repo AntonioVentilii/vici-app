@@ -306,16 +306,20 @@
 			onclick={() => (confirmClose = false)}
 			role="presentation"
 		></div>
+		<!-- An `alertdialog` (not a second `dialog`): the editor itself is already
+		     the modal surface, and nesting a second `aria-modal` dialog inside it
+		     is invalid and confuses AT/focus. `aria-labelledby`/`-describedby`
+		     point at its own heading + body. -->
 		<div
 			class="avatar-editor-confirm-sheet"
-			aria-label={t({ locale: $localeStore, key: 'profile.avatar.discard_title' })}
-			aria-modal="true"
-			role="dialog"
+			aria-describedby="avatar-editor-confirm-sub"
+			aria-labelledby="avatar-editor-confirm-title"
+			role="alertdialog"
 		>
-			<h3 class="avatar-editor-confirm-title">
+			<h3 id="avatar-editor-confirm-title" class="avatar-editor-confirm-title">
 				{t({ locale: $localeStore, key: 'profile.avatar.discard_title' })}
 			</h3>
-			<p class="avatar-editor-confirm-sub">
+			<p id="avatar-editor-confirm-sub" class="avatar-editor-confirm-sub">
 				{t({ locale: $localeStore, key: 'profile.avatar.discard_sub' })}
 			</p>
 			<div class="avatar-editor-confirm-row">

@@ -33,6 +33,14 @@ export const RESOLUTION_EMAIL = `resolution@${CONTACT_DOMAIN}`;
  */
 export const PROFILE_JOIN_URL_BASE = `https://${CONTACT_DOMAIN}/join`;
 
-/** Builds the profile-share join link for a handle. */
+/**
+ * Builds the profile-share join link for a handle. The handle keeps the
+ * owner's real form — the documented charset is letters (any language) +
+ * digits + `. _ -` (see `NICKNAME_PATTERN` in profile.constants), so
+ * stripping to ASCII
+ * alphanumerics or lowercasing would mangle valid handles and break the
+ * round-trip from the invite URL. `encodeURIComponent` makes the segment
+ * URL-safe while preserving the exact handle on decode.
+ */
 export const profileJoinUrl = (handle: string): string =>
-	`${PROFILE_JOIN_URL_BASE}/${handle.replace(/[^a-z0-9]/gi, '').toLowerCase()}`;
+	`${PROFILE_JOIN_URL_BASE}/${encodeURIComponent(handle)}`;
