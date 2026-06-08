@@ -55,6 +55,17 @@
 	let climb = $state(false);
 	let startX = 0;
 
+	// Tracks the pending rest→payoff advance scheduled by `commit` so a
+	// re-commit or unmount can't fire a stale phase change.
+	let commitTimer: ReturnType<typeof setTimeout> | null = null;
+
+	const clearCommitTimer = (): void => {
+		if (commitTimer !== null) {
+			clearTimeout(commitTimer);
+			commitTimer = null;
+		}
+	};
+
 	// A minority call (under 50% consensus on the chosen side) is the
 	// contrarian "Trickster" beat; otherwise the Oracle delivers the verdict.
 	const contrarian = $derived(side === 'YES' ? YES < 50 : NO < 50);
@@ -145,15 +156,23 @@
 		dragging = false;
 		dx = s === 'YES' ? 520 : -520;
 		phase = 'gone';
-		setTimeout(() => (phase = 'payoff'), 360);
+		clearCommitTimer();
+		commitTimer = setTimeout(() => {
+			commitTimer = null;
+			phase = 'payoff';
+		}, 360);
 	};
 
 	const reset = (): void => {
+		clearCommitTimer();
 		phase = 'rest';
 		side = null;
 		dx = 0;
 		climb = false;
 	};
+
+	// Clear any pending rest→payoff advance on teardown.
+	$effect(() => clearCommitTimer);
 
 	const pointerX = (e: MouseEvent | TouchEvent): number =>
 		'touches' in e ? e.touches[0].clientX : e.clientX;

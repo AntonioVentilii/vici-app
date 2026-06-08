@@ -69,7 +69,18 @@
 	]);
 
 	let active = $state(0);
-	let paused = $state(false);
+
+	// Auto-rotation pauses while the pointer is over the slider OR keyboard
+	// focus is anywhere inside it; it only resumes once BOTH are false, so
+	// tabbing through a control with the pointer away never resumes mid-focus.
+	let hovering = $state(false);
+	let focusWithin = $state(false);
+	const paused = $derived(hovering || focusWithin);
+
+	// `focusout`/`pointerleave` confirm focus has actually left the container
+	// (relatedTarget can be null on click-away) before clearing focus-within.
+	const focusStillInside = ({ el, next }: { el: HTMLElement; next: EventTarget | null }): boolean =>
+		(next instanceof Node && el.contains(next)) || el.contains(document.activeElement);
 
 	const tab = $derived(tabs[active]);
 	const headline = $derived(splitHeadline(tt('welcome.v2.status.headline')));
@@ -115,10 +126,11 @@
 			<div
 				class="v2-status-slider"
 				aria-label={tt('welcome.v2.status.kicker')}
-				onfocusin={() => (paused = true)}
-				onfocusout={() => (paused = false)}
-				onmouseenter={() => (paused = true)}
-				onmouseleave={() => (paused = false)}
+				onfocusin={() => (focusWithin = true)}
+				onfocusout={(e) =>
+					(focusWithin = focusStillInside({ el: e.currentTarget, next: e.relatedTarget }))}
+				onpointerenter={() => (hovering = true)}
+				onpointerleave={() => (hovering = false)}
 				role="group"
 			>
 				<div class="v2-status-tabs" aria-label={tt('welcome.v2.status.kicker')} role="tablist">
@@ -127,10 +139,7 @@
 							class="v2-status-tab"
 							class:on={i === active}
 							aria-selected={i === active}
-							onclick={() => {
-								active = i;
-								paused = true;
-							}}
+							onclick={() => (active = i)}
 							role="tab"
 							type="button"
 						>

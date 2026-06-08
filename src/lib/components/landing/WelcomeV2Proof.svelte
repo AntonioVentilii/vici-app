@@ -52,13 +52,16 @@
 		}
 	});
 
+	// Locale-aware grouped count, shared by the big number and the label.
+	const countLabel = $derived(count.toLocaleString($localeStore));
+
 	// The live count is interpolated into the label sentence; render the
 	// sentence with the formatted count substituted in.
 	const liveLabel = $derived(
 		t({
 			locale: $localeStore,
 			key: 'welcome.v2.proof.live',
-			params: { count: count.toLocaleString() }
+			params: { count: countLabel }
 		})
 	);
 </script>
@@ -74,7 +77,7 @@
 	</div>
 
 	<div class="v2-wrap v2-proof-inner">
-		<div class="v2-proof-num"><span class="acc">{count.toLocaleString()}</span></div>
+		<div class="v2-proof-num"><span class="acc">{countLabel}</span></div>
 		<div class="v2-proof-label" aria-live="off">
 			{liveLabel}
 			{tt('welcome.v2.proof.label')}
