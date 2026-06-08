@@ -299,9 +299,11 @@ export const formatMonthAnchorLabel = ({
 		return anchor;
 	}
 
-	return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(
-		new Date(Date.UTC(year, month - 1, 1))
-	);
+	return new Intl.DateTimeFormat(locale, {
+		month: 'long',
+		year: 'numeric',
+		timeZone: 'UTC'
+	}).format(new Date(Date.UTC(year, month - 1, 1)));
 };
 
 export const decimalFixedValueToNumber = ({
