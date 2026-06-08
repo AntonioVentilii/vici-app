@@ -2394,7 +2394,7 @@ export const itMessages = {
 	'welcome.how.s2': 'Si chiude su dati pubblici',
 	'welcome.how.s3': 'Scala la classifica',
 	'welcome.proof.label': 'Tu dove ti piazzi?',
-	'welcome.proof.live': 'persone fanno previsioni su VICI.',
+	'welcome.proof.live': 'persone stanno pronosticando il Mondiale proprio ora.',
 	'welcome.status.body':
 		'Ogni previsione finisce nel tuo storico. Indovina e sali — oltre la tua chat, la tua città, il mondo. Alla classifica non importa chi urla più forte. Solo chi ci prende più spesso.',
 	'welcome.status.cap_friends': 'La tua chat di gruppo, in classifica.',

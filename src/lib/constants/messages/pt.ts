@@ -2393,7 +2393,7 @@ export const ptMessages = {
 	'welcome.how.s2': 'Resolve em dados públicos',
 	'welcome.how.s3': 'Suba no ranking',
 	'welcome.proof.label': 'E você, onde fica?',
-	'welcome.proof.live': 'pessoas fazem suas previsões na VICI.',
+	'welcome.proof.live': 'pessoas estão palpitando na Copa agora mesmo.',
 	'welcome.status.body':
 		'Cada palpite entra no seu histórico. Acertou, você sobe — além do seu grupo, da sua cidade, do mundo. O ranking não liga pra quem grita mais alto. Só pra quem acerta mais.',
 	'welcome.status.cap_friends': 'Seu grupo, no ranking.',

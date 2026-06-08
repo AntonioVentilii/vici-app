@@ -2410,7 +2410,7 @@ export const frMessages = {
 	'welcome.how.s2': 'Réglé sur données publiques',
 	'welcome.how.s3': 'Grimpe au classement',
 	'welcome.proof.label': 'Et toi, tu te places où ?',
-	'welcome.proof.live': 'personnes font leurs pronostics sur VICI.',
+	'welcome.proof.live': 'personnes pronostiquent la Coupe du Monde en ce moment.',
 	'welcome.status.body':
 		'Chaque prédiction entre à ton palmarès. Vois juste et tu montes — au-delà de ta bande, de ta ville, du monde. Le classement se moque de qui parle le plus fort. Seulement de qui voit juste le plus souvent.',
 	'welcome.status.cap_friends': 'Ta bande, classée.',

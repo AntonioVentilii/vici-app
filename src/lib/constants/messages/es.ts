@@ -2400,7 +2400,7 @@ export const esMessages = {
 	'welcome.how.s2': 'Se resuelve con datos públicos',
 	'welcome.how.s3': 'Sube en la tabla',
 	'welcome.proof.label': '¿Y tú dónde quedas?',
-	'welcome.proof.live': 'personas hacen sus predicciones en VICI.',
+	'welcome.proof.live': 'personas están prediciendo el Mundial ahora mismo.',
 	'welcome.status.body':
 		'Cada predicción queda en tu historial. Acierta y subes — más allá de tu grupo, tu ciudad, el mundo. A la tabla no le importa quién grita más. Solo quién acierta más.',
 	'welcome.status.cap_friends': 'Tu grupo, en la tabla.',
