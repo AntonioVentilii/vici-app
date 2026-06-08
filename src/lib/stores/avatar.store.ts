@@ -10,10 +10,19 @@ import { derived, get, type Readable } from 'svelte/store';
  * the optimistic `userStore` write in {@link saveMyAvatarParts} flows
  * straight back out here. `undefined` means the user has never saved picks
  * (the surface falls back to a deterministic principal-seeded face).
+ *
+ * Narrowed to the raw serialized string first so the `JSON.parse` in
+ * {@link parseParts} only re-runs when that string actually changes, not on
+ * every unrelated `userStore` tick (`authBusy`, balance, …).
  */
-export const myAvatarParts: Readable<ViciAvatarParts | undefined> = derived(
+const myAvatarPartsRaw: Readable<string | undefined> = derived(
 	userStore,
-	({ profile }) => parseParts(profile?.avatarParts)
+	({ profile }) => profile?.avatarParts
+);
+
+export const myAvatarParts: Readable<ViciAvatarParts | undefined> = derived(
+	myAvatarPartsRaw,
+	(raw) => parseParts(raw)
 );
 
 /**

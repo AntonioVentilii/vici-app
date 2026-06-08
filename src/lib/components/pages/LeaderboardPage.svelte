@@ -62,22 +62,14 @@
 	let activeWindow = $state<StandingsWindow>('week');
 	const currentUser = $derived($authPrincipal);
 
-	// Per-window joined rows. `undefined` until the active window's slice has
-	// loaded, distinct from a loaded-but-empty window (`[]`).
-	const weekRows = globalStandingsRows('week');
-	const monthRows = globalStandingsRows('month');
-	const allRows = globalStandingsRows('all');
-
-	const rows = $derived.by<StandingsRow[] | undefined>(() => {
-		switch (activeWindow) {
-			case 'week':
-				return $weekRows;
-			case 'month':
-				return $monthRows;
-			case 'all':
-				return $allRows;
-		}
-	});
+	// Only the active window's joined rows are computed. `globalStandingsRows`
+	// re-maps its whole window on every `profilesStore` trickle, so instantiating
+	// all three at once would keep re-mapping two windows that aren't on screen.
+	// The standings store caches per-window, so switching tabs re-subscribes to
+	// the cached slice. `undefined` until the active window's slice has loaded,
+	// distinct from a loaded-but-empty window (`[]`).
+	const rowsStore = $derived(globalStandingsRows(activeWindow));
+	const rows = $derived<StandingsRow[] | undefined>($rowsStore);
 
 	const loading = $derived(rows === undefined);
 	const rankedRows = $derived(rows ?? []);
