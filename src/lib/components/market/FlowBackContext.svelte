@@ -2,6 +2,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CategoryAccuracySignal, PriorCallSignal } from '$lib/types/market-signals';
 	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
+	import { probabilityToPercent } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
@@ -18,7 +19,7 @@
 	const categoryAccLine = $derived(
 		categoryAcc !== undefined
 			? {
-					pct: Math.round(categoryAcc.accuracy * 100),
+					pct: probabilityToPercent(categoryAcc.accuracy),
 					calls: categoryAcc.calls,
 					accGood: categoryAcc.accuracy >= 0.6
 				}
@@ -32,7 +33,7 @@
 			return;
 		}
 
-		return Math.round(yesPct - Math.round(priorCall.consensusThen * 100));
+		return Math.round(yesPct - probabilityToPercent(priorCall.consensusThen));
 	});
 </script>
 
