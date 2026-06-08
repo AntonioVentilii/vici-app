@@ -741,7 +741,6 @@ const resolveMatchInPlace = ({
 	fromEval,
 	toEval,
 	winner,
-	tournament,
 	round,
 	matchesByRound,
 	caller
@@ -750,7 +749,6 @@ const resolveMatchInPlace = ({
 	fromEval: { qualifies: boolean; accuracy: number };
 	toEval: { qualifies: boolean; accuracy: number };
 	winner: string;
-	tournament: TournamentDoc;
 	round: TournamentRound;
 	matchesByRound: Record<
 		TournamentRound,
@@ -779,7 +777,6 @@ const resolveMatchInPlace = ({
 	// bracket the mapping is: match (i) feeds next-round match
 	// (i/2), alternating from/to slot by parity.
 	propagateWinnerToNextRound({
-		tournament,
 		round,
 		index: entry.doc.index,
 		winnerLeagueId: winner,
@@ -931,7 +928,6 @@ export const resolveTournamentRoundFn = ({
 					fromEval,
 					toEval,
 					winner,
-					tournament,
 					round: round_,
 					matchesByRound,
 					caller: callerBytes
@@ -982,14 +978,12 @@ export const resolveTournamentRoundFn = ({
  *  - semi match (1) → final match (0), to-slot
  */
 const propagateWinnerToNextRound = ({
-	tournament,
 	round,
 	index,
 	winnerLeagueId,
 	matchesByRound,
 	caller
 }: {
-	tournament: TournamentDoc;
 	round: TournamentRound;
 	index: number;
 	winnerLeagueId: string;
@@ -1058,7 +1052,6 @@ const propagateWinnerToNextRound = ({
 	// version, but the round-by-round flow only propagates one win
 	// per next-round slot per call, so this stays safe.
 	nextMatchEntry.doc = updated;
-	void tournament;
 };
 
 // ─── Prize claim ─────────────────────────────────────────────────
