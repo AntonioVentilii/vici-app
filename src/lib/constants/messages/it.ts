@@ -724,6 +724,7 @@ export const itMessages = {
 	'dash.disclosure.contrarian_empty': 'Nessuna vittoria contrarian — vai contro corrente.',
 	'dash.disclosure.contrarian_title': 'Vittorie contrarian · {count}',
 	'dash.disclosure.rival_gap': '{points} pt di vantaggio',
+	'dash.disclosure.rival_gap_behind': 'In testa di {points} pt',
 	'dash.disclosure.rival_gap_unknown': 'Dati rivalità in arrivo',
 	'dash.disclosure.rival_title': 'Il tuo rivale · {handle}',
 	'dash.disclosure.rival_title_unknown': 'Il tuo rivale · —',
