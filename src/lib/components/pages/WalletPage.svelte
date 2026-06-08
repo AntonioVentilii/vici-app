@@ -24,6 +24,7 @@
 	import { positions } from '$lib/derived/positions.derived';
 	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
 	import { tradeHistory } from '$lib/derived/trade-history.derived';
+	import { vxpBacked, vxpFree } from '$lib/derived/vxp-holdings.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { sendIc } from '$lib/services/send.services';
 	import {
@@ -31,7 +32,6 @@
 		type WalletTransactionsCursors,
 		type WalletTransactionsDone
 	} from '$lib/services/wallet.service';
-	import { balancesStore } from '$lib/stores/balances.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { MarketId } from '$lib/types/market';
@@ -132,12 +132,10 @@
 	const sortNewestFirst = (arr: Transaction[]) =>
 		arr.sort((a, b) => (a.timestamp === b.timestamp ? 0 : a.timestamp > b.timestamp ? -1 : 1));
 
-	// Live VXP balance from the wallet store. Same source `WalletStats`
-	// and `WalletDropdown` read — keyed by `TokenId`.
-	const vxpBalance = $derived.by((): bigint => $balancesStore?.[VXP_TOKEN.id] ?? ZERO);
-
+	// Live free VXP balance (`$vxpFree`) from the wallet store. Same source
+	// `WalletStats` and `WalletDropdown` read — keyed by `TokenId`.
 	const vxpBalanceDisplay = $derived(
-		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
+		formatVxpBalance({ value: $vxpFree, decimals: VXP_TOKEN.decimals })
 	);
 
 	// ── Deployed-vs-depleted recovery split ───────────────────────────
@@ -159,18 +157,17 @@
 		$positions.filter((p) => marketById.get(p.marketId)?.token.symbol === VXP_TOKEN.symbol)
 	);
 
-	// Total VXP riding on open calls, in base units — the deploy-floor gate.
-	const lockedInOpenBaseUnits = $derived(
-		openVxpPositions.reduce<bigint>((acc, p) => acc + p.lockedCollateral, ZERO)
-	);
+	// Total VXP riding on open VXP-market positions, in base units — the
+	// deploy-floor gate. `$vxpBacked` is the shared sum of `lockedCollateral`
+	// across the user's VXP-market positions (see `vxp-holdings.derived`).
 
 	// Whole-VXP rendering of the locked total, for the recovery beat display.
 	const lockedInOpenVxp = $derived(
-		Math.round(decimalFixedValueToNumber({ value: lockedInOpenBaseUnits, decimals: USD_DECIMALS }))
+		Math.round(decimalFixedValueToNumber({ value: $vxpBacked, decimals: USD_DECIMALS }))
 	);
 
-	const recovering = $derived(vxpBalance < CALIBRATION_RECOVERY_FLOOR_BASE_UNITS);
-	const fullyDeployed = $derived(lockedInOpenBaseUnits >= CALIBRATION_DEPLOY_FLOOR_BASE_UNITS);
+	const recovering = $derived($vxpFree < CALIBRATION_RECOVERY_FLOOR_BASE_UNITS);
+	const fullyDeployed = $derived($vxpBacked >= CALIBRATION_DEPLOY_FLOOR_BASE_UNITS);
 
 	// Whole-VXP reward shown on the recovery beat, derived from the base-unit
 	// constant so the display tracks the authoritative award amount.
