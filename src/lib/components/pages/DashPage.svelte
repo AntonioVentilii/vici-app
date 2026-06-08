@@ -89,11 +89,12 @@
 	const dailyGoalDate = $derived(profile?.dailyGoalDate);
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
-	// The "Your rival" insight: the profile ranked one place above the user
-	// across the FULL points ranking, fetched from the satellite
-	// `getMyRival` query. `undefined` until the onMount load resolves, when
-	// the user is unranked, or when they're already rank 1.
-	let rivalProfile = $state<UserProfile | undefined>(undefined);
+	// The "Your rival" insight: the profile adjacent to the user across the
+	// FULL points ranking, fetched from the satellite `getMyRival` query —
+	// usually the competitor one rank above, or (for rank 1) the runner-up
+	// below, flagged `isTrailing`. `undefined` until the onMount load
+	// resolves, or when the user is unranked / the lone ranked profile.
+	let rivalData = $state<{ profile: UserProfile; isTrailing: boolean } | undefined>(undefined);
 
 	let tw = $state<TimeWindow>('30d');
 	let pastFilter = $state<PastFilter>('all');
@@ -386,20 +387,23 @@
 	);
 
 	// ─── Rival ─────────────────────────────────────────────────────────
-	// The user's rival is the adjacent competitor directly above them on
-	// the points ranking — the next person to overtake. The satellite
-	// `getMyRival` query resolves it from the FULL ranking (not the top-50
-	// leaderboard slice), so it works for every ranked user. `undefined`
-	// (→ locked tease) when the user is unranked or already rank 1.
+	// The user's rival is the adjacent competitor on the points ranking —
+	// usually the one directly above (the next to overtake), or for rank 1
+	// the runner-up directly below (the chaser). The satellite `getMyRival`
+	// query resolves it from the FULL ranking (not the top-50 leaderboard
+	// slice), so it works for every ranked user. `behind` is true when the
+	// rival trails the user (rank-1 case) so the gap reads as a lead.
+	// `undefined` (→ locked tease) when the user is unranked or alone.
 	const rival = $derived.by<
-		{ name: string; initials: string; gapPts: number; acc: number } | undefined
+		{ name: string; initials: string; gapPts: number; acc: number; behind: boolean } | undefined
 	>(() => {
-		const above = rivalProfile;
+		const data = rivalData;
 
-		if (above === undefined) {
+		if (data === undefined) {
 			return;
 		}
 
+		const above = data.profile;
 		const name = getDisplayName({ profile: above });
 		// Up to two leading initials from the display name, caps. Falls
 		// back to a neutral glyph so the disc is never blank (brand: no
@@ -416,8 +420,11 @@
 		return {
 			name,
 			initials,
-			gapPts: Math.max(0, Math.round((above.points ?? 0) - (profile?.points ?? 0))),
-			acc: above.accuracy ?? 0
+			// Absolute gap — the rival can be above (deficit) or, for rank 1,
+			// below (lead); the sign is carried by `behind`, not the number.
+			gapPts: Math.max(0, Math.round(Math.abs((above.points ?? 0) - (profile?.points ?? 0)))),
+			acc: above.accuracy ?? 0,
+			behind: data.isTrailing
 		};
 	});
 
@@ -554,7 +561,7 @@
 			// Powers the "Your rival" insight — the competitor one rank above
 			// the user. Best-effort: a failed read leaves the rival as the
 			// locked tease rather than blocking the dashboard.
-			rivalProfile = await getMyRival();
+			rivalData = await getMyRival();
 		} catch (err) {
 			console.error('DashPage: failed to load rival', err);
 		}
@@ -904,7 +911,9 @@
 								<span class="gap">
 									{t({
 										locale: $localeStore,
-										key: 'dash.disclosure.rival_gap',
+										key: rival.behind
+											? 'dash.disclosure.rival_gap_behind'
+											: 'dash.disclosure.rival_gap',
 										params: { points: rival.gapPts }
 									})}
 								</span>

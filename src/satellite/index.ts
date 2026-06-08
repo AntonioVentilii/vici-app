@@ -228,19 +228,22 @@ export const getUserRankAndCount = defineQuery({
 	handler: ({ principalStr }) => getUserRankAndCountFn({ principal: principalStr })
 });
 
-// The caller's rival — the profile one rank above them across the FULL
+// The caller's rival — the profile adjacent to them across the FULL
 // ranking, not the top-50 slice `listLeaderboard` returns. Lets the
 // dashboard "Your rival" insight resolve for every ranked user instead
-// of only those in the visible top N. `rival` is omitted when the caller
-// is unranked (no profile / hidden) or already rank 1.
+// of only those in the visible top N. Usually the competitor one rank
+// above; for rank 1 it's the runner-up below, flagged `rivalIsTrailing`
+// so the FE frames the gap as a lead. `rival` is omitted only when the
+// caller is unranked or the lone ranked profile.
 //
 // `j.optional(<Record>)` returns camelCase, so the handler returns the
 // domain profile directly (no `toWireProfile`) — mirrors `getProfile`.
 export const getMyRival = defineQuery({
 	result: j.strictObject({
-		rival: j.optional(UserProfileSchema)
+		rival: j.optional(UserProfileSchema),
+		rivalIsTrailing: j.boolean()
 	}),
-	handler: () => ({ rival: getMyRivalFn() })
+	handler: () => getMyRivalFn()
 });
 
 export const getProfile = defineQuery({

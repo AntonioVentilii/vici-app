@@ -416,7 +416,8 @@ const AppGetMyRivalResultSchema = j.strictObject({
 				onboardingCompleted: j.boolean()
 			})
 		})
-	)
+	),
+	rivalIsTrailing: j.boolean()
 });
 
 const getMyRival = async (): Promise<j.infer<typeof AppGetMyRivalResultSchema>> => {

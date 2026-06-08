@@ -313,6 +313,7 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AppGetMyReferralCodeResult = IDL.Record({ code: IDL.Opt(IDL.Text) });
 	const AppGetMyRivalResult = IDL.Record({
+		rival_is_trailing: IDL.Bool,
 		rival: IDL.Opt(
 			IDL.Record({
 				pnl: IDL.Float64,

@@ -311,6 +311,7 @@ export interface AppGetMyReferralCodeResult {
 	code: [] | [string];
 }
 export interface AppGetMyRivalResult {
+	rival_is_trailing: boolean;
 	rival:
 		| []
 		| [

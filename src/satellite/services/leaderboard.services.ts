@@ -95,43 +95,63 @@ export const listLeaderboard = (): UserProfile[] => {
 };
 
 /**
- * The caller's rival: the profile ranked directly above them in the
- * global {@link rankedProfiles} ordering — the next competitor to
- * overtake. Resolved from the FULL ranking (not the top-{@link
- * LEADERBOARD_LIMIT} slice {@link listLeaderboard} returns), so it
- * works for every ranked user, not just those in the visible top N.
+ * The caller's rival, resolved from the FULL {@link rankedProfiles}
+ * ordering (not the top-{@link LEADERBOARD_LIMIT} slice {@link
+ * listLeaderboard} returns), so it works for every ranked user — not
+ * just those in the visible top N.
  *
- * `undefined` when the caller has no profile / is hidden (unranked) or
- * is already rank 1 (nobody above) — the FE renders the locked tease in
- * both cases.
+ * - Usual case: the profile one rank ABOVE the caller — the next
+ *   competitor to overtake.
+ * - Leader (rank 1): nobody is above, so surface the runner-up one rank
+ *   BELOW — the rival chasing them — with `rivalIsTrailing: true` so the
+ *   FE frames the gap as a lead rather than a deficit.
+ *
+ * `rival` is `undefined` (→ FE locked tease) only when the caller is
+ * genuinely unranked (no profile / hidden) or is the lone ranked profile
+ * (rank 1 with no runner-up).
  *
  * The returned row is role-hydrated and run through
  * {@link withProfileDefaults}, matching the shape every other profile
  * query emits.
  */
-export const getMyRivalFn = (): UserProfile | undefined => {
+export const getMyRivalFn = (): {
+	rival: UserProfile | undefined;
+	rivalIsTrailing: boolean;
+} => {
 	const caller = msgCaller();
 	const callerText = caller.toText();
 
 	const profiles = rankedProfiles();
 	const myIndex = profiles.findIndex((profile) => profile.owner === callerText);
 
-	if (myIndex <= 0) {
-		// Unranked (−1) or already at the top (0) — no rival above.
-		return;
+	if (myIndex === -1) {
+		// Unranked (no profile / hidden) — no rival.
+		return { rival: undefined, rivalIsTrailing: false };
 	}
 
-	const rival = profiles[myIndex - 1];
+	// Rank 1 has nobody above: fall back to the runner-up one rank below
+	// (the chaser). Every other rank takes the competitor one rank above.
+	const rivalIsTrailing = myIndex === 0;
+	const rival = profiles[rivalIsTrailing ? 1 : myIndex - 1];
+
+	if (rival === undefined) {
+		// Rank 1 with no runner-up (lone ranked profile) — no rival.
+		return { rival: undefined, rivalIsTrailing: false };
+	}
+
 	const roleDoc = getDocStore({
 		collection: Collection.ROLES,
 		key: rival.owner,
 		caller
 	});
 
-	return withProfileDefaults({
-		...rival,
-		role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
-	});
+	return {
+		rival: withProfileDefaults({
+			...rival,
+			role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
+		}),
+		rivalIsTrailing
+	};
 };
 
 /**
