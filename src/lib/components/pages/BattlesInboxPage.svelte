@@ -170,7 +170,11 @@
 	// countdown. The season always runs to the end of the active month.
 	const monthDaysLeft = $derived.by((): number => {
 		const now = new Date();
-		const end = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime();
+		// Build the end-of-month boundary in UTC so the day count never
+		// drifts by ±1 across a DST transition: a local-time boundary plus
+		// a fixed-ms divisor would gain/lose an hour at the change and the
+		// ceil could flip the displayed `{days}d left`.
+		const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
 		const delta = end - now.getTime();
 
 		return delta <= 0 ? 0 : Math.ceil(delta / DAY_IN_MS);

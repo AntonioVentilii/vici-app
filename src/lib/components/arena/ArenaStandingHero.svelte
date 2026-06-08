@@ -35,7 +35,6 @@
 
 <script lang="ts">
 	import type { PrincipalText } from '@junobuild/schema';
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -66,9 +65,9 @@
 	 * scopes and there is NO auto-advance — nothing rotates a stat out
 	 * from under them.
 	 *
-	 * The Global scope leads with a percentile bracket (`Top 1%` /
-	 * `Top 5%` / …) when the viewer is in the top half; below that it
-	 * falls back to the absolute `#rank of total`. Movement reads as
+	 * The Global scope leads with a percentile bracket (`Top 0.1%` /
+	 * `Top 1%` / `Top 5%` / …) when the viewer is in the top half; below
+	 * that it falls back to the absolute `#rank of total`. Movement reads as
 	 * `▲ {n}` — a percentile-point delta (with a `%` suffix) for the
 	 * Global scope, an absolute rank climb for the others.
 	 *
@@ -124,13 +123,31 @@
 
 	const unitThisWeek = $derived(t({ locale: $localeStore, key: 'arena.hero.unit_this_week' }));
 
-	onMount(() => {
-		void refreshFriendRelations();
-		void refreshMyAffiliations();
-		void hydrate();
+	// Hydrate once the friend relations and affiliations have been
+	// refreshed: `hydrate()` reads `$friendsListStore` / `$myAffiliationsStore`
+	// synchronously, so kicking it off before those refreshes resolve can
+	// permanently omit the Friends and Battle scopes on a cold load. The
+	// `cancelled` flag drops a late resolution after the component is torn
+	// down so we never write `scopes` on an unmounted instance.
+	$effect(() => {
+		let cancelled = false;
+
+		void (async () => {
+			await Promise.allSettled([refreshFriendRelations(), refreshMyAffiliations()]);
+
+			if (cancelled) {
+				return;
+			}
+
+			await hydrate(() => cancelled);
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
-	const hydrate = async (): Promise<void> => {
+	const hydrate = async (isCancelled: () => boolean): Promise<void> => {
 		const owner = principal;
 
 		if (owner === undefined) {
@@ -278,6 +295,10 @@
 			// Skip the Battle scope on failure.
 		}
 
+		if (isCancelled()) {
+			return;
+		}
+
 		scopes = next;
 
 		if (idx >= scopes.length) {
@@ -331,6 +352,13 @@
 			event.preventDefault();
 			select(idx - 1);
 		} else if (event.key === 'Enter' || event.key === ' ') {
+			// Only the hero itself opens the active scope — a focused dot
+			// button has its own activation, so don't hijack its Enter/Space
+			// when the keydown bubbles up from a nested control.
+			if (event.target !== event.currentTarget) {
+				return;
+			}
+
 			event.preventDefault();
 			current?.onOpen();
 		}
