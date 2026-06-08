@@ -6,6 +6,8 @@
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import AddFriendSheet from '$lib/components/arena/AddFriendSheet.svelte';
+	import FriendProfileSheet from '$lib/components/arena/FriendProfileSheet.svelte';
 	import FriendsEmptyState from '$lib/components/arena/FriendsEmptyState.svelte';
 	import RankedRow from '$lib/components/arena/RankedRow.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
@@ -939,161 +941,30 @@
 {#if openProfile}
 	{@const row = openProfile}
 	{@const h2h = formatH2h(row.accuracy)}
-	<div
-		class="friends-sheet-scrim"
-		onclick={closeFriendSheet}
-		onkeydown={(e) => e.key === 'Escape' && closeFriendSheet()}
-		role="presentation"
-	>
-		<div
-			class="friends-sheet"
-			aria-modal="true"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			tabindex="-1"
-		>
-			<div class="friends-sheet-grip" aria-hidden="true"></div>
-			<div class="friends-sheet-head">
-				<span class="friends-sheet-avatar">
-					<Avatar
-						class="h-full w-full"
-						avatar={row.profile?.avatar}
-						nickname={row.profile?.nickname}
-						owner={row.profile?.owner ?? row.friendId}
-					/>
-				</span>
-				<div class="friends-sheet-head-copy">
-					<span class="friends-sheet-name">
-						@{row.profile?.nickname ??
-							t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
-					</span>
-					<span class="num friends-sheet-sub">
-						{shortenWithMiddleEllipsis({ text: row.friendId, splitLength: 6 })}
-					</span>
-				</div>
-			</div>
-
-			<div class="friends-sheet-stats">
-				<div class="friends-sheet-stat">
-					<span class="friends-sheet-lbl">
-						{t({ locale: $localeStore, key: 'arena.friends.sheet.accuracy' })}
-					</span>
-					<span class="friends-sheet-val num">{formatPct(row.accuracy)}</span>
-				</div>
-				<div class="friends-sheet-stat">
-					<span class="friends-sheet-lbl">
-						{t({ locale: $localeStore, key: 'arena.friends.sheet.streak' })}
-					</span>
-					<span class="friends-sheet-val num">{row.streak}d</span>
-				</div>
-				<div class="friends-sheet-stat">
-					<span class="friends-sheet-lbl">
-						{t({ locale: $localeStore, key: 'arena.friends.sheet.vxp' })}
-					</span>
-					<span class="friends-sheet-val num">
-						{formatVxpBalance({ value: vxpBaseUnitsFromPoints(row.points) })}
-					</span>
-				</div>
-			</div>
-
-			<div class="friends-sheet-h2h" class:is-ahead={h2h.ahead} class:is-behind={!h2h.ahead}>
-				<span class="friends-sheet-lbl">
-					{t({ locale: $localeStore, key: 'arena.friends.sheet.h2h' })}
-				</span>
-				<span class="friends-sheet-val num">
-					{h2h.ahead
-						? t({
-								locale: $localeStore,
-								key: 'arena.friends.sheet.h2h_ahead',
-								params: { delta: h2h.value.replace('+', '') }
-							})
-						: t({
-								locale: $localeStore,
-								key: 'arena.friends.sheet.h2h_behind',
-								params: { delta: h2h.value.replace('-', '') }
-							})}
-				</span>
-			</div>
-
-			<BaseButton
-				class="friends-sheet-remove"
-				onclick={handleRemoveFriend}
-				status={removingFriendId === row.friendId ? 'pending' : 'enabled'}
-			>
-				{t({ locale: $localeStore, key: 'arena.friends.sheet.remove' })}
-			</BaseButton>
-			<BaseButton class="friends-sheet-close" onclick={closeFriendSheet}>
-				{t({ locale: $localeStore, key: 'arena.friends.sheet.close' })}
-			</BaseButton>
-		</div>
-	</div>
+	<FriendProfileSheet
+		accuracyLabel={formatPct(row.accuracy)}
+		friendId={row.friendId}
+		h2hAhead={h2h.ahead}
+		h2hValue={h2h.value}
+		isOpen={openProfile !== undefined}
+		onClose={closeFriendSheet}
+		onRemove={handleRemoveFriend}
+		profile={row.profile}
+		removing={removingFriendId === row.friendId}
+		streak={row.streak}
+		vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(row.points) })}
+	/>
 {/if}
 
 <!-- Add-by-handle bottom sheet ───────────────────────────────── -->
-{#if addSheetOpen}
-	<div
-		class="friends-sheet-scrim"
-		onclick={closeAddSheet}
-		onkeydown={(e) => e.key === 'Escape' && closeAddSheet()}
-		role="presentation"
-	>
-		<div
-			class="friends-sheet"
-			aria-modal="true"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			tabindex="-1"
-		>
-			<div class="friends-sheet-grip" aria-hidden="true"></div>
-			<h3 class="friends-sheet-title">
-				{t({ locale: $localeStore, key: 'arena.friends.add.sheet_title' })}
-			</h3>
-			<p class="friends-sheet-blurb">
-				{t({ locale: $localeStore, key: 'arena.friends.add.sheet_blurb' })}
-			</p>
-			<div class="friends-add-input">
-				<span class="friends-add-prefix" aria-hidden="true">@</span>
-				<input
-					class="friends-add-field num"
-					aria-label={t({ locale: $localeStore, key: 'arena.friends.add.cta' })}
-					autocapitalize="none"
-					autocomplete="off"
-					autocorrect="off"
-					onkeydown={(event) => {
-						if (event.key === 'Enter') {
-							void handleAddSubmit();
-						}
-					}}
-					placeholder={t({ locale: $localeStore, key: 'arena.friends.add.placeholder' })}
-					spellcheck="false"
-					type="text"
-					bind:value={addInput}
-				/>
-			</div>
-			<p class="friends-add-footnote num">
-				{t({
-					locale: $localeStore,
-					key: 'arena.friends.add.invite_hint',
-					params: { amount: bonusLabel }
-				})}
-			</p>
-			<BaseButton
-				class="friends-sheet-remove friends-sheet-primary"
-				onclick={handleAddSubmit}
-				status={adding ? 'pending' : addInput.trim().length === 0 ? 'disabled' : 'enabled'}
-			>
-				{adding
-					? t({ locale: $localeStore, key: 'arena.friends.add.sending' })
-					: t({ locale: $localeStore, key: 'arena.friends.add.cta' })}
-			</BaseButton>
-			<BaseButton class="friends-sheet-close" onclick={closeAddSheet}>
-				{t({ locale: $localeStore, key: 'arena.friends.sheet.close' })}
-			</BaseButton>
-		</div>
-	</div>
-{/if}
+<AddFriendSheet
+	{adding}
+	inviteHintAmount={bonusLabel}
+	isOpen={addSheetOpen}
+	onClose={closeAddSheet}
+	onSubmit={() => void handleAddSubmit()}
+	bind:value={addInput}
+/>
 
 <style lang="postcss">
 	/* Horizontal inset is owned by the Arena page wrapper (its only
@@ -1742,230 +1613,5 @@
 
 	.global-link-rank {
 		color: var(--color-primary);
-	}
-
-	/* ── Bottom sheet ──────────────────────────────────────── */
-	.friends-sheet-scrim {
-		position: fixed;
-		inset: 0;
-		z-index: 60;
-		display: flex;
-		align-items: flex-end;
-		justify-content: center;
-		background: rgba(0, 0, 0, 0.55);
-		backdrop-filter: blur(6px);
-	}
-
-	/* Hide the floating mobile pill-nav while a friends sheet is open —
-	 * it sits at the same lower edge as the sheet and clips the close /
-	 * primary CTA on short viewports (e.g. with the soft keyboard
-	 * open). Matches the behaviour of the shared `BottomSheet`. */
-	:global(body:has(.friends-sheet-scrim) .pillnav-wrap) {
-		display: none;
-	}
-
-	.friends-sheet {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		max-width: 32rem;
-		padding: 0.5rem 1rem 1.25rem;
-		border-top-left-radius: 1.25rem;
-		border-top-right-radius: 1.25rem;
-		background: var(--bg-popover);
-		box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.25);
-		padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
-	}
-
-	.friends-sheet-grip {
-		align-self: center;
-		width: 2.5rem;
-		height: 0.25rem;
-		margin: 0.25rem 0 0.85rem;
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--text-muted) 35%, transparent);
-	}
-
-	.friends-sheet-head {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.25rem 0 0.85rem;
-	}
-
-	.friends-sheet-avatar {
-		display: inline-flex;
-		overflow: hidden;
-		width: 3rem;
-		height: 3rem;
-		flex-shrink: 0;
-		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-	}
-
-	.friends-sheet-head-copy {
-		display: flex;
-		min-width: 0;
-		flex-direction: column;
-		gap: 0.15rem;
-	}
-
-	.friends-sheet-name {
-		color: var(--text-base);
-		font-size: var(--t-16);
-		font-weight: 700;
-	}
-
-	.friends-sheet-sub {
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-10);
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.friends-sheet-title {
-		margin: 0.25rem 0 0.35rem;
-		color: var(--text-base);
-		font-size: var(--t-18);
-		font-weight: 600;
-	}
-
-	.friends-sheet-blurb {
-		margin: 0 0 0.75rem;
-		color: var(--text-muted);
-		font-size: var(--t-13);
-		line-height: var(--leading-snug);
-	}
-
-	/* Open-column stats — label over value, no per-tile box. The block is
-	   bracketed by a top + bottom divider rule so the three columns read as
-	   one editorial band rather than three cards. */
-	.friends-sheet-stats {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.5rem;
-		padding: 0.75rem 0;
-		border-top: 1px solid var(--border-base);
-		border-bottom: 1px solid var(--border-base);
-	}
-
-	.friends-sheet-stat {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		text-align: center;
-	}
-
-	.friends-sheet-lbl {
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: 0.6rem;
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.friends-sheet-val {
-		color: var(--text-base);
-		font-family: var(--font-mono);
-		font-size: var(--t-16);
-		font-weight: 700;
-	}
-
-	/* Head-to-head reads as a single open row — label left, delta right —
-	   sharing the open-column register of the stats band above (no box). */
-	.friends-sheet-h2h {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-		padding: 0.85rem 0 0.25rem;
-		margin-bottom: 0.6rem;
-	}
-
-	.friends-sheet-h2h .friends-sheet-val {
-		font-size: var(--t-13);
-	}
-
-	.friends-sheet-h2h.is-ahead .friends-sheet-val {
-		color: var(--yes);
-	}
-
-	.friends-sheet-h2h.is-behind .friends-sheet-val {
-		color: var(--no);
-	}
-
-	:global(.friends-sheet-remove) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		padding: 0.75rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-		color: var(--no);
-		font-size: var(--t-13);
-		font-weight: 700;
-	}
-
-	:global(.friends-sheet-primary) {
-		border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
-		background: var(--color-primary);
-		color: var(--color-primary-foreground, white);
-	}
-
-	:global(.friends-sheet-close) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		padding: 0.65rem;
-		margin-top: 0.4rem;
-		border: 0;
-		border-radius: var(--r-pill);
-		background: transparent;
-		color: var(--text-muted);
-		font-size: var(--t-13);
-		font-weight: 700;
-	}
-
-	.friends-add-input {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.65rem 0.85rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-	}
-
-	.friends-add-prefix {
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-14);
-		font-weight: 800;
-	}
-
-	.friends-add-field {
-		flex: 1;
-		min-width: 0;
-		border: 0;
-		background: transparent;
-		color: var(--text-base);
-		font-size: var(--t-13);
-		outline: none;
-	}
-
-	.friends-add-footnote {
-		margin: 0.55rem 0 0.85rem;
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-10);
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
 	}
 </style>
