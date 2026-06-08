@@ -37,7 +37,7 @@ import {
 } from '$lib/utils/market.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
-import { isNullish, nonNullish, notEmptyString, toNullable } from '@dfinity/utils';
+import { isEmptyString, isNullish, nonNullish, notEmptyString, toNullable } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
 /**
@@ -136,7 +136,12 @@ export const createMarket = async ({
 
 	// The registry requires a non-empty resolution clause on every series, so
 	// trim + cap it to mirror `ResolutionClauseEmpty` / `ResolutionClauseTooLong`.
+	// Fail fast on a blank clause rather than letting the canister reject it.
 	const resolutionClause = resolution.trim().slice(0, RESOLUTION_CLAUSE_MAX_LENGTH);
+
+	if (isEmptyString(resolutionClause)) {
+		throw new Error('A market requires a non-empty resolution clause.');
+	}
 
 	// `description` is optional for callers; on chain it is still required, so
 	// fall back to the resolution clause when no blurb is provided.
