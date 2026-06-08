@@ -21,7 +21,20 @@
 	import { theme } from '$lib/stores/theme.store';
 	import { t } from '$lib/utils/i18n.utils';
 
-	const sections = ['markets', 'flow', 'leaderboard', 'trust'] as const;
+	// Landing in-page sections the nav links to. `status` (the
+	// accuracy-as-status board) reuses the `nav.leaderboard` label
+	// ("Social"); `faq` uses the universal "FAQ" literal.
+	const sections = [
+		{ id: 'status', labelKey: 'nav.leaderboard' as const },
+		{ id: 'faq', labelKey: null }
+	] as const;
+
+	type NavSection = (typeof sections)[number];
+
+	// "FAQ" is a universal literal (same in every supported locale); other
+	// sections resolve through the i18n catalog.
+	const navLabel = (section: NavSection): string =>
+		section.labelKey === null ? 'FAQ' : t({ locale: $localeStore, key: section.labelKey });
 	// Theme labels resolve from the canonical `ui.theme.*` catalog — the
 	// same source AppearancePicker uses — so the appearance tooltips/aria
 	// stay localized and in sync rather than hardcoded English.
@@ -62,7 +75,7 @@
 
 		// Scroll spy
 		const els = sections
-			.map((id) => document.getElementById(id))
+			.map((s) => document.getElementById(s.id))
 			.filter((el): el is HTMLElement => Boolean(el));
 		const io =
 			els.length === 0
@@ -233,14 +246,14 @@
 	<div class="dnav-inner">
 		<span class="dnav-logo"><Logo href={PublicPath.Welcome} /></span>
 		<div class="dnav-links">
-			{#each sections as id (id)}
+			{#each sections as section (section.id)}
 				<a
-					class:is-active={active === id}
-					aria-current={active === id ? 'page' : undefined}
-					href="#{id}"
-					onclick={onLinkClick(id)}
+					class:is-active={active === section.id}
+					aria-current={active === section.id ? 'page' : undefined}
+					href="#{section.id}"
+					onclick={onLinkClick(section.id)}
 				>
-					<span class="ltext">{t({ locale: $localeStore, key: `nav.${id}` as const })}</span>
+					<span class="ltext">{navLabel(section)}</span>
 					<span class="dot" aria-hidden="true"></span>
 				</a>
 			{/each}
@@ -378,10 +391,10 @@
 					</div>
 
 					<nav class="lp-menu-links">
-						{#each sections as id, i (id)}
-							<a href="#{id}" onclick={closeMenu}>
+						{#each sections as section, i (section.id)}
+							<a href="#{section.id}" onclick={closeMenu}>
 								<span class="ix">0{i + 1}</span>
-								<span class="ltext">{t({ locale: $localeStore, key: `nav.${id}` as const })}</span>
+								<span class="ltext">{navLabel(section)}</span>
 							</a>
 						{/each}
 					</nav>

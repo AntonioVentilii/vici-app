@@ -110,6 +110,39 @@
 					}
 				} catch (e) {}
 			})();
+
+			// Flash-free locale boot. Runs before the first paint so
+			// <html lang>, dir, and [data-locale] are correct on the first
+			// frame — the static-host equivalent of SSR locale negotiation.
+			// A saved choice wins instantly; otherwise the device language
+			// seeds it. The i18n layer re-resolves authoritatively after
+			// hydrate, so a stale/missing value just falls through here.
+			// RTL languages (ar/he/fa/ur) get dir="rtl".
+			(function () {
+				try {
+					var RTL = ['ar', 'he', 'fa', 'ur'];
+					var saved = null;
+					try {
+						var raw = localStorage.getItem('vici.locale.v1');
+						saved = raw ? JSON.parse(raw) : null;
+					} catch (e) {}
+					var loc = saved;
+					if (!loc) {
+						var navs =
+							navigator.languages && navigator.languages.length
+								? navigator.languages
+								: [navigator.language || 'en'];
+						loc = navs[0] || 'en';
+					}
+					var lang = String(loc).split('-')[0].toLowerCase();
+					var el = document.documentElement;
+					el.setAttribute('lang', loc);
+					el.setAttribute('data-locale', loc);
+					el.setAttribute('dir', RTL.indexOf(lang) >= 0 ? 'rtl' : 'ltr');
+				} catch (e) {
+					/* defaults in markup are fine */
+				}
+			})();
 		</script>
 
 		%sveltekit.head%
