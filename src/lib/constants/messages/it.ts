@@ -1151,10 +1151,10 @@ export const itMessages = {
 	'layout.user.theme': 'Tema',
 	'layout.wallet.balances': 'Saldi',
 	'layout.wallet.go_to_wallet': 'Vai al portafoglio',
+	'leaderboard.back': "Torna all'arena",
 	'leaderboard.empty': 'Si uniscono al gruppo...',
 	'leaderboard.empty_sub':
 		'Ancora nessuna predizione regolata in questo periodo. Sii il primo in classifica.',
-	'leaderboard.friends_aria': 'Apri amici',
 	'leaderboard.scope.all': 'Sempre',
 	'leaderboard.scope.month': 'Questo mese',
 	'leaderboard.scope.week': 'Questa settimana',
@@ -1178,6 +1178,7 @@ export const itMessages = {
 	'league_invite.resolving': 'Accesso alla lega…',
 	'league_invite.unknown_body': 'Nessuna lega corrisponde a questo codice di invito.',
 	'league_invite.unknown_title': 'Invito sconosciuto',
+	'leagues.back': "Torna all'arena",
 	'leagues.create.cta': 'Crea lega',
 	'leagues.create.invalid_description': 'La descrizione deve avere al massimo 240 caratteri.',
 	'leagues.create.invalid_name_too_long': 'Il nome deve avere al massimo 40 caratteri.',
@@ -1691,6 +1692,7 @@ export const itMessages = {
 	'outcome.yes': 'SÌ',
 	'outcome.yes_won': 'SÌ ha vinto',
 	'portfolio.allocation.eyebrow': 'RIPARTIZIONE',
+	'portfolio.back': 'Torna alla dashboard',
 	'portfolio.allocation.other': 'Altri',
 	'portfolio.empty.body':
 		'Punta su qualche call nel mazzo Flow — le tue posizioni attive e risolte appariranno qui.',

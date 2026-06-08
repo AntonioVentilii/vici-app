@@ -1158,10 +1158,10 @@ export const deMessages = {
 	'layout.user.theme': 'Theme',
 	'layout.wallet.balances': 'Salden',
 	'layout.wallet.go_to_wallet': 'Zur Wallet',
+	'leaderboard.back': 'Zurück zur Arena',
 	'leaderboard.empty': 'Tritt der Meute bei...',
 	'leaderboard.empty_sub':
 		'In diesem Zeitraum noch keine abgerechneten Calls. Sei der Erste auf der Liste.',
-	'leaderboard.friends_aria': 'Freunde öffnen',
 	'leaderboard.scope.all': 'Allzeit',
 	'leaderboard.scope.month': 'Diesen Monat',
 	'leaderboard.scope.week': 'Diese Woche',
@@ -1186,6 +1186,7 @@ export const deMessages = {
 	'league_invite.resolving': 'Trete der Liga bei…',
 	'league_invite.unknown_body': 'Keine Liga passt zu diesem Einladungscode.',
 	'league_invite.unknown_title': 'Unbekannte Einladung',
+	'leagues.back': 'Zurück zur Arena',
 	'leagues.create.cta': 'Liga erstellen',
 	'leagues.create.invalid_description': 'Beschreibung darf höchstens 240 Zeichen lang sein.',
 	'leagues.create.invalid_name_too_long': 'Name darf höchstens 40 Zeichen lang sein.',
@@ -1705,6 +1706,7 @@ export const deMessages = {
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES gewonnen',
 	'portfolio.allocation.eyebrow': 'AUFTEILUNG',
+	'portfolio.back': 'Zurück zum Dashboard',
 	'portfolio.allocation.other': 'Andere',
 	'portfolio.empty.body':
 		'Setze auf ein paar Calls im Flow-Deck — deine offenen und abgeschlossenen Positionen erscheinen hier.',

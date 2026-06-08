@@ -1163,10 +1163,10 @@ export const frMessages = {
 	'layout.user.theme': 'Thème',
 	'layout.wallet.balances': 'Soldes',
 	'layout.wallet.go_to_wallet': 'Aller à la Cagnotte',
+	'leaderboard.back': "Retour à l'arène",
 	'leaderboard.empty': 'Ils rejoignent le groupe...',
 	'leaderboard.empty_sub':
 		'Aucune prédiction réglée sur cette période. Sois le premier au classement.',
-	'leaderboard.friends_aria': 'Ouvrir les amis',
 	'leaderboard.scope.all': 'Tout temps',
 	'leaderboard.scope.month': 'Ce mois-ci',
 	'leaderboard.scope.week': 'Cette semaine',
@@ -1190,6 +1190,7 @@ export const frMessages = {
 	'league_invite.resolving': 'Adhésion à la ligue…',
 	'league_invite.unknown_body': 'Aucune ligue ne correspond à ce code d’invitation.',
 	'league_invite.unknown_title': 'Invitation inconnue',
+	'leagues.back': "Retour à l'arène",
 	'leagues.create.cta': 'Créer la ligue',
 	'leagues.create.invalid_description': 'La description doit faire 240 caractères au plus.',
 	'leagues.create.invalid_name_too_long': 'Le nom doit faire 40 caractères au plus.',
@@ -1704,6 +1705,7 @@ export const frMessages = {
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES a gagné',
 	'portfolio.allocation.eyebrow': 'RÉPARTITION',
+	'portfolio.back': 'Retour au tableau de bord',
 	'portfolio.allocation.other': 'Autres',
 	'portfolio.empty.body':
 		'Soutenez quelques calls dans le deck Flow — vos positions actives et résolues apparaîtront ici.',
