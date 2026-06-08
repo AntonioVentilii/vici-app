@@ -2,7 +2,7 @@ import { browser } from '$app/environment';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { INBOX_SETTLED_READ_STORAGE_KEY, INBOX_STORAGE_KEY } from '$lib/constants/inbox.constants';
 import { AppPath } from '$lib/constants/routes.constants';
-import { markets } from '$lib/derived/markets.derived';
+import { marketById } from '$lib/derived/market-by-id.derived';
 import {
 	resolvedPositions,
 	resolvedPositionsNotInitialized
@@ -180,12 +180,10 @@ const settledReadStore = writable<Set<bigint>>(loadSettledReadSet());
  * already-existing "X.YZ USD" presentation downstream surfaces use.
  */
 const settledInboxStore: Readable<InboxNotification[]> = derived(
-	[resolvedPositions, markets, settledReadStore, localeStore],
-	([$resolved, $markets, $read, $locale]) => {
-		const marketById = new Map($markets.map((m) => [m.id, m]));
-
-		return $resolved.map((entry): InboxNotification => {
-			const market = marketById.get(entry.marketId);
+	[resolvedPositions, marketById, settledReadStore, localeStore],
+	([$resolved, $marketById, $read, $locale]) =>
+		$resolved.map((entry): InboxNotification => {
+			const market = $marketById.get(entry.marketId);
 
 			const variant: 'won' | 'lost' | 'neutral' = entry.result;
 			const titleKey =
@@ -223,8 +221,7 @@ const settledInboxStore: Readable<InboxNotification[]> = derived(
 				unread: !$read.has(entry.eventId),
 				href: `${AppPath.Markets}/${entry.marketId}`
 			};
-		});
-	}
+		})
 );
 
 // ── "While you were away" resolution digest ─────────────────────────────────
@@ -273,13 +270,12 @@ const resolvedSide = ({
  * win reads "<1" rather than a broken "+0" — see `formatWholeVxpMagnitude`).
  */
 export const maturedResolutions: Readable<ResolutionRevealData> = derived(
-	[resolvedPositions, markets, settledReadStore, localeStore],
-	([$resolved, $markets, $read, $locale]) => {
-		const marketById = new Map($markets.map((m) => [m.id, m]));
+	[resolvedPositions, marketById, settledReadStore, localeStore],
+	([$resolved, $marketById, $read, $locale]) => {
 		const unseen = $resolved.filter((entry) => !$read.has(entry.eventId));
 
 		const items: ResolutionItem[] = unseen.map((entry) => {
-			const market = marketById.get(entry.marketId);
+			const market = $marketById.get(entry.marketId);
 			const { label, sideKey } = resolvedSide({ resolved: entry, market });
 			// Full precision — the digest renderers round for display via
 			// `formatWholeVxpMagnitude` (a sub-1 favourite win reads "<1", not a
