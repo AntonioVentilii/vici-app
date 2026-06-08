@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Plus } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
@@ -24,6 +25,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Social cohorts list page.
@@ -256,9 +258,27 @@
 	};
 </script>
 
+{#snippet leaguesCreateAction()}
+	<button
+		class="appbar-icon-btn"
+		aria-label={t({ locale: $localeStore, key: 'leagues.create.cta' })}
+		onclick={openCreate}
+		type="button"
+	>
+		<Plus aria-hidden="true" size={18} strokeWidth={1.8} />
+	</button>
+{/snippet}
+
 <div class="leagues-page pb-24" class:embedded>
 	{#if !embedded}
-		<ScreenHeader title={t({ locale: $localeStore, key: 'leagues.title' })} />
+		<ScreenHeader
+			back={{
+				label: t({ locale: $localeStore, key: 'leagues.back' }),
+				onBack: () => goBack(resolve(AppPath.Arena))
+			}}
+			right={leaguesCreateAction}
+			title={t({ locale: $localeStore, key: 'leagues.title' })}
+		/>
 	{/if}
 
 	{#if loadState === 'loading'}
