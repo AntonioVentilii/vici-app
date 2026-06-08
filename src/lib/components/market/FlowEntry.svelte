@@ -1,53 +1,63 @@
 <script lang="ts">
 	/**
 	 * FlowEntry — the unified full-bleed frosted entry that sits over the
-	 * deck (above the pill-nav) until the user commits to the session.
+	 * deck (above the pill-nav) until the session begins.
 	 *
 	 * One surface, two modes:
-	 *  • DECK mode — when there is nothing settled to recap, the deck riffles
-	 *    (three cards fan + snap) under the Oracle orb while the first-card
-	 *    fetch resolves. Rotating Oracle copy reads while the deck shuffles.
+	 *  • DECK mode — when there is nothing settled to recap, the entry is a
+	 *    brief branded beat, NOT a gate. The deck riffles (three cards fan +
+	 *    snap) under the Oracle orb while the first-card fetch resolves, then
+	 *    the surface auto-enters the moment the deck is ready and a short
+	 *    dwell has elapsed (~800 ms, or 250 ms under reduced motion — just long
+	 *    enough for the beat to register). No tap is required; the "Enter
+	 *    Flow →" CTA is an optional tap-to-skip that the user can hit early.
 	 *  • DIGEST mode — when calls settled since the user's last visit, the
-	 *    "while you were away" recap takes over: outcome-aware framing (net
-	 *    gain → celebratory 56px green net + confetti + "keep the run going";
-	 *    net loss → measured neutral net, no confetti, "shake it off"), the
-	 *    actual resolved calls (win/loss list, capped at 5 + "+N more").
+	 *    "while you were away" recap takes over and the surface WAITS for the
+	 *    user: outcome-aware framing (net gain → celebratory 56px green net +
+	 *    confetti + "keep the run going"; net loss → measured neutral net, no
+	 *    confetti, "shake it off"), the actual resolved calls (win/loss list,
+	 *    capped at 5 + "+N more"). There is no short auto-enter here — the user
+	 *    reads the digest and continues via tap-anywhere or the CTA. A ~30 s
+	 *    safety net still prevents an indefinite linger.
 	 *
-	 * The "Enter Flow →" CTA arms only when BOTH conditions hold: the read
-	 * beat has elapsed (4s, or 600ms under reduced motion — a moment to read
-	 * the digest / let the deck settle) AND `ready` is true. `ready` carries
-	 * the REAL first-card fetch state, so the CTA never reveals a deck that
-	 * has not arrived: while the fetch is in flight the Oracle copy keeps
-	 * cycling and the CTA holds its arming state. A countdown bar fills INSIDE
-	 * the pill; entering settles the matured calls (`onEnter`) and reveals the
-	 * deck.
-	 *
-	 * As a safety net, the surface auto-enters once both 30s have elapsed and
-	 * the deck is ready — so the entry never lingers indefinitely if the CTA
-	 * is left untapped. The auto-enter runs the same `onEnter` path (settling
-	 * any matured digest). Reduced-motion + theme safe.
+	 * `ready` carries the REAL first-card fetch state, so neither the dwell
+	 * auto-enter, the safety auto-enter, nor a tap ever reveals a deck that has
+	 * not arrived: while the fetch is in flight the Oracle copy keeps cycling
+	 * and the CTA holds its arming state. Entering settles any matured calls
+	 * (`onEnter`) and reveals the deck. Reduced-motion + theme safe.
 	 */
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { ResolutionRevealData } from '$lib/types/flow';
 	import { flowBeat, flowSummary } from '$lib/utils/flow-sound.utils';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
+
+	// The deck-shuffle dwell — the entry beat holds this long before the deck
+	// is allowed to auto-enter (paired with the real first-card readiness). A
+	// short branded moment, not a gate; reduced motion trims it further.
+	const DECK_DWELL_MS = 800;
+	const DECK_DWELL_REDUCED_MS = 250;
+	// Safety-net ceiling for the digest wait — if the user never acts, the
+	// surface still enters once both this has elapsed and the deck is ready.
+	const SAFETY_AUTO_ENTER_MS = 30_000;
 
 	interface Props {
 		/** The away-digest; `count === 0` falls back to deck-shuffle mode. */
 		digest: ResolutionRevealData;
 		/**
-		 * Real first-card fetch readiness. The CTA arms (and the auto-enter
-		 * fires) only once this is true — so neither path ever reveals a deck
-		 * that has not yet arrived. Stays false while the deck is loading.
+		 * Real first-card fetch readiness. Auto-enter (the short deck dwell and
+		 * the digest safety net alike) and the optional tap-to-skip CTA all gate
+		 * on this — so no path ever reveals a deck that has not yet arrived.
+		 * Stays false while the deck is loading.
 		 */
 		ready: boolean;
 		/**
-		 * Settles the matured calls and reveals the deck. Called once, when
-		 * the user taps the armed CTA (or when the 30s ready-gated auto-enter
-		 * fires).
+		 * Settles the matured calls and reveals the deck. Called once — by the
+		 * deck-mode dwell auto-enter, the digest safety-net auto-enter, a
+		 * tap-anywhere, or a tap on the CTA.
 		 */
 		onEnter: () => void;
 	}
@@ -78,20 +88,25 @@
 		loadLine = (loadLine + 1) % loadLineKeys.length;
 	};
 
-	// The read beat — a moment to read the digest / let the deck settle —
-	// elapses on a timer. The CTA arms only once this AND the real fetch
-	// (`ready`) have both landed, so it never reveals a deck that hasn't
-	// arrived.
-	let armBeatElapsed = $state(false);
-	const ctaReady = $derived(armBeatElapsed && ready);
+	// The "Enter Flow →" CTA is an optional tap-to-skip — the entry beat
+	// auto-enters on its own (see below), so the CTA arms as soon as the real
+	// first-card fetch (`ready`) lands. It never reveals a deck that hasn't
+	// arrived, but it imposes no read-beat of its own.
+	const ctaReady = $derived(ready);
 
-	// Whether `onEnter` already ran (manual tap or the 30s auto-enter), so the
-	// ready-gated auto-enter never double-fires once the deck becomes ready.
+	// Whether `onEnter` already ran (any path), so the ready-gated auto-enter
+	// timers never double-fire once the deck becomes ready.
 	let entered = $state(false);
 
-	// Set when the 30s safety-net timer fires; the actual auto-enter is
-	// ready-gated (see the effect below) so it enters at max(30s, ready).
-	let autoElapsed = $state(false);
+	// Set when the deck-mode dwell timer fires; the actual auto-enter is
+	// ready-gated (see the effect below) so it enters at max(dwell, ready).
+	// DECK mode only — a no-op away digest (`count === 0`) is the brief beat.
+	let dwellElapsed = $state(false);
+
+	// Set when the digest safety-net timer fires; likewise ready-gated, so a
+	// long-untapped digest still enters at max(30s, ready) without ever
+	// revealing an unready deck. DIGEST mode only.
+	let safetyElapsed = $state(false);
 
 	const previewItems = $derived(digest.items.slice(0, 5));
 
@@ -115,8 +130,7 @@
 	// is active at any time: the CSS `animationend` path (full motion) or the
 	// plain interval (reduced motion). The interval is also created fresh if
 	// the preference flips from full → reduced mid-session, and cancelled when
-	// it flips back. The arm timeout is also keyed on the preference so the
-	// correct delay (600 ms vs 4 s) is applied from the current state.
+	// it flips back.
 	$effect(() => {
 		const reduce = prefersReducedMotion();
 
@@ -125,52 +139,76 @@
 		// on a plain timer. The line never animates to `opacity:0`, so there
 		// are still no empty frames here.
 		const rot = reduce ? setInterval(advanceLine, 1100) : undefined;
-		const arm = setTimeout(
-			() => {
-				armBeatElapsed = true;
-			},
-			reduce ? 600 : 4000
-		);
 
-		// Reveal cue: a celebratory chime for a net gain, a soft single tone
-		// for a loss. Suppressed under reduced motion. Stored so it can be
-		// cancelled on cleanup if the user navigates or preference flips before
-		// the 360 ms fires.
-		let audioCue: ReturnType<typeof setTimeout> | undefined;
+		// Reveal cue — fired only in DIGEST mode, paired with the recap landing:
+		// a celebratory chime + a celebration buzz for a net gain, a soft single
+		// tone + low thud for a loss. Suppressed under reduced motion. Stored so
+		// it can be cancelled on cleanup if the user navigates or the preference
+		// flips before the 360 ms fires.
+		let revealCue: ReturnType<typeof setTimeout> | undefined;
 
 		if (hasDigest && !reduce) {
-			audioCue = setTimeout(() => {
-				audioCue = undefined;
+			revealCue = setTimeout(() => {
+				revealCue = undefined;
 
 				if (positive) {
 					flowSummary();
+					haptic('celebration');
 				} else {
 					flowBeat(false);
+					haptic('low-thud');
 				}
 			}, 360);
 		}
 
 		return () => {
 			clearInterval(rot);
-			clearTimeout(arm);
-			clearTimeout(audioCue);
+			clearTimeout(revealCue);
 		};
 	});
 
-	// Auto-enter safety net: after 30s, flag that the wait has run long. Kept
-	// in its OWN effect with NO dependency on `prefersReducedMotion()`, so the
-	// 30s timer starts once on mount and isn't cleared/restarted when the OS
+	// DECK-mode dwell: a brief branded beat, not a gate. After the dwell
+	// (~800 ms, or 250 ms under reduced motion) the surface is free to
+	// auto-enter — paired with `ready` in the effect below so it enters at
+	// max(dwell, ready). Keyed on the reduced-motion preference so the correct
+	// delay is applied from the current state. DECK mode only.
+	$effect(() => {
+		if (hasDigest) {
+			return;
+		}
+
+		const reduce = prefersReducedMotion();
+		const dwell = setTimeout(
+			() => {
+				dwellElapsed = true;
+			},
+			reduce ? DECK_DWELL_REDUCED_MS : DECK_DWELL_MS
+		);
+
+		return () => {
+			clearTimeout(dwell);
+		};
+	});
+
+	// DIGEST-mode safety net: after ~30 s, flag that the wait has run long.
+	// Kept in its OWN effect with NO dependency on `prefersReducedMotion()`, so
+	// the timer starts once and isn't cleared/restarted when the OS
 	// reduced-motion preference is toggled mid-session (which would postpone
 	// the safety auto-enter). The actual enter is ready-gated below, so an
 	// in-flight deck is never revealed early — it enters the moment the deck
-	// becomes ready.
+	// becomes ready. DIGEST mode only; the deck mode auto-enters far sooner via
+	// the dwell.
 	$effect(() => {
-		const auto = setTimeout(() => {
-			autoElapsed = true;
-		}, 30_000);
+		if (!hasDigest) {
+			return;
+		}
+
+		const safety = setTimeout(() => {
+			safetyElapsed = true;
+		}, SAFETY_AUTO_ENTER_MS);
 
 		return () => {
-			clearTimeout(auto);
+			clearTimeout(safety);
 		};
 	});
 
@@ -183,8 +221,11 @@
 		}
 	};
 
+	// Reveal the deck. Idempotent (the `entered` latch) so the dwell / safety
+	// auto-enter, a tap-anywhere, and the CTA can't double-fire. Gated on
+	// `ready` so no path ever reveals a deck that hasn't arrived.
 	const enterFlow = () => {
-		if (!ctaReady || entered) {
+		if (!ready || entered) {
 			return;
 		}
 
@@ -192,12 +233,43 @@
 		onEnter();
 	};
 
-	// 30s safety-net auto-enter, ready-gated: enters at max(30s, ready) so the
-	// surface never lingers indefinitely, yet never reveals an unready deck.
+	// Auto-enter, ready-gated for both modes:
+	//  • DECK mode — the brief dwell elapses and the deck is ready → enter, no
+	//    tap required. The entry is a branded beat, not a gate.
+	//  • DIGEST mode — only the 30 s safety net auto-enters (the user is meant
+	//    to read the recap and continue by tap); it enters at max(30s, ready).
 	$effect(() => {
-		if (autoElapsed && ready && !entered) {
+		if (entered || !ready) {
+			return;
+		}
+
+		if (hasDigest ? safetyElapsed : dwellElapsed) {
 			enterFlow();
 		}
+	});
+
+	// Tap-anywhere to continue — the whole surface is the affordance, not just
+	// the CTA, so a pointer-down anywhere over the overlay enters once the deck
+	// is ready (matching the labelled CTA button, which is the same `enterFlow`
+	// path and the accessible control). A window listener — rather than a
+	// clickable wrapper — keeps the overlay free of a static interactive
+	// element. `enterFlow` is idempotent, so a tap landing on the CTA itself
+	// can't double-fire. Re-armed reactively as `ready` flips and torn down on
+	// unmount.
+	$effect(() => {
+		if (entered) {
+			return;
+		}
+
+		const onPointerDown = () => {
+			enterFlow();
+		};
+
+		window.addEventListener('pointerdown', onPointerDown);
+
+		return () => {
+			window.removeEventListener('pointerdown', onPointerDown);
+		};
 	});
 
 	const ctaLabel = $derived(
