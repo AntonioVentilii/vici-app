@@ -666,6 +666,7 @@ export const itMessages = {
 	'dash.dz.trend_tag_day0': 'IN ATTESA',
 	'dash.dz.trend_tag_day1': 'IN ATTESA',
 	'dash.header_eyebrow_standard': 'serie di {count} giorni · finestra {window}',
+	'dash.holdings.available': 'Disponibili',
 	'dash.holdings.backed': 'Impegnati',
 	'dash.holdings.eyebrow': 'Holdings',
 	'dash.holdings.invite_cta': 'Invita →',
