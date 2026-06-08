@@ -1,4 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
 import {
@@ -16,6 +17,7 @@ import {
 	type TournamentRound
 } from '$lib/types/tournament';
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
+import { parseToken } from '$lib/utils/parse.utils';
 import { getLeagueStatsFn } from '$satellite/services/league-stats.services';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { AssertSetDocContext } from '@junobuild/functions';
@@ -1203,11 +1205,20 @@ export const claimTournamentPrizeFn = ({
 	}
 
 	const nowMs = Number(time() / 1_000_000n);
+	// `tier.vxp` is the human-readable whole-VXP prize (5000 / 2500 / 1000),
+	// the same value the FE renders. The award doc / ledger work in base
+	// units (VXP has 4 decimals), so size it via `parseToken` like every
+	// other award constant — writing the raw whole number here would
+	// under-pay by 10⁴ (5000 base units = 0.5 VXP).
+	const amountBaseUnits = parseToken({
+		value: tier.vxp.toString(),
+		unitName: VXP_TOKEN.decimals
+	});
 	const pendingDoc: VxpAwardDoc = {
 		recipient: callerText,
 		awardType: 'tournament_prize',
 		awardKey,
-		amountBaseUnits: tier.vxp.toString(),
+		amountBaseUnits: amountBaseUnits.toString(),
 		status: 'pending',
 		earnedAtMs: nowMs
 	};
