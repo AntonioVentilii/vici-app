@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, ChevronDown, ChevronRight, ChevronUp } from '@lucide/svelte/icons';
+	import { Check, ChevronRight } from '@lucide/svelte/icons';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -10,10 +10,11 @@
 
 	/**
 	 * Single row in the Leagues list. Renders the gradient logo
-	 * tile, the league name + role chip, a member-count + your-rank
-	 * meta line, an optional friend-overlap row, an optional latest-
-	 * activity preview line, and an inline copy-invite pill on the
-	 * trailing edge.
+	 * tile, the league name + role chip, a member-count meta line
+	 * (with an optional ▲/▼ "{N} this week" rank-trend), an optional
+	 * friend-overlap row, and a trailing column carrying the caller's
+	 * "#rank of M" badge (or a chevron when no rank) above an inline
+	 * copy-invite pill.
 	 *
 	 * The card itself is a `<button>` that routes to the league
 	 * detail page; the copy pill is a nested button that stops
@@ -43,11 +44,9 @@
 		 *  undefined (e.g. recommendation cards). */
 		yourRank?: number;
 		/** Signed rank-trend vs the prior period: negative = climbed
-		 *  (shown green ↑), positive = slipped (shown red ↓), 0 = flat
+		 *  (shown green ▲), positive = slipped (shown red ▼), 0 = flat
 		 *  (hidden). */
 		trend?: number;
-		/** Free-form "latest activity" preview. Hidden when undefined. */
-		activityPreview?: string;
 		/** Marks this card as a recommendation (friends are in, you
 		 *  are not). Swaps the role chip for a `REQUEST` chip and
 		 *  hides the copy pill. */
@@ -64,7 +63,6 @@
 		friendOverlap,
 		yourRank,
 		trend = 0,
-		activityPreview,
 		isRecommendation = false,
 		onclick
 	}: Props = $props();
@@ -193,19 +191,15 @@
 
 		<span class="meta num">
 			{memberCountLabel}
-			{#if yourRank != null}
-				<span class="meta-sep" aria-hidden="true">·</span>
-				<span class="meta-rank">#{yourRank}</span>
-				{#if trend !== 0}
-					<span class="meta-trend" class:is-down={trend > 0} class:is-up={trend < 0}>
-						{#if trend < 0}
-							<ChevronUp aria-hidden="true" size={11} strokeWidth={2.6} />
-						{:else}
-							<ChevronDown aria-hidden="true" size={11} strokeWidth={2.6} />
-						{/if}
-						{Math.abs(trend)}
-					</span>
-				{/if}
+			{#if trend !== 0}
+				<span class="meta-trend" class:is-down={trend > 0} class:is-up={trend < 0}>
+					{trend < 0 ? '▲' : '▼'}
+					{t({
+						locale: $localeStore,
+						key: 'leagues.card.trend_this_week',
+						params: { count: Math.abs(trend) }
+					})}
+				</span>
 			{/if}
 		</span>
 
@@ -231,14 +225,23 @@
 				</span>
 			</span>
 		{/if}
-
-		{#if activityPreview}
-			<span class="activity-preview">{activityPreview}</span>
-		{/if}
 	</span>
 
 	<span class="trailing">
-		<ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} />
+		{#if yourRank != null}
+			<span class="rank-badge">
+				<span class="rank-v num">#{yourRank}</span>
+				<span class="rank-of num">
+					{t({
+						locale: $localeStore,
+						key: 'leagues.card.rank_of',
+						params: { count: memberCount }
+					})}
+				</span>
+			</span>
+		{:else}
+			<ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} />
+		{/if}
 		{#if !isRecommendation}
 			<!-- Nested interactive control inside a button is technically
 			     invalid HTML; we use a `<span role="button">` so the
@@ -424,25 +427,17 @@
 	.meta {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.2rem;
+		gap: 0.375rem;
 		font-size: 10.5px;
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-wide);
 	}
 
-	.meta-sep {
-		color: var(--fg-faint, var(--text-muted));
-	}
-
-	.meta-rank {
-		color: var(--text-base);
-		font-weight: 600;
-	}
-
 	.meta-trend {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.05rem;
+		gap: 0.2rem;
+		font-size: var(--t-10);
 		font-weight: 700;
 	}
 
@@ -503,19 +498,40 @@
 		margin-left: 0.2rem;
 	}
 
-	.activity-preview {
-		margin-top: 2px;
-		font-size: 10.5px;
-		color: var(--text-muted);
-		line-height: 1.3;
-	}
-
+	/* Trailing column · rank badge (or chevron) pinned to the top edge,
+	   copy pill to the bottom, stretched to the card height so the badge
+	   sits flush with the league name and the pill with the meta line. */
 	.trailing {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
-		gap: 6px;
+		justify-content: space-between;
+		align-self: stretch;
+		gap: 8px;
 		flex-shrink: 0;
+		color: var(--text-muted);
+	}
+
+	/* "#rank / of M" stacked badge — the caller's standing within the
+	   league, right-aligned and mono so the figures read as a scoreline. */
+	.rank-badge {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		line-height: 1;
+	}
+
+	.rank-v {
+		font-size: 22px;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		color: var(--text-base);
+	}
+
+	.rank-of {
+		margin-top: 3px;
+		font-size: 9px;
+		letter-spacing: 0.04em;
 		color: var(--text-muted);
 	}
 

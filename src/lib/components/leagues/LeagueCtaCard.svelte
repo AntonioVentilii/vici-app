@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { ChevronRight, Plus } from '@lucide/svelte/icons';
+	import { Plus } from '@lucide/svelte/icons';
 
 	/**
-	 * Trailing "Create a league" / "Join with code" CTA card
-	 * rendered at the end of the Leagues list. Matches the
-	 * row shape of `LeagueListCard` so both surfaces feel
-	 * continuous, with the gradient tile reserved for an icon
-	 * or short glyph string instead of a league emblem.
+	 * Compact "Create a league" / "Join with code" action rendered in
+	 * the trailing "Start or join" grid beneath the league list. A
+	 * single-row pill — small accent-glow icon tile + a title / sub
+	 * stack — deliberately lighter than the league cards above so the
+	 * leagues you're in stay the focus.
 	 */
 	interface Props {
 		title: string;
@@ -18,112 +18,85 @@
 	const { title, sub, variant, onclick }: Props = $props();
 </script>
 
-<button class="league-cta-card" {onclick} type="button">
-	<span class="league-cta-logo" aria-hidden="true">
+<button class="leagues-cta" {onclick} type="button">
+	<span class="leagues-cta-ic" class:mono={variant === 'join'} aria-hidden="true">
 		{#if variant === 'create'}
-			<Plus aria-hidden="true" size={20} strokeWidth={2} />
+			<Plus aria-hidden="true" size={16} strokeWidth={2.2} />
 		{:else}
-			<span class="join-glyph">JOIN</span>
+			CODE
 		{/if}
 	</span>
-
-	<span class="body">
-		<span class="title">{title}</span>
-		<span class="sub num">{sub}</span>
+	<span class="leagues-cta-tx">
+		<span class="leagues-cta-t">{title}</span>
+		<span class="leagues-cta-s num">{sub}</span>
 	</span>
-
-	<ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} />
 </button>
 
 <style lang="postcss">
-	.league-cta-card {
+	.leagues-cta {
 		display: flex;
+		flex-direction: row;
 		align-items: center;
-		gap: 0.75rem;
+		gap: 10px;
 		width: 100%;
-		padding: 0.85rem 0.95rem;
+		padding: 11px 12px;
 		font: inherit;
 		text-align: left;
 		color: var(--text-base);
 		background: var(--bg-surface);
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
+		border-radius: var(--r-11, 11px);
 		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
+		transition: border-color var(--d-hover) var(--ease-vici);
 	}
 
-	.league-cta-card:hover {
-		background: var(--bg-popover);
+	.leagues-cta:hover {
 		border-color: var(--border-strong);
 	}
 
-	/* Empty logo tile shared by the Create and Join CTAs. 56-px square
-	   with a muted dashed border + near-transparent surface so the
-	   tile reads as a slot waiting to be filled, with a faint diagonal
-	   sheen pseudo behind the laurel-coloured glyph / text. Same
-	   geometry as the populated league-list-card logo so the rows
-	   line up visually. */
-	.league-cta-logo {
-		position: relative;
+	/* Small accent-glow icon tile — `--laurel`-tinted square holding the
+	   plus glyph (create) or a mono "CODE" label (join). */
+	.leagues-cta-ic {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		flex-shrink: 0;
-		width: 3.5rem;
-		height: 3.5rem;
-		color: var(--color-primary);
-		background: rgba(242, 236, 220, 0.03);
-		border: 1px dashed var(--border-strong);
-		border-radius: 10px;
+		flex: none;
+		width: 30px;
+		height: 30px;
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--laurel) 12%, transparent);
+		color: var(--laurel);
 	}
 
-	.league-cta-logo::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(
-			120deg,
-			transparent 35%,
-			rgba(242, 236, 220, 0.1) 50%,
-			transparent 65%
-		);
-		border-radius: inherit;
-		pointer-events: none;
-	}
-
-	.league-cta-logo > * {
-		position: relative;
-		z-index: 1;
-	}
-
-	.join-glyph {
-		font-family: var(--font-mono, monospace);
-		font-size: var(--t-13, 0.8125rem);
+	.leagues-cta-ic.mono {
+		font-family: var(--font-mono);
+		font-size: 9.5px;
 		font-weight: 700;
-		letter-spacing: 0.08em;
-		color: var(--color-primary);
+		letter-spacing: 0.02em;
 	}
 
-	.body {
+	.leagues-cta-tx {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
-		flex: 1;
+		gap: 1px;
 		min-width: 0;
 	}
 
-	.title {
-		font-family: var(--font-display);
-		font-size: var(--t-15, 0.9375rem);
+	.leagues-cta-t {
+		font-size: 12.5px;
 		font-weight: 600;
 		color: var(--text-base);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	.sub {
-		font-size: var(--t-11);
+	.leagues-cta-s {
+		font-size: 9px;
+		letter-spacing: 0.02em;
 		color: var(--text-muted);
-		letter-spacing: var(--tracking-wide);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 </style>
