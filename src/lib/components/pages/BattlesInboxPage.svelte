@@ -6,7 +6,7 @@
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import BattlesIntroCard from '$lib/components/leagues/BattlesIntroCard.svelte';
 	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
-	import WorldsPodiumCard from '$lib/components/worlds/WorldsPodiumCard.svelte';
+	import WorldsBattleCard from '$lib/components/worlds/WorldsBattleCard.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
@@ -26,8 +26,6 @@
 		type TournamentMatchDoc,
 		type TournamentRound
 	} from '$lib/types/tournament';
-	import { compareAffiliationByLifetime } from '$lib/utils/affiliation-stats.utils';
-	import { formatMonthName } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { BATTLES_INTRO_SEEN_KEY } from '$lib/utils/onboarding-flags.utils';
@@ -158,93 +156,41 @@
 		createBoutOpen = true;
 	};
 
-	// ─── Worlds podium helpers ──────────────────────────────────────
-	/**
-	 * Top-3 by WC (lifetime) accuracy for a roster. The featured
-	 * podium always frames the World Cup battle — same shape as
-	 * WorldsPage's `wcTop3`.
-	 */
-	const wcTop3 = ({ stats }: { stats: AffiliationStatsDoc[] }): AffiliationStatsDoc[] => {
-		const list = [...stats];
-
-		list.sort(compareAffiliationByLifetime);
-
-		return list.slice(0, 3);
-	};
-
-	const uniWcTop3 = $derived(wcTop3({ stats: uniStats }));
-	const countryWcTop3 = $derived(wcTop3({ stats: countryStats }));
-
-	/**
-	 * Caller's rank in the lifetime-accuracy ranking for a roster.
-	 * Returns `0` when the user has no affiliation or the affiliation
-	 * isn't in the roster yet (no stats doc).
-	 */
-	const rankIn = ({
-		stats,
-		affiliationIdentifier
-	}: {
-		stats: AffiliationStatsDoc[];
-		affiliationIdentifier: string | undefined;
-	}): number => {
-		if (affiliationIdentifier === undefined) {
-			return 0;
-		}
-
-		const sorted = [...stats].sort(compareAffiliationByLifetime);
-
-		const idx = sorted.findIndex((s) => s.affiliationIdentifier === affiliationIdentifier);
-
-		return idx === -1 ? 0 : idx + 1;
-	};
-
-	const myUniStats = $derived.by(() => {
-		const uni = myUni;
-
-		return uni
-			? uniStats.find((s) => s.affiliationIdentifier === uni.affiliationIdentifier)
-			: undefined;
-	});
-
-	const myUniRank = $derived(
-		rankIn({ stats: uniStats, affiliationIdentifier: myUni?.affiliationIdentifier })
-	);
-
-	const myCountryStats = $derived.by(() => {
-		const country = myCountry;
-
-		return country
-			? countryStats.find((s) => s.affiliationIdentifier === country.affiliationIdentifier)
-			: undefined;
-	});
-
-	const myCountryRank = $derived(
-		rankIn({ stats: countryStats, affiliationIdentifier: myCountry?.affiliationIdentifier })
-	);
-
+	// ─── Worlds roster helpers ──────────────────────────────────────
+	// The single Worlds battle card owns its own scope ranking — it
+	// receives the full roster `stats` and re-sorts per the active
+	// scope — so the parent only supplies the roster, the viewer's
+	// affiliation, the total size, and the two countdowns.
 	const universityCount = WORLDS_UNIVERSITIES.length;
 	const countryCount = WORLDS_COUNTRIES.length;
 
 	const eventDaysLeft = $derived($daysToFinal);
 
-	// Month-anchored season label — the monthly cards always name the
-	// current month rather than a hard-coded one.
-	const currentMonthName = $derived(formatMonthName({ locale: $localeStore }));
+	// Days left in the current calendar month — the Season scope's
+	// countdown. The season always runs to the end of the active month.
+	const monthDaysLeft = $derived.by((): number => {
+		const now = new Date();
+		// Build the end-of-month boundary in UTC so the day count never
+		// drifts by ±1 across a DST transition: a local-time boundary plus
+		// a fixed-ms divisor would gain/lose an hour at the change and the
+		// ceil could flip the displayed `{days}d left`.
+		const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
+		const delta = end - now.getTime();
 
-	const goWorldsUniversitiesWc = () => {
-		void goto(`${resolve(AppPath.Arena)}/worlds/schools`);
+		return delta <= 0 ? 0 : Math.ceil(delta / DAY_IN_MS);
+	});
+
+	// Open a roster's detail surface on the scope the viewer was looking
+	// at — the detail page reads `?scope=wc|month` to land on the same
+	// ranking.
+	const goWorldsUniversities = (scope: 'wc' | 'month') => {
+		const suffix = scope === 'month' ? '?scope=month' : '';
+		void goto(`${resolve(AppPath.Arena)}/worlds/schools${suffix}`);
 	};
 
-	const goWorldsUniversitiesMonth = () => {
-		void goto(`${resolve(AppPath.Arena)}/worlds/schools?scope=month`);
-	};
-
-	const goWorldsCountriesWc = () => {
-		void goto(`${resolve(AppPath.Arena)}/worlds/countries`);
-	};
-
-	const goWorldsCountriesMonth = () => {
-		void goto(`${resolve(AppPath.Arena)}/worlds/countries?scope=month`);
+	const goWorldsCountries = (scope: 'wc' | 'month') => {
+		const suffix = scope === 'month' ? '?scope=month' : '';
+		void goto(`${resolve(AppPath.Arena)}/worlds/countries${suffix}`);
 	};
 
 	const goTournament = () => {
@@ -379,32 +325,26 @@
 		</p>
 	{:else}
 		<!-- ─── Worlds Universities ─────────────────────────────── -->
-		<WorldsPodiumCard
-			{currentMonthName}
-			{eventDaysLeft}
+		<WorldsBattleCard
 			kind="university"
+			{monthDaysLeft}
 			myAffiliationIdentifier={myUni?.affiliationIdentifier}
-			myRank={myUniRank}
-			myStats={myUniStats}
-			onOpenMonth={goWorldsUniversitiesMonth}
-			onOpenWc={goWorldsUniversitiesWc}
-			top3={uniWcTop3}
+			onOpen={goWorldsUniversities}
+			stats={uniStats}
 			total={universityCount}
+			wcDaysLeft={eventDaysLeft}
 		/>
 
 		<!-- ─── Worlds Countries ────────────────────────────────── -->
-		<WorldsPodiumCard
-			{currentMonthName}
+		<WorldsBattleCard
 			divided
-			{eventDaysLeft}
 			kind="country"
+			{monthDaysLeft}
 			myAffiliationIdentifier={myCountry?.affiliationIdentifier}
-			myRank={myCountryRank}
-			myStats={myCountryStats}
-			onOpenMonth={goWorldsCountriesMonth}
-			onOpenWc={goWorldsCountriesWc}
-			top3={countryWcTop3}
+			onOpen={goWorldsCountries}
+			stats={countryStats}
 			total={countryCount}
+			wcDaysLeft={eventDaysLeft}
 		/>
 
 		<!-- ─── Monthly Tournament (curated, when active) ─────── -->
