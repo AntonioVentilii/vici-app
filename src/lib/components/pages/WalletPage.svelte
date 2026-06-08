@@ -157,9 +157,9 @@
 		$positions.filter((p) => marketById.get(p.marketId)?.token.symbol === VXP_TOKEN.symbol)
 	);
 
-	// Total VXP riding on open calls, in base units — the deploy-floor gate.
-	// `$vxpBacked` is the shared sum of `lockedCollateral` across the user's
-	// VXP-market positions (see `vxp-holdings.derived`).
+	// Total VXP riding on open VXP-market positions, in base units — the
+	// deploy-floor gate. `$vxpBacked` is the shared sum of `lockedCollateral`
+	// across the user's VXP-market positions (see `vxp-holdings.derived`).
 
 	// Whole-VXP rendering of the locked total, for the recovery beat display.
 	const lockedInOpenVxp = $derived(

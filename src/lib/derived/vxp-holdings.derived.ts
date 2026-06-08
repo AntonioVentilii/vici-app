@@ -25,25 +25,27 @@ export const vxpFree: Readable<bigint> = derived(
 	($balancesStore) => $balancesStore?.[VXP_TOKEN.id] ?? ZERO
 );
 
+// `marketId → market` lookup, rebuilt only when `markets` changes — not on
+// every `positions` tick (positions refresh far more often). Keeps the
+// `vxpBacked` reduce from re-mapping the whole markets array on each refresh.
+const marketById = derived(markets, ($markets) => new Map($markets.map((m) => [m.id, m] as const)));
+
 // Backed = sum of locked collateral across the user's active positions on
 // VXP-denominated markets. `lockedCollateral` is in clearing-USD micro-units
 // (USD_DECIMALS = 4), matching `VXP_TOKEN.decimals`, so no conversion is
 // needed.
 export const vxpBacked: Readable<bigint> = derived(
-	[positions, markets],
-	([$positions, $markets]) => {
-		const marketById = new Map($markets.map((m) => [m.id, m] as const));
-
-		return $positions.reduce<bigint>((acc, pos) => {
-			const market = marketById.get(pos.marketId);
+	[positions, marketById],
+	([$positions, $marketById]) =>
+		$positions.reduce<bigint>((acc, pos) => {
+			const market = $marketById.get(pos.marketId);
 
 			if (market === undefined || market.token.symbol !== VXP_TOKEN.symbol) {
 				return acc;
 			}
 
 			return acc + pos.lockedCollateral;
-		}, ZERO);
-	}
+		}, ZERO)
 );
 
 // Total holdings = free wallet balance + backed collateral, in base units.
