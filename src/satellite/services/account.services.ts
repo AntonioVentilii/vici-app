@@ -198,6 +198,84 @@ export interface ResumeMyAccountResult {
 	resumed: boolean;
 }
 
+/**
+ * Outcome of {@link mutateOwnProfile}, discriminated by `status`:
+ *
+ *  - `'no_profile'` — the caller had no `PROFILES` doc (never onboarded,
+ *    or already hard-deleted). No read-back, nothing written.
+ *  - `'skipped'` — a profile existed but `transform` returned `null`, so
+ *    no write was issued (a clean no-op, e.g. the marker was already in
+ *    the desired state). `profile` is the decoded (pre-transform) doc.
+ *  - `'written'` — `transform` returned a profile and it was persisted
+ *    via a version-locked overwrite. `profile` is the decoded
+ *    (pre-transform) doc.
+ *
+ * Callers map this onto their own typed result, reading `profile` where
+ * the pre-mutation state matters (e.g. whether the marker was already
+ * set).
+ */
+type MutateOwnProfileResult =
+	| { status: 'no_profile' }
+	| { status: 'skipped'; profile: UserProfile }
+	| { status: 'written'; profile: UserProfile };
+
+/**
+ * Shared read-modify-write envelope for the caller's own `PROFILES` doc.
+ * Reads the doc via `getDocStore` (PROFILES is keyed by principal text,
+ * one doc per user, and is user-owned — so the write is authorised by the
+ * REAL caller, never an admin key), null-guards a missing doc, decodes it,
+ * then runs `transform`:
+ *
+ *  - `transform` returns a `UserProfile` → persist it with a version-locked
+ *    `setDocStore` (the current `version` is threaded back so a concurrent
+ *    profile write can't be silently clobbered). Result `'written'`.
+ *  - `transform` returns `null` → no write (a clean no-op). Result
+ *    `'skipped'`.
+ *
+ * The marker mutations in {@link softDeleteProfile}, {@link
+ * recoverMyAccountFn}, {@link hibernateMyAccountFn} and {@link
+ * resumeMyAccountFn} all share this exact envelope and differ only in the
+ * one-field transform, so they each pass their transform here.
+ */
+const mutateOwnProfile = ({
+	callerText,
+	callerBytes,
+	transform
+}: {
+	callerText: string;
+	callerBytes: Uint8Array;
+	transform: (profile: UserProfile) => UserProfile | null;
+}): MutateOwnProfileResult => {
+	const profileDoc = getDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes
+	});
+
+	if (isNullish(profileDoc)) {
+		return { status: 'no_profile' };
+	}
+
+	const profile = decodeDocData<UserProfile>(profileDoc.data);
+	const next = transform(profile);
+
+	if (isNullish(next)) {
+		return { status: 'skipped', profile };
+	}
+
+	setDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes,
+		doc: {
+			data: encodeDocData<UserProfile>(next),
+			version: profileDoc.version
+		}
+	});
+
+	return { status: 'written', profile };
+};
+
 const validateInput = ({
 	reason,
 	note
@@ -963,33 +1041,26 @@ const softDeleteProfile = ({
 	callerBytes: Uint8Array;
 	nowMs: number;
 }): SoftDeleteProfileResult => {
-	const profileDoc = getDocStore({
-		collection: Collection.PROFILES,
-		key: callerText,
-		caller: callerBytes
-	});
+	const result = mutateOwnProfile({
+		callerText,
+		callerBytes,
+		transform: (profile) => {
+			// Keep the earliest mark — re-deleting must not reset the clock.
+			const deletedAtMs = isNullish(profile.deletedAtMs)
+				? nowMs
+				: Math.min(profile.deletedAtMs, nowMs);
 
-	if (isNullish(profileDoc)) {
-		return { softDeleted: false, alreadyDeleted: false };
-	}
-
-	const profile = decodeDocData<UserProfile>(profileDoc.data);
-	const alreadyDeleted = nonNullish(profile.deletedAtMs);
-
-	// Keep the earliest mark — re-deleting must not reset the clock.
-	const deletedAtMs = isNullish(profile.deletedAtMs) ? nowMs : Math.min(profile.deletedAtMs, nowMs);
-
-	setDocStore({
-		collection: Collection.PROFILES,
-		key: callerText,
-		caller: callerBytes,
-		doc: {
-			data: encodeDocData<UserProfile>({ ...profile, deletedAtMs }),
-			version: profileDoc.version
+			return { ...profile, deletedAtMs };
 		}
 	});
 
-	return { softDeleted: true, alreadyDeleted };
+	if (result.status === 'no_profile') {
+		return { softDeleted: false, alreadyDeleted: false };
+	}
+
+	// The transform always writes, so `result.status` is `'written'` here;
+	// `alreadyDeleted` reflects the marker on the PRE-mutation profile.
+	return { softDeleted: true, alreadyDeleted: nonNullish(result.profile.deletedAtMs) };
 };
 
 /**
@@ -1012,45 +1083,43 @@ export const recoverMyAccountFn = (): RecoverMyAccountResult => {
 	const callerText = caller.toText();
 	const callerBytes = caller.toUint8Array();
 
-	const profileDoc = getDocStore({
-		collection: Collection.PROFILES,
-		key: callerText,
-		caller: callerBytes
-	});
-
-	if (isNullish(profileDoc)) {
-		return { ok: true, recovered: false };
-	}
-
-	const profile = decodeDocData<UserProfile>(profileDoc.data);
-
-	if (isNullish(profile.deletedAtMs)) {
-		return { ok: true, recovered: false };
-	}
-
 	const nowMs = Number(time() / 1_000_000n);
 
-	if (nowMs - profile.deletedAtMs >= ACCOUNT_RECOVERY_WINDOW_MS) {
+	// The expired branch hard-deletes instead of writing the cleared
+	// marker, so we surface it via this flag and return `null` (no write)
+	// from the transform; the caller below runs the purge.
+	let expired = false;
+
+	const result = mutateOwnProfile({
+		callerText,
+		callerBytes,
+		transform: (profile) => {
+			if (isNullish(profile.deletedAtMs)) {
+				return null;
+			}
+
+			if (nowMs - profile.deletedAtMs >= ACCOUNT_RECOVERY_WINDOW_MS) {
+				// Window elapsed — refuse the recovery and purge below.
+				expired = true;
+
+				return null;
+			}
+
+			// Inside the window — clear the marker via the version-locked write.
+			const { deletedAtMs: _drop, ...rest } = profile;
+
+			return rest;
+		}
+	});
+
+	if (expired) {
 		// Window elapsed — purge now and refuse the recovery.
 		hardDeleteAccountFn({ callerText, callerBytes });
 
 		return { ok: false, reason: 'expired' };
 	}
 
-	// Inside the window — clear the marker via a version-locked write.
-	const { deletedAtMs: _drop, ...rest } = profile;
-
-	setDocStore({
-		collection: Collection.PROFILES,
-		key: callerText,
-		caller: callerBytes,
-		doc: {
-			data: encodeDocData<UserProfile>(rest),
-			version: profileDoc.version
-		}
-	});
-
-	return { ok: true, recovered: true };
+	return { ok: true, recovered: result.status === 'written' };
 };
 
 /**
@@ -1075,41 +1144,42 @@ export const hibernateMyAccountFn = (): HibernateMyAccountResult => {
 	const callerText = caller.toText();
 	const callerBytes = caller.toUint8Array();
 
-	const profileDoc = getDocStore({
-		collection: Collection.PROFILES,
-		key: callerText,
-		caller: callerBytes
+	const nowMs = Number(time() / 1_000_000n);
+
+	// Soft-delete and hibernation are mutually exclusive; a soft-deleted
+	// account refuses with `'deleted'` instead of writing. Surface that
+	// via this flag and return `null` (no write) from the transform.
+	let deleted = false;
+
+	const result = mutateOwnProfile({
+		callerText,
+		callerBytes,
+		transform: (profile) => {
+			// Mutually exclusive with soft-delete — a deleted account can't be
+			// hibernated. The FE should never reach here (it offers hibernation
+			// as an alternative to delete), but guard defensively.
+			if (isSoftDeleted(profile)) {
+				deleted = true;
+
+				return null;
+			}
+
+			// Keep the earliest mark — re-hibernating must not reset the clock.
+			const hibernatedAtMs = isHibernated(profile)
+				? Math.min(profile.hibernatedAtMs ?? nowMs, nowMs)
+				: nowMs;
+
+			return { ...profile, hibernatedAtMs };
+		}
 	});
 
-	if (isNullish(profileDoc)) {
+	if (result.status === 'no_profile') {
 		return { ok: false, reason: 'no_profile' };
 	}
 
-	const profile = decodeDocData<UserProfile>(profileDoc.data);
-
-	// Mutually exclusive with soft-delete — a deleted account can't be
-	// hibernated. The FE should never reach here (it offers hibernation as
-	// an alternative to delete), but guard defensively.
-	if (isSoftDeleted(profile)) {
+	if (deleted) {
 		return { ok: false, reason: 'deleted' };
 	}
-
-	const nowMs = Number(time() / 1_000_000n);
-
-	// Keep the earliest mark — re-hibernating must not reset the clock.
-	const hibernatedAtMs = isHibernated(profile)
-		? Math.min(profile.hibernatedAtMs ?? nowMs, nowMs)
-		: nowMs;
-
-	setDocStore({
-		collection: Collection.PROFILES,
-		key: callerText,
-		caller: callerBytes,
-		doc: {
-			data: encodeDocData<UserProfile>({ ...profile, hibernatedAtMs }),
-			version: profileDoc.version
-		}
-	});
 
 	return { ok: true };
 };
@@ -1133,36 +1203,24 @@ export const resumeMyAccountFn = (): ResumeMyAccountResult => {
 	const callerText = caller.toText();
 	const callerBytes = caller.toUint8Array();
 
-	const profileDoc = getDocStore({
-		collection: Collection.PROFILES,
-		key: callerText,
-		caller: callerBytes
-	});
+	const result = mutateOwnProfile({
+		callerText,
+		callerBytes,
+		transform: (profile) => {
+			if (!isHibernated(profile)) {
+				return null;
+			}
 
-	if (isNullish(profileDoc)) {
-		return { ok: true, resumed: false };
-	}
+			// Clear the marker via the version-locked write.
+			const { hibernatedAtMs: _drop, ...rest } = profile;
 
-	const profile = decodeDocData<UserProfile>(profileDoc.data);
-
-	if (!isHibernated(profile)) {
-		return { ok: true, resumed: false };
-	}
-
-	// Clear the marker via a version-locked write.
-	const { hibernatedAtMs: _drop, ...rest } = profile;
-
-	setDocStore({
-		collection: Collection.PROFILES,
-		key: callerText,
-		caller: callerBytes,
-		doc: {
-			data: encodeDocData<UserProfile>(rest),
-			version: profileDoc.version
+			return rest;
 		}
 	});
 
-	return { ok: true, resumed: true };
+	// No profile and not-hibernated both collapse to a clean no-op; only an
+	// actual marker clear (a write) reports `resumed: true`.
+	return { ok: true, resumed: result.status === 'written' };
 };
 
 /**
