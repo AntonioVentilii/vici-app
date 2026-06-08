@@ -23,12 +23,10 @@
 
 		if (show && !dialog.open) {
 			dialog.showModal();
-			document.body.style.overflow = 'hidden';
 		}
 
 		if (!show && dialog.open) {
 			dialog.close();
-			document.body.style.overflow = '';
 		}
 	});
 
@@ -38,7 +36,6 @@
 
 	const handleClose = () => {
 		show = false;
-		document.body.style.overflow = '';
 	};
 </script>
 
@@ -70,6 +67,15 @@
 </dialog>
 
 <style lang="postcss">
+	/* Lock body scroll while open, mirroring Modal (`.wrapper`) and
+	 * BottomSheet (`.sheet`). Keyed on the `[open]` attribute the native
+	 * `<dialog>` carries only while shown, so the body stays locked as
+	 * long as any open overlay's marker is present — stacked overlays no
+	 * longer desync the lock. */
+	:global(body:has(dialog[open])) {
+		overflow: hidden;
+	}
+
 	dialog::backdrop {
 		animation: fade-in 0.2s ease-out;
 	}
