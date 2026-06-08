@@ -129,10 +129,12 @@
 	let markets = $state<Market[]>([]);
 	let currentIndex = $state(0);
 	let loading = $state(true);
-	// Entry gate — the full-bleed frosted FlowEntry overlay sits over the
-	// deck until the user taps the armed "Enter Flow →" CTA. It carries the
-	// deck-shuffle loading state AND the "while you were away" digest. A
-	// no-op digest (`count === 0`) renders the deck-shuffle mode.
+	// Entry beat — the full-bleed frosted FlowEntry overlay sits over the deck
+	// until the session begins. It carries the deck-shuffle loading state AND
+	// the "while you were away" digest. A no-op digest (`count === 0`) renders
+	// the deck-shuffle beat, which auto-enters the moment the deck is ready (a
+	// brief branded moment, no required tap); a real digest waits for the user
+	// (tap-anywhere / CTA, with a safety auto-enter). See FlowEntry.
 	let entered = $state(false);
 	// The away-digest while the entry gate is open. Tracks the live store so
 	// a late trade-history fetch still populates the recap; the moment the
@@ -860,9 +862,10 @@
 		goto(resolve(AppPath.Home));
 	};
 
-	// Enter Flow — the user tapped the armed CTA on the entry gate. Settle
-	// the matured calls (acknowledge them so the Dashboard banner / bell
-	// badge clear in lockstep) and reveal the deck. `markResolutionsSeen`
+	// Enter Flow — the entry beat cleared (deck-mode auto-enter, the digest
+	// safety net, a tap-anywhere, or the CTA). Settle the matured calls
+	// (acknowledge them so the Dashboard banner / bell badge clear in
+	// lockstep) and reveal the deck. `markResolutionsSeen`
 	// empties `liveDigest`, but flipping `entered` removes the overlay in
 	// the same tick — Svelte freezes the last-rendered digest for the
 	// `out:fade`, so the recap never flips to deck-shuffle mid-transition.
@@ -1140,12 +1143,14 @@
 		{/if}
 	{/if}
 
-	<!-- Entry gate — the unified full-bleed frosted overlay (deck-shuffle
+	<!-- Entry beat — the unified full-bleed frosted overlay (deck-shuffle
 	     loading + "while you were away" digest) sits above the deck and the
-	     pill-nav until the user taps the armed "Enter Flow →" CTA. Shown over
-	     the in-flight fetch (deck-shuffle) and once the deck is loaded (the
-	     read-the-digest gate); hidden on the empty deck and at the summary.
-	     Entering settles the matured calls and reveals the deck below. -->
+	     pill-nav until the session begins. The deck-shuffle beat auto-enters
+	     once the deck is ready (a brief branded moment, no required tap); a
+	     real away digest waits for the user (tap-anywhere / CTA) with a safety
+	     auto-enter. Shown over the in-flight fetch and once the deck is loaded;
+	     hidden on the empty deck and at the summary. Entering settles the
+	     matured calls and reveals the deck below. -->
 	{#if !entered && !completed && (loading || markets.length > 0)}
 		<div out:fade={{ duration: prefersReducedMotion() ? 0 : 220 }}>
 			<FlowEntry digest={liveDigest} onEnter={enterFlow} ready={!loading} />
