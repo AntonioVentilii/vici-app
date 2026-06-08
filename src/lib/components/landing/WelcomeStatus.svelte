@@ -27,12 +27,19 @@
 
 	const tt = (key: MessageKey) => t({ locale: $localeStore, key });
 
+	// Which university row is highlighted as the visitor's own. The top
+	// university leads on English; on Italian the visitor sits one rank
+	// down, so the highlight + climb badge move to the second row.
+	const uniYou = $derived($localeStore === 'it' ? 1 : 0);
+
 	const uniRows = $derived<readonly LandingStatusRow[]>(
 		LANDING_STATUS_UNIVERSITIES.map((name, i) => ({
 			rank: i + 1,
 			name,
 			acc: `${(71.8 - i * 1.4).toFixed(1)}%`,
-			team: true
+			team: true,
+			you: i === uniYou,
+			delta: i === uniYou ? '▲ 1' : undefined
 		}))
 	);
 
