@@ -316,7 +316,9 @@
 }
 .lp-hero-visual {
 	position: relative;
-	height: 600px;
+	/* Viewport-relative so the deck fits the phone frame instead of a
+	   fixed tall block that overflows on short screens. */
+	height: min(72vh, 600px);
 }
 .lp-deck {
 	position: relative;
@@ -324,6 +326,15 @@
 	height: 100%;
 	max-width: 420px;
 	margin-left: auto;
+}
+@media (max-width: 880px) {
+	.lp-hero-visual {
+		height: min(58vh, 420px);
+	}
+	.lp-deck {
+		max-width: 340px;
+		margin-inline: auto;
+	}
 }
 
 /* ─── Ticker ─── */
@@ -463,6 +474,14 @@
 	flex-direction: column;
 	gap: 12px;
 	padding: 12px 20px 16px;
+	/* Grow to fill the remaining card height so the probs block's
+	   `margin-top:auto` pins it to the bottom and the foot never floats
+	   mid-card. `min-height:0` lets the body shrink below its intrinsic
+	   height when the deck is short (mobile `min(58vh,420px)`), so the
+	   bleed art (which is allowed to shrink) absorbs the squeeze instead
+	   of pushing the foot past the clipped card edge. */
+	flex: 1;
+	min-height: 0;
 }
 .flow-foot {
 	font-size: 11px;
@@ -474,7 +493,12 @@
 .flow-body .flow-art-bleed {
 	position: relative;
 	width: calc(100% + 40px);
-	height: 150px;
+	/* Prefer 150px but flex-shrink toward a 96px floor when the card is
+	   short, so the head/probs/foot stay fully visible inside the deck
+	   on small phones. At desktop deck height there is spare room, so the
+	   art keeps its full 150px. */
+	flex: 0 1 150px;
+	min-height: 96px;
 	margin: 0 -20px;
 	overflow: hidden;
 	border-top: 1px solid var(--border-strong);

@@ -1875,9 +1875,6 @@ export const itMessages = {
 	'profile.avatar.option.bg.indigo': 'Indaco',
 	'profile.avatar.option.bg.teal': 'Foglia di tè',
 	'profile.avatar.option.bg.clay': 'Argilla',
-	'profile.dashboard.identity_meta': 'Liv {level} · {rank} global · {accuracy}% di precisione',
-	'profile.dashboard.calls_count': '{calls} previsioni',
-	'profile.dashboard.level_label': 'LIVELLO {level}',
 	'profile.dashboard.oracle.above': '{acc}% di precisione su {trades} previsioni. Sopra la folla.',
 	'profile.dashboard.oracle.approves':
 		'{acc}% di precisione su {trades} previsioni. L’Oracolo approva.',
@@ -1895,7 +1892,6 @@ export const itMessages = {
 	'profile.dashboard.oracle_label': 'Oracolo ·',
 	'profile.dashboard.oracle_weekly': 'Insight settimanale',
 	'profile.dashboard.principal': 'Principal ID',
-	'profile.dashboard.session': 'sessione',
 	'profile.empty.sub': 'Accedi o fai la prima previsione per inizializzare la tua identità social.',
 	'profile.empty.title': 'Profilo non trovato',
 	'profile.handle.available': 'disponibile',

@@ -1872,9 +1872,6 @@ export const ptMessages = {
 	'profile.avatar.option.bg.indigo': 'Índigo',
 	'profile.avatar.option.bg.teal': 'Verde-azulado',
 	'profile.avatar.option.bg.clay': 'Argila',
-	'profile.dashboard.identity_meta': 'Nv {level} · {rank} global · {accuracy}% de precisão',
-	'profile.dashboard.calls_count': '{calls} previsões',
-	'profile.dashboard.level_label': 'NÍVEL {level}',
 	'profile.dashboard.oracle.above': '{acc}% de precisão em {trades} previsões. Acima da multidão.',
 	'profile.dashboard.oracle.approves':
 		'{acc}% de precisão em {trades} previsões. O Oráculo aprova.',
@@ -1892,7 +1889,6 @@ export const ptMessages = {
 	'profile.dashboard.oracle_label': 'Oráculo ·',
 	'profile.dashboard.oracle_weekly': 'Insight semanal',
 	'profile.dashboard.principal': 'Principal ID',
-	'profile.dashboard.session': 'sessão',
 	'profile.empty.sub':
 		'Entre ou faça sua primeira previsão para inicializar sua identidade social.',
 	'profile.empty.title': 'Nenhum perfil encontrado',

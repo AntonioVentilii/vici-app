@@ -1889,9 +1889,6 @@ export const deMessages = {
 	'profile.avatar.option.bg.indigo': 'Indigo',
 	'profile.avatar.option.bg.teal': 'Petrol',
 	'profile.avatar.option.bg.clay': 'Lehm',
-	'profile.dashboard.identity_meta': 'Lvl {level} · {rank} global · {accuracy}% Genauigkeit',
-	'profile.dashboard.calls_count': '{calls} Calls',
-	'profile.dashboard.level_label': 'LEVEL {level}',
 	'profile.dashboard.oracle.above':
 		'{acc}% Genauigkeit über {trades} Calls. Über dem Durchschnitt.',
 	'profile.dashboard.oracle.approves': '{acc}% Genauigkeit über {trades} Calls. Das Oracle nickt.',
@@ -1909,7 +1906,6 @@ export const deMessages = {
 	'profile.dashboard.oracle_label': 'Oracle ·',
 	'profile.dashboard.oracle_weekly': 'Wöchentlicher Insight',
 	'profile.dashboard.principal': 'Principal-ID',
-	'profile.dashboard.session': 'Session',
 	'profile.empty.sub':
 		'Melde dich an oder platziere deine erste Vorhersage, um deine soziale Identität zu initialisieren.',
 	'profile.empty.title': 'Kein Profil gefunden',
