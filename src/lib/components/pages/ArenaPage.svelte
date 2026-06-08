@@ -143,7 +143,12 @@
 
 	.arena-tab {
 		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		flex: 1;
+		/* ≥44px tap target on the segmented tab control. */
+		min-height: 44px;
 		padding: 0.55rem 0.75rem;
 		font: inherit;
 		font-size: var(--t-13);

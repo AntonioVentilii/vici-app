@@ -1050,10 +1050,10 @@ export const esMessages = {
 	'layout.user.theme': 'Tema',
 	'layout.wallet.balances': 'Saldos',
 	'layout.wallet.go_to_wallet': 'Ir a la cartera',
+	'leaderboard.back': 'Volver a la arena',
 	'leaderboard.empty': 'Uniéndose al grupo...',
 	'leaderboard.empty_sub':
 		'Aún no hay predicciones liquidadas en este periodo. Sé el primero en la tabla.',
-	'leaderboard.friends_aria': 'Abrir amigos',
 	'leaderboard.scope.all': 'Histórico',
 	'leaderboard.scope.month': 'Este mes',
 	'leaderboard.scope.week': 'Esta semana',
@@ -1077,6 +1077,7 @@ export const esMessages = {
 	'league_invite.resolving': 'Uniéndote a la liga…',
 	'league_invite.unknown_body': 'Ninguna liga coincide con ese código de invitación.',
 	'league_invite.unknown_title': 'Invitación desconocida',
+	'leagues.back': 'Volver a la arena',
 	'leagues.create.cta': 'Crear liga',
 	'leagues.create.invalid_description': 'La descripción debe tener 240 caracteres o menos.',
 	'leagues.create.invalid_name_too_long': 'El nombre debe tener 40 caracteres o menos.',
@@ -1591,6 +1592,7 @@ export const esMessages = {
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES ganó',
 	'portfolio.allocation.eyebrow': 'ASIGNACIÓN',
+	'portfolio.back': 'Volver al panel',
 	'portfolio.allocation.other': 'Otros',
 	'portfolio.empty.body':
 		'Respalda algunas predicciones en el mazo Flow — tus posiciones activas y resueltas aparecerán aquí.',

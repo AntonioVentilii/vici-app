@@ -1,12 +1,14 @@
 <script lang="ts">
 	import type { Doc } from '@junobuild/core';
-	import { ArrowDown, ArrowUp, Minus, UserMinus, UserPlus, Users } from '@lucide/svelte/icons';
+	import { ArrowDown, ArrowUp, Minus, UserMinus, UserPlus } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
+	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { globalStandingsRows, type StandingsRow } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
@@ -27,6 +29,7 @@
 	import type { StandingsWindow } from '$lib/types/standings';
 	import { shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
@@ -191,16 +194,6 @@
 	};
 </script>
 
-{#snippet leaderboardAppbarRight()}
-	<button
-		class="appbar-icon-btn"
-		aria-label={t({ locale: $localeStore, key: 'leaderboard.friends_aria' })}
-		type="button"
-	>
-		<Users size={18} strokeWidth={1.8} />
-	</button>
-{/snippet}
-
 <!-- ↑/↓ rank-delta pill. Positive delta = climbed (better rank), negative =
      dropped, 0 = held. `undefined` (newcomer / no prior window) shows nothing. -->
 {#snippet rankDelta(delta: number | undefined)}
@@ -221,7 +214,10 @@
 
 <div class="leaderboard-page">
 	<ScreenHeader
-		right={leaderboardAppbarRight}
+		back={{
+			label: t({ locale: $localeStore, key: 'leaderboard.back' }),
+			onBack: () => goBack(resolve(AppPath.Arena))
+		}}
 		title={t({ locale: $localeStore, key: 'leaderboard.title' })}
 	/>
 
@@ -452,6 +448,11 @@
 
 	.leaderboard-scope {
 		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		/* ≥44px tap target on the window tab control while the chip keeps its
+		   compact visual height. */
+		min-height: 44px;
 		padding: 0.4rem 0.875rem;
 		font: inherit;
 		font-size: var(--t-13);
@@ -605,9 +606,21 @@
 		border-color: var(--border-strong);
 	}
 
+	/* Your own row reads as a personal highlight: an accent gradient that
+	   fades to the surface, plus an accent-tinted border. The rank and handle
+	   pick up the accent colour + extra weight below. */
 	.leaderboard-row.is-you {
 		border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
-		background: color-mix(in srgb, var(--color-primary) 8%, var(--bg-surface));
+		background: linear-gradient(
+			90deg,
+			var(--accent-glow, color-mix(in srgb, var(--color-primary) 16%, transparent)),
+			transparent
+		);
+	}
+
+	.leaderboard-row.is-you .leaderboard-row-handle {
+		color: var(--color-primary);
+		font-weight: 700;
 	}
 
 	.leaderboard-row-left {
@@ -633,6 +646,7 @@
 
 	.leaderboard-row.is-you .leaderboard-row-rank {
 		color: var(--color-primary);
+		font-weight: 700;
 	}
 
 	/* ↑/↓ rank-delta pill under the rank number. */
