@@ -385,9 +385,29 @@ Flow-Mode rules. The headlines, repeated so they live near the brand:
 - **Negative states deserve motion.** None borrow celebratory
   vocabulary; none go silent.
 
+**Overshoot is a budget, spent by frequency.** How a moment is allowed
+to move depends on how often it happens:
+
+- **Rare peaks** — an achievement unlock, an end-of-session celebration
+  — _may_ spring / overshoot. They fire seldom enough to earn the
+  flourish.
+- **Frequent rewards** — a call settling, a routine grant — settle
+  **without** overshoot. Repetition turns a bounce into noise.
+- **Direct-action confirmations** — a button press, a swipe commit —
+  keep a **small tactile pop**: enough to read as "registered", never a
+  full bounce.
+
+**Reduced motion is non-negotiable.** Every animation and transition
+must disable under reduced motion — idle loops, celebration beats, and
+incidental transitions alike. Gate CSS with `@media
+(prefers-reduced-motion: reduce)`; gate JS-driven Svelte transitions
+with `prefersReducedMotion()` from
+[`reduced-motion.utils.ts`](../../../src/lib/utils/reduced-motion.utils.ts).
+
 Curves and durations live in [`src/app.css`](../../../src/app.css):
 `--ease-vici`, `--ease-quick`, `--ease-stage`, and the `--d-*` /
-`--dur-*` duration scale. Named haptic patterns live in
+`--dur-*` duration scale (the `MOTION PRINCIPLE` comment block sits
+beside them). Named haptic patterns live in
 [`haptics.utils.ts`](../../../src/lib/utils/haptics.utils.ts) — call
 them by name, never by raw ms.
 
