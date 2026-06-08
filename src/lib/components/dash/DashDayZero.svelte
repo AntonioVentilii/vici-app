@@ -36,12 +36,12 @@
 	interface Props {
 		/** `false` → Day 0 (no calls); `true` → Day 1+ (call placed, unresolved). */
 		day1: boolean;
-		/** Free + backed VXP, already formatted for display (e.g. "1,000"). */
-		balanceDisplay: string;
-		/** Backed VXP for the Day-1 sub-stat, formatted (e.g. "100"). */
+		/** Spendable VXP (what the user can still bet), formatted — the hero figure. */
+		availableDisplay: string;
+		/** Backed VXP (locked in open calls + orders) for the Day-1 sub-stat, formatted. */
 		backedDisplay: string;
-		/** Free wallet VXP, formatted (e.g. "900") — used for the Available sub-stat. */
-		freeBalanceDisplay: string;
+		/** Total holdings (available + backed), formatted — the Day-1 "Holdings" sub-stat. */
+		holdingsDisplay: string;
 		/** Featured pinned market (Day 0 only) — the large tap-to-Flow card. */
 		featuredMarket: Market | undefined;
 		/** Two compact pinned markets shown beneath the featured one (Day 0). */
@@ -54,9 +54,9 @@
 
 	let {
 		day1,
-		balanceDisplay,
+		availableDisplay,
 		backedDisplay,
-		freeBalanceDisplay,
+		holdingsDisplay,
 		featuredMarket,
 		compactMarkets,
 		firstCall,
@@ -136,7 +136,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'dash.dz.hero_foot_day1',
-					params: { count: pendingCount, balance: freeBalanceDisplay }
+					params: { count: pendingCount, balance: availableDisplay }
 				})}
 			{:else}
 				{t({ locale: $localeStore, key: 'dash.dz.hero_foot_day0' })}
@@ -148,18 +148,18 @@
 	<div class="dash-section">
 		<div class="dash-holdings">
 			<div class="dash-holdings-top">
-				<span class="dash-ey">{t({ locale: $localeStore, key: 'dash.holdings.eyebrow' })}</span>
+				<span class="dash-ey">{t({ locale: $localeStore, key: 'dash.holdings.available' })}</span>
 				<span class="dash-purpose">
 					{t({ locale: $localeStore, key: 'dash.holdings.purpose' })}
 				</span>
 				<div class="dash-balance">
-					{balanceDisplay}<span class="unit">VXP</span>
+					{availableDisplay}<span class="unit">VXP</span>
 				</div>
 				{#if day1}
 					<div class="dash-sub-stats">
 						<div class="dash-sub-stat">
-							<span class="lbl">{t({ locale: $localeStore, key: 'dash.dz.available' })}</span>
-							<span class="val">{freeBalanceDisplay}</span>
+							<span class="lbl">{t({ locale: $localeStore, key: 'dash.holdings.eyebrow' })}</span>
+							<span class="val">{holdingsDisplay}</span>
 						</div>
 						<div class="dash-sub-stat">
 							<span class="lbl">{t({ locale: $localeStore, key: 'dash.holdings.backed' })}</span>

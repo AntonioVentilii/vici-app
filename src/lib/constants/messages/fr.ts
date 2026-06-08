@@ -672,6 +672,7 @@ export const frMessages = {
 	'dash.dz.trend_tag_day0': 'EN ATTENTE',
 	'dash.dz.trend_tag_day1': 'EN ATTENTE',
 	'dash.header_eyebrow_standard': 'série de {count} jours · fenêtre {window}',
+	'dash.holdings.available': 'Disponible',
 	'dash.holdings.backed': 'Engagé',
 	'dash.holdings.eyebrow': 'Avoirs',
 	'dash.holdings.invite_cta': 'Inviter →',
