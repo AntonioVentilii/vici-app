@@ -686,6 +686,7 @@ export const zhCnMessages = {
 	'dash.disclosure.contrarian_empty': '还没有逆共识胜利。',
 	'dash.disclosure.contrarian_title': '逆共识胜利 · {count}',
 	'dash.disclosure.rival_gap': '领先 {points} 分',
+	'dash.disclosure.rival_gap_behind': '领先对手 {points} 分',
 	'dash.disclosure.rival_gap_unknown': '对手数据即将上线',
 	'dash.disclosure.rival_title': '你的对手 · {handle}',
 	'dash.disclosure.rival_title_unknown': '你的对手 · —',

@@ -312,6 +312,81 @@ export const idlFactory = ({ IDL }) => {
 		)
 	});
 	const AppGetMyReferralCodeResult = IDL.Record({ code: IDL.Opt(IDL.Text) });
+	const AppGetMyRivalResult = IDL.Record({
+		rival_is_trailing: IDL.Bool,
+		rival: IDL.Opt(
+			IDL.Record({
+				pnl: IDL.Float64,
+				sharpest_eye_best_tier: IDL.Opt(IDL.Text),
+				streak: IDL.Float64,
+				top_decile_streak: IDL.Float64,
+				nickname: IDL.Text,
+				hibernated_at_ms: IDL.Opt(IDL.Float64),
+				daily_goal_date: IDL.Opt(IDL.Text),
+				daily_goal_done: IDL.Float64,
+				contrarian_wins: IDL.Float64,
+				owner: IDL.Text,
+				interests: IDL.Vec(IDL.Text),
+				role: IDL.Opt(
+					IDL.Variant({
+						controller: IDL.Null,
+						creator: IDL.Null,
+						admin: IDL.Null,
+						solver: IDL.Null
+					})
+				),
+				handle_last_change_ms: IDL.Opt(IDL.Float64),
+				email: IDL.Text,
+				level: IDL.Float64,
+				preferences: IDL.Record({
+					favorite_participant_id: IDL.Text,
+					favorite_side: IDL.Text,
+					notify: IDL.Record({
+						market_alerts: IDL.Bool,
+						friend_activity: IDL.Bool,
+						weekly_digest: IDL.Bool,
+						streak_reminder: IDL.Bool
+					}),
+					haptics_enabled: IDL.Bool,
+					sharing: IDL.Record({
+						worlds_opt_in: IDL.Bool,
+						leaderboard_opt_in: IDL.Bool,
+						calls_public: IDL.Bool,
+						profile_visibility: IDL.Text
+					}),
+					sound_enabled: IDL.Bool,
+					onboarding_completed: IDL.Bool,
+					default_amount: IDL.Record({
+						flow: IDL.Text,
+						manual: IDL.Text
+					}),
+					world_cup_mode: IDL.Bool,
+					saved_market_ids: IDL.Vec(IDL.Text),
+					flow_tags: IDL.Vec(IDL.Text),
+					flow_session_length: IDL.Float64
+				}),
+				longest_streak: IDL.Float64,
+				archetype: IDL.Text,
+				school_status: IDL.Opt(IDL.Text),
+				last_active_day: IDL.Opt(IDL.Text),
+				total_trades: IDL.Float64,
+				last_top_decile_day: IDL.Opt(IDL.Text),
+				win_rate: IDL.Float64,
+				avatar_parts: IDL.Text,
+				visibility: IDL.Variant({
+					friends_and_followers: IDL.Null,
+					public: IDL.Null,
+					friends_only: IDL.Null
+				}),
+				daily_streak: IDL.Float64,
+				unlocked_achievements: IDL.Vec(IDL.Text),
+				deleted_at_ms: IDL.Opt(IDL.Float64),
+				points: IDL.Float64,
+				avatar: IDL.Text,
+				accuracy: IDL.Float64
+			})
+		)
+	});
 	const AppGetProfileArgs = IDL.Record({ principal_str: IDL.Text });
 	const AppGetProfileResult = IDL.Record({
 		profile: IDL.Opt(
@@ -1210,6 +1285,7 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_get_my_referral_code: IDL.Func([], [AppGetMyReferralCodeResult], ['query']),
+		app_get_my_rival: IDL.Func([], [AppGetMyRivalResult], ['query']),
 		app_get_profile: IDL.Func([AppGetProfileArgs], [AppGetProfileResult], ['query']),
 		app_get_user_rank_and_count: IDL.Func(
 			[AppGetUserRankAndCountArgs],

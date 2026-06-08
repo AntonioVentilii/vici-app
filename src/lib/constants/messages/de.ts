@@ -727,6 +727,7 @@ export const deMessages = {
 	'dash.disclosure.contrarian_empty': 'Noch keine Contrarian-Wins — geh gegen den Konsens.',
 	'dash.disclosure.contrarian_title': 'Contrarian-Wins · {count}',
 	'dash.disclosure.rival_gap': '{points} Punkte voraus',
+	'dash.disclosure.rival_gap_behind': '{points} Punkte Vorsprung',
 	'dash.disclosure.rival_gap_unknown': 'Rivalitätsdaten in Kürze',
 	'dash.disclosure.rival_title': 'Dein Rivale · {handle}',
 	'dash.disclosure.rival_title_unknown': 'Dein Rivale · —',
