@@ -666,6 +666,7 @@ export const esMessages = {
 	'dash.dz.trend_tag_day0': 'PENDIENTE',
 	'dash.dz.trend_tag_day1': 'PENDIENTE',
 	'dash.header_eyebrow_standard': 'racha de {count} días · ventana {window}',
+	'dash.holdings.available': 'Disponible',
 	'dash.holdings.backed': 'Respaldado',
 	'dash.holdings.eyebrow': 'Holdings',
 	'dash.holdings.invite_cta': 'Invitar →',
