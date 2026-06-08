@@ -1524,6 +1524,9 @@ export const frMessages = {
 		'Résolutions, invitations de ligue et défis arrivent ici. Faites quelques pronostics pour démarrer votre historique.',
 	'notifications.empty.title': 'Aucune nouvelle notification.',
 	'notifications.mark_read': 'Tout marquer comme lu',
+	'notifications.mark_read_one': 'Marquer comme lu',
+	'notifications.section.earlier': 'Plus tôt',
+	'notifications.section.new': 'Nouveau',
 	'notifications.title': 'Notifications',
 	'onboarding.markets.taylor_tour.title':
 		'Taylor Swift annoncera-t-elle une tournée 2027 avant août ?',
