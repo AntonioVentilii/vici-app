@@ -24,18 +24,16 @@
 	 * relevant detail surface, empty tiles are tap-to-fill prompts
 	 * (League → Leagues tab, School → affiliation picker).
 	 *
-	 * Reuses the Dashboard's `.dash-rank-grid` / `.dash-rank-tile`
-	 * classes for visual parity with `DashRankContext`, but the third
-	 * tile is School (an affiliation), not a market category — hence a
-	 * dedicated component rather than overloading `DashRankContext`.
+	 * Reuses the shared `.dash-rank-grid` / `.dash-rank-tile` classes for
+	 * a three-tile rank grid, but the third tile is School (an
+	 * affiliation), not a market category — hence its own component.
 	 *
 	 * Ranks come from real data where the satellite exposes it:
 	 *   - Global: viewer's index in the cached leaderboard.
 	 *   - School: viewer's monthly rank among ranked universities.
 	 * A league rank isn't surfaced by the satellite yet, so the League
 	 * tile shows the league name (no fabricated `#rank`). Anywhere a
-	 * rank is genuinely unavailable we render `EM_DASH`, matching the
-	 * `DashRankContext` placeholder convention.
+	 * rank is genuinely unavailable we render `EM_DASH`.
 	 */
 
 	interface Props {
