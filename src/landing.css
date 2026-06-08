@@ -1047,6 +1047,8 @@
 	transition:
 		border-radius 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
 		background 200ms,
+		border-color 200ms,
+		box-shadow 200ms,
 		max-width 280ms cubic-bezier(0.2, 0.7, 0.2, 1);
 	overflow: hidden;
 }
@@ -1056,6 +1058,19 @@
 }
 [data-theme='peach'] .lp-pill {
 	background: rgba(250, 224, 204, 0.82);
+}
+/* Seamless at the very top: the pill carries no slab over the hero — it only
+   frosts in once the page is scrolled (the base .lp-pill frost + the
+   .is-scrolled darken below), fading via the .lp-pill background/border/shadow
+   transitions (backdrop blur snaps, intentionally, to avoid iOS flicker).
+   Excludes `.open`: an opened menu at the top keeps its solid `.lp-pill.open`
+   surface (this selector is otherwise more specific than `.lp-pill.open`). */
+.lp-nav:not(.is-scrolled) .lp-pill:not(.open) {
+	background: transparent;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	border-color: transparent;
+	box-shadow: none;
 }
 .lp-nav.is-scrolled .lp-pill {
 	background: rgba(20, 18, 15, 0.92);
@@ -1508,23 +1523,22 @@
 	z-index: 50;
 	background: transparent;
 	border-bottom: 1px solid transparent;
+	/* Do NOT transition backdrop-filter — iOS Safari repaints the blur layer on
+	   each frame of the transition, which reads as a flicker/tremble. The blur
+	   snaps; background/border/shadow fade. */
 	transition:
 		background 200ms var(--ease),
 		border-color 200ms var(--ease),
-		box-shadow 200ms var(--ease),
-		backdrop-filter 200ms var(--ease);
+		box-shadow 200ms var(--ease);
 }
+/* Desktop nav stays fully transparent even when scrolled — the logo, links and
+   CTA float cleanly over the page rather than on a full-width frosted band. */
 .dnav.is-scrolled {
-	background: rgba(20, 18, 15, 0.78);
-	backdrop-filter: blur(18px);
-	-webkit-backdrop-filter: blur(18px);
-	border-bottom-color: var(--border);
-	box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.4);
-}
-[data-theme='light'] .dnav.is-scrolled,
-[data-theme='peach'] .dnav.is-scrolled {
-	background: rgba(242, 236, 220, 0.85);
-	border-bottom-color: rgba(14, 13, 11, 0.1);
+	background: transparent;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	border-bottom-color: transparent;
+	box-shadow: none;
 }
 .dnav-skip {
 	position: absolute;
