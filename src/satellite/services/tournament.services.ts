@@ -1,3 +1,4 @@
+import { VXP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { LeagueDoc } from '$lib/types/league';
@@ -19,8 +20,12 @@ import {
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
 import { parseToken } from '$lib/utils/parse.utils';
 import { getLeagueStatsFn } from '$satellite/services/league-stats.services';
+import { logError, logInfo } from '$satellite/utils/logger.utils';
+import { transferWithBadFeeRetry } from '$satellite/utils/vxp-payout.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
+import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext } from '@junobuild/functions';
+import { IcrcLedgerCanister } from '@junobuild/functions/canisters/ledger/icrc';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
@@ -1085,11 +1090,11 @@ export interface ClaimTournamentPrizeResult {
  * Idempotent via the doc key — a second claim returns
  * `awardsAlreadyClaimed > 0`.
  */
-export const claimTournamentPrizeFn = ({
+export const claimTournamentPrizeFn = async ({
 	tournamentId
 }: {
 	tournamentId: string;
-}): ClaimTournamentPrizeResult => {
+}): Promise<ClaimTournamentPrizeResult> => {
 	const caller = msgCaller();
 	const callerText = caller.toText();
 	const callerBytes = caller.toUint8Array();
@@ -1225,25 +1230,81 @@ export const claimTournamentPrizeFn = ({
 		}
 	});
 
-	// Mark as paid immediately (no ledger transfer here — the
-	// ledger-bridge job picks up `pending` awards on the back side.
-	// The Worlds-podium service has the on-write ledger pattern;
-	// the tournament claim follows the same surface so the FE
-	// counter shows the award lands instantly; the actual ledger
-	// credit is a follow-up wiring step in the same shape).
-	//
-	// For symmetry we *attempt* the same pattern as
-	// `claimWorldsPodiumPrizeFn`, but we don't have the
-	// `IcrcLedgerCanister` plumbing in this file. Leave the award
-	// in pending state; the streak-award background sweeper (which
-	// runs on every profile update) will transition it once a
-	// follow-up commit adds tournament_prize to its allowlist.
+	// Pay the prize inline — same pending → paid/failed ledger pattern as
+	// claimWorldsPodiumPrize — so the award reflects a real transfer rather
+	// than sitting `pending` forever (nothing sweeps `tournament_prize`).
+	const ledger = new IcrcLedgerCanister({
+		canisterId: Principal.fromText(VXP_LEDGER_CANISTER_ID)
+	});
+	const transferResult = await transferWithBadFeeRetry({
+		ledger,
+		toOwner: caller,
+		amount: amountBaseUnits,
+		memo: `vxp:tournament_prize:${awardKey}`
+	});
 
+	// Re-read to pick up the version stamp from the pending write.
+	const pendingExisting = getDocStore({
+		collection: Collection.VXP_AWARDS,
+		key: docKey,
+		caller: callerBytes
+	});
+
+	if (transferResult.ok) {
+		setDocStore({
+			collection: Collection.VXP_AWARDS,
+			key: docKey,
+			caller: callerBytes,
+			doc: {
+				data: encodeDocData<VxpAwardDoc>({
+					...pendingDoc,
+					status: 'paid',
+					paidAtMs: nowMs,
+					blockIndex: transferResult.blockIndex.toString()
+				}),
+				version: pendingExisting?.version
+			}
+		});
+
+		logInfo({
+			message: 'tournament_prize credited',
+			detail: { recipient: callerText, tournamentId, place: myPlace, amount: amountBaseUnits }
+		});
+
+		return {
+			ok: true,
+			awardsCreated: 1,
+			awardsAlreadyClaimed: 0,
+			totalVxpCredited: tier.vxp
+		};
+	}
+
+	setDocStore({
+		collection: Collection.VXP_AWARDS,
+		key: docKey,
+		caller: callerBytes,
+		doc: {
+			data: encodeDocData<VxpAwardDoc>({
+				...pendingDoc,
+				status: 'failed',
+				errorMessage: transferResult.error
+			}),
+			version: pendingExisting?.version
+		}
+	});
+
+	logError({
+		message: 'tournament_prize transfer failed',
+		detail: { recipient: callerText, tournamentId, place: myPlace, error: transferResult.error }
+	});
+
+	// Transfer failed: report nothing credited (the doc is left `failed`
+	// for diagnostics) so the FE never shows a credit that didn't land.
 	return {
 		ok: true,
-		awardsCreated: 1,
+		awardsCreated: 0,
 		awardsAlreadyClaimed: 0,
-		totalVxpCredited: tier.vxp
+		totalVxpCredited: 0
 	};
 };
 
