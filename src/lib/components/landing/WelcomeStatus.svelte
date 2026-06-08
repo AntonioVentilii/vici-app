@@ -9,7 +9,7 @@
 	import { onDestroy } from 'svelte';
 	import {
 		LANDING_STATUS_FRIENDS,
-		LANDING_STATUS_UNIVERSITIES,
+		landingStatusUniversities,
 		type LandingStatusRow,
 		type LandingStatusTabId
 	} from '$lib/constants/landing-data.constants';
@@ -27,19 +27,16 @@
 
 	const tt = (key: MessageKey) => t({ locale: $localeStore, key });
 
-	// Which university row is highlighted as the visitor's own. The top
-	// university leads on English; on Italian the visitor sits one rank
-	// down, so the highlight + climb badge move to the second row.
-	const uniYou = $derived($localeStore === 'it' ? 1 : 0);
-
+	// Locale-matched universities; the leader is the highlighted "you" row with
+	// the climb badge (illustrative — the board is a demo fixture, not live data).
 	const uniRows = $derived<readonly LandingStatusRow[]>(
-		LANDING_STATUS_UNIVERSITIES.map((name, i) => ({
+		landingStatusUniversities($localeStore).map((name, i) => ({
 			rank: i + 1,
 			name,
 			acc: `${(71.8 - i * 1.4).toFixed(1)}%`,
 			team: true,
-			you: i === uniYou,
-			delta: i === uniYou ? '▲ 1' : undefined
+			you: i === 0,
+			delta: i === 0 ? '▲ 1' : undefined
 		}))
 	);
 
