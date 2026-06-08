@@ -275,3 +275,97 @@ export const LANDING_WORLDS_UNIVERSITIES: readonly LandingUniversity[] = [
 ] as const;
 
 export const LANDING_WORLDS_UNIVERSITIES_COUNT = 64;
+
+/* ── Landing hero (interactive swipe card) ─────────────────────────── */
+
+/**
+ * The single demo market a first-time visitor can swipe in the hero.
+ * Mirrors a real Flow card: a World-Cup binary with a published YES
+ * consensus. Kept deliberately simple — the question text resolves
+ * from i18n (`welcome.v2.hero.card_q`), only the artwork seed + YES%
+ * live here.
+ */
+export const LANDING_HERO_CARD = {
+	/** Artwork seed passed to `MarketArtwork` (category `wc`). */
+	artSeed: 'wc-usa-quarter',
+	/** Published YES consensus for the demo question. */
+	yes: 33
+} as const;
+
+/** Stake the hero payoff math + leaderboard climb beat are framed around. */
+export const LANDING_HERO_STAKE = 50;
+
+/**
+ * Leaderboard-climb beat shown after the XP count-up — the competitive
+ * hook that turns a single correct call into a rank move. Handles are
+ * illustrative marketing names, not real users.
+ */
+export const LANDING_HERO_CLIMB = {
+	rank: 2,
+	delta: 6,
+	rival: 'giovanni',
+	below: 'antonio'
+} as const;
+
+/* ── Landing status slider (accuracy-as-status, 3 tabs) ────────────── */
+
+export type LandingStatusTabId = 'friends' | 'uni' | 'work';
+
+export interface LandingStatusRow {
+	readonly rank: number;
+	/** Either a raw handle (prefixed `@` in the UI) or a localized team name. */
+	readonly name: string;
+	/** Pre-formatted accuracy string, e.g. `82.4%`. */
+	readonly acc: string;
+	/** Highlight this row as the visitor's own. */
+	readonly you?: boolean;
+	/** Optional rank-move badge, e.g. `▲ 3`. */
+	readonly delta?: string;
+	/** Render the name verbatim (a team), not as an `@handle`. */
+	readonly team?: boolean;
+}
+
+/**
+ * Friends-tab board — a small group-chat leaderboard. Handles are
+ * illustrative; the visitor sits at #2 with a recent climb.
+ */
+export const LANDING_STATUS_FRIENDS: readonly LandingStatusRow[] = [
+	{ rank: 1, name: 'giovanni', acc: '82.4%' },
+	{ rank: 2, name: 'you', acc: '80.1%', you: true, delta: '▲ 3' },
+	{ rank: 3, name: 'antonio', acc: '77.9%' },
+	{ rank: 4, name: 'sofia_b', acc: '74.2%' }
+] as const;
+
+/** University names per tab, illustrative of the kind of institutions that compete. */
+export const LANDING_STATUS_UNIVERSITIES: readonly string[] = [
+	'Stanford',
+	'Harvard',
+	'MIT',
+	'NYU'
+] as const;
+
+/* ── Landing proof ticker (live calls) ─────────────────────────────── */
+
+export type LandingCallSide = 'YES' | 'NO';
+
+export interface LandingProofChip {
+	readonly who: string;
+	readonly side: LandingCallSide;
+	readonly q: string;
+}
+
+/**
+ * Decorative live-calls ticker (aria-hidden). Handles + questions are
+ * illustrative marketing texture, not live data.
+ */
+export const LANDING_PROOF_CHIPS: readonly LandingProofChip[] = [
+	{ who: 'marcov', side: 'YES', q: 'Brazil to lift the trophy' },
+	{ who: 'lenak', side: 'NO', q: 'Host nation wins the group' },
+	{ who: 'tariq', side: 'YES', q: 'A QF decided on penalties' },
+	{ who: 'priyas', side: 'YES', q: 'Golden Boot from Europe' },
+	{ who: 'dani', side: 'NO', q: 'Defending champ exits early' },
+	{ who: 'okonkwo', side: 'YES', q: 'Opening match over 2.5 goals' }
+] as const;
+
+/** Seed value the live proof counter ticks up from. */
+export const LANDING_PROOF_COUNT_SEED = 12431;

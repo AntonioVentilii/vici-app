@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Plus } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
@@ -10,13 +11,11 @@
 	import LeagueListCard from '$lib/components/leagues/LeagueListCard.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { loadLeaguesByIds, type LeagueWithRole } from '$lib/services/leagues.services';
+	import type { LeagueWithRole } from '$lib/services/leagues.services';
 	import { findOwnStanding, getLeagueStandings } from '$lib/services/standings.services';
 	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
-	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 	import {
 		friendRecommendedLeaguesStore,
-		leagueBattlesStore,
 		leagueMembersStore,
 		leaguesErrorStore,
 		leaguesLoadedStore,
@@ -25,9 +24,8 @@
 	} from '$lib/stores/leagues.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
-	import type { BattleState } from '$lib/types/battle';
-	import { shortLeagueId } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Social cohorts list page.
@@ -36,13 +34,13 @@
 	 * the caller is a member of via `listMyLeagues`, split into
 	 * "founded" (the caller is the owner) and "joined" (everyone
 	 * else). Each row carries a gradient logo tile, the league name
-	 * + role chip, a member-count meta line, optional friend-overlap
-	 * row when any of the viewer's friends are in the league, an
-	 * optional latest-activity line derived from the league's most
-	 * recent battle, and an inline copy-invite pill.
+	 * + role chip, a member-count meta line (with an optional weekly
+	 * rank-trend), an optional friend-overlap row when any of the
+	 * viewer's friends are in the league, a trailing "#rank of M"
+	 * badge, and an inline copy-invite pill.
 	 *
-	 * The Create + Join entries live as trailing CTA cards — never
-	 * as a top-of-list pill row.
+	 * The Create + Join entries live in a trailing "Start or join"
+	 * CTA grid — never as a top-of-list pill row.
 	 */
 
 	interface Props {
@@ -56,7 +54,6 @@
 	interface LeagueRow extends LeagueWithRole {
 		memberCount: number;
 		members: string[];
-		latestBattle: { state: BattleState; opponentId: string } | undefined;
 	}
 
 	let createOpen = $state(false);
@@ -82,48 +79,20 @@
 	});
 
 	// Build the per-league rows from the shared cache. Each row pulls its
-	// roster + battles from the per-league maps the store hydrated; a
-	// league still missing from the maps falls back to an empty roster.
+	// roster from the per-league map the store hydrated; a league still
+	// missing from the map falls back to an empty roster.
 	const rows = $derived.by<LeagueRow[]>(() =>
 		$myLeaguesStore.map((m) => {
 			const roster = $leagueMembersStore.get(m.league.id) ?? [];
 			const members = roster.map((r) => r.member);
-			const battleList = $leagueBattlesStore.get(m.league.id) ?? [];
-
-			// Pick the most recently-touched battle we can identify. Battle
-			// docs don't carry a timestamp on the wire schema today; we sort
-			// by `kickoffMs` ascending (so newest upcoming kickoff is last)
-			// and take the trailing non-resolved entry. Battles are typically
-			// a small list per league so the cost is irrelevant.
-			const sorted = [...battleList].sort((a, b) => a.kickoffMs - b.kickoffMs);
-			const activeBattle = sorted.find((b) => b.state !== 'resolved') ?? sorted.at(-1);
-			const opponentId = activeBattle
-				? activeBattle.sideA === m.league.id
-					? activeBattle.sideB
-					: activeBattle.sideA
-				: undefined;
-			const latestBattle =
-				activeBattle && opponentId ? { state: activeBattle.state, opponentId } : undefined;
 
 			return {
 				...m,
 				memberCount: members.length,
-				members,
-				latestBattle
+				members
 			} satisfies LeagueRow;
 		})
 	);
-
-	// Hydrate the directory for every opponent named in the preview line.
-	$effect(() => {
-		const opponentIds = rows
-			.map((row) => row.latestBattle?.opponentId)
-			.filter((id): id is string => id !== undefined);
-
-		if (opponentIds.length > 0) {
-			void loadLeaguesByIds({ ids: opponentIds });
-		}
-	});
 
 	const friendPrincipals = $derived.by(() => {
 		const me = selfPrincipal;
@@ -270,40 +239,6 @@
 	// standing has resolved a comparable prior-week rank for the viewer.
 	const trendFor = (row: LeagueRow): number => leagueTrends.get(row.league.id) ?? 0;
 
-	/**
-	 * Translate the latest battle into a short "activity preview" line
-	 * ("Live battle vs {opponent}", …), or undefined when none exists.
-	 * Opponent resolves own memberships → directory cache → shortened id.
-	 */
-	const activityPreviewFor = (row: LeagueRow): string | undefined => {
-		if (!row.latestBattle) {
-			return;
-		}
-
-		const { opponentId } = row.latestBattle;
-		const opponentName =
-			rows.find((r) => r.league.id === opponentId)?.league.name ??
-			$leagueDirectoryStore.get(opponentId)?.name ??
-			shortLeagueId(opponentId);
-		const stateLabel = STATE_LABELS[row.latestBattle.state];
-
-		return t({
-			locale: $localeStore,
-			key: 'leagues.card.latest_battle',
-			params: { state: stateLabel, opponent: opponentName }
-		});
-	};
-
-	// Map of battle state → short display label. These mirror the
-	// strings already shipped under `leagues.battle.state.*` but with
-	// a sentence-case + trimmed form suited to inline copy.
-	const STATE_LABELS: Record<BattleState, string> = {
-		proposed: 'Proposed',
-		accepted: 'Accepted',
-		in_flight: 'Live',
-		resolved: 'Resolved'
-	};
-
 	const openCreate = () => {
 		createOpen = true;
 	};
@@ -323,9 +258,27 @@
 	};
 </script>
 
+{#snippet leaguesCreateAction()}
+	<button
+		class="appbar-icon-btn"
+		aria-label={t({ locale: $localeStore, key: 'leagues.create.cta' })}
+		onclick={openCreate}
+		type="button"
+	>
+		<Plus aria-hidden="true" size={18} strokeWidth={1.8} />
+	</button>
+{/snippet}
+
 <div class="leagues-page pb-24" class:embedded>
 	{#if !embedded}
-		<ScreenHeader title={t({ locale: $localeStore, key: 'leagues.title' })} />
+		<ScreenHeader
+			back={{
+				label: t({ locale: $localeStore, key: 'leagues.back' }),
+				onBack: () => goBack(resolve(AppPath.Arena))
+			}}
+			right={leaguesCreateAction}
+			title={t({ locale: $localeStore, key: 'leagues.title' })}
+		/>
 	{/if}
 
 	{#if loadState === 'loading'}
@@ -365,7 +318,6 @@
 					{#each founded as row (row.league.id)}
 						<li>
 							<LeagueListCard
-								activityPreview={activityPreviewFor(row)}
 								friendOverlap={friendOverlapFor(row)}
 								league={row.league}
 								memberCount={row.memberCount}
@@ -389,7 +341,6 @@
 					{#each joined as row (row.league.id)}
 						<li>
 							<LeagueListCard
-								activityPreview={activityPreviewFor(row)}
 								friendOverlap={friendOverlapFor(row)}
 								league={row.league}
 								memberCount={row.memberCount}
@@ -404,24 +355,27 @@
 			</section>
 		{/if}
 
-		<ul class="leagues-list">
-			<li>
+		<!-- Start or join — secondary actions, deliberately lighter than the
+		     league cards above so the leagues you're in stay the focus. -->
+		<section class="leagues-section">
+			<h2 class="leagues-eyebrow allcaps">
+				{t({ locale: $localeStore, key: 'leagues.eyebrow.start_or_join' })}
+			</h2>
+			<div class="leagues-cta-grid">
 				<LeagueCtaCard
 					onclick={openCreate}
-					sub={t({ locale: $localeStore, key: 'leagues.card.create_sub' })}
+					sub={t({ locale: $localeStore, key: 'leagues.card.create_founder' })}
 					title={t({ locale: $localeStore, key: 'leagues.card.create_title' })}
 					variant="create"
 				/>
-			</li>
-			<li>
 				<LeagueCtaCard
 					onclick={openJoin}
-					sub={t({ locale: $localeStore, key: 'leagues.card.join_sub' })}
+					sub={t({ locale: $localeStore, key: 'leagues.card.join_invite' })}
 					title={t({ locale: $localeStore, key: 'leagues.card.join_title' })}
 					variant="join"
 				/>
-			</li>
-		</ul>
+			</div>
+		</section>
 
 		{#if recommendations.length > 0}
 			<section class="leagues-section">
@@ -495,6 +449,16 @@
 		list-style: none;
 		padding: 0;
 		margin: 0;
+	}
+
+	/* Two-up grid for the Create / Join secondary actions. */
+	.leagues-cta-grid {
+		display: grid;
+		/* `minmax(0, 1fr)` lets the columns shrink below their content's
+		   intrinsic width, so wide button labels can't force horizontal
+		   overflow (the default `1fr` floors at `minmax(auto, 1fr)`). */
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 10px;
 	}
 
 	.league-card-skeleton {
