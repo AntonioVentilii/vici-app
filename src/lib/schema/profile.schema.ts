@@ -117,6 +117,19 @@ export const UserProfileSchema = j.strictObject({
 	// only reachable state for a set school is `'unverified'`. Mirror any
 	// change here in `src/satellite/api-schemas.ts`.
 	schoolStatus: j.string().optional(),
+	// Celebrated Menagerie tier keys (the achievement "trophy layer"). Each
+	// entry is a `${slug}:${tier}` string (e.g. `owl:gold`) the owner has
+	// already SEEN a celebration for. The set is the de-dupe ledger that keeps
+	// the one-time unlock reveal from re-firing — the live tier is always
+	// re-derived from the owner's real stats, this field only records what was
+	// already shown. Intentionally `optional()` with NO default: ABSENCE is the
+	// meaningful "never seeded" state, which the reveal pipeline reads as
+	// "first-ever load → seed silently" (so a fully-stocked profile doesn't
+	// spam a dozen celebrations on its first visit). A default of `[]` would
+	// instead make every legacy row look like it had explicitly celebrated
+	// nothing, turning that first load into a celebration storm. Mirror any
+	// change here in `src/satellite/api-schemas.ts`.
+	earnedMenagerie: j.array(j.string()).optional(),
 	// Wall-clock ms at which the owner last CHANGED their handle (nickname).
 	// Drives the {@link HANDLE_COOLDOWN_DAYS}-day handle-change cooldown: a
 	// rename is only allowed once this is older than the window. PRESENCE = a

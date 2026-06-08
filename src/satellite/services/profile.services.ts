@@ -135,6 +135,10 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		// profile's school slot). `optional()` so an absent value (no school /
 		// never set) round-trips unchanged.
 		schoolStatus: profile.schoolStatus,
+		// Celebrated Menagerie tier keys (achievement trophy layer). `optional()`
+		// so an absent value (never seeded → first load seeds silently)
+		// round-trips unchanged; a present array round-trips verbatim.
+		earnedMenagerie: profile.earnedMenagerie,
 		// Handle-change cooldown timestamp (drives the 30-day handle limit).
 		// `optional()` so an absent value (never changed) round-trips unchanged.
 		handleLastChangeMs: profile.handleLastChangeMs,

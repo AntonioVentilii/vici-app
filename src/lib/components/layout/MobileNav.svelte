@@ -139,6 +139,7 @@
 				class:active
 				class:flow-tab={flow}
 				aria-current={active ? 'page' : undefined}
+				data-nav={item.labelKey === 'nav.profile' ? 'profile' : undefined}
 				onclick={() => handleNav(item.path)}
 				type="button"
 			>
