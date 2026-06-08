@@ -1878,9 +1878,6 @@ export const esMessages = {
 	'profile.avatar.option.bg.indigo': 'Índigo',
 	'profile.avatar.option.bg.teal': 'Verde azulado',
 	'profile.avatar.option.bg.clay': 'Arcilla',
-	'profile.dashboard.identity_meta': 'Nvl {level} · {rank} global · {accuracy}% de precisión',
-	'profile.dashboard.calls_count': '{calls} predicciones',
-	'profile.dashboard.level_label': 'NIVEL {level}',
 	'profile.dashboard.oracle.above':
 		'{acc}% de precisión en {trades} predicciones. Por encima de la multitud.',
 	'profile.dashboard.oracle.approves':
@@ -1898,7 +1895,6 @@ export const esMessages = {
 	'profile.dashboard.oracle_label': 'Oráculo ·',
 	'profile.dashboard.oracle_weekly': 'Insight semanal',
 	'profile.dashboard.principal': 'ID Principal',
-	'profile.dashboard.session': 'sesión',
 	'profile.empty.sub':
 		'Inicia sesión o haz tu primera predicción para inicializar tu identidad social.',
 	'profile.empty.title': 'Sin perfil',

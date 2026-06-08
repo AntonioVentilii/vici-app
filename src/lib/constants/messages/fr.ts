@@ -1888,9 +1888,6 @@ export const frMessages = {
 	'profile.avatar.option.bg.indigo': 'Indigo',
 	'profile.avatar.option.bg.teal': 'Sarcelle',
 	'profile.avatar.option.bg.clay': 'Argile',
-	'profile.dashboard.identity_meta': 'Niv {level} · {rank} global · {accuracy}% de précision',
-	'profile.dashboard.calls_count': '{calls} pronostics',
-	'profile.dashboard.level_label': 'NIVEAU {level}',
 	'profile.dashboard.oracle.above':
 		'{acc}% de précision sur {trades} pronostics. Au-dessus de la foule.',
 	'profile.dashboard.oracle.approves':
@@ -1908,7 +1905,6 @@ export const frMessages = {
 	'profile.dashboard.oracle_label': 'Oracle ·',
 	'profile.dashboard.oracle_weekly': 'Insight hebdo',
 	'profile.dashboard.principal': 'Principal ID',
-	'profile.dashboard.session': 'session',
 	'profile.empty.sub':
 		'Connectez-vous ou faites votre première prédiction pour initialiser votre identité sociale.',
 	'profile.empty.title': 'Profil introuvable',

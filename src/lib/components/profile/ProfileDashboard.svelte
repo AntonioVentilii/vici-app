@@ -3,7 +3,6 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import StreakFlame from '$lib/components/characters/StreakFlame.svelte';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
 	import MenagerieBadge from '$lib/components/menagerie/MenagerieBadge.svelte';
 	import AvatarEditor from '$lib/components/profile/AvatarEditor.svelte';
@@ -12,7 +11,6 @@
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import NotifBell from '$lib/components/ui/NotifBell.svelte';
 	import ViciAvatar from '$lib/components/ui/ViciAvatar.svelte';
-	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { profileJoinUrl } from '$lib/constants/contact.constants';
 	import { nicknameUniqueKey } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -20,10 +18,6 @@
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { marketById } from '$lib/derived/market-by-id.derived';
-	import {
-		decisiveSettledCount,
-		resolvedPositionsNotInitialized
-	} from '$lib/derived/resolved-positions.derived';
 	import { userIsAdmin } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { listMyReferrals } from '$lib/services/referral.services';
@@ -38,7 +32,6 @@
 	import type { MarketId } from '$lib/types/market';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
-	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
 	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -134,56 +127,26 @@
 
 	/* Identity stats -------------------------------------------------- */
 
+	// The viewer's lifetime record (accuracy, rank, streak, calls) surfaces on
+	// the Dashboard and Arena; the Profile hero is identity-focused. The few
+	// figures kept here drive the credibility line, the Oracle insight, and the
+	// Menagerie tiers — not a stats card.
 	const accuracy = $derived(profile.accuracy ?? 0);
 	const dailyStreak = $derived(profile.dailyStreak ?? 0);
-	const level = $derived(profile.level ?? 1);
-	const points = $derived(profile.points ?? 0);
-	const xpInLevel = $derived(points % 500);
-	const nextLevelTarget = $derived(level * 500);
-	const xpProgressPercent = $derived((xpInLevel / 500) * 100);
 	const totalTrades = $derived(profile.totalTrades ?? 0);
-	const archetype = $derived(profile.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
-	const archetypeAccent = $derived(archetype?.accent ?? 'var(--color-primary)');
 
 	/**
-	 * VXP balance — for now equal to lifetime points. Rendered as a
-	 * small laurel-accent chip next to the handle ("1,000 VXP").
-	 * Locale-aware separators via `toLocaleString`.
-	 */
-	const vxpBalance = $derived(points);
-	const vxpBalanceLabel = $derived(`${vxpBalance.toLocaleString($localeStore)} VXP`);
-
-	// `profile.accuracy` is a 0..100 win-rate float (see `profile.services.ts`
-	// `calculateAndSyncStats`), so render one decimal to match the Dash hero
-	// figure (`DashPage` `accuracyPct`) rather than truncating to an integer.
-	// On the viewer's own profile, a user with no settled predictions yet shows
-	// an optimistic 100% instead of a misleading 0% (display-only — see
-	// `displayAccuracyPct`). Other users' profiles render the raw figure, since
-	// the empty-state gate keys off the *viewer's* own trade history.
-	const accuracyDisplay = $derived(
-		isOwnProfile
-			? displayAccuracyPct({
-					accuracy,
-					settledCount: $decisiveSettledCount,
-					initialized: !$resolvedPositionsNotInitialized
-				})
-			: accuracy.toFixed(1)
-	);
-
-	/**
-	 * Global rank — viewer's 1-based index in the cached leaderboard.
-	 * The leaderboard is populated lazily by `LoaderLeaderboard` on app
-	 * boot; when the slice hasn't resolved yet (or the viewer isn't in
-	 * it), we render an em-dash placeholder rather than omitting the
-	 * chip entirely, so the stats-line layout stays stable across loads.
+	 * Global rank — viewer's 1-based index in the cached leaderboard. Drives the
+	 * "Top X%" credibility line below the handle and the rank-gated Menagerie
+	 * tiers (Goat). The leaderboard is populated lazily by `LoaderLeaderboard`
+	 * on app boot; when the slice hasn't resolved yet (or the viewer isn't in
+	 * it), the credibility line simply doesn't render.
 	 */
 	const globalRank = $derived.by<number | undefined>(() => {
 		const idx = $leaderboard.findIndex((entry) => entry.owner === profile.owner);
 
 		return idx === -1 ? undefined : idx + 1;
 	});
-
-	const globalRankDisplay = $derived(globalRank === undefined ? '—' : `#${globalRank}`);
 
 	/**
 	 * Credibility line — "Top X% of global predictors". The hero surfaces one
@@ -264,47 +227,11 @@
 		void goto(resolve(AppPath.Admin));
 	};
 
-	/**
-	 * Compact lifetime stats line — "{calls} calls · {accuracy}% accuracy".
-	 */
-	const statsLineCalls = $derived.by(() => {
-		if (totalTrades >= 1_000_000) {
-			return `${(totalTrades / 1_000_000).toFixed(1)}M`;
-		}
-
-		if (totalTrades >= 10_000) {
-			return `${Math.round(totalTrades / 1_000)}K`;
-		}
-
-		if (totalTrades >= 1_000) {
-			return `${(totalTrades / 1_000).toFixed(1)}K`;
-		}
-
-		return totalTrades.toString();
-	});
-
-	/* User-stats — drives the inline session VXP delta. --------------- */
+	/* User-stats — drives the Oracle insight's latest-settled record line. */
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
 
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
-
-	// The inline "session" figure is the net VXP swing across the user's
-	// recent-calls window — the bounded `recentSettlements` snapshot (capped
-	// at `USER_STATS_RECENT_LIMIT`), not a fixed clock window. It reads as
-	// "how the latest run of calls is going" rather than "today".
-	// `RecentSettlementSnapshot` does not carry per-call VXP; we estimate at
-	// the canonical 240 VXP-per-resolution rate used elsewhere in the app.
-	// Sign is win → +240, loss → -240.
-	const sessionVxpDelta = $derived.by(() => {
-		const VXP_PER_CALL = 240;
-		const delta = recentSettlements.reduce(
-			(acc, s) => acc + (s.win ? VXP_PER_CALL : -VXP_PER_CALL),
-			0
-		);
-
-		return { count: recentSettlements.length, delta };
-	});
 
 	/* Affiliations ----------------------------------------------------- */
 
@@ -656,106 +583,6 @@
 					{t({ locale: $localeStore, key: 'profile.dashboard.invite_friends' })}
 				</button>
 			{/if}
-		</div>
-	</section>
-
-	<!-- Identity card — VXP balance + affiliation chips, the level ladder,
-	     and the compact lifetime stats line (streak · calls · session). The
-	     avatar + handle now live in the hero above. -->
-	<section style:--archetype-accent={archetypeAccent} class="profile-identity">
-		<div class="profile-identity-meta">
-			<div class="profile-handle-row">
-				<span class="num profile-vxp-chip" aria-label={vxpBalanceLabel}>
-					{vxpBalanceLabel}
-				</span>
-				{#if myUni !== undefined || myCountry !== undefined}
-					{@const uniOption = myUni
-						? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationIdentifier })
-						: undefined}
-					{@const countryOption = myCountry
-						? lookupWorldsAffiliation({ kind: 'country', id: myCountry.affiliationIdentifier })
-						: undefined}
-					{#if uniOption}
-						<span
-							style={affiliationChipStyle({ color: uniOption.color, text: uniOption.text })}
-							class="school-chip"
-							class:has-brand={uniOption.color !== undefined}
-						>
-							<span class="school-chip-dot" aria-hidden="true"></span>
-							{uniOption.name.toUpperCase()}
-						</span>
-					{/if}
-					{#if countryOption}
-						<span
-							style={affiliationChipStyle({
-								color: countryOption.color,
-								text: countryOption.text
-							})}
-							class="country-chip"
-							class:has-brand={countryOption.color !== undefined}
-						>
-							<CountryFlag class="profile-country-flag" countryCode={countryOption.id} />
-							{countryOption.name.toUpperCase()}
-						</span>
-					{/if}
-				{:else if archetype}
-					<span class="profile-archetype-chip">
-						{t({ locale: $localeStore, key: archetype.tagKey })}
-					</span>
-				{/if}
-			</div>
-
-			<!-- Compact identity stats — Lvl · rank · accuracy -->
-			<p class="profile-stats-line">
-				{t({
-					locale: $localeStore,
-					key: 'profile.dashboard.identity_meta',
-					params: { level, rank: globalRankDisplay, accuracy: accuracyDisplay }
-				})}
-			</p>
-
-			<!-- Inline streak + calls (Flame N · M calls). Always rendered —
-			     the flame stays visible even at streak=0 so the row reads as
-			     persistent. -->
-			<p class="profile-streak-line">
-				<span class="profile-streak-inline" aria-label="streak">
-					<StreakFlame count={dailyStreak} size={14} />
-					<span class="num">{dailyStreak}</span>
-				</span>
-				<span class="profile-stats-sep" aria-hidden="true">·</span>
-				<span class="num">
-					{t({
-						locale: $localeStore,
-						key: 'profile.dashboard.calls_count',
-						params: { calls: statsLineCalls }
-					})}
-				</span>
-				{#if sessionVxpDelta.count > 0}
-					<span class="profile-stats-sep" aria-hidden="true">·</span>
-					<span
-						class="num profile-session-inline"
-						class:is-down={sessionVxpDelta.delta < 0}
-						class:is-up={sessionVxpDelta.delta > 0}
-					>
-						{sessionVxpDelta.delta >= 0 ? '+' : ''}{sessionVxpDelta.delta}
-						{t({ locale: $localeStore, key: 'profile.dashboard.session' })}
-					</span>
-				{/if}
-			</p>
-		</div>
-
-		<!-- Level progress — explicit "LEVEL" eyebrow + "{xp} / {target}
-		     VXP" numbers. -->
-		<div class="profile-level-row">
-			<span class="profile-level-label">
-				{t({ locale: $localeStore, key: 'profile.dashboard.level_label', params: { level } })}
-			</span>
-			<span class="num profile-level-target">
-				{points.toLocaleString($localeStore)} / {nextLevelTarget.toLocaleString($localeStore)} VXP
-			</span>
-		</div>
-		<div class="profile-level-bar" role="presentation">
-			<span style:width={`${xpProgressPercent}%`}></span>
 		</div>
 	</section>
 
@@ -1168,130 +995,6 @@
 		border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
 	}
 
-	/* Identity card ---------------------------------------------------- */
-	.profile-identity {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 0.85rem;
-		overflow: hidden;
-		padding: 1rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-popover);
-		box-shadow: var(--shadow-card);
-	}
-
-	.profile-identity-meta {
-		display: flex;
-		min-width: 0;
-		flex-direction: column;
-		gap: 0.2rem;
-	}
-
-	.profile-handle-row {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.45rem;
-	}
-
-	.profile-archetype-chip {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.15rem 0.45rem;
-		border-radius: var(--r-4);
-		background: color-mix(in srgb, var(--archetype-accent, var(--color-primary)) 14%, transparent);
-		color: var(--archetype-accent, var(--color-primary));
-		font-family: var(--font-mono);
-		font-size: var(--t-10);
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	/* VXP balance chip — small laurel pill next to the handle. */
-	.profile-vxp-chip {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.15rem 0.5rem;
-		border-radius: var(--r-4);
-		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-		border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
-		color: var(--color-primary);
-		font-family: var(--font-mono);
-		font-size: 0.65rem;
-		font-weight: 700;
-		letter-spacing: var(--tracking-wide);
-	}
-
-	/* School + country chips — each tinted in its affiliation's own
-	   palette via inline `background`/`color` (set from the roster's
-	   curated `color`/`text` pair). The class-level rules below are the
-	   fallback for roster entries that carry no brand colour: school
-	   chips fall back to the laurel accent, country chips to a neutral
-	   surface tint. `.has-brand` carries the inset highlight that reads
-	   on a saturated fill. Both share the same small uppercase mono
-	   geometry. */
-	.school-chip,
-	.country-chip {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3rem;
-		padding: 0.18rem 0.55rem;
-		border-radius: var(--r-4);
-		font-family: var(--font-mono);
-		font-size: 0.6rem;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-	}
-
-	.school-chip {
-		background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-		color: var(--color-primary);
-	}
-
-	.country-chip {
-		background: var(--bg-surface);
-		color: var(--text-base);
-		border: 1px solid var(--border-base);
-		box-shadow: none;
-	}
-
-	/* Brand-tinted chips drop the neutral stand-in chrome — the inline
-	   fill carries the colour, so the country chip sheds its border and
-	   both pick up the same inset highlight the school chip uses. */
-	.country-chip.has-brand {
-		border-color: transparent;
-		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-	}
-
-	.school-chip.has-brand {
-		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-	}
-
-	.school-chip-dot {
-		display: inline-block;
-		width: 5px;
-		height: 5px;
-		border-radius: var(--r-pill);
-		background: currentColor;
-		opacity: 0.85;
-	}
-
-	/* Country-flag SVG inside the inline chip — keep it pill-height so the
-	   chip reads at the same scale as the school chip. Without this rule
-	   the flag falls back to its native SVG size and explodes the row. */
-	.profile-dashboard :global(.profile-country-flag) {
-		display: inline-block;
-		width: 14px;
-		height: 10px;
-		border-radius: var(--r-2);
-		object-fit: cover;
-	}
-
 	/* Country-flag SVG inside the four-slot tile — fills the same 1.6rem
 	   square as the alphabetic glyph so the row geometry is stable. */
 	.profile-dashboard :global(.affil-slot-flag) {
@@ -1299,101 +1002,6 @@
 		height: 100%;
 		border-radius: var(--r-pill);
 		object-fit: cover;
-	}
-
-	.profile-streak-inline {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.2rem;
-		color: var(--char-flame);
-		font-size: var(--t-12);
-		font-weight: 700;
-	}
-
-	.profile-streak-line {
-		margin: 0;
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.35rem;
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-12);
-		letter-spacing: 0.02em;
-	}
-
-	.profile-streak-line :global(.num) {
-		color: var(--text-base);
-		font-weight: 600;
-	}
-
-	.profile-streak-line .profile-streak-inline :global(.num) {
-		color: var(--char-flame);
-	}
-
-	.profile-stats-sep {
-		color: var(--text-muted);
-		opacity: 0.6;
-	}
-
-	.profile-session-inline.is-up {
-		color: var(--yes);
-	}
-
-	.profile-session-inline.is-down {
-		color: var(--no);
-	}
-
-	.profile-stats-line {
-		margin: 0;
-		display: flex;
-		align-items: center;
-		gap: 0.35rem;
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-12);
-		letter-spacing: 0.02em;
-	}
-
-	.profile-level-row {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.profile-level-label {
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: 0.65rem;
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.profile-level-target {
-		color: var(--text-base);
-		font-size: var(--t-12);
-		font-weight: 700;
-	}
-
-	.profile-level-bar {
-		position: relative;
-		height: 0.4rem;
-		overflow: hidden;
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--border-base) 60%, transparent);
-	}
-
-	.profile-level-bar span {
-		display: block;
-		height: 100%;
-		background: linear-gradient(
-			90deg,
-			var(--archetype-accent, var(--color-primary)),
-			var(--color-primary)
-		);
-		transition: width var(--d-state) var(--ease-vici);
 	}
 
 	/* Affiliations card ------------------------------------------------ */
