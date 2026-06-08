@@ -1204,6 +1204,7 @@
 
 	/* Accent-tinted add-friend chip. */
 	.ranked-add {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
@@ -1221,6 +1222,18 @@
 		transition:
 			background 140ms ease,
 			border-color 140ms ease;
+	}
+
+	/* Keep the chip visually compact while giving it a ≥44px tap target. */
+	.ranked-add::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 100%;
+		min-width: 44px;
+		height: 44px;
+		transform: translate(-50%, -50%);
 	}
 
 	.ranked-add:hover {

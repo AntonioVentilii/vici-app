@@ -1,144 +1,48 @@
 <script lang="ts">
 	/**
-	 * Landing surface. Renders WelcomeNav (desktop + mobile), Hero,
-	 * Ticker, WCFeature, LiveMarkets, FlowFeature, SocialProof, Loop,
-	 * FAQ, TrustAndClose, Footer.
+	 * Landing surface — a conversion-first, entertainment-first page.
 	 *
-	 * The hero copy + visual is inlined here (rather than extracted)
-	 * because it's a single editorial block.
+	 * Sections, top to bottom:
+	 *   1. WelcomeNav (desktop + mobile)
+	 *   2. WelcomeV2Hero — interactive swipe card + payoff celebration
+	 *   3. WelcomeV2Proof — how-it-works + live count + calls ticker
+	 *   4. WelcomeV2Status — 3-tab accuracy slider (auto-rotating)
+	 *   5. WelcomeV2Trust — condensed trust one-liner
+	 *   6. WelcomeFAQ — visitor-stage questions
+	 *   7. WelcomeV2Close — Latin motto + closing CTA
+	 *   8. WelcomeFooter — FIFA mark + disclosure
+	 *
+	 * The whole tree is wrapped in `.v2 .lp-root` so it picks up both the
+	 * landing-v2 layout layer (the warm parchment field + section rhythm)
+	 * and the shared landing primitives (`.flow-card`, `.tag`, `.btn`, …)
+	 * from `src/landing.css`.
 	 */
-	import { ChevronRight, Clock } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import WelcomeFAQ from '$lib/components/landing/WelcomeFAQ.svelte';
-	import WelcomeFeaturedEvent from '$lib/components/landing/WelcomeFeaturedEvent.svelte';
-	import WelcomeFlowFeature from '$lib/components/landing/WelcomeFlowFeature.svelte';
 	import WelcomeFooter from '$lib/components/landing/WelcomeFooter.svelte';
-	import WelcomeHeroDeck from '$lib/components/landing/WelcomeHeroDeck.svelte';
-	import WelcomeLiveMarkets from '$lib/components/landing/WelcomeLiveMarkets.svelte';
-	import WelcomeLoop from '$lib/components/landing/WelcomeLoop.svelte';
-	import WelcomeSocialProof from '$lib/components/landing/WelcomeSocialProof.svelte';
-	import WelcomeTrustAndClose from '$lib/components/landing/WelcomeTrustAndClose.svelte';
-	import Ticker from '$lib/components/layout/Ticker.svelte';
+	import WelcomeV2Close from '$lib/components/landing/WelcomeV2Close.svelte';
+	import WelcomeV2Hero from '$lib/components/landing/WelcomeV2Hero.svelte';
+	import WelcomeV2Proof from '$lib/components/landing/WelcomeV2Proof.svelte';
+	import WelcomeV2Status from '$lib/components/landing/WelcomeV2Status.svelte';
+	import WelcomeV2Trust from '$lib/components/landing/WelcomeV2Trust.svelte';
 	import WelcomeNav from '$lib/components/layout/WelcomeNav.svelte';
-	import { PublicPath } from '$lib/constants/routes.constants';
-	import { daysToKickoff } from '$lib/derived/featured-event.derived';
-	import { localeStore } from '$lib/stores/locale.store';
-	import { t } from '$lib/utils/i18n.utils';
 
 	onMount(() => {
 		document.title = 'VICI';
 	});
 </script>
 
-<div class="lp-root">
+<div class="v2 lp-root">
 	<WelcomeNav />
 
 	<main id="main">
-		<section class="lp-hero">
-			<div class="lp-hero-inner">
-				<div class="lp-hero-copy">
-					<div style="gap:8px; margin-bottom:14px; flex-wrap:wrap;" class="row">
-						<span class="tag live">{t({ locale: $localeStore, key: 'hero.live' })}</span>
-						<span class="eyebrow acc">
-							{t({
-								locale: $localeStore,
-								key: 'hero.predictors',
-								params: { count: '184,210' }
-							})}
-						</span>
-						{#if $daysToKickoff !== null}
-							<span class="tag countdown">
-								<Clock size={10} strokeWidth={2.5} />
-								{t({
-									locale: $localeStore,
-									key: 'wc.kickoff_chip',
-									params: { days: String($daysToKickoff) }
-								})}
-							</span>
-						{/if}
-					</div>
-					<h1 class="lp-h1">
-						{t({ locale: $localeStore, key: 'hero.title_a' })}
-						<span class="serif-italic acc">
-							{t({ locale: $localeStore, key: 'hero.title_b' })}
-						</span>
-					</h1>
-					<p class="lp-lede">
-						{t({ locale: $localeStore, key: 'hero.lede_a' })}
-						<span class="serif-italic acc">
-							{t({ locale: $localeStore, key: 'hero.lede_b' })}
-						</span>
-					</p>
-					<div class="lp-cta-block">
-						<div style="gap:10px; flex-wrap:wrap;" class="row">
-							<button
-								class="btn btn-primary btn-lg"
-								onclick={() => goto(PublicPath.SignUp)}
-								type="button"
-							>
-								{t({ locale: $localeStore, key: 'cta.primary' })}
-								<ChevronRight size={16} />
-							</button>
-						</div>
-						<p class="num mute lp-cta-micro">
-							{t({ locale: $localeStore, key: 'hero.micro' })}
-						</p>
-					</div>
-					<div
-						style="gap:24px; margin-top:32px; color:var(--fg-mute); flex-wrap:wrap;"
-						class="row t-body-sm"
-					>
-						<span>
-							<span style="color:var(--fg); font-weight:600;" class="num">184K</span>
-							{t({ locale: $localeStore, key: 'hero.stat_active' })}
-						</span>
-						<span>
-							<span style="color:var(--fg); font-weight:600;" class="num">2.1M</span>
-							{t({ locale: $localeStore, key: 'hero.stat_calls' })}
-						</span>
-						<span>
-							<span style="font-weight:600;" class="num yes">74%</span>
-							{t({ locale: $localeStore, key: 'hero.stat_top' })}
-						</span>
-					</div>
-				</div>
-				<div class="lp-hero-visual">
-					<WelcomeHeroDeck />
-				</div>
-			</div>
-		</section>
-
-		<Ticker />
-
-		<WelcomeFeaturedEvent />
-		<WelcomeLiveMarkets />
-		<WelcomeFlowFeature />
-		<WelcomeSocialProof />
-		<WelcomeLoop />
+		<WelcomeV2Hero />
+		<WelcomeV2Proof />
+		<WelcomeV2Status />
+		<WelcomeV2Trust />
 		<WelcomeFAQ />
-		<WelcomeTrustAndClose />
+		<WelcomeV2Close />
 	</main>
 
 	<WelcomeFooter />
 </div>
-
-<style lang="postcss">
-	/* Background ambient gradients — scoped to the landing root so
-	   non-landing routes (sign-in modals, etc.) aren't tinted by the
-	   same wash. */
-	.lp-root {
-		min-height: 100dvh;
-		background:
-			radial-gradient(1200px 600px at 80% -20%, rgba(226, 184, 66, 0.08), transparent 60%),
-			radial-gradient(1000px 700px at -10% 30%, rgba(107, 159, 255, 0.04), transparent 60%),
-			var(--bg-base);
-	}
-	:global([data-theme='light']) .lp-root,
-	:global([data-theme='peach']) .lp-root {
-		background:
-			radial-gradient(1200px 600px at 80% -20%, rgba(226, 184, 66, 0.1), transparent 60%),
-			radial-gradient(1000px 700px at -10% 30%, rgba(181, 70, 44, 0.04), transparent 60%),
-			var(--bg-base);
-	}
-</style>
