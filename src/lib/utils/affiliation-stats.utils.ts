@@ -39,7 +39,7 @@ export const affiliationRankComparator =
 		accuracyOf: (stats: AffiliationStatsDoc) => number;
 		callsOf: (stats: AffiliationStatsDoc) => number;
 	}) =>
-	// eslint-disable-next-line local-rules/prefer-object-params -- Compare functions are more readable with primitive params
+	// eslint-disable-next-line local-rules/prefer-object-params -- Array.sort comparators take two positional args by contract
 	(a: AffiliationStatsDoc, b: AffiliationStatsDoc): number => {
 		const accuracyA = accuracyOf(a);
 		const accuracyB = accuracyOf(b);
