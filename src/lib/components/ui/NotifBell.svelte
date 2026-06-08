@@ -17,6 +17,9 @@
 	 * unread count. The numeric badge itself is `aria-hidden` (the count is
 	 * already in the label) and carries `aria-live` so assistive tech is told
 	 * when fresh notifications arrive while the bell is on screen.
+	 *
+	 * `light` tints the icon cream so the bell reads on a dark hero band
+	 * (the muted token disappears against those surfaces).
 	 */
 	interface Props {
 		/** Render the bell in its cream variant — for placement over a dark
@@ -79,12 +82,12 @@
 	/* Cream variant — sits on the profile hero's translucent disc, over a dark
 	   scrim, so it ignores the theme's muted-text default and stays legible. */
 	.notif-bell.is-light {
-		color: #f2ecdc;
+		color: var(--parchment);
 	}
 
 	.notif-bell.is-light:hover {
-		color: #f2ecdc;
-		background: color-mix(in srgb, #f2ecdc 14%, transparent);
+		color: var(--parchment);
+		background: color-mix(in srgb, var(--parchment) 14%, transparent);
 	}
 
 	.notif-bell-dot {

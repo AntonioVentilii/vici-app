@@ -1,53 +1,56 @@
 <script lang="ts">
-	import type { Icon as LucideIcon } from '@lucide/svelte';
-	import {
-		ArrowLeft,
-		Bell,
-		Check,
-		Flame,
-		Sparkles,
-		Swords,
-		Target,
-		UserPlus,
-		Users
-	} from '@lucide/svelte/icons';
+	import { ArrowLeft, Bell } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import NotifRow from '$lib/components/ui/NotifRow.svelte';
+	import { notificationDestination } from '$lib/constants/notification-kind.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { refreshFriendRelations } from '$lib/stores/friends.store';
-	import { combinedInboxStore, markAllInboxRead } from '$lib/stores/inbox.store';
+	import {
+		combinedInboxStore,
+		dismissInboxNotification,
+		markAllInboxRead,
+		markInboxRead
+	} from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox';
+	import type { InboxNotification } from '$lib/types/inbox';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
-	const kindIcons: Record<InboxNotificationKind, typeof LucideIcon> = {
-		resolve: Check,
-		streak: Flame,
-		social: Users,
-		challenge: Swords,
-		level: Sparkles,
-		market: Target,
-		friend_request: UserPlus
+	const unread = $derived($combinedInboxStore.filter((item) => item.unread));
+	const earlier = $derived($combinedInboxStore.filter((item) => !item.unread));
+	const hasUnread = $derived(unread.length > 0);
+
+	// Tap router: mark the card read, then deep-link to its market when one is
+	// attached (`mid`), otherwise fall back to the kind's home surface — a
+	// single source via `notificationDestination`. `goto` takes the raw string
+	// because the market path is dynamic.
+	const open = (notification: InboxNotification) => {
+		markInboxRead(notification.id);
+		void goto(
+			notificationDestination({
+				kind: notification.kind,
+				mid: notification.mid,
+				href: notification.href
+			})
+		);
 	};
 
-	// Kind-based routing: each notification opens a destination relevant to
-	// its kind. Items that carry an explicit `href` (settled-market cards →
-	// the market detail, friend requests → the Arena) use it directly; the
-	// remaining seeded kinds fall back to this map so every row is tappable,
-	// matching the inbox's row-routing behaviour.
-	const kindDestinations: Record<InboxNotificationKind, string> = {
-		resolve: AppPath.Dash,
-		streak: AppPath.Flow,
-		social: AppPath.Arena,
-		challenge: AppPath.Arena,
-		level: AppPath.Profile,
-		market: AppPath.Markets,
-		friend_request: AppPath.Arena
+	const dismiss = (notification: InboxNotification) => {
+		dismissInboxNotification(notification.id);
+		haptic('light-tap');
 	};
 
-	const destinationFor = (notification: InboxNotification): string =>
-		notification.href ?? kindDestinations[notification.kind] ?? AppPath.Dash;
+	const markRead = (notification: InboxNotification) => {
+		markInboxRead(notification.id);
+	};
+
+	const markAll = () => {
+		markAllInboxRead();
+		haptic('firm-tap');
+	};
 
 	onMount(() => {
 		void refreshFriendRelations();
@@ -56,13 +59,8 @@
 
 <div class="notifications-page">
 	<header class="notifications-appbar">
-		<!--
-			Back destination is Flow. The back-arrow is a text-only
-			ghost icon button — no border box. The Mark-all-read on
-			the right is also a plain ghost text button (not the
-			`Button` component) so the padding + typography read as
-			`t-eyebrow` instead of a sized control.
-		-->
+		<!-- Centered title with a text-only ghost back control on the left and a
+		     ghost Mark-all-read on the right. Back returns to Flow. -->
 		<button
 			class="appbar-icon-btn"
 			aria-label={t({ locale: $localeStore, key: 'notifications.back_flow' })}
@@ -72,15 +70,12 @@
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
 		<h1 class="notifications-title">{t({ locale: $localeStore, key: 'notifications.title' })}</h1>
-		<!--
-			Mark-all-read is rendered unconditionally. It is a no-op
-			when the inbox is empty, kept visible so the layout doesn't
-			reflow as notifications arrive.
-		-->
+		<!-- Rendered unconditionally so the layout doesn't reflow; disabled (and
+		     dimmed) when there is nothing unread. -->
 		<button
 			class="notifications-mark-read allcaps"
-			disabled={$combinedInboxStore.length === 0}
-			onclick={markAllInboxRead}
+			disabled={!hasUnread}
+			onclick={markAll}
 			type="button"
 		>
 			{t({ locale: $localeStore, key: 'notifications.mark_read' })}
@@ -88,9 +83,8 @@
 	</header>
 
 	{#if $combinedInboxStore.length === 0}
-		<!-- Polished empty state — dashed surface with serif-italic
-		     headline. The bell icon is faint by design (no foreground
-		     attention since there's no event to draw the eye). -->
+		<!-- Polished empty state — dashed surface with serif-italic headline.
+		     The bell icon is faint by design (no event to draw the eye). -->
 		<div class="notifications-empty" aria-live="polite" role="status">
 			<Bell class="notifications-empty-icon" aria-hidden="true" size={28} strokeWidth={1.4} />
 			<p class="notifications-empty-title serif-italic">
@@ -101,28 +95,31 @@
 			</p>
 		</div>
 	{:else}
-		<ul class="notifications-list">
-			{#each $combinedInboxStore as notification (notification.id)}
-				{@const KindIcon = kindIcons[notification.kind] ?? Target}
-				<li class="notification-item" class:is-unread={notification.unread}>
-					<!-- Every row routes by kind (or its explicit href) — see
-					     `destinationFor`. -->
-					<a class="notification-card notification-card-link" href={destinationFor(notification)}>
-						<span class="notification-icon" aria-hidden="true">
-							<KindIcon size={16} strokeWidth={1.8} />
-						</span>
-						<div class="notification-copy">
-							<span class="notification-title">{notification.title}</span>
-							<p class="notification-body">{notification.body}</p>
-							<span class="notification-when num">{notification.when}</span>
-						</div>
-						{#if notification.unread}
-							<span class="notification-dot" aria-hidden="true"></span>
-						{/if}
-					</a>
-				</li>
-			{/each}
-		</ul>
+		<div class="notifications-list">
+			{#if unread.length > 0}
+				<div class="notifications-section-head">
+					<span class="eyebrow notifications-section-label is-new">
+						{t({ locale: $localeStore, key: 'notifications.section.new' })}
+					</span>
+					<span class="num notifications-section-count">{unread.length}</span>
+				</div>
+				{#each unread as notification (notification.id)}
+					<NotifRow {notification} onDismiss={dismiss} onMarkRead={markRead} onOpen={open} />
+				{/each}
+			{/if}
+
+			{#if earlier.length > 0}
+				<div class="notifications-section-head" class:has-spacer={unread.length > 0}>
+					<span class="eyebrow notifications-section-label">
+						{t({ locale: $localeStore, key: 'notifications.section.earlier' })}
+					</span>
+					<span class="num notifications-section-count">{earlier.length}</span>
+				</div>
+				{#each earlier as notification (notification.id)}
+					<NotifRow {notification} onDismiss={dismiss} onMarkRead={markRead} onOpen={open} />
+				{/each}
+			{/if}
+		</div>
 	{/if}
 </div>
 
@@ -174,89 +171,31 @@
 	.notifications-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.375rem;
 		margin: 0;
 		padding: 0;
-		list-style: none;
 	}
 
-	.notification-item {
-		display: block;
-	}
-
-	.notification-card {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto;
-		gap: 0.625rem;
-		align-items: flex-start;
-		padding: 0.875rem;
-		border-radius: var(--r-12);
-		border: 1px solid var(--border-base);
-		background: var(--bg-surface);
-		box-shadow: var(--shadow-card);
-		color: var(--text-base);
-		text-decoration: none;
-	}
-
-	.notification-card-link {
-		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
-	}
-
-	.notification-card-link:hover {
-		border-color: var(--border-strong);
-		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-surface));
-	}
-
-	.notification-item.is-unread .notification-card {
-		border-color: color-mix(in srgb, var(--color-primary) 30%, var(--border-base));
-		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-surface));
-	}
-
-	.notification-icon {
+	/* Section header — `New` / `Earlier` eyebrow plus a count badge. The
+	   Earlier head gets extra top padding when it sits below the New group. */
+	.notifications-section-head {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-		color: var(--color-primary);
+		justify-content: space-between;
+		padding: 0.125rem 0.125rem 0.25rem;
 	}
 
-	.notification-copy {
-		display: flex;
-		flex-direction: column;
-		gap: 0.125rem;
-		min-width: 0;
+	.notifications-section-head.has-spacer {
+		padding-top: 0.875rem;
 	}
 
-	.notification-title {
-		font-size: var(--t-13);
-		font-weight: 600;
-		color: var(--text-base);
+	.notifications-section-label.is-new {
+		color: var(--accent);
 	}
 
-	.notification-body {
-		margin: 0;
-		font-size: var(--t-12);
+	.notifications-section-count {
+		font-size: var(--t-10);
 		color: var(--text-muted);
-	}
-
-	.notification-when {
-		margin-top: 0.125rem;
-		font-size: var(--t-11);
-		color: var(--text-muted);
-	}
-
-	.notification-dot {
-		width: 0.375rem;
-		height: 0.375rem;
-		margin-top: 0.375rem;
-		border-radius: 50%;
-		background: var(--color-primary);
 	}
 
 	.notifications-empty {

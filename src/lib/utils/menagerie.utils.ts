@@ -102,8 +102,9 @@ export const menagerieStatsFromProfile = ({
 /**
  * Per-animal metric extractor — reads one number from {@link MenagerieStats}.
  * Centralised so `menagerieTierFor` and `menagerieProgress` always agree on the
- * source. Engine-unbacked animals return `0` (which resolves to LOCKED for a
- * higher-is-better ladder) until the backend lights them up.
+ * source. Engine-unbacked animals return a baseline worst value — `0` for a
+ * higher-is-better ladder, `1` for a reversed (lower-is-better) ladder like
+ * `octopus` — so they resolve to LOCKED until the backend lights them up.
  */
 const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	hatchling: (stats) => stats.calls,
@@ -372,11 +373,21 @@ export const detectNewMenagerieTiers = ({
 	const bySlug = new Map<MenagerieSlug, MenagerieTier>();
 
 	for (const key of fresh) {
-		const [slug, tier] = key.split(':') as [MenagerieSlug, MenagerieTier];
-		const existing = bySlug.get(slug);
+		// Keys are `${slug}:${tier}`, but the ledger is opaque persisted data — a
+		// malformed or stale entry (unknown slug / tier) must never be ranked, or
+		// `MENAGERIE_TIER_RANK[undefined]` would enqueue an invalid reveal. Only
+		// act on entries we can resolve against the live catalogue.
+		const [rawSlug, rawTier] = key.split(':');
+		const slug = rawSlug as MenagerieSlug;
+		const tier = rawTier as MenagerieTier;
+		const known = MENAGERIE_BY_SLUG.has(slug) && MENAGERIE_TIER_RANK[tier] !== undefined;
 
-		if (!existing || MENAGERIE_TIER_RANK[tier] > MENAGERIE_TIER_RANK[existing]) {
-			bySlug.set(slug, tier);
+		if (known) {
+			const existing = bySlug.get(slug);
+
+			if (!existing || MENAGERIE_TIER_RANK[tier] > MENAGERIE_TIER_RANK[existing]) {
+				bySlug.set(slug, tier);
+			}
 		}
 	}
 

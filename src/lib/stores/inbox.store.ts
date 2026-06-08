@@ -1,6 +1,11 @@
 import { browser } from '$app/environment';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
-import { INBOX_SETTLED_READ_STORAGE_KEY, INBOX_STORAGE_KEY } from '$lib/constants/inbox.constants';
+import {
+	INBOX_DISMISSED_STORAGE_KEY,
+	INBOX_READ_STORAGE_KEY,
+	INBOX_SETTLED_READ_STORAGE_KEY,
+	INBOX_STORAGE_KEY
+} from '$lib/constants/inbox.constants';
 import { AppPath } from '$lib/constants/routes.constants';
 import { marketById } from '$lib/derived/market-by-id.derived';
 import {
@@ -219,7 +224,9 @@ const settledInboxStore: Readable<InboxNotification[]> = derived(
 				}),
 				when: formatRelativeAgoFromNs({ timestampNs: entry.timestampNs, locale: $locale }),
 				unread: !$read.has(entry.eventId),
-				href: `${AppPath.Markets}/${entry.marketId}`
+				// Deep-link to the resolved market's detail via the kind router
+				// (`notificationDestination`) — `mid` carries the market id.
+				mid: entry.marketId
 			};
 		})
 );
@@ -340,16 +347,49 @@ export const markResolutionsSeen = (): void => {
 	});
 };
 
+// ── Per-id read overlay + dismissed set ─────────────────────────────────────
+// Two persisted string-id sets, keyed by the notification `id`:
+//   • read     — overlays `unread` for cards NOT backed by the settled
+//                 read-set (synthetic friend requests, seeds), so tapping a
+//                 card's unread dot marks it read in place across reloads.
+//   • dismissed — cards the user swiped away; filtered out of the list.
+// Settled cards keep using `settledReadStore` (keyed by `event_id`) so the
+// away-digest banner and the bell badge stay in lockstep — the read overlay
+// here is purely additive on top of that.
+
+const loadStringSet = (key: string): Set<string> => {
+	const raw = get<unknown>({ key });
+
+	if (!Array.isArray(raw) || !raw.every((id) => typeof id === 'string')) {
+		return new Set();
+	}
+
+	return new Set(raw);
+};
+
+const persistStringSet = ({ key, set }: { key: string; set: Set<string> }): void => {
+	setStorage({ key, value: Array.from(set) });
+};
+
+const inboxReadStore = writable<Set<string>>(loadStringSet(INBOX_READ_STORAGE_KEY));
+const inboxDismissedStore = writable<Set<string>>(loadStringSet(INBOX_DISMISSED_STORAGE_KEY));
+
 /**
- * The inbox surface (Notifications page, future bell badge) reads from
- * this combined view. Order: live actionable items (friend requests),
- * then real settled-event notifications, then the persisted local seed.
- * Settled cards sit above the seeds so a freshly-resolved market lands
- * at the top of the user's view.
+ * The inbox surface (Notifications page, bell badge) reads from this combined
+ * view. Order: live actionable items (friend requests), then real
+ * settled-event notifications, then the persisted local seed. Settled cards
+ * sit above the seeds so a freshly-resolved market lands at the top.
+ *
+ * Dismissed cards are filtered out, and the per-id read overlay is applied
+ * on top of each item's own `unread` so a card tapped read in place stays
+ * read across reloads.
  */
 export const combinedInboxStore: Readable<InboxNotification[]> = derived(
-	[friendRequestInboxStore, settledInboxStore, inboxStore],
-	([$requests, $settled, $inbox]) => [...$requests, ...$settled, ...$inbox]
+	[friendRequestInboxStore, settledInboxStore, inboxStore, inboxReadStore, inboxDismissedStore],
+	([$requests, $settled, $inbox, $read, $dismissed]) =>
+		[...$requests, ...$settled, ...$inbox]
+			.filter((item) => !$dismissed.has(item.id))
+			.map((item) => (item.unread && $read.has(item.id) ? { ...item, unread: false } : item))
 );
 
 export const combinedInboxUnreadCount: Readable<number> = derived(
@@ -384,6 +424,7 @@ export interface InboxToast {
 	kind: InboxNotificationKind;
 	title: string;
 	body: string;
+	mid?: string;
 	href?: string;
 }
 
@@ -468,6 +509,7 @@ export const initInboxToasts = (): (() => void) => {
 			kind: next.kind,
 			title: next.title,
 			body: next.body,
+			mid: next.mid,
 			href: next.href
 		});
 	});
@@ -520,12 +562,96 @@ const markAllSettledRead = (): void => {
 };
 
 /**
- * Public "mark all read" entry point. Clears both the seed-store layer
- * and the per-event Settled read-state. Callers (NotificationsPage,
- * future bell action) should use this — never the layer-specific
- * helpers directly.
+ * Marks a single inbox card read in place by its `id`. Settled cards route
+ * to the per-event read-set (so the away-digest banner clears in lockstep);
+ * every other id goes to the per-id read overlay. Idempotent.
+ */
+export const markInboxRead = (id: string): void => {
+	const SETTLED_PREFIX = 'settled-';
+
+	if (id.startsWith(SETTLED_PREFIX)) {
+		let eventId: bigint;
+
+		try {
+			eventId = BigInt(id.slice(SETTLED_PREFIX.length));
+		} catch {
+			return;
+		}
+
+		settledReadStore.update((current) => {
+			if (current.has(eventId)) {
+				return current;
+			}
+
+			const next = new Set(current);
+			next.add(eventId);
+			persistSettledReadSet(next);
+
+			return next;
+		});
+
+		return;
+	}
+
+	inboxReadStore.update((current) => {
+		if (current.has(id)) {
+			return current;
+		}
+
+		const next = new Set(current);
+		next.add(id);
+		persistStringSet({ key: INBOX_READ_STORAGE_KEY, set: next });
+
+		return next;
+	});
+};
+
+/**
+ * Dismisses a single inbox card by its `id`, persisting the dismissal so the
+ * card stays hidden across reloads. Filtered out of {@link combinedInboxStore}.
+ */
+export const dismissInboxNotification = (id: string): void => {
+	inboxDismissedStore.update((current) => {
+		if (current.has(id)) {
+			return current;
+		}
+
+		const next = new Set(current);
+		next.add(id);
+		persistStringSet({ key: INBOX_DISMISSED_STORAGE_KEY, set: next });
+
+		return next;
+	});
+};
+
+/**
+ * Public "mark all read" entry point. Clears the seed-store layer and the
+ * per-event Settled read-state, and overlays a read marker on every other
+ * currently-visible card (synthetic friend requests) so the badge fully
+ * clears. Callers (NotificationsPage, bell action) should use this — never
+ * the layer-specific helpers directly.
  */
 export const markAllInboxRead = (): void => {
 	markAllSeedInboxRead();
 	markAllSettledRead();
+
+	const unreadIds = getStore(combinedInboxStore)
+		.filter((item) => item.unread)
+		.map((item) => item.id);
+
+	if (unreadIds.length === 0) {
+		return;
+	}
+
+	inboxReadStore.update((current) => {
+		const next = new Set(current);
+
+		for (const id of unreadIds) {
+			next.add(id);
+		}
+
+		persistStringSet({ key: INBOX_READ_STORAGE_KEY, set: next });
+
+		return next;
+	});
 };
