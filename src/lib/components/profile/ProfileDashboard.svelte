@@ -586,7 +586,7 @@
 		</div>
 	</section>
 
-	<!-- Affiliations · 4-slot grid -->
+	<!-- Affiliations · 2-slot grid (Alma Mater + Citizen) -->
 	<section class="profile-affiliations">
 		<div class="profile-affiliations-head">
 			<span class="profile-affiliations-eyebrow">
@@ -995,7 +995,7 @@
 		border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
 	}
 
-	/* Country-flag SVG inside the four-slot tile — fills the same 1.6rem
+	/* Country-flag SVG inside an affiliation tile — fills the same 1.6rem
 	   square as the alphabetic glyph so the row geometry is stable. */
 	.profile-dashboard :global(.affil-slot-flag) {
 		width: 100%;
@@ -1005,10 +1005,9 @@
 	}
 
 	/* Affiliations card ------------------------------------------------ */
-	/* Wrapped in its own bordered card surface — same treatment as the
-	   identity card above (border / radius / popover background / card
-	   shadow) so the AFFILIATIONS header + 4-slot grid read as a single
-	   contained card rather than floating on the page background. */
+	/* Wrapped in its own bordered card surface (border / radius / popover
+	   background / card shadow) so the AFFILIATIONS header + 2-slot grid read
+	   as a single contained card rather than floating on the page background. */
 	.profile-affiliations {
 		display: flex;
 		flex-direction: column;
