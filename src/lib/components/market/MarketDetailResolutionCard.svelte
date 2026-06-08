@@ -10,6 +10,9 @@
 
 	const { market }: Props = $props();
 
+	// Trim before testing emptiness so a whitespace-only clause falls back to
+	// the templated sentence, matching FlowResolutionBlock.
+	const resolutionClause = $derived(market.resolution?.trim() ?? '');
 	const closesLabel = $derived(formatDate(market.expiryDate));
 </script>
 
@@ -25,8 +28,8 @@
 		{t({ locale: $localeStore, key: 'market.detail.resolution.eyebrow' })}
 	</span>
 	<p class="market-resolution-body">
-		{#if market.resolution !== ''}
-			{market.resolution}
+		{#if resolutionClause !== ''}
+			{resolutionClause}
 		{:else}
 			{t({
 				locale: $localeStore,
