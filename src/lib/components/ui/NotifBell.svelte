@@ -78,7 +78,7 @@
 		justify-content: center;
 		border-radius: var(--r-pill);
 		background: var(--no);
-		color: #fff;
+		color: var(--color-danger-foreground);
 		font-size: 9px;
 		font-weight: 700;
 		line-height: 1;
