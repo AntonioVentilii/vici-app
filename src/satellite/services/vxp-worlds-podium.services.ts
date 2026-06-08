@@ -3,6 +3,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
+import { monthAnchorFromMs } from '$lib/types/affiliation-stats';
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
 import { parseToken } from '$lib/utils/parse.utils';
 import {
@@ -70,12 +71,6 @@ const PODIUM_PLACES: ReadonlyArray<{
 ] as const;
 
 const KINDS: ReadonlyArray<AffiliationKind> = ['university', 'country'] as const;
-
-const monthAnchorFromMs = (ms: number): string => {
-	const d = new Date(ms);
-
-	return `${d.getUTCFullYear()}-${(d.getUTCMonth() + 1).toString().padStart(2, '0')}`;
-};
 
 export interface ClaimWorldsPodiumPrizeResult {
 	monthAnchor: string;
