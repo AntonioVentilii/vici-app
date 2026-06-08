@@ -6,6 +6,7 @@ import {
 	MILLISECOND_IN_NANOSECONDS,
 	PAYOFF_TYPE,
 	PRICE_DECIMALS,
+	RESOLUTION_CLAUSE_MAX_LENGTH,
 	STRIKE,
 	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
@@ -46,6 +47,7 @@ import type { Identity } from '@icp-sdk/core/agent';
 export const createMarket = async ({
 	title,
 	description,
+	resolution,
 	expiryDate,
 	outcomes = [],
 	payoutUnit: payoutUnitOverride,
@@ -56,6 +58,15 @@ export const createMarket = async ({
 }: {
 	title: string;
 	description: string;
+	/**
+	 * The compulsory on-chain settlement clause (`Resolution.clause`) stating
+	 * how this market resolves. Defaults to `description` when omitted — the
+	 * registry requires a non-empty clause, and `description` historically
+	 * doubled as the resolution criterion. Trimmed and capped at
+	 * {@link RESOLUTION_CLAUSE_MAX_LENGTH} to mirror the canister's
+	 * `ResolutionClauseEmpty` / `ResolutionClauseTooLong` validation.
+	 */
+	resolution?: string;
 	expiryDate: bigint;
 	outcomes?: string[];
 	payoutUnit?: RegistryDid.PayoutUnit;
@@ -119,6 +130,14 @@ export const createMarket = async ({
 		.replace(/\s+/g, '_')
 		.replace(/[^A-Z0-9_-]/g, '');
 
+	// The registry requires a non-empty resolution clause on every series.
+	// Fall back to the description when the caller omits one, matching the
+	// deploy-markets backfill (`.resolution // .description`).
+	const trimmedResolution = resolution?.trim();
+	const resolutionClause = (
+		nonNullish(trimmedResolution) && trimmedResolution.length > 0 ? trimmedResolution : description
+	).slice(0, RESOLUTION_CLAUSE_MAX_LENGTH);
+
 	const params: RegistryDid.AddSeriesParams = {
 		underlying,
 		title,
@@ -127,6 +146,7 @@ export const createMarket = async ({
 			markdown: toNullable(),
 			html: toNullable()
 		},
+		resolution: { clause: resolutionClause },
 		expiry_ns: expiryDate * MILLISECOND_IN_NANOSECONDS,
 		payout_unit: payoutUnit,
 		strike: STRIKE,
@@ -980,12 +1000,20 @@ export const forkMarket = async ({
 	groupIds,
 	title,
 	description,
+	resolution,
 	locale
 }: {
 	marketId: MarketId;
 	groupIds: string[];
 	title?: string;
 	description?: string;
+	/**
+	 * Optional settlement-clause override for the fork. When omitted, the
+	 * registry inherits the source series' resolution (`fork_series` treats a
+	 * `None` resolution as "keep the source's"), which is what we want for
+	 * "Challenge your friends" forks that don't restate how the market settles.
+	 */
+	resolution?: string;
 	/**
 	 * Optional BCP 47 source-language override for the forked market's
 	 * `title`/`description`. When omitted, the registry inherits the source
@@ -1001,11 +1029,18 @@ export const forkMarket = async ({
 
 	const identity = await safeGetIdentityOnce();
 
+	const trimmedResolution = resolution?.trim();
+
 	const params: RegistryDid.ForkSeriesParams = {
 		source_series_id: marketId,
 		title: toNullable(title),
 		description: toNullable(
 			nonNullish(description) ? { plain: description, html: [], markdown: [] } : undefined
+		),
+		resolution: toNullable(
+			nonNullish(trimmedResolution) && trimmedResolution.length > 0
+				? { clause: trimmedResolution.slice(0, RESOLUTION_CLAUSE_MAX_LENGTH) }
+				: undefined
 		),
 		trading_access: [{ Restricted: { groups: groupIds } }],
 		engine_id: toNullable(VICI_ENGINE_ID),

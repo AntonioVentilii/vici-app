@@ -466,6 +466,10 @@ export const frMessages = {
 	'admin.markets.bulk.error.outcomes_not_array':
 		'Les résultats doivent être un tableau pour le marché : {title}',
 	'admin.markets.bulk.error.parse_failed': 'Échec de l’analyse JSON : {message}',
+	'admin.markets.bulk.error.resolution_not_string':
+		'La résolution doit être une chaîne pour le marché : {title}',
+	'admin.markets.bulk.error.resolution_too_long':
+		'La résolution dépasse {max} caractères pour le marché : {title}',
 	'admin.markets.bulk.error.tag_not_string':
 		'Chaque tag doit être une chaîne pour le marché : {title}',
 	'admin.markets.bulk.error.tags_not_array':
@@ -490,11 +494,20 @@ export const frMessages = {
 	'admin.markets.form.domain.label': 'Domaine de balance',
 	'admin.markets.form.domain.social': 'Social (défi fun)',
 	'admin.markets.form.domain.vici_xp': 'ViciXp (Playground)',
+	'admin.markets.form.error.resolution_required':
+		'Une clause de résolution est requise — décrivez comment le marché est réglé.',
+	'admin.markets.form.error.resolution_too_long':
+		'La clause de résolution doit comporter au maximum {max} caractères.',
 	'admin.markets.form.field.description': 'Description',
 	'admin.markets.form.field.description_placeholder':
-		'Donnez des critères détaillés de résolution...',
+		'Décrivez brièvement le sujet de ce marché...',
 	'admin.markets.form.field.expiry_date': 'Date d’expiration',
 	'admin.markets.form.field.market_type': 'Type de marché',
+	'admin.markets.form.field.resolution': 'Résolution',
+	'admin.markets.form.field.resolution_hint':
+		'Jusqu’à {max} caractères. Il s’agit de la clause de règlement contraignante affichée aux participants.',
+	'admin.markets.form.field.resolution_placeholder':
+		'Précisez les critères exacts qui déterminent la résolution de ce marché...',
 	'admin.markets.form.field.title': 'Titre du marché',
 	'admin.markets.form.field.title_placeholder':
 		'p.ex. Le Bitcoin atteindra-t-il 100k$ d’ici 2027 ?',

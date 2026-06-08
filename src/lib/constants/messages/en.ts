@@ -462,6 +462,10 @@ export const enMessages = {
 		'Each outcome must be a string for market: {title}',
 	'admin.markets.bulk.error.outcomes_not_array': 'Outcomes must be an array for market: {title}',
 	'admin.markets.bulk.error.parse_failed': 'Failed to parse JSON: {message}',
+	'admin.markets.bulk.error.resolution_not_string':
+		'Resolution must be a string for market: {title}',
+	'admin.markets.bulk.error.resolution_too_long':
+		'Resolution exceeds {max} characters for market: {title}',
 	'admin.markets.bulk.error.tag_not_string': 'Each tag must be a string for market: {title}',
 	'admin.markets.bulk.error.tags_not_array': 'Tags must be an array for market: {title}',
 	'admin.markets.bulk.error.too_few_outcomes':
@@ -484,10 +488,20 @@ export const enMessages = {
 	'admin.markets.form.domain.label': 'Balance Domain',
 	'admin.markets.form.domain.social': 'Social (Fun Dare)',
 	'admin.markets.form.domain.vici_xp': 'ViciXp (Playground)',
+	'admin.markets.form.error.resolution_required':
+		'A resolution clause is required — describe how the market settles.',
+	'admin.markets.form.error.resolution_too_long':
+		'The resolution clause must be {max} characters or fewer.',
 	'admin.markets.form.field.description': 'Description',
-	'admin.markets.form.field.description_placeholder': 'Provide detailed criteria for resolution...',
+	'admin.markets.form.field.description_placeholder':
+		'Briefly describe what this market is about...',
 	'admin.markets.form.field.expiry_date': 'Expiry Date',
 	'admin.markets.form.field.market_type': 'Market Type',
+	'admin.markets.form.field.resolution': 'Resolution',
+	'admin.markets.form.field.resolution_hint':
+		'Up to {max} characters. This is the binding settlement clause shown to predictors.',
+	'admin.markets.form.field.resolution_placeholder':
+		'Specify the exact criteria that decide how this market resolves...',
 	'admin.markets.form.field.title': 'Market Title',
 	'admin.markets.form.field.title_placeholder': 'e.g., Will Bitcoin hit $100k by 2027?',
 	'admin.markets.form.outcomes.add': '+ Add Outcome',

@@ -465,6 +465,10 @@ export const itMessages = {
 	'admin.markets.bulk.error.outcomes_not_array':
 		'Gli esiti devono essere un array per il mercato: {title}',
 	'admin.markets.bulk.error.parse_failed': 'Impossibile analizzare il JSON: {message}',
+	'admin.markets.bulk.error.resolution_not_string':
+		'La risoluzione deve essere una stringa per il mercato: {title}',
+	'admin.markets.bulk.error.resolution_too_long':
+		'La risoluzione supera {max} caratteri per il mercato: {title}',
 	'admin.markets.bulk.error.tag_not_string':
 		'Ogni tag deve essere una stringa per il mercato: {title}',
 	'admin.markets.bulk.error.tags_not_array': 'I tag devono essere un array per il mercato: {title}',
@@ -488,11 +492,20 @@ export const itMessages = {
 	'admin.markets.form.domain.label': 'Dominio del saldo',
 	'admin.markets.form.domain.social': 'Social (Sfida divertente)',
 	'admin.markets.form.domain.vici_xp': 'ViciXp (Playground)',
+	'admin.markets.form.error.resolution_required':
+		'È richiesta una clausola di risoluzione — descrivi come si liquida il mercato.',
+	'admin.markets.form.error.resolution_too_long':
+		'La clausola di risoluzione deve contenere al massimo {max} caratteri.',
 	'admin.markets.form.field.description': 'Descrizione',
 	'admin.markets.form.field.description_placeholder':
-		'Fornisci criteri dettagliati per la risoluzione...',
+		'Descrivi brevemente di cosa tratta questo mercato...',
 	'admin.markets.form.field.expiry_date': 'Data di scadenza',
 	'admin.markets.form.field.market_type': 'Tipo di mercato',
+	'admin.markets.form.field.resolution': 'Risoluzione',
+	'admin.markets.form.field.resolution_hint':
+		'Fino a {max} caratteri. È la clausola di liquidazione vincolante mostrata ai partecipanti.',
+	'admin.markets.form.field.resolution_placeholder':
+		'Specifica i criteri esatti che determinano la risoluzione di questo mercato...',
 	'admin.markets.form.field.title': 'Titolo del mercato',
 	'admin.markets.form.field.title_placeholder': 'es. Bitcoin raggiungerà $100k entro il 2027?',
 	'admin.markets.form.outcomes.add': '+ Aggiungi esito',

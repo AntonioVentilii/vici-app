@@ -4,6 +4,7 @@
 	import type { RegistryDid } from '$declarations';
 	import SocialPremiumPicker from '$lib/components/arena/SocialPremiumPicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { RESOLUTION_CLAUSE_MAX_LENGTH } from '$lib/constants/app.constants';
 	import {
 		DEFAULT_SOCIAL_PREMIUM_ID,
 		formatSocialPremium,
@@ -26,6 +27,7 @@
 
 	let title = $state('');
 	let description = $state('');
+	let resolution = $state('');
 	let expiryDate = $state('');
 
 	let marketType = $state<'Binary' | 'Categorical'>('Binary');
@@ -59,6 +61,35 @@
 
 	const onCreate = async () => {
 		if (isNullish(title) || isNullish(description) || isNullish(expiryDate)) {
+			return;
+		}
+
+		// Mirror the registry's resolution-clause validation
+		// (`ResolutionClauseEmpty` / `ResolutionClauseTooLong`) so the admin gets
+		// a localized message instead of an opaque `add_series` error.
+		const resolutionTrimmed = resolution.trim();
+
+		if (resolutionTrimmed.length === 0) {
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'wallet.send.error_title' }),
+				message: t({ locale: $localeStore, key: 'admin.markets.form.error.resolution_required' }),
+				type: 'warning'
+			});
+
+			return;
+		}
+
+		if (resolutionTrimmed.length > RESOLUTION_CLAUSE_MAX_LENGTH) {
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'wallet.send.error_title' }),
+				message: t({
+					locale: $localeStore,
+					key: 'admin.markets.form.error.resolution_too_long',
+					params: { max: RESOLUTION_CLAUSE_MAX_LENGTH }
+				}),
+				type: 'warning'
+			});
+
 			return;
 		}
 
@@ -99,6 +130,7 @@
 			await createMarket({
 				title,
 				description,
+				resolution: resolutionTrimmed,
 				expiryDate: BigInt(new Date(expiryDate).getTime()),
 				outcomes: marketType === 'Categorical' ? outcomes : [],
 				balanceDomain: domain,
@@ -108,6 +140,7 @@
 
 			title = '';
 			description = '';
+			resolution = '';
 			expiryDate = '';
 			outcomes = ['Option A', 'Option B'];
 			socialPremiumId = DEFAULT_SOCIAL_PREMIUM_ID;
@@ -178,6 +211,34 @@
 				rows="4"
 				value={description}
 			></textarea>
+		</div>
+
+		<div class="space-y-2">
+			<label
+				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
+				for="market-resolution"
+			>
+				{t({ locale: $localeStore, key: 'admin.markets.form.field.resolution' })}
+			</label>
+			<textarea
+				id="market-resolution"
+				class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-2xl border-none px-6 py-4 ring-1 ring-inset focus:ring-2"
+				maxlength={RESOLUTION_CLAUSE_MAX_LENGTH}
+				oninput={(e) => (resolution = e.currentTarget.value)}
+				placeholder={t({
+					locale: $localeStore,
+					key: 'admin.markets.form.field.resolution_placeholder'
+				})}
+				rows="4"
+				value={resolution}
+			></textarea>
+			<p class="text-muted-foreground text-[10px]">
+				{t({
+					locale: $localeStore,
+					key: 'admin.markets.form.field.resolution_hint',
+					params: { max: RESOLUTION_CLAUSE_MAX_LENGTH }
+				})}
+			</p>
 		</div>
 
 		<div class="space-y-2">

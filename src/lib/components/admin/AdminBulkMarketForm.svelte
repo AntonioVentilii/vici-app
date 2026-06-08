@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { RESOLUTION_CLAUSE_MAX_LENGTH } from '$lib/constants/app.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { downloadJsonFile } from '$lib/utils/download.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -8,6 +9,7 @@
 			markets: {
 				title: string;
 				description: string;
+				resolution?: string;
 				expiryDate: string;
 				balanceDomain?: string;
 				outcomes?: string[];
@@ -25,8 +27,9 @@
 	const exampleJson = [
 		{
 			title: 'Will Bitcoin hit $100k by 2027?',
-			description:
-				'This market resolves to YES if the Bitcoin price reaches $100,000 USD on any major exchange before Jan 1, 2027.',
+			description: "Bitcoin's run at a six-figure price before 2027.",
+			resolution:
+				'Resolves YES if the Bitcoin price reaches $100,000 USD on any major exchange before Jan 1, 2027.',
 			expiryDate: '2027-01-01T00:00:00Z',
 			balanceDomain: 'ViciXp',
 			tags: ['crypto', 'macro']
@@ -75,6 +78,31 @@
 					});
 
 					return;
+				}
+
+				// `resolution` is optional in the upload: when omitted the market
+				// falls back to its `description` (see createMarket). When present it
+				// must be a string within the registry's clause-length bound.
+				if (item.resolution !== undefined) {
+					if (typeof item.resolution !== 'string') {
+						error = t({
+							locale: $localeStore,
+							key: 'admin.markets.bulk.error.resolution_not_string',
+							params: { title: item.title }
+						});
+
+						return;
+					}
+
+					if (item.resolution.length > RESOLUTION_CLAUSE_MAX_LENGTH) {
+						error = t({
+							locale: $localeStore,
+							key: 'admin.markets.bulk.error.resolution_too_long',
+							params: { title: item.title, max: RESOLUTION_CLAUSE_MAX_LENGTH }
+						});
+
+						return;
+					}
 				}
 
 				if (item.outcomes) {
