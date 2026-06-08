@@ -367,8 +367,18 @@
 			return;
 		}
 
+		// Guard against a stale resolution clobbering fresher state: when the
+		// inputs change quickly a prior run's promise can settle after this
+		// one, so only commit while this run is still the latest. The teardown
+		// flips `cancelled` before the next run starts.
+		let cancelled = false;
+
 		getLeagueStandings({ window: 'week', members: roster })
 			.then((result) => {
+				if (cancelled) {
+					return;
+				}
+
 				const delta = findOwnStanding({ result, owner })?.rankDelta;
 
 				// `rankDelta` is `priorRank - rank` (positive = climbed); the
@@ -377,9 +387,17 @@
 				standingTrend = delta === undefined ? 0 : -delta;
 			})
 			.catch((err: unknown) => {
+				if (cancelled) {
+					return;
+				}
+
 				console.error(err);
 				standingTrend = 0;
 			});
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	// 1-indexed position of the caller for the head card's `N°{NN}` corner

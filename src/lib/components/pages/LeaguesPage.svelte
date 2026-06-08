@@ -434,7 +434,10 @@
 	/* Two-up grid for the Create / Join secondary actions. */
 	.leagues-cta-grid {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		/* `minmax(0, 1fr)` lets the columns shrink below their content's
+		   intrinsic width, so wide button labels can't force horizontal
+		   overflow (the default `1fr` floors at `minmax(auto, 1fr)`). */
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		gap: 10px;
 	}
 
