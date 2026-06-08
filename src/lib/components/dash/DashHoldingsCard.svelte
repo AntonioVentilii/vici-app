@@ -7,26 +7,39 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
-		balanceDisplay: string;
+		availableDisplay: string;
 		backedDisplay: string;
+		holdingsDisplay: string;
 		lifetimeDisplay: string;
 		recentSettlementsCount: number;
 	}
 
-	let { balanceDisplay, backedDisplay, lifetimeDisplay, recentSettlementsCount }: Props = $props();
+	let {
+		availableDisplay,
+		backedDisplay,
+		holdingsDisplay,
+		lifetimeDisplay,
+		recentSettlementsCount
+	}: Props = $props();
 </script>
 
 <div class="dash-section">
 	<div class="dash-holdings">
 		<div class="dash-holdings-top">
-			<span class="dash-ey">{t({ locale: $localeStore, key: 'dash.holdings.eyebrow' })}</span>
+			<span class="dash-ey">{t({ locale: $localeStore, key: 'dash.holdings.available' })}</span>
 			<span class="dash-purpose">
 				{t({ locale: $localeStore, key: 'dash.holdings.purpose' })}
 			</span>
 			<div class="dash-balance">
-				{balanceDisplay}<span class="unit">VXP</span>
+				{availableDisplay}<span class="unit">VXP</span>
 			</div>
 			<div class="dash-sub-stats">
+				<div class="dash-sub-stat">
+					<span class="lbl">
+						{t({ locale: $localeStore, key: 'dash.holdings.eyebrow' })}
+					</span>
+					<span class="val">{holdingsDisplay}</span>
+				</div>
 				<div class="dash-sub-stat">
 					<span class="lbl">
 						{t({ locale: $localeStore, key: 'dash.holdings.backed' })}
