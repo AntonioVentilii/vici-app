@@ -6,9 +6,9 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_STAKE_LADDER } from '$lib/constants/vxp-economy.constants';
-	import { marginSummary } from '$lib/derived/available-margin.derived';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
+	import { vxpSpendable } from '$lib/derived/vxp-holdings.derived';
 	import { getBalances } from '$lib/services/wallet.service';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -87,7 +87,7 @@
 	// Available collateral for this market's balance domain — the shared
 	// "spendable margin" derivation, so the figure matches the wallet, the
 	// Dashboard, and every other prediction surface.
-	const availableMargin = $derived($marginSummary.available);
+	const availableMargin = $derived($vxpSpendable);
 
 	const balanceLabel = $derived(
 		formatAvailableMarginForUi({ value: availableMargin, playground: $playgroundVxpUnitMode })

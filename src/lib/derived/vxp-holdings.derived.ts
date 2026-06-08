@@ -1,4 +1,5 @@
 import { ZERO } from '$lib/constants/app.constants';
+import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import { walletUiTokens } from '$lib/derived/tokens.derived';
 import { balancesStore } from '$lib/stores/balances.store';
 import { collateralsStore } from '$lib/stores/collaterals.store';
@@ -11,37 +12,44 @@ import { isNullish } from '@dfinity/utils';
 import { derived, type Readable } from 'svelte/store';
 
 /**
- * Holdings breakdown for the current balance domain.
+ * Shared VXP-holdings derivation for the current balance domain, used by the
+ * Dash, Portfolio, and Wallet surfaces.
  *
- * All three figures are in the clearing-margin scale (4 decimals). On the
- * ViciXp playground domain — where the collateral asset is VXP, pegged 1:1 to
- * the clearing unit and sharing the same 4 decimals — they are plain VXP
- * amounts in base units, no conversion needed. (The clearing canister names
- * its fields `*_usd` because it is asset-agnostic; that suffix is the engine's
- * accounting unit, not real dollars.)
+ * All figures are in the clearing-margin scale (4 decimals). On the ViciXp
+ * playground domain — where the collateral asset is VXP, pegged 1:1 to the
+ * clearing unit and sharing the same 4 decimals — they are plain VXP base
+ * units, no conversion needed. (The clearing canister names its fields
+ * `*_usd` because it is asset-agnostic; that suffix is the engine's accounting
+ * unit, not real dollars.) Values are base units; never compare or sum in
+ * whole-VXP.
  */
-export interface MarginSummary {
+
+// Raw VXP balance sitting in the user's ICRC ledger wallet (un-deposited).
+// Trends toward ~0 as VXP is swept into the clearing canister as collateral.
+// Kept as its own concept for the Wallet surface (ledger balance + the
+// low-balance "recovery" gate); the Dash "available to bet" figure is
+// `vxpSpendable`, which also counts deposited clearing collateral.
+export const vxpFree: Readable<bigint> = derived(
+	balancesStore,
+	($balancesStore) => $balancesStore?.[VXP_TOKEN.id] ?? ZERO
+);
+
+interface Holdings {
 	/**
 	 * Spendable: every VXP the user holds — free in the wallet **and**
 	 * deposited as clearing collateral — minus everything reserved for open
 	 * positions and resting orders. The honest "available to bet" figure.
 	 */
-	available: bigint;
+	spendable: bigint;
 	/** Reserved for open positions **and** resting limit orders. */
 	backed: bigint;
-	/** `available + backed` — everything the user holds in this domain. */
-	total: bigint;
 }
 
-/**
- * Single source of truth shared by the Trade modal and the Dashboard so the
- * "how much can I stake right now?" figure is identical across surfaces.
- */
-export const marginSummary: Readable<MarginSummary> = derived(
+const holdings: Readable<Holdings> = derived(
 	[collateralsStore, balancesStore, walletUiTokens],
-	([$collateralsStore, $balancesStore, $walletUiTokens]): MarginSummary => {
-		// Un-deposited VXP still sitting in the wallet — spendable too, since it
-		// is swept into clearing when the user places a call.
+	([$collateralsStore, $balancesStore, $walletUiTokens]): Holdings => {
+		// Un-deposited wallet VXP — spendable too, since it is swept into
+		// clearing when the user places a call.
 		let walletMargin = ZERO;
 
 		for (const token of $walletUiTokens) {
@@ -60,7 +68,7 @@ export const marginSummary: Readable<MarginSummary> = derived(
 		// No clearing account yet (e.g. a fresh user who hasn't deposited): all
 		// they can stake is whatever sits in the wallet.
 		if (isNullish($collateralsStore) || isNullish(account)) {
-			return { available: walletMargin, backed: ZERO, total: walletMargin };
+			return { spendable: walletMargin, backed: ZERO };
 		}
 
 		// Clearing collateral raw balances — the mark-value fallback used when
@@ -96,8 +104,20 @@ export const marginSummary: Readable<MarginSummary> = derived(
 				? account.total_equity_usd - account.available_margin_usd
 				: ZERO;
 
-		const available = walletMargin + clearingFree;
-
-		return { available, backed, total: available + backed };
+		return { spendable: walletMargin + clearingFree, backed };
 	}
+);
+
+// "Available to bet": wallet VXP + deposited clearing collateral, minus
+// everything reserved for open positions and resting orders.
+export const vxpSpendable: Readable<bigint> = derived(holdings, ($holdings) => $holdings.spendable);
+
+// Reserved for open positions + resting orders (the "Backed" figure).
+export const vxpBacked: Readable<bigint> = derived(holdings, ($holdings) => $holdings.backed);
+
+// Total holdings = spendable + backed — everything the user owns in this
+// domain (free + locked), in base units.
+export const vxpHoldingsTotal: Readable<bigint> = derived(
+	holdings,
+	($holdings) => $holdings.spendable + $holdings.backed
 );

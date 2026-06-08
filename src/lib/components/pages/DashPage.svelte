@@ -28,7 +28,6 @@
 		type MarketTag
 	} from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { marginSummary } from '$lib/derived/available-margin.derived';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -38,6 +37,7 @@
 		resolvedPositions,
 		resolvedPositionsNotInitialized
 	} from '$lib/derived/resolved-positions.derived';
+	import { vxpBacked, vxpHoldingsTotal, vxpSpendable } from '$lib/derived/vxp-holdings.derived';
 	import { worldCupActive } from '$lib/derived/world-cup.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { getLeaderboard } from '$lib/services/leaderboard.services';
@@ -98,24 +98,20 @@
 	let pastFilter = $state<PastFilter>('all');
 
 	// Holdings for the current (playground / VXP) domain — one shared source
-	// with the Trade modal via `marginSummary`:
-	//  • available — spendable VXP: free wallet balance + deposited clearing
-	//    collateral, minus everything reserved for open positions AND resting
-	//    orders. The honest "available to bet" headline.
+	// (`vxp-holdings.derived`) with the Trade modal, Portfolio, and Wallet:
+	//  • spendable — "available to bet": free wallet balance + deposited
+	//    clearing collateral, minus everything reserved for open positions AND
+	//    resting orders. The honest headline figure.
 	//  • backed — that reserved amount (positions + orders).
-	//  • total — available + backed, i.e. everything the user holds.
+	//  • total — spendable + backed, i.e. everything the user holds.
 	// All in `USD_DECIMALS`, which on VXP is the same 4-decimal scale 1:1, so
 	// they render as plain VXP with no conversion.
-	const availableVxp = $derived($marginSummary.available);
-	const backedVxp = $derived($marginSummary.backed);
-	const holdingsVxp = $derived($marginSummary.total);
-
 	const availableDisplay = $derived(
-		formatVxpBalance({ value: availableVxp, decimals: USD_DECIMALS })
+		formatVxpBalance({ value: $vxpSpendable, decimals: USD_DECIMALS })
 	);
-	const backedDisplay = $derived(formatVxpBalance({ value: backedVxp, decimals: USD_DECIMALS }));
+	const backedDisplay = $derived(formatVxpBalance({ value: $vxpBacked, decimals: USD_DECIMALS }));
 	const holdingsDisplay = $derived(
-		formatVxpBalance({ value: holdingsVxp, decimals: USD_DECIMALS })
+		formatVxpBalance({ value: $vxpHoldingsTotal, decimals: USD_DECIMALS })
 	);
 
 	// Lifetime = `profile.points`, the running XP/VXP accumulator the
