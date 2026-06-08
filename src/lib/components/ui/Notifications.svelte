@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Check, X } from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
 	import { notificationsStore } from '$lib/stores/notification.store';
 
@@ -16,29 +17,15 @@
 		>
 			{#if notification.type === 'error'}
 				<div
-					class="bg-destructive/10 text-destructive mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+					class="bg-danger-wash text-danger mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
 				>
-					<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M6 18L18 6M6 6l12 12"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="3"
-						/>
-					</svg>
+					<X class="h-3 w-3" />
 				</div>
 			{:else}
 				<div
 					class="bg-yes-wash text-yes mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
 				>
-					<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M5 13l4 4L19 7"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="3"
-						/>
-					</svg>
+					<Check class="h-3 w-3" />
 				</div>
 			{/if}
 			<div class="flex flex-col">
