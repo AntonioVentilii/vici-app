@@ -294,7 +294,7 @@
 		grid-template-columns: repeat(5, 1fr);
 		padding: 6px;
 		border: 1px solid rgba(242, 236, 220, 0.12);
-		border-radius: 28px;
+		border-radius: var(--radius-nav);
 		background: rgba(20, 18, 15, 0.74);
 		-webkit-backdrop-filter: blur(16px);
 		backdrop-filter: blur(16px);
