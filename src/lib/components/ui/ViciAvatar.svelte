@@ -32,6 +32,13 @@
 		frame?: boolean;
 		/** Draw the gold signature circle + wordmark. */
 		signature?: boolean;
+		/** Draw the decorative backdrop flourishes (lower-left dot + gold
+		 *  signature disc). Off lets an overlay surface keep the backdrop
+		 *  clean behind its own controls. */
+		decor?: boolean;
+		/** Skip the backdrop entirely so the figure sits on a caller-supplied
+		 *  surface (e.g. the profile hero's palette gradient). */
+		noBg?: boolean;
 		/** Whether idle motion is desired. Always re-gated behind
 		 *  `prefers-reduced-motion` — passing `true` never overrides a
 		 *  reduced-motion preference. */
@@ -46,6 +53,8 @@
 		size = 28,
 		frame = true,
 		signature = false,
+		decor = true,
+		noBg = false,
 		animate = false,
 		class: className = ''
 	}: Props = $props();
@@ -58,7 +67,11 @@
 	const motion = $derived(animate && !prefersReducedMotion());
 
 	const svg = $derived(
-		renderAvatarSvg({ parts: resolvedParts, size, options: { animate: motion, frame, signature } })
+		renderAvatarSvg({
+			parts: resolvedParts,
+			size,
+			options: { animate: motion, frame, signature, decor, noBg }
+		})
 	);
 </script>
 

@@ -558,104 +558,154 @@
 </script>
 
 <div class="friends-tab">
-	<!-- Invite hero ─────────────────────────────────────────────── -->
-	<section class="invite-hero" aria-labelledby="invite-hero-title">
-		<span class="invite-eyebrow">
-			<span class="num invite-bonus">+{bonusLabel} VXP</span>
-			<span class="invite-eyebrow-suffix">
-				{t({ locale: $localeStore, key: 'arena.friends.invite.eyebrow_suffix' })}
+	<!-- Invite hero ─────────────────────────────────────────────────
+	     Inviting IS the job when the list is short, so the full hero only
+	     leads while the viewer has two or fewer friends. With a real ranking
+	     present it demotes to the compact strip below. -->
+	{#if rankedFriends.length <= 2}
+		<section class="invite-hero" aria-labelledby="invite-hero-title">
+			<span class="invite-eyebrow">
+				<span class="num invite-bonus">+{bonusLabel} VXP</span>
+				<span class="invite-eyebrow-suffix">
+					{t({ locale: $localeStore, key: 'arena.friends.invite.eyebrow_suffix' })}
+				</span>
 			</span>
-		</span>
-		<h3 id="invite-hero-title" class="invite-title">
-			{t({ locale: $localeStore, key: 'arena.friends.invite.title' })}
-		</h3>
-		<p class="invite-sub">
-			{#if referralsRemaining > 0}
-				{t({
-					locale: $localeStore,
-					key: 'arena.friends.invite.sub',
-					params: { amount: bonusLabel }
-				})}
-				<span class="num invite-cap">
+			<h3 id="invite-hero-title" class="invite-title">
+				{t({ locale: $localeStore, key: 'arena.friends.invite.title' })}
+			</h3>
+			<p class="invite-sub">
+				{#if referralsRemaining > 0}
 					{t({
 						locale: $localeStore,
-						key: 'arena.friends.invite.cap_remaining',
-						params: { remaining: referralsRemaining }
+						key: 'arena.friends.invite.sub',
+						params: { amount: bonusLabel }
 					})}
-				</span>
-			{:else}
-				{t({ locale: $localeStore, key: 'arena.friends.invite.cap_reached' })}
-				<span class="num invite-cap">
-					{t({ locale: $localeStore, key: 'arena.friends.invite.cap_resets' })}
-				</span>
-			{/if}
-		</p>
-
-		{#if joinedCount > 0}
-			<div class="invite-proof num">
-				<span>
-					<b>{joinedCount}</b>
-					{t({
-						locale: $localeStore,
-						key:
-							joinedCount === 1
-								? 'arena.friends.invite.proof_one'
-								: 'arena.friends.invite.proof_many'
-					})}
-				</span>
-				{#if referralPaidCount > 0}
-					<span class="invite-proof-dot" aria-hidden="true">·</span>
-					<span class="invite-proof-earned">
-						<b>+{referralVxpEarnedLabel}</b>
-						{t({ locale: $localeStore, key: 'arena.friends.invite.proof_earned' })}
+					<span class="num invite-cap">
+						{t({
+							locale: $localeStore,
+							key: 'arena.friends.invite.cap_remaining',
+							params: { remaining: referralsRemaining }
+						})}
+					</span>
+				{:else}
+					{t({ locale: $localeStore, key: 'arena.friends.invite.cap_reached' })}
+					<span class="num invite-cap">
+						{t({ locale: $localeStore, key: 'arena.friends.invite.cap_resets' })}
 					</span>
 				{/if}
+			</p>
+
+			{#if joinedCount > 0}
+				<div class="invite-proof num">
+					<span>
+						<b>{joinedCount}</b>
+						{t({
+							locale: $localeStore,
+							key:
+								joinedCount === 1
+									? 'arena.friends.invite.proof_one'
+									: 'arena.friends.invite.proof_many'
+						})}
+					</span>
+					{#if referralPaidCount > 0}
+						<span class="invite-proof-dot" aria-hidden="true">·</span>
+						<span class="invite-proof-earned">
+							<b>+{referralVxpEarnedLabel}</b>
+							{t({ locale: $localeStore, key: 'arena.friends.invite.proof_earned' })}
+						</span>
+					{/if}
+				</div>
+			{/if}
+
+			<div class="invite-row">
+				<BaseButton
+					class="invite-share"
+					onclick={handleShare}
+					status={inviteUrl ? 'enabled' : 'disabled'}
+				>
+					<Share2 aria-hidden="true" size={14} strokeWidth={1.8} />
+					<span>
+						{t({ locale: $localeStore, key: 'arena.friends.invite.share' })}
+					</span>
+				</BaseButton>
 			</div>
-		{/if}
 
-		<div class="invite-row">
-			<BaseButton
-				class="invite-share"
-				onclick={handleShare}
-				status={inviteUrl ? 'enabled' : 'disabled'}
-			>
-				<Share2 aria-hidden="true" size={14} strokeWidth={1.8} />
-				<span>
-					{t({ locale: $localeStore, key: 'arena.friends.invite.share' })}
-				</span>
-			</BaseButton>
-		</div>
-
-		<!-- Inline copy field — the link line IS the copy CTA. Tapping it
+			<!-- Inline copy field — the link line IS the copy CTA. Tapping it
 		     copies the canonical share URL, flips the trailing chip to a
 		     green check + "Copied", and fires a brief haptic. The `/i/{code}`
 		     path is resolved by `src/routes/i/[code]/+page.svelte`. -->
-		{#if inviteUrlDisplay}
-			<BaseButton
-				class={`invite-copyfield${copied ? ' is-copied' : ''}`}
-				aria-label={copied
-					? t({ locale: $localeStore, key: 'arena.friends.invite.copied' })
-					: t({ locale: $localeStore, key: 'arena.friends.invite.copy' })}
-				onclick={handleCopy}
-				status={inviteUrl ? 'enabled' : 'disabled'}
-			>
-				<Link2 aria-hidden="true" size={14} strokeWidth={1.8} />
-				<span class="num invite-copyurl">{inviteUrlDisplay}</span>
-				<span class="invite-copychip" aria-hidden="true">
-					{#if copied}
-						<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
-							<Check size={13} strokeWidth={2.4} />
-							{t({ locale: $localeStore, key: 'arena.friends.invite.copied' })}
+			{#if inviteUrlDisplay}
+				<BaseButton
+					class={`invite-copyfield${copied ? ' is-copied' : ''}`}
+					aria-label={copied
+						? t({ locale: $localeStore, key: 'arena.friends.invite.copied' })
+						: t({ locale: $localeStore, key: 'arena.friends.invite.copy' })}
+					onclick={handleCopy}
+					status={inviteUrl ? 'enabled' : 'disabled'}
+				>
+					<Link2 aria-hidden="true" size={14} strokeWidth={1.8} />
+					<span class="num invite-copyurl">{inviteUrlDisplay}</span>
+					<span class="invite-copychip" aria-hidden="true">
+						{#if copied}
+							<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
+								<Check size={13} strokeWidth={2.4} />
+								{t({ locale: $localeStore, key: 'arena.friends.invite.copied' })}
+							</span>
+						{:else}
+							<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
+								{t({ locale: $localeStore, key: 'arena.friends.invite.copy' })}
+							</span>
+						{/if}
+					</span>
+				</BaseButton>
+			{/if}
+		</section>
+	{:else}
+		<!-- Compact invite strip — the ranking leads (≥3 friends), so inviting
+		     demotes to a single tappable line carrying the referral proof. -->
+		<BaseButton
+			class="friends-invite-strip"
+			onclick={handleShare}
+			status={inviteUrl ? 'enabled' : 'disabled'}
+		>
+			<span class="friends-invite-strip-ic" aria-hidden="true">
+				<Share2 size={13} strokeWidth={1.8} />
+			</span>
+			<span class="friends-invite-strip-tx">
+				{#if referralsRemaining > 0}
+					<span>
+						{t({ locale: $localeStore, key: 'arena.friends.invite.strip' })}
+						<span class="num invite-strip-bonus">
+							{t({
+								locale: $localeStore,
+								key: 'arena.friends.invite.strip_bonus',
+								params: { amount: bonusLabel }
+							})}
 						</span>
-					{:else}
-						<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
-							{t({ locale: $localeStore, key: 'arena.friends.invite.copy' })}
+					</span>
+				{:else}
+					<span>
+						{t({ locale: $localeStore, key: 'arena.friends.invite.cap_reached' })}
+						<span class="num invite-strip-cap">
+							{t({ locale: $localeStore, key: 'arena.friends.invite.cap_resets' })}
 						</span>
-					{/if}
-				</span>
-			</BaseButton>
-		{/if}
-	</section>
+					</span>
+				{/if}
+				{#if joinedCount > 0 && referralsRemaining > 0}
+					<span class="num friends-invite-strip-proof">
+						{t({
+							locale: $localeStore,
+							key: 'arena.friends.invite.strip_proof',
+							params: { count: joinedCount, amount: referralVxpEarnedLabel }
+						})}
+					</span>
+				{/if}
+			</span>
+			{#if referralsRemaining > 0}
+				<span class="friends-invite-strip-go" aria-hidden="true">→</span>
+			{/if}
+		</BaseButton>
+	{/if}
 
 	<!-- Pending sent — outgoing invites still waiting on the recipient's
 	     first call. Sits directly under the invite hero. -->
@@ -793,7 +843,11 @@
 				</span>
 			</header>
 			{#if rankedFriends.length === 0}
-				<FriendsEmptyState />
+				<FriendsEmptyState
+					canInvite={inviteUrl !== undefined && referralsRemaining > 0}
+					onAdd={openAddSheet}
+					onInvite={() => void handleShare()}
+				/>
 			{:else}
 				<ul class="ranked-list">
 					{#each visibleRanked as row, idx (row.friendId)}
@@ -982,6 +1036,78 @@
 	/* ── Invite hero ────────────────────────────────────────── */
 	/* Invite hero — accent gradient wash over the raised surface,
 	   gold-tinted border. */
+	/* Compact invite strip — the demoted invite affordance once the ranking
+	   leads. A single gold-accent tappable line carrying the referral proof. */
+	:global(.friends-invite-strip) {
+		display: flex;
+		width: 100%;
+		align-items: center;
+		gap: 0.7rem;
+		padding: 0.7rem 0.8rem;
+		border: 1px solid color-mix(in srgb, var(--color-primary) 26%, transparent);
+		border-radius: var(--r-12);
+		background:
+			linear-gradient(
+				180deg,
+				color-mix(in srgb, var(--color-primary) 7%, transparent),
+				transparent
+			),
+			var(--bg-popover);
+		color: var(--text-base);
+		text-align: left;
+		cursor: pointer;
+		transition: border-color 140ms var(--ease-vici, ease);
+	}
+
+	:global(.friends-invite-strip:hover) {
+		border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+	}
+
+	.friends-invite-strip-ic {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		flex: none;
+		border-radius: 8px;
+		background: var(--accent-glow, color-mix(in srgb, var(--color-primary) 14%, transparent));
+		color: var(--color-primary);
+	}
+
+	.friends-invite-strip-tx {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		font-size: var(--t-13);
+		font-weight: 600;
+	}
+
+	.invite-strip-bonus,
+	.invite-strip-cap {
+		color: var(--color-primary);
+	}
+
+	.invite-strip-cap {
+		color: var(--text-muted);
+	}
+
+	.friends-invite-strip-proof {
+		font-size: var(--t-10);
+		font-weight: 400;
+		letter-spacing: 0.02em;
+		color: var(--text-muted);
+	}
+
+	.friends-invite-strip-go {
+		flex: none;
+		font-family: var(--font-mono);
+		font-size: var(--t-15, 0.95rem);
+		color: var(--color-primary);
+	}
+
 	.invite-hero {
 		display: flex;
 		flex-direction: column;

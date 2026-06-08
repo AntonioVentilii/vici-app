@@ -22,6 +22,9 @@
 	 * (the muted token disappears against those surfaces).
 	 */
 	interface Props {
+		/** Render the bell in its cream variant — for placement over a dark
+		 *  scrim (e.g. the profile hero's translucent control disc) where the
+		 *  muted-text default would read too dim. */
 		light?: boolean;
 	}
 
@@ -76,9 +79,15 @@
 		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 	}
 
-	/* Cream variant for dark hero bands, where the muted token vanishes. */
+	/* Cream variant — sits on the profile hero's translucent disc, over a dark
+	   scrim, so it ignores the theme's muted-text default and stays legible. */
 	.notif-bell.is-light {
 		color: var(--parchment);
+	}
+
+	.notif-bell.is-light:hover {
+		color: var(--parchment);
+		background: color-mix(in srgb, var(--parchment) 14%, transparent);
 	}
 
 	.notif-bell-dot {
