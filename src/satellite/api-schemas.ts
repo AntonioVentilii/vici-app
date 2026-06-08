@@ -64,6 +64,12 @@ export const UserProfileApiSchema = j.strictObject({
 	// school with this absent is treated as `'unverified'`. Mirror any change
 	// here in `src/lib/schema/profile.schema.ts`.
 	schoolStatus: j.string().optional(),
+	// Celebrated Menagerie tier keys (the achievement trophy layer) — each a
+	// `${slug}:${tier}` string the owner has already seen a reveal for.
+	// `optional()` with NO default: ABSENCE means "never seeded" (first load
+	// seeds silently), so a default would re-fire celebrations for every legacy
+	// row. Mirror any change here in `src/lib/schema/profile.schema.ts`.
+	earnedMenagerie: j.array(j.string()).optional(),
 	// Wall-clock ms of the owner's last handle (nickname) change — drives the
 	// 30-day handle-change cooldown. `optional()` with NO default so legacy
 	// rows decode as never-changed. Mirror any change here in

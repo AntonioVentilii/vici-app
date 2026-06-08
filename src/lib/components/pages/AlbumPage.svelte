@@ -1,153 +1,112 @@
 <script lang="ts">
 	import { X } from '@lucide/svelte/icons';
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
-	import type { AchievementTier } from '$lib/constants/achievements.constants';
+	import MenagerieBadge from '$lib/components/menagerie/MenagerieBadge.svelte';
+	import { MENAGERIE_TIER_RANK, type MenagerieSlug } from '$lib/constants/menagerie.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { listMyReferrals } from '$lib/services/referral.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { userStore } from '$lib/stores/user.store';
-	import { evaluateAchievements, type AchievementEvaluation } from '$lib/utils/achievements.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import {
+		menagerieConceptKey,
+		menagerieRows,
+		menagerieStatsFromProfile,
+		menagerieTierColor,
+		type MenagerieRow
+	} from '$lib/utils/menagerie.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
-	 * Album — milestone awards / stickers gallery. Reached as a profile
-	 * sub-route. Renders every achievement defined in `ACHIEVEMENTS` as a
-	 * circular metallic medallion in a 3-column grid; each tile carries
-	 * the achievement's unicode glyph emblem (◎ ★ ⚡ ⧖ ◐ ⌘ ✦ ◉ ✧) over a
-	 * tier fill (gold / silver / bronze). The inset bevel ring + diagonal
-	 * shine sweep give the disc its metallic relief. Tapping a tile slides
-	 * up a bottom-sheet with the full prose detail + a progress bar for
-	 * the unearned ones.
+	 * The Menagerie — the achievement trophy layer. Reached as a profile
+	 * sub-route. Renders all twelve animals as squircle badges in a 3-column
+	 * grid (earned first, then locked-by-progress), each with the animal's
+	 * current tier derived live from the owner's real stats. Tapping a badge
+	 * slides up a detail sheet: the tier ladder, current progress, and the
+	 * animal's concept / rule.
 	 *
-	 * Tiles render in one of three states:
-	 *   - earned       — full metallic medallion in its tier colour.
-	 *   - in progress  — locked (dark) medallion with a thin accent
-	 *                    progress bar across the foot, sized to how close
-	 *                    the user is to unlocking.
-	 *   - locked       — untouched dark medallion (progress 0), no bar.
-	 *
-	 * Ordering is closest-to-unlock first: in-progress tiles lead (highest
-	 * progress first), then earned, then untouched-locked — mirroring the
-	 * profile achievement rail so the affordance carries across surfaces.
-	 *
-	 * Earned state is sticky: it honours the profile's persisted
-	 * `unlockedAchievements` set (`persistedUnlocks.has(id) ||
-	 * evaluation.unlocked`), so an award never visually rescinds after a
-	 * streak regresses — append-only, exactly like the profile rail.
-	 *
-	 * Progress is sourced from the user's live profile via
-	 * `evaluateAchievements` — the same engine that fires the one-shot
-	 * unlock toasts during normal trading. `sharpest-eye` reflects the
-	 * persisted gold/silver/bronze tier from `sharpestEyeBestTier`; every
-	 * other award uses its static `def.tier`.
+	 * Animals whose metric reads a stat the backend does not yet populate
+	 * (Raven / Octopus / Magpie / Bee) resolve to LOCKED and show as "soon"
+	 * tiles — see the per-hook notes in `$lib/utils/menagerie.utils`.
 	 */
 
-	const persistedUnlocks = $derived(new Set($userStore.profile?.unlockedAchievements ?? []));
+	// Referral count (Parrot) — loaded once; the profile doc doesn't carry it.
+	let referralCount = $state(0);
 
-	const evaluations = $derived.by((): AchievementEvaluation[] => {
-		const { profile } = $userStore;
-
-		if (!profile) {
-			return [];
-		}
-
-		return evaluateAchievements({
-			totalTrades: profile.totalTrades ?? 0,
-			winStreak: profile.streak ?? 0,
-			dailyStreak: profile.dailyStreak ?? 0,
-			accuracy: profile.accuracy ?? 0,
-			contrarianWins: profile.contrarianWins ?? 0,
-			// `league-founder`'s live axis needs league membership the album
-			// store doesn't carry; the sticky persisted unlock drives the
-			// earned state, so the live flag stays `false` here.
-			ownsQualifyingLeague: false,
-			topDecileStreak: profile.topDecileStreak ?? 0,
-			// Monthly awards: `sharpest-eye`'s tier comes from the persisted
-			// best tier; `bold-caller`'s live axis is the sticky persisted
-			// unlock (the album store doesn't recompute monthly leaderboards —
-			// `getMonthlyLeaderboard` runs on the profile-sync path that
-			// persists `sharpestEyeBestTier` + appends `bold-caller`).
-			sharpestEyeBestTier: profile.sharpestEyeBestTier,
-			wonBoldCallerMonth: (profile.unlockedAchievements ?? []).includes('bold-caller')
-		});
+	onMount(() => {
+		void (async () => {
+			try {
+				const referrals = await listMyReferrals();
+				referralCount = referrals.length;
+			} catch {
+				// Best-effort: Parrot just stays at its baseline if this fails.
+			}
+		})();
 	});
 
-	// Effective earned state — sticky: a persisted unlock keeps the
-	// medallion lit even if the live axis regressed (parity with the
-	// profile achievement rail).
-	const isEarned = (e: AchievementEvaluation): boolean => persistedUnlocks.has(e.id) || e.unlocked;
+	// Global rank (Goat) from the cached "all" leaderboard window, if loaded.
+	const selfRank = $derived.by((): { rank: number; total: number } | undefined => {
+		const result = $globalStandingsStore.get('all');
+		const owner = $userStore.profile?.owner;
 
-	const isInProgress = (e: AchievementEvaluation): boolean => !isEarned(e) && e.progress > 0;
-
-	// `sharpest-eye` is the one award whose live wash isn't its static
-	// `def.tier`: the podium tier (gold / silver / bronze) is carried by
-	// the profile's `sharpestEyeBestTier`. Everything else uses `def.tier`.
-	const tierFor = (e: AchievementEvaluation): AchievementTier => {
-		if (e.id === 'sharpest-eye') {
-			const best = $userStore.profile?.sharpestEyeBestTier;
-
-			if (best === 'gold' || best === 'silver' || best === 'bronze') {
-				return best;
-			}
+		if (!result || !owner) {
+			return;
 		}
 
-		return e.def.tier;
-	};
+		const self = result.entries.find((entry) => entry.owner === owner);
 
-	// Closest-to-unlock first: in-progress (locked w/ progress) sorted by
-	// progress desc, then earned, then untouched-locked. Mirrors the
-	// profile rail's sort with the sticky earned bucket folded behind.
-	const ordered = $derived.by((): AchievementEvaluation[] => {
-		const bucket = (e: AchievementEvaluation): number => {
-			if (isEarned(e)) {
-				return 1;
-			}
+		if (!self) {
+			return;
+		}
 
-			return e.progress > 0 ? 0 : 2;
-		};
-
-		return [...evaluations].sort((a, b) => {
-			const byBucket = bucket(a) - bucket(b);
-
-			if (byBucket !== 0) {
-				return byBucket;
-			}
-
-			return b.progress - a.progress;
-		});
+		return { rank: self.rank, total: result.entries.length };
 	});
 
-	const earned = $derived(evaluations.filter((e) => isEarned(e)).length);
-	const total = $derived(evaluations.length);
+	const stats = $derived(
+		menagerieStatsFromProfile({
+			profile: $userStore.profile,
+			signals: {
+				referrals: referralCount,
+				rank: selfRank?.rank,
+				totalRanked: selfRank?.total
+			}
+		})
+	);
 
-	let openTarget = $state<AchievementEvaluation | null>(null);
+	const rows = $derived(menagerieRows(stats));
+	const earned = $derived(rows.filter((row) => row.tier !== null).length);
+	const total = $derived(rows.length);
 
-	const openTargetEarned = $derived(openTarget !== null && isEarned(openTarget));
-	const openTargetTier = $derived(openTarget === null ? 'gold' : tierFor(openTarget));
+	let openSlug = $state<MenagerieSlug | null>(null);
+	const openRow = $derived.by((): MenagerieRow | null =>
+		openSlug === null ? null : (rows.find((row) => row.animal.slug === openSlug) ?? null)
+	);
 </script>
 
-<div class="album-page">
+<div class="menagerie-page">
 	<ScreenHeader
 		back={{
-			label: t({ locale: $localeStore, key: 'album.back' }),
+			label: t({ locale: $localeStore, key: 'menagerie.back' }),
 			onBack: () => goBack(resolve(AppPath.Profile))
 		}}
-		title={t({ locale: $localeStore, key: 'album.title' })}
+		title={t({ locale: $localeStore, key: 'menagerie.title' })}
 	/>
 
-	<section class="album-progress">
-		<span class="eyebrow album-progress-label">
-			{t({ locale: $localeStore, key: 'album.progress_eyebrow' })}
+	<section class="men-progress">
+		<span class="eyebrow men-progress-label">
+			{t({ locale: $localeStore, key: 'menagerie.collection' })}
 		</span>
-		<div class="album-progress-counts">
-			<span class="num album-progress-earned">{earned}</span>
-			<span class="album-progress-of">
-				{t({ locale: $localeStore, key: 'album.progress_of', params: { total } })}
+		<div class="men-progress-counts">
+			<span class="num men-progress-earned">{earned}</span>
+			<span class="men-progress-of">
+				{t({ locale: $localeStore, key: 'menagerie.earned_of', params: { total } })}
 			</span>
 		</div>
 		<div
-			class="album-progress-bar"
+			class="men-progress-bar"
 			aria-valuemax={total}
 			aria-valuemin="0"
 			aria-valuenow={earned}
@@ -157,128 +116,157 @@
 		</div>
 	</section>
 
-	<div class="album-grid">
-		{#each ordered as evaluation (evaluation.id)}
-			{@const tier = tierFor(evaluation)}
+	<div class="men-grid">
+		{#each rows as row, i (row.animal.slug)}
+			{@const { tier } = row}
+			{@const earnedOne = tier !== null}
+			{@const conceptKey = menagerieConceptKey({ slug: row.animal.slug, tier })}
 			<button
-				class="award"
-				class:bronze={tier === 'bronze'}
-				class:gold={tier === 'gold'}
-				class:in-progress={isInProgress(evaluation)}
-				class:locked={!isEarned(evaluation)}
-				class:silver={tier === 'silver'}
-				onclick={() => (openTarget = evaluation)}
+				style:--ti={i}
+				class="men-tile"
+				class:is-earned={earnedOne}
+				onclick={() => (openSlug = row.animal.slug)}
 				type="button"
 			>
-				<span class="emblem" aria-hidden="true">
-					{evaluation.def.emblem}
+				<MenagerieBadge size={84} slug={row.animal.slug} {stats} {tier} />
+				<span class="men-tile-name">{t({ locale: $localeStore, key: row.animal.nameKey })}</span>
+				<span
+					style:color={earnedOne ? menagerieTierColor(tier) : 'var(--text-muted)'}
+					class="men-tile-concept"
+				>
+					{#if earnedOne && conceptKey}
+						{t({ locale: $localeStore, key: conceptKey })}
+					{:else}
+						{t({ locale: $localeStore, key: 'menagerie.locked' })}
+					{/if}
 				</span>
-				<span class="title">
-					{t({ locale: $localeStore, key: evaluation.def.nameKey })}
-				</span>
-				<span class="sub">
-					{t({ locale: $localeStore, key: evaluation.def.descriptionKey })}
-				</span>
-				{#if isInProgress(evaluation)}
-					<span
-						class="award-progress"
-						aria-valuemax="100"
-						aria-valuemin="0"
-						aria-valuenow={Math.round(evaluation.progress * 100)}
-						role="progressbar"
-					>
-						<span style:width={`${evaluation.progress * 100}%`}></span>
-					</span>
-				{/if}
 			</button>
 		{/each}
 	</div>
 
-	{#if openTarget}
-		<!--
-			Position the sheet backdrop ABSOLUTELY within the .album-page
-			container (not `position: fixed` on the viewport) so the modal
-			swims inside the screen-scroll surface.
-		-->
+	{#if openRow}
+		{@const row = openRow}
+		{@const { tier } = row}
+		{@const earnedOne = tier !== null}
+		{@const { progress } = row}
 		<div
-			class="album-sheet-backdrop"
-			aria-label={t({ locale: $localeStore, key: 'album.close' })}
-			onclick={() => (openTarget = null)}
+			class="men-sheet-backdrop"
+			aria-label={t({ locale: $localeStore, key: 'menagerie.close' })}
+			onclick={() => (openSlug = null)}
 			onkeydown={(e) => {
 				if (e.key === 'Escape' || e.key === 'Enter') {
-					openTarget = null;
+					openSlug = null;
 				}
 			}}
 			role="button"
 			tabindex="0"
 		>
 			<div
-				class="album-sheet"
+				class="men-sheet"
 				aria-modal="true"
 				onclick={(e) => e.stopPropagation()}
-				onkeydown={(e) => e.stopPropagation()}
+				onkeydown={(e) => {
+					// Handle Escape-to-close even when focus is inside the sheet; other
+					// keys stay scoped so they don't reach the backdrop button.
+					if (e.key === 'Escape') {
+						openSlug = null;
+
+						return;
+					}
+
+					e.stopPropagation();
+				}}
 				role="dialog"
 				tabindex="-1"
 			>
-				<div class="album-sheet-head">
+				<div class="men-sheet-head">
 					<span
+						style:color={earnedOne ? menagerieTierColor(tier) : 'var(--text-muted)'}
 						class="eyebrow"
-						class:album-sheet-earned={openTargetEarned}
-						class:album-sheet-locked={!openTargetEarned}
+						class:men-sheet-earned={earnedOne}
+						class:men-sheet-locked={!earnedOne}
 					>
-						{t({
-							locale: $localeStore,
-							key: openTargetEarned ? 'album.awarded' : 'album.locked'
-						})}
+						{#if earnedOne}
+							{t({ locale: $localeStore, key: `menagerie.tier.${tier}` as const })}
+							·
+							{t({
+								locale: $localeStore,
+								key: menagerieConceptKey({ slug: row.animal.slug, tier }) ?? row.animal.conceptKey
+							})}
+						{:else}
+							{t({ locale: $localeStore, key: 'menagerie.locked' })}
+						{/if}
 					</span>
 					<button
-						class="album-sheet-close"
-						aria-label={t({ locale: $localeStore, key: 'album.close' })}
-						onclick={() => (openTarget = null)}
+						class="men-sheet-close"
+						aria-label={t({ locale: $localeStore, key: 'menagerie.close' })}
+						onclick={() => (openSlug = null)}
 						type="button"
 					>
 						<X size={14} strokeWidth={1.8} />
 					</button>
 				</div>
 
-				<div class="album-sheet-body">
-					<div
-						class="award album-sheet-emblem"
-						class:bronze={openTargetTier === 'bronze'}
-						class:gold={openTargetTier === 'gold'}
-						class:locked={!openTargetEarned}
-						class:silver={openTargetTier === 'silver'}
-						aria-hidden="true"
-					>
-						<span class="emblem">{openTarget.def.emblem}</span>
-					</div>
+				<div class="men-sheet-body">
+					<MenagerieBadge size={92} slug={row.animal.slug} {stats} {tier} />
 					<div>
-						<div class="album-sheet-title">
-							{t({ locale: $localeStore, key: openTarget.def.nameKey })}
+						<div class="men-sheet-title">
+							{t({ locale: $localeStore, key: row.animal.nameKey })}
 						</div>
-						<div class="album-sheet-sub allcaps num">
-							{t({ locale: $localeStore, key: openTarget.def.descriptionKey })}
+						<div class="men-sheet-oracle">
+							“{t({ locale: $localeStore, key: row.animal.oracleKey })}”
 						</div>
 					</div>
 				</div>
 
-				<p class="album-sheet-detail">
-					{t({ locale: $localeStore, key: openTarget.def.detailKey })}
+				<p class="men-sheet-rule">
+					{t({ locale: $localeStore, key: row.animal.ruleKey })}
 				</p>
 
-				{#if !openTargetEarned}
-					<div class="album-sheet-progress">
-						<div class="album-sheet-progress-head">
+				<!-- Tier ladder -->
+				<div class="men-ladder">
+					{#each row.animal.tiers as step, idx (step.tier)}
+						{@const reached = tier ? MENAGERIE_TIER_RANK[tier] : 0}
+						{@const on = MENAGERIE_TIER_RANK[step.tier] <= reached}
+						{@const isCurrent = step.tier === tier}
+						<div class="men-step" class:is-current={isCurrent} class:is-reached={on}>
+							<span
+								style:background={on ? menagerieTierColor(step.tier) : undefined}
+								class="men-step-dot"
+							></span>
+							<span class="men-step-tier">
+								{t({ locale: $localeStore, key: `menagerie.tier.${step.tier}` as const })}
+							</span>
+							<span class="men-step-goal">
+								{t({ locale: $localeStore, key: row.animal.labelKeys[idx] })}
+							</span>
+						</div>
+					{/each}
+				</div>
+
+				{#if progress && progress.next !== null}
+					<div class="men-sheet-progress">
+						<div class="men-sheet-progress-head">
 							<span class="eyebrow">
-								{t({ locale: $localeStore, key: 'album.progress_eyebrow' })}
+								{t({
+									locale: $localeStore,
+									key: earnedOne ? 'menagerie.next_tier' : 'menagerie.progress'
+								})}
 							</span>
-							<span class="num album-sheet-progress-value">
-								{Math.round(openTarget.progress * 100)}%
+							<span class="num men-sheet-progress-value">
+								{Math.round(progress.ratio * 100)}%
 							</span>
 						</div>
-						<div class="album-sheet-progress-bar">
-							<span style:width={`${openTarget.progress * 100}%`}></span>
+						<div class="men-sheet-progress-bar">
+							<span
+								style:width={`${Math.round(progress.ratio * 100)}%`}
+								style:background={earnedOne ? menagerieTierColor(tier) : 'var(--color-primary)'}
+							></span>
 						</div>
+					</div>
+				{:else if earnedOne}
+					<div class="men-maxed">
+						{t({ locale: $localeStore, key: 'menagerie.fully_evolved' })}
 					</div>
 				{/if}
 			</div>
@@ -287,7 +275,7 @@
 </div>
 
 <style lang="postcss">
-	.album-page {
+	.menagerie-page {
 		position: relative;
 		display: flex;
 		flex-direction: column;
@@ -295,7 +283,7 @@
 		padding: 0 1.25rem 6rem;
 	}
 
-	.album-progress {
+	.men-progress {
 		display: flex;
 		flex-direction: column;
 		gap: 0.4rem;
@@ -305,28 +293,28 @@
 		border-radius: var(--r-12);
 	}
 
-	.album-progress-label {
+	.men-progress-label {
 		color: var(--color-primary);
 	}
 
-	.album-progress-counts {
+	.men-progress-counts {
 		display: flex;
 		align-items: baseline;
 		gap: 0.5rem;
 	}
 
-	.album-progress-earned {
+	.men-progress-earned {
 		font-size: var(--t-28, 1.75rem);
 		font-weight: 700;
 		color: var(--text-base);
 	}
 
-	.album-progress-of {
+	.men-progress-of {
 		font-size: var(--t-13);
 		color: var(--text-muted);
 	}
 
-	.album-progress-bar {
+	.men-progress-bar {
 		position: relative;
 		height: 4px;
 		border-radius: var(--r-pill);
@@ -334,215 +322,77 @@
 		overflow: hidden;
 	}
 
-	.album-progress-bar > span {
+	.men-progress-bar > span {
 		display: block;
 		height: 100%;
 		background: var(--color-primary);
 		transition: width 360ms ease;
 	}
 
-	.album-grid {
+	.men-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 14px;
+		gap: 10px;
 	}
 
-	/* Award medallion — a circular metallic disc with a raised bevel.
-	   The glyph + title + sub sit centred above the disc; a thin accent
-	   bar appears across the foot when the award is in progress.
-	   Gold is the default tier; silver / bronze + locked re-tint the
-	   radial fill. The ::before ring + ::after shine sweep give the disc
-	   its metallic relief. */
-	.award {
-		appearance: none;
-		border: 0;
-		cursor: pointer;
-		font-family: inherit;
-		color: inherit;
-		aspect-ratio: 1 / 1;
-		position: relative;
-		border-radius: 50%;
-		background: radial-gradient(
-			circle at 30% 30%,
-			rgba(226, 184, 66, 0.85) 0%,
-			rgba(182, 139, 31, 0.95) 50%,
-			rgba(120, 90, 18, 0.95) 100%
-		);
-		box-shadow:
-			0 10px 24px -10px rgba(0, 0, 0, 0.6),
-			inset 0 2px 0 rgba(255, 255, 255, 0.2),
-			inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+	.men-tile {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		text-align: center;
-		padding: 14% 12% 16%;
-		isolation: isolate;
-		overflow: hidden;
-		transition: transform 140ms ease;
+		padding: 18px 8px 16px;
+		border-radius: 16px;
+		background: var(--bg-surface);
+		border: 1px solid var(--border-base);
+		appearance: none;
+		cursor: pointer;
+		font-family: inherit;
+		color: inherit;
+		transition:
+			transform 0.12s ease,
+			border-color 0.12s ease;
+		/* staggered grid reveal — the collection blooms in rather than dumping */
+		animation: men-tile-in 0.44s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+		animation-delay: calc(var(--ti, 0) * 34ms);
 	}
 
-	/* Only the interactive grid medallions (buttons) lift on hover — not the
-	   static detail-sheet emblem, which reuses the `.award` class. */
-	button.award:hover {
-		transform: translateY(-1px);
+	.men-tile:hover {
+		transform: translateY(-2px);
+		border-color: color-mix(in srgb, var(--text-base) 18%, transparent);
 	}
 
-	.award::before {
-		content: '';
-		position: absolute;
-		inset: 8%;
-		border: 1px solid rgba(255, 255, 255, 0.3);
-		border-radius: 50%;
-		z-index: 0;
+	.men-tile:active {
+		transform: translateY(0);
 	}
 
-	.award::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(
-			135deg,
-			transparent 30%,
-			rgba(255, 255, 255, 0.2) 48%,
-			rgba(255, 255, 255, 0.06) 52%,
-			transparent 60%
-		);
-		z-index: 1;
-		pointer-events: none;
+	@keyframes men-tile-in {
+		from {
+			opacity: 0;
+			transform: translateY(14px) scale(0.97);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
 	}
 
-	.award .emblem {
-		position: relative;
-		z-index: 2;
-		font-size: 26px;
-		color: rgba(60, 40, 8, 0.9);
-		line-height: 1;
-		margin-bottom: 4px;
-	}
-
-	/* Source uses ~8.5px / 7.5px mono labels for tight on-disc legibility.
-	   Kept source-exact for visual parity; `text-wrap: balance` + no
-	   truncation lets the longest translated titles (DE "Schärfster
-	   Blick", PT "Olhar mais afiado", FR "Premier pronostic") wrap onto a
-	   second/third line rather than clip. */
-	.award .title {
-		position: relative;
-		z-index: 2;
-		font-family: var(--font-mono);
-		font-size: 8.5px;
-		font-weight: 800;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: rgba(40, 28, 4, 0.95);
-		line-height: 1.15;
-		text-wrap: balance;
-		overflow-wrap: anywhere;
-	}
-
-	.award .sub {
-		position: relative;
-		z-index: 2;
-		font-family: var(--font-mono);
-		font-size: 7.5px;
+	.men-tile-name {
+		margin-top: 12px;
+		font-size: var(--t-13);
 		font-weight: 600;
-		letter-spacing: 0.08em;
-		color: rgba(40, 28, 4, 0.7);
-		margin-top: 2px;
-		text-wrap: balance;
-		overflow-wrap: anywhere;
+		text-align: center;
 	}
 
-	.award.silver {
-		background: radial-gradient(
-			circle at 30% 30%,
-			rgba(214, 218, 223, 0.9) 0%,
-			rgba(160, 166, 175, 0.95) 50%,
-			rgba(100, 106, 115, 0.95) 100%
-		);
+	.men-tile-concept {
+		margin-top: 3px;
+		font-family: var(--font-mono);
+		font-size: var(--t-11);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		text-align: center;
 	}
 
-	.award.silver .emblem,
-	.award.silver .title,
-	.award.silver .sub {
-		color: rgba(28, 32, 40, 0.9);
-	}
-
-	.award.bronze {
-		background: radial-gradient(
-			circle at 30% 30%,
-			rgba(196, 138, 90, 0.92) 0%,
-			rgba(148, 98, 58, 0.96) 50%,
-			rgba(96, 62, 30, 0.96) 100%
-		);
-	}
-
-	.award.bronze .emblem,
-	.award.bronze .title,
-	.award.bronze .sub {
-		color: rgba(36, 22, 8, 0.92);
-	}
-
-	.award.locked {
-		background: radial-gradient(
-			circle at 30% 30%,
-			rgba(80, 80, 86, 0.85) 0%,
-			rgba(50, 50, 56, 0.95) 50%,
-			rgba(28, 28, 32, 0.95) 100%
-		);
-		box-shadow:
-			0 6px 14px -8px rgba(0, 0, 0, 0.45),
-			inset 0 2px 0 rgba(255, 255, 255, 0.06),
-			inset 0 -3px 0 rgba(0, 0, 0, 0.3);
-	}
-
-	.award.locked::after {
-		background: linear-gradient(
-			135deg,
-			transparent 30%,
-			rgba(255, 255, 255, 0.06) 48%,
-			transparent 60%
-		);
-	}
-
-	.award.locked .emblem {
-		color: rgba(242, 236, 220, 0.3);
-	}
-
-	.award.locked .title {
-		color: rgba(242, 236, 220, 0.55);
-	}
-
-	.award.locked .sub {
-		color: rgba(242, 236, 220, 0.35);
-	}
-
-	/* In-progress accent bar across the foot of a locked medallion —
-	   visually distinguishes "on the way" tiles from untouched ones. */
-	.award-progress {
-		position: absolute;
-		z-index: 2;
-		left: 22%;
-		right: 22%;
-		bottom: 14%;
-		height: 3px;
-		border-radius: var(--r-pill);
-		background: rgba(242, 236, 220, 0.18);
-		overflow: hidden;
-	}
-
-	.award-progress > span {
-		display: block;
-		height: 100%;
-		border-radius: var(--r-pill);
-		background: var(--color-primary);
-		transition: width 360ms ease;
-	}
-
-	/* Bottom-sheet positioned ABSOLUTELY within the .album-page
-	   container so it swims inside the screen-scroll surface. */
-	.album-sheet-backdrop {
+	/* ── Detail sheet ── */
+	.men-sheet-backdrop {
 		position: absolute;
 		inset: 0;
 		background: rgba(14, 13, 11, 0.78);
@@ -553,33 +403,25 @@
 		z-index: 80;
 	}
 
-	.album-sheet {
+	.men-sheet {
 		background: var(--bg-surface);
 		border-top-left-radius: 22px;
 		border-top-right-radius: 22px;
 		border-top: 1px solid var(--border-base);
 		padding: 1.4rem 1.4rem calc(1.4rem + env(safe-area-inset-bottom, 0px));
 		box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.5);
-		max-height: 80vh;
+		max-height: 86vh;
 		overflow-y: auto;
 	}
 
-	.album-sheet-head {
+	.men-sheet-head {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-bottom: 0.85rem;
+		margin-bottom: 1rem;
 	}
 
-	.album-sheet-earned {
-		color: var(--color-primary);
-	}
-
-	.album-sheet-locked {
-		color: var(--text-muted);
-	}
-
-	.album-sheet-close {
+	.men-sheet-close {
 		appearance: none;
 		display: inline-flex;
 		align-items: center;
@@ -591,88 +433,147 @@
 		cursor: pointer;
 	}
 
-	.album-sheet-body {
+	.men-sheet-body {
 		display: flex;
 		align-items: center;
-		gap: 0.9rem;
-		margin-bottom: 0.9rem;
+		gap: 1.1rem;
+		margin-bottom: 1.1rem;
 	}
 
-	/* 64×64 medallion inside the modal — reuses .award fill but at a
-	   fixed size, no hover, no progress bar. */
-	.album-sheet-emblem {
-		width: 64px;
-		height: 64px;
-		aspect-ratio: auto;
-		padding: 0;
-		flex-shrink: 0;
-		cursor: default;
-	}
-
-	.album-sheet-emblem .emblem {
-		font-size: 30px;
-		margin-bottom: 0;
-	}
-
-	.album-sheet-title {
-		font-size: 19px;
+	.men-sheet-title {
+		font-size: 22px;
 		font-weight: 600;
 		letter-spacing: var(--tracking-snug);
 		color: var(--text-base);
 	}
 
-	.album-sheet-sub {
-		font-size: var(--t-11);
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
+	.men-sheet-oracle {
+		font-family: var(--font-serif, Georgia, serif);
+		font-style: italic;
+		font-size: 15px;
 		color: var(--text-muted);
-		margin-top: 0.15rem;
+		margin-top: 3px;
 	}
 
-	.album-sheet-detail {
-		margin: 0;
+	.men-sheet-rule {
+		margin: 0 0 1.25rem;
 		font-size: var(--t-13);
 		line-height: 1.6;
 		color: var(--text-muted);
 	}
 
-	.album-sheet-progress {
-		margin-top: 1.1rem;
+	.men-ladder {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: 1fr;
+		gap: 6px;
+		position: relative;
 	}
 
-	.album-sheet-progress-head {
+	.men-ladder::before {
+		content: '';
+		position: absolute;
+		left: 8%;
+		right: 8%;
+		top: 5px;
+		height: 2px;
+		background: color-mix(in srgb, var(--text-base) 10%, transparent);
+		z-index: 0;
+	}
+
+	.men-step {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		text-align: center;
+		position: relative;
+		z-index: 1;
+	}
+
+	.men-step-dot {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--text-base) 16%, transparent);
+		box-shadow: 0 0 0 3px var(--bg-surface);
+	}
+
+	.men-step.is-current .men-step-dot {
+		box-shadow:
+			0 0 0 3px var(--bg-surface),
+			0 0 0 5px color-mix(in srgb, var(--text-base) 20%, transparent);
+	}
+
+	.men-step-tier {
+		font-size: 10px;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-family: var(--font-mono);
+		color: var(--text-muted);
+	}
+
+	.men-step.is-reached .men-step-tier {
+		color: var(--text-base);
+	}
+
+	.men-step-goal {
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--text-muted);
+	}
+
+	.men-step.is-reached .men-step-goal {
+		color: var(--text-base);
+	}
+
+	.men-sheet-progress {
+		margin-top: 1.25rem;
+	}
+
+	.men-sheet-progress-head {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: 0.4rem;
 	}
 
-	.album-sheet-progress-value {
+	.men-sheet-progress-value {
 		font-size: var(--t-11);
 		color: var(--color-primary);
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 	}
 
-	.album-sheet-progress-bar {
+	.men-sheet-progress-bar {
 		height: 4px;
 		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 		overflow: hidden;
 	}
 
-	.album-sheet-progress-bar > span {
+	.men-sheet-progress-bar > span {
 		display: block;
 		height: 100%;
-		background: var(--color-primary);
+		border-radius: var(--r-pill);
 		transition: width 360ms ease;
 	}
 
+	.men-maxed {
+		margin-top: 1.1rem;
+		font-size: 12.5px;
+		font-weight: 600;
+		color: var(--laurel, var(--color-primary));
+	}
+
 	@media (prefers-reduced-motion: reduce) {
-		.award,
-		.award-progress > span,
-		.album-progress-bar > span,
-		.album-sheet-progress-bar > span {
+		.men-tile {
+			animation: none;
+			transition: none;
+		}
+
+		.men-progress-bar > span,
+		.men-sheet-progress-bar > span {
 			transition: none;
 		}
 	}

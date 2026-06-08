@@ -33,6 +33,7 @@
 	import { persistDailyGoal, persistDailyStreak } from '$lib/services/profile.services';
 	import { loadMarketPriceCandles } from '$lib/services/trade.services';
 	import { showCompanion } from '$lib/stores/companion.store';
+	import { setFlowBeatActive } from '$lib/stores/flow-beat.store';
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -227,6 +228,18 @@
 	let streakBreakBanner = $state<{ stage: FlameStage } | null>(null);
 	let flowPaused = $state(false);
 	let activeMotionBeat = $state<MotionBeatPayload | null>(null);
+
+	// Broadcast "a Flow character beat is on screen" to the achievement
+	// celebration host so a freshly-crossed Menagerie tier reveal is held until
+	// the beat clears (card → character beat → trophy). A centered character
+	// beat or the session-end takeover both count as a beat. Cleared on unmount
+	// so a reveal never stays gated after leaving Flow.
+	$effect(() => {
+		const beatOnScreen = activeMotionBeat !== null || completed;
+		setFlowBeatActive(beatOnScreen);
+	});
+
+	$effect(() => () => setFlowBeatActive(false));
 
 	// Per-swipe commit pop — "CALLED YES · {stake} IN PLAY (+bonus VXP)".
 	// Fires on every committed YES / NO swipe (SKIP renders nothing). A

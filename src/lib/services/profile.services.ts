@@ -16,6 +16,7 @@ import {
 import { computeUserStatsSnapshot, persistMyUserStats } from '$lib/services/user-stats.services';
 import { marketMetadataStore } from '$lib/stores/market-metadata.store';
 import { profilesStore } from '$lib/stores/profiles.store';
+import { userStore } from '$lib/stores/user.store';
 import type { Nickname, UserProfile } from '$lib/types/profile';
 import {
 	CONTRARIAN_PRICE_THRESHOLD,
@@ -272,6 +273,39 @@ export const persistDailyGoal = ({
 	dailyGoalDone: number;
 	dailyGoalDate: string;
 }): Promise<UserProfile> => patchProfile({ principal, patch: { dailyGoalDone, dailyGoalDate } });
+
+/**
+ * Persist the Menagerie celebration ledger — the set of `${slug}:${tier}` keys
+ * the owner has already seen a reveal for. Drives the once-per-crossing guard:
+ * the celebration host writes the full current earned set after seeding (first
+ * load, silently) and after each genuine crossing.
+ *
+ * Best-effort and fire-and-forget — the reveal already played from the local
+ * queue; a failed round-trip just means it may re-evaluate next load (the diff
+ * engine is idempotent against the persisted ledger). The local `userStore` is
+ * synced so the host's own detection settles immediately and doesn't re-fire.
+ */
+export const persistEarnedMenagerie = async ({
+	owner,
+	keys
+}: {
+	owner: PrincipalText;
+	keys: string[];
+}): Promise<void> => {
+	// Reflect the ledger locally first so the always-mounted host's detection
+	// pass sees the seeded / updated set on the next tick.
+	userStore.update((current) =>
+		current.profile && current.profile.owner === owner
+			? { ...current, profile: { ...current.profile, earnedMenagerie: keys } }
+			: current
+	);
+
+	try {
+		await patchProfile({ principal: owner, patch: { earnedMenagerie: keys } });
+	} catch (err: unknown) {
+		console.warn('persistEarnedMenagerie failed', err instanceof Error ? err.message : err);
+	}
+};
 
 export const upsertProfile = async (
 	profileDoc: Doc<UserProfile> | { key: string; data: UserProfile }
