@@ -1,39 +1,41 @@
 <script lang="ts">
 	/**
-	 * Dash screen — the user's at-a-glance accuracy + streak + recent
-	 * activity surface. Backend fields that don't yet exist on the
-	 * canister (rival, contrarian count, lifetime VXP, global rank, …)
-	 * fall back to an em-dash placeholder rather than an approximation.
+	 * Dash screen — a glanceable, three-zone surface over the user's real
+	 * performance, stack, and calls:
+	 *
+	 *   1 · Performance — the accuracy hero (big mono number), a swipeable
+	 *       accuracy trend (7 / 30 / 90-day windows), the session delta + streak,
+	 *       and a global ⇄ friends benchmark toggle.
+	 *   2 · Stack       — the holdings card; tapping opens a breakdown sheet
+	 *       (lifetime earned, in-play, referrals).
+	 *   3 · Calls       — an Open / Resolved segmented toggle over compact call
+	 *       rows with status dots and an inline "see all".
+	 *
+	 * Before any call has settled the same framework renders the Day-0/Day-1
+	 * calibrating state (see {@link DashBuildZero}). Every figure is read from
+	 * the real stores; the only synthesised data is the accuracy trail (no
+	 * per-window time-series is persisted yet — see `dash-trend.utils`).
 	 */
-	import { Check } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import DashAccuracySparkline from '$lib/components/dash/DashAccuracySparkline.svelte';
-	import DashActivePositions from '$lib/components/dash/DashActivePositions.svelte';
-	import DashCategoryBreakdown from '$lib/components/dash/DashCategoryBreakdown.svelte';
-	import DashDayZero from '$lib/components/dash/DashDayZero.svelte';
-	import DashDisclosure from '$lib/components/dash/DashDisclosure.svelte';
-	import DashHeroAccuracy from '$lib/components/dash/DashHeroAccuracy.svelte';
-	import DashHoldingsCard from '$lib/components/dash/DashHoldingsCard.svelte';
-	import DashNextUnlock from '$lib/components/dash/DashNextUnlock.svelte';
-	import DashOracleInsight from '$lib/components/dash/DashOracleInsight.svelte';
-	import DashPastPredictions from '$lib/components/dash/DashPastPredictions.svelte';
-	import DashRankContext from '$lib/components/dash/DashRankContext.svelte';
+	import type { ClearingDid } from '$declarations';
+	import DashBuildHero from '$lib/components/dash/DashBuildHero.svelte';
+	import DashBuildZero, { type ZeroMarketRow } from '$lib/components/dash/DashBuildZero.svelte';
+	import DashCallsZone, {
+		type OpenCallRow,
+		type ResolvedCallRow
+	} from '$lib/components/dash/DashCallsZone.svelte';
 	import DashResolutionBanner from '$lib/components/dash/DashResolutionBanner.svelte';
-	import DashTodaysGoal from '$lib/components/dash/DashTodaysGoal.svelte';
+	import DashStackCard from '$lib/components/dash/DashStackCard.svelte';
+	import DashStackSheet from '$lib/components/dash/DashStackSheet.svelte';
 	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import ResolutionReveal from '$lib/components/market/ResolutionReveal.svelte';
-	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
-	import { EM_DASH, USD_DECIMALS } from '$lib/constants/app.constants';
-	import {
-		MARKET_TAG_LABEL_KEYS,
-		MARKET_TAGS,
-		type MarketTag
-	} from '$lib/constants/market-tags.constants';
+	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { REFERRAL_VXP_BONUS_VALUE } from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
-	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { orders } from '$lib/derived/orders.derived';
 	import { positions } from '$lib/derived/positions.derived';
@@ -41,270 +43,218 @@
 		resolvedPositions,
 		resolvedPositionsNotInitialized
 	} from '$lib/derived/resolved-positions.derived';
-	import { vxpBacked, vxpHoldingsTotal, vxpSpendable } from '$lib/derived/vxp-holdings.derived';
-	import { worldCupActive } from '$lib/derived/world-cup.derived';
+	import { vxpBacked, vxpHoldingsTotal } from '$lib/derived/vxp-holdings.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import { getMyRival } from '$lib/services/leaderboard.services';
-	import {
-		calculateAndSyncStats,
-		getDisplayName,
-		getProfile
-	} from '$lib/services/profile.services';
+	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
+	import { listMyReferrals } from '$lib/services/referral.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
+	import { friendsListStore } from '$lib/stores/friends.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketsStore } from '$lib/stores/markets.store';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
-	import type { UserProfile } from '$lib/types/profile';
-	import type { RecentSettlementSnapshot, UserStatsDoc } from '$lib/types/user-stats';
-	import { DAILY_GOAL_TARGET } from '$lib/utils/daily-goal.utils';
-	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+	import type { UserStatsDoc } from '$lib/types/user-stats';
+	import {
+		decimalFixedValueToNumber,
+		formatRelativeAgoShort,
+		probabilityToPercent
+	} from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
-
-	type TimeWindow = '7d' | '30d' | '90d' | 'All';
-
-	// — em-dash placeholder used everywhere a real backend number
-	// isn't yet available — signals "unknown" rather than fabricating
-	// data.
-	const MARATHON_DAYS = 30;
+	import { formatVxpBalance, formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
+	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	// ─── Reactive backend reads ────────────────────────────────────────
 	const profile = $derived($userStore.profile);
-	const nickname = $derived(profile?.nickname ?? '');
 	const totalTrades = $derived(profile?.totalTrades ?? 0);
-	// `profile.accuracy` is persisted as a 0..100 percentage (see
-	// `profile.services.ts` `calculateAndSyncStats`). Render directly —
-	// multiplying by 100 here gave 10000% for a fully-accurate user.
+	// `profile.accuracy` is persisted as a 0..100 percentage.
 	const accuracyValue = $derived(profile?.accuracy ?? 0);
 	const accuracyPct = $derived(accuracyValue.toFixed(1));
 	const streak = $derived(profile?.dailyStreak ?? 0);
-	// Personal-best streak. Defended with `max(…, streak)` so a legacy row
-	// whose stored `longestStreak` hasn't self-healed yet never renders
-	// below the current streak (the best can't be below today's run).
-	const longestStreak = $derived(Math.max(profile?.longestStreak ?? 0, streak));
-	// Daily-goal progress — the persisted cross-session counter feeds the
-	// "Today's goal" resume card. The card itself rolls a stale day over to
-	// 0 and hides until there's progress to resume.
-	const dailyGoalDone = $derived(profile?.dailyGoalDone ?? 0);
-	const dailyGoalDate = $derived(profile?.dailyGoalDate);
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
-	// The "Your rival" insight: the profile adjacent to the user across the
-	// FULL points ranking, fetched from the satellite `getMyRival` query —
-	// usually the competitor one rank above, or (for rank 1) the runner-up
-	// below, flagged `isTrailing`. `undefined` until the onMount load
-	// resolves, or when the user is unranked / the lone ranked profile.
-	let rivalData = $state<{ profile: UserProfile; isTrailing: boolean } | undefined>(undefined);
+	let referralCount = $state(0);
 
-	let tw = $state<TimeWindow>('30d');
-
-	// Holdings for the current (playground / VXP) domain — one shared source
-	// (`vxp-holdings.derived`) with the Trade modal, Portfolio, and Wallet:
-	//  • spendable — "available to bet": free wallet balance + deposited
-	//    clearing collateral, minus everything reserved for open positions AND
-	//    resting orders. The honest headline figure.
-	//  • backed — that reserved amount (positions + orders).
-	//  • total — spendable + backed, i.e. everything the user holds.
-	// All in `USD_DECIMALS`, which on VXP is the same 4-decimal scale 1:1, so
-	// they render as plain VXP with no conversion.
-	const availableDisplay = $derived(
-		formatVxpBalance({ value: $vxpSpendable, decimals: USD_DECIMALS })
-	);
-	const backedDisplay = $derived(formatVxpBalance({ value: $vxpBacked, decimals: USD_DECIMALS }));
+	// ─── Holdings (playground / VXP domain) ────────────────────────────
 	const holdingsDisplay = $derived(
 		formatVxpBalance({ value: $vxpHoldingsTotal, decimals: USD_DECIMALS })
 	);
+	const inPlayDisplay = $derived(formatVxpBalance({ value: $vxpBacked, decimals: USD_DECIMALS }));
 
-	// Lifetime = `profile.points`, the running XP/VXP accumulator the
-	// satellite credits per win + streak bonus. Stored as a whole number
-	// already; no decimal conversion needed.
-	const lifetimeRaw = $derived(profile?.points ?? 0);
-	const lifetimeDisplay = $derived(lifetimeRaw.toLocaleString());
+	// Lifetime earned = `profile.points`, the running VXP accumulator.
+	const lifetimeDisplay = $derived((profile?.points ?? 0).toLocaleString());
 
-	// Positions + markets — used by the Active calls block. The
-	// "See all" count combines filled positions and resting limit
-	// orders, since the Portfolio surface lists both.
-	const activePositionsAll = $derived($positions);
-	const openOrdersAll = $derived($orders);
-	const totalActive = $derived(activePositionsAll.length + openOrdersAll.length);
+	// Referral earnings — settled referrals × the per-referral bonus.
+	const referralVxpDisplay = $derived((referralCount * REFERRAL_VXP_BONUS_VALUE).toLocaleString());
+
+	// ─── Markets ───────────────────────────────────────────────────────
 	const marketById = $derived(new Map<string, Market>(($marketsStore ?? []).map((m) => [m.id, m])));
 
-	const activePositions = $derived(
-		[...activePositionsAll]
-			.map((p) => ({ position: p, market: marketById.get(p.marketId) }))
+	// Short, year-stripped close label so the row end stays compact.
+	const timerOf = (market: Market): string => {
+		const expiry = Number(market.expiryDate);
+
+		if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+			return t({ locale: $localeStore, key: 'dash.build.timer_closed' });
+		}
+
+		const days = Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24));
+
+		return days <= 1
+			? t({ locale: $localeStore, key: 'dash.active.hours_left', params: { count: 24 } })
+			: t({ locale: $localeStore, key: 'dash.active.days_left', params: { count: days } });
+	};
+
+	const categoryOf = (market: Market): string => {
+		const [tag]: (MarketTag | undefined)[] = $marketTags[market.id] ?? [];
+
+		return tag !== undefined && MARKET_TAG_LABEL_KEYS[tag] !== undefined
+			? t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })
+			: t({ locale: $localeStore, key: 'dash.build.category_fallback' });
+	};
+
+	// Day-0/1 market context — "{category} · {pct}% YES" from live consensus.
+	const crowdContextOf = (market: Market): string =>
+		t({
+			locale: $localeStore,
+			key: 'dash.build.zero_crowd_ctx',
+			params: { category: categoryOf(market), pct: probabilityToPercent(market.yesProbability) }
+		});
+
+	// ─── Positions / orders ────────────────────────────────────────────
+	const activePositionsAll = $derived($positions);
+	const openOrdersAll = $derived($orders);
+	const liveCallCount = $derived(activePositionsAll.length + openOrdersAll.length);
+
+	// A resting limit order reads as YES exposure when buying, NO when selling —
+	// mirrors how `OpenOrdersTable` labels the same orders.
+	const orderSide = (order: ClearingDid.LimitOrder): 'YES' | 'NO' =>
+		'Buy' in order.side ? 'YES' : 'NO';
+
+	// Open call rows — soonest-expiring first. Live positions AND resting limit
+	// orders both count as open calls, so the Open tab stays consistent with
+	// `liveCallCount` / the Day-0 gating (a user holding only limit orders must
+	// not see the "no live calls" empty state).
+	const openCalls = $derived.by<OpenCallRow[]>(() => {
+		const positionRows = activePositionsAll
+			.map((position) => ({ position, market: marketById.get(position.marketId) }))
 			.filter(
 				(entry): entry is { position: (typeof activePositionsAll)[number]; market: Market } =>
 					entry.market !== undefined
 			)
+			.map(({ position, market }) => ({
+				market,
+				row: {
+					key: position.marketId,
+					question: market.title,
+					side: position.outcomeId === 'YES' ? ('YES' as const) : ('NO' as const),
+					context: categoryOf(market),
+					timer: timerOf(market),
+					marketId: market.id
+				}
+			}));
+
+		const orderRows = openOrdersAll
+			.map((order) => ({ order, market: marketById.get(order.series_id) }))
+			.filter(
+				(entry): entry is { order: ClearingDid.LimitOrder; market: Market } =>
+					entry.market !== undefined
+			)
+			.map(({ order, market }) => ({
+				market,
+				row: {
+					key: order.order_id,
+					question: market.title,
+					side: orderSide(order),
+					context: categoryOf(market),
+					timer: timerOf(market),
+					marketId: market.id
+				}
+			}));
+
+		return [...positionRows, ...orderRows]
 			.sort((a, b) => Number(a.market.expiryDate) - Number(b.market.expiryDate))
-			.slice(0, 3)
-	);
-
-	// ─── Resolution digest (while-you-were-away) ───────────────────────
-	// The standard dashboard leads with a tappable banner whenever calls
-	// settled since the user last acknowledged them. Tapping opens the
-	// ResolutionReveal overlay; both CTAs acknowledge the batch (clearing
-	// the banner + the bell badge in lockstep via `markResolutionsSeen`)
-	// and only pick where the user goes next.
-	//
-	// `revealSnapshot` is a frozen copy of the digest taken at the moment
-	// the overlay opens. This prevents the card contents from blanking if
-	// `markResolutionsSeen` clears the store while the overlay is still
-	// visible (e.g. the user is mid-scroll before tapping a CTA).
-	const digest = $derived($maturedResolutions);
-	let revealOpen = $state(false);
-	let revealSnapshot = $state($maturedResolutions);
-
-	const openReveal = () => {
-		revealSnapshot = $maturedResolutions;
-		revealOpen = true;
-	};
-
-	// View in Dashboard — acknowledge + stay (we're already on the dash).
-	const onRevealReview = () => {
-		markResolutionsSeen();
-		revealOpen = false;
-	};
-
-	// Back to the deck — acknowledge + head to Flow.
-	const onRevealDismiss = () => {
-		markResolutionsSeen();
-		revealOpen = false;
-		void goto(resolve(AppPath.Flow));
-	};
-
-	// ─── Per-user stats cache ──────────────────────────────────────────
-	interface CategoryRow {
-		id: MarketTag;
-		label: string;
-		acc: number;
-	}
-
-	const catRows = $derived.by<CategoryRow[]>(() => {
-		const stats = userStats?.categoryStats ?? {};
-
-		return MARKET_TAGS.filter((tag) => tag !== 'wc')
-			.map((tag) => {
-				const bucket = stats[tag] ?? { calls: 0, wins: 0 };
-				const acc = bucket.calls > 0 ? bucket.wins / bucket.calls : 0;
-
-				return {
-					id: tag,
-					label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
-					acc
-				};
-			})
-			.filter((row) => (stats[row.id]?.calls ?? 0) > 0)
-			.sort((a, b) => b.acc - a.acc);
+			.map(({ row }) => row);
 	});
 
-	// World-Cup accuracy for the rank tile's WC variant — the `wc` bucket
-	// is excluded from `catRows` (it's the event, not an evergreen
-	// category), so derive it on its own. `undefined` until there's a call.
-	const wcAccuracy = $derived.by(() => {
-		const bucket = userStats?.categoryStats?.wc;
-
-		return bucket && bucket.calls > 0 ? bucket.wins / bucket.calls : undefined;
-	});
-
-	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
-
-	// Win / loss tallies for the "Past predictions" filter chips. We count
-	// settled markets from the clearing canister's `Settled` event stream
-	// rather than deriving `losses = totalTrades − wins`, which used to
-	// treat every Executed event as a settled trade and ended up counting
-	// still-open positions as losses (e.g. "16 Executed events with 0
-	// wins" was reported as 16 losses even when only 1 market had
-	// resolved). The new store is uncapped — `userStats.recentSettlements`
-	// is capped at `USER_STATS_RECENT_LIMIT`, so we deliberately do not
-	// read these chip counts from there.
+	// ─── Resolved calls ────────────────────────────────────────────────
 	const wins = $derived($resolvedPositions.filter((r) => r.result === 'won').length);
 	const losses = $derived($resolvedPositions.filter((r) => r.result === 'lost').length);
 	const settledTotal = $derived(wins + losses);
 
-	// ─── Three-state gate ──────────────────────────────────────────────
-	// The Dashboard renders one of three shapes:
-	//   Day 0    · no calls placed at all → orientation hero + starter pack.
-	//   Day 1+   · calls placed but none have settled (the featured event
-	//              resolves weeks out) → "your call is in flight".
-	//   Standard · at least one settled call → the full accuracy dashboard.
-	// A "call" is any position the user has taken — live (filled or resting)
-	// or already resolved. `totalTrades` is the profile's lifetime call
-	// counter; `settledTotal` is the count of resolved calls. We OR in the
-	// live position/order counts so a freshly-placed first call flips Day 0
-	// → Day 1 immediately, before the satellite re-counts `totalTrades`.
-	//
-	// IMPORTANT: we must not branch on `settledTotal` until the trade-history
-	// fetch has completed. While the store is still `undefined` (not yet
-	// initialized), `resolvedPositions` defaults to `[]`, making `settledTotal`
-	// look like 0 even for a returning user with resolved calls. Gate on
-	// `resolvedPositionsNotInitialized` and render a loading state until the
-	// store is ready, preventing the misroute to Day-1 for returning users.
-	const resolvedPosNotInit = $derived($resolvedPositionsNotInitialized);
-	const liveCallCount = $derived(activePositionsAll.length + openOrdersAll.length);
-	const callsPlaced = $derived(Math.max(totalTrades, liveCallCount + settledTotal));
-	const isDay0 = $derived(callsPlaced === 0);
-	const isDay1Pending = $derived(!isDay0 && settledTotal === 0);
+	const resolvedCalls = $derived.by<ResolvedCallRow[]>(() =>
+		$resolvedPositions
+			.filter((row) => row.result !== 'neutral')
+			.map((row) => {
+				const market = marketById.get(row.marketId);
+				const outcomeId = inferResolvedOutcomeId({ resolved: row, market });
+				const side = outcomeId === 'YES' ? 'YES' : outcomeId === 'NO' ? 'NO' : undefined;
+				const settledAtMs = Number(row.timestampNs / 1_000_000n);
+				const won = row.result === 'won';
+				const pnl = decimalFixedValueToNumber({
+					value: row.realizedPnlUsd,
+					decimals: USD_DECIMALS
+				});
 
-	// Day-0 pinned markets: the featured event's open markets first (the
-	// starter deck), then any other open markets, so the "Today in Flow"
-	// preview always has three rows where data allows. Sorted by volume so
-	// the most-traded markets surface.
-	const dayZeroMarkets = $derived.by<Market[]>(() => {
-		const open = ($marketsStore ?? []).filter((m) => m.status === 'Open');
-		const featuredTag = $featuredEvent.categoryTag;
-		const isFeatured = (m: Market): boolean =>
-			featuredTag !== undefined && ($marketTags[m.id] ?? []).some((tag) => tag === featuredTag);
+				return {
+					key: `${row.marketId}-${settledAtMs}`,
+					question: market?.title ?? row.marketId,
+					side,
+					context: t({
+						locale: $localeStore,
+						key: 'dash.past.row_ctx_when',
+						params: { when: formatRelativeAgoShort({ timestampMs: settledAtMs }) }
+					}),
+					end: `${won ? '+' : '−'}${formatWholeVxpMagnitude(pnl)}`,
+					won,
+					marketId: market ? row.marketId : undefined
+				};
+			})
+	);
 
-		return [...open].sort((a, b) => {
-			const fa = isFeatured(a) ? 0 : 1;
-			const fb = isFeatured(b) ? 0 : 1;
+	// ─── Friends benchmark ─────────────────────────────────────────────
+	// Join the social graph with cached profiles to count how many friends the
+	// user is at-or-ahead-of on accuracy. Only friends whose profile is cached
+	// (and so carry a comparable accuracy) are counted.
+	const friendAccuracies = $derived.by<number[]>(() => {
+		const me = $userStore.user?.owner;
+		const cache = $profilesStore;
 
-			if (fa !== fb) {
-				return fa - fb;
-			}
-
-			// Compare bigints directly to avoid Number precision loss on large volumes.
-			if (b.totalVolume === a.totalVolume) {
-				return 0;
-			}
-
-			return b.totalVolume > a.totalVolume ? 1 : -1;
-		});
+		return $friendsListStore
+			.map((relation) => relation.participants.find((p) => p !== me))
+			.filter((owner): owner is string => owner !== undefined)
+			.map((owner) => cache.get(owner)?.accuracy)
+			.filter((acc): acc is number => acc !== undefined);
 	});
-	const dayZeroFeatured = $derived(dayZeroMarkets[0]);
-	const dayZeroCompact = $derived(dayZeroMarkets.slice(1, 3));
+	const friendsTotal = $derived(friendAccuracies.length);
+	const friendsAhead = $derived(friendAccuracies.filter((acc) => accuracyValue >= acc).length);
 
-	// Day-1 open position: the single live position, reframed for the
-	// open-position card. `lockedCollateral` is in `USD_DECIMALS` units
-	// (== VXP_TOKEN.decimals), so it converts to whole VXP for the caption.
-	const dayOneFirstCall = $derived.by(() => {
-		const [entry] = activePositions;
+	// ─── Stack: today's delta + breakdown sheet ────────────────────────
+	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
 
-		if (entry === undefined) {
-			return;
+	// Net VXP across the recent settlement window: wins add their payout, losses
+	// have no payout (the stake is already gone), so a quiet/loss-only window
+	// reads 0. `null` only when there is no settlement data at all.
+	const todayDelta = $derived.by<number | null>(() => {
+		if (recentSettlements.length === 0) {
+			return null;
 		}
 
-		const side = entry.position.outcomeId === 'YES' ? 'YES' : 'NO';
-		const stakeVxp = Math.round(
-			decimalFixedValueToNumber({ value: entry.position.lockedCollateral, decimals: USD_DECIMALS })
-		);
-
-		return { market: entry.market, side, stakeVxp } as const;
+		return Math.round(recentSettlements.reduce((sum, s) => sum + (s.win ? s.vxp : 0), 0));
 	});
 
-	// Live session delta — prior accuracy reconstruction.
+	let sheetOpen = $state(false);
+
+	// ─── Session delta ─────────────────────────────────────────────────
 	const sessionDelta = $derived.by<number | null>(() => {
-		const session = recentSettlements;
-		const sc = session.length;
+		const sc = recentSettlements.length;
 
 		if (sc === 0) {
 			return null;
 		}
 
-		const sw = session.filter((s) => s.win).length;
+		const sw = recentSettlements.filter((s) => s.win).length;
 		const priorCalls = totalTrades - sc;
 
 		if (priorCalls < 1) {
@@ -317,110 +267,90 @@
 		return Math.round((accuracyValue - priorAcc) * 1000) / 10;
 	});
 
-	// Past-prediction rows are shaped inside `DashPastPredictions` from the
-	// same uncapped `$resolvedPositions` stream and `marketById` lookup, so
-	// the row list stays consistent with the chip counts below.
+	// ─── Resolution digest banner ──────────────────────────────────────
+	const digest = $derived($maturedResolutions);
+	let revealOpen = $state(false);
+	let revealSnapshot = $state($maturedResolutions);
 
-	// `recentSettlements` (capped at `USER_STATS_RECENT_LIMIT`) used to be
-	// combined with the broken lifetime `wins`/`losses` to render the
-	// chip counts. Now that `wins`/`losses` are sourced from the
-	// uncapped `$resolvedPositions` directly they're already complete,
-	// so the separate "session" tallies are gone. The variable is kept
-	// for the `sessionDelta` insight further up the file, which is a
-	// distinct concept (accuracy delta in the recent window).
+	const openReveal = (): void => {
+		revealSnapshot = $maturedResolutions;
+		revealOpen = true;
+	};
 
-	// Best win for the Oracle insight — the user's highest-VXP settled
-	// WIN in the recent window (the "best call" worth surfacing). When
-	// nothing in the window won, this is `undefined` so the Oracle empty
-	// state renders — never a loss dressed up as a "best call" (+0 VXP).
-	// `vxp` and `contrarian` are threaded through the user_stats snapshot
-	// from the clearing settlement event (see `user-stats.services`), so
-	// the sub-line reads "+{vxp} VXP · contrarian win" / "· best call".
-	const bestWin = $derived(
-		recentSettlements
-			.filter((s) => s.win)
-			.reduce<
-				RecentSettlementSnapshot | undefined
-			>((best, s) => (best === undefined || s.vxp > best.vxp ? s : best), undefined)
+	const onRevealReview = (): void => {
+		markResolutionsSeen();
+		revealOpen = false;
+	};
+
+	const onRevealDismiss = (): void => {
+		markResolutionsSeen();
+		revealOpen = false;
+		void goto(resolve(AppPath.Flow));
+	};
+
+	// ─── Three-state gate ──────────────────────────────────────────────
+	const resolvedPosNotInit = $derived($resolvedPositionsNotInitialized);
+	const callsPlaced = $derived(Math.max(totalTrades, liveCallCount + settledTotal));
+	const isDay0 = $derived(callsPlaced === 0);
+	const isDay1Pending = $derived(!isDay0 && settledTotal === 0);
+
+	// ─── Zero-state markets ────────────────────────────────────────────
+	// Open markets, most-traded first — the starter list (Day 0) and the
+	// "add another while you wait" pair (Day 1).
+	const openMarketsByVolume = $derived.by<Market[]>(() =>
+		[...($marketsStore ?? [])]
+			.filter((m) => m.status === 'Open')
+			.sort((a, b) => {
+				if (b.totalVolume === a.totalVolume) {
+					return 0;
+				}
+
+				return b.totalVolume > a.totalVolume ? 1 : -1;
+			})
 	);
-	const bestWinTitle = $derived(
-		bestWin ? (marketById.get(bestWin.marketId)?.title ?? bestWin.marketId) : ''
-	);
-	const bestWinVxp = $derived(bestWin?.vxp ?? 0);
-	const bestWinContrarian = $derived(bestWin?.contrarian ?? false);
+	const toZeroRow = (market: Market): ZeroMarketRow => ({
+		marketId: market.id,
+		question: market.title,
+		context: crowdContextOf(market),
+		timer: timerOf(market)
+	});
 
-	// Contrarian wins — settled wins the user took against the crowd
-	// (the satellite tags each settlement with a `contrarian` flag,
-	// derived from the execution price vs the long-shot threshold).
-	const contrarianWins = $derived(
-		recentSettlements.filter((s) => s.win && s.contrarian).slice(0, 3)
-	);
+	const starterRows = $derived(openMarketsByVolume.slice(0, 3).map(toZeroRow));
+	const moreRows = $derived(openMarketsByVolume.slice(0, 2).map(toZeroRow));
 
-	// ─── Rival ─────────────────────────────────────────────────────────
-	// The user's rival is the adjacent competitor on the points ranking —
-	// usually the one directly above (the next to overtake), or for rank 1
-	// the runner-up directly below (the chaser). The satellite `getMyRival`
-	// query resolves it from the FULL ranking (not the top-50 leaderboard
-	// slice), so it works for every ranked user. `behind` is true when the
-	// rival trails the user (rank-1 case) so the gap reads as a lead.
-	// `undefined` (→ locked tease) when the user is unranked or alone.
-	const rival = $derived.by<
-		{ name: string; initials: string; gapPts: number; acc: number; behind: boolean } | undefined
-	>(() => {
-		const data = rivalData;
+	// Day-1 first call — the single live position, reframed for the in-flight row.
+	const firstCallEntry = $derived.by<{ market: Market; side: 'YES' | 'NO' } | undefined>(() => {
+		const [position] = [...activePositionsAll].sort((a, b) => {
+			const ma = marketById.get(a.marketId);
+			const mb = marketById.get(b.marketId);
 
-		if (data === undefined) {
+			return Number(ma?.expiryDate ?? ZERO) - Number(mb?.expiryDate ?? ZERO);
+		});
+		const market = position ? marketById.get(position.marketId) : undefined;
+
+		if (position === undefined || market === undefined) {
 			return;
 		}
 
-		const above = data.profile;
-		const name = getDisplayName({ profile: above });
-		// Up to two leading initials from the display name, caps. Falls
-		// back to a neutral glyph so the disc is never blank (brand: no
-		// emoji avatar fallback — initials in a tinted disc).
-		const initials =
-			name
-				.trim()
-				.split(/\s+/)
-				.map((part) => part.charAt(0))
-				.join('')
-				.slice(0, 2)
-				.toUpperCase() || '·';
-
-		return {
-			name,
-			initials,
-			// Absolute gap — the rival can be above (deficit) or, for rank 1,
-			// below (lead); the sign is carried by `behind`, not the number.
-			gapPts: Math.max(0, Math.round(Math.abs((above.points ?? 0) - (profile?.points ?? 0)))),
-			acc: above.accuracy ?? 0,
-			behind: data.isTrailing
-		};
+		return { market, side: position.outcomeId === 'YES' ? 'YES' : 'NO' };
 	});
 
-	// Next-unlock achievement (Marathon by default).
-	const unlocked = $derived(new Set<string>(profile?.unlockedAchievements ?? []));
-	const nextAchievement = $derived(
-		ACHIEVEMENTS.find((a) => !unlocked.has(a.id)) ?? ACHIEVEMENTS[ACHIEVEMENTS.length - 1]
-	);
-	const streakBarPct = $derived(Math.min(100, (streak / MARATHON_DAYS) * 100));
-	const daysToMarathon = $derived(Math.max(0, MARATHON_DAYS - streak));
+	const firstCallRow = $derived.by<ZeroMarketRow | undefined>(() => {
+		if (firstCallEntry === undefined) {
+			return;
+		}
 
-	// Markets the user hasn't tried — pick the first category with
-	// zero settled calls (falls back to `Culture` when the taxonomy
-	// is empty). Same satellite-cached source as `catRows` so the two
-	// surfaces agree on what counts as "tried".
-	const untriedCategory = $derived<MarketTag | undefined>(
-		MARKET_TAGS.filter((tag) => tag !== 'wc').find(
-			(tag) => (userStats?.categoryStats?.[tag]?.calls ?? 0) === 0
-		)
-	);
+		return {
+			marketId: firstCallEntry.market.id,
+			question: firstCallEntry.market.title,
+			side: firstCallEntry.side,
+			context: categoryOf(firstCallEntry.market),
+			timer: timerOf(firstCallEntry.market)
+		};
+	});
+	const firstCallTimer = $derived(firstCallEntry ? timerOf(firstCallEntry.market) : '');
 
-	// ─── Time window strip (visual switch only) ────────────────────────
-	const windows: TimeWindow[] = ['7d', '30d', '90d', 'All'];
-
-	// Page-chrome eyebrow: orientation line on Day 0/1, the live
-	// streak + active time-window on the standard dashboard.
+	// Page-chrome eyebrow.
 	const headerEyebrow = $derived.by(() => {
 		if (isDay0) {
 			return t({ locale: $localeStore, key: 'dash.dz.header_eyebrow_day0' });
@@ -432,8 +362,8 @@
 
 		return t({
 			locale: $localeStore,
-			key: 'dash.header_eyebrow_standard',
-			params: { count: streak, window: tw }
+			key: 'dash.build.header_eyebrow',
+			params: { count: streak }
 		});
 	});
 
@@ -458,313 +388,78 @@
 		}
 
 		try {
-			// Powers the "Your rival" insight — the competitor one rank above
-			// the user. Best-effort: a failed read leaves the rival as the
-			// locked tease rather than blocking the dashboard.
-			rivalData = await getMyRival();
+			// Settled referrals back the stack-sheet referral figure.
+			const referrals = await listMyReferrals();
+			referralCount = referrals.filter((r) => r.referrerPayout.status === 'paid').length;
 		} catch (err) {
-			console.error('DashPage: failed to load rival', err);
+			console.error('DashPage: failed to load referrals', err);
 		}
 	});
 </script>
 
 <PageScaffold eyebrow={headerEyebrow} title={t({ locale: $localeStore, key: 'dash.title' })}>
 	{#if resolvedPosNotInit && callsPlaced > 0}
-		<!-- ─── LOADING · trade-history not yet initialized, can't gate safely ─── -->
-		<!-- The user has placed at least one call but the resolved-positions store
-		     hasn't finished loading yet. We cannot safely distinguish Day-1 from
-		     Standard here: `settledTotal` reads as 0 from the empty default, which
-		     would misroute a returning user with settled calls to the Day-1 view.
-		     Show nothing until the store is ready (the positions/orders stores
-		     load first, so this window is brief). Day-0 users (`callsPlaced === 0`)
-		     skip this gate entirely — there is nothing settled to wait for. -->
+		<!-- LOADING · trade-history not yet initialized — gating on `settledTotal`
+		     here would misroute a returning user to Day-1. Render nothing until
+		     the resolved-positions store is ready (the window is brief). -->
 	{:else if isDay0 || isDay1Pending}
-		<!-- ─── DAY 0 / DAY 1+ pending · forward-looking dashboard ─── -->
-		<DashDayZero
-			{availableDisplay}
-			{backedDisplay}
-			compactMarkets={dayZeroCompact}
-			day1={isDay1Pending}
-			featuredMarket={dayZeroFeatured}
-			firstCall={dayOneFirstCall}
-			{holdingsDisplay}
-			pendingCount={liveCallCount}
-		/>
+		<div class="db-screen">
+			<DashBuildZero
+				day1={isDay1Pending}
+				{firstCallRow}
+				{firstCallTimer}
+				{holdingsDisplay}
+				{inPlayDisplay}
+				{moreRows}
+				pendingCount={liveCallCount}
+				{starterRows}
+			/>
+		</div>
 	{:else}
-		<div class="screen-scroll">
-			<!-- ─── Resolution banner · while-you-were-away ───
-			     Leads the standard dashboard when calls settled since the user
-			     last acknowledged them. Tapping opens the ResolutionReveal
-			     overlay. `is-neg` flips the accent to measured (no laurel /
-			     pulse) on a net-negative batch — the system never borrows
-			     celebratory styling for a loss. -->
+		<div class="db-screen">
+			<!-- Resolution banner · while-you-were-away -->
 			{#if digest.count > 0}
 				<DashResolutionBanner {digest} onOpen={openReveal} />
 			{/if}
 
-			<!-- ─── TODAY'S GOAL · resume the daily call goal ───
-			     Leads the standard dashboard so the active nudge sits above
-			     the accuracy overview. Self-hides until there's progress to
-			     resume; nudges back into Flow while calls remain, then settles
-			     into a calm complete state. -->
-			<DashTodaysGoal date={dailyGoalDate} done={dailyGoalDone} target={DAILY_GOAL_TARGET} />
-
-			<!-- ─── HERO · accuracy ─── -->
-			<DashHeroAccuracy
-				{accuracyPct}
-				{daysToMarathon}
-				{longestStreak}
-				{nickname}
-				{sessionDelta}
-				{streak}
-				{streakBarPct}
-			/>
-
-			<!-- ─── Time window ─── -->
-			<div
-				class="dash-window"
-				aria-label={t({ locale: $localeStore, key: 'dash.window.label' })}
-				role="tablist"
-			>
-				{#each windows as w (w)}
-					<button
-						class:active={tw === w}
-						aria-selected={tw === w}
-						onclick={() => (tw = w)}
-						role="tab"
-						type="button"
-					>
-						{w}
-					</button>
-				{/each}
-			</div>
-
-			<!-- ─── HOLDINGS card ─── -->
-			<DashHoldingsCard
-				{availableDisplay}
-				{backedDisplay}
-				{holdingsDisplay}
-				{lifetimeDisplay}
-				recentSettlementsCount={recentSettlements.length}
-			/>
-
-			<!-- ─── ACCURACY TREND chart ─── -->
-			<div class="dash-section">
-				<div class="dash-section-eyebrow">
-					<span>
-						{t({ locale: $localeStore, key: 'dash.trend.eyebrow' })} · {tw}
-					</span>
-					<span class="delta-pos">{t({ locale: $localeStore, key: 'dash.trend.delta' })}</span>
-				</div>
-				<div class="dash-chart-card">
-					<DashAccuracySparkline />
-				</div>
-			</div>
-
-			<!-- ─── ACTIVE positions ─── -->
-			<DashActivePositions entries={activePositions} {totalActive} />
-
-			<!-- ─── BY CATEGORY breakdown ─── -->
-			<!-- Hidden during World-Cup mode: per-category accuracy is empty
-		     when play is scoped to the event. -->
-			{#if !$worldCupActive}
-				<DashCategoryBreakdown {catRows} />
-			{/if}
-
-			<!-- ─── RANK CONTEXT ─── -->
-			<DashRankContext topCategory={catRows[0]} {wcAccuracy} worldCupActive={$worldCupActive} />
-
-			<!-- ─── ORACLE INSIGHT ─── -->
-			<DashOracleInsight
-				{bestWinContrarian}
-				{bestWinTitle}
-				{bestWinVxp}
-				hasBestWin={Boolean(bestWin)}
-			/>
-
-			<!-- ─── PAST predictions ─── -->
-			<DashPastPredictions
-				{losses}
-				{marketById}
-				resolvedRows={$resolvedPositions}
-				{settledTotal}
-				{wins}
-			/>
-
-			<!-- ─── NEXT UNLOCK ─── -->
-			{#if nextAchievement}
-				<DashNextUnlock
-					{daysToMarathon}
-					emblem={nextAchievement.emblem}
-					nameKey={nextAchievement.nameKey}
+			<div class="db-body">
+				<!-- ZONE 1 · PERFORMANCE -->
+				<DashBuildHero
+					{accuracyPct}
+					{accuracyValue}
+					{friendsAhead}
+					{friendsTotal}
+					{sessionDelta}
 					{streak}
-					{streakBarPct}
-					target={MARATHON_DAYS}
 				/>
-			{/if}
 
-			<!-- ─── DISCLOSURE foldouts ─── -->
-			<!-- Your rival · the competitor one rank above the user on the
-			     points leaderboard. Falls back to the locked tease (em-dashes)
-			     until the user is ranked with someone above them. -->
-			<DashDisclosure
-				title={rival
-					? t({
-							locale: $localeStore,
-							key: 'dash.disclosure.rival_title',
-							params: { handle: rival.name }
-						})
-					: t({ locale: $localeStore, key: 'dash.disclosure.rival_title_unknown' })}
-			>
-				{#snippet body()}
-					{#if rival}
-						<div class="dash-rival">
-							<span class="av">{rival.initials}</span>
-							<div class="meta">
-								<span class="name">{rival.name}</span>
-								<span class="gap">
-									{t({
-										locale: $localeStore,
-										key: rival.behind
-											? 'dash.disclosure.rival_gap_behind'
-											: 'dash.disclosure.rival_gap',
-										params: { points: rival.gapPts }
-									})}
-								</span>
-							</div>
-							<span class="acc-num">{rival.acc.toFixed(1)}%</span>
-						</div>
-					{:else}
-						<div class="dash-rival">
-							<span class="av">{EM_DASH}</span>
-							<div class="meta">
-								<span class="name">{EM_DASH}</span>
-								<span class="gap"
-									>{t({ locale: $localeStore, key: 'dash.disclosure.rival_gap_unknown' })}</span
-								>
-							</div>
-							<span class="acc-num">{EM_DASH}</span>
-						</div>
-					{/if}
-				{/snippet}
-			</DashDisclosure>
+				<!-- ZONE 2 · STACK -->
+				<DashStackCard
+					{holdingsDisplay}
+					{inPlayDisplay}
+					onOpen={() => (sheetOpen = true)}
+					{todayDelta}
+				/>
 
-			<DashDisclosure
-				title={t({
-					locale: $localeStore,
-					key: 'dash.disclosure.contrarian_title',
-					params: { count: contrarianWins.length }
-				})}
-			>
-				{#snippet body()}
-					{#if contrarianWins.length === 0}
-						<div class="dash-empty">
-							{t({ locale: $localeStore, key: 'dash.disclosure.contrarian_empty' })}
-						</div>
-					{:else}
-						{#each contrarianWins as h (h.marketId + h.settledAtMs)}
-							<div class="dash-past-row dash-past-row-soft">
-								<span class="res won">
-									<Check aria-hidden="true" size={11} strokeWidth={3} />
-								</span>
-								<div>
-									<div class="q">{marketById.get(h.marketId)?.title ?? h.marketId}</div>
-									<div class="ctx">
-										{t({ locale: $localeStore, key: 'dash.disclosure.contrarian_ctx' })}
-									</div>
-								</div>
-								<span class="delta-pct delta-won">
-									{t({
-										locale: $localeStore,
-										key: 'dash.disclosure.contrarian_amount',
-										params: { vxp: h.vxp }
-									})}
-								</span>
-							</div>
-						{/each}
-					{/if}
-				{/snippet}
-			</DashDisclosure>
+				<!-- ZONE 3 · CALLS -->
+				<DashCallsZone {openCalls} {resolvedCalls} resolvedTotal={settledTotal} />
+			</div>
 
-			<DashDisclosure title={t({ locale: $localeStore, key: 'dash.disclosure.untried_title' })}>
-				{#snippet body()}
-					{#if untriedCategory}
-						{@const label = t({
-							locale: $localeStore,
-							key: MARKET_TAG_LABEL_KEYS[untriedCategory]
-						})}
-						<p class="dash-suggest-q">
-							{t({
-								locale: $localeStore,
-								key: 'dash.disclosure.untried_body',
-								params: { category: label }
-							})}
-						</p>
-						<button
-							class="dash-suggest-cta"
-							onclick={() => goto(resolve(AppPath.Flow))}
-							type="button"
-						>
-							{t({
-								locale: $localeStore,
-								key: 'dash.disclosure.untried_cta',
-								params: { category: label }
-							})}
-						</button>
-					{:else}
-						<p class="dash-suggest-q">
-							{t({ locale: $localeStore, key: 'dash.disclosure.untried_empty' })}
-						</p>
-					{/if}
-				{/snippet}
-			</DashDisclosure>
-
-			<div style:height="32px"></div>
+			<div style:height="28px"></div>
 		</div>
 	{/if}
 </PageScaffold>
 
-<!-- ResolutionReveal — the deferred "being right" digest. Opened by the
-     dashboard resolution banner; both CTAs acknowledge the batch. Rendered
-     outside PageScaffold so its fixed full-screen overlay isn't clipped by
-     the scroll container. -->
+<DashStackSheet
+	{holdingsDisplay}
+	{inPlayDisplay}
+	isOpen={sheetOpen}
+	{lifetimeDisplay}
+	onClose={() => (sheetOpen = false)}
+	{referralCount}
+	{referralVxpDisplay}
+/>
+
 {#if revealOpen}
 	<ResolutionReveal data={revealSnapshot} onDismiss={onRevealDismiss} onReview={onRevealReview} />
 {/if}
-
-<style lang="postcss">
-	/* DashPage local hooks. Most class names live in `app.css`; this
-	   block only carries small Svelte-only tweaks (delta-pct colour
-	   modifiers). */
-
-	:global(.dash-delta.dash-delta-pos) {
-		color: var(--yes);
-	}
-
-	:global(.dash-delta.dash-delta-neg) {
-		color: var(--no);
-	}
-
-	:global(.dash-delta.dash-delta-neutral) {
-		color: var(--text-muted);
-	}
-
-	:global(.dash-past-row .delta-pct.delta-won) {
-		color: var(--yes);
-	}
-
-	:global(.dash-past-row .delta-pct.delta-lost) {
-		color: var(--no);
-	}
-
-	:global(.dash-rank-tile-btn) {
-		appearance: none;
-		cursor: pointer;
-		text-align: left;
-	}
-
-	:global(.dash-past-row-soft) {
-		padding: 8px 0;
-		border-bottom-color: color-mix(in srgb, var(--text-base) 6%, transparent);
-	}
-</style>
