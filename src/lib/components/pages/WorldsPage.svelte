@@ -22,6 +22,7 @@
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
@@ -213,7 +214,7 @@
 	 * the school has no colour so the CSS laurel default applies.
 	 */
 	const badgeStyle = (opt: WorldsAffiliationOption | undefined): string =>
-		opt?.color ? `background: ${opt.color}; color: ${opt.text ?? '#fff'};` : '';
+		affiliationChipStyle({ color: opt?.color, text: opt?.text });
 
 	/**
 	 * Per-school signal for the affiliation picker — real member count
