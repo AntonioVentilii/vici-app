@@ -95,6 +95,66 @@ export const listLeaderboard = (): UserProfile[] => {
 };
 
 /**
+ * The caller's rival, resolved from the FULL {@link rankedProfiles}
+ * ordering (not the top-{@link LEADERBOARD_LIMIT} slice {@link
+ * listLeaderboard} returns), so it works for every ranked user — not
+ * just those in the visible top N.
+ *
+ * - Usual case: the profile one rank ABOVE the caller — the next
+ *   competitor to overtake.
+ * - Leader (rank 1): nobody is above, so surface the runner-up one rank
+ *   BELOW — the rival chasing them — with `rivalIsTrailing: true` so the
+ *   FE frames the gap as a lead rather than a deficit.
+ *
+ * `rival` is `undefined` (→ FE locked tease) only when the caller is
+ * genuinely unranked (no profile / hidden) or is the lone ranked profile
+ * (rank 1 with no runner-up).
+ *
+ * The returned row is role-hydrated and run through
+ * {@link withProfileDefaults}, matching the shape every other profile
+ * query emits.
+ */
+export const getMyRivalFn = (): {
+	rival: UserProfile | undefined;
+	rivalIsTrailing: boolean;
+} => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+
+	const profiles = rankedProfiles();
+	const myIndex = profiles.findIndex((profile) => profile.owner === callerText);
+
+	if (myIndex === -1) {
+		// Unranked (no profile / hidden) — no rival.
+		return { rival: undefined, rivalIsTrailing: false };
+	}
+
+	// Rank 1 has nobody above: fall back to the runner-up one rank below
+	// (the chaser). Every other rank takes the competitor one rank above.
+	const rivalIsTrailing = myIndex === 0;
+	const rival = profiles[rivalIsTrailing ? 1 : myIndex - 1];
+
+	if (rival === undefined) {
+		// Rank 1 with no runner-up (lone ranked profile) — no rival.
+		return { rival: undefined, rivalIsTrailing: false };
+	}
+
+	const roleDoc = getDocStore({
+		collection: Collection.ROLES,
+		key: rival.owner,
+		caller
+	});
+
+	return {
+		rival: withProfileDefaults({
+			...rival,
+			role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
+		}),
+		rivalIsTrailing
+	};
+};
+
+/**
  * Count of profiles that appear on the public leaderboard (non-hidden).
  * The denominator for the `top-decile` achievement: a user is in the top
  * 10% when their {@link getUserRankFn} rank is ≤ `count / 10`.

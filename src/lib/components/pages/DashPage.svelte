@@ -44,7 +44,7 @@
 	import { vxpBacked, vxpHoldingsTotal, vxpSpendable } from '$lib/derived/vxp-holdings.derived';
 	import { worldCupActive } from '$lib/derived/world-cup.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import { getLeaderboard } from '$lib/services/leaderboard.services';
+	import { getMyRival } from '$lib/services/leaderboard.services';
 	import {
 		calculateAndSyncStats,
 		getDisplayName,
@@ -91,10 +91,12 @@
 	const dailyGoalDate = $derived(profile?.dailyGoalDate);
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
-	// Points-ranked profiles from the satellite `listLeaderboard` query —
-	// the source for the "Your rival" insight (the principal one rank
-	// above the user). Empty until the onMount load resolves.
-	let leaderboard = $state<UserProfile[]>([]);
+	// The "Your rival" insight: the profile adjacent to the user across the
+	// FULL points ranking, fetched from the satellite `getMyRival` query —
+	// usually the competitor one rank above, or (for rank 1) the runner-up
+	// below, flagged `isTrailing`. `undefined` until the onMount load
+	// resolves, or when the user is unranked / the lone ranked profile.
+	let rivalData = $state<{ profile: UserProfile; isTrailing: boolean } | undefined>(undefined);
 
 	let tw = $state<TimeWindow>('30d');
 
@@ -355,29 +357,23 @@
 	);
 
 	// ─── Rival ─────────────────────────────────────────────────────────
-	// The user's rival is the adjacent competitor directly above them on
-	// the points-ranked leaderboard — the next person to overtake. Derived
-	// purely from the existing `listLeaderboard` query: find the user's own
-	// row, take the one immediately above it. `undefined` (→ locked tease)
-	// when the user isn't on the leaderboard yet or is already rank 1.
+	// The user's rival is the adjacent competitor on the points ranking —
+	// usually the one directly above (the next to overtake), or for rank 1
+	// the runner-up directly below (the chaser). The satellite `getMyRival`
+	// query resolves it from the FULL ranking (not the top-50 leaderboard
+	// slice), so it works for every ranked user. `behind` is true when the
+	// rival trails the user (rank-1 case) so the gap reads as a lead.
+	// `undefined` (→ locked tease) when the user is unranked or alone.
 	const rival = $derived.by<
-		{ name: string; initials: string; gapPts: number; acc: number } | undefined
+		{ name: string; initials: string; gapPts: number; acc: number; behind: boolean } | undefined
 	>(() => {
-		const owner = profile?.owner;
+		const data = rivalData;
 
-		if (owner === undefined || leaderboard.length === 0) {
+		if (data === undefined) {
 			return;
 		}
 
-		const myIndex = leaderboard.findIndex((entry) => entry.owner === owner);
-
-		if (myIndex <= 0) {
-			// Not ranked yet (−1) or already at the top (0) — no rival above.
-			return;
-		}
-
-		const above = leaderboard[myIndex - 1];
-		const me = leaderboard[myIndex];
+		const above = data.profile;
 		const name = getDisplayName({ profile: above });
 		// Up to two leading initials from the display name, caps. Falls
 		// back to a neutral glyph so the disc is never blank (brand: no
@@ -394,8 +390,11 @@
 		return {
 			name,
 			initials,
-			gapPts: Math.max(0, Math.round((above.points ?? 0) - (me.points ?? 0))),
-			acc: above.accuracy ?? 0
+			// Absolute gap — the rival can be above (deficit) or, for rank 1,
+			// below (lead); the sign is carried by `behind`, not the number.
+			gapPts: Math.max(0, Math.round(Math.abs((above.points ?? 0) - (profile?.points ?? 0)))),
+			acc: above.accuracy ?? 0,
+			behind: data.isTrailing
 		};
 	});
 
@@ -462,9 +461,9 @@
 			// Powers the "Your rival" insight — the competitor one rank above
 			// the user. Best-effort: a failed read leaves the rival as the
 			// locked tease rather than blocking the dashboard.
-			leaderboard = await getLeaderboard();
+			rivalData = await getMyRival();
 		} catch (err) {
-			console.error('DashPage: failed to load leaderboard for rival', err);
+			console.error('DashPage: failed to load rival', err);
 		}
 	});
 </script>
@@ -626,7 +625,9 @@
 								<span class="gap">
 									{t({
 										locale: $localeStore,
-										key: 'dash.disclosure.rival_gap',
+										key: rival.behind
+											? 'dash.disclosure.rival_gap_behind'
+											: 'dash.disclosure.rival_gap',
 										params: { points: rival.gapPts }
 									})}
 								</span>

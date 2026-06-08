@@ -724,6 +724,7 @@ export const esMessages = {
 	'dash.disclosure.contrarian_empty': 'Aún no hay victorias a contracorriente.',
 	'dash.disclosure.contrarian_title': 'Victorias a contracorriente · {count}',
 	'dash.disclosure.rival_gap': '{points} pts por delante',
+	'dash.disclosure.rival_gap_behind': 'Liderando por {points} pts',
 	'dash.disclosure.rival_gap_unknown': 'Datos de rivalidad próximamente',
 	'dash.disclosure.rival_title': 'Tu rival · {handle}',
 	'dash.disclosure.rival_title_unknown': 'Tu rival · —',

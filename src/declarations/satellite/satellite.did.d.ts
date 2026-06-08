@@ -310,6 +310,71 @@ export interface AppGetMonthlyLeaderboardResult {
 export interface AppGetMyReferralCodeResult {
 	code: [] | [string];
 }
+export interface AppGetMyRivalResult {
+	rival_is_trailing: boolean;
+	rival:
+		| []
+		| [
+				{
+					pnl: number;
+					sharpest_eye_best_tier: [] | [string];
+					streak: number;
+					top_decile_streak: number;
+					nickname: string;
+					hibernated_at_ms: [] | [number];
+					daily_goal_date: [] | [string];
+					daily_goal_done: number;
+					contrarian_wins: number;
+					owner: string;
+					interests: Array<string>;
+					role:
+						| []
+						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+					handle_last_change_ms: [] | [number];
+					email: string;
+					level: number;
+					preferences: {
+						favorite_participant_id: string;
+						favorite_side: string;
+						notify: {
+							market_alerts: boolean;
+							friend_activity: boolean;
+							weekly_digest: boolean;
+							streak_reminder: boolean;
+						};
+						haptics_enabled: boolean;
+						sharing: {
+							worlds_opt_in: boolean;
+							leaderboard_opt_in: boolean;
+							calls_public: boolean;
+							profile_visibility: string;
+						};
+						sound_enabled: boolean;
+						onboarding_completed: boolean;
+						default_amount: { flow: string; manual: string };
+						world_cup_mode: boolean;
+						saved_market_ids: Array<string>;
+						flow_tags: Array<string>;
+						flow_session_length: number;
+					};
+					longest_streak: number;
+					archetype: string;
+					school_status: [] | [string];
+					last_active_day: [] | [string];
+					total_trades: number;
+					last_top_decile_day: [] | [string];
+					win_rate: number;
+					avatar_parts: string;
+					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
+					daily_streak: number;
+					unlocked_achievements: Array<string>;
+					deleted_at_ms: [] | [number];
+					points: number;
+					avatar: string;
+					accuracy: number;
+				}
+		  ];
+}
 export interface AppGetProfileArgs {
 	principal_str: string;
 }
@@ -1028,6 +1093,7 @@ export interface _SERVICE {
 		AppGetMonthlyLeaderboardResult
 	>;
 	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
+	app_get_my_rival: ActorMethod<[], AppGetMyRivalResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
 	app_get_user_rank_and_count: ActorMethod<
 		[AppGetUserRankAndCountArgs],
