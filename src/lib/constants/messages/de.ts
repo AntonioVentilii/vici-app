@@ -2412,7 +2412,7 @@ export const deMessages = {
 	'welcome.how.s2': 'Entscheidet sich auf öffentlichen Daten',
 	'welcome.how.s3': 'Steig im Ranking auf',
 	'welcome.proof.label': 'Wo stehst du?',
-	'welcome.proof.live': 'Leute tippen gerade jetzt auf die WM.',
+	'welcome.proof.live': 'Leute geben ihre Tipps auf VICI ab.',
 	'welcome.status.body':
 		'Jeder Tipp kommt auf dein Konto. Richtig getippt, steigst du auf — vorbei an deinem Chat, deiner Stadt, der Welt. Dem Ranking ist egal, wer am lautesten ist. Nur, wer am öftesten richtig liegt.',
 	'welcome.status.cap_friends': 'Dein Gruppenchat, im Ranking.',

@@ -1,17 +1,16 @@
 <script lang="ts">
 	/**
 	 * Proof band: a 3-step "How it works" micro-strip, a real count of
-	 * people calling the World Cup, and a marquee ticker of @handles making
-	 * calls. The count is the live aggregate of executed predictions on the
-	 * World-Cup markets, read anonymously after first paint. Until that real
-	 * figure resolves — and on any failure / no-WC-markets / 0 — the big
-	 * number stays a pulsing dash placeholder; we never render a fake number.
-	 * The ticker is decorative (aria-hidden) and scrolls via CSS (paused
-	 * under reduced-motion).
+	 * registered VICI users, and a marquee ticker of @handles making calls.
+	 * The count is the total number of users in the public `profiles`
+	 * collection, read anonymously after first paint. Until that real figure
+	 * resolves — and on any failure — the big number stays a pulsing dash
+	 * placeholder; we never render a fake number. The ticker is decorative
+	 * (aria-hidden) and scrolls via CSS (paused under reduced-motion).
 	 */
 	import { onMount } from 'svelte';
 	import { LANDING_PROOF_CHIPS } from '$lib/constants/landing-data.constants';
-	import { getWorldCupCallerCount } from '$lib/services/landing-proof.services';
+	import { getViciUserCount } from '$lib/services/landing-proof.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
@@ -29,12 +28,12 @@
 
 	// `undefined` until the first successful real fetch. We never seed a
 	// synthetic figure — a fake number that diverged from the real one would
-	// be misleading. On any failure / no-WC-markets / 0 it stays `undefined`
-	// and the big number keeps its pulsing dash placeholder.
+	// be misleading. On any failure it stays `undefined` and the big number
+	// keeps its pulsing dash placeholder.
 	let count = $state<number | undefined>(undefined);
 
 	onMount(() => {
-		void getWorldCupCallerCount().then((real) => {
+		void getViciUserCount().then((real) => {
 			if (real !== undefined && real > 0) {
 				count = real;
 			}

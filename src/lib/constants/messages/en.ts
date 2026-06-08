@@ -2390,7 +2390,7 @@ export const enMessages = {
 	'welcome.how.s2': 'It settles on public record',
 	'welcome.how.s3': 'Climb the leaderboard',
 	'welcome.proof.label': 'Where do you land?',
-	'welcome.proof.live': 'people are calling the World Cup right now.',
+	'welcome.proof.live': 'people are calling on VICI.',
 	'welcome.status.body':
 		'Every call goes on your record. Get them right and you climb — past your group chat, your city, the world. The leaderboard doesn’t care how loud you are. Only how often you’re right.',
 	'welcome.status.cap_friends': 'Your group chat, ranked.',
