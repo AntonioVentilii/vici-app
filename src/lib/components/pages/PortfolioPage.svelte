@@ -16,6 +16,7 @@
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { positions, positionsNotInitialized } from '$lib/derived/positions.derived';
 	import {
+		decisiveSettledCount,
 		resolvedPositions,
 		resolvedPositionsNotInitialized
 	} from '$lib/derived/resolved-positions.derived';
@@ -24,6 +25,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
+	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
 	import { decimalFixedValueToNumber, relativeAgoBucketFromMs } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import {
@@ -146,7 +148,17 @@
 	// multiplying by 100 here gave 10000% for a fully-accurate user.
 	const accuracyValue = $derived($userStore.profile?.accuracy ?? 0);
 
-	const accuracyDisplay = $derived(`${accuracyValue.toFixed(1)}%`);
+	// A user with no settled predictions yet shows an optimistic 100% rather
+	// than a misleading 0% (display-only — see `displayAccuracyPct`). This is
+	// always the viewer's own portfolio, so the `resolvedPositions`-derived
+	// count is the right gate.
+	const accuracyDisplay = $derived(
+		`${displayAccuracyPct({
+			accuracy: accuracyValue,
+			settledCount: $decisiveSettledCount,
+			initialized: !$resolvedPositionsNotInitialized
+		})}%`
+	);
 
 	// ── Active-call row helpers ──────────────────────────────────────
 

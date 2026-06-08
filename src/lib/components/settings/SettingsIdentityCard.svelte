@@ -3,8 +3,13 @@
 	import { resolve } from '$app/paths';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import {
+		decisiveSettledCount,
+		resolvedPositionsNotInitialized
+	} from '$lib/derived/resolved-positions.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { UserProfile } from '$lib/types/profile';
+	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
@@ -13,6 +18,17 @@
 	}
 
 	let { profile, joinedLabel }: Props = $props();
+
+	// Settings always shows the signed-in user's own identity, so a user with
+	// no settled predictions yet shows an optimistic 100% rather than a
+	// misleading 0% (display-only — see `displayAccuracyPct`).
+	const accuracyDisplay = $derived(
+		displayAccuracyPct({
+			accuracy: profile?.accuracy ?? 0,
+			settledCount: $decisiveSettledCount,
+			initialized: !$resolvedPositionsNotInitialized
+		})
+	);
 </script>
 
 <button class="set-identity" onclick={() => goto(resolve(AppPath.Profile))} type="button">
@@ -39,10 +55,7 @@
 				key: 'settings.identity.meta',
 				params: {
 					level: profile?.level ?? 1,
-					// `profile.accuracy` is already a 0..100 percentage
-					// (see `profile.services.ts`); render directly without
-					// re-multiplying by 100.
-					accuracy: (profile?.accuracy ?? 0).toFixed(1),
+					accuracy: accuracyDisplay,
 					calls: profile?.totalTrades ?? 0
 				}
 			})}
