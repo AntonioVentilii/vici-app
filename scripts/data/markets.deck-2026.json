@@ -849,7 +849,7 @@
 	{
 		"title": "Will Paraguay beat the United States?",
 		"description": "Upset watch · Group D · Los Angeles",
-		"resolution": "Resolves YES if Paraguay win in 90 minutes; a draw or an the United States win resolves NO.",
+		"resolution": "Resolves YES if Paraguay win in 90 minutes; a draw or the United States win resolves NO.",
 		"expiryDate": "2026-06-12T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -871,7 +871,7 @@
 	{
 		"title": "Will Korea Republic beat Czechia?",
 		"description": "Group A · Matchday 1 · Guadalajara",
-		"resolution": "Resolves YES if Korea Republic win in 90 minutes; a draw or an Czechia win resolves NO.",
+		"resolution": "Resolves YES if Korea Republic win in 90 minutes; a draw or a Czechia win resolves NO.",
 		"expiryDate": "2026-06-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -893,7 +893,7 @@
 	{
 		"title": "Will Czechia beat Korea Republic?",
 		"description": "Upset watch · Group A · Guadalajara",
-		"resolution": "Resolves YES if Czechia win in 90 minutes; a draw or an Korea Republic win resolves NO.",
+		"resolution": "Resolves YES if Czechia win in 90 minutes; a draw or a Korea Republic win resolves NO.",
 		"expiryDate": "2026-06-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -915,7 +915,7 @@
 	{
 		"title": "Will Bosnia and Herzegovina beat Canada?",
 		"description": "Upset watch · Group B · Toronto",
-		"resolution": "Resolves YES if Bosnia and Herzegovina win in 90 minutes; a draw or an Canada win resolves NO.",
+		"resolution": "Resolves YES if Bosnia and Herzegovina win in 90 minutes; a draw or a Canada win resolves NO.",
 		"expiryDate": "2026-06-12T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -959,7 +959,7 @@
 	{
 		"title": "Will South Africa beat Mexico?",
 		"description": "Upset watch · Group A · Mexico City",
-		"resolution": "Resolves YES if South Africa win in 90 minutes; a draw or an Mexico win resolves NO.",
+		"resolution": "Resolves YES if South Africa win in 90 minutes; a draw or a Mexico win resolves NO.",
 		"expiryDate": "2026-06-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1124,7 +1124,7 @@
 	{
 		"title": "Will Mexico beat South Africa?",
 		"description": "Tournament opener · 2,240 m at the Azteca",
-		"resolution": "Resolves YES if Mexico win in 90 minutes; a draw or an South Africa win resolves NO.",
+		"resolution": "Resolves YES if Mexico win in 90 minutes; a draw or a South Africa win resolves NO.",
 		"expiryDate": "2026-06-11T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1410,7 +1410,7 @@
 	{
 		"title": "Will Morocco beat Brazil?",
 		"description": "Upset watch · Group C · New York/New Jersey",
-		"resolution": "Resolves YES if Morocco win in 90 minutes; a draw or an Brazil win resolves NO.",
+		"resolution": "Resolves YES if Morocco win in 90 minutes; a draw or a Brazil win resolves NO.",
 		"expiryDate": "2026-06-13T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1432,7 +1432,7 @@
 	{
 		"title": "Will the United States beat Paraguay?",
 		"description": "the United States on home soil · Los Angeles",
-		"resolution": "Resolves YES if the United States win in 90 minutes; a draw or an Paraguay win resolves NO.",
+		"resolution": "Resolves YES if the United States win in 90 minutes; a draw or a Paraguay win resolves NO.",
 		"expiryDate": "2026-06-12T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1454,7 +1454,7 @@
 	{
 		"title": "Will Haiti beat Scotland?",
 		"description": "Upset watch · Group C · Boston",
-		"resolution": "Resolves YES if Haiti win in 90 minutes; a draw or an Scotland win resolves NO.",
+		"resolution": "Resolves YES if Haiti win in 90 minutes; a draw or a Scotland win resolves NO.",
 		"expiryDate": "2026-06-13T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1476,7 +1476,7 @@
 	{
 		"title": "Will Qatar beat Switzerland?",
 		"description": "Upset watch · Group B · San Francisco Bay Area",
-		"resolution": "Resolves YES if Qatar win in 90 minutes; a draw or an Switzerland win resolves NO.",
+		"resolution": "Resolves YES if Qatar win in 90 minutes; a draw or a Switzerland win resolves NO.",
 		"expiryDate": "2026-06-13T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1652,7 +1652,7 @@
 	{
 		"title": "Will Canada beat Bosnia and Herzegovina?",
 		"description": "Canada on home soil · Toronto",
-		"resolution": "Resolves YES if Canada win in 90 minutes; a draw or an Bosnia and Herzegovina win resolves NO.",
+		"resolution": "Resolves YES if Canada win in 90 minutes; a draw or a Bosnia and Herzegovina win resolves NO.",
 		"expiryDate": "2026-06-12T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1674,7 +1674,7 @@
 	{
 		"title": "Will Australia beat Türkiye?",
 		"description": "Upset watch · Group D · Vancouver",
-		"resolution": "Resolves YES if Australia win in 90 minutes; a draw or an Türkiye win resolves NO.",
+		"resolution": "Resolves YES if Australia win in 90 minutes; a draw or a Türkiye win resolves NO.",
 		"expiryDate": "2026-06-13T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1861,7 +1861,7 @@
 	{
 		"title": "Will Brazil beat Morocco?",
 		"description": "Group C · Matchday 1 · New York/New Jersey",
-		"resolution": "Resolves YES if Brazil win in 90 minutes; a draw or an Morocco win resolves NO.",
+		"resolution": "Resolves YES if Brazil win in 90 minutes; a draw or a Morocco win resolves NO.",
 		"expiryDate": "2026-06-13T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1883,7 +1883,7 @@
 	{
 		"title": "Will Switzerland beat Qatar?",
 		"description": "Group B · Matchday 1 · San Francisco Bay Area",
-		"resolution": "Resolves YES if Switzerland win in 90 minutes; a draw or an Qatar win resolves NO.",
+		"resolution": "Resolves YES if Switzerland win in 90 minutes; a draw or a Qatar win resolves NO.",
 		"expiryDate": "2026-06-13T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1905,7 +1905,7 @@
 	{
 		"title": "Will Scotland beat Haiti?",
 		"description": "Group C · Matchday 1 · Boston",
-		"resolution": "Resolves YES if Scotland win in 90 minutes; a draw or an Haiti win resolves NO.",
+		"resolution": "Resolves YES if Scotland win in 90 minutes; a draw or a Haiti win resolves NO.",
 		"expiryDate": "2026-06-13T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -1949,7 +1949,7 @@
 	{
 		"title": "Will Japan beat the Netherlands?",
 		"description": "Upset watch · Group F · Dallas",
-		"resolution": "Resolves YES if Japan win in 90 minutes; a draw or an the Netherlands win resolves NO.",
+		"resolution": "Resolves YES if Japan win in 90 minutes; a draw or the Netherlands win resolves NO.",
 		"expiryDate": "2026-06-14T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2015,7 +2015,7 @@
 	{
 		"title": "Will Curaçao beat Germany?",
 		"description": "Upset watch · Group E · Houston",
-		"resolution": "Resolves YES if Curaçao win in 90 minutes; a draw or an Germany win resolves NO.",
+		"resolution": "Resolves YES if Curaçao win in 90 minutes; a draw or a Germany win resolves NO.",
 		"expiryDate": "2026-06-14T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2235,7 +2235,7 @@
 	{
 		"title": "Will Tunisia beat Sweden?",
 		"description": "Upset watch · Group F · Monterrey",
-		"resolution": "Resolves YES if Tunisia win in 90 minutes; a draw or an Sweden win resolves NO.",
+		"resolution": "Resolves YES if Tunisia win in 90 minutes; a draw or a Sweden win resolves NO.",
 		"expiryDate": "2026-06-14T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2356,7 +2356,7 @@
 	{
 		"title": "Will the Netherlands beat Japan?",
 		"description": "Group F · Matchday 1 · Dallas",
-		"resolution": "Resolves YES if the Netherlands win in 90 minutes; a draw or an Japan win resolves NO.",
+		"resolution": "Resolves YES if the Netherlands win in 90 minutes; a draw or a Japan win resolves NO.",
 		"expiryDate": "2026-06-14T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2378,7 +2378,7 @@
 	{
 		"title": "Will Sweden beat Tunisia?",
 		"description": "Group F · Matchday 1 · Monterrey",
-		"resolution": "Resolves YES if Sweden win in 90 minutes; a draw or an Tunisia win resolves NO.",
+		"resolution": "Resolves YES if Sweden win in 90 minutes; a draw or a Tunisia win resolves NO.",
 		"expiryDate": "2026-06-14T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2422,7 +2422,7 @@
 	{
 		"title": "Will Egypt beat Belgium?",
 		"description": "Upset watch · Group G · Seattle",
-		"resolution": "Resolves YES if Egypt win in 90 minutes; a draw or an Belgium win resolves NO.",
+		"resolution": "Resolves YES if Egypt win in 90 minutes; a draw or a Belgium win resolves NO.",
 		"expiryDate": "2026-06-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2532,7 +2532,7 @@
 	{
 		"title": "Will Cape Verde beat Spain?",
 		"description": "Upset watch · Group H · Atlanta",
-		"resolution": "Resolves YES if Cape Verde win in 90 minutes; a draw or an Spain win resolves NO.",
+		"resolution": "Resolves YES if Cape Verde win in 90 minutes; a draw or a Spain win resolves NO.",
 		"expiryDate": "2026-06-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2609,7 +2609,7 @@
 	{
 		"title": "Will Germany beat Curaçao?",
 		"description": "Group E · Matchday 1 · Houston",
-		"resolution": "Resolves YES if Germany win in 90 minutes; a draw or an Curaçao win resolves NO.",
+		"resolution": "Resolves YES if Germany win in 90 minutes; a draw or a Curaçao win resolves NO.",
 		"expiryDate": "2026-06-14T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2719,7 +2719,7 @@
 	{
 		"title": "Will Saudi Arabia beat Uruguay?",
 		"description": "Upset watch · Group H · Miami",
-		"resolution": "Resolves YES if Saudi Arabia win in 90 minutes; a draw or an Uruguay win resolves NO.",
+		"resolution": "Resolves YES if Saudi Arabia win in 90 minutes; a draw or a Uruguay win resolves NO.",
 		"expiryDate": "2026-06-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2840,7 +2840,7 @@
 	{
 		"title": "Will Iran beat New Zealand?",
 		"description": "Group G · Matchday 1 · Los Angeles",
-		"resolution": "Resolves YES if Iran win in 90 minutes; a draw or an New Zealand win resolves NO.",
+		"resolution": "Resolves YES if Iran win in 90 minutes; a draw or a New Zealand win resolves NO.",
 		"expiryDate": "2026-06-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -2873,7 +2873,7 @@
 	{
 		"title": "Will Iraq beat Norway?",
 		"description": "Upset watch · Group I · Boston",
-		"resolution": "Resolves YES if Iraq win in 90 minutes; a draw or an Norway win resolves NO.",
+		"resolution": "Resolves YES if Iraq win in 90 minutes; a draw or a Norway win resolves NO.",
 		"expiryDate": "2026-06-16T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3082,7 +3082,7 @@
 	{
 		"title": "Will Spain beat Cape Verde?",
 		"description": "Group H · Matchday 1 · Atlanta",
-		"resolution": "Resolves YES if Spain win in 90 minutes; a draw or an Cape Verde win resolves NO.",
+		"resolution": "Resolves YES if Spain win in 90 minutes; a draw or a Cape Verde win resolves NO.",
 		"expiryDate": "2026-06-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3104,7 +3104,7 @@
 	{
 		"title": "Will Uruguay beat Saudi Arabia?",
 		"description": "Group H · Matchday 1 · Miami",
-		"resolution": "Resolves YES if Uruguay win in 90 minutes; a draw or an Saudi Arabia win resolves NO.",
+		"resolution": "Resolves YES if Uruguay win in 90 minutes; a draw or a Saudi Arabia win resolves NO.",
 		"expiryDate": "2026-06-15T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3192,7 +3192,7 @@
 	{
 		"title": "Will Senegal beat France?",
 		"description": "Upset watch · Group I · New York/New Jersey",
-		"resolution": "Resolves YES if Senegal win in 90 minutes; a draw or an France win resolves NO.",
+		"resolution": "Resolves YES if Senegal win in 90 minutes; a draw or a France win resolves NO.",
 		"expiryDate": "2026-06-16T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3346,7 +3346,7 @@
 	{
 		"title": "Will France beat Senegal?",
 		"description": "Group I · Matchday 1 · New York/New Jersey",
-		"resolution": "Resolves YES if France win in 90 minutes; a draw or an Senegal win resolves NO.",
+		"resolution": "Resolves YES if France win in 90 minutes; a draw or a Senegal win resolves NO.",
 		"expiryDate": "2026-06-16T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3368,7 +3368,7 @@
 	{
 		"title": "Will Panama beat Ghana?",
 		"description": "Upset watch · Group L · Toronto",
-		"resolution": "Resolves YES if Panama win in 90 minutes; a draw or an Ghana win resolves NO.",
+		"resolution": "Resolves YES if Panama win in 90 minutes; a draw or a Ghana win resolves NO.",
 		"expiryDate": "2026-06-17T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3555,7 +3555,7 @@
 	{
 		"title": "Will DR Congo beat Portugal?",
 		"description": "Upset watch · Group K · Houston",
-		"resolution": "Resolves YES if DR Congo win in 90 minutes; a draw or an Portugal win resolves NO.",
+		"resolution": "Resolves YES if DR Congo win in 90 minutes; a draw or a Portugal win resolves NO.",
 		"expiryDate": "2026-06-17T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3621,7 +3621,7 @@
 	{
 		"title": "Will Austria beat Jordan?",
 		"description": "Group J · Matchday 1 · San Francisco Bay Area",
-		"resolution": "Resolves YES if Austria win in 90 minutes; a draw or an Jordan win resolves NO.",
+		"resolution": "Resolves YES if Austria win in 90 minutes; a draw or a Jordan win resolves NO.",
 		"expiryDate": "2026-06-16T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3709,7 +3709,7 @@
 	{
 		"title": "Will Uzbekistan beat Colombia?",
 		"description": "Upset watch · Group K · Mexico City",
-		"resolution": "Resolves YES if Uzbekistan win in 90 minutes; a draw or an Colombia win resolves NO.",
+		"resolution": "Resolves YES if Uzbekistan win in 90 minutes; a draw or a Colombia win resolves NO.",
 		"expiryDate": "2026-06-17T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3808,7 +3808,7 @@
 	{
 		"title": "Will England beat Croatia?",
 		"description": "Group L heavyweight clash · Dallas",
-		"resolution": "Resolves YES if England win in 90 minutes; a draw or an Croatia win resolves NO.",
+		"resolution": "Resolves YES if England win in 90 minutes; a draw or a Croatia win resolves NO.",
 		"expiryDate": "2026-06-17T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3852,7 +3852,7 @@
 	{
 		"title": "Will Ghana beat Panama?",
 		"description": "Group L · Matchday 1 · Toronto",
-		"resolution": "Resolves YES if Ghana win in 90 minutes; a draw or an Panama win resolves NO.",
+		"resolution": "Resolves YES if Ghana win in 90 minutes; a draw or a Panama win resolves NO.",
 		"expiryDate": "2026-06-17T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3874,7 +3874,7 @@
 	{
 		"title": "Will Bosnia and Herzegovina beat Switzerland?",
 		"description": "Upset watch · Group B · Los Angeles",
-		"resolution": "Resolves YES if Bosnia and Herzegovina win in 90 minutes; a draw or an Switzerland win resolves NO.",
+		"resolution": "Resolves YES if Bosnia and Herzegovina win in 90 minutes; a draw or a Switzerland win resolves NO.",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3896,7 +3896,7 @@
 	{
 		"title": "Will Korea Republic beat Mexico?",
 		"description": "Upset watch · Group A · Guadalajara",
-		"resolution": "Resolves YES if Korea Republic win in 90 minutes; a draw or an Mexico win resolves NO.",
+		"resolution": "Resolves YES if Korea Republic win in 90 minutes; a draw or a Mexico win resolves NO.",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -3918,7 +3918,7 @@
 	{
 		"title": "Will Qatar beat Canada?",
 		"description": "Upset watch · Group B · Vancouver",
-		"resolution": "Resolves YES if Qatar win in 90 minutes; a draw or an Canada win resolves NO.",
+		"resolution": "Resolves YES if Qatar win in 90 minutes; a draw or a Canada win resolves NO.",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4039,7 +4039,7 @@
 	{
 		"title": "Will Portugal beat DR Congo?",
 		"description": "Group K · Matchday 1 · Houston",
-		"resolution": "Resolves YES if Portugal win in 90 minutes; a draw or an DR Congo win resolves NO.",
+		"resolution": "Resolves YES if Portugal win in 90 minutes; a draw or a DR Congo win resolves NO.",
 		"expiryDate": "2026-06-17T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4171,7 +4171,7 @@
 	{
 		"title": "Will South Africa beat Czechia?",
 		"description": "Upset watch · Group A · Atlanta",
-		"resolution": "Resolves YES if South Africa win in 90 minutes; a draw or an Czechia win resolves NO.",
+		"resolution": "Resolves YES if South Africa win in 90 minutes; a draw or a Czechia win resolves NO.",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4303,7 +4303,7 @@
 	{
 		"title": "Will Canada beat Qatar?",
 		"description": "Canada on home soil · Vancouver",
-		"resolution": "Resolves YES if Canada win in 90 minutes; a draw or an Qatar win resolves NO.",
+		"resolution": "Resolves YES if Canada win in 90 minutes; a draw or a Qatar win resolves NO.",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4325,7 +4325,7 @@
 	{
 		"title": "Will Mexico beat Korea Republic?",
 		"description": "Mexico on home soil · Guadalajara",
-		"resolution": "Resolves YES if Mexico win in 90 minutes; a draw or an Korea Republic win resolves NO.",
+		"resolution": "Resolves YES if Mexico win in 90 minutes; a draw or a Korea Republic win resolves NO.",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4347,7 +4347,7 @@
 	{
 		"title": "Will Switzerland beat Bosnia and Herzegovina?",
 		"description": "Group B · Matchday 2 · Los Angeles",
-		"resolution": "Resolves YES if Switzerland win in 90 minutes; a draw or an Bosnia and Herzegovina win resolves NO.",
+		"resolution": "Resolves YES if Switzerland win in 90 minutes; a draw or a Bosnia and Herzegovina win resolves NO.",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4369,7 +4369,7 @@
 	{
 		"title": "Will Scotland beat Morocco?",
 		"description": "Upset watch · Group C · Boston",
-		"resolution": "Resolves YES if Scotland win in 90 minutes; a draw or an Morocco win resolves NO.",
+		"resolution": "Resolves YES if Scotland win in 90 minutes; a draw or a Morocco win resolves NO.",
 		"expiryDate": "2026-06-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4391,7 +4391,7 @@
 	{
 		"title": "Will Australia beat the United States?",
 		"description": "Upset watch · Group D · Seattle",
-		"resolution": "Resolves YES if Australia win in 90 minutes; a draw or an the United States win resolves NO.",
+		"resolution": "Resolves YES if Australia win in 90 minutes; a draw or the United States win resolves NO.",
 		"expiryDate": "2026-06-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4424,7 +4424,7 @@
 	{
 		"title": "Will Haiti beat Brazil?",
 		"description": "Upset watch · Group C · Philadelphia",
-		"resolution": "Resolves YES if Haiti win in 90 minutes; a draw or an Brazil win resolves NO.",
+		"resolution": "Resolves YES if Haiti win in 90 minutes; a draw or a Brazil win resolves NO.",
 		"expiryDate": "2026-06-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4490,7 +4490,7 @@
 	{
 		"title": "Will Czechia beat South Africa?",
 		"description": "Group A · Matchday 2 · Atlanta",
-		"resolution": "Resolves YES if Czechia win in 90 minutes; a draw or an South Africa win resolves NO.",
+		"resolution": "Resolves YES if Czechia win in 90 minutes; a draw or a South Africa win resolves NO.",
 		"expiryDate": "2026-06-18T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4512,7 +4512,7 @@
 	{
 		"title": "Will Paraguay beat Türkiye?",
 		"description": "Upset watch · Group D · San Francisco Bay Area",
-		"resolution": "Resolves YES if Paraguay win in 90 minutes; a draw or an Türkiye win resolves NO.",
+		"resolution": "Resolves YES if Paraguay win in 90 minutes; a draw or a Türkiye win resolves NO.",
 		"expiryDate": "2026-06-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4710,7 +4710,7 @@
 	{
 		"title": "Will Brazil beat Haiti?",
 		"description": "Group C · Matchday 2 · Philadelphia",
-		"resolution": "Resolves YES if Brazil win in 90 minutes; a draw or an Haiti win resolves NO.",
+		"resolution": "Resolves YES if Brazil win in 90 minutes; a draw or a Haiti win resolves NO.",
 		"expiryDate": "2026-06-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4732,7 +4732,7 @@
 	{
 		"title": "Will Türkiye beat Paraguay?",
 		"description": "Group D · Matchday 2 · San Francisco Bay Area",
-		"resolution": "Resolves YES if Türkiye win in 90 minutes; a draw or an Paraguay win resolves NO.",
+		"resolution": "Resolves YES if Türkiye win in 90 minutes; a draw or a Paraguay win resolves NO.",
 		"expiryDate": "2026-06-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4754,7 +4754,7 @@
 	{
 		"title": "Will Tunisia beat Japan?",
 		"description": "Upset watch · Group F · Monterrey",
-		"resolution": "Resolves YES if Tunisia win in 90 minutes; a draw or an Japan win resolves NO.",
+		"resolution": "Resolves YES if Tunisia win in 90 minutes; a draw or a Japan win resolves NO.",
 		"expiryDate": "2026-06-20T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -4985,7 +4985,7 @@
 	{
 		"title": "Will Morocco beat Scotland?",
 		"description": "Group C · Matchday 2 · Boston",
-		"resolution": "Resolves YES if Morocco win in 90 minutes; a draw or an Scotland win resolves NO.",
+		"resolution": "Resolves YES if Morocco win in 90 minutes; a draw or a Scotland win resolves NO.",
 		"expiryDate": "2026-06-19T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5029,7 +5029,7 @@
 	{
 		"title": "Will Sweden beat the Netherlands?",
 		"description": "Upset watch · Group F · Houston",
-		"resolution": "Resolves YES if Sweden win in 90 minutes; a draw or an the Netherlands win resolves NO.",
+		"resolution": "Resolves YES if Sweden win in 90 minutes; a draw or the Netherlands win resolves NO.",
 		"expiryDate": "2026-06-20T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5051,7 +5051,7 @@
 	{
 		"title": "Will Ivory Coast beat Germany?",
 		"description": "Upset watch · Group E · Toronto",
-		"resolution": "Resolves YES if Ivory Coast win in 90 minutes; a draw or an Germany win resolves NO.",
+		"resolution": "Resolves YES if Ivory Coast win in 90 minutes; a draw or a Germany win resolves NO.",
 		"expiryDate": "2026-06-20T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5128,7 +5128,7 @@
 	{
 		"title": "Will Saudi Arabia beat Spain?",
 		"description": "Upset watch · Group H · Atlanta",
-		"resolution": "Resolves YES if Saudi Arabia win in 90 minutes; a draw or an Spain win resolves NO.",
+		"resolution": "Resolves YES if Saudi Arabia win in 90 minutes; a draw or a Spain win resolves NO.",
 		"expiryDate": "2026-06-21T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5172,7 +5172,7 @@
 	{
 		"title": "Will the Netherlands beat Sweden?",
 		"description": "Group F · Matchday 2 · Houston",
-		"resolution": "Resolves YES if the Netherlands win in 90 minutes; a draw or an Sweden win resolves NO.",
+		"resolution": "Resolves YES if the Netherlands win in 90 minutes; a draw or a Sweden win resolves NO.",
 		"expiryDate": "2026-06-20T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5194,7 +5194,7 @@
 	{
 		"title": "Will Ecuador beat Curaçao?",
 		"description": "Group E · Matchday 2 · Kansas City",
-		"resolution": "Resolves YES if Ecuador win in 90 minutes; a draw or an Curaçao win resolves NO.",
+		"resolution": "Resolves YES if Ecuador win in 90 minutes; a draw or a Curaçao win resolves NO.",
 		"expiryDate": "2026-06-20T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5216,7 +5216,7 @@
 	{
 		"title": "Will Iran beat Belgium?",
 		"description": "Upset watch · Group G · Los Angeles",
-		"resolution": "Resolves YES if Iran win in 90 minutes; a draw or an Belgium win resolves NO.",
+		"resolution": "Resolves YES if Iran win in 90 minutes; a draw or a Belgium win resolves NO.",
 		"expiryDate": "2026-06-21T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5238,7 +5238,7 @@
 	{
 		"title": "Will Cape Verde beat Uruguay?",
 		"description": "Upset watch · Group H · Miami",
-		"resolution": "Resolves YES if Cape Verde win in 90 minutes; a draw or an Uruguay win resolves NO.",
+		"resolution": "Resolves YES if Cape Verde win in 90 minutes; a draw or a Uruguay win resolves NO.",
 		"expiryDate": "2026-06-21T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5337,7 +5337,7 @@
 	{
 		"title": "Will Japan beat Tunisia?",
 		"description": "Group F · Matchday 2 · Monterrey",
-		"resolution": "Resolves YES if Japan win in 90 minutes; a draw or an Tunisia win resolves NO.",
+		"resolution": "Resolves YES if Japan win in 90 minutes; a draw or a Tunisia win resolves NO.",
 		"expiryDate": "2026-06-20T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5557,7 +5557,7 @@
 	{
 		"title": "Will Spain beat Saudi Arabia?",
 		"description": "Group H · Matchday 2 · Atlanta",
-		"resolution": "Resolves YES if Spain win in 90 minutes; a draw or an Saudi Arabia win resolves NO.",
+		"resolution": "Resolves YES if Spain win in 90 minutes; a draw or a Saudi Arabia win resolves NO.",
 		"expiryDate": "2026-06-21T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5579,7 +5579,7 @@
 	{
 		"title": "Will Egypt beat New Zealand?",
 		"description": "Group G · Matchday 2 · Vancouver",
-		"resolution": "Resolves YES if Egypt win in 90 minutes; a draw or an New Zealand win resolves NO.",
+		"resolution": "Resolves YES if Egypt win in 90 minutes; a draw or a New Zealand win resolves NO.",
 		"expiryDate": "2026-06-21T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5821,7 +5821,7 @@
 	{
 		"title": "Will Uruguay beat Cape Verde?",
 		"description": "Group H · Matchday 2 · Miami",
-		"resolution": "Resolves YES if Uruguay win in 90 minutes; a draw or an Cape Verde win resolves NO.",
+		"resolution": "Resolves YES if Uruguay win in 90 minutes; a draw or a Cape Verde win resolves NO.",
 		"expiryDate": "2026-06-21T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5865,7 +5865,7 @@
 	{
 		"title": "Will Norway beat Senegal?",
 		"description": "Upset watch · Group I · New York/New Jersey",
-		"resolution": "Resolves YES if Norway win in 90 minutes; a draw or an Senegal win resolves NO.",
+		"resolution": "Resolves YES if Norway win in 90 minutes; a draw or a Senegal win resolves NO.",
 		"expiryDate": "2026-06-22T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -5942,7 +5942,7 @@
 	{
 		"title": "Will Iraq beat France?",
 		"description": "Upset watch · Group I · Philadelphia",
-		"resolution": "Resolves YES if Iraq win in 90 minutes; a draw or an France win resolves NO.",
+		"resolution": "Resolves YES if Iraq win in 90 minutes; a draw or a France win resolves NO.",
 		"expiryDate": "2026-06-22T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6019,7 +6019,7 @@
 	{
 		"title": "Will Senegal beat Norway?",
 		"description": "Group I · Matchday 2 · New York/New Jersey",
-		"resolution": "Resolves YES if Senegal win in 90 minutes; a draw or an Norway win resolves NO.",
+		"resolution": "Resolves YES if Senegal win in 90 minutes; a draw or a Norway win resolves NO.",
 		"expiryDate": "2026-06-22T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6063,7 +6063,7 @@
 	{
 		"title": "Will Panama beat Croatia?",
 		"description": "Upset watch · Group L · Toronto",
-		"resolution": "Resolves YES if Panama win in 90 minutes; a draw or an Croatia win resolves NO.",
+		"resolution": "Resolves YES if Panama win in 90 minutes; a draw or a Croatia win resolves NO.",
 		"expiryDate": "2026-06-23T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6085,7 +6085,7 @@
 	{
 		"title": "Will Uzbekistan beat Portugal?",
 		"description": "Upset watch · Group K · Houston",
-		"resolution": "Resolves YES if Uzbekistan win in 90 minutes; a draw or an Portugal win resolves NO.",
+		"resolution": "Resolves YES if Uzbekistan win in 90 minutes; a draw or a Portugal win resolves NO.",
 		"expiryDate": "2026-06-23T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6195,7 +6195,7 @@
 	{
 		"title": "Will Algeria beat Jordan?",
 		"description": "Group J · Matchday 2 · San Francisco Bay Area",
-		"resolution": "Resolves YES if Algeria win in 90 minutes; a draw or an Jordan win resolves NO.",
+		"resolution": "Resolves YES if Algeria win in 90 minutes; a draw or a Jordan win resolves NO.",
 		"expiryDate": "2026-06-22T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6283,7 +6283,7 @@
 	{
 		"title": "Will DR Congo beat Colombia?",
 		"description": "Upset watch · Group K · Guadalajara",
-		"resolution": "Resolves YES if DR Congo win in 90 minutes; a draw or an Colombia win resolves NO.",
+		"resolution": "Resolves YES if DR Congo win in 90 minutes; a draw or a Colombia win resolves NO.",
 		"expiryDate": "2026-06-23T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6470,7 +6470,7 @@
 	{
 		"title": "Will Scotland beat Brazil?",
 		"description": "Upset watch · Group C · Miami",
-		"resolution": "Resolves YES if Scotland win in 90 minutes; a draw or an Brazil win resolves NO.",
+		"resolution": "Resolves YES if Scotland win in 90 minutes; a draw or a Brazil win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6514,7 +6514,7 @@
 	{
 		"title": "Will Canada beat Switzerland?",
 		"description": "Upset watch · Group B · Vancouver",
-		"resolution": "Resolves YES if Canada win in 90 minutes; a draw or an Switzerland win resolves NO.",
+		"resolution": "Resolves YES if Canada win in 90 minutes; a draw or a Switzerland win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6569,7 +6569,7 @@
 	{
 		"title": "Will Czechia beat Mexico?",
 		"description": "Upset watch · Group A · Mexico City",
-		"resolution": "Resolves YES if Czechia win in 90 minutes; a draw or an Mexico win resolves NO.",
+		"resolution": "Resolves YES if Czechia win in 90 minutes; a draw or a Mexico win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6756,7 +6756,7 @@
 	{
 		"title": "Will England beat Ghana?",
 		"description": "Group L · Matchday 2 · Boston",
-		"resolution": "Resolves YES if England win in 90 minutes; a draw or an Ghana win resolves NO.",
+		"resolution": "Resolves YES if England win in 90 minutes; a draw or a Ghana win resolves NO.",
 		"expiryDate": "2026-06-23T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6778,7 +6778,7 @@
 	{
 		"title": "Will Croatia beat Panama?",
 		"description": "Group L · Matchday 2 · Toronto",
-		"resolution": "Resolves YES if Croatia win in 90 minutes; a draw or an Panama win resolves NO.",
+		"resolution": "Resolves YES if Croatia win in 90 minutes; a draw or a Panama win resolves NO.",
 		"expiryDate": "2026-06-23T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6800,7 +6800,7 @@
 	{
 		"title": "Will Colombia beat DR Congo?",
 		"description": "Group K · Matchday 2 · Guadalajara",
-		"resolution": "Resolves YES if Colombia win in 90 minutes; a draw or an DR Congo win resolves NO.",
+		"resolution": "Resolves YES if Colombia win in 90 minutes; a draw or a DR Congo win resolves NO.",
 		"expiryDate": "2026-06-23T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6822,7 +6822,7 @@
 	{
 		"title": "Will Qatar beat Bosnia and Herzegovina?",
 		"description": "Upset watch · Group B · Seattle",
-		"resolution": "Resolves YES if Qatar win in 90 minutes; a draw or an Bosnia and Herzegovina win resolves NO.",
+		"resolution": "Resolves YES if Qatar win in 90 minutes; a draw or a Bosnia and Herzegovina win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6844,7 +6844,7 @@
 	{
 		"title": "Will South Africa beat Korea Republic?",
 		"description": "Upset watch · Group A · Monterrey",
-		"resolution": "Resolves YES if South Africa win in 90 minutes; a draw or an Korea Republic win resolves NO.",
+		"resolution": "Resolves YES if South Africa win in 90 minutes; a draw or a Korea Republic win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -6932,7 +6932,7 @@
 	{
 		"title": "Will Haiti beat Morocco?",
 		"description": "Upset watch · Group C · Atlanta",
-		"resolution": "Resolves YES if Haiti win in 90 minutes; a draw or an Morocco win resolves NO.",
+		"resolution": "Resolves YES if Haiti win in 90 minutes; a draw or a Morocco win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7020,7 +7020,7 @@
 	{
 		"title": "Will Brazil beat Scotland?",
 		"description": "Matchday 3 · Group C qualification on the line",
-		"resolution": "Resolves YES if Brazil win in 90 minutes; a draw or an Scotland win resolves NO.",
+		"resolution": "Resolves YES if Brazil win in 90 minutes; a draw or a Scotland win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7042,7 +7042,7 @@
 	{
 		"title": "Will Mexico beat Czechia?",
 		"description": "Mexico on home soil · Mexico City",
-		"resolution": "Resolves YES if Mexico win in 90 minutes; a draw or an Czechia win resolves NO.",
+		"resolution": "Resolves YES if Mexico win in 90 minutes; a draw or a Czechia win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7064,7 +7064,7 @@
 	{
 		"title": "Will Bosnia and Herzegovina beat Qatar?",
 		"description": "Matchday 3 · Group B qualification on the line",
-		"resolution": "Resolves YES if Bosnia and Herzegovina win in 90 minutes; a draw or an Qatar win resolves NO.",
+		"resolution": "Resolves YES if Bosnia and Herzegovina win in 90 minutes; a draw or a Qatar win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7086,7 +7086,7 @@
 	{
 		"title": "Will Türkiye beat the United States?",
 		"description": "Upset watch · Group D · Los Angeles",
-		"resolution": "Resolves YES if Türkiye win in 90 minutes; a draw or an the United States win resolves NO.",
+		"resolution": "Resolves YES if Türkiye win in 90 minutes; a draw or the United States win resolves NO.",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7152,7 +7152,7 @@
 	{
 		"title": "Will Ecuador beat Germany?",
 		"description": "Upset watch · Group E · New York/New Jersey",
-		"resolution": "Resolves YES if Ecuador win in 90 minutes; a draw or an Germany win resolves NO.",
+		"resolution": "Resolves YES if Ecuador win in 90 minutes; a draw or a Germany win resolves NO.",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7262,7 +7262,7 @@
 	{
 		"title": "Will Tunisia beat the Netherlands?",
 		"description": "Upset watch · Group F · Kansas City",
-		"resolution": "Resolves YES if Tunisia win in 90 minutes; a draw or an the Netherlands win resolves NO.",
+		"resolution": "Resolves YES if Tunisia win in 90 minutes; a draw or the Netherlands win resolves NO.",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7284,7 +7284,7 @@
 	{
 		"title": "Will Morocco beat Haiti?",
 		"description": "Matchday 3 · Group C qualification on the line",
-		"resolution": "Resolves YES if Morocco win in 90 minutes; a draw or an Haiti win resolves NO.",
+		"resolution": "Resolves YES if Morocco win in 90 minutes; a draw or a Haiti win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7306,7 +7306,7 @@
 	{
 		"title": "Will Korea Republic beat South Africa?",
 		"description": "Matchday 3 · Group A qualification on the line",
-		"resolution": "Resolves YES if Korea Republic win in 90 minutes; a draw or an South Africa win resolves NO.",
+		"resolution": "Resolves YES if Korea Republic win in 90 minutes; a draw or a South Africa win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7328,7 +7328,7 @@
 	{
 		"title": "Will Switzerland beat Canada?",
 		"description": "Canada on home soil · Vancouver",
-		"resolution": "Resolves YES if Switzerland win in 90 minutes; a draw or an Canada win resolves NO.",
+		"resolution": "Resolves YES if Switzerland win in 90 minutes; a draw or a Canada win resolves NO.",
 		"expiryDate": "2026-06-24T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7350,7 +7350,7 @@
 	{
 		"title": "Will Australia beat Paraguay?",
 		"description": "Matchday 3 · Group D qualification on the line",
-		"resolution": "Resolves YES if Australia win in 90 minutes; a draw or an Paraguay win resolves NO.",
+		"resolution": "Resolves YES if Australia win in 90 minutes; a draw or a Paraguay win resolves NO.",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7372,7 +7372,7 @@
 	{
 		"title": "Will Sweden beat Japan?",
 		"description": "Upset watch · Group F · Dallas",
-		"resolution": "Resolves YES if Sweden win in 90 minutes; a draw or an Japan win resolves NO.",
+		"resolution": "Resolves YES if Sweden win in 90 minutes; a draw or a Japan win resolves NO.",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7526,7 +7526,7 @@
 	{
 		"title": "Will Uruguay beat Spain?",
 		"description": "Upset watch · Group H · Guadalajara",
-		"resolution": "Resolves YES if Uruguay win in 90 minutes; a draw or an Spain win resolves NO.",
+		"resolution": "Resolves YES if Uruguay win in 90 minutes; a draw or a Spain win resolves NO.",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7570,7 +7570,7 @@
 	{
 		"title": "Will the United States beat Türkiye?",
 		"description": "the United States on home soil · Los Angeles",
-		"resolution": "Resolves YES if the United States win in 90 minutes; a draw or an Türkiye win resolves NO.",
+		"resolution": "Resolves YES if the United States win in 90 minutes; a draw or a Türkiye win resolves NO.",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7592,7 +7592,7 @@
 	{
 		"title": "Will Japan beat Sweden?",
 		"description": "Matchday 3 · Group F qualification on the line",
-		"resolution": "Resolves YES if Japan win in 90 minutes; a draw or an Sweden win resolves NO.",
+		"resolution": "Resolves YES if Japan win in 90 minutes; a draw or a Sweden win resolves NO.",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7658,7 +7658,7 @@
 	{
 		"title": "Will Iraq beat Senegal?",
 		"description": "Upset watch · Group I · Toronto",
-		"resolution": "Resolves YES if Iraq win in 90 minutes; a draw or an Senegal win resolves NO.",
+		"resolution": "Resolves YES if Iraq win in 90 minutes; a draw or a Senegal win resolves NO.",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7812,7 +7812,7 @@
 	{
 		"title": "Will the Netherlands beat Tunisia?",
 		"description": "Matchday 3 · Group F qualification on the line",
-		"resolution": "Resolves YES if the Netherlands win in 90 minutes; a draw or an Tunisia win resolves NO.",
+		"resolution": "Resolves YES if the Netherlands win in 90 minutes; a draw or a Tunisia win resolves NO.",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7834,7 +7834,7 @@
 	{
 		"title": "Will Ivory Coast beat Curaçao?",
 		"description": "Matchday 3 · Group E qualification on the line",
-		"resolution": "Resolves YES if Ivory Coast win in 90 minutes; a draw or an Curaçao win resolves NO.",
+		"resolution": "Resolves YES if Ivory Coast win in 90 minutes; a draw or a Curaçao win resolves NO.",
 		"expiryDate": "2026-06-25T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7856,7 +7856,7 @@
 	{
 		"title": "Will Saudi Arabia beat Cape Verde?",
 		"description": "Upset watch · Group H · Houston",
-		"resolution": "Resolves YES if Saudi Arabia win in 90 minutes; a draw or an Cape Verde win resolves NO.",
+		"resolution": "Resolves YES if Saudi Arabia win in 90 minutes; a draw or a Cape Verde win resolves NO.",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7922,7 +7922,7 @@
 	{
 		"title": "Will Norway beat France?",
 		"description": "Upset watch · Group I · Boston",
-		"resolution": "Resolves YES if Norway win in 90 minutes; a draw or an France win resolves NO.",
+		"resolution": "Resolves YES if Norway win in 90 minutes; a draw or a France win resolves NO.",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -7966,7 +7966,7 @@
 	{
 		"title": "Will New Zealand beat Belgium?",
 		"description": "Upset watch · Group G · Vancouver",
-		"resolution": "Resolves YES if New Zealand win in 90 minutes; a draw or an Belgium win resolves NO.",
+		"resolution": "Resolves YES if New Zealand win in 90 minutes; a draw or a Belgium win resolves NO.",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8054,7 +8054,7 @@
 	{
 		"title": "Will Spain beat Uruguay?",
 		"description": "Group H heavyweight clash · Guadalajara",
-		"resolution": "Resolves YES if Spain win in 90 minutes; a draw or an Uruguay win resolves NO.",
+		"resolution": "Resolves YES if Spain win in 90 minutes; a draw or a Uruguay win resolves NO.",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8076,7 +8076,7 @@
 	{
 		"title": "Will Belgium beat New Zealand?",
 		"description": "Matchday 3 · Group G qualification on the line",
-		"resolution": "Resolves YES if Belgium win in 90 minutes; a draw or an New Zealand win resolves NO.",
+		"resolution": "Resolves YES if Belgium win in 90 minutes; a draw or a New Zealand win resolves NO.",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8142,7 +8142,7 @@
 	{
 		"title": "Will Uzbekistan beat DR Congo?",
 		"description": "Upset watch · Group K · Atlanta",
-		"resolution": "Resolves YES if Uzbekistan win in 90 minutes; a draw or an DR Congo win resolves NO.",
+		"resolution": "Resolves YES if Uzbekistan win in 90 minutes; a draw or a DR Congo win resolves NO.",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8186,7 +8186,7 @@
 	{
 		"title": "Will Colombia beat Portugal?",
 		"description": "Upset watch · Group K · Miami",
-		"resolution": "Resolves YES if Colombia win in 90 minutes; a draw or an Portugal win resolves NO.",
+		"resolution": "Resolves YES if Colombia win in 90 minutes; a draw or a Portugal win resolves NO.",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8285,7 +8285,7 @@
 	{
 		"title": "Will France beat Norway?",
 		"description": "Matchday 3 · Group I qualification on the line",
-		"resolution": "Resolves YES if France win in 90 minutes; a draw or an Norway win resolves NO.",
+		"resolution": "Resolves YES if France win in 90 minutes; a draw or a Norway win resolves NO.",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8417,7 +8417,7 @@
 	{
 		"title": "Will Cape Verde beat Saudi Arabia?",
 		"description": "Matchday 3 · Group H qualification on the line",
-		"resolution": "Resolves YES if Cape Verde win in 90 minutes; a draw or an Saudi Arabia win resolves NO.",
+		"resolution": "Resolves YES if Cape Verde win in 90 minutes; a draw or a Saudi Arabia win resolves NO.",
 		"expiryDate": "2026-06-26T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8494,7 +8494,7 @@
 	{
 		"title": "Will Ghana beat Croatia?",
 		"description": "Upset watch · Group L · Philadelphia",
-		"resolution": "Resolves YES if Ghana win in 90 minutes; a draw or an Croatia win resolves NO.",
+		"resolution": "Resolves YES if Ghana win in 90 minutes; a draw or a Croatia win resolves NO.",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8516,7 +8516,7 @@
 	{
 		"title": "Will Portugal beat Colombia?",
 		"description": "Group K heavyweight clash · Miami",
-		"resolution": "Resolves YES if Portugal win in 90 minutes; a draw or an Colombia win resolves NO.",
+		"resolution": "Resolves YES if Portugal win in 90 minutes; a draw or a Colombia win resolves NO.",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8538,7 +8538,7 @@
 	{
 		"title": "Will Argentina beat Jordan?",
 		"description": "Matchday 3 · Group J qualification on the line",
-		"resolution": "Resolves YES if Argentina win in 90 minutes; a draw or an Jordan win resolves NO.",
+		"resolution": "Resolves YES if Argentina win in 90 minutes; a draw or a Jordan win resolves NO.",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8560,7 +8560,7 @@
 	{
 		"title": "Will England beat Panama?",
 		"description": "Matchday 3 · Group L qualification on the line",
-		"resolution": "Resolves YES if England win in 90 minutes; a draw or an Panama win resolves NO.",
+		"resolution": "Resolves YES if England win in 90 minutes; a draw or a Panama win resolves NO.",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
@@ -8582,7 +8582,7 @@
 	{
 		"title": "Will Croatia beat Ghana?",
 		"description": "Matchday 3 · Group L qualification on the line",
-		"resolution": "Resolves YES if Croatia win in 90 minutes; a draw or an Ghana win resolves NO.",
+		"resolution": "Resolves YES if Croatia win in 90 minutes; a draw or a Ghana win resolves NO.",
 		"expiryDate": "2026-06-27T21:59:59.000Z",
 		"categories": ["wc"],
 		"inviteOnly": false,
