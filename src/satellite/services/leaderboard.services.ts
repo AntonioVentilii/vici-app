@@ -111,9 +111,10 @@ export const listLeaderboard = (): UserProfile[] => {
  */
 export const getMyRivalFn = (): UserProfile | undefined => {
 	const caller = msgCaller();
+	const callerText = caller.toText();
 
 	const profiles = rankedProfiles();
-	const myIndex = profiles.findIndex((profile) => profile.owner === caller.toText());
+	const myIndex = profiles.findIndex((profile) => profile.owner === callerText);
 
 	if (myIndex <= 0) {
 		// Unranked (−1) or already at the top (0) — no rival above.
