@@ -670,6 +670,7 @@ export const deMessages = {
 	'dash.dz.trend_tag_day0': 'AUSSTEHEND',
 	'dash.dz.trend_tag_day1': 'AUSSTEHEND',
 	'dash.header_eyebrow_standard': '{count}-Tage-Serie · Fenster {window}',
+	'dash.holdings.available': 'Verfügbar',
 	'dash.holdings.backed': 'Eingesetzt',
 	'dash.holdings.eyebrow': 'Bestand',
 	'dash.holdings.invite_cta': 'Einladen →',

@@ -1,30 +1,23 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
 	import { X } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_STAKE_LADDER } from '$lib/constants/vxp-economy.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
-	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
+	import { vxpSpendable } from '$lib/derived/vxp-holdings.derived';
 	import { getBalances } from '$lib/services/wallet.service';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { CallSide, Market } from '$lib/types/market';
-	import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
 	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { resolveOutcomeExecutionPrice } from '$lib/utils/market.utils';
-	import {
-		formatAvailableMarginForUi,
-		intuitiveAvailableMarginUsd,
-		nativeToClearingMarginUnits
-	} from '$lib/utils/playground-display.utils';
+	import { formatAvailableMarginForUi } from '$lib/utils/playground-display.utils';
 	import { executeOutcomeTrade } from '$lib/utils/trade.utils';
 
 	/**
@@ -91,45 +84,10 @@
 		return Math.round(size / sideExecutionPrice);
 	});
 
-	// Available collateral for this market's balance domain, reusing the
-	// shared intuitive-margin derivation so the figure matches the wallet
-	// and other prediction surfaces.
-	const availableMargin = $derived.by(() => {
-		if (isNullish($collateralsStore)) {
-			return ZERO;
-		}
-
-		const account = $collateralsStore.accountState;
-
-		if (isNullish(account)) {
-			return ZERO;
-		}
-
-		let fallback = ZERO;
-
-		for (const token of $walletUiTokens) {
-			const balance = $collateralsStore?.balances[token.id] ?? ZERO;
-
-			if (balance > ZERO) {
-				const decimals = icrcLedgerDecimalsFromCollateralConfig({
-					assetsConfig: $collateralsStore?.assetsConfig ?? {},
-					ledgerCanisterId: token.ledgerCanisterId,
-					fallbackDecimals: token.decimals
-				});
-				fallback += nativeToClearingMarginUnits({
-					nativeBalance: balance,
-					nativeDecimals: decimals
-				});
-			}
-		}
-
-		return intuitiveAvailableMarginUsd({
-			assets: account.assets,
-			totalEquityUsd: account.total_equity_usd,
-			availableMarginUsd: account.available_margin_usd,
-			fallbackCollateralMarginUnits: fallback
-		});
-	});
+	// Available collateral for this market's balance domain — the shared
+	// "spendable margin" derivation, so the figure matches the wallet, the
+	// Dashboard, and every other prediction surface.
+	const availableMargin = $derived($vxpSpendable);
 
 	const balanceLabel = $derived(
 		formatAvailableMarginForUi({ value: availableMargin, playground: $playgroundVxpUnitMode })

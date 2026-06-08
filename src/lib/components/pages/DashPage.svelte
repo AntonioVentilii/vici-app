@@ -28,7 +28,6 @@
 		type MarketTag
 	} from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -38,7 +37,7 @@
 		resolvedPositions,
 		resolvedPositionsNotInitialized
 	} from '$lib/derived/resolved-positions.derived';
-	import { vxpBacked, vxpFree, vxpHoldingsTotal } from '$lib/derived/vxp-holdings.derived';
+	import { vxpBacked, vxpHoldingsTotal, vxpSpendable } from '$lib/derived/vxp-holdings.derived';
 	import { worldCupActive } from '$lib/derived/world-cup.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { getLeaderboard } from '$lib/services/leaderboard.services';
@@ -98,27 +97,21 @@
 	let tw = $state<TimeWindow>('30d');
 	let pastFilter = $state<PastFilter>('all');
 
-	// Free wallet balance formatted for display — passed to DashDayZero's
-	// Available sub-stat so it shows only unencumbered funds, not total
-	// holdings (free + backed). `$vxpFree` drops to ~0 once VXP is moved
-	// into the clearing canister as collateral.
-	const freeBalanceDisplay = $derived(
-		formatVxpBalance({ value: $vxpFree, decimals: VXP_TOKEN.decimals })
+	// Holdings for the current (playground / VXP) domain — one shared source
+	// (`vxp-holdings.derived`) with the Trade modal, Portfolio, and Wallet:
+	//  • spendable — "available to bet": free wallet balance + deposited
+	//    clearing collateral, minus everything reserved for open positions AND
+	//    resting orders. The honest headline figure.
+	//  • backed — that reserved amount (positions + orders).
+	//  • total — spendable + backed, i.e. everything the user holds.
+	// All in `USD_DECIMALS`, which on VXP is the same 4-decimal scale 1:1, so
+	// they render as plain VXP with no conversion.
+	const availableDisplay = $derived(
+		formatVxpBalance({ value: $vxpSpendable, decimals: USD_DECIMALS })
 	);
-
-	// Backed = sum of locked collateral across active VXP-market positions.
-	// `lockedCollateral` is in clearing-USD micro-units (USD_DECIMALS = 4),
-	// which matches VXP_TOKEN.decimals, so the same `formatVxpBalance`
-	// helper renders it at the right scale without an extra conversion.
 	const backedDisplay = $derived(formatVxpBalance({ value: $vxpBacked, decimals: USD_DECIMALS }));
-
-	// Total holdings = free wallet balance + backed collateral. Without
-	// this combined number, a user with all their VXP locked in active
-	// positions would see "0 VXP" as their Total Holdings while "Backed"
-	// reads in the thousands — the headline must reflect everything they
-	// own, not just the free portion.
-	const balanceDisplay = $derived(
-		formatVxpBalance({ value: $vxpHoldingsTotal, decimals: VXP_TOKEN.decimals })
+	const holdingsDisplay = $derived(
+		formatVxpBalance({ value: $vxpHoldingsTotal, decimals: USD_DECIMALS })
 	);
 
 	// Lifetime = `profile.points`, the running XP/VXP accumulator the
@@ -589,13 +582,13 @@
 	{:else if isDay0 || isDay1Pending}
 		<!-- ─── DAY 0 / DAY 1+ pending · forward-looking dashboard ─── -->
 		<DashDayZero
+			{availableDisplay}
 			{backedDisplay}
-			{balanceDisplay}
 			compactMarkets={dayZeroCompact}
 			day1={isDay1Pending}
 			featuredMarket={dayZeroFeatured}
 			firstCall={dayOneFirstCall}
-			{freeBalanceDisplay}
+			{holdingsDisplay}
 			pendingCount={liveCallCount}
 		/>
 	{:else}
@@ -686,8 +679,9 @@
 
 			<!-- ─── HOLDINGS card ─── -->
 			<DashHoldingsCard
+				{availableDisplay}
 				{backedDisplay}
-				{balanceDisplay}
+				{holdingsDisplay}
 				{lifetimeDisplay}
 				recentSettlementsCount={recentSettlements.length}
 			/>
