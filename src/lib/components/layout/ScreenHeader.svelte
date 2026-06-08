@@ -100,7 +100,7 @@
 		min-height: 50px;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 4px 1.25rem;
+		padding: 4px var(--spacing-edge);
 	}
 
 	/* The back control is a tighter circle than the default appbar button
@@ -157,7 +157,7 @@
 	.screen-header-chips {
 		display: flex;
 		gap: 6px;
-		padding: 0 1.25rem 10px;
+		padding: 0 var(--spacing-edge) 10px;
 		overflow-x: auto;
 		scrollbar-width: none;
 	}

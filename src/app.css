@@ -162,7 +162,24 @@
 	--char-flame: #f08a3c;
 
 	/* Motion (--ease-vici lives in `@theme` so Tailwind generates the
-	 * `ease-vici` utility; the value still cascades into `:root`). */
+	 * `ease-vici` utility; the value still cascades into `:root`).
+	 *
+	 * MOTION PRINCIPLE — how a moment is allowed to move:
+	 *   • Rare peaks (an achievement unlock, an end-of-session
+	 *     celebration) MAY use spring / overshoot easing — they happen
+	 *     seldom enough to earn the flourish.
+	 *   • Frequent rewards (a call settling, a routine grant) settle
+	 *     WITHOUT overshoot — repetition turns a bounce into noise.
+	 *   • Direct-action confirmations (a button press, a swipe commit)
+	 *     keep a small tactile pop — just enough to read as "registered",
+	 *     never a full bounce.
+	 * One easing curve (`--ease-vici`) is the app default; the durations
+	 * below are the standard scale. Every animation/transition must be
+	 * disabled under reduced motion — gate CSS with `@media
+	 * (prefers-reduced-motion: reduce)` and JS-driven Svelte transitions
+	 * with `prefersReducedMotion()` from
+	 * `$lib/utils/reduced-motion.utils.ts`. The narrative side of this
+	 * principle lives in `docs/ai/frontend/brand.md` §8 / `design.md` §7.1. */
 	--d-hover: 120ms;
 	--d-state: 200ms;
 	--d-enter: 320ms;
@@ -225,7 +242,19 @@
 	--r-s: 4px;
 	--r-m: 8px;
 	--r-l: 12px;
-	--r-xl: 18px;
+
+	/* Sanctioned large-radius one-offs — two intentional exceptions above
+	 * the standard card scale, named by the surface they belong to so
+	 * call-sites read the intent rather than a bare literal:
+	 *   --radius-frame  18 px — elevated framed surfaces (the swipeable
+	 *                   onboarding card + its drop shadow); the largest
+	 *                   corner a content surface takes.
+	 *   --radius-nav    28 px — the floating bottom-nav pill shell only.
+	 * `--r-xl` is retained as a back-compat alias of `--radius-frame`
+	 * (the canonical name) so the two can't drift. */
+	--radius-frame: 18px;
+	--radius-nav: 28px;
+	--r-xl: var(--radius-frame);
 
 	/* Spacing scale — 8-point base, no exceptions outside this scale.
 	 * Two parallel naming schemes are exposed: `--space-N` is the
@@ -259,6 +288,13 @@
 	--gap-section: 32px;
 	--gap-screen: 48px;
 	--gap-row: 12px;
+
+	/* Screen-edge horizontal padding — the single gutter a screen reserves
+	 * between its content column and the viewport edge. Named separately
+	 * from `--gap-card` (which is a vertical in-card stack gap that happens
+	 * to share the 20 px value) so the two intents stay independently
+	 * tunable. Stray 18 px edge paddings reconcile to this token. */
+	--spacing-edge: 20px;
 
 	/* Named font-size tokens — locked role-named set. Sits alongside the
 	 * numeric `--t-*` scale (modular 1.25) so editorial / display moments
@@ -3130,7 +3166,7 @@ a.title-action::after {
 	bottom: -2px;
 	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
 	border: 1px solid var(--border-base);
-	border-radius: 18px;
+	border-radius: var(--radius-frame);
 	transform: rotate(-2deg);
 	opacity: 0.45;
 	z-index: 1;
@@ -3140,7 +3176,7 @@ a.title-action::after {
 	inset: 0;
 	background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
 	border: 1px solid var(--border-strong);
-	border-radius: 18px;
+	border-radius: var(--radius-frame);
 	box-shadow:
 		0 18px 50px -16px rgba(0, 0, 0, 0.6),
 		inset 0 1px 0 color-mix(in srgb, var(--text-base) 8%, transparent);
