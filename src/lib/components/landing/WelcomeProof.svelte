@@ -1,15 +1,16 @@
 <script lang="ts">
 	/**
-	 * Proof band: a 3-step "How it works" micro-strip, a live count of
-	 * people calling right now, and a marquee ticker of @handles making
-	 * calls. The count ticks up gently; the ticker is decorative
+	 * Proof band: a 3-step "How it works" micro-strip, a real count of
+	 * registered VICI users, and a marquee ticker of @handles making calls.
+	 * The count is the total number of users in the public `profiles`
+	 * collection, read anonymously after first paint. Until that real figure
+	 * resolves — and on any failure — the big number stays a pulsing dash
+	 * placeholder; we never render a fake number. The ticker is decorative
 	 * (aria-hidden) and scrolls via CSS (paused under reduced-motion).
 	 */
-	import { onDestroy } from 'svelte';
-	import {
-		LANDING_PROOF_CHIPS,
-		LANDING_PROOF_COUNT_SEED
-	} from '$lib/constants/landing-data.constants';
+	import { onMount } from 'svelte';
+	import { LANDING_PROOF_CHIPS } from '$lib/constants/landing-data.constants';
+	import { getViciUserCount } from '$lib/services/landing-proof.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
@@ -25,45 +26,25 @@
 	// Doubled so the CSS marquee loops seamlessly.
 	const track = [...LANDING_PROOF_CHIPS, ...LANDING_PROOF_CHIPS];
 
-	let count = $state(LANDING_PROOF_COUNT_SEED);
+	// `undefined` until the first successful real fetch. We never seed a
+	// synthetic figure — a fake number that diverged from the real one would
+	// be misleading. On any failure it stays `undefined` and the big number
+	// keeps its pulsing dash placeholder.
+	let count = $state<number | undefined>(undefined);
 
-	let timer: ReturnType<typeof setInterval> | null = null;
-
-	$effect(() => {
-		if (prefersReducedMotion()) {
-			return;
-		}
-
-		timer = setInterval(() => {
-			count += Math.floor(Math.random() * 3);
-		}, 2600);
-
-		return () => {
-			if (timer !== null) {
-				clearInterval(timer);
-				timer = null;
+	onMount(() => {
+		void getViciUserCount().then((real) => {
+			if (real !== undefined && real > 0) {
+				count = real;
 			}
-		};
+		});
 	});
 
-	onDestroy(() => {
-		if (timer !== null) {
-			clearInterval(timer);
-		}
-	});
+	// Locale-aware grouped figure once resolved; `undefined` while loading.
+	const countLabel = $derived(count?.toLocaleString($localeStore));
 
-	// Locale-aware grouped count, shared by the big number and the label.
-	const countLabel = $derived(count.toLocaleString($localeStore));
-
-	// The live count is interpolated into the label sentence; render the
-	// sentence with the formatted count substituted in.
-	const liveLabel = $derived(
-		t({
-			locale: $localeStore,
-			key: 'welcome.proof.live',
-			params: { count: countLabel }
-		})
-	);
+	// Standalone caption rendered under the big number — carries no count.
+	const liveLabel = $derived(tt('welcome.proof.live'));
 </script>
 
 <section class="lpc-proof">
@@ -77,7 +58,13 @@
 	</div>
 
 	<div class="lpc-wrap lpc-proof-inner">
-		<div class="lpc-proof-num"><span class="acc">{countLabel}</span></div>
+		<div class="lpc-proof-num" class:is-loading={countLabel === undefined}>
+			{#if countLabel === undefined}
+				<span class="acc" aria-hidden="true">—</span>
+			{:else}
+				<span class="acc">{countLabel}</span>
+			{/if}
+		</div>
 		<div class="lpc-proof-label" aria-live="off">
 			{liveLabel}
 			{tt('welcome.proof.label')}
