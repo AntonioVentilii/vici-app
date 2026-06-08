@@ -248,20 +248,32 @@
 		}
 	});
 
-	// Tap-anywhere to continue — the whole surface is the affordance, not just
-	// the CTA, so a pointer-down anywhere over the overlay enters once the deck
-	// is ready (matching the labelled CTA button, which is the same `enterFlow`
-	// path and the accessible control). A window listener — rather than a
-	// clickable wrapper — keeps the overlay free of a static interactive
-	// element. `enterFlow` is idempotent, so a tap landing on the CTA itself
-	// can't double-fire. Re-armed reactively as `ready` flips and torn down on
-	// unmount.
+	// Tap-anywhere to continue — the whole overlay is the affordance, not just
+	// the CTA, so a pointer-down over it enters once the deck is ready (matching
+	// the labelled CTA button, which is the same idempotent `enterFlow` path and
+	// the accessible control). A window listener — rather than a clickable
+	// wrapper — keeps the overlay free of a static interactive element, but it is
+	// scoped so it only fires for a primary pointer landing inside `.flow-loading`
+	// and NOT inside the scrollable digest `.reslist` (which needs pointer-down
+	// for touch scrolling). This avoids entering on taps in the bottom-nav
+	// clearance area and lets the digest list scroll. Re-armed reactively as
+	// `ready` flips and torn down on unmount.
 	$effect(() => {
 		if (entered) {
 			return;
 		}
 
-		const onPointerDown = () => {
+		const onPointerDown = (event: PointerEvent) => {
+			if (event.button !== 0 || !event.isPrimary) {
+				return;
+			}
+
+			const target = event.target instanceof Element ? event.target : null;
+
+			if (!target?.closest('.flow-loading') || target.closest('.reslist')) {
+				return;
+			}
+
 			enterFlow();
 		};
 
