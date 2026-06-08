@@ -65,17 +65,16 @@ export const leaderboard: Readable<UserProfile[]> = derived(
 			return $leaderboard;
 		}
 
-		return [
-			...$leaderboard.slice(0, idx),
-			{
-				...$leaderboard[idx],
-				nickname: $self.nickname,
-				avatar: $self.avatar,
-				streak: $self.streak,
-				accuracy: $self.accuracy
-			},
-			...$leaderboard.slice(idx + 1)
-		];
+		const next = [...$leaderboard];
+		next[idx] = {
+			...next[idx],
+			nickname: $self.nickname,
+			avatar: $self.avatar,
+			streak: $self.streak,
+			accuracy: $self.accuracy
+		};
+
+		return next;
 	}
 );
 
