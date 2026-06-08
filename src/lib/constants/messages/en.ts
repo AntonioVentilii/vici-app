@@ -1867,9 +1867,6 @@ export const enMessages = {
 	'profile.avatar.option.bg.indigo': 'Indigo',
 	'profile.avatar.option.bg.teal': 'Teal',
 	'profile.avatar.option.bg.clay': 'Clay',
-	'profile.dashboard.identity_meta': 'Lvl {level} · {rank} global · {accuracy}% accuracy',
-	'profile.dashboard.calls_count': '{calls} calls',
-	'profile.dashboard.level_label': 'LEVEL {level}',
 	'profile.dashboard.nickname_save_failed_title': 'Could not save nickname',
 	'profile.dashboard.nickname_save_failed': 'Try again in a moment.',
 	'profile.dashboard.nickname_taken_title': 'Nickname taken',
@@ -1897,7 +1894,6 @@ export const enMessages = {
 	'profile.dashboard.referrals.share_text':
 		'Sign up to VICI with my code {code} — we both get {amount} VXP.',
 	'profile.dashboard.referrals.share_title': 'Join me on VICI',
-	'profile.dashboard.session': 'session',
 	'profile.empty.sub': 'Sign in or place your first prediction to initialize your social identity.',
 	'profile.empty.title': 'No Profile Found',
 	'profile.handle.available': 'available',
