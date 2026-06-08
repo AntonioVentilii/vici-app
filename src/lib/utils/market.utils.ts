@@ -377,7 +377,7 @@ export const getOutcomeVariant = (
  * (logged, never thrown) so the market still renders as resolved without an
  * outcome label.
  */
-export const parseSettlementOutcome = (details?: string): string | undefined => {
+export const parseSettlementOutcome = (details?: string): Outcome | undefined => {
 	try {
 		const parsed = JSON.parse(details ?? '{}');
 
