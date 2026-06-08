@@ -30,6 +30,7 @@
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
+		compareAffiliationByLifetime,
 		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
 	import { formatMonthName } from '$lib/utils/format.utils';
@@ -172,20 +173,7 @@
 	const wcTop3 = ({ stats }: { stats: AffiliationStatsDoc[] }): AffiliationStatsDoc[] => {
 		const list = [...stats];
 
-		list.sort((a, b) => {
-			const da = affiliationLifetimeAccuracy(a);
-			const db = affiliationLifetimeAccuracy(b);
-
-			if (da !== db) {
-				return db - da;
-			}
-
-			if (a.totalCalls !== b.totalCalls) {
-				return b.totalCalls - a.totalCalls;
-			}
-
-			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
-		});
+		list.sort(compareAffiliationByLifetime);
 
 		return list.slice(0, 3);
 	};
@@ -209,20 +197,7 @@
 			return 0;
 		}
 
-		const sorted = [...stats].sort((a, b) => {
-			const da = affiliationLifetimeAccuracy(a);
-			const db = affiliationLifetimeAccuracy(b);
-
-			if (da !== db) {
-				return db - da;
-			}
-
-			if (a.totalCalls !== b.totalCalls) {
-				return b.totalCalls - a.totalCalls;
-			}
-
-			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
-		});
+		const sorted = [...stats].sort(compareAffiliationByLifetime);
 
 		const idx = sorted.findIndex((s) => s.affiliationIdentifier === affiliationIdentifier);
 
