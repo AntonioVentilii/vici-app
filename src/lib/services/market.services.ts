@@ -6,6 +6,7 @@ import {
 	MILLISECOND_IN_NANOSECONDS,
 	PAYOFF_TYPE,
 	PRICE_DECIMALS,
+	RESOLUTION_CLAUSE_MAX_LENGTH,
 	STRIKE,
 	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
@@ -36,7 +37,7 @@ import {
 } from '$lib/utils/market.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
-import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
+import { isEmptyString, isNullish, nonNullish, notEmptyString, toNullable } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
 /**
@@ -45,6 +46,7 @@ import type { Identity } from '@icp-sdk/core/agent';
  */
 export const createMarket = async ({
 	title,
+	resolution,
 	description,
 	expiryDate,
 	outcomes = [],
@@ -55,7 +57,20 @@ export const createMarket = async ({
 	locale
 }: {
 	title: string;
-	description: string;
+	/**
+	 * The compulsory on-chain settlement clause (`Resolution.clause`) stating
+	 * how this market resolves. The registry rejects an empty or over-long
+	 * clause (`ResolutionClauseEmpty` / `ResolutionClauseTooLong`); callers must
+	 * supply a non-empty value, which is trimmed and capped at
+	 * {@link RESOLUTION_CLAUSE_MAX_LENGTH} here.
+	 */
+	resolution: string;
+	/**
+	 * Free-text descriptive blurb. Optional — when omitted (or blank) it falls
+	 * back to the {@link resolution} clause, since `AddSeriesParams.description`
+	 * is still a required field on chain.
+	 */
+	description?: string;
 	expiryDate: bigint;
 	outcomes?: string[];
 	payoutUnit?: RegistryDid.PayoutUnit;
@@ -119,14 +134,31 @@ export const createMarket = async ({
 		.replace(/\s+/g, '_')
 		.replace(/[^A-Z0-9_-]/g, '');
 
+	// The registry requires a non-empty resolution clause on every series, so
+	// trim + cap it to mirror `ResolutionClauseEmpty` / `ResolutionClauseTooLong`.
+	// Fail fast on a blank clause rather than letting the canister reject it.
+	const resolutionClause = resolution.trim().slice(0, RESOLUTION_CLAUSE_MAX_LENGTH);
+
+	if (isEmptyString(resolutionClause)) {
+		throw new Error('A market requires a non-empty resolution clause.');
+	}
+
+	// `description` is optional for callers; on chain it is still required, so
+	// fall back to the resolution clause when no blurb is provided.
+	const trimmedDescription = description?.trim();
+	const descriptionText = notEmptyString(trimmedDescription)
+		? trimmedDescription
+		: resolutionClause;
+
 	const params: RegistryDid.AddSeriesParams = {
 		underlying,
 		title,
 		description: {
-			plain: description,
+			plain: descriptionText,
 			markdown: toNullable(),
 			html: toNullable()
 		},
+		resolution: { clause: resolutionClause },
 		expiry_ns: expiryDate * MILLISECOND_IN_NANOSECONDS,
 		payout_unit: payoutUnit,
 		strike: STRIKE,
@@ -168,7 +200,7 @@ export const createMarket = async ({
 		user: identity.getPrincipal().toText(),
 		marketId: seriesId,
 		title: `Market created: ${title}`,
-		details: description
+		details: descriptionText
 	});
 
 	refreshMarkets();
@@ -980,12 +1012,20 @@ export const forkMarket = async ({
 	groupIds,
 	title,
 	description,
+	resolution,
 	locale
 }: {
 	marketId: MarketId;
 	groupIds: string[];
 	title?: string;
 	description?: string;
+	/**
+	 * Optional settlement-clause override for the fork. When omitted, the
+	 * registry inherits the source series' resolution (`fork_series` treats a
+	 * `None` resolution as "keep the source's"), which is what we want for
+	 * "Challenge your friends" forks that don't restate how the market settles.
+	 */
+	resolution?: string;
 	/**
 	 * Optional BCP 47 source-language override for the forked market's
 	 * `title`/`description`. When omitted, the registry inherits the source
@@ -1001,11 +1041,18 @@ export const forkMarket = async ({
 
 	const identity = await safeGetIdentityOnce();
 
+	const trimmedResolution = resolution?.trim();
+
 	const params: RegistryDid.ForkSeriesParams = {
 		source_series_id: marketId,
 		title: toNullable(title),
 		description: toNullable(
 			nonNullish(description) ? { plain: description, html: [], markdown: [] } : undefined
+		),
+		resolution: toNullable(
+			notEmptyString(trimmedResolution)
+				? { clause: trimmedResolution.slice(0, RESOLUTION_CLAUSE_MAX_LENGTH) }
+				: undefined
 		),
 		trading_access: [{ Restricted: { groups: groupIds } }],
 		engine_id: toNullable(VICI_ENGINE_ID),
