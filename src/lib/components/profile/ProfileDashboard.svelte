@@ -1,40 +1,49 @@
 <script lang="ts">
-	import { Check, Eye, Flame, Lock, Pencil, Target, Trophy } from '@lucide/svelte';
+	import { Check, Pencil, Settings, Shield, Users } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import StreakFlame from '$lib/components/characters/StreakFlame.svelte';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
-	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import MenagerieBadge from '$lib/components/menagerie/MenagerieBadge.svelte';
 	import AvatarEditor from '$lib/components/profile/AvatarEditor.svelte';
 	import HandleEditor from '$lib/components/profile/HandleEditor.svelte';
 	import ProfileOracleInsight from '$lib/components/profile/ProfileOracleInsight.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
+	import NotifBell from '$lib/components/ui/NotifBell.svelte';
+	import ViciAvatar from '$lib/components/ui/ViciAvatar.svelte';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
+	import { profileJoinUrl } from '$lib/constants/contact.constants';
 	import { nicknameUniqueKey } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { SCHOOL_PASS2_ENABLED } from '$lib/constants/school-picker.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
+	import { marketById } from '$lib/derived/market-by-id.derived';
 	import {
 		decisiveSettledCount,
 		resolvedPositionsNotInitialized
 	} from '$lib/derived/resolved-positions.derived';
+	import { userIsAdmin } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
+	import { listMyReferrals } from '$lib/services/referral.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { myAvatarParts } from '$lib/stores/avatar.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
+	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
+	import type { MarketId } from '$lib/types/market';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
 	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
-	import { evaluateAchievements } from '$lib/utils/achievements.utils';
 	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
+	import { writeToClipboard } from '$lib/utils/clipboard.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
-	import { deterministicParts } from '$lib/utils/vici-avatar.utils';
+	import { menagerieRows, menagerieStatsFromProfile } from '$lib/utils/menagerie.utils';
+	import { avatarBackdropPlanes, deterministicParts } from '$lib/utils/vici-avatar.utils';
 
 	interface Props {
 		profile: UserProfile;
@@ -177,6 +186,85 @@
 	const globalRankDisplay = $derived(globalRank === undefined ? '—' : `#${globalRank}`);
 
 	/**
+	 * Credibility line — "Top X% of global predictors". The hero surfaces one
+	 * quiet line of social standing under the handle. The percentile is the
+	 * viewer's rank over the size of the global ("all") standings window (the
+	 * total ranked field). Below 1% it floors to "Top 1%"; we only render the
+	 * line once a real rank + a non-empty ranked field exist, so it never reads
+	 * as "Top 100%" on an unranked or unloaded profile.
+	 */
+	const topPercentLabel = $derived.by<string | undefined>(() => {
+		const total = $globalStandingsStore.get('all')?.entries.length;
+
+		if (globalRank === undefined || total === undefined || total <= 0) {
+			return;
+		}
+
+		const pct = (globalRank / total) * 100;
+		const rounded = pct < 1 ? 1 : Math.ceil(pct);
+
+		return t({
+			locale: $localeStore,
+			key: 'profile.dashboard.top_percent',
+			params: { percent: rounded }
+		});
+	});
+
+	/* Invite Friends — growth loop ------------------------------------- */
+
+	// The hero CTA shares the viewer's public profile link. Native share sheet
+	// when available; otherwise copy to clipboard with a toast fallback so the
+	// loop still closes on desktop / unsupported browsers. The `/join/{handle}`
+	// link feeds the referral / Parrot achievement as friends join.
+	const handleInviteFriends = async () => {
+		const url = profileJoinUrl(profile.nickname ?? '');
+		const shareText = t({ locale: $localeStore, key: 'profile.dashboard.invite_share_text' });
+
+		if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+			try {
+				await navigator.share({
+					title: t({ locale: $localeStore, key: 'profile.dashboard.invite_share_title' }),
+					text: shareText,
+					url
+				});
+
+				return;
+			} catch (_: unknown) {
+				// Cancelled or unsupported — fall through to clipboard.
+			}
+		}
+
+		const ok = await writeToClipboard(url);
+
+		if (ok) {
+			flashProfileToast(t({ locale: $localeStore, key: 'profile.dashboard.invite_copied' }));
+		}
+	};
+
+	/* Hero gradient — recoloured from the avatar's own backdrop palette ---- */
+
+	// The full-bleed hero figure renders with `noBg`, so it sits on a gradient
+	// built from the same two backdrop planes the avatar would otherwise draw.
+	// Re-syncs the instant the editor saves (`saveMyAvatarParts` dispatches
+	// `avatarchange`) so the gradient tracks a backdrop change without waiting
+	// for an incidental re-render. Falls back to the principal-seeded face's
+	// palette for a user who has never picked.
+	const heroParts = $derived(
+		isOwnProfile
+			? ($myAvatarParts ?? deterministicParts(profile.owner))
+			: deterministicParts(profile.owner)
+	);
+	const heroPalette = $derived(avatarBackdropPlanes(heroParts));
+
+	const handleOpenSettings = () => {
+		void goto(resolve(AppPath.Settings));
+	};
+
+	const handleOpenAdmin = () => {
+		void goto(resolve(AppPath.Admin));
+	};
+
+	/**
 	 * Compact lifetime stats line — "{calls} calls · {accuracy}% accuracy".
 	 */
 	const statsLineCalls = $derived.by(() => {
@@ -233,13 +321,14 @@
 	const myCountry = $derived(isOwnProfile ? $myAffiliationsStore.country : undefined);
 
 	/**
-	 * Four-slot affiliation grid — Uni / Country / City / Company.
-	 * Only the first two are wired; City + Company are locked
-	 * placeholders ("coming soon").
+	 * Affiliation grid — the two wired slots, Alma Mater + Citizen. The
+	 * earlier locked City / Company "coming soon" placeholders are gone: an
+	 * empty slot that can never be filled reads as broken chrome, so the grid
+	 * shows only the affiliations a user can actually set.
 	 */
 	interface AffilSlot {
-		key: 'university' | 'country' | 'city' | 'company';
-		kind: AffiliationKind | null;
+		key: 'university' | 'country';
+		kind: AffiliationKind;
 		labelKey: MessageKey;
 		filled: boolean;
 		value: string | null;
@@ -250,10 +339,9 @@
 		glyph: string;
 		/** Affiliation brand palette — tints the filled-slot icon in the
 		 *  school's / country's own colour. Absent for roster entries
-		 *  without a curated palette and for the locked placeholders. */
+		 *  without a curated palette. */
 		color: string | null;
 		text: string | null;
-		locked: boolean;
 		/** Alma Mater verification state — only meaningful on the
 		 *  `university` slot when filled. `null` on every other slot. */
 		status: SchoolStatus | null;
@@ -304,7 +392,6 @@
 				glyph: uniOption?.glyph ?? '+',
 				color: uniOption?.color ?? null,
 				text: uniOption?.text ?? null,
-				locked: false,
 				status: uniOption !== undefined ? schoolStatus : null
 			},
 			{
@@ -317,33 +404,6 @@
 				glyph: countryOption?.glyph ?? '+',
 				color: countryOption?.color ?? null,
 				text: countryOption?.text ?? null,
-				locked: false,
-				status: null
-			},
-			{
-				key: 'city',
-				kind: null,
-				labelKey: 'profile.dashboard.affiliations.city',
-				filled: false,
-				value: null,
-				affiliationIdentifier: null,
-				glyph: '+',
-				color: null,
-				text: null,
-				locked: true,
-				status: null
-			},
-			{
-				key: 'company',
-				kind: null,
-				labelKey: 'profile.dashboard.affiliations.company',
-				filled: false,
-				value: null,
-				affiliationIdentifier: null,
-				glyph: '+',
-				color: null,
-				text: null,
-				locked: true,
 				status: null
 			}
 		];
@@ -352,10 +412,6 @@
 	const filledSlotCount = $derived(slots.filter((s) => s.filled).length);
 
 	const handleSlotClick = (slot: AffilSlot) => {
-		if (slot.locked || slot.kind === null) {
-			return;
-		}
-
 		// From an unverified university slot (Pass-2 on), jump the picker
 		// straight to that school's email-verification step.
 		pickerVerifyId =
@@ -375,8 +431,38 @@
 	// already shows them.
 	const avatarInitialParts = $derived($myAvatarParts ?? deterministicParts(profile.owner));
 
-	/* Oracle insight (kept lean — no archetype-fiction card) ----------- */
+	/* Oracle weekly insight — the latest settled call as a record line --- */
 
+	// The newest settled call in the recent window — drives the Oracle's
+	// record card: a win reads "You called it — '{q}?'", a loss reads "The
+	// market went the other way — '{q}?'". `recentSettlements` is newest-first,
+	// so the head is the latest resolution. The market title (the question) is
+	// resolved live from the shared `marketById` map; it falls back to the
+	// market id only when the market hasn't loaded.
+	const latestSettlement = $derived(recentSettlements.at(0));
+
+	interface OracleRecord {
+		win: boolean;
+		question: string;
+	}
+
+	const oracleRecord = $derived.by<OracleRecord | undefined>(() => {
+		if (!isOwnProfile || latestSettlement === undefined) {
+			return;
+		}
+
+		const title =
+			$marketById.get(latestSettlement.marketId as MarketId)?.title ?? latestSettlement.marketId;
+		// Drop a trailing "?" so the copy can re-add a single one inside the
+		// quotes ("…'{q}?'") regardless of how the title is punctuated.
+		const question = title.replace(/\?\s*$/, '');
+
+		return { win: latestSettlement.win, question };
+	});
+
+	// Fallback insight string — shown when there is no settled call to surface
+	// as a record line (a fresh account, or someone else's profile). Kept lean,
+	// no archetype fiction.
 	const oracleInsight = $derived.by(() => {
 		const trades = totalTrades;
 		const acc = Math.round(accuracy);
@@ -417,73 +503,29 @@
 		});
 	});
 
-	/* Achievements ----------------------------------------------------- */
+	/* Achievements — the Menagerie trophy layer ------------------------ */
 
-	const persistedUnlocks = $derived(new Set(profile.unlockedAchievements ?? []));
-	const achievementEvaluations = $derived(
-		evaluateAchievements({
-			totalTrades,
-			winStreak: profile.streak ?? 0,
-			dailyStreak,
-			accuracy,
-			contrarianWins: profile.contrarianWins ?? 0,
-			// `league-founder` reflects the persisted unlock here (the rail
-			// reads `unlockedAchievements`); the dashboard doesn't fetch
-			// league membership, so the live axis stays `false` and the
-			// sticky persisted flag drives the earned state.
-			ownsQualifyingLeague: false,
-			topDecileStreak: profile.topDecileStreak ?? 0,
-			// Monthly awards: `sharpest-eye`'s tier comes from the persisted
-			// best tier; `bold-caller`'s live axis is the sticky persisted
-			// unlock (the dashboard doesn't recompute monthly leaderboards).
-			sharpestEyeBestTier: profile.sharpestEyeBestTier,
-			wonBoldCallerMonth: (profile.unlockedAchievements ?? []).includes('bold-caller')
-		})
-	);
+	// Referral count (Parrot) — the profile doc doesn't carry it, so it's
+	// loaded once and folded into the live menagerie stats. Best-effort: a
+	// failed load just leaves Parrot at its baseline.
+	let referralCount = $state(0);
 
-	// Sort: closest-to-unlock locked first → earned → far-locked.
-	// `b.prog - a.prog` ordering with the earned bucket folded behind.
-	const sortedAchievements = $derived.by(() => {
-		const items = [...achievementEvaluations];
-
-		return items.sort((a, b) => {
-			const aUnlocked = persistedUnlocks.has(a.id) || a.unlocked;
-			const bUnlocked = persistedUnlocks.has(b.id) || b.unlocked;
-
-			if (aUnlocked !== bUnlocked) {
-				return aUnlocked ? -1 : 1;
-			}
-
-			return b.progress - a.progress;
-		});
+	// Global rank + ranked total (Goat) — from the cached "all" standings
+	// window when loaded.
+	const menagerieSignals = $derived({
+		referrals: referralCount,
+		rank: globalRank,
+		totalRanked: $globalStandingsStore.get('all')?.entries.length
 	});
 
-	/**
-	 * Achievement glyph mapping (per-id lucide picker):
-	 *   - `oracle`  → eye
-	 *   - `on-fire` → flame
-	 *   - `marathon`→ target
-	 *   - default   → trophy
-	 *
-	 * Every other tile (first-call, contrarian, league-founder, …)
-	 * falls through to Trophy. The Album surface uses the same mapping
-	 * so the affordance carries across surfaces.
-	 */
-	const iconForAchievement = (id: string): typeof Trophy => {
-		if (id === 'oracle') {
-			return Eye;
-		}
+	const menagerieStats = $derived(
+		menagerieStatsFromProfile({ profile, signals: menagerieSignals })
+	);
 
-		if (id === 'on-fire') {
-			return Flame;
-		}
-
-		if (id === 'marathon') {
-			return Target;
-		}
-
-		return Trophy;
-	};
+	// All twelve animals, decorated with each one's live tier + progress and
+	// sorted earned-first — the same ordering the Album route uses, so the
+	// profile rail leads with the trophies the owner has actually earned.
+	const menagerieRailRows = $derived(menagerieRows(menagerieStats));
 
 	onMount(() => {
 		if (!isOwnProfile) {
@@ -498,82 +540,134 @@
 			}
 		})();
 
+		void (async () => {
+			try {
+				const referrals = await listMyReferrals();
+				referralCount = referrals.length;
+			} catch (_: unknown) {
+				// Best-effort: Parrot stays at its baseline if this fails.
+			}
+		})();
+
 		void refreshMyAffiliations();
 	});
 </script>
 
 <div class="profile-dashboard">
-	<!-- Identity card with archetype halo -->
-	<section style:--archetype-accent={archetypeAccent} class="profile-identity">
-		<span class="profile-halo" aria-hidden="true"></span>
+	<!-- Full-bleed avatar hero. The avatar scene IS the header: the figure
+	     renders with `noBg` on a gradient built from its own backdrop palette,
+	     a top scrim keeps the floating controls legible, and a soft bottom fade
+	     melts the panel into the page. Tapping the panel opens the avatar
+	     editor (own profile only). -->
+	<section class="profile-hero">
+		<button
+			style:background={`linear-gradient(165deg, ${heroPalette.p1} 0%, ${heroPalette.p2} 100%)`}
+			class="profile-hero-panel"
+			class:is-editable={isOwnProfile}
+			aria-label={t({ locale: $localeStore, key: 'profile.dashboard.edit_avatar' })}
+			disabled={!isOwnProfile}
+			onclick={() => isOwnProfile && (avatarEditorOpen = true)}
+			type="button"
+		>
+			<span class="profile-hero-figure" aria-hidden="true">
+				<ViciAvatar
+					animate
+					decor={false}
+					frame={false}
+					noBg
+					parts={heroParts}
+					seed={profile.owner}
+					signature={false}
+					size={500}
+				/>
+			</span>
+			<!-- Soft bottom fade into the page. Kept short + below the figure so
+			     it never clips the bust. -->
+			<span class="profile-hero-fade" aria-hidden="true"></span>
+			{#if isOwnProfile}
+				<span class="profile-hero-edit" aria-hidden="true">
+					<Pencil size={12} strokeWidth={1.8} />
+					{t({ locale: $localeStore, key: 'profile.dashboard.edit_label' })}
+				</span>
+			{/if}
+		</button>
 
-		<div class="profile-identity-row">
+		<!-- Top scrim so the floating controls read over any backdrop. -->
+		<span class="profile-hero-scrim" aria-hidden="true"></span>
+
+		<!-- Floating controls — notification bell + settings (+ admin), on
+		     translucent discs. The bell uses its cream variant for contrast. -->
+		<div class="profile-hero-controls">
+			<span class="profile-hero-disc">
+				<NotifBell light />
+			</span>
+			{#if $userIsAdmin}
+				<button
+					class="profile-hero-disc profile-hero-disc-btn"
+					aria-label={t({ locale: $localeStore, key: 'nav.admin' })}
+					onclick={handleOpenAdmin}
+					type="button"
+				>
+					<Shield aria-hidden="true" size={18} strokeWidth={1.7} />
+				</button>
+			{/if}
 			<button
-				class="profile-avatar"
-				class:is-editable={isOwnProfile}
-				aria-label={t({ locale: $localeStore, key: 'profile.dashboard.edit_avatar' })}
-				disabled={!isOwnProfile}
-				onclick={() => isOwnProfile && (avatarEditorOpen = true)}
+				class="profile-hero-disc profile-hero-disc-btn"
+				aria-label={t({ locale: $localeStore, key: 'settings.title' })}
+				onclick={handleOpenSettings}
 				type="button"
 			>
-				<Avatar
-					class="h-full w-full"
-					animate
-					avatar={profile.avatar}
-					nickname={profile.nickname}
-					owner={profile.owner}
-					self={isOwnProfile}
-				/>
-				{#if isOwnProfile}
-					<span class="profile-avatar-edit" aria-hidden="true">
-						<Pencil size={12} strokeWidth={2} />
-					</span>
-				{/if}
+				<Settings aria-hidden="true" size={18} strokeWidth={1.7} />
 			</button>
+		</div>
 
-			<div class="profile-identity-meta">
-				<!-- Row 1: handle · VXP balance chip.
-				     The handle doubles as the rename affordance (own
-				     profile only) and carries an inline pencil glyph that
-				     opens the HandleEditor sheet. -->
-				<div class="profile-handle-row">
-					{#if isOwnProfile}
-						<!-- The button's visible text (the handle) is the
-						     accessible name. The pencil is decorative
-						     (`aria-hidden`); `aria-label` names the action. -->
-						<button
-							class="profile-handle profile-handle-btn"
-							aria-label={t({ locale: $localeStore, key: 'profile.handle.edit' })}
-							onclick={() => (handleEditOpen = true)}
-							type="button"
-						>
-							<span class="profile-handle-text">@{profile.nickname}</span>
-							<Pencil
-								class="profile-handle-pencil"
-								aria-hidden="true"
-								size={13}
-								strokeWidth={1.7}
-							/>
-						</button>
-					{:else}
-						<h1 class="profile-handle">@{profile.nickname}</h1>
-					{/if}
-					<span class="num profile-vxp-chip" aria-label={vxpBalanceLabel}>
-						{vxpBalanceLabel}
-					</span>
-				</div>
+		<!-- Editable handle + one credibility line, centered below the figure. -->
+		<div class="profile-hero-meta">
+			{#if isOwnProfile}
+				<button
+					class="profile-hero-handle profile-hero-handle-btn"
+					aria-label={t({ locale: $localeStore, key: 'profile.handle.edit' })}
+					onclick={() => (handleEditOpen = true)}
+					type="button"
+				>
+					<span class="profile-hero-handle-text">@{profile.nickname}</span>
+					<Pencil
+						class="profile-hero-handle-pencil"
+						aria-hidden="true"
+						size={15}
+						strokeWidth={1.7}
+					/>
+				</button>
+			{:else}
+				<h1 class="profile-hero-handle">@{profile.nickname}</h1>
+			{/if}
 
-				<!-- Row 2: school + country chip(s) BELOW the handle.
-				     Each chip renders in its affiliation's own palette —
-				     the school's brand colour ("STANFORD" red), the
-				     country's national tint — drawn from the roster's
-				     curated `color`/`text` pair (same plumbing the
-				     onboarding affiliation preview uses). Either colour may
-				     be missing for a roster entry, so each chip falls back
-				     to the laurel accent (school) / neutral surface
-				     (country). The archetype tag trails behind when no
-				     affiliations are set, preserving the "you're an
-				     archetype" affordance. -->
+			{#if topPercentLabel !== undefined}
+				<span class="num profile-hero-credibility">{topPercentLabel}</span>
+			{/if}
+
+			{#if isOwnProfile}
+				<button
+					class="profile-hero-invite"
+					onclick={() => void handleInviteFriends()}
+					type="button"
+				>
+					<Users aria-hidden="true" size={15} strokeWidth={1.8} />
+					{t({ locale: $localeStore, key: 'profile.dashboard.invite_friends' })}
+				</button>
+			{/if}
+		</div>
+	</section>
+
+	<!-- Identity card — VXP balance + affiliation chips, the level ladder,
+	     and the compact lifetime stats line (streak · calls · session). The
+	     avatar + handle now live in the hero above. -->
+	<section style:--archetype-accent={archetypeAccent} class="profile-identity">
+		<div class="profile-identity-meta">
+			<div class="profile-handle-row">
+				<span class="num profile-vxp-chip" aria-label={vxpBalanceLabel}>
+					{vxpBalanceLabel}
+				</span>
 				{#if myUni !== undefined || myCountry !== undefined}
 					{@const uniOption = myUni
 						? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationIdentifier })
@@ -581,77 +675,73 @@
 					{@const countryOption = myCountry
 						? lookupWorldsAffiliation({ kind: 'country', id: myCountry.affiliationIdentifier })
 						: undefined}
-					<div class="profile-affil-chip-row">
-						{#if uniOption}
-							<span
-								style={affiliationChipStyle({ color: uniOption.color, text: uniOption.text })}
-								class="school-chip"
-								class:has-brand={uniOption.color !== undefined}
-							>
-								<span class="school-chip-dot" aria-hidden="true"></span>
-								{uniOption.name.toUpperCase()}
-							</span>
-						{/if}
-						{#if countryOption}
-							<span
-								style={affiliationChipStyle({
-									color: countryOption.color,
-									text: countryOption.text
-								})}
-								class="country-chip"
-								class:has-brand={countryOption.color !== undefined}
-							>
-								<CountryFlag class="profile-country-flag" countryCode={countryOption.id} />
-								{countryOption.name.toUpperCase()}
-							</span>
-						{/if}
-					</div>
-				{:else if archetype}
-					<div class="profile-affil-chip-row">
-						<span class="profile-archetype-chip">
-							{t({ locale: $localeStore, key: archetype.tagKey })}
-						</span>
-					</div>
-				{/if}
-
-				<!-- Row 3: compact identity stats — Lvl · accuracy -->
-				<p class="profile-stats-line">
-					{t({
-						locale: $localeStore,
-						key: 'profile.dashboard.identity_meta',
-						params: { level, rank: globalRankDisplay, accuracy: accuracyDisplay }
-					})}
-				</p>
-
-				<!-- Row 4: inline streak + calls (Flame N · M calls).
-				     Always rendered — the flame stays visible even at
-				     streak=0 so the row reads as persistent. -->
-				<p class="profile-streak-line">
-					<span class="profile-streak-inline" aria-label="streak">
-						<StreakFlame count={dailyStreak} size={14} />
-						<span class="num">{dailyStreak}</span>
-					</span>
-					<span class="profile-stats-sep" aria-hidden="true">·</span>
-					<span class="num">
-						{t({
-							locale: $localeStore,
-							key: 'profile.dashboard.calls_count',
-							params: { calls: statsLineCalls }
-						})}
-					</span>
-					{#if sessionVxpDelta.count > 0}
-						<span class="profile-stats-sep" aria-hidden="true">·</span>
+					{#if uniOption}
 						<span
-							class="num profile-session-inline"
-							class:is-down={sessionVxpDelta.delta < 0}
-							class:is-up={sessionVxpDelta.delta > 0}
+							style={affiliationChipStyle({ color: uniOption.color, text: uniOption.text })}
+							class="school-chip"
+							class:has-brand={uniOption.color !== undefined}
 						>
-							{sessionVxpDelta.delta >= 0 ? '+' : ''}{sessionVxpDelta.delta}
-							{t({ locale: $localeStore, key: 'profile.dashboard.session' })}
+							<span class="school-chip-dot" aria-hidden="true"></span>
+							{uniOption.name.toUpperCase()}
 						</span>
 					{/if}
-				</p>
+					{#if countryOption}
+						<span
+							style={affiliationChipStyle({
+								color: countryOption.color,
+								text: countryOption.text
+							})}
+							class="country-chip"
+							class:has-brand={countryOption.color !== undefined}
+						>
+							<CountryFlag class="profile-country-flag" countryCode={countryOption.id} />
+							{countryOption.name.toUpperCase()}
+						</span>
+					{/if}
+				{:else if archetype}
+					<span class="profile-archetype-chip">
+						{t({ locale: $localeStore, key: archetype.tagKey })}
+					</span>
+				{/if}
 			</div>
+
+			<!-- Compact identity stats — Lvl · rank · accuracy -->
+			<p class="profile-stats-line">
+				{t({
+					locale: $localeStore,
+					key: 'profile.dashboard.identity_meta',
+					params: { level, rank: globalRankDisplay, accuracy: accuracyDisplay }
+				})}
+			</p>
+
+			<!-- Inline streak + calls (Flame N · M calls). Always rendered —
+			     the flame stays visible even at streak=0 so the row reads as
+			     persistent. -->
+			<p class="profile-streak-line">
+				<span class="profile-streak-inline" aria-label="streak">
+					<StreakFlame count={dailyStreak} size={14} />
+					<span class="num">{dailyStreak}</span>
+				</span>
+				<span class="profile-stats-sep" aria-hidden="true">·</span>
+				<span class="num">
+					{t({
+						locale: $localeStore,
+						key: 'profile.dashboard.calls_count',
+						params: { calls: statsLineCalls }
+					})}
+				</span>
+				{#if sessionVxpDelta.count > 0}
+					<span class="profile-stats-sep" aria-hidden="true">·</span>
+					<span
+						class="num profile-session-inline"
+						class:is-down={sessionVxpDelta.delta < 0}
+						class:is-up={sessionVxpDelta.delta > 0}
+					>
+						{sessionVxpDelta.delta >= 0 ? '+' : ''}{sessionVxpDelta.delta}
+						{t({ locale: $localeStore, key: 'profile.dashboard.session' })}
+					</span>
+				{/if}
+			</p>
 		</div>
 
 		<!-- Level progress — explicit "LEVEL" eyebrow + "{xp} / {target}
@@ -679,7 +769,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'profile.dashboard.affiliations.count',
-					params: { count: filledSlotCount }
+					params: { count: filledSlotCount, total: slots.length }
 				})}
 			</span>
 		</div>
@@ -687,13 +777,12 @@
 			{#each slots as slot (slot.key)}
 				<button
 					class="affil-slot"
-					class:is-empty={!slot.filled && !slot.locked}
+					class:is-empty={!slot.filled}
 					class:is-filled={slot.filled}
-					class:is-locked={slot.locked}
 					aria-label={slot.filled
 						? `${t({ locale: $localeStore, key: slot.labelKey })}: ${slot.value}`
 						: t({ locale: $localeStore, key: slot.labelKey })}
-					disabled={slot.locked || !isOwnProfile}
+					disabled={!isOwnProfile}
 					onclick={() => handleSlotClick(slot)}
 					type="button"
 				>
@@ -706,9 +795,7 @@
 						class:has-brand={slot.filled && slot.kind !== 'country' && slot.color !== null}
 						aria-hidden="true"
 					>
-						{#if slot.locked}
-							<Lock size={14} strokeWidth={1.8} />
-						{:else if slot.kind === 'country' && slot.affiliationIdentifier !== null}
+						{#if slot.kind === 'country' && slot.affiliationIdentifier !== null}
 							<CountryFlag class="affil-slot-flag" countryCode={slot.affiliationIdentifier} />
 						{:else}
 							{slot.glyph}
@@ -720,8 +807,6 @@
 					<span class="affil-slot-value" class:dim={!slot.filled}>
 						{#if slot.filled}
 							{slot.value}
-						{:else if slot.locked}
-							{t({ locale: $localeStore, key: 'profile.dashboard.affiliations.soon' })}
 						{:else}
 							{t({ locale: $localeStore, key: 'profile.dashboard.affiliations.add' })}
 						{/if}
@@ -765,7 +850,9 @@
 		</div>
 	</section>
 
-	<!-- Achievements rail (glyph emblems + tier classes) -->
+	<!-- Achievements — the Menagerie trophy layer. Each animal renders as a
+	     squircle badge (the shared `MenagerieBadge`) at its live tier, earned
+	     trophies first; "All" opens the full Menagerie album. -->
 	<section class="profile-achievements">
 		<div class="profile-achievements-head">
 			<h2 class="profile-section-title">
@@ -780,47 +867,33 @@
 			</button>
 		</div>
 		<div class="profile-achievements-rail">
-			{#each sortedAchievements as evaluation (evaluation.id)}
-				{@const unlocked = persistedUnlocks.has(evaluation.id) || evaluation.unlocked}
-				{@const progressPercent = Math.round(evaluation.progress * 100)}
-				{@const AchIcon = iconForAchievement(evaluation.id)}
-				<div
-					class="profile-achievement-card"
-					class:is-bronze={evaluation.def.tier === 'bronze'}
-					class:is-gold={evaluation.def.tier === 'gold'}
-					class:is-silver={evaluation.def.tier === 'silver'}
-					class:is-unlocked={unlocked}
+			{#each menagerieRailRows as row (row.animal.slug)}
+				{@const earned = row.tier !== null}
+				<button
+					class="profile-menagerie-tile"
+					onclick={() => goto(resolve(AppPath.Album))}
+					type="button"
 				>
-					<span class="profile-achievement-emblem" aria-hidden="true">
-						<AchIcon size={18} strokeWidth={1.8} />
+					<MenagerieBadge size={68} slug={row.animal.slug} tier={row.tier} />
+					<span class="profile-menagerie-name">
+						{t({ locale: $localeStore, key: row.animal.nameKey })}
 					</span>
-					<div class="profile-achievement-text">
-						<span class="profile-achievement-name">
-							{t({ locale: $localeStore, key: evaluation.def.nameKey })}
+					{#if earned}
+						<span class="profile-menagerie-concept">
+							{t({ locale: $localeStore, key: row.animal.conceptKey })}
 						</span>
-						<span class="profile-achievement-sub">
-							{t({ locale: $localeStore, key: evaluation.def.descriptionKey })}
+					{:else}
+						<span class="profile-menagerie-concept is-locked">
+							{t({ locale: $localeStore, key: 'menagerie.locked' })}
 						</span>
-					</div>
-					{#if !unlocked && evaluation.progress > 0}
-						<div
-							class="profile-achievement-progress"
-							aria-valuemax="100"
-							aria-valuemin="0"
-							aria-valuenow={progressPercent}
-							role="progressbar"
-						>
-							<span style="width: {progressPercent}%" class="profile-achievement-progress-bar"
-							></span>
-						</div>
 					{/if}
-				</div>
+				</button>
 			{/each}
 		</div>
 	</section>
 
-	<!-- Oracle weekly insight -->
-	<ProfileOracleInsight {oracleInsight} />
+	<!-- Oracle weekly insight — the latest settled call as a record line. -->
+	<ProfileOracleInsight {oracleInsight} record={oracleRecord} />
 </div>
 
 {#if pickerKind !== null}
@@ -881,7 +954,221 @@
 		letter-spacing: var(--tracking-tight);
 	}
 
-	/* Identity card with archetype halo -------------------------------- */
+	/* Full-bleed avatar hero ------------------------------------------- */
+	/* Breaks out of the dashboard's horizontal padding so the avatar scene
+	   reaches both edges, then re-insets its meta column. */
+	.profile-hero {
+		position: relative;
+		margin: 0 -1.25rem 0.25rem;
+	}
+
+	.profile-hero-panel {
+		display: block;
+		position: relative;
+		width: 100%;
+		height: clamp(208px, 50vw, 268px);
+		padding: 0;
+		border: 0;
+		overflow: hidden;
+		cursor: default;
+	}
+
+	.profile-hero-panel.is-editable {
+		cursor: pointer;
+	}
+
+	/* The figure sits at the foot of the panel, oversized so the bust fills
+	   the lower-centre and bleeds off the bottom edge. */
+	.profile-hero-figure {
+		position: absolute;
+		bottom: 4%;
+		left: 50%;
+		width: 64%;
+		max-width: 244px;
+		aspect-ratio: 1 / 1;
+		transform: translateX(-50%);
+	}
+
+	.profile-hero-figure :global(.vici-avatar),
+	.profile-hero-figure :global(.vici-avatar svg) {
+		width: 100% !important;
+		height: 100% !important;
+	}
+
+	/* Soft fade into the page — short + low so it never clips the bust. */
+	.profile-hero-fade {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 14%;
+		background: linear-gradient(to bottom, transparent 0%, var(--bg-base) 100%);
+		pointer-events: none;
+	}
+
+	.profile-hero-edit {
+		position: absolute;
+		right: 14px;
+		bottom: 14px;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 12px;
+		border-radius: var(--r-pill);
+		border: 1px solid rgba(242, 236, 220, 0.18);
+		background: rgba(14, 13, 11, 0.55);
+		-webkit-backdrop-filter: blur(8px);
+		backdrop-filter: blur(8px);
+		color: #f2ecdc;
+		font-family: var(--font-mono);
+		font-size: var(--t-10);
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	/* Top scrim keeps the floating controls legible over any backdrop. */
+	.profile-hero-scrim {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 96px;
+		background: linear-gradient(to bottom, rgba(14, 13, 11, 0.45) 0%, rgba(14, 13, 11, 0) 100%);
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.profile-hero-controls {
+		position: absolute;
+		top: 12px;
+		right: 12px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		z-index: 3;
+	}
+
+	.profile-hero-disc {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		border: 1px solid rgba(242, 236, 220, 0.16);
+		background: rgba(14, 13, 11, 0.45);
+		-webkit-backdrop-filter: blur(8px);
+		backdrop-filter: blur(8px);
+		color: #f2ecdc;
+		transition:
+			transform 130ms var(--ease-vici, ease),
+			filter 160ms var(--ease-vici, ease);
+	}
+
+	.profile-hero-disc-btn {
+		cursor: pointer;
+	}
+
+	.profile-hero-disc:hover {
+		filter: brightness(1.18);
+	}
+
+	.profile-hero-disc:active {
+		transform: scale(0.9);
+		filter: brightness(1.28);
+	}
+
+	/* The bell renders its own 36px button inside the 40px disc; centre it. */
+	.profile-hero-disc :global(.notif-bell) {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+	}
+
+	.profile-hero-meta {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		padding: 0 1.25rem;
+		margin-top: -8px;
+	}
+
+	.profile-hero-handle {
+		margin: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		max-width: 100%;
+		color: var(--text-base);
+		font-size: 1.625rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.profile-hero-handle-btn {
+		appearance: none;
+		border: 0;
+		padding: 0;
+		background: transparent;
+		cursor: pointer;
+		font: inherit;
+		font-size: 1.625rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.profile-hero-handle-text {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.profile-hero-handle-btn :global(.profile-hero-handle-pencil) {
+		flex-shrink: 0;
+		color: var(--fg-faint);
+	}
+
+	.profile-hero-handle-btn:hover,
+	.profile-hero-handle-btn:hover :global(.profile-hero-handle-pencil) {
+		color: var(--color-primary);
+	}
+
+	.profile-hero-credibility {
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: var(--t-10);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+
+	/* Invite Friends — gold-accent growth CTA. */
+	.profile-hero-invite {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 6px;
+		padding: 9px 18px;
+		border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+		border-radius: var(--r-pill);
+		background: var(--accent-glow, color-mix(in srgb, var(--color-primary) 12%, transparent));
+		color: var(--color-primary);
+		font-family: var(--font-mono);
+		font-size: var(--t-12);
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		cursor: pointer;
+		transition: border-color var(--d-hover, 140ms) var(--ease-vici, ease);
+	}
+
+	.profile-hero-invite:hover {
+		border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+	}
+
+	/* Identity card ---------------------------------------------------- */
 	.profile-identity {
 		position: relative;
 		display: flex;
@@ -895,68 +1182,9 @@
 		box-shadow: var(--shadow-card);
 	}
 
-	/* Top-right archetype-accent blur disc. Sized + opacity tuned so
-	   it reads as a subtle warm halo behind the avatar quadrant — not
-	   a yellow wash. Earlier values (220 px / 0.28 opacity / left-
-	   anchored) flooded the entire card with accent colour and made
-	   the surrounding text look tinted. */
-	.profile-halo {
-		position: absolute;
-		top: -30px;
-		right: -30px;
-		width: 140px;
-		height: 140px;
-		border-radius: 50%;
-		background: var(--archetype-accent, var(--color-primary));
-		opacity: 0.1;
-		filter: blur(20px);
-		pointer-events: none;
-	}
-
-	.profile-identity-row {
-		position: relative;
-		display: flex;
-		align-items: flex-start;
-		gap: 0.85rem;
-	}
-
-	.profile-avatar {
-		position: relative;
-		display: block;
-		width: 3.5rem;
-		height: 3.5rem;
-		flex-shrink: 0;
-		overflow: visible;
-		padding: 0;
-		border: 0;
-		border-radius: var(--r-pill);
-		background: transparent;
-		cursor: default;
-	}
-
-	.profile-avatar.is-editable {
-		cursor: pointer;
-	}
-
-	.profile-avatar-edit {
-		position: absolute;
-		bottom: -2px;
-		right: -2px;
-		display: inline-flex;
-		width: 1.25rem;
-		height: 1.25rem;
-		align-items: center;
-		justify-content: center;
-		border: 2px solid var(--bg-popover);
-		border-radius: var(--r-pill);
-		background: var(--archetype-accent, var(--color-primary));
-		color: var(--bg-canvas, #0e0d0b);
-	}
-
 	.profile-identity-meta {
 		display: flex;
 		min-width: 0;
-		flex: 1;
 		flex-direction: column;
 		gap: 0.2rem;
 	}
@@ -966,51 +1194,6 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 0.45rem;
-	}
-
-	.profile-handle {
-		margin: 0;
-		overflow: hidden;
-		color: var(--text-base);
-		font-size: var(--t-18);
-		font-weight: 700;
-		letter-spacing: var(--tracking-tight);
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.profile-handle-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3rem;
-		appearance: none;
-		min-width: 0;
-		padding: 0;
-		border: 0;
-		background: transparent;
-		color: var(--text-base);
-		text-align: left;
-		cursor: pointer;
-		font: inherit;
-		font-size: var(--t-18);
-		font-weight: 700;
-		letter-spacing: var(--tracking-tight);
-	}
-
-	.profile-handle-text {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.profile-handle-btn :global(.profile-handle-pencil) {
-		flex-shrink: 0;
-		color: var(--fg-faint);
-	}
-
-	.profile-handle-btn:hover,
-	.profile-handle-btn:hover :global(.profile-handle-pencil) {
-		color: var(--color-primary);
 	}
 
 	.profile-archetype-chip {
@@ -1040,15 +1223,6 @@
 		font-size: 0.65rem;
 		font-weight: 700;
 		letter-spacing: var(--tracking-wide);
-	}
-
-	/* Affiliation chip row sits below the handle row. */
-	.profile-affil-chip-row {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.4rem;
-		margin-top: 0.1rem;
 	}
 
 	/* School + country chips — each tinted in its affiliation's own
@@ -1306,11 +1480,6 @@
 		background: color-mix(in srgb, var(--laurel) 6%, var(--bg-surface));
 	}
 
-	.affil-slot.is-locked {
-		cursor: not-allowed;
-		opacity: 0.55;
-	}
-
 	.affil-slot:disabled {
 		cursor: default;
 	}
@@ -1333,8 +1502,7 @@
 		font-weight: 700;
 	}
 
-	.affil-slot.is-empty .affil-slot-icon,
-	.affil-slot.is-locked .affil-slot-icon {
+	.affil-slot.is-empty .affil-slot-icon {
 		font-size: 0.95rem;
 	}
 
@@ -1476,119 +1644,43 @@
 		display: none;
 	}
 
-	/* ~140 px card — emblem sits TOP-LEFT in its own row, with title +
-	   sub stacked below. An always-on underbar shows progress, going
-	   fully gold when unlocked. */
-	.profile-achievement-card {
-		position: relative;
+	/* Menagerie tile — a squircle badge with the animal name + its concept /
+	   "Locked" line, centred in a fixed-width carousel card. Tapping opens the
+	   Menagerie album. */
+	.profile-menagerie-tile {
 		display: flex;
-		min-width: 9rem;
-		min-height: 6rem;
+		flex: 0 0 8.25rem;
 		flex-direction: column;
-		flex-shrink: 0;
-		align-items: flex-start;
-		gap: 0.5rem;
-		padding: 0.85rem 0.9rem 0.95rem;
+		align-items: center;
+		gap: 0;
+		padding: 0.875rem;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
 		background: var(--bg-popover);
+		color: inherit;
+		text-align: center;
 		scroll-snap-align: start;
-		overflow: hidden;
+		cursor: pointer;
+		font: inherit;
 	}
 
-	.profile-achievement-card:not(.is-unlocked) {
-		opacity: 0.65;
-	}
-
-	.profile-achievement-card.is-unlocked {
-		border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
-	}
-
-	/* Full-width gold underbar for unlocked tiles (the "fully gold
-	   filled" earned state). */
-	.profile-achievement-card.is-unlocked::after {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		height: 3px;
-		background: var(--color-primary);
-	}
-
-	.profile-achievement-emblem {
-		display: inline-flex;
-		width: 2.25rem;
-		height: 2.25rem;
-		align-items: center;
-		justify-content: center;
-		border-radius: 0.6rem;
-		color: var(--text-base);
-		font-size: 18px;
-		line-height: 1;
-		align-self: flex-start;
-	}
-
-	.profile-achievement-text {
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-	}
-
-	.profile-achievement-card.is-unlocked .profile-achievement-emblem {
-		background: var(--accent-glow, color-mix(in srgb, var(--color-primary) 16%, transparent));
-		color: var(--color-primary);
-	}
-
-	.profile-achievement-card.is-gold.is-unlocked .profile-achievement-emblem {
-		background: color-mix(in srgb, #f4c544 14%, transparent);
-		color: #f4c544;
-	}
-
-	.profile-achievement-card.is-silver.is-unlocked .profile-achievement-emblem {
-		background: color-mix(in srgb, #c0c5cc 14%, transparent);
-		color: #c0c5cc;
-	}
-
-	.profile-achievement-card.is-bronze.is-unlocked .profile-achievement-emblem {
-		background: color-mix(in srgb, #c97c4a 14%, transparent);
-		color: #c97c4a;
-	}
-
-	.profile-achievement-card:not(.is-unlocked) .profile-achievement-emblem {
-		background: var(--bg-surface);
-		color: var(--text-muted);
-		filter: grayscale(0.85);
-	}
-
-	.profile-achievement-name {
+	.profile-menagerie-name {
+		margin-top: 0.75rem;
 		color: var(--text-base);
 		font-size: var(--t-13);
-		font-weight: 700;
+		font-weight: 600;
 	}
 
-	.profile-achievement-sub {
+	.profile-menagerie-concept {
+		margin-top: 0.1875rem;
+		color: var(--color-primary);
+		font-family: var(--font-mono);
+		font-size: var(--t-10);
+		letter-spacing: 0.06em;
+	}
+
+	.profile-menagerie-concept.is-locked {
 		color: var(--text-muted);
-		font-size: var(--t-12);
-		line-height: var(--leading-snug);
-	}
-
-	.profile-achievement-progress {
-		display: block;
-		width: 100%;
-		height: 0.25rem;
-		margin-top: 0.4rem;
-		overflow: hidden;
-		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-	}
-
-	.profile-achievement-progress-bar {
-		display: block;
-		height: 100%;
-		border-radius: inherit;
-		background: var(--color-primary);
-		transition: width var(--d-enter) ease;
 	}
 
 	/* Confirmation toast — floats above the pill-nav after a handle
@@ -1627,11 +1719,14 @@
 		.profile-toast {
 			animation: none;
 		}
-	}
 
-	@media (min-width: 768px) {
-		.profile-affiliations-grid {
-			grid-template-columns: repeat(4, minmax(0, 1fr));
+		.profile-hero-disc,
+		.profile-hero-invite {
+			transition: none;
+		}
+
+		.profile-hero-disc:active {
+			transform: none;
 		}
 	}
 </style>
