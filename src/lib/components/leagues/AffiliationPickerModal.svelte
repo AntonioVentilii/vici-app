@@ -1,6 +1,10 @@
 <script lang="ts">
-	import { ArrowLeft, Check, Mail, Search, X } from '@lucide/svelte/icons';
+	import { ArrowLeft, Check, Search, X } from '@lucide/svelte/icons';
 	import { untrack } from 'svelte';
+	import SchoolAddConfirmStep from '$lib/components/leagues/SchoolAddConfirmStep.svelte';
+	import SchoolAddFormStep from '$lib/components/leagues/SchoolAddFormStep.svelte';
+	import SchoolCodeStep from '$lib/components/leagues/SchoolCodeStep.svelte';
+	import SchoolVerifyStep from '$lib/components/leagues/SchoolVerifyStep.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import {
@@ -871,197 +875,56 @@
 				{/if}
 			</ul>
 		{:else if mode === 'verify-existing' && verifyTarget}
-			<div class="affil-picker-summary">
-				<span class="affil-picker-glyph" aria-hidden="true">{verifyTarget.glyph}</span>
-				<span class="affil-picker-summary-body">
-					<span class="affil-picker-summary-eyebrow num allcaps"
-						>{tr('worlds.picker.school.verify_eyebrow')}</span
-					>
-					<span class="affil-picker-summary-name">{verifyTarget.name}</span>
-				</span>
-			</div>
-
-			<p class="affil-picker-explainer">
-				{tr('worlds.picker.school.verify_explainer', {
-					name: verifyTarget.short ?? verifyTarget.name
-				})}
-			</p>
-
-			<label class="affil-picker-input-label num allcaps" for="sp-verify-email">
-				{tr('worlds.picker.school.email_label')}
-			</label>
-			<input
-				id="sp-verify-email"
-				class="affil-picker-input num"
-				class:is-bad={verifyWrongDomain}
-				autocapitalize="off"
-				autocorrect="off"
-				disabled={submitting}
-				oninput={() => (verifyError = null)}
-				onkeydown={(event) => {
-					if (event.key === 'Enter' && verifyDomainOk && !submitting) {
-						event.preventDefault();
-						void requestExistingCode();
-					}
+			<SchoolVerifyStep
+				canSend={verifyDomainOk && !submitting}
+				email={verifyEmail}
+				error={verifyError}
+				onEmailInput={(value) => {
+					verifyEmail = value;
+					verifyError = null;
 				}}
-				placeholder={tr('worlds.picker.school.email_placeholder', {
-					domain: verifyTarget.domains?.[0] ?? 'school.edu'
-				})}
-				spellcheck="false"
-				type="email"
-				bind:value={verifyEmail}
+				onSubmit={() => void requestExistingCode()}
+				{submitting}
+				target={verifyTarget}
+				wrongDomain={verifyWrongDomain}
 			/>
-			{#if verifyWrongDomain}
-				<p class="affil-picker-error-inline">
-					{tr('worlds.picker.school.wrong_domain', {
-						name: verifyTarget.short ?? verifyTarget.name,
-						domain: verifyTarget.domains?.[0] ?? ''
-					})}
-				</p>
-			{/if}
-			{#if verifyError}
-				<p class="affil-picker-error-inline" role="alert">{verifyError}</p>
-			{/if}
 		{:else if mode === 'add-confirm'}
-			<p class="affil-picker-hint serif-italic">
-				{tr('worlds.picker.school.add_dedupe_hint')}
-			</p>
-
-			<label class="affil-picker-input-label num allcaps" for="sp-add-name">
-				{tr('worlds.picker.school.name_label')}
-			</label>
-			<input
-				id="sp-add-name"
-				class="affil-picker-input"
-				placeholder={tr('worlds.picker.school.name_placeholder')}
-				type="text"
-				bind:value={addName}
+			<SchoolAddConfirmStep
+				name={addName}
+				{dupeMatches}
+				onNameInput={(value) => (addName = value)}
+				onUseDupe={commitVerified}
 			/>
-
-			{#if dupeMatches.length > 0 && addName.trim().length >= 2}
-				<div class="affil-picker-dupe">
-					<p class="affil-picker-dupe-title num allcaps">{tr('worlds.picker.school.dupe_title')}</p>
-					{#each dupeMatches as dupe (dupe.id)}
-						<button
-							class="affil-picker-dupe-row"
-							onclick={() => commitVerified(dupe)}
-							type="button"
-						>
-							<span class="affil-picker-glyph affil-picker-glyph-sm" aria-hidden="true">
-								{dupe.glyph}
-							</span>
-							<span class="affil-picker-dupe-body">
-								<span class="affil-picker-dupe-name">{dupe.name}</span>
-								<span class="affil-picker-dupe-meta num">
-									{dupe.country ?? ''} · @{dupe.domains?.[0] ?? ''}
-								</span>
-							</span>
-							<span class="affil-picker-dupe-use num allcaps">{tr('worlds.picker.school.use')}</span
-							>
-						</button>
-					{/each}
-				</div>
-			{:else if addName.trim().length >= 3}
-				<p class="affil-picker-ok">{tr('worlds.picker.school.not_in_directory')}</p>
-			{/if}
 		{:else if mode === 'add-form'}
-			<div class="affil-picker-summary">
-				<span class="affil-picker-summary-body">
-					<span class="affil-picker-summary-eyebrow num allcaps"
-						>{tr('worlds.picker.school.adding')}</span
-					>
-					<span class="affil-picker-summary-name">{addName}</span>
-					{#if addEmail && inferredCountry}
-						<span class="affil-picker-summary-meta num">
-							{inferredCountry} · {tr('worlds.picker.school.detected_from_email')}
-						</span>
-					{/if}
-				</span>
-			</div>
-
-			<p class="affil-picker-explainer">
-				{tr('worlds.picker.school.add_explainer')}
-			</p>
-
-			<label class="affil-picker-input-label num allcaps" for="sp-add-email">
-				{tr('worlds.picker.school.email_label')}
-			</label>
-			<input
-				id="sp-add-email"
-				class="affil-picker-input num"
-				class:is-bad={addConsumerBlock}
-				autocapitalize="off"
-				autocorrect="off"
-				disabled={submitting}
-				oninput={() => (verifyError = null)}
-				onkeydown={(event) => {
-					if (event.key === 'Enter' && addCanSubmit) {
-						event.preventDefault();
-						void requestAddCode();
-					}
+			<SchoolAddFormStep
+				name={addName}
+				canSubmit={addCanSubmit}
+				consumerBlock={addConsumerBlock}
+				domainMatch={addDomainMatch}
+				email={addEmail}
+				error={verifyError}
+				{inferredCountry}
+				onEmailInput={(value) => {
+					addEmail = value;
+					verifyError = null;
 				}}
-				placeholder={tr('worlds.picker.school.email_placeholder', { domain: 'school.edu' })}
-				spellcheck="false"
-				type="email"
-				bind:value={addEmail}
+				onSubmit={() => void requestAddCode()}
+				onUseDomainMatch={commitVerified}
+				{submitting}
 			/>
-			{#if addConsumerBlock}
-				<p class="affil-picker-error-inline">{tr('worlds.picker.school.consumer_blocked')}</p>
-			{/if}
-			{#if addDomainMatch}
-				<div class="affil-picker-redirect">
-					<span>{tr('worlds.picker.school.domain_belongs', { name: addDomainMatch.name })}</span>
-					<button
-						class="affil-picker-redirect-cta"
-						onclick={() => commitVerified(addDomainMatch)}
-						type="button"
-					>
-						{tr('worlds.picker.school.use_existing', {
-							name: addDomainMatch.short ?? addDomainMatch.name
-						})}
-					</button>
-				</div>
-			{/if}
-			{#if verifyError}
-				<p class="affil-picker-error-inline" role="alert">{verifyError}</p>
-			{/if}
 		{:else if mode === 'add-verifying'}
-			<div class="affil-picker-verify">
-				<span class="affil-picker-mail-icon" aria-hidden="true">
-					<Mail size={22} strokeWidth={1.8} />
-				</span>
-				<h3 class="affil-picker-mail-title serif-italic">
-					{tr('worlds.picker.school.code_sent_to', {
-						email: verifyTarget ? verifyEmail : addEmail
-					})}
-				</h3>
-				<p class="affil-picker-mail-body">{tr('worlds.picker.school.code_body')}</p>
-				<input
-					class="affil-picker-code num"
-					aria-label={tr('worlds.picker.school.code_label')}
-					disabled={submitting}
-					inputmode="numeric"
-					oninput={(event) => {
-						code = spSanitizeCode(event.currentTarget.value);
-						verifyError = null;
-					}}
-					onkeydown={(event) => {
-						if (event.key === 'Enter' && codeValid && !submitting) {
-							event.preventDefault();
-							void submitCode();
-						}
-					}}
-					pattern="\d{'{'}6}"
-					placeholder="000000"
-					type="text"
-					value={code}
-				/>
-				{#if verifyError}
-					<p class="affil-picker-error-inline affil-picker-error-center" role="alert">
-						{verifyError}
-					</p>
-				{/if}
-			</div>
+			<SchoolCodeStep
+				canSubmit={codeValid && !submitting}
+				{code}
+				email={verifyTarget ? verifyEmail : addEmail}
+				error={verifyError}
+				onCodeInput={(rawValue) => {
+					code = spSanitizeCode(rawValue);
+					verifyError = null;
+				}}
+				onSubmit={() => void submitCode()}
+				{submitting}
+			/>
 		{/if}
 	</div>
 </BottomSheet>
@@ -1258,12 +1121,6 @@
 		overflow: hidden;
 	}
 
-	.affil-picker-glyph-sm {
-		width: 28px;
-		height: 28px;
-		font-size: 0.7rem;
-	}
-
 	.affil-picker :global(.affil-picker-flag) {
 		display: block;
 		width: 100%;
@@ -1432,234 +1289,6 @@
 
 	.affil-picker-add-cta-arrow {
 		color: var(--laurel);
-	}
-
-	/* ── Summary card (verify-existing / add-form) ── */
-	.affil-picker-summary {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.75rem 0.85rem;
-		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-	}
-
-	.affil-picker-summary-body {
-		display: flex;
-		min-width: 0;
-		flex-direction: column;
-		gap: 0.2rem;
-	}
-
-	.affil-picker-summary-eyebrow {
-		font-size: var(--t-10);
-		letter-spacing: 0.12em;
-		color: var(--text-muted);
-	}
-
-	.affil-picker-summary-name {
-		font-size: var(--t-15, 0.95rem);
-		font-weight: 600;
-		color: var(--text-base);
-	}
-
-	.affil-picker-summary-meta {
-		font-size: var(--t-10);
-		color: var(--text-muted);
-	}
-
-	.affil-picker-explainer {
-		margin: 0;
-		padding: 0.7rem 0.85rem;
-		font-size: var(--t-12);
-		line-height: 1.55;
-		color: var(--text-muted);
-		background: color-mix(in srgb, var(--text-base) 3%, transparent);
-		border-left: 2px solid var(--laurel);
-	}
-
-	.affil-picker-input-label {
-		font-size: var(--t-10);
-		letter-spacing: 0.1em;
-		color: var(--text-muted);
-	}
-
-	.affil-picker-input {
-		appearance: none;
-		width: 100%;
-		box-sizing: border-box;
-		padding: 0.75rem 0.85rem;
-		font: inherit;
-		font-size: var(--t-14);
-		color: var(--text-base);
-		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		outline: none;
-	}
-
-	.affil-picker-input.is-bad {
-		border-color: var(--no);
-	}
-
-	.affil-picker-error-inline {
-		margin: 0;
-		font-size: var(--t-12);
-		line-height: 1.5;
-		color: var(--no);
-	}
-
-	.affil-picker-error-center {
-		text-align: center;
-	}
-
-	.affil-picker-ok {
-		margin: 0;
-		padding: 0.6rem 0.75rem;
-		font-size: var(--t-12);
-		line-height: 1.5;
-		color: var(--text-base);
-		background: color-mix(in srgb, var(--yes, var(--laurel)) 6%, transparent);
-		border: 1px solid color-mix(in srgb, var(--yes, var(--laurel)) 30%, transparent);
-		border-radius: var(--r-12);
-	}
-
-	/* ── Dupe panel (add-confirm) ── */
-	.affil-picker-dupe {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-		padding: 0.75rem 0.85rem;
-		background: color-mix(in srgb, var(--laurel) 6%, transparent);
-		border: 1px solid color-mix(in srgb, var(--laurel) 30%, transparent);
-		border-radius: var(--r-12);
-	}
-
-	.affil-picker-dupe-title {
-		font-size: var(--t-10);
-		letter-spacing: 0.12em;
-		color: var(--laurel);
-	}
-
-	.affil-picker-dupe-row {
-		appearance: none;
-		display: flex;
-		align-items: center;
-		gap: 0.6rem;
-		width: 100%;
-		padding: 0.4rem 0;
-		font: inherit;
-		text-align: left;
-		color: var(--text-base);
-		background: none;
-		border: none;
-		border-top: 1px solid color-mix(in srgb, var(--laurel) 18%, transparent);
-		cursor: pointer;
-	}
-
-	.affil-picker-dupe-body {
-		display: flex;
-		min-width: 0;
-		flex: 1;
-		flex-direction: column;
-	}
-
-	.affil-picker-dupe-name {
-		font-size: var(--t-13);
-		font-weight: 600;
-	}
-
-	.affil-picker-dupe-meta {
-		font-size: var(--t-10);
-		color: var(--text-muted);
-	}
-
-	.affil-picker-dupe-use {
-		font-size: var(--t-10);
-		letter-spacing: 0.08em;
-		color: var(--laurel);
-	}
-
-	/* ── Domain redirect (add-form) ── */
-	.affil-picker-redirect {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.7rem 0.85rem;
-		font-size: var(--t-12);
-		line-height: 1.5;
-		color: var(--text-base);
-		background: color-mix(in srgb, var(--laurel) 6%, transparent);
-		border: 1px solid color-mix(in srgb, var(--laurel) 30%, transparent);
-		border-radius: var(--r-12);
-	}
-
-	.affil-picker-redirect-cta {
-		appearance: none;
-		align-self: flex-start;
-		padding: 0.4rem 0.85rem;
-		font: inherit;
-		font-size: var(--t-12);
-		font-weight: 600;
-		color: var(--ink, #0e0d0b);
-		background: var(--laurel);
-		border: none;
-		border-radius: var(--r-pill);
-		cursor: pointer;
-	}
-
-	/* ── Verify code entry (add-verifying) ── */
-	.affil-picker-verify {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.7rem;
-		padding: 0.6rem 0 0.2rem;
-		text-align: center;
-	}
-
-	.affil-picker-mail-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 56px;
-		height: 56px;
-		color: var(--laurel);
-		background: color-mix(in srgb, var(--laurel) 10%, transparent);
-		border: 1px solid color-mix(in srgb, var(--laurel) 30%, transparent);
-		border-radius: var(--r-pill);
-	}
-
-	.affil-picker-mail-title {
-		margin: 0;
-		font-size: var(--t-20, 1.25rem);
-		color: var(--text-base);
-		overflow-wrap: anywhere;
-	}
-
-	.affil-picker-mail-body {
-		margin: 0;
-		max-width: 32ch;
-		font-size: var(--t-13);
-		line-height: 1.5;
-		color: var(--text-muted);
-	}
-
-	.affil-picker-code {
-		width: 100%;
-		max-width: 240px;
-		box-sizing: border-box;
-		padding: 0.85rem;
-		font-size: 1.75rem;
-		font-weight: 600;
-		letter-spacing: 0.3em;
-		text-align: center;
-		color: var(--text-base);
-		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		outline: none;
 	}
 
 	/* ── Docked footer ── */
