@@ -1,6 +1,7 @@
 import type { ClearingDid } from '$declarations';
-import { ZERO } from '$lib/constants/app.constants';
+import { DAY_IN_MS, ZERO } from '$lib/constants/app.constants';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
+import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type {
 	IcpTransaction,
 	IcrcTransaction,
@@ -337,4 +338,66 @@ export const mapClearingEventToTransaction = ({
 		priceE6: event.price.decimal.value,
 		qty: event.qty
 	};
+};
+
+const sortNewestFirst = (txs: Transaction[]): Transaction[] =>
+	txs.sort((a, b) => (a.timestamp === b.timestamp ? 0 : a.timestamp > b.timestamp ? -1 : 1));
+
+/**
+ * Assembles the unified Wallet activity feed: merges the paged ICRC ledger
+ * rows with the clearing rows, keeps only the tokens the wallet currently
+ * surfaces, and sorts newest-first.
+ */
+export const mergeWalletFeed = ({
+	ledgerTransactions,
+	clearingTransactions,
+	allowedLedgerCanisterIds
+}: {
+	ledgerTransactions: Transaction[];
+	clearingTransactions: Transaction[];
+	allowedLedgerCanisterIds: Iterable<string>;
+}): Transaction[] => {
+	const allowed = new Set(allowedLedgerCanisterIds);
+
+	const merged = [...ledgerTransactions, ...clearingTransactions].filter((tx) =>
+		allowed.has(tx.token.ledgerCanisterId)
+	);
+
+	return sortNewestFirst(merged);
+};
+
+/**
+ * Weekly VXP delta — sums signed amounts on VXP-denominated rows from the last
+ * 7 days. Settlements / receives / mints / rewards credit; trades / sends /
+ * burns / liquidations debit (entry stake is never refunded). Result is in VXP
+ * base units; format at display only.
+ */
+export const weeklyVxpDeltaBaseUnits = (transactions: Transaction[]): bigint => {
+	const cutoffNs = BigInt(Date.now() - 7 * DAY_IN_MS) * 1_000_000n;
+	let delta = ZERO;
+
+	const recentVxpTx = transactions.filter(
+		(tx) => tx.timestamp >= cutoffNs && tx.token.symbol === VXP_TOKEN.symbol
+	);
+
+	for (const tx of recentVxpTx) {
+		switch (tx.type) {
+			case 'Settlement':
+			case 'Receive':
+			case 'Mint':
+			case 'Reward':
+				delta += tx.amount;
+				break;
+			case 'Trade':
+			case 'Send':
+			case 'Burn':
+			case 'Liquidation':
+				delta -= tx.amount;
+				break;
+			default:
+				break;
+		}
+	}
+
+	return delta;
 };
