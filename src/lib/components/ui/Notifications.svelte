@@ -19,13 +19,13 @@
 				<div
 					class="bg-danger-wash text-danger mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
 				>
-					<X class="h-3 w-3" />
+					<X size={12} strokeWidth={3} />
 				</div>
 			{:else}
 				<div
 					class="bg-yes-wash text-yes mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
 				>
-					<Check class="h-3 w-3" />
+					<Check size={12} strokeWidth={3} />
 				</div>
 			{/if}
 			<div class="flex flex-col">
