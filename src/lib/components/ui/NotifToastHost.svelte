@@ -11,9 +11,10 @@
 		Users,
 		X
 	} from '@lucide/svelte/icons';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { clearInboxToast, latestInboxToast } from '$lib/stores/inbox.store';
+	import { clearInboxToast, initInboxToasts, latestInboxToast } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { InboxNotificationKind } from '$lib/types/inbox';
 	import { t } from '$lib/utils/i18n.utils';
@@ -88,6 +89,10 @@
 
 		return clearTimers;
 	});
+
+	// Start the arrival-toast diff on mount, unsubscribe on destroy, so it
+	// only runs while the host is rendered (not at module scope).
+	onMount(() => initInboxToasts());
 
 	const open = () => {
 		// `href` may be a dynamic path (e.g. `/markets/<id>`), so we route

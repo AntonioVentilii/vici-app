@@ -1,3 +1,4 @@
+import { browser } from '$app/environment';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { INBOX_SETTLED_READ_STORAGE_KEY, INBOX_STORAGE_KEY } from '$lib/constants/inbox.constants';
 import { AppPath } from '$lib/constants/routes.constants';
@@ -418,43 +419,63 @@ const sourcesHydrated: Readable<boolean> = derived(
 	([$notInit, $friendsLoaded]) => !$notInit && $friendsLoaded
 );
 
-let seenInboxIds: Set<string> | undefined;
+/**
+ * Wires the arrival-toast diff: subscribes to the combined inbox snapshot
+ * (gated on {@link sourcesHydrated}) and pushes a freshly-arrived unread item
+ * into {@link inboxToastStore}. The "seen" baseline is kept LOCAL to this
+ * subscription rather than at module scope, so the side-effect only runs while
+ * `NotifToastHost` is mounted (it calls this once and tears it down on
+ * destroy). Returns a teardown that stops the subscription — mirrors
+ * `initFlowPrewarm` in `flow.store.ts`.
+ *
+ * Baseline semantics are unchanged: until both async sources hydrate, every
+ * emission just refreshes the baseline (no toast); on the first hydrated tick
+ * the existing backlog is absorbed into the baseline; only genuinely new
+ * unread items thereafter fire a toast.
+ */
+export const initInboxToasts = (): (() => void) => {
+	if (!browser) {
+		return () => undefined;
+	}
 
-derived([combinedInboxStore, sourcesHydrated], ([$items, $hydrated]) => ({
-	items: $items,
-	hydrated: $hydrated
-})).subscribe(({ items, hydrated }) => {
-	if (!hydrated) {
-		// Sources still loading — accumulate ids as baseline without diffing.
+	let seenInboxIds: Set<string> | undefined;
+
+	return derived([combinedInboxStore, sourcesHydrated], ([$items, $hydrated]) => ({
+		items: $items,
+		hydrated: $hydrated
+	})).subscribe(({ items, hydrated }) => {
+		if (!hydrated) {
+			// Sources still loading — accumulate ids as baseline without diffing.
+			seenInboxIds = new Set(items.map((item) => item.id));
+
+			return;
+		}
+
+		if (seenInboxIds === undefined) {
+			// Hydration just completed but no baseline recorded yet (edge case:
+			// subscribe fired with hydrated=true before any non-hydrated tick).
+			seenInboxIds = new Set(items.map((item) => item.id));
+
+			return;
+		}
+
+		const next = items.find((item) => item.unread && !seenInboxIds?.has(item.id));
+
 		seenInboxIds = new Set(items.map((item) => item.id));
 
-		return;
-	}
+		if (next === undefined) {
+			return;
+		}
 
-	if (seenInboxIds === undefined) {
-		// Hydration just completed but no baseline recorded yet (edge case:
-		// subscribe fired with hydrated=true before any non-hydrated tick).
-		seenInboxIds = new Set(items.map((item) => item.id));
-
-		return;
-	}
-
-	const next = items.find((item) => item.unread && !seenInboxIds?.has(item.id));
-
-	seenInboxIds = new Set(items.map((item) => item.id));
-
-	if (next === undefined) {
-		return;
-	}
-
-	inboxToastStore.set({
-		id: next.id,
-		kind: next.kind,
-		title: next.title,
-		body: next.body,
-		href: next.href
+		inboxToastStore.set({
+			id: next.id,
+			kind: next.kind,
+			title: next.title,
+			body: next.body,
+			href: next.href
+		});
 	});
-});
+};
 
 /**
  * Marks every currently-visible settled-event card as read by adding
