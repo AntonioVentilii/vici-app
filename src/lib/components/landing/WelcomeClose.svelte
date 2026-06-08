@@ -12,19 +12,19 @@
 
 	const tt = (key: MessageKey) => t({ locale: $localeStore, key });
 
-	const headline = $derived(splitHeadline(tt('welcome.v2.close.headline')));
+	const headline = $derived(splitHeadline(tt('welcome.close.headline')));
 </script>
 
-<section class="v2-section v2-close">
-	<div class="v2-wrap">
-		<div class="v2-close-latin">{LATIN_MOTTO_LEAD}<span class="acc">{LATIN_MOTTO_TAIL}</span></div>
-		<h2 class="v2-h2">
+<section class="lpc-section lpc-close">
+	<div class="lpc-wrap">
+		<div class="lpc-close-latin">{LATIN_MOTTO_LEAD}<span class="acc">{LATIN_MOTTO_TAIL}</span></div>
+		<h2 class="lpc-h2">
 			{headline.before}{#if headline.accent}<span class="acc">{headline.accent}</span
 				>{/if}{headline.after}
 		</h2>
-		<div class="v2-close-cta">
+		<div class="lpc-close-cta">
 			<a class="btn btn-primary btn-lg" href={PublicPath.SignUp}>
-				{tt('welcome.v2.close.cta')}
+				{tt('welcome.close.cta')}
 				<ChevronRight size={16} strokeWidth={2.4} />
 			</a>
 		</div>

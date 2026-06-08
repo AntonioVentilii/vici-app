@@ -52,20 +52,20 @@
 	];
 </script>
 
-<footer class="v2-footer">
-	<div class="v2-wrap">
-		<div class="v2-footer-top">
-			<div class="v2-footer-brand">
+<footer class="lpc-footer">
+	<div class="lpc-wrap">
+		<div class="lpc-footer-top">
+			<div class="lpc-footer-brand">
 				<Logo href={PublicPath.Welcome} />
-				<p class="v2-footer-tag">{tt('footer.tagline')}</p>
-				<div class="v2-footer-latin">
+				<p class="lpc-footer-tag">{tt('footer.tagline')}</p>
+				<div class="lpc-footer-latin">
 					{LATIN_MOTTO_LEAD}<span class="acc">{LATIN_MOTTO_TAIL}</span>
 				</div>
 			</div>
-			<div class="v2-footer-cols">
+			<div class="lpc-footer-cols">
 				{#each cols as col (col.heading)}
-					<div class="v2-footer-col">
-						<span class="v2-footer-h">{tt(col.heading)}</span>
+					<div class="lpc-footer-col">
+						<span class="lpc-footer-h">{tt(col.heading)}</span>
 						{#each col.links as link (link.label)}
 							<a href={link.href}>{tt(link.label)}</a>
 						{/each}
@@ -73,7 +73,7 @@
 				{/each}
 			</div>
 		</div>
-		<p class="v2-footer-fifa">{tt('footer.fifa')}</p>
-		<p class="v2-footer-disclosure">{tt('footer.disclosure')}</p>
+		<p class="lpc-footer-fifa">{tt('footer.fifa')}</p>
+		<p class="lpc-footer-disclosure">{tt('footer.disclosure')}</p>
 	</div>
 </footer>
