@@ -1,15 +1,18 @@
 <script lang="ts">
 	/**
-	 * Proof band: a 3-step "How it works" micro-strip, a live count of
-	 * people calling right now, and a marquee ticker of @handles making
-	 * calls. The count ticks up gently; the ticker is decorative
-	 * (aria-hidden) and scrolls via CSS (paused under reduced-motion).
+	 * Proof band: a 3-step "How it works" micro-strip, a real count of
+	 * people calling the World Cup, and a marquee ticker of @handles making
+	 * calls. The count is the live aggregate of executed predictions on the
+	 * World-Cup markets, read anonymously after first paint (with a synthetic
+	 * seed as a silent fallback); the ticker is decorative (aria-hidden) and
+	 * scrolls via CSS (paused under reduced-motion).
 	 */
-	import { onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 	import {
 		LANDING_PROOF_CHIPS,
 		LANDING_PROOF_COUNT_SEED
 	} from '$lib/constants/landing-data.constants';
+	import { getWorldCupCallerCount } from '$lib/services/landing-proof.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
@@ -25,31 +28,19 @@
 	// Doubled so the CSS marquee loops seamlessly.
 	const track = [...LANDING_PROOF_CHIPS, ...LANDING_PROOF_CHIPS];
 
+	// Seeded with the synthetic figure so the band renders immediately and
+	// never flashes 0/blank. After first paint we swap in the real aggregate
+	// (executed predictions across the World-Cup markets, read anonymously).
+	// Any failure / no-WC-markets / 0 leaves the seed in place — silent
+	// fallback, never a spinner, blank, or thrown error.
 	let count = $state(LANDING_PROOF_COUNT_SEED);
 
-	let timer: ReturnType<typeof setInterval> | null = null;
-
-	$effect(() => {
-		if (prefersReducedMotion()) {
-			return;
-		}
-
-		timer = setInterval(() => {
-			count += Math.floor(Math.random() * 3);
-		}, 2600);
-
-		return () => {
-			if (timer !== null) {
-				clearInterval(timer);
-				timer = null;
+	onMount(() => {
+		void getWorldCupCallerCount().then((real) => {
+			if (real !== undefined && real > 0) {
+				count = real;
 			}
-		};
-	});
-
-	onDestroy(() => {
-		if (timer !== null) {
-			clearInterval(timer);
-		}
+		});
 	});
 
 	// Locale-aware grouped count, shared by the big number and the label.
