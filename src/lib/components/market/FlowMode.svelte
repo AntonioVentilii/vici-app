@@ -45,7 +45,6 @@
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import {
 		applyDailyGoalBump,
-		DAILY_GOAL_TARGET,
 		reconcileDailyGoalOnEntry,
 		rolloverDailyGoal,
 		writeDailyGoalMirror
@@ -55,6 +54,13 @@
 		resolveFlowArtCategory,
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
+	import {
+		canExtendSession,
+		isDailyCapReached,
+		isOvertimeSession,
+		maxBetsFor,
+		sittingGoalFor
+	} from '$lib/utils/flow-session.utils';
 	import {
 		flowBeat,
 		flowSummary,
@@ -94,19 +100,14 @@
 	// the daily ten and the engine's overtime beats fire.
 	let pushedToOvertime = $state(false);
 
-	// This sitting's ceiling for the cumulative daily count: the daily ten
-	// normally, or the daily hard cap (15) once the day is already in
-	// overtime (entered with ten-or-more placed) or the user pushed into it.
-	const sittingGoal = $derived(
-		sessionBaseline >= DAILY_GOAL_TARGET || pushedToOvertime ? DAILY_HARD_CAP : DAILY_GOAL_TARGET
-	);
-
-	// Swipes this sitting may still place: the sitting goal less what the
-	// day already carried in. `advance()` ends the run on the SESSION
-	// counter (`betsCount`) reaching this — which is exactly the cumulative
-	// daily count reaching `sittingGoal`, so the cap holds regardless of how
-	// many times Flow is re-entered today.
-	const maxBets = $derived(Math.max(0, sittingGoal - sessionBaseline));
+	// This sitting's ceiling for the cumulative daily count, and the swipes
+	// it may still place (the ceiling less what the day already carried in).
+	// `advance()` ends the run on the SESSION counter (`betsCount`) reaching
+	// `maxBets` — which is exactly the cumulative daily count reaching
+	// `sittingGoal` — so the cap holds regardless of how many times Flow is
+	// re-entered today. See `flow-session.utils` for the arithmetic.
+	const sittingGoal = $derived(sittingGoalFor({ baseline: sessionBaseline, pushedToOvertime }));
+	const maxBets = $derived(maxBetsFor({ sittingGoal, baseline: sessionBaseline }));
 
 	const resolveFlowCategory = ({
 		categoryId,
@@ -290,7 +291,7 @@
 	// across sessions, opening Flow shows a "come back tomorrow" takeover
 	// (not a fresh deck) so the 15/day model holds. Suppressed mid-session
 	// (`betsCount === 0` means this run hasn't placed a call yet).
-	const dailyCapReached = $derived(dailyGoalDone >= DAILY_HARD_CAP);
+	const dailyCapReached = $derived(isDailyCapReached(dailyGoalDone));
 
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
@@ -814,7 +815,7 @@
 	// Whether the day's sitting goal is the hard cap (15) — the day entered
 	// in overtime or the user opted in via Push-to-15. Drives the FlowEnd
 	// "overtime" variant.
-	const overtimeSession = $derived(sittingGoal >= DAILY_HARD_CAP);
+	const overtimeSession = $derived(isOvertimeSession(sittingGoal));
 
 	// Push-to-15 is offered only on a regular (non-overtime) day that still
 	// has deck inventory to continue into — never once the hard cap is in
@@ -823,7 +824,11 @@
 	// already at the cap has no cross-session headroom left and must come
 	// back tomorrow.
 	const canExtend = $derived(
-		!overtimeSession && currentIndex < markets.length - 1 && dailyGoalDone < DAILY_HARD_CAP
+		canExtendSession({
+			overtimeSession,
+			hasMoreCards: currentIndex < markets.length - 1,
+			dailyGoalDone
+		})
 	);
 
 	// "Push to 15 →" — lift this sitting's goal to the daily hard cap,
