@@ -351,8 +351,13 @@ const LANDING_STATUS_UNIVERSITIES_BY_LANG: Record<string, readonly string[]> = {
 	de: ['TU München', 'LMU München', 'Heidelberg', 'Humboldt Berlin']
 };
 
-/** The visitor's market-matched universities for a locale (en fallback). */
+/**
+ * The visitor's market-matched universities for a locale: full tag first (so a
+ * region-specific list like `zh-CN` or `pt-BR` wins when present), then the base
+ * language, then the `en` fallback.
+ */
 export const landingStatusUniversities = (locale: string): readonly string[] =>
+	LANDING_STATUS_UNIVERSITIES_BY_LANG[locale] ??
 	LANDING_STATUS_UNIVERSITIES_BY_LANG[locale.split('-')[0]] ??
 	LANDING_STATUS_UNIVERSITIES_BY_LANG.en;
 
