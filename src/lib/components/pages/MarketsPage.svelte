@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 	import { get } from 'svelte/store';
-	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
 	import MarketsCategoryChips, {
 		type MarketsCategoryFilter
@@ -73,11 +73,13 @@
 		prevPhase = phase;
 	});
 
-	// Eyebrow copy: a single-line, localized event label rendered uppercase by
-	// the header styling. Surfaced only while the list is laser-focused on the
-	// featured event.
-	const wcEyebrow = $derived(
-		wcFocus ? t({ locale: $localeStore, key: 'markets.wc_eyebrow' }) : undefined
+	// Header context chip: the currently featured event, surfaced as a single
+	// mono chip while the list is laser-focused on it. The Markets header is a
+	// chips-only row — no title or subtitle — so the chip carries the context.
+	// In the `open` / `off` phases there is no featured event and the chip (and
+	// therefore the whole header strip) is omitted.
+	const eventChips = $derived(
+		wcFocus ? [{ label: t({ locale: $localeStore, key: 'markets.wc_eyebrow' }) }] : undefined
 	);
 
 	const loading = $derived($marketsNotInitialized);
@@ -217,105 +219,107 @@
 </script>
 
 <div class="screen-scroll">
-	<PageScaffold eyebrow={wcEyebrow} title={t({ locale: $localeStore, key: 'nav.markets' })}>
-		<!-- Category chips with Saved filter prepended. In WC-focus mode the
-		     rail opens on the World Cup with the rest behind "More markets →". -->
-		<MarketsCategoryChips
-			active={cat}
-			{availableTags}
-			onChange={(next) => (cat = next)}
-			savedCount={savedMarkets.length}
-			{wcFocus}
-		/>
+	<!-- Chips-only header: no title or subtitle, just the featured-event
+	     context chip (omitted entirely once no event is in focus). -->
+	<ScreenHeader chips={eventChips} variant="section" />
 
-		<!-- `open` phase: the Cup has resolved. Recap the user's World-Cup run
+	<!-- Category chips with Saved filter prepended. In WC-focus mode the
+	     rail opens on the World Cup with the rest behind "More markets →". -->
+	<MarketsCategoryChips
+		active={cat}
+		{availableTags}
+		onChange={(next) => (cat = next)}
+		savedCount={savedMarkets.length}
+		{wcFocus}
+	/>
+
+	<!-- `open` phase: the Cup has resolved. Recap the user's World-Cup run
 		     at the top of the list and convert it into broader play. The list
 		     itself behaves as all-categories (no WC default). -->
-		{#if isOpen}
-			<WorldCupRecapCard onExplore={() => (cat = 'all')} />
-		{/if}
+	{#if isOpen}
+		<WorldCupRecapCard onExplore={() => (cat = 'all')} />
+	{/if}
 
-		<!-- `bridge` phase: still WC-focused, but seed a "Beyond the Cup" rail
+	<!-- `bridge` phase: still WC-focused, but seed a "Beyond the Cup" rail
 		     of curated non-WC markets before the Cup ends — a soft landing for
 		     the post-Cup cliff. Shown on the focused (`wc`) view only, so it
 		     doesn't double up once the user expands to other categories. -->
-		{#if isBridge && cat === 'wc' && beyondMarkets.length > 0}
-			<p class="beyond-eyebrow dim t-body-sm">
-				{t({ locale: $localeStore, key: 'markets.beyond.line' })}
-			</p>
-			<MarketsCarousel
-				markets={beyondMarkets}
-				tagsBySeries={tagsByMarket}
-				title={t({ locale: $localeStore, key: 'markets.beyond.title' })}
-			/>
-		{/if}
+	{#if isBridge && cat === 'wc' && beyondMarkets.length > 0}
+		<p class="beyond-eyebrow dim t-body-sm">
+			{t({ locale: $localeStore, key: 'markets.beyond.line' })}
+		</p>
+		<MarketsCarousel
+			markets={beyondMarkets}
+			tagsBySeries={tagsByMarket}
+			title={t({ locale: $localeStore, key: 'markets.beyond.title' })}
+		/>
+	{/if}
 
-		<!-- Saved carousel only visible on All view -->
-		{#if cat === 'all' && savedMarkets.length > 0}
-			<MarketsCarousel
-				markets={savedMarkets.slice(0, SAVED_RAIL_LIMIT)}
-				moreLabel={t({
-					locale: $localeStore,
-					key: 'markets.see_all_count',
-					params: { count: savedMarkets.length }
-				})}
-				onMore={() => (cat = 'saved')}
-				tagsBySeries={tagsByMarket}
-				title={t({ locale: $localeStore, key: 'markets.section.saved' })}
-			/>
-		{/if}
+	<!-- Saved carousel only visible on All view -->
+	{#if cat === 'all' && savedMarkets.length > 0}
+		<MarketsCarousel
+			markets={savedMarkets.slice(0, SAVED_RAIL_LIMIT)}
+			moreLabel={t({
+				locale: $localeStore,
+				key: 'markets.see_all_count',
+				params: { count: savedMarkets.length }
+			})}
+			onMore={() => (cat = 'saved')}
+			tagsBySeries={tagsByMarket}
+			title={t({ locale: $localeStore, key: 'markets.section.saved' })}
+		/>
+	{/if}
 
-		<!-- Trending on All view -->
-		{#if cat === 'all' && trendingMarkets.length > 0}
-			<MarketsCarousel
-				markets={trendingMarkets}
-				moreLabel={t({ locale: $localeStore, key: 'markets.see_all' })}
-				onMore={scrollToMainList}
-				tagsBySeries={tagsByMarket}
-				title={t({ locale: $localeStore, key: 'markets.section.trending' })}
-			/>
-		{/if}
+	<!-- Trending on All view -->
+	{#if cat === 'all' && trendingMarkets.length > 0}
+		<MarketsCarousel
+			markets={trendingMarkets}
+			moreLabel={t({ locale: $localeStore, key: 'markets.see_all' })}
+			onMore={scrollToMainList}
+			tagsBySeries={tagsByMarket}
+			title={t({ locale: $localeStore, key: 'markets.section.trending' })}
+		/>
+	{/if}
 
-		<!-- Main list with Saved empty state. card-empty owns the dashed
+	<!-- Main list with Saved empty state. card-empty owns the dashed
 		     border + the c-eyebrow / c-title / c-body type ramp. -->
-		{#if cat === 'saved' && list.length === 0 && !loading}
-			<div style="margin: 20px 20px 24px;" class="card-empty">
-				<span class="c-eyebrow">{t({ locale: $localeStore, key: 'markets.section.saved' })}</span>
-				<span class="c-title">{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}</span>
+	{#if cat === 'saved' && list.length === 0 && !loading}
+		<div style="margin: 20px 20px 24px;" class="card-empty">
+			<span class="c-eyebrow">{t({ locale: $localeStore, key: 'markets.section.saved' })}</span>
+			<span class="c-title">{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}</span>
+			<p class="c-body">
+				{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
+			</p>
+		</div>
+	{:else}
+		<div bind:this={mainListEl} style="scroll-margin-top: 12px;" class="section-h">
+			<h3>{sectionTitle}</h3>
+			<span class="mute t-sub">{list.length}</span>
+		</div>
+
+		{#if loading}
+			<div style="gap: 8px; padding: 0 20px 20px;" class="col">
+				{#each Array(4) as _, index (index)}
+					<div
+						style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
+						aria-hidden="true"
+					></div>
+				{/each}
+			</div>
+		{:else if list.length === 0}
+			<div style="margin: 0 20px 20px;" class="card-empty">
 				<p class="c-body">
-					{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
+					{t({ locale: $localeStore, key: 'markets.empty' })}
 				</p>
 			</div>
 		{:else}
-			<div bind:this={mainListEl} style="scroll-margin-top: 12px;" class="section-h">
-				<h3>{sectionTitle}</h3>
-				<span class="mute t-sub">{list.length}</span>
+			<div style="gap: 0; padding: 0 20px 20px;" class="col">
+				{#each list as m (m.id)}
+					<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+				{/each}
 			</div>
-
-			{#if loading}
-				<div style="gap: 8px; padding: 0 20px 20px;" class="col">
-					{#each Array(4) as _, index (index)}
-						<div
-							style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
-							aria-hidden="true"
-						></div>
-					{/each}
-				</div>
-			{:else if list.length === 0}
-				<div style="margin: 0 20px 20px;" class="card-empty">
-					<p class="c-body">
-						{t({ locale: $localeStore, key: 'markets.empty' })}
-					</p>
-				</div>
-			{:else}
-				<div style="gap: 0; padding: 0 20px 20px;" class="col">
-					{#each list as m (m.id)}
-						<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
-					{/each}
-				</div>
-			{/if}
 		{/if}
-	</PageScaffold>
+	{/if}
 </div>
 
 <style lang="postcss">
