@@ -1573,6 +1573,9 @@ export const esMessages = {
 		'Resoluciones, invitaciones de liga y desafíos aparecen aquí. Haz algunas predicciones para empezar tu historial.',
 	'notifications.empty.title': 'Sin notificaciones nuevas.',
 	'notifications.mark_read': 'Marcar todas como leídas',
+	'notifications.mark_read_one': 'Marcar como leída',
+	'notifications.section.earlier': 'Anteriores',
+	'notifications.section.new': 'Nuevas',
 	'notifications.title': 'Notificaciones',
 	'onboarding.markets.taylor_tour.title':
 		'¿Taylor Swift anunciará una gira de 2027 antes de agosto?',
