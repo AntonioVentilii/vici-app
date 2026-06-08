@@ -105,6 +105,18 @@ const BG: Record<string, BgPlanes> = {
 };
 
 const INK = '#14110D';
+// Warm parchment cream — the eye catchlight tint (see `eyeMarkup`).
+const CREAM = '#F2ECDC';
+
+/**
+ * The two backdrop planes for a parts object's backdrop key. Lets a surface
+ * that renders the figure with `noBg` (e.g. the full-bleed profile hero)
+ * recreate a cohesive gradient from the same palette the avatar would have
+ * drawn. Falls back to `slate` for an unknown / unset key.
+ */
+export const avatarBackdropPlanes = (
+	parts: Partial<ViciAvatarParts> | null | undefined
+): BgPlanes => BG[parts?.bg ?? ''] ?? BG.slate;
 
 /** Frozen, ordered key lists the editor iterates to build option tiles. */
 export const AVATAR_PARTS = {
@@ -271,11 +283,31 @@ interface RenderOptions {
 	/** Draw the gold signature circle + wordmark. Off for editor option
 	 *  tiles, which crop tight to the face. */
 	signature?: boolean;
+	/** Draw the decorative backdrop flourishes (lower-left dot + gold
+	 *  signature disc). Defaults on; off lets an overlay surface keep the
+	 *  backdrop clean behind its own controls. */
+	decor?: boolean;
+	/** Skip the backdrop entirely so the figure sits on a caller-supplied
+	 *  surface (e.g. the profile hero's palette gradient). */
+	noBg?: boolean;
 }
 
 // Backdrop: two colour planes + token-driven chrome (highlight beam, shadow
-// accent line, decorative dot, gold signature circle).
-const bgLayer = ({ bg, signature }: { bg: BgPlanes; signature: boolean }): string => {
+// accent line, decorative dot, gold signature mark).
+//
+// `decor` gates the decorative flourishes — the lower-left dot and the gold
+// signature disc — so a surface that overlays its own UI (e.g. the full-bleed
+// profile hero, where floating controls sit over the top-right corner) can
+// drop them and keep the backdrop clean.
+const bgLayer = ({
+	bg,
+	signature,
+	decor
+}: {
+	bg: BgPlanes;
+	signature: boolean;
+	decor: boolean;
+}): string => {
 	let m = '';
 
 	// Identity planes (user-picked backdrop) — literal palette.
@@ -285,11 +317,19 @@ const bgLayer = ({ bg, signature }: { bg: BgPlanes; signature: boolean }): strin
 	// Chrome overlays — theme tokens so they track dark / light / peach.
 	m += `<polygon points="0,0 52,0 0,46" fill="var(--text-base)" opacity="0.06"/>`;
 	m += `<polygon points="0,100 100,34 100,38 0,100" fill="var(--bg-base)" opacity="0.10"/>`;
-	m += `<circle cx="14" cy="83" r="5" fill="var(--text-base)" opacity="0.14"/>`;
 
-	if (signature) {
-		m += `<circle cx="81" cy="20" r="9" fill="var(--brand)"/>`;
-		m += `<circle cx="81" cy="20" r="9" fill="none" stroke="var(--bg-base)" stroke-width="0.6" opacity="0.18"/>`;
+	if (decor) {
+		m += `<circle cx="14" cy="83" r="5" fill="var(--text-base)" opacity="0.14"/>`;
+
+		// Tamed signature disc — a small gold mark in the top-right corner. Kept
+		// deliberately compact (radius 4.5) and hairline-stroked so it reads as a
+		// quiet maker's mark rather than competing with gold-tier menagerie badges
+		// or the laurel accent. The `signature` gate keeps it off the editor's
+		// tight option tiles.
+		if (signature) {
+			m += `<circle cx="84" cy="17" r="4.5" fill="var(--brand)"/>`;
+			m += `<circle cx="84" cy="17" r="4.5" fill="none" stroke="var(--bg-base)" stroke-width="0.5" opacity="0.18"/>`;
+		}
 	}
 
 	return m;
@@ -318,7 +358,9 @@ const eyeMarkup = ({
 	e += `<ellipse cx="${cx}" cy="${eyeY}" rx="3" ry="${eyeRy}" fill="#F4EFE3"/>`;
 	e += `<ellipse cx="${cx}" cy="${eyeY}" rx="3" ry="${eyeRy}" fill="none" stroke="${INK}" stroke-width="0.4" opacity="0.18"/>`;
 	e += `<circle cx="${cx + pdx}" cy="${eyeY + pdy}" r="1.7" fill="${INK}"/>`;
-	e += `<circle cx="${cx + pdx - 0.7}" cy="${eyeY + pdy - 0.8}" r="0.7" fill="#FFFFFF" opacity="0.92"/>`;
+	// Catchlight — a warm cream rather than pure white, so the eye reads as part
+	// of the editorial parchment palette instead of a hard digital spec.
+	e += `<circle cx="${cx + pdx - 0.7}" cy="${eyeY + pdy - 0.8}" r="0.7" fill="${CREAM}" opacity="0.6"/>`;
 
 	if (lid > 0) {
 		e += `<rect x="${cx - 3.4}" y="${eyeY - eyeRy - 0.4}" width="6.8" height="${lid + 0.4}" rx="0.5" fill="${skin.base}"/>`;
@@ -513,6 +555,8 @@ export const renderAvatarContent = ({
 	const animate = options?.animate ?? false;
 	const frame = options?.frame ?? true;
 	const signature = options?.signature ?? true;
+	const decor = options?.decor ?? true;
+	const noBg = options?.noBg ?? false;
 
 	const skin = SKIN[p.skin];
 	const hairC = HAIR_COLOR[p.hair];
@@ -524,8 +568,11 @@ export const renderAvatarContent = ({
 
 	let s = '';
 
-	// 1 · Backdrop (two planes + signature)
-	s += bgLayer({ bg, signature });
+	// 1 · Backdrop (two planes + signature) — skipped entirely when `noBg`, so
+	// the figure can sit on a caller-supplied surface (the profile hero tint).
+	if (!noBg) {
+		s += bgLayer({ bg, signature, decor });
+	}
 
 	// 2 · Figure group (gentle bob, gated)
 	s += `<g${animate ? ' class="va-bob"' : ''}>`;
