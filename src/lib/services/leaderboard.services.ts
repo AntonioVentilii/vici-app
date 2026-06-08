@@ -20,3 +20,22 @@ export const getLeaderboard = async (): Promise<UserProfile[]> => {
 
 	return items.map(fromWireProfile);
 };
+
+/**
+ * The caller's rival — the profile adjacent to them across the full points
+ * ranking (not just the top-{@link getLeaderboard} slice), so the "Your
+ * rival" insight resolves for every ranked user. Usually the competitor
+ * one rank above; for rank 1 it's the runner-up below, flagged
+ * `isTrailing` so the gap reads as a lead. `undefined` when the caller is
+ * unranked or the lone ranked profile.
+ *
+ * The satellite returns the profile in camelCase (`j.optional(Record)`),
+ * so no wire decode is needed — it's the same shape as `getProfile`.
+ */
+export const getMyRival = async (): Promise<
+	{ profile: UserProfile; isTrailing: boolean } | undefined
+> => {
+	const { rival, rivalIsTrailing } = await functions.getMyRival();
+
+	return rival ? { profile: rival as UserProfile, isTrailing: rivalIsTrailing } : undefined;
+};

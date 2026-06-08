@@ -723,6 +723,7 @@ export const ptMessages = {
 	'dash.disclosure.contrarian_empty': 'Ainda sem vitórias contra o consenso.',
 	'dash.disclosure.contrarian_title': 'Vitórias contra o consenso · {count}',
 	'dash.disclosure.rival_gap': '{points} pts à frente',
+	'dash.disclosure.rival_gap_behind': 'Liderando por {points} pts',
 	'dash.disclosure.rival_gap_unknown': 'Dados de rivalidade em breve',
 	'dash.disclosure.rival_title': 'Seu rival · {handle}',
 	'dash.disclosure.rival_title_unknown': 'Seu rival · —',
