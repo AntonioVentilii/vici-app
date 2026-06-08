@@ -5,23 +5,27 @@
 	 * canister (rival, contrarian count, lifetime VXP, global rank, …)
 	 * fall back to an em-dash placeholder rather than an approximation.
 	 */
-	import { Check, ChevronRight, X } from '@lucide/svelte/icons';
+	import { Check } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DashAccuracySparkline from '$lib/components/dash/DashAccuracySparkline.svelte';
+	import DashActivePositions from '$lib/components/dash/DashActivePositions.svelte';
 	import DashCategoryBreakdown from '$lib/components/dash/DashCategoryBreakdown.svelte';
 	import DashDayZero from '$lib/components/dash/DashDayZero.svelte';
+	import DashDisclosure from '$lib/components/dash/DashDisclosure.svelte';
 	import DashHeroAccuracy from '$lib/components/dash/DashHeroAccuracy.svelte';
 	import DashHoldingsCard from '$lib/components/dash/DashHoldingsCard.svelte';
 	import DashNextUnlock from '$lib/components/dash/DashNextUnlock.svelte';
 	import DashOracleInsight from '$lib/components/dash/DashOracleInsight.svelte';
+	import DashPastPredictions from '$lib/components/dash/DashPastPredictions.svelte';
 	import DashRankContext from '$lib/components/dash/DashRankContext.svelte';
+	import DashResolutionBanner from '$lib/components/dash/DashResolutionBanner.svelte';
 	import DashTodaysGoal from '$lib/components/dash/DashTodaysGoal.svelte';
 	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import ResolutionReveal from '$lib/components/market/ResolutionReveal.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
-	import { EM_DASH, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+	import { EM_DASH, USD_DECIMALS } from '$lib/constants/app.constants';
 	import {
 		MARKET_TAG_LABEL_KEYS,
 		MARKET_TAGS,
@@ -57,11 +61,9 @@
 	import { DAILY_GOAL_TARGET } from '$lib/utils/daily-goal.utils';
 	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { formatVxpBalance, formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
-	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
 	type TimeWindow = '7d' | '30d' | '90d' | 'All';
-	type PastFilter = 'all' | 'won' | 'lost';
 
 	// — em-dash placeholder used everywhere a real backend number
 	// isn't yet available — signals "unknown" rather than fabricating
@@ -97,7 +99,6 @@
 	let rivalData = $state<{ profile: UserProfile; isTrailing: boolean } | undefined>(undefined);
 
 	let tw = $state<TimeWindow>('30d');
-	let pastFilter = $state<PastFilter>('all');
 
 	// Holdings for the current (playground / VXP) domain — one shared source
 	// (`vxp-holdings.derived`) with the Trade modal, Portfolio, and Wallet:
@@ -316,40 +317,9 @@
 		return Math.round((accuracyValue - priorAcc) * 1000) / 10;
 	});
 
-	// "Past predictions" row list. Reads from `$resolvedPositions` (the
-	// uncapped clearing-event stream) and shapes each entry to the row
-	// template's expected fields. Stays consistent with the chip counts
-	// further up — same source, same scope.
-	const filteredHistory = $derived(
-		$resolvedPositions
-			.filter((row) => {
-				if (pastFilter === 'won') {
-					return row.result === 'won';
-				}
-
-				if (pastFilter === 'lost') {
-					return row.result === 'lost';
-				}
-
-				return row.result !== 'neutral';
-			})
-			.map((row) => {
-				const market = marketById.get(row.marketId);
-				const outcomeId = inferResolvedOutcomeId({ resolved: row, market });
-				const sideLabel =
-					outcomeId === undefined
-						? null
-						: (market?.outcomes?.find((o) => o.id === outcomeId)?.title ?? outcomeId);
-
-				return {
-					marketId: row.marketId,
-					settledAtMs: Number(row.timestampNs / 1_000_000n),
-					win: row.result === 'won',
-					sideLabel,
-					realizedPnlUsd: row.realizedPnlUsd
-				};
-			})
-	);
+	// Past-prediction rows are shaped inside `DashPastPredictions` from the
+	// same uncapped `$resolvedPositions` stream and `marketById` lookup, so
+	// the row list stays consistent with the chip counts below.
 
 	// `recentSettlements` (capped at `USER_STATS_RECENT_LIMIT`) used to be
 	// combined with the broken lifetime `wins`/`losses` to render the
@@ -446,76 +416,6 @@
 		)
 	);
 
-	// ─── Formatters ────────────────────────────────────────────────────
-	const fmtRelativeShort = (ms: number): string => {
-		const delta = Date.now() - ms;
-		const minutes = Math.floor(delta / 60_000);
-
-		if (minutes < 60) {
-			return `${Math.max(1, minutes)}m`;
-		}
-
-		const hours = Math.floor(minutes / 60);
-
-		if (hours < 24) {
-			return `${hours}h`;
-		}
-
-		const days = Math.floor(hours / 24);
-
-		return `${days}d`;
-	};
-
-	/**
-	 * Past-prediction row PnL → "+240 VXP" / "−180 VXP". `pnlUsdMicroUnits`
-	 * is the signed `cashflow_usd` carried on the `Settled` event in
-	 * `USD_DECIMALS` units; converted via `decimalFixedValueToNumber` and
-	 * formatted whole-VXP for the row chip. A real sub-1 favourite win reads
-	 * "+<1 VXP" (via `formatWholeVxpMagnitude`) rather than a broken "+0".
-	 */
-	const fmtPastRowAmount = (pnlUsdMicroUnits: bigint): string => {
-		const n = decimalFixedValueToNumber({ value: pnlUsdMicroUnits, decimals: USD_DECIMALS });
-		const sign = n >= 0 ? '+' : '−';
-
-		return `${sign}${formatWholeVxpMagnitude(n)} VXP`;
-	};
-
-	const fmtTimeLeft = (expiryMs: number): { label: string; urgent: boolean } => {
-		const delta = expiryMs - Date.now();
-
-		if (delta <= 0) {
-			return { label: t({ locale: $localeStore, key: 'dash.active.closed' }), urgent: false };
-		}
-
-		const hours = Math.floor(delta / (1000 * 60 * 60));
-
-		if (hours < 24) {
-			return {
-				label: t({
-					locale: $localeStore,
-					key: 'dash.active.hours_left',
-					params: { count: Math.max(1, hours) }
-				}),
-				urgent: true
-			};
-		}
-
-		const days = Math.floor(hours / 24);
-
-		return {
-			label: t({ locale: $localeStore, key: 'dash.active.days_left', params: { count: days } }),
-			urgent: false
-		};
-	};
-
-	const marketTitle = (marketId: string): string => marketById.get(marketId)?.title ?? marketId;
-	const marketVolumeCalls = (m: Market): number => Number(m.totalVolume ?? ZERO);
-
-	// ─── Closing-today urgency badge ───────────────────────────────────
-	const closingTodayCount = $derived(
-		activePositions.filter((entry) => fmtTimeLeft(Number(entry.market.expiryDate)).urgent).length
-	);
-
 	// ─── Time window strip (visual switch only) ────────────────────────
 	const windows: TimeWindow[] = ['7d', '30d', '90d', 'All'];
 
@@ -599,44 +499,7 @@
 			     pulse) on a net-negative batch — the system never borrows
 			     celebratory styling for a loss. -->
 			{#if digest.count > 0}
-				<button
-					class="dash-reso-banner"
-					class:is-neg={digest.netVxp < 0}
-					onclick={openReveal}
-					type="button"
-				>
-					<span class="dash-reso-dot" aria-hidden="true"></span>
-					<span class="dash-reso-text">
-						<span class="dash-reso-title">
-							{t({
-								locale: $localeStore,
-								key:
-									digest.count === 1 ? 'dash.reso.banner_title_one' : 'dash.reso.banner_title_many',
-								params: { count: digest.count }
-							})}
-						</span>
-						<span class="dash-reso-sub">
-							<span
-								class="dash-reso-vxp"
-								class:is-neg={digest.netVxp < 0}
-								class:is-pos={digest.netVxp >= 0}
-							>
-								{digest.netVxp >= 0 ? '+' : '−'}{formatWholeVxpMagnitude(digest.netVxp)}
-								{t({ locale: $localeStore, key: 'flow.reso.vxp' })}
-							</span>
-							<span class="dash-reso-dim">
-								{t({
-									locale: $localeStore,
-									key: 'dash.reso.banner_breakdown',
-									params: { wins: digest.wins, losses: digest.losses }
-								})}
-							</span>
-						</span>
-					</span>
-					<span class="dash-reso-cta"
-						>{t({ locale: $localeStore, key: 'dash.reso.banner_cta' })}</span
-					>
-				</button>
+				<DashResolutionBanner {digest} onOpen={openReveal} />
 			{/if}
 
 			<!-- ─── TODAY'S GOAL · resume the daily call goal ───
@@ -699,71 +562,7 @@
 			</div>
 
 			<!-- ─── ACTIVE positions ─── -->
-			<div class="dash-section">
-				<div class="dash-section-eyebrow">
-					<span>
-						{t({ locale: $localeStore, key: 'dash.active.eyebrow' })}
-						{#if closingTodayCount > 0}
-							<span class="dash-urgency">
-								{t({
-									locale: $localeStore,
-									key: 'dash.active.closing_today',
-									params: { count: closingTodayCount }
-								})}
-							</span>
-						{/if}
-					</span>
-					<a
-						class="see-all"
-						href={resolve(AppPath.Portfolio)}
-						onclick={(e) => {
-							e.preventDefault();
-							goto(resolve(AppPath.Portfolio));
-						}}
-					>
-						{t({
-							locale: $localeStore,
-							key: 'dash.active.see_all',
-							params: { count: totalActive }
-						})}
-					</a>
-				</div>
-				{#if activePositions.length === 0}
-					<div class="dash-empty">
-						{t({ locale: $localeStore, key: 'dash.placeholder.positions' })}
-					</div>
-				{:else}
-					{#each activePositions as entry, i (entry.position.marketId)}
-						{@const m = entry.market}
-						{@const side = entry.position.outcomeId === 'YES' ? 'YES' : 'NO'}
-						{@const prob = side === 'YES' ? m.yesProbability : 1 - m.yesProbability}
-						{@const currentPct = Math.round(prob * 100)}
-						{@const timer = fmtTimeLeft(Number(m.expiryDate))}
-						<button
-							class="dash-pos-row"
-							onclick={() => goto(resolve(`${AppPath.Markets}/${m.id}`))}
-						>
-							<div class="left">
-								<div class="q">{m.title}</div>
-								<div class="ctx">
-									<span class="side {side.toLowerCase()}">{side}</span>
-									<span>
-										{t({
-											locale: $localeStore,
-											key: 'dash.active.vol_calls',
-											params: { count: marketVolumeCalls(m) }
-										})}
-									</span>
-								</div>
-							</div>
-							<div class="right-col">
-								<span class="pct">{currentPct}%</span>
-								<span class="timer" class:urgent={i === 0 && timer.urgent}>{timer.label}</span>
-							</div>
-						</button>
-					{/each}
-				{/if}
-			</div>
+			<DashActivePositions entries={activePositions} {totalActive} />
 
 			<!-- ─── BY CATEGORY breakdown ─── -->
 			<!-- Hidden during World-Cup mode: per-category accuracy is empty
@@ -784,92 +583,13 @@
 			/>
 
 			<!-- ─── PAST predictions ─── -->
-			<div class="dash-section">
-				<div class="dash-section-eyebrow">
-					<span>{t({ locale: $localeStore, key: 'dash.past.eyebrow' })}</span>
-					<span class="see-all">
-						{t({ locale: $localeStore, key: 'dash.past.total', params: { count: settledTotal } })}
-					</span>
-				</div>
-				<div class="dash-filter-chips">
-					<button
-						class:active={pastFilter === 'all'}
-						onclick={() => (pastFilter = 'all')}
-						type="button"
-					>
-						{t({ locale: $localeStore, key: 'dash.past.filter_all' })}
-					</button>
-					<button
-						class:active={pastFilter === 'won'}
-						onclick={() => (pastFilter = 'won')}
-						type="button"
-					>
-						{t({
-							locale: $localeStore,
-							key: 'dash.past.filter_won',
-							params: { count: wins }
-						})}
-					</button>
-					<button
-						class:active={pastFilter === 'lost'}
-						onclick={() => (pastFilter = 'lost')}
-						type="button"
-					>
-						{t({
-							locale: $localeStore,
-							key: 'dash.past.filter_lost',
-							params: { count: losses }
-						})}
-					</button>
-				</div>
-				<div>
-					{#if filteredHistory.length === 0}
-						<div class="dash-empty">{t({ locale: $localeStore, key: 'dash.past.empty' })}</div>
-					{:else}
-						{#each filteredHistory.slice(0, 8) as h (h.marketId + h.settledAtMs)}
-							{@const won = h.win}
-							{@const pnlPositive = h.realizedPnlUsd >= ZERO}
-							<div class="dash-past-row">
-								<span class="res" class:lost={!won} class:won>
-									{#if won}
-										<Check aria-hidden="true" size={11} strokeWidth={3} />
-									{:else}
-										<X aria-hidden="true" size={11} strokeWidth={3} />
-									{/if}
-								</span>
-								<div>
-									<div class="q">{marketTitle(h.marketId)}</div>
-									<div class="ctx">
-										{#if h.sideLabel !== null}
-											{t({
-												locale: $localeStore,
-												key: 'dash.past.row_ctx_side_when',
-												params: {
-													side: h.sideLabel,
-													when: fmtRelativeShort(h.settledAtMs)
-												}
-											})}
-										{:else}
-											{t({
-												locale: $localeStore,
-												key: 'dash.past.row_ctx_when',
-												params: { when: fmtRelativeShort(h.settledAtMs) }
-											})}
-										{/if}
-									</div>
-								</div>
-								<span
-									class="delta-pct"
-									class:delta-lost={!pnlPositive}
-									class:delta-won={pnlPositive}
-								>
-									{fmtPastRowAmount(h.realizedPnlUsd)}
-								</span>
-							</div>
-						{/each}
-					{/if}
-				</div>
-			</div>
+			<DashPastPredictions
+				{losses}
+				{marketById}
+				resolvedRows={$resolvedPositions}
+				{settledTotal}
+				{wins}
+			/>
 
 			<!-- ─── NEXT UNLOCK ─── -->
 			{#if nextAchievement}
@@ -887,22 +607,16 @@
 			<!-- Your rival · the competitor one rank above the user on the
 			     points leaderboard. Falls back to the locked tease (em-dashes)
 			     until the user is ranked with someone above them. -->
-			<details class="dash-disclosure">
-				<summary>
-					<span>
-						{#if rival}
-							{t({
-								locale: $localeStore,
-								key: 'dash.disclosure.rival_title',
-								params: { handle: rival.name }
-							})}
-						{:else}
-							{t({ locale: $localeStore, key: 'dash.disclosure.rival_title_unknown' })}
-						{/if}
-					</span>
-					<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
-				</summary>
-				<div class="dash-disclosure-body">
+			<DashDisclosure
+				title={rival
+					? t({
+							locale: $localeStore,
+							key: 'dash.disclosure.rival_title',
+							params: { handle: rival.name }
+						})
+					: t({ locale: $localeStore, key: 'dash.disclosure.rival_title_unknown' })}
+			>
+				{#snippet body()}
 					{#if rival}
 						<div class="dash-rival">
 							<span class="av">{rival.initials}</span>
@@ -932,21 +646,17 @@
 							<span class="acc-num">{EM_DASH}</span>
 						</div>
 					{/if}
-				</div>
-			</details>
+				{/snippet}
+			</DashDisclosure>
 
-			<details class="dash-disclosure">
-				<summary>
-					<span>
-						{t({
-							locale: $localeStore,
-							key: 'dash.disclosure.contrarian_title',
-							params: { count: contrarianWins.length }
-						})}
-					</span>
-					<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
-				</summary>
-				<div class="dash-disclosure-body">
+			<DashDisclosure
+				title={t({
+					locale: $localeStore,
+					key: 'dash.disclosure.contrarian_title',
+					params: { count: contrarianWins.length }
+				})}
+			>
+				{#snippet body()}
 					{#if contrarianWins.length === 0}
 						<div class="dash-empty">
 							{t({ locale: $localeStore, key: 'dash.disclosure.contrarian_empty' })}
@@ -958,7 +668,7 @@
 									<Check aria-hidden="true" size={11} strokeWidth={3} />
 								</span>
 								<div>
-									<div class="q">{marketTitle(h.marketId)}</div>
+									<div class="q">{marketById.get(h.marketId)?.title ?? h.marketId}</div>
 									<div class="ctx">
 										{t({ locale: $localeStore, key: 'dash.disclosure.contrarian_ctx' })}
 									</div>
@@ -973,15 +683,11 @@
 							</div>
 						{/each}
 					{/if}
-				</div>
-			</details>
+				{/snippet}
+			</DashDisclosure>
 
-			<details class="dash-disclosure">
-				<summary>
-					<span>{t({ locale: $localeStore, key: 'dash.disclosure.untried_title' })}</span>
-					<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
-				</summary>
-				<div class="dash-disclosure-body">
+			<DashDisclosure title={t({ locale: $localeStore, key: 'dash.disclosure.untried_title' })}>
+				{#snippet body()}
 					{#if untriedCategory}
 						{@const label = t({
 							locale: $localeStore,
@@ -1010,8 +716,8 @@
 							{t({ locale: $localeStore, key: 'dash.disclosure.untried_empty' })}
 						</p>
 					{/if}
-				</div>
-			</details>
+				{/snippet}
+			</DashDisclosure>
 
 			<div style:height="32px"></div>
 		</div>
