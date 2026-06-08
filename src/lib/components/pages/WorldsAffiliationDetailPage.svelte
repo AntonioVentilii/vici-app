@@ -26,6 +26,7 @@
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
+		affiliationRankComparator,
 		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -134,20 +135,9 @@
 		const score = (s: AffiliationStatsDoc): number =>
 			key === 'lifetime' ? affiliationLifetimeAccuracy(s) : affiliationMonthlyAccuracy(s);
 
-		const sorted = [...allStats].sort((a, b) => {
-			const da = score(a);
-			const db = score(b);
-
-			if (da !== db) {
-				return db - da;
-			}
-
-			if (a.totalCalls !== b.totalCalls) {
-				return b.totalCalls - a.totalCalls;
-			}
-
-			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
-		});
+		const sorted = [...allStats].sort(
+			affiliationRankComparator({ accuracyOf: score, callsOf: (s) => s.totalCalls })
+		);
 
 		const idx = sorted.findIndex((s) => s.affiliationIdentifier === affiliationIdentifier);
 

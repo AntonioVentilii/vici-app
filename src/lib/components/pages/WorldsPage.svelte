@@ -25,6 +25,9 @@
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
+		affiliationRankComparator,
+		compareAffiliationByLifetime,
+		compareAffiliationByMonth,
 		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -133,21 +136,14 @@
 		const list = [...stats];
 		const activeScope = scope;
 
-		list.sort((a, b) => {
-			const da = accForScope({ row: a, scope: activeScope });
-			const db = accForScope({ row: b, scope: activeScope });
-
-			if (da !== db) {
-				return db - da;
-			}
-
-			// Tie-breakers: more calls first, then stable id sort.
-			if (a.totalCalls !== b.totalCalls) {
-				return b.totalCalls - a.totalCalls;
-			}
-
-			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
-		});
+		// Accuracy basis follows the active scope; the tie-break always
+		// uses lifetime `totalCalls`.
+		list.sort(
+			affiliationRankComparator({
+				accuracyOf: (row) => accForScope({ row, scope: activeScope }),
+				callsOf: (row) => row.totalCalls
+			})
+		);
 
 		return list;
 	});
@@ -160,20 +156,7 @@
 	const wcTop3 = $derived.by(() => {
 		const list = [...stats];
 
-		list.sort((a, b) => {
-			const da = affiliationLifetimeAccuracy(a);
-			const db = affiliationLifetimeAccuracy(b);
-
-			if (da !== db) {
-				return db - da;
-			}
-
-			if (a.totalCalls !== b.totalCalls) {
-				return b.totalCalls - a.totalCalls;
-			}
-
-			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
-		});
+		list.sort(compareAffiliationByLifetime);
 
 		return list.slice(0, PODIUM_SIZE);
 	});
@@ -240,20 +223,7 @@
 	 * without a rank.
 	 */
 	const schoolStats = $derived.by(() => {
-		const monthRanked = [...stats].sort((a, b) => {
-			const da = affiliationMonthlyAccuracy(a);
-			const db = affiliationMonthlyAccuracy(b);
-
-			if (da !== db) {
-				return db - da;
-			}
-
-			if (a.monthTotalCalls !== b.monthTotalCalls) {
-				return b.monthTotalCalls - a.monthTotalCalls;
-			}
-
-			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
-		});
+		const monthRanked = [...stats].sort(compareAffiliationByMonth);
 
 		const rankById = new Map<string, number>(
 			monthRanked.map((row, i) => [row.affiliationIdentifier, i + 1])

@@ -11,7 +11,10 @@
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
-	import { affiliationMonthlyAccuracy } from '$lib/utils/affiliation-stats.utils';
+	import {
+		affiliationMonthlyAccuracy,
+		affiliationRankComparator
+	} from '$lib/utils/affiliation-stats.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -112,20 +115,12 @@
 			// desc, then more calls, then stable id). The viewer's 1-based
 			// index in that order is their month rank; not-present -> EM_DASH.
 			const stats = await listAffiliationStats({ kind: 'university' });
-			const ranked = [...stats].sort((a, b) => {
-				const da = affiliationMonthlyAccuracy(a);
-				const db = affiliationMonthlyAccuracy(b);
-
-				if (da !== db) {
-					return db - da;
-				}
-
-				if (a.totalCalls !== b.totalCalls) {
-					return b.totalCalls - a.totalCalls;
-				}
-
-				return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
-			});
+			const ranked = [...stats].sort(
+				affiliationRankComparator({
+					accuracyOf: affiliationMonthlyAccuracy,
+					callsOf: (row) => row.totalCalls
+				})
+			);
 			const idx = ranked.findIndex((row) => row.affiliationIdentifier === id);
 			schoolRank = idx === -1 ? undefined : idx + 1;
 		} catch {

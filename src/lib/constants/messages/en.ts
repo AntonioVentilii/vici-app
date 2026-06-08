@@ -655,6 +655,7 @@ export const enMessages = {
 	'dash.dz.trend_tag_day0': 'PENDING',
 	'dash.dz.trend_tag_day1': 'PENDING',
 	'dash.header_eyebrow_standard': '{count}-day streak · {window} window',
+	'dash.holdings.available': 'Available',
 	'dash.holdings.backed': 'Backed',
 	'dash.holdings.eyebrow': 'Holdings',
 	'dash.holdings.invite_cta': 'Invite →',
