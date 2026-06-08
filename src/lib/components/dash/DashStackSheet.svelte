@@ -41,7 +41,7 @@
 
 	const openInvite = (): void => {
 		onClose();
-		goto(resolve(AppPath.Arena));
+		void goto(resolve(AppPath.Arena));
 	};
 </script>
 

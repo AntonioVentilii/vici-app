@@ -33,19 +33,25 @@ const WINDOW_SPEC: Record<TrendWindowKey, { days: number; startDelta: number; po
 	d90: { days: 90, startDelta: 5.4, points: 16 }
 };
 
+/** Accuracy is a percentage — every sample must stay within [0, 100]. */
+const clampPct = (value: number): number => Math.min(100, Math.max(0, value));
+
 const buildWindow = ({ key, end }: { key: TrendWindowKey; end: number }): TrendWindow => {
 	const { days, startDelta, points } = WINDOW_SPEC[key];
-	const start = Math.max(0, end - startDelta);
+	const clampedEnd = clampPct(end);
+	const start = Math.max(0, clampedEnd - startDelta);
 	const ys: number[] = [];
 
 	for (let i = 0; i < points; i += 1) {
 		const t = i / (points - 1);
-		// Ease-out climb from `start` to `end`, plus a small fixed wobble so the
-		// line reads as organic. The final sample is pinned exactly on `end`.
-		const base = start + (end - start) * (1 - Math.pow(1 - t, 1.7));
+		// Ease-out climb from `start` to `clampedEnd`, plus a small fixed wobble so
+		// the line reads as organic. The wobble can nudge a sample past the 0..100
+		// bounds, so clamp each one; the final sample is pinned exactly on the
+		// (clamped) end value.
+		const base = start + (clampedEnd - start) * (1 - Math.pow(1 - t, 1.7));
 		const wobble = Math.sin(i * 1.3) * (startDelta * 0.06);
 
-		ys.push(i === points - 1 ? end : base + wobble);
+		ys.push(i === points - 1 ? clampedEnd : clampPct(base + wobble));
 	}
 
 	return { key, days, start: start.toFixed(1), ys };

@@ -19,6 +19,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import type { ClearingDid } from '$declarations';
 	import DashBuildHero from '$lib/components/dash/DashBuildHero.svelte';
 	import DashBuildZero, { type ZeroMarketRow } from '$lib/components/dash/DashBuildZero.svelte';
 	import DashCallsZone, {
@@ -126,24 +127,56 @@
 	const openOrdersAll = $derived($orders);
 	const liveCallCount = $derived(activePositionsAll.length + openOrdersAll.length);
 
-	// Open call rows — soonest-expiring first.
-	const openCalls = $derived.by<OpenCallRow[]>(() =>
-		[...activePositionsAll]
+	// A resting limit order reads as YES exposure when buying, NO when selling —
+	// mirrors how `OpenOrdersTable` labels the same orders.
+	const orderSide = (order: ClearingDid.LimitOrder): 'YES' | 'NO' =>
+		'Buy' in order.side ? 'YES' : 'NO';
+
+	// Open call rows — soonest-expiring first. Live positions AND resting limit
+	// orders both count as open calls, so the Open tab stays consistent with
+	// `liveCallCount` / the Day-0 gating (a user holding only limit orders must
+	// not see the "no live calls" empty state).
+	const openCalls = $derived.by<OpenCallRow[]>(() => {
+		const positionRows = activePositionsAll
 			.map((position) => ({ position, market: marketById.get(position.marketId) }))
 			.filter(
 				(entry): entry is { position: (typeof activePositionsAll)[number]; market: Market } =>
 					entry.market !== undefined
 			)
-			.sort((a, b) => Number(a.market.expiryDate) - Number(b.market.expiryDate))
 			.map(({ position, market }) => ({
-				key: position.marketId,
-				question: market.title,
-				side: position.outcomeId === 'YES' ? ('YES' as const) : ('NO' as const),
-				context: categoryOf(market),
-				timer: timerOf(market),
-				marketId: market.id
-			}))
-	);
+				market,
+				row: {
+					key: position.marketId,
+					question: market.title,
+					side: position.outcomeId === 'YES' ? ('YES' as const) : ('NO' as const),
+					context: categoryOf(market),
+					timer: timerOf(market),
+					marketId: market.id
+				}
+			}));
+
+		const orderRows = openOrdersAll
+			.map((order) => ({ order, market: marketById.get(order.series_id) }))
+			.filter(
+				(entry): entry is { order: ClearingDid.LimitOrder; market: Market } =>
+					entry.market !== undefined
+			)
+			.map(({ order, market }) => ({
+				market,
+				row: {
+					key: order.order_id,
+					question: market.title,
+					side: orderSide(order),
+					context: categoryOf(market),
+					timer: timerOf(market),
+					marketId: market.id
+				}
+			}));
+
+		return [...positionRows, ...orderRows]
+			.sort((a, b) => Number(a.market.expiryDate) - Number(b.market.expiryDate))
+			.map(({ row }) => row);
+	});
 
 	// ─── Resolved calls ────────────────────────────────────────────────
 	const wins = $derived($resolvedPositions.filter((r) => r.result === 'won').length);

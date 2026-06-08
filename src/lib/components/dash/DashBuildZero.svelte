@@ -64,11 +64,11 @@
 	}: Props = $props();
 
 	const openMarket = (marketId: string): void => {
-		goto(resolve(`${AppPath.Markets}/${marketId}`));
+		void goto(resolve(`${AppPath.Markets}/${marketId}`));
 	};
 
 	const openFlow = (): void => {
-		goto(resolve(AppPath.Flow));
+		void goto(resolve(AppPath.Flow));
 	};
 
 	const calibratingCaption = $derived(
