@@ -666,9 +666,8 @@
 					<FlowCardFooter {guided} {sizeStake} />
 				</div>
 
-				<!-- Corner-anchored swipe stamps — compact YES/NO/SKIP boxes
-			     that fade in with drag progress. YES top-right, NO top-left,
-			     SKIP top-center. -->
+				<!-- Swipe stamps — large centered YES / NO and a compact
+			     top-center SKIP, fading in with drag progress. -->
 				<div
 					style:opacity={frontOverlayYes}
 					class="flow-overlay flow-overlay-yes"
@@ -1171,24 +1170,17 @@
 		opacity: 0.75;
 	}
 
-	/* Corner-anchored swipe stamps — compact YES / NO / SKIP boxes that
-	   fade in with drag progress and read like a rubber stamp slammed onto
-	   the card. YES top-right, NO top-left, both tilted outward; SKIP rides
-	   top-center. The stamp box (border + radius + tilt) carries the swipe
-	   intent without obscuring the card content beneath it. */
+	/* Swipe stamps that fade in with drag progress and read like a rubber
+	   stamp slammed onto the card. YES / NO are large and centered — the word
+	   fills the card face as the swipe commits — while SKIP stays a compact
+	   glassy box riding top-center. The stamp box (border + radius + tilt)
+	   carries the swipe intent. */
 	.flow-overlay {
 		position: absolute;
-		top: 24px;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		padding: 8px 12px;
-		border: 2px solid currentColor;
-		border-radius: 6px;
 		font-family: var(--font-display);
-		font-weight: 800;
-		font-size: 18px;
-		letter-spacing: 0.18em;
 		line-height: 1;
 		text-transform: uppercase;
 		pointer-events: none;
@@ -1199,26 +1191,39 @@
 			transform 120ms var(--ease-vici);
 		z-index: 20;
 	}
-	/* The slight scale > 1 gives the "slammed-down" stamp punch; reduced
-	   motion flattens it to a static 1:1 stamp (see the media query below). */
+	/* Large centered YES / NO — anchored at the card center and tilted toward
+	   their swipe edge (YES leans left for the right swipe, NO leans right for
+	   the left). The same rule drives the back-face stamps (`.flow-overlay-back`
+	   reuses these classes), so front and back read identically. */
+	.flow-overlay-yes,
+	.flow-overlay-no {
+		top: 50%;
+		left: 50%;
+		font-size: 64px;
+		font-weight: 800;
+		letter-spacing: 0.12em;
+		padding: 12px 22px;
+		border: 4px solid currentColor;
+		border-radius: 12px;
+	}
 	.flow-overlay-yes {
-		right: 24px;
 		color: var(--yes);
-		/* Tilt outward toward the YES (right-swipe) edge. */
-		transform: rotate(8deg) scale(1.06);
+		transform: translate(-50%, -50%) rotate(-8deg);
 	}
 	.flow-overlay-no {
-		left: 24px;
 		color: var(--no);
-		/* Tilt outward toward the NO (left-swipe) edge. */
-		transform: rotate(-8deg) scale(1.06);
+		transform: translate(-50%, -50%) rotate(8deg);
 	}
 	.flow-overlay-skip {
 		top: 18px;
 		left: 50%;
-		transform: translateX(-50%) scale(1.06);
+		padding: 8px 12px;
+		border: 2px solid currentColor;
+		border-radius: 6px;
 		font-size: 16px;
+		font-weight: 800;
 		letter-spacing: 0.22em;
+		transform: translateX(-50%) scale(1.06);
 		color: var(--text-base);
 		/* Glassy scrim so the upward-swipe stamp reads over any artwork,
 		   tinted from theme tokens to stay correct across dark/light/peach. */
@@ -1230,23 +1235,18 @@
 	/* The back face is pre-rotated rotateY(180deg) and the flipper adds
 	   another 180° when flipped, so back content already resolves
 	   forward-facing (net 360°). The back stamps therefore inherit the
-	   front-face YES/NO treatment as-is — lettering reads forward and
-	   YES lands top-right, NO top-left. Only the stacking order differs. */
+	   front-face YES/NO treatment as-is — lettering reads forward and the
+	   word lands centered. Only the stacking order differs. */
 	.flow-overlay-back {
 		z-index: 25;
 	}
 
-	/* Reduced motion: drop the stamp pop + transform easing — the stamp
-	   appears as a static 1:1 box, fading in on drag opacity alone. */
+	/* Reduced motion: drop the SKIP stamp's pop + the transform easing. The
+	   centered YES / NO keep their tilt (it's the stamp's identity, not motion)
+	   and just fade in on drag opacity alone. */
 	@media (prefers-reduced-motion: reduce) {
 		.flow-overlay {
 			transition: opacity 80ms linear;
-		}
-		.flow-overlay-yes {
-			transform: rotate(8deg);
-		}
-		.flow-overlay-no {
-			transform: rotate(-8deg);
 		}
 		.flow-overlay-skip {
 			transform: translateX(-50%);
