@@ -8,8 +8,8 @@
 		onBulkCreate: (
 			markets: {
 				title: string;
-				description: string;
-				resolution?: string;
+				resolution: string;
+				description?: string;
 				expiryDate: string;
 				balanceDomain?: string;
 				outcomes?: string[];
@@ -27,16 +27,16 @@
 	const exampleJson = [
 		{
 			title: 'Will Bitcoin hit $100k by 2027?',
-			description: "Bitcoin's run at a six-figure price before 2027.",
 			resolution:
 				'Resolves YES if the Bitcoin price reaches $100,000 USD on any major exchange before Jan 1, 2027.',
+			description: "Bitcoin's run at a six-figure price before 2027.",
 			expiryDate: '2027-01-01T00:00:00Z',
 			balanceDomain: 'ViciXp',
 			tags: ['crypto', 'macro']
 		},
 		{
 			title: 'Who will win the 2026 FIFA World Cup?',
-			description: 'Prediction on the champion of the 2026 FIFA World Cup.',
+			resolution: 'Resolves to the nation that wins the 2026 FIFA World Cup final.',
 			expiryDate: '2026-07-20T21:59:59.000Z',
 			balanceDomain: 'ViciXp',
 			outcomes: ['Italy', 'Brazil', 'France', 'Argentina', 'England', 'Spain', 'Germany', 'Other'],
@@ -64,7 +64,7 @@
 			}
 
 			for (const item of data) {
-				if (!item.title || !item.description || !item.expiryDate) {
+				if (!item.title || !item.resolution || !item.expiryDate) {
 					error = t({ locale: $localeStore, key: 'admin.markets.bulk.error.missing_fields' });
 
 					return;
@@ -80,29 +80,27 @@
 					return;
 				}
 
-				// `resolution` is optional in the upload: when omitted the market
-				// falls back to its `description` (see createMarket). When present it
-				// must be a string within the registry's clause-length bound.
-				if (item.resolution !== undefined) {
-					if (typeof item.resolution !== 'string') {
-						error = t({
-							locale: $localeStore,
-							key: 'admin.markets.bulk.error.resolution_not_string',
-							params: { title: item.title }
-						});
+				// `resolution` is the compulsory settlement clause: it must be a
+				// string within the registry's clause-length bound. (`description`
+				// is optional and falls back to the clause in createMarket.)
+				if (typeof item.resolution !== 'string') {
+					error = t({
+						locale: $localeStore,
+						key: 'admin.markets.bulk.error.resolution_not_string',
+						params: { title: item.title }
+					});
 
-						return;
-					}
+					return;
+				}
 
-					if (item.resolution.length > RESOLUTION_CLAUSE_MAX_LENGTH) {
-						error = t({
-							locale: $localeStore,
-							key: 'admin.markets.bulk.error.resolution_too_long',
-							params: { title: item.title, max: RESOLUTION_CLAUSE_MAX_LENGTH }
-						});
+				if (item.resolution.length > RESOLUTION_CLAUSE_MAX_LENGTH) {
+					error = t({
+						locale: $localeStore,
+						key: 'admin.markets.bulk.error.resolution_too_long',
+						params: { title: item.title, max: RESOLUTION_CLAUSE_MAX_LENGTH }
+					});
 
-						return;
-					}
+					return;
 				}
 
 				if (item.outcomes) {

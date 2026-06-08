@@ -25,8 +25,8 @@
 	const handleBulkCreate = async (
 		bulkMarkets: {
 			title: string;
-			description: string;
-			resolution?: string;
+			resolution: string;
+			description?: string;
 			expiryDate: string;
 			balanceDomain?: string;
 			outcomes?: string[];

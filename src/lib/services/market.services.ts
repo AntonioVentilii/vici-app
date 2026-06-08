@@ -37,7 +37,7 @@ import {
 } from '$lib/utils/market.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
-import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
+import { isNullish, nonNullish, notEmptyString, toNullable } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
 /**
@@ -46,8 +46,8 @@ import type { Identity } from '@icp-sdk/core/agent';
  */
 export const createMarket = async ({
 	title,
-	description,
 	resolution,
+	description,
 	expiryDate,
 	outcomes = [],
 	payoutUnit: payoutUnitOverride,
@@ -57,16 +57,20 @@ export const createMarket = async ({
 	locale
 }: {
 	title: string;
-	description: string;
 	/**
 	 * The compulsory on-chain settlement clause (`Resolution.clause`) stating
-	 * how this market resolves. Defaults to `description` when omitted — the
-	 * registry requires a non-empty clause, and `description` historically
-	 * doubled as the resolution criterion. Trimmed and capped at
-	 * {@link RESOLUTION_CLAUSE_MAX_LENGTH} to mirror the canister's
-	 * `ResolutionClauseEmpty` / `ResolutionClauseTooLong` validation.
+	 * how this market resolves. The registry rejects an empty or over-long
+	 * clause (`ResolutionClauseEmpty` / `ResolutionClauseTooLong`); callers must
+	 * supply a non-empty value, which is trimmed and capped at
+	 * {@link RESOLUTION_CLAUSE_MAX_LENGTH} here.
 	 */
-	resolution?: string;
+	resolution: string;
+	/**
+	 * Free-text descriptive blurb. Optional — when omitted (or blank) it falls
+	 * back to the {@link resolution} clause, since `AddSeriesParams.description`
+	 * is still a required field on chain.
+	 */
+	description?: string;
 	expiryDate: bigint;
 	outcomes?: string[];
 	payoutUnit?: RegistryDid.PayoutUnit;
@@ -130,19 +134,22 @@ export const createMarket = async ({
 		.replace(/\s+/g, '_')
 		.replace(/[^A-Z0-9_-]/g, '');
 
-	// The registry requires a non-empty resolution clause on every series.
-	// Fall back to the description when the caller omits one, matching the
-	// deploy-markets backfill (`.resolution // .description`).
-	const trimmedResolution = resolution?.trim();
-	const resolutionClause = (
-		nonNullish(trimmedResolution) && trimmedResolution.length > 0 ? trimmedResolution : description
-	).slice(0, RESOLUTION_CLAUSE_MAX_LENGTH);
+	// The registry requires a non-empty resolution clause on every series, so
+	// trim + cap it to mirror `ResolutionClauseEmpty` / `ResolutionClauseTooLong`.
+	const resolutionClause = resolution.trim().slice(0, RESOLUTION_CLAUSE_MAX_LENGTH);
+
+	// `description` is optional for callers; on chain it is still required, so
+	// fall back to the resolution clause when no blurb is provided.
+	const trimmedDescription = description?.trim();
+	const descriptionText = notEmptyString(trimmedDescription)
+		? trimmedDescription
+		: resolutionClause;
 
 	const params: RegistryDid.AddSeriesParams = {
 		underlying,
 		title,
 		description: {
-			plain: description,
+			plain: descriptionText,
 			markdown: toNullable(),
 			html: toNullable()
 		},
@@ -188,7 +195,7 @@ export const createMarket = async ({
 		user: identity.getPrincipal().toText(),
 		marketId: seriesId,
 		title: `Market created: ${title}`,
-		details: description
+		details: descriptionText
 	});
 
 	refreshMarkets();
@@ -1038,7 +1045,7 @@ export const forkMarket = async ({
 			nonNullish(description) ? { plain: description, html: [], markdown: [] } : undefined
 		),
 		resolution: toNullable(
-			nonNullish(trimmedResolution) && trimmedResolution.length > 0
+			notEmptyString(trimmedResolution)
 				? { clause: trimmedResolution.slice(0, RESOLUTION_CLAUSE_MAX_LENGTH) }
 				: undefined
 		),

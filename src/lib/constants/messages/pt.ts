@@ -456,7 +456,7 @@ export const ptMessages = {
 	'admin.markets.bulk.download_template': 'Baixar modelo',
 	'admin.markets.bulk.error.invalid_date': 'Formato de data inválido: {date}',
 	'admin.markets.bulk.error.missing_fields':
-		'Cada mercado precisa ter título, descrição e data de expiração.',
+		'Cada mercado precisa ter título, resolution e data de expiração.',
 	'admin.markets.bulk.error.not_array': 'O JSON deve ser uma lista de objetos de mercado.',
 	'admin.markets.bulk.error.not_json': 'Envie um arquivo JSON.',
 	'admin.markets.bulk.error.outcome_not_string':
@@ -496,7 +496,7 @@ export const ptMessages = {
 		'A cláusula de resolução deve ter no máximo {max} caracteres.',
 	'admin.markets.form.field.description': 'Descrição',
 	'admin.markets.form.field.description_placeholder':
-		'Descreva brevemente do que se trata este mercado...',
+		'Opcional — descreva brevemente do que se trata este mercado...',
 	'admin.markets.form.field.expiry_date': 'Data de expiração',
 	'admin.markets.form.field.market_type': 'Tipo de mercado',
 	'admin.markets.form.field.resolution': 'Resolução',
