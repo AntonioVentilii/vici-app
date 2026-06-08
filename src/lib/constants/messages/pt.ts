@@ -1039,10 +1039,10 @@ export const ptMessages = {
 	'layout.user.theme': 'Tema',
 	'layout.wallet.balances': 'Saldos',
 	'layout.wallet.go_to_wallet': 'Ir para a Carteira',
+	'leaderboard.back': 'Voltar à arena',
 	'leaderboard.empty': 'Juntando-se ao grupo...',
 	'leaderboard.empty_sub':
 		'Ainda sem previsões liquidadas neste período. Seja o primeiro no quadro.',
-	'leaderboard.friends_aria': 'Abrir amigos',
 	'leaderboard.scope.all': 'Sempre',
 	'leaderboard.scope.month': 'Este mês',
 	'leaderboard.scope.week': 'Esta semana',
@@ -1066,6 +1066,7 @@ export const ptMessages = {
 	'league_invite.resolving': 'Entrando na liga…',
 	'league_invite.unknown_body': 'Nenhuma liga corresponde a esse código de convite.',
 	'league_invite.unknown_title': 'Convite desconhecido',
+	'leagues.back': 'Voltar à arena',
 	'leagues.create.cta': 'Criar liga',
 	'leagues.create.invalid_description': 'A descrição deve ter no máx. 240 caracteres.',
 	'leagues.create.invalid_name_too_long': 'O nome deve ter no máx. 40 caracteres.',
@@ -1575,6 +1576,7 @@ export const ptMessages = {
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES venceu',
 	'portfolio.allocation.eyebrow': 'DISTRIBUIÇÃO',
+	'portfolio.back': 'Voltar ao painel',
 	'portfolio.allocation.other': 'Outros',
 	'portfolio.empty.body':
 		'Apoie alguns calls no deck Flow — suas posições ativas e resolvidas aparecem aqui.',

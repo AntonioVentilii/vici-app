@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { LineChart } from '@lucide/svelte/icons';
+	import { goto } from '$app/navigation';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
@@ -311,6 +312,10 @@
 
 <div class="portfolio-page">
 	<ScreenHeader
+		back={{
+			label: t({ locale: $localeStore, key: 'portfolio.back' }),
+			onBack: () => goto(AppPath.Dash)
+		}}
 		right={portfolioAppbarRight}
 		title={t({ locale: $localeStore, key: 'portfolio.title' })}
 	/>
