@@ -712,6 +712,7 @@ export const enMessages = {
 	'dash.disclosure.contrarian_empty': 'No contrarian wins yet — call against consensus to log one.',
 	'dash.disclosure.contrarian_title': 'Contrarian wins · {count}',
 	'dash.disclosure.rival_gap': '{points} pts ahead',
+	'dash.disclosure.rival_gap_behind': 'Leading by {points} pts',
 	'dash.disclosure.rival_gap_unknown': 'Rivalry data coming soon',
 	'dash.disclosure.rival_title': 'Your rival · {handle}',
 	'dash.disclosure.rival_title_unknown': 'Your rival · —',
