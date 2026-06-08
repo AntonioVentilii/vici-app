@@ -2358,10 +2358,10 @@ export const enMessages = {
 	'welcome.flowcard.trickster': '{minority}% agree · 2× VXP',
 	'welcome.flowcard.yes': 'YES',
 	'welcome.nav.already_member': 'Already a member?',
+	'welcome.nav.disclosure':
+		'VICI is a free to play prediction game. Market settles on public record.',
 	'welcome.nav.explore': 'Explore',
-	'welcome.nav.free_prefix': 'VICI is free -',
 	'welcome.nav.latin_motto': 'Veni · Vidi ·',
-	'welcome.nav.public_data': 'resolution on public data',
 	'welcome.nav.skip_to_content': 'Skip to content',
 	'welcome.trust.tagline': 'Veni. Vidi. Vici.',
 	'welcome.universities.fifa_tag': 'FIFA WORLD CUP',

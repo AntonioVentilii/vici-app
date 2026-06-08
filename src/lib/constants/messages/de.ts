@@ -2380,10 +2380,10 @@ export const deMessages = {
 	'welcome.flowcard.trickster': '{minority}% einig · 2× VXP',
 	'welcome.flowcard.yes': 'JA',
 	'welcome.nav.already_member': 'Schon Mitglied?',
+	'welcome.nav.disclosure':
+		'VICI ist ein kostenloses Tipp-Spiel. Der Markt wird anhand öffentlicher Daten aufgelöst.',
 	'welcome.nav.explore': 'Entdecken',
-	'welcome.nav.free_prefix': 'VICI ist kostenlos -',
 	'welcome.nav.latin_motto': 'Veni · Vidi ·',
-	'welcome.nav.public_data': 'Auflösung anhand öffentlicher Daten',
 	'welcome.nav.skip_to_content': 'Zum Inhalt springen',
 	'welcome.trust.tagline': 'Veni. Vidi. Vici.',
 	'welcome.universities.fifa_tag': 'FIFA WELTMEISTERSCHAFT',
