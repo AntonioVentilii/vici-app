@@ -6,11 +6,10 @@
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import BattlesIntroCard from '$lib/components/leagues/BattlesIntroCard.svelte';
 	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
-	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
+	import WorldsPodiumCard from '$lib/components/worlds/WorldsPodiumCard.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
-		lookupWorldsAffiliation,
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
@@ -27,12 +26,7 @@
 		type TournamentMatchDoc,
 		type TournamentRound
 	} from '$lib/types/tournament';
-	import {
-		affiliationLifetimeAccuracy,
-		affiliationMonthlyAccuracy,
-		compareAffiliationByLifetime,
-		formatAccuracyPercent
-	} from '$lib/utils/affiliation-stats.utils';
+	import { compareAffiliationByLifetime } from '$lib/utils/affiliation-stats.utils';
 	import { formatMonthName } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
@@ -237,9 +231,6 @@
 	// current month rather than a hard-coded one.
 	const currentMonthName = $derived(formatMonthName({ locale: $localeStore }));
 
-	const uniOption = (id: string) => lookupWorldsAffiliation({ kind: 'university', id });
-	const countryOption = (id: string) => lookupWorldsAffiliation({ kind: 'country', id });
-
 	const goWorldsUniversitiesWc = () => {
 		void goto(`${resolve(AppPath.Arena)}/worlds/schools`);
 	};
@@ -388,324 +379,33 @@
 		</p>
 	{:else}
 		<!-- ─── Worlds Universities ─────────────────────────────── -->
-		<section class="battles-section" aria-label="Worlds Universities">
-			<header class="battles-section-head">
-				<span class="battles-eyebrow allcaps">
-					{t({ locale: $localeStore, key: 'battles.section.worlds_universities' })}
-				</span>
-				{#if myUni}
-					{@const opt = uniOption(myUni.affiliationIdentifier)}
-					<span class="battles-section-head-meta num allcaps">
-						{t({
-							locale: $localeStore,
-							key: 'battles.your_school',
-							params: { name: opt?.name ?? myUni.affiliationIdentifier }
-						})}
-					</span>
-				{/if}
-			</header>
-
-			<button class="battles-card is-featured" onclick={goWorldsUniversitiesWc} type="button">
-				<div class="battles-card-head">
-					<div class="battles-card-tags">
-						<span class="battles-tag is-wc">
-							{t({ locale: $localeStore, key: 'worlds.event.tag_wc' })}
-						</span>
-						<span class="battles-tag is-live">
-							{t({ locale: $localeStore, key: 'worlds.event.tag_live' })}
-						</span>
-					</div>
-					{#if eventDaysLeft !== null}
-						<span class="battles-card-timer num">
-							{t({
-								locale: $localeStore,
-								key: 'battles.card.days_left',
-								params: { days: eventDaysLeft }
-							})}
-						</span>
-					{/if}
-				</div>
-				<h3 class="battles-card-title">
-					{t({ locale: $localeStore, key: 'battles.uni.wc_title_lede' })}
-					<span class="serif-italic">
-						{t({ locale: $localeStore, key: 'battles.uni.wc_title_emph' })}
-					</span>
-					{t({ locale: $localeStore, key: 'battles.uni.wc_title_tail' })}
-				</h3>
-				<p class="battles-card-meta">
-					{t({
-						locale: $localeStore,
-						key: 'battles.uni.wc_sub',
-						params: { schools: universityCount }
-					})}
-				</p>
-
-				{#if uniWcTop3.length > 0}
-					<div class="battles-podium">
-						{#if uniWcTop3[1]}
-							{@const opt = uniOption(uniWcTop3[1].affiliationIdentifier)}
-							<div class="battles-pod-tile is-silver">
-								<div class="num battles-pod-place">02</div>
-								<div class="battles-pod-name">
-									{opt?.name ?? uniWcTop3[1].affiliationIdentifier}
-								</div>
-								<div class="num battles-pod-pct">
-									{formatAccuracyPercent(affiliationLifetimeAccuracy(uniWcTop3[1]))}
-								</div>
-							</div>
-						{/if}
-						{#if uniWcTop3[0]}
-							{@const opt = uniOption(uniWcTop3[0].affiliationIdentifier)}
-							<div class="battles-pod-tile is-gold">
-								<div class="num battles-pod-place">01</div>
-								<div class="battles-pod-name">
-									{opt?.name ?? uniWcTop3[0].affiliationIdentifier}
-								</div>
-								<div class="num battles-pod-pct">
-									{formatAccuracyPercent(affiliationLifetimeAccuracy(uniWcTop3[0]))}
-								</div>
-							</div>
-						{/if}
-						{#if uniWcTop3[2]}
-							{@const opt = uniOption(uniWcTop3[2].affiliationIdentifier)}
-							<div class="battles-pod-tile is-bronze">
-								<div class="num battles-pod-place">03</div>
-								<div class="battles-pod-name">
-									{opt?.name ?? uniWcTop3[2].affiliationIdentifier}
-								</div>
-								<div class="num battles-pod-pct">
-									{formatAccuracyPercent(affiliationLifetimeAccuracy(uniWcTop3[2]))}
-								</div>
-							</div>
-						{/if}
-					</div>
-				{/if}
-
-				{#if myUni && myUniStats}
-					{@const opt = uniOption(myUni.affiliationIdentifier)}
-					<div class="battles-your-row">
-						<span class="battles-your-em" aria-hidden="true">
-							{(opt?.name ?? myUni.affiliationIdentifier).charAt(0)}
-						</span>
-						<span class="battles-your-text">
-							<b>{opt?.name ?? myUni.affiliationIdentifier}</b>
-							·
-							{t({
-								locale: $localeStore,
-								key: 'battles.your_rank',
-								params: { rank: myUniRank, total: universityCount }
-							})}
-						</span>
-						<span class="num battles-your-pct"
-							>{formatAccuracyPercent(affiliationLifetimeAccuracy(myUniStats))}</span
-						>
-					</div>
-				{/if}
-			</button>
-
-			<button class="battles-card is-compact" onclick={goWorldsUniversitiesMonth} type="button">
-				<div class="battles-card-head">
-					<span class="battles-tag is-monthly">
-						{t({
-							locale: $localeStore,
-							key: 'battles.tag.monthly_all_calls',
-							params: { month: currentMonthName }
-						})}
-					</span>
-				</div>
-				{#if myUni && myUniStats}
-					{@const opt = uniOption(myUni.affiliationIdentifier)}
-					<div class="battles-your-row is-tight">
-						<span class="battles-your-em" aria-hidden="true">
-							{(opt?.name ?? myUni.affiliationIdentifier).charAt(0)}
-						</span>
-						<span class="battles-your-text">
-							<b>{opt?.name ?? myUni.affiliationIdentifier}</b>
-							·
-							{t({
-								locale: $localeStore,
-								key: 'battles.your_rank',
-								params: { rank: myUniRank, total: universityCount }
-							})}
-						</span>
-						<span class="num battles-your-pct"
-							>{formatAccuracyPercent(affiliationMonthlyAccuracy(myUniStats))}</span
-						>
-					</div>
-				{:else}
-					<p class="battles-card-meta">
-						{t({
-							locale: $localeStore,
-							key: 'battles.uni.month_pick',
-							params: { count: universityCount }
-						})}
-					</p>
-				{/if}
-				<span class="battles-see-all allcaps">
-					{t({ locale: $localeStore, key: 'battles.see_full_standings' })}
-				</span>
-			</button>
-		</section>
+		<WorldsPodiumCard
+			{currentMonthName}
+			{eventDaysLeft}
+			kind="university"
+			myAffiliationIdentifier={myUni?.affiliationIdentifier}
+			myRank={myUniRank}
+			myStats={myUniStats}
+			onOpenMonth={goWorldsUniversitiesMonth}
+			onOpenWc={goWorldsUniversitiesWc}
+			top3={uniWcTop3}
+			total={universityCount}
+		/>
 
 		<!-- ─── Worlds Countries ────────────────────────────────── -->
-		<section class="battles-section is-divided" aria-label="Worlds Countries">
-			<header class="battles-section-head">
-				<span class="battles-eyebrow allcaps">
-					{t({ locale: $localeStore, key: 'battles.section.worlds_countries' })}
-				</span>
-				{#if myCountry}
-					{@const opt = countryOption(myCountry.affiliationIdentifier)}
-					<span class="battles-section-head-meta num allcaps">
-						{#if opt}<CountryFlag class="battles-section-flag" countryCode={opt.id} />{/if}
-						{(opt?.name ?? myCountry.affiliationIdentifier).toUpperCase()}
-					</span>
-				{/if}
-			</header>
-
-			<button class="battles-card is-featured" onclick={goWorldsCountriesWc} type="button">
-				<div class="battles-card-head">
-					<div class="battles-card-tags">
-						<span class="battles-tag is-wc">
-							{t({ locale: $localeStore, key: 'worlds.event.tag_wc' })}
-						</span>
-						<span class="battles-tag is-live">
-							{t({ locale: $localeStore, key: 'worlds.event.tag_live' })}
-						</span>
-					</div>
-					{#if eventDaysLeft !== null}
-						<span class="battles-card-timer num">
-							{t({
-								locale: $localeStore,
-								key: 'battles.card.days_left',
-								params: { days: eventDaysLeft }
-							})}
-						</span>
-					{/if}
-				</div>
-				<h3 class="battles-card-title">
-					{t({ locale: $localeStore, key: 'battles.country.wc_title_lede' })}
-					<span class="serif-italic">
-						{t({ locale: $localeStore, key: 'battles.country.wc_title_emph' })}
-					</span>
-					{t({ locale: $localeStore, key: 'battles.country.wc_title_tail' })}
-				</h3>
-				<p class="battles-card-meta">
-					{t({
-						locale: $localeStore,
-						key: 'battles.country.wc_sub',
-						params: { nations: countryCount }
-					})}
-				</p>
-
-				{#if countryWcTop3.length > 0}
-					<div class="battles-podium">
-						{#if countryWcTop3[1]}
-							{@const opt = countryOption(countryWcTop3[1].affiliationIdentifier)}
-							<div class="battles-pod-tile is-silver">
-								<div class="num battles-pod-place">02</div>
-								<div class="battles-pod-name">
-									{#if opt}<CountryFlag class="battles-pod-flag" countryCode={opt.id} />{/if}
-									{opt?.name ?? countryWcTop3[1].affiliationIdentifier}
-								</div>
-								<div class="num battles-pod-pct">
-									{formatAccuracyPercent(affiliationLifetimeAccuracy(countryWcTop3[1]))}
-								</div>
-							</div>
-						{/if}
-						{#if countryWcTop3[0]}
-							{@const opt = countryOption(countryWcTop3[0].affiliationIdentifier)}
-							<div class="battles-pod-tile is-gold">
-								<div class="num battles-pod-place">01</div>
-								<div class="battles-pod-name">
-									{#if opt}<CountryFlag class="battles-pod-flag" countryCode={opt.id} />{/if}
-									{opt?.name ?? countryWcTop3[0].affiliationIdentifier}
-								</div>
-								<div class="num battles-pod-pct">
-									{formatAccuracyPercent(affiliationLifetimeAccuracy(countryWcTop3[0]))}
-								</div>
-							</div>
-						{/if}
-						{#if countryWcTop3[2]}
-							{@const opt = countryOption(countryWcTop3[2].affiliationIdentifier)}
-							<div class="battles-pod-tile is-bronze">
-								<div class="num battles-pod-place">03</div>
-								<div class="battles-pod-name">
-									{#if opt}<CountryFlag class="battles-pod-flag" countryCode={opt.id} />{/if}
-									{opt?.name ?? countryWcTop3[2].affiliationIdentifier}
-								</div>
-								<div class="num battles-pod-pct">
-									{formatAccuracyPercent(affiliationLifetimeAccuracy(countryWcTop3[2]))}
-								</div>
-							</div>
-						{/if}
-					</div>
-				{/if}
-
-				{#if myCountry && myCountryStats}
-					{@const opt = countryOption(myCountry.affiliationIdentifier)}
-					<div class="battles-your-row">
-						<span class="battles-your-em" aria-hidden="true">
-							{#if opt}<CountryFlag class="battles-your-flag" countryCode={opt.id} />{/if}
-						</span>
-						<span class="battles-your-text">
-							<b>{opt?.name ?? myCountry.affiliationIdentifier}</b>
-							·
-							{t({
-								locale: $localeStore,
-								key: 'battles.your_rank',
-								params: { rank: myCountryRank, total: countryCount }
-							})}
-						</span>
-						<span class="num battles-your-pct"
-							>{formatAccuracyPercent(affiliationLifetimeAccuracy(myCountryStats))}</span
-						>
-					</div>
-				{/if}
-			</button>
-
-			<button class="battles-card is-compact" onclick={goWorldsCountriesMonth} type="button">
-				<div class="battles-card-head">
-					<span class="battles-tag is-monthly">
-						{t({
-							locale: $localeStore,
-							key: 'battles.tag.monthly_all_calls',
-							params: { month: currentMonthName }
-						})}
-					</span>
-				</div>
-				{#if myCountry && myCountryStats}
-					{@const opt = countryOption(myCountry.affiliationIdentifier)}
-					<div class="battles-your-row is-tight">
-						<span class="battles-your-em" aria-hidden="true">
-							{#if opt}<CountryFlag class="battles-your-flag" countryCode={opt.id} />{/if}
-						</span>
-						<span class="battles-your-text">
-							<b>{opt?.name ?? myCountry.affiliationIdentifier}</b>
-							·
-							{t({
-								locale: $localeStore,
-								key: 'battles.your_rank',
-								params: { rank: myCountryRank, total: countryCount }
-							})}
-						</span>
-						<span class="num battles-your-pct"
-							>{formatAccuracyPercent(affiliationMonthlyAccuracy(myCountryStats))}</span
-						>
-					</div>
-				{:else}
-					<p class="battles-card-meta">
-						{t({
-							locale: $localeStore,
-							key: 'battles.country.month_pick',
-							params: { count: countryCount }
-						})}
-					</p>
-				{/if}
-				<span class="battles-see-all allcaps">
-					{t({ locale: $localeStore, key: 'battles.see_full_standings' })}
-				</span>
-			</button>
-		</section>
+		<WorldsPodiumCard
+			{currentMonthName}
+			divided
+			{eventDaysLeft}
+			kind="country"
+			myAffiliationIdentifier={myCountry?.affiliationIdentifier}
+			myRank={myCountryRank}
+			myStats={myCountryStats}
+			onOpenMonth={goWorldsCountriesMonth}
+			onOpenWc={goWorldsCountriesWc}
+			top3={countryWcTop3}
+			total={countryCount}
+		/>
 
 		<!-- ─── Monthly Tournament (curated, when active) ─────── -->
 		{#if tournament !== null && tournamentLiveRound !== null}
@@ -886,27 +586,6 @@
 		gap: 0.5rem;
 	}
 
-	/* Separator between stacked surface sections — a hairline rule with a
-	   short centered golden accent line riding the top edge. */
-	.battles-section.is-divided {
-		position: relative;
-		margin-top: 28px;
-		padding-top: 20px;
-		border-top: 1px solid var(--border-base);
-	}
-
-	.battles-section.is-divided::before {
-		content: '';
-		position: absolute;
-		top: -1px;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 48px;
-		height: 1px;
-		background: var(--laurel);
-		opacity: 0.5;
-	}
-
 	.battles-section-head {
 		display: flex;
 		align-items: center;
@@ -950,10 +629,6 @@
 		border-color: color-mix(in srgb, var(--laurel) 38%, var(--border-base));
 	}
 
-	.battles-card.is-compact {
-		padding: 0.75rem 0.9rem;
-	}
-
 	.battles-card.is-tournament {
 		background:
 			linear-gradient(180deg, color-mix(in srgb, #b49cff 10%, transparent), transparent 70%),
@@ -987,11 +662,6 @@
 		border-radius: var(--r-4, 0.25rem);
 	}
 
-	.battles-tag.is-wc {
-		background: color-mix(in srgb, #ff6b2a 14%, transparent);
-		color: #ff8a4c;
-	}
-
 	.battles-tag.is-live {
 		background: color-mix(in srgb, var(--no) 14%, transparent);
 		color: var(--no);
@@ -1020,11 +690,6 @@
 		.battles-tag.is-live::before {
 			animation: none;
 		}
-	}
-
-	.battles-tag.is-monthly {
-		background: color-mix(in srgb, var(--laurel) 12%, transparent);
-		color: var(--laurel);
 	}
 
 	.battles-tag.is-tournament-round {
@@ -1066,105 +731,6 @@
 		letter-spacing: var(--tracking-wide);
 	}
 
-	/* ─── podium ─────────────────────────────────────────────── */
-	.battles-podium {
-		display: grid;
-		grid-template-columns: 1fr 1fr 1fr;
-		gap: 0.4rem;
-		margin-bottom: 0.6rem;
-	}
-
-	.battles-pod-tile {
-		padding: 0.55rem 0.3rem;
-		text-align: center;
-		background: var(--bg-surface);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-10, 0.6rem);
-		transition:
-			transform 100ms ease,
-			border-color 180ms ease;
-	}
-
-	.battles-pod-tile:hover {
-		border-color: var(--border-strong, var(--border-base));
-		transform: translateY(-1px);
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.battles-pod-tile {
-			transition: border-color 180ms ease;
-		}
-
-		.battles-pod-tile:hover {
-			transform: none;
-		}
-	}
-
-	.battles-pod-tile.is-gold {
-		background:
-			linear-gradient(
-				180deg,
-				color-mix(in srgb, #e2b842 20%, transparent),
-				color-mix(in srgb, #e2b842 6%, transparent) 70%
-			),
-			var(--bg-surface);
-		border-color: color-mix(in srgb, #e2b842 40%, var(--border-base));
-	}
-
-	.battles-pod-tile.is-silver {
-		background:
-			linear-gradient(180deg, color-mix(in srgb, #c0c5cb 14%, transparent), transparent 70%),
-			var(--bg-surface);
-	}
-
-	.battles-pod-tile.is-bronze {
-		background:
-			linear-gradient(180deg, color-mix(in srgb, #b57c52 14%, transparent), transparent 70%),
-			var(--bg-surface);
-	}
-
-	.battles-pod-place {
-		font-size: var(--t-10);
-		font-weight: 700;
-		color: var(--text-muted);
-	}
-
-	.battles-pod-tile.is-gold .battles-pod-place {
-		color: #e2b842;
-	}
-
-	.battles-pod-tile.is-silver .battles-pod-place {
-		color: #c0c5cb;
-	}
-
-	.battles-pod-tile.is-bronze .battles-pod-place {
-		color: #b57c52;
-	}
-
-	.battles-pod-name {
-		margin-top: 0.18rem;
-		font-size: var(--t-11);
-		font-weight: 600;
-		line-height: 1.2;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-	}
-
-	.battles-pod-pct {
-		margin-top: 0.1rem;
-		font-size: var(--t-10);
-		letter-spacing: var(--tracking-wide);
-		color: var(--text-muted);
-	}
-
-	.battles-pod-tile.is-gold .battles-pod-pct {
-		color: #e2b842;
-		font-weight: 700;
-	}
-
 	/* ─── your-row inside grouped card ──────────────────────── */
 	.battles-your-row {
 		display: grid;
@@ -1175,10 +741,6 @@
 		background: color-mix(in srgb, var(--laurel) 6%, transparent);
 		border: 1px solid color-mix(in srgb, var(--laurel) 18%, var(--border-base));
 		border-radius: var(--r-10, 0.6rem);
-	}
-
-	.battles-your-row.is-tight {
-		margin-top: 0.3rem;
 	}
 
 	.battles-your-row.is-tournament {
