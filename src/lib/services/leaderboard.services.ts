@@ -20,3 +20,18 @@ export const getLeaderboard = async (): Promise<UserProfile[]> => {
 
 	return items.map(fromWireProfile);
 };
+
+/**
+ * The caller's rival — the profile ranked one place above them across the
+ * full points ranking (not just the top-{@link getLeaderboard} slice), so
+ * the "Your rival" insight resolves for every ranked user. `undefined`
+ * when the caller is unranked or already rank 1.
+ *
+ * The satellite returns the profile in camelCase (`j.optional(Record)`),
+ * so no wire decode is needed — it's the same shape as `getProfile`.
+ */
+export const getMyRival = async (): Promise<UserProfile | undefined> => {
+	const { rival } = await functions.getMyRival();
+
+	return rival as UserProfile | undefined;
+};

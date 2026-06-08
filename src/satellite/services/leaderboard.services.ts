@@ -95,6 +95,45 @@ export const listLeaderboard = (): UserProfile[] => {
 };
 
 /**
+ * The caller's rival: the profile ranked directly above them in the
+ * global {@link rankedProfiles} ordering — the next competitor to
+ * overtake. Resolved from the FULL ranking (not the top-{@link
+ * LEADERBOARD_LIMIT} slice {@link listLeaderboard} returns), so it
+ * works for every ranked user, not just those in the visible top N.
+ *
+ * `undefined` when the caller has no profile / is hidden (unranked) or
+ * is already rank 1 (nobody above) — the FE renders the locked tease in
+ * both cases.
+ *
+ * The returned row is role-hydrated and run through
+ * {@link withProfileDefaults}, matching the shape every other profile
+ * query emits.
+ */
+export const getMyRivalFn = (): UserProfile | undefined => {
+	const caller = msgCaller();
+
+	const profiles = rankedProfiles();
+	const myIndex = profiles.findIndex((profile) => profile.owner === caller.toText());
+
+	if (myIndex <= 0) {
+		// Unranked (−1) or already at the top (0) — no rival above.
+		return;
+	}
+
+	const rival = profiles[myIndex - 1];
+	const roleDoc = getDocStore({
+		collection: Collection.ROLES,
+		key: rival.owner,
+		caller
+	});
+
+	return withProfileDefaults({
+		...rival,
+		role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
+	});
+};
+
+/**
  * Count of profiles that appear on the public leaderboard (non-hidden).
  * The denominator for the `top-decile` achievement: a user is in the top
  * 10% when their {@link getUserRankFn} rank is ≤ `count / 10`.

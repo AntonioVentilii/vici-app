@@ -358,6 +358,75 @@ const getMyReferralCode = async (): Promise<j.infer<typeof AppGetMyReferralCodeR
 	return AppGetMyReferralCodeResultSchema.parse(result);
 };
 
+const AppGetMyRivalResultSchema = j.strictObject({
+	rival: j.optional(
+		j.strictObject({
+			owner: j.string(),
+			nickname: j.string(),
+			avatar: j.string(),
+			avatarParts: j.string(),
+			email: j.string(),
+			pnl: j.number(),
+			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
+			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			totalTrades: j.number(),
+			winRate: j.number(),
+			dailyStreak: j.number(),
+			longestStreak: j.number(),
+			dailyGoalDone: j.number(),
+			dailyGoalDate: j.optional(j.string()),
+			streak: j.number(),
+			accuracy: j.number(),
+			points: j.number(),
+			level: j.number(),
+			archetype: j.string(),
+			interests: j.array(j.string()),
+			lastActiveDay: j.optional(j.string()),
+			deletedAtMs: j.optional(j.number()),
+			hibernatedAtMs: j.optional(j.number()),
+			unlockedAchievements: j.array(j.string()),
+			contrarianWins: j.number(),
+			topDecileStreak: j.number(),
+			lastTopDecileDay: j.optional(j.string()),
+			sharpestEyeBestTier: j.optional(j.string()),
+			schoolStatus: j.optional(j.string()),
+			handleLastChangeMs: j.optional(j.number()),
+			preferences: j.strictObject({
+				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),
+				notify: j.strictObject({
+					streakReminder: j.boolean(),
+					marketAlerts: j.boolean(),
+					friendActivity: j.boolean(),
+					weeklyDigest: j.boolean()
+				}),
+				flowSessionLength: j.number(),
+				hapticsEnabled: j.boolean(),
+				soundEnabled: j.boolean(),
+				sharing: j.strictObject({
+					profileVisibility: j.string(),
+					callsPublic: j.boolean(),
+					leaderboardOptIn: j.boolean(),
+					worldsOptIn: j.boolean()
+				}),
+				flowTags: j.array(j.string()),
+				worldCupMode: j.boolean(),
+				savedMarketIds: j.array(j.string()),
+				favoriteParticipantId: j.string(),
+				favoriteSide: j.string(),
+				onboardingCompleted: j.boolean()
+			})
+		})
+	)
+});
+
+const getMyRival = async (): Promise<j.infer<typeof AppGetMyRivalResultSchema>> => {
+	const { app_get_my_rival } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_get_my_rival();
+
+	const result = schemaFromIdl({ schema: AppGetMyRivalResultSchema, value: idlResult });
+	return AppGetMyRivalResultSchema.parse(result);
+};
+
 const AppGetProfileArgsSchema = j.strictObject({ principalStr: j.string() });
 const AppGetProfileResultSchema = j.strictObject({
 	profile: j.optional(
@@ -1834,6 +1903,7 @@ export const functions = {
 	getMarketTranslation,
 	getMonthlyLeaderboard,
 	getMyReferralCode,
+	getMyRival,
 	getProfile,
 	getUserRankAndCount,
 	listAffiliationChampionships,

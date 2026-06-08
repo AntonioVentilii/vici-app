@@ -64,6 +64,7 @@ import {
 } from '$satellite/services/engine-sync.services';
 import { assertSetExitSignal } from '$satellite/services/exit-signal.services';
 import {
+	getMyRivalFn,
 	getUserRankAndCountFn,
 	listLeaderboard as listLeaderboardFn
 } from '$satellite/services/leaderboard.services';
@@ -225,6 +226,21 @@ export const getUserRankAndCount = defineQuery({
 		count: j.number()
 	}),
 	handler: ({ principalStr }) => getUserRankAndCountFn({ principal: principalStr })
+});
+
+// The caller's rival — the profile one rank above them across the FULL
+// ranking, not the top-50 slice `listLeaderboard` returns. Lets the
+// dashboard "Your rival" insight resolve for every ranked user instead
+// of only those in the visible top N. `rival` is omitted when the caller
+// is unranked (no profile / hidden) or already rank 1.
+//
+// `j.optional(<Record>)` returns camelCase, so the handler returns the
+// domain profile directly (no `toWireProfile`) — mirrors `getProfile`.
+export const getMyRival = defineQuery({
+	result: j.strictObject({
+		rival: j.optional(UserProfileSchema)
+	}),
+	handler: () => ({ rival: getMyRivalFn() })
 });
 
 export const getProfile = defineQuery({
