@@ -274,15 +274,4 @@
 		margin-top: 0.2rem;
 		border-top: 1px solid color-mix(in srgb, var(--border-base) 60%, transparent);
 	}
-
-	@keyframes sheet-rise {
-		from {
-			transform: translateY(16px);
-			opacity: 0;
-		}
-		to {
-			transform: translateY(0);
-			opacity: 1;
-		}
-	}
 </style>
