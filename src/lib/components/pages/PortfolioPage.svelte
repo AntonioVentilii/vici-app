@@ -6,12 +6,7 @@
 	import PortfolioEmptyState from '$lib/components/portfolio/PortfolioEmptyState.svelte';
 	import PortfolioHero from '$lib/components/portfolio/PortfolioHero.svelte';
 	import PortfolioPerformanceCard from '$lib/components/portfolio/PortfolioPerformanceCard.svelte';
-	import {
-		EM_DASH,
-		MILLISECOND_IN_NANOSECONDS,
-		USD_DECIMALS,
-		ZERO
-	} from '$lib/constants/app.constants';
+	import { EM_DASH, MILLISECOND_IN_NANOSECONDS, USD_DECIMALS } from '$lib/constants/app.constants';
 	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
@@ -25,7 +20,7 @@
 		resolvedPositionsNotInitialized
 	} from '$lib/derived/resolved-positions.derived';
 	import { tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
-	import { balancesStore } from '$lib/stores/balances.store';
+	import { vxpHoldingsTotal } from '$lib/derived/vxp-holdings.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
@@ -94,40 +89,18 @@
 
 	// ── Hero VXP balance ─────────────────────────────────────────────
 
-	// Free balance in the user's VXP ICRC ledger account. Drops toward
-	// zero as VXP is moved into the clearing canister as collateral, so
-	// the "Total Holdings" hero must combine this with the locked
-	// portion below — otherwise a user with all VXP in open positions
-	// shows "0 VXP" despite owning plenty.
-	const vxpBalance = $derived.by((): bigint => $balancesStore?.[VXP_TOKEN.id] ?? ZERO);
-
-	// Locked-as-collateral portion across active positions on VXP
-	// markets. Same shape + scale as the matching sum on Dash.
-	const backedRaw = $derived.by((): bigint =>
-		$positions.reduce<bigint>((acc, pos) => {
-			const market = $markets.find((m) => m.id === pos.marketId);
-
-			if (market === undefined || market.token.symbol !== VXP_TOKEN.symbol) {
-				return acc;
-			}
-
-			return acc + pos.lockedCollateral;
-		}, ZERO)
-	);
-
-	// Total = free + backed. Both legs share a 4-decimal scale
-	// (`VXP_TOKEN.decimals` == `USD_DECIMALS`), so we add raw bigints
-	// before formatting.
-	const holdingsTotalRaw = $derived(vxpBalance + backedRaw);
-
+	// Total Holdings = free wallet balance + backed collateral, shared with
+	// the Dash and Wallet surfaces (see `vxp-holdings.derived`). Combining
+	// the legs avoids a user with all VXP in open positions showing
+	// "0 VXP" despite owning plenty.
 	const vxpBalanceDisplay = $derived(
-		formatVxpBalance({ value: holdingsTotalRaw, decimals: VXP_TOKEN.decimals })
+		formatVxpBalance({ value: $vxpHoldingsTotal, decimals: VXP_TOKEN.decimals })
 	);
 
 	// Performance card uses the *total* holdings as its denominator so
 	// the % delta tracks the same number the hero shows.
 	const vxpBalanceNumber = $derived(
-		decimalFixedValueToNumber({ value: holdingsTotalRaw, decimals: VXP_TOKEN.decimals })
+		decimalFixedValueToNumber({ value: $vxpHoldingsTotal, decimals: VXP_TOKEN.decimals })
 	);
 
 	// ── 3-col mini stats (Unrealized P&L · 7D Accuracy · Rank) ───────

@@ -38,6 +38,7 @@
 		resolvedPositions,
 		resolvedPositionsNotInitialized
 	} from '$lib/derived/resolved-positions.derived';
+	import { vxpBacked, vxpFree, vxpHoldingsTotal } from '$lib/derived/vxp-holdings.derived';
 	import { worldCupActive } from '$lib/derived/world-cup.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { getLeaderboard } from '$lib/services/leaderboard.services';
@@ -47,7 +48,6 @@
 		getProfile
 	} from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
-	import { balancesStore } from '$lib/stores/balances.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketsStore } from '$lib/stores/markets.store';
@@ -98,47 +98,27 @@
 	let tw = $state<TimeWindow>('30d');
 	let pastFilter = $state<PastFilter>('all');
 
-	// Free VXP balance in the user's ICRC ledger account. Note this
-	// drops to ~0 once VXP is moved into the clearing canister as
-	// collateral, so a user with many active positions can show 0 here
-	// despite owning plenty of VXP — see `holdingsTotal` below for the
-	// combined free + backed number that the "Total Holdings" hero shows.
-	const vxpBalance = $derived($balancesStore?.[VXP_TOKEN.id] ?? ZERO);
 	// Free wallet balance formatted for display — passed to DashDayZero's
 	// Available sub-stat so it shows only unencumbered funds, not total
-	// holdings (free + backed).
+	// holdings (free + backed). `$vxpFree` drops to ~0 once VXP is moved
+	// into the clearing canister as collateral.
 	const freeBalanceDisplay = $derived(
-		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
+		formatVxpBalance({ value: $vxpFree, decimals: VXP_TOKEN.decimals })
 	);
 
-	// Backed = sum of locked collateral across the user's active positions
-	// on VXP-denominated markets. `lockedCollateral` is in clearing-USD
-	// micro-units (USD_DECIMALS = 4), which matches VXP_TOKEN.decimals,
-	// so the same `formatVxpBalance` helper renders them at the right
-	// scale without an extra conversion.
-	const backedRaw = $derived.by((): bigint =>
-		$positions.reduce<bigint>((acc, pos) => {
-			const market = marketById.get(pos.marketId);
+	// Backed = sum of locked collateral across active VXP-market positions.
+	// `lockedCollateral` is in clearing-USD micro-units (USD_DECIMALS = 4),
+	// which matches VXP_TOKEN.decimals, so the same `formatVxpBalance`
+	// helper renders it at the right scale without an extra conversion.
+	const backedDisplay = $derived(formatVxpBalance({ value: $vxpBacked, decimals: USD_DECIMALS }));
 
-			if (market === undefined || market.token.symbol !== VXP_TOKEN.symbol) {
-				return acc;
-			}
-
-			return acc + pos.lockedCollateral;
-		}, ZERO)
-	);
-	const backedDisplay = $derived(formatVxpBalance({ value: backedRaw, decimals: USD_DECIMALS }));
-
-	// Total holdings = free wallet balance + backed collateral. Both legs
-	// already share a 4-decimal scale (`VXP_TOKEN.decimals` ==
-	// `USD_DECIMALS`), so we can add raw bigints before formatting.
-	// Without this, a user with all their VXP locked in active positions
-	// would see "0 VXP" as their Total Holdings while "Backed" reads in
-	// the thousands — the headline number must reflect everything they
+	// Total holdings = free wallet balance + backed collateral. Without
+	// this combined number, a user with all their VXP locked in active
+	// positions would see "0 VXP" as their Total Holdings while "Backed"
+	// reads in the thousands — the headline must reflect everything they
 	// own, not just the free portion.
-	const holdingsTotalRaw = $derived(vxpBalance + backedRaw);
 	const balanceDisplay = $derived(
-		formatVxpBalance({ value: holdingsTotalRaw, decimals: VXP_TOKEN.decimals })
+		formatVxpBalance({ value: $vxpHoldingsTotal, decimals: VXP_TOKEN.decimals })
 	);
 
 	// Lifetime = `profile.points`, the running XP/VXP accumulator the
