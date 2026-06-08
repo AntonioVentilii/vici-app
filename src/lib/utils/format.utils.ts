@@ -198,6 +198,114 @@ export const formatRelativeAgoFromNs = ({
 	return rtf.format(0, 'second');
 };
 
+/**
+ * Compact, locale-independent "time ago" for dense data rows that show a
+ * bare unit suffix (e.g. `5m`, `3h`, `2d`) rather than a full localized
+ * phrase — the Dash past-prediction list. Floors to the largest whole
+ * unit; the minute branch never reports `0m` (a just-settled row reads
+ * `1m`), matching the original inline formatter. Output is intentionally
+ * NOT i18n'd: the suffixes are bare ASCII glyphs the calling surface wraps
+ * in its own copy.
+ */
+export const formatRelativeAgoShort = ({
+	timestampMs,
+	nowMs = Date.now()
+}: {
+	timestampMs: number;
+	nowMs?: number;
+}): string => {
+	const deltaMs = nowMs - timestampMs;
+	const minutes = Math.floor(deltaMs / 60_000);
+
+	if (minutes < 60) {
+		return `${Math.max(1, minutes)}m`;
+	}
+
+	const hours = Math.floor(minutes / 60);
+
+	if (hours < 24) {
+		return `${hours}h`;
+	}
+
+	const days = Math.floor(hours / 24);
+
+	return `${days}d`;
+};
+
+/**
+ * Coarse "time ago" bucket for surfaces that map the unit to their own
+ * i18n keys instead of rendering a phrase here (the Portfolio recent-
+ * history row). Returns the largest applicable bucket and its whole
+ * count: under an hour is `now` (count `0`), then `days` (>= 1 day),
+ * else `hours`. This is the threshold ladder the inline
+ * `resolvedAgoDisplay` used — coarser than {@link formatRelativeAgoFromNs}
+ * (no minute bucket, sub-hour collapses to "now").
+ */
+export const relativeAgoBucketFromMs = ({
+	timestampMs,
+	nowMs = Date.now()
+}: {
+	timestampMs: number;
+	nowMs?: number;
+}): { unit: 'now' | 'hours' | 'days'; value: number } => {
+	const HOUR_MS = 60 * 60 * 1000;
+	const DAY_MS = 24 * HOUR_MS;
+	const diffMs = nowMs - timestampMs;
+
+	if (diffMs < HOUR_MS) {
+		return { unit: 'now', value: 0 };
+	}
+
+	const days = Math.floor(diffMs / DAY_MS);
+
+	if (days >= 1) {
+		return { unit: 'days', value: days };
+	}
+
+	return { unit: 'hours', value: Math.floor(diffMs / HOUR_MS) };
+};
+
+/**
+ * Render an epoch-ms instant as a compact ISO calendar day (`YYYY-MM-DD`)
+ * in UTC. Locale-independent by design — the Tournament bracket lists
+ * match end dates as stable, sortable calendar days, not localized prose.
+ */
+export const formatIsoDateUtc = ({ timestampMs }: { timestampMs: number }): string => {
+	const date = new Date(timestampMs);
+	const year = date.getUTCFullYear();
+	const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+	const day = date.getUTCDate().toString().padStart(2, '0');
+
+	return `${year}-${month}-${day}`;
+};
+
+/**
+ * Render a `YYYY-MM` month anchor as a localized "Month YYYY" label
+ * (e.g. `June 2026`), anchored in UTC to mirror how the underlying
+ * stats are bucketed. Falls back to the raw anchor when it isn't two
+ * finite numeric components — the champion-history list never shows a
+ * malformed date.
+ */
+export const formatMonthAnchorLabel = ({
+	anchor,
+	locale
+}: {
+	anchor: string;
+	locale: string;
+}): string => {
+	const [year, month] = anchor.split('-').map((n) => Number(n));
+
+	if (!Number.isFinite(year) || !Number.isFinite(month)) {
+		return anchor;
+	}
+
+	return new Intl.DateTimeFormat(locale, {
+		month: 'long',
+		year: 'numeric',
+		timeZone: 'UTC'
+	}).format(new Date(Date.UTC(year, month - 1, 1)));
+};
+
 export const decimalFixedValueToNumber = ({
 	value,
 	decimals

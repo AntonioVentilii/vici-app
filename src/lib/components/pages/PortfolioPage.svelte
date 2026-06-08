@@ -24,7 +24,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
-	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+	import { decimalFixedValueToNumber, relativeAgoBucketFromMs } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import {
 		formatPositionPnLWithOptionalUnit,
@@ -267,31 +267,26 @@
 	 * iff a Settled event produced it.
 	 */
 	const resolvedAgoDisplay = (resolved: ResolvedPosition): string => {
-		const tsMs = Number(resolved.timestampNs / MILLISECOND_IN_NANOSECONDS);
-		const diffMs = Date.now() - tsMs;
-		const HOUR_MS = 60 * 60 * 1000;
-		const DAY_MS = 24 * HOUR_MS;
+		const { unit, value } = relativeAgoBucketFromMs({
+			timestampMs: Number(resolved.timestampNs / MILLISECOND_IN_NANOSECONDS)
+		});
 
-		if (diffMs < HOUR_MS) {
+		if (unit === 'now') {
 			return t({ locale: $localeStore, key: 'portfolio.row.ago_just_now' });
 		}
 
-		const days = Math.floor(diffMs / DAY_MS);
-
-		if (days >= 1) {
+		if (unit === 'days') {
 			return t({
 				locale: $localeStore,
 				key: 'portfolio.row.ago_days',
-				params: { days: String(days) }
+				params: { days: String(value) }
 			});
 		}
-
-		const hours = Math.floor(diffMs / HOUR_MS);
 
 		return t({
 			locale: $localeStore,
 			key: 'portfolio.row.ago_hours',
-			params: { hours: String(hours) }
+			params: { hours: String(value) }
 		});
 	};
 </script>
