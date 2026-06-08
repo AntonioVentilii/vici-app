@@ -81,7 +81,7 @@
 <section
 	class="battles-section"
 	class:is-divided={divided}
-	aria-label={isCountry ? 'Worlds Countries' : 'Worlds Universities'}
+	aria-label={t({ locale: $localeStore, key: eyebrowKey })}
 >
 	<header class="battles-section-head">
 		<span class="battles-eyebrow allcaps">
