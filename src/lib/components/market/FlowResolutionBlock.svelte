@@ -9,7 +9,7 @@
 
 	const { market }: Props = $props();
 
-	const resolutionCondition = $derived(market.description?.trim() ?? '');
+	const resolutionCondition = $derived(market.resolution?.trim() ?? '');
 	let rulesOpen = $state(false);
 </script>
 

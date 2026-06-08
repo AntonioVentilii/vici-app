@@ -254,12 +254,12 @@
 	//      — fallback for the tentpole markets the deck ships with
 	//   4. undefined → row is hidden
 	//
-	// The raw `market.description` is intentionally NOT used as a
-	// fallback. It's long, prose-shaped, and belongs under
-	// RESOLVES YES IF on the back card. Surfacing it here as
-	// truncated italic ("YES if that date is the hottest daily
-	// maximum tem…") reads as a snippet rather than an editorial
-	// accent.
+	// Neither the descriptive blurb (`market.description`) nor the
+	// settlement clause (`market.resolution`) is used as a fallback here.
+	// They're long, prose-shaped, and belong under RESOLVES YES IF on the
+	// back card (the clause drives `FlowResolutionBlock`). Surfacing either
+	// here as truncated italic ("YES if that date is the hottest daily
+	// maximum tem…") reads as a snippet rather than an editorial accent.
 	const subtitleText = $derived(
 		subtitle ?? metadata?.subtitle ?? lookupWcMarketSubtitle(market.id)
 	);
