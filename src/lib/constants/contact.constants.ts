@@ -24,3 +24,15 @@ export const PRIVACY_EMAIL = `privacy@${CONTACT_DOMAIN}`;
 
 /** Resolution-dispute filings (referenced from the resolution rules). */
 export const RESOLUTION_EMAIL = `resolution@${CONTACT_DOMAIN}`;
+
+/**
+ * Public profile-share link for the growth loop. The Profile hero's "Invite
+ * Friends" CTA shares `{base}/{handle}` so a recipient lands on the inviter's
+ * handle. This is a structural URL, not translatable copy — kept here with the
+ * apex domain so the host lives in exactly one place.
+ */
+export const PROFILE_JOIN_URL_BASE = `https://${CONTACT_DOMAIN}/join`;
+
+/** Builds the profile-share join link for a handle. */
+export const profileJoinUrl = (handle: string): string =>
+	`${PROFILE_JOIN_URL_BASE}/${handle.replace(/[^a-z0-9]/gi, '').toLowerCase()}`;

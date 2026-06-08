@@ -18,6 +18,15 @@
 	 * already in the label) and carries `aria-live` so assistive tech is told
 	 * when fresh notifications arrive while the bell is on screen.
 	 */
+	interface Props {
+		/** Render the bell in its cream variant — for placement over a dark
+		 *  scrim (e.g. the profile hero's translucent control disc) where the
+		 *  muted-text default would read too dim. */
+		light?: boolean;
+	}
+
+	const { light = false }: Props = $props();
+
 	const count = $derived($combinedInboxUnreadCount);
 	const badge = $derived(count > 9 ? '9+' : String(count));
 
@@ -28,6 +37,7 @@
 
 <button
 	class="notif-bell"
+	class:is-light={light}
 	aria-label={count > 0
 		? t({ locale: $localeStore, key: 'a11y.notifications_unread', params: { count } })
 		: t({ locale: $localeStore, key: 'a11y.notifications' })}
@@ -64,6 +74,17 @@
 	.notif-bell:hover {
 		color: var(--text-base);
 		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+	}
+
+	/* Cream variant — sits on the profile hero's translucent disc, over a dark
+	   scrim, so it ignores the theme's muted-text default and stays legible. */
+	.notif-bell.is-light {
+		color: #f2ecdc;
+	}
+
+	.notif-bell.is-light:hover {
+		color: #f2ecdc;
+		background: color-mix(in srgb, #f2ecdc 14%, transparent);
 	}
 
 	.notif-bell-dot {

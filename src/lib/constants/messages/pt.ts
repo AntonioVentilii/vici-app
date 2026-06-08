@@ -1723,11 +1723,8 @@ export const ptMessages = {
 	'prediction.sign_in': 'Entre para prever',
 	'profile.dashboard.achievements': 'Conquistas',
 	'profile.dashboard.affiliations.add': 'Adicionar',
-	'profile.dashboard.affiliations.city': 'Residência',
-	'profile.dashboard.affiliations.company': 'Trabalho',
-	'profile.dashboard.affiliations.count': '{count} de 4',
+	'profile.dashboard.affiliations.count': '{count} de {total}',
 	'profile.dashboard.affiliations.country': 'Cidadão',
-	'profile.dashboard.affiliations.soon': 'Em breve',
 	'profile.dashboard.affiliations.status_pending': 'Pendente',
 	'profile.dashboard.affiliations.status_verified': 'Verificada',
 	'profile.dashboard.affiliations.title': 'Afiliações',
@@ -1739,10 +1736,21 @@ export const ptMessages = {
 	'profile.dashboard.cancel': 'Cancelar',
 	'profile.dashboard.close': 'Fechar',
 	'profile.dashboard.edit_avatar': 'Editar avatar',
+	'profile.dashboard.edit_label': 'Editar',
+	'profile.dashboard.top_percent': 'Top {percent}% dos preditores globais',
+	'profile.dashboard.invite_friends': 'Convidar amigos',
+	'profile.dashboard.invite_share_title': 'VICI',
+	'profile.dashboard.invite_share_text':
+		'Junte-se a mim no VICI — preveja o futuro, construa o seu histórico.',
+	'profile.dashboard.invite_copied': 'Link de convite copiado',
 	'profile.avatar.title': 'Editar avatar',
 	'profile.avatar.subtitle':
 		'Toque para pré-visualizar · as alterações aplicam-se ao tocar em Concluir',
 	'profile.avatar.discard': 'Descartar',
+	'profile.avatar.discard_title': 'Descartar alterações?',
+	'profile.avatar.discard_sub':
+		'As alterações do seu avatar não foram salvas. Toque em Salvar para mantê-las.',
+	'profile.avatar.save_changes': 'Salvar alterações',
 	'profile.avatar.done': 'Concluir',
 	'profile.avatar.surprise': 'Surpreenda-me',
 	'profile.avatar.caption': '{mood} · {trait}',
@@ -1812,6 +1820,12 @@ export const ptMessages = {
 		'{trades} previsões registradas. {acc}% de acertos. Espaço para afinar.',
 	'profile.dashboard.oracle.streak_acc':
 		'Sequência de {days} dias e {acc}% de precisão. Consistência se acumula.',
+	'profile.dashboard.oracle.record_win': 'Você acertou —',
+	'profile.dashboard.oracle.record_win_sub':
+		'Seu lado prevaleceu. Seu histórico leva isso adiante.',
+	'profile.dashboard.oracle.record_loss': 'O mercado foi para o outro lado —',
+	'profile.dashboard.oracle.record_loss_sub':
+		'Leia a fonte. Recalibre. Só a próxima previsão importa.',
 	'profile.dashboard.oracle_label': 'Oráculo ·',
 	'profile.dashboard.oracle_weekly': 'Insight semanal',
 	'profile.dashboard.principal': 'Principal ID',
@@ -2093,9 +2107,11 @@ export const ptMessages = {
 	'arena.friends.add.sending': 'Enviando...',
 	'arena.friends.add.sheet_blurb': 'Busque por handle ou principal. Contatos em breve.',
 	'arena.friends.add.sheet_title': 'Adicionar amigo',
-	'arena.friends.empty.quote':
-		'"As previsões ficam mais afiadas quando seus amigos competem com você."',
-	'arena.friends.empty.sub': 'Convide alguém — os dois começam com 500 VXP.',
+	'arena.friends.empty.quote': '"Que solidão por aqui."',
+	'arena.friends.empty.sub':
+		'Ainda sem amigos. Adicione o primeiro — ou convide alguém e ambos começam com 500 VXP.',
+	'arena.friends.empty.add_first': 'Adicione seu primeiro amigo',
+	'arena.friends.empty.invite_now': 'Convidar agora',
 	'arena.friends.error.cancel_failed': 'Falha ao cancelar pedido',
 	'arena.friends.error.not_found':
 		'Nenhum usuário encontrado com esse handle. Confira a ortografia ou envie um link de convite.',
@@ -2118,6 +2134,9 @@ export const ptMessages = {
 	'arena.friends.invite.proof_many': 'amigos entraram',
 	'arena.friends.invite.proof_one': 'amigo entrou',
 	'arena.friends.invite.share': 'Compartilhar convite',
+	'arena.friends.invite.strip': 'Convide um amigo',
+	'arena.friends.invite.strip_bonus': '· +{amount} VXP para ambos',
+	'arena.friends.invite.strip_proof': '{count} entraram · +{amount} ganhos',
 	'arena.friends.invite.sub': 'Vocês dois ganham {amount} VXP na primeira previsão.',
 	'arena.friends.invite.title': 'Convide um amigo.',
 	'arena.friends.pending.close': 'Fechar',
