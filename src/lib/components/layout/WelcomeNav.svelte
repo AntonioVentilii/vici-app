@@ -66,8 +66,12 @@
 			document.documentElement.setAttribute('data-accent', 'laurel');
 		}
 
+		// Hysteresis (8px to engage, 4px to release) so iOS momentum/rubber-band
+		// jitter around the threshold can't rapidly toggle the scrolled state and
+		// make the nav background tremble. A small deadband, not a single edge.
 		const onScroll = () => {
-			scrolled = window.scrollY > 8;
+			const y = window.scrollY;
+			scrolled = scrolled ? y > 4 : y > 8;
 		};
 
 		onScroll();
