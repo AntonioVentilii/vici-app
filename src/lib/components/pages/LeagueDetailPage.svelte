@@ -328,6 +328,14 @@
 	// settled position in the window.
 	let standingRank = $state<number | undefined>(undefined);
 
+	// Caller's weekly rank-trend within the league — the sign of their
+	// week-over-week movement, mapped onto the card convention (negative =
+	// climbed, shown as ▲). Sourced from the weekly window's `rankDelta`
+	// (`priorRank - rank`), independent of the leaderboard tab so the
+	// "this week" copy stays accurate even on the All-time tab. `0` =
+	// no comparable prior week (newcomer / no settled position) → "even".
+	let standingTrend = $state(0);
+
 	$effect(() => {
 		const owner = selfPrincipal;
 		const window: StandingsWindow = leaderboardTab === 'week' ? 'week' : 'all';
@@ -349,6 +357,31 @@
 			});
 	});
 
+	$effect(() => {
+		const owner = selfPrincipal;
+		const roster = members.map((m) => m.member);
+
+		if (owner === undefined || roster.length === 0) {
+			standingTrend = 0;
+
+			return;
+		}
+
+		getLeagueStandings({ window: 'week', members: roster })
+			.then((result) => {
+				const delta = findOwnStanding({ result, owner })?.rankDelta;
+
+				// `rankDelta` is `priorRank - rank` (positive = climbed); the
+				// card convention inverts that (negative = climbed). Leave 0
+				// (shown "even") when there is no comparable prior week.
+				standingTrend = delta === undefined ? 0 : -delta;
+			})
+			.catch((err: unknown) => {
+				console.error(err);
+				standingTrend = 0;
+			});
+	});
+
 	// 1-indexed position of the caller for the head card's `N°{NN}` corner
 	// badge. Prefers the clearing standings rank; falls back to the roster
 	// order (the leaderboard render order) while standings load or when the
@@ -367,38 +400,6 @@
 		return idx === -1 ? 1 : idx + 1;
 	});
 
-	// Member-count line under the head: `{count} members · {size} LEAGUE`.
-	// We don't carry a server-side tier field, so the size bucket is
-	// derived from the roster headcount (xs / s / m / l).
-	const sizeLabelKey: MessageKey = $derived.by(() => {
-		const count = members.length;
-
-		if (count <= 3) {
-			return 'leagues.detail.size_xs';
-		}
-
-		if (count <= 10) {
-			return 'leagues.detail.size_s';
-		}
-
-		if (count <= 25) {
-			return 'leagues.detail.size_m';
-		}
-
-		return 'leagues.detail.size_l';
-	});
-
-	const memberCountLine = $derived(
-		t({
-			locale: $localeStore,
-			key: members.length === 1 ? 'leagues.detail.head_meta_one' : 'leagues.detail.head_meta_many',
-			params: {
-				count: members.length,
-				size: t({ locale: $localeStore, key: sizeLabelKey })
-			}
-		})
-	);
-
 	// Maps the three-way privacy onto its chip label key. A league with an
 	// absent field resolves to `open` via `leaguePrivacy`.
 	const PRIVACY_CHIP_KEY: Record<LeaguePrivacy, MessageKey> = {
@@ -407,19 +408,13 @@
 		[LeaguePrivacy.PRIVATE]: 'leagues.detail.hero_chip_private'
 	};
 
-	// Editorial-hero eyebrow chips — exactly three: the kind ("League"),
-	// the member count, and the privacy state (Open / Invite-only /
-	// Private). The privacy chip reads the league's `privacy` field
-	// through `leaguePrivacy` (absent → Open). The caller's role is
-	// surfaced in the battle section ("Admin · you"), not here.
+	// Editorial-hero eyebrow chips — the kind ("League") and the privacy
+	// state (Open / Invite-only / Private). The privacy chip reads the
+	// league's `privacy` field through `leaguePrivacy` (absent → Open).
+	// The member count now lives on the identity card's overlap row, and
+	// the caller's role is surfaced in the battle section ("Admin · you").
 	const heroChips = $derived([
 		t({ locale: $localeStore, key: 'leagues.detail.hero_chip_kind' }),
-		t({
-			locale: $localeStore,
-			key:
-				members.length === 1 ? 'leagues.card.member_count_one' : 'leagues.card.member_count_many',
-			params: { count: members.length }
-		}),
 		t({
 			locale: $localeStore,
 			key:
@@ -780,6 +775,14 @@
 		return members.find((m) => m.member === selfPrincipal);
 	});
 
+	// The sticky YOU row at the foot of the leaderboard is a reminder for
+	// callers who fell outside the visible top-6 — when the caller already
+	// appears in `leaderboardTop` it would just duplicate their own row, so
+	// we suppress it.
+	const showYouRow = $derived(
+		youMember !== undefined && !leaderboardTop.some((m) => m.member === selfPrincipal)
+	);
+
 	// Small-league recruit state — under four members there isn't
 	// enough of a field for a podium, so we surface a "just getting
 	// started" prompt with an invite CTA beneath the leaderboard.
@@ -803,7 +806,7 @@
 		<ScreenHeader
 			back={{
 				label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
-				onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
+				onBack: () => goBack(resolve(AppPath.Arena))
 			}}
 		/>
 		<p class="league-detail-status" aria-busy="true">
@@ -813,7 +816,7 @@
 		<ScreenHeader
 			back={{
 				label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
-				onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
+				onBack: () => goBack(resolve(AppPath.Arena))
 			}}
 		/>
 		<LeagueDetailEmptyState />
@@ -821,7 +824,7 @@
 		<ScreenHeader
 			back={{
 				label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
-				onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
+				onBack: () => goBack(resolve(AppPath.Arena))
 			}}
 		/>
 		<p class="league-detail-error" role="alert">
@@ -838,7 +841,7 @@
 					<button
 						class="league-detail-hero-back"
 						aria-label={t({ locale: $localeStore, key: 'leagues.detail.back' })}
-						onclick={() => goBack(`${resolve(AppPath.Arena)}/leagues`)}
+						onclick={() => goBack(resolve(AppPath.Arena))}
 						type="button"
 					>
 						<ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -890,7 +893,7 @@
 					<button
 						class="league-detail-hero-back"
 						aria-label={t({ locale: $localeStore, key: 'leagues.detail.back' })}
-						onclick={() => goBack(`${resolve(AppPath.Arena)}/leagues`)}
+						onclick={() => goBack(resolve(AppPath.Arena))}
 						type="button"
 					>
 						<ChevronLeft aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -979,7 +982,41 @@
 					{/if}
 				</div>
 				<div class="league-detail-identity-body">
-					<span class="num allcaps league-detail-identity-eyebrow">{memberCountLine}</span>
+					<span class="num allcaps league-detail-identity-eyebrow">
+						{t({
+							locale: $localeStore,
+							key: 'leagues.detail.rank_eyebrow',
+							params: { league: league.name }
+						})}
+					</span>
+					<div class="league-detail-rank">
+						<span class="num league-detail-rank-v">#{yourRank}</span>
+						<span class="num league-detail-rank-of">
+							{t({
+								locale: $localeStore,
+								key: 'leagues.detail.rank_of',
+								params: { count: members.length }
+							})}
+						</span>
+						{#if standingTrend === 0}
+							<span class="num league-detail-rank-mv is-even">
+								— {t({ locale: $localeStore, key: 'leagues.detail.trend_even' })}
+							</span>
+						{:else}
+							<span
+								class="num league-detail-rank-mv"
+								class:is-down={standingTrend > 0}
+								class:is-up={standingTrend < 0}
+							>
+								{standingTrend < 0 ? '▲' : '▼'}
+								{t({
+									locale: $localeStore,
+									key: 'leagues.detail.trend_this_week',
+									params: { count: Math.abs(standingTrend) }
+								})}
+							</span>
+						{/if}
+					</div>
 					<button
 						class="league-detail-identity-overlap"
 						aria-label={t({
@@ -1035,7 +1072,148 @@
 			</div>
 		</section>
 
-		<!-- ─── Battle section · active card OR challenge another league ─── -->
+		<!-- ─── Leaderboard · This week / All time ─── -->
+		<!-- Members now live here as tappable rows (avatar + handle +
+		     streak + accuracy); the row opens a member detail sheet.
+		     The Panini sticker grid is retired in favour of this single
+		     roster + the member sheet. -->
+		<section class="league-detail-section">
+			<div class="league-detail-section-head">
+				<span class="eyebrow league-detail-section-title">
+					{t({ locale: $localeStore, key: 'leagues.detail.leaderboard_eyebrow' })}
+				</span>
+				<span class="num league-detail-section-side">
+					{t({
+						locale: $localeStore,
+						key: 'leagues.detail.members_count_unlimited',
+						params: { count: members.length }
+					})}
+				</span>
+			</div>
+			<div class="league-detail-leaderboard">
+				<div class="league-detail-lb-tabs" role="tablist">
+					<button
+						class="league-detail-lb-tab allcaps"
+						class:is-active={leaderboardTab === 'week'}
+						aria-selected={leaderboardTab === 'week'}
+						onclick={() => (leaderboardTab = 'week')}
+						role="tab"
+						type="button"
+					>
+						{t({ locale: $localeStore, key: 'leagues.detail.lb_tab_week' })}
+					</button>
+					<button
+						class="league-detail-lb-tab allcaps"
+						class:is-active={leaderboardTab === 'all'}
+						aria-selected={leaderboardTab === 'all'}
+						onclick={() => (leaderboardTab = 'all')}
+						role="tab"
+						type="button"
+					>
+						{t({ locale: $localeStore, key: 'leagues.detail.lb_tab_all' })}
+					</button>
+				</div>
+
+				<ul class="league-detail-lb-rows">
+					{#each leaderboardTop as member, idx (member.member)}
+						{@const isYou = member.member === selfPrincipal}
+						<li>
+							<button
+								class="league-detail-lb-row"
+								class:is-you={isYou}
+								aria-label={memberHandle(member.member)}
+								onclick={() => (openMember = member)}
+								type="button"
+							>
+								<span
+									class="league-detail-lb-rank num"
+									data-rank={idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : ''}
+								>
+									{String(idx + 1).padStart(2, '0')}
+								</span>
+								<Avatar
+									class="league-detail-lb-avatar"
+									avatar={memberAvatar(member.member)}
+									nickname={memberNickname(member.member)}
+									owner={member.member}
+									self={member.member === selfPrincipal}
+								/>
+								<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
+								<span class="league-detail-lb-streak num allcaps">
+									{t({
+										locale: $localeStore,
+										key: 'leagues.detail.lb_streak',
+										params: { count: memberStreak(member.member) }
+									})}
+								</span>
+								<span class="league-detail-lb-acc num">{formatAccuracy(member.member)}</span>
+							</button>
+						</li>
+					{/each}
+				</ul>
+
+				<!-- Sticky YOU row — only when the caller falls outside the
+				     visible top-6 above; otherwise it would duplicate their
+				     own row. -->
+				{#if showYouRow && youMember}
+					<button
+						class="league-detail-lb-row league-detail-lb-you-row"
+						aria-label={t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
+						onclick={() => (openMember = youMember ?? null)}
+						type="button"
+					>
+						<span class="league-detail-lb-rank num is-you">
+							{String(yourRank).padStart(2, '0')}
+						</span>
+						<Avatar
+							class="league-detail-lb-avatar"
+							avatar={memberAvatar(youMember.member)}
+							nickname={memberNickname(youMember.member)}
+							owner={youMember.member}
+							self={youMember.member === selfPrincipal}
+						/>
+						<span class="league-detail-lb-name">
+							{t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
+						</span>
+						<span class="league-detail-lb-streak num allcaps">
+							{t({
+								locale: $localeStore,
+								key: 'leagues.detail.lb_streak',
+								params: { count: memberStreak(youMember.member) }
+							})}
+						</span>
+						<span class="league-detail-lb-acc num">{formatAccuracy(youMember.member)}</span>
+					</button>
+				{/if}
+			</div>
+
+			<!-- Small-league recruit prompt — no podium theatre for a
+			     near-empty league; nudge the user to invite instead. -->
+			{#if isRecruiting}
+				<div class="league-detail-recruit">
+					<span class="league-detail-recruit-title">
+						{t({ locale: $localeStore, key: 'leagues.detail.recruit_title' })}
+					</span>
+					<p class="league-detail-recruit-sub">
+						{t({ locale: $localeStore, key: 'leagues.detail.recruit_sub' })}
+					</p>
+					{#if canSeeInvite}
+						<button class="league-detail-recruit-cta" onclick={handleCopyInvite} type="button">
+							{#if copied}
+								<Check aria-hidden="true" size={13} strokeWidth={2.4} />
+								<span>{t({ locale: $localeStore, key: 'leagues.detail.invite_copied' })}</span>
+							{:else}
+								<Copy aria-hidden="true" size={13} strokeWidth={2} />
+								<span>{t({ locale: $localeStore, key: 'leagues.detail.invite_label' })}</span>
+							{/if}
+						</button>
+					{/if}
+				</div>
+			{/if}
+		</section>
+
+		<!-- ─── Battle section · secondary to standings, so it sits below
+		     the leaderboard. Active card OR challenge-another-league CTA. ─── -->
 		<section class="league-detail-section">
 			<div class="league-detail-section-head">
 				<span class="eyebrow league-detail-section-title">
@@ -1124,146 +1302,6 @@
 						>
 							<span>{t({ locale: $localeStore, key: 'leagues.detail.battle_challenge_cta' })}</span>
 							<ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
-						</button>
-					{/if}
-				</div>
-			{/if}
-		</section>
-
-		<!-- ─── Leaderboard · This week / All time ─── -->
-		<!-- Members now live here as tappable rows (avatar + handle +
-		     streak + accuracy); the row opens a member detail sheet.
-		     The Panini sticker grid is retired in favour of this single
-		     roster + the member sheet. -->
-		<section class="league-detail-section">
-			<div class="league-detail-section-head">
-				<span class="eyebrow league-detail-section-title">
-					{t({ locale: $localeStore, key: 'leagues.detail.leaderboard_eyebrow' })}
-				</span>
-				<span class="num league-detail-section-side">
-					{t({
-						locale: $localeStore,
-						key: 'leagues.detail.members_count_unlimited',
-						params: { count: members.length }
-					})}
-				</span>
-			</div>
-			<div class="league-detail-leaderboard">
-				<div class="league-detail-lb-tabs" role="tablist">
-					<button
-						class="league-detail-lb-tab allcaps"
-						class:is-active={leaderboardTab === 'week'}
-						aria-selected={leaderboardTab === 'week'}
-						onclick={() => (leaderboardTab = 'week')}
-						role="tab"
-						type="button"
-					>
-						{t({ locale: $localeStore, key: 'leagues.detail.lb_tab_week' })}
-					</button>
-					<button
-						class="league-detail-lb-tab allcaps"
-						class:is-active={leaderboardTab === 'all'}
-						aria-selected={leaderboardTab === 'all'}
-						onclick={() => (leaderboardTab = 'all')}
-						role="tab"
-						type="button"
-					>
-						{t({ locale: $localeStore, key: 'leagues.detail.lb_tab_all' })}
-					</button>
-				</div>
-
-				<ul class="league-detail-lb-rows">
-					{#each leaderboardTop as member, idx (member.member)}
-						{@const isYou = member.member === selfPrincipal}
-						<li>
-							<button
-								class="league-detail-lb-row"
-								class:is-you={isYou}
-								aria-label={memberHandle(member.member)}
-								onclick={() => (openMember = member)}
-								type="button"
-							>
-								<span
-									class="league-detail-lb-rank num"
-									data-rank={idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : ''}
-								>
-									{String(idx + 1).padStart(2, '0')}
-								</span>
-								<Avatar
-									class="league-detail-lb-avatar"
-									avatar={memberAvatar(member.member)}
-									nickname={memberNickname(member.member)}
-									owner={member.member}
-									self={member.member === selfPrincipal}
-								/>
-								<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
-								<span class="league-detail-lb-streak num allcaps">
-									{t({
-										locale: $localeStore,
-										key: 'leagues.detail.lb_streak',
-										params: { count: memberStreak(member.member) }
-									})}
-								</span>
-								<span class="league-detail-lb-acc num">{formatAccuracy(member.member)}</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
-
-				<!-- Sticky YOU row — renders the caller's stats
-				     regardless of whether they already appear in the
-				     top-6 above. -->
-				{#if youMember}
-					<button
-						class="league-detail-lb-row league-detail-lb-you-row"
-						aria-label={t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
-						onclick={() => (openMember = youMember ?? null)}
-						type="button"
-					>
-						<span class="league-detail-lb-rank num is-you">
-							{String(yourRank).padStart(2, '0')}
-						</span>
-						<Avatar
-							class="league-detail-lb-avatar"
-							avatar={memberAvatar(youMember.member)}
-							nickname={memberNickname(youMember.member)}
-							owner={youMember.member}
-							self={youMember.member === selfPrincipal}
-						/>
-						<span class="league-detail-lb-name">
-							{t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
-						</span>
-						<span class="league-detail-lb-streak num allcaps">
-							{t({
-								locale: $localeStore,
-								key: 'leagues.detail.lb_streak',
-								params: { count: memberStreak(youMember.member) }
-							})}
-						</span>
-						<span class="league-detail-lb-acc num">{formatAccuracy(youMember.member)}</span>
-					</button>
-				{/if}
-			</div>
-
-			<!-- Small-league recruit prompt — no podium theatre for a
-			     near-empty league; nudge the user to invite instead. -->
-			{#if isRecruiting}
-				<div class="league-detail-recruit">
-					<span class="league-detail-recruit-title">
-						{t({ locale: $localeStore, key: 'leagues.detail.recruit_title' })}
-					</span>
-					<p class="league-detail-recruit-sub">
-						{t({ locale: $localeStore, key: 'leagues.detail.recruit_sub' })}
-					</p>
-					{#if canSeeInvite}
-						<button class="league-detail-recruit-cta" onclick={handleCopyInvite} type="button">
-							{#if copied}
-								<Check aria-hidden="true" size={13} strokeWidth={2.4} />
-								<span>{t({ locale: $localeStore, key: 'leagues.detail.invite_copied' })}</span>
-							{:else}
-								<Copy aria-hidden="true" size={13} strokeWidth={2} />
-								<span>{t({ locale: $localeStore, key: 'leagues.detail.invite_label' })}</span>
-							{/if}
 						</button>
 					{/if}
 				</div>
@@ -1648,6 +1686,48 @@
 		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
+	}
+
+	/* Rank-forward identity — the caller's standing reads as the headline
+	   figure: a large mono "#rank", the "of M" denominator, and a coloured
+	   ▲/▼ "N this week" (or "— even") trend, baseline-aligned. */
+	.league-detail-rank {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 9px;
+	}
+
+	.league-detail-rank-v {
+		font-size: 34px;
+		font-weight: 700;
+		letter-spacing: -0.03em;
+		line-height: 0.9;
+		color: var(--text-base);
+	}
+
+	.league-detail-rank-of {
+		font-size: 12px;
+		color: var(--text-muted);
+	}
+
+	.league-detail-rank-mv {
+		margin-left: 2px;
+		font-size: 11.5px;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	.league-detail-rank-mv.is-even {
+		color: var(--text-muted);
+	}
+
+	.league-detail-rank-mv.is-up {
+		color: var(--yes);
+	}
+
+	.league-detail-rank-mv.is-down {
+		color: var(--no);
 	}
 
 	.league-detail-identity-overlap {
