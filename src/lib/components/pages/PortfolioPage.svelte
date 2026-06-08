@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { LineChart } from '@lucide/svelte/icons';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
@@ -43,7 +42,7 @@
 	 * Portfolio page — single-page hero + flat lists.
 	 *
 	 * Layout (top → bottom)
-	 * - `ScreenHeader`, title "Portfolio", chart icon right.
+	 * - `ScreenHeader`, back control + centered title "Portfolio".
 	 * - Hero card (left-aligned, gradient surface) — TOTAL HOLDINGS
 	 *   eyebrow, 38 px VXP balance + unit, 3-col stat row
 	 *   (Unrealized P&L · 7D Accuracy · Rank).
@@ -305,19 +304,12 @@
 	};
 </script>
 
-{#snippet portfolioAppbarRight()}
-	<span class="appbar-icon-btn portfolio-appbar-icon" aria-hidden="true">
-		<LineChart size={18} strokeWidth={1.8} />
-	</span>
-{/snippet}
-
 <div class="portfolio-page">
 	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'portfolio.back' }),
 			onBack: () => goBack(resolve(AppPath.Dash))
 		}}
-		right={portfolioAppbarRight}
 		title={t({ locale: $localeStore, key: 'portfolio.title' })}
 	/>
 
@@ -496,17 +488,6 @@
 		flex-direction: column;
 		gap: 1.25rem;
 		padding: 0 1.25rem 6rem;
-	}
-
-	.portfolio-appbar-icon {
-		cursor: default;
-	}
-
-	/* Decorative, non-interactive icon — neutralise the base hover so it
-	   stays a flat transparent glyph instead of lighting up on hover. */
-	.portfolio-appbar-icon:hover {
-		color: var(--text-muted);
-		background: transparent;
 	}
 
 	.portfolio-section {
