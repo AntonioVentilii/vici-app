@@ -16,6 +16,10 @@
 	import { SCHOOL_PASS2_ENABLED } from '$lib/constants/school-picker.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
+	import {
+		decisiveSettledCount,
+		resolvedPositionsNotInitialized
+	} from '$lib/derived/resolved-positions.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
@@ -26,6 +30,7 @@
 	import type { AffiliationKind } from '$lib/types/affiliation';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
+	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
 	import { evaluateAchievements } from '$lib/utils/achievements.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { deterministicParts } from '$lib/utils/vici-avatar.utils';
@@ -141,7 +146,19 @@
 	// `profile.accuracy` is a 0..100 win-rate float (see `profile.services.ts`
 	// `calculateAndSyncStats`), so render one decimal to match the Dash hero
 	// figure (`DashPage` `accuracyPct`) rather than truncating to an integer.
-	const accuracyDisplay = $derived(accuracy.toFixed(1));
+	// On the viewer's own profile, a user with no settled predictions yet shows
+	// an optimistic 100% instead of a misleading 0% (display-only — see
+	// `displayAccuracyPct`). Other users' profiles render the raw figure, since
+	// the empty-state gate keys off the *viewer's* own trade history.
+	const accuracyDisplay = $derived(
+		isOwnProfile
+			? displayAccuracyPct({
+					accuracy,
+					settledCount: $decisiveSettledCount,
+					initialized: !$resolvedPositionsNotInitialized
+				})
+			: accuracy.toFixed(1)
+	);
 
 	/**
 	 * Global rank — viewer's 1-based index in the cached leaderboard.
