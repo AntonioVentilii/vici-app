@@ -40,12 +40,21 @@
 		init();
 	});
 
+	// RTL scripts — kept in sync with the flash-free locale boot in
+	// `app.html` so the document direction stays correct after hydrate.
+	const RTL_LANGS = ['ar', 'he', 'fa', 'ur'];
+
 	$effect(() => {
 		if (!browser) {
 			return;
 		}
 
-		document.documentElement.lang = $localeStore;
+		const el = document.documentElement;
+		const lang = $localeStore.split('-')[0].toLowerCase();
+
+		el.lang = $localeStore;
+		el.setAttribute('data-locale', $localeStore);
+		el.dir = RTL_LANGS.includes(lang) ? 'rtl' : 'ltr';
 	});
 
 	afterNavigate(({ from }) => {
