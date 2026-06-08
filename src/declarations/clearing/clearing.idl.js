@@ -395,6 +395,7 @@ export const idlFactory = ({ IDL }) => {
 		markdown: IDL.Opt(IDL.Text),
 		plain: IDL.Text
 	});
+	const Resolution = IDL.Record({ clause: IDL.Text });
 	const Outcome = IDL.Record({
 		id: IDL.Text,
 		title: IDL.Text,
@@ -418,6 +419,7 @@ export const idlFactory = ({ IDL }) => {
 		underlying: IDL.Text,
 		locale: IDL.Opt(IDL.Text),
 		description: Description,
+		resolution: Resolution,
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		created_at_ns: IDL.Nat64,
 		icon_url: IDL.Opt(IDL.Text),

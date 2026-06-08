@@ -79,6 +79,11 @@ export interface AddSeriesParams {
 	 */
 	description: Description;
 	/**
+	 * The settlement terms describing how this market resolves.
+	 * Compulsory — every new series must state how it settles.
+	 */
+	resolution: Resolution;
+	/**
 	 * The defined outcomes for categorical markets (ordered).
 	 */
 	outcomes: [] | [Array<Outcome>];
@@ -443,6 +448,10 @@ export interface ForkSeriesParams {
 	 * Optional description override. Falls back to the source series description.
 	 */
 	description: [] | [Description];
+	/**
+	 * Optional resolution override. Falls back to the source series resolution.
+	 */
+	resolution: [] | [Resolution];
 	/**
 	 * Trading access policies for the forked series. Must be `Restricted`.
 	 */
@@ -859,6 +868,23 @@ export interface RegisterEngineParams {
  */
 export type RegisterEngineResult = { Ok: string } | { Err: EngineError };
 /**
+ * Settlement terms for a series. Compulsory on every market.
+ *
+ * Modeled as a struct (not a bare `String`) so it can grow without a breaking
+ * candid change: future fields — e.g. structured `rules` (named source +
+ * settle date + day-count, see issue #64) — are added as `opt` fields, which
+ * candid can decode against records persisted before the field existed.
+ * Variants were considered and rejected: adding an enum variant risks decode
+ * failures in already-deployed consumers, whereas appending `opt` record
+ * fields is forward-compatible.
+ */
+export interface Resolution {
+	/**
+	 * Human-readable clause describing how the market settles.
+	 */
+	clause: string;
+}
+/**
  * An audit record of a role grant within an Engine.
  */
 export interface RoleGrant {
@@ -945,6 +971,15 @@ export interface Series {
 	 * A detailed description of the series.
 	 */
 	description: Description;
+	/**
+	 * The settlement terms describing how this market resolves.
+	 *
+	 * Compulsory metadata: every series carries resolution terms. Like
+	 * `title`/`description`/`locale`, it does NOT participate in `series_id`
+	 * hashing (see [`Series::generate_id`]), so the same economic contract
+	 * keeps a single id regardless of its resolution wording.
+	 */
+	resolution: Resolution;
 	/**
 	 * The defined outcomes for categorical markets (ordered).
 	 */
@@ -1070,9 +1105,21 @@ export type SeriesError =
 	  }
 	| {
 			/**
+			 * Returned when the resolution clause is empty (a non-empty clause is compulsory).
+			 */
+			ResolutionClauseEmpty: null;
+	  }
+	| {
+			/**
 			 * The caller has exceeded the hourly social market creation limit.
 			 */
 			SocialRateLimitExceeded: null;
+	  }
+	| {
+			/**
+			 * Returned when the resolution clause exceeds the maximum allowed length.
+			 */
+			ResolutionClauseTooLong: null;
 	  }
 	| {
 			/**
