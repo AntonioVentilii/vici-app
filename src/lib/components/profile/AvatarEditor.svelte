@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Check, Shuffle, X } from '@lucide/svelte/icons';
 	import { untrack } from 'svelte';
-	import { browser } from '$app/environment';
 	import { saveMyAvatarParts } from '$lib/stores/avatar.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -34,7 +33,16 @@
 	let draft = $state<ViciAvatarParts>(untrack(() => normalizeParts(initial)));
 	let activeTab = $state<TabId>('skin');
 	let saving = $state(false);
-	let editorEl = $state<HTMLDivElement | undefined>();
+	// Whether the discard-confirm sheet is up. Raised by a close gesture (X /
+	// Escape / backdrop) when the draft carries unsaved edits.
+	let confirmClose = $state(false);
+
+	// Snapshot the parts the editor opened on, so we can tell an untouched
+	// close (just dismiss) from one that would drop unsaved edits (confirm
+	// first). The sheet is remounted per open, so capturing the seed once is
+	// correct — there is no later `initial` change to track within an open.
+	const initialSerialized = untrack(() => JSON.stringify(normalizeParts(initial)));
+	const dirty = $derived(JSON.stringify(draft) !== initialSerialized);
 
 	type TabId = 'skin' | 'hair' | 'expr' | 'trait' | 'shirt' | 'bg';
 
@@ -74,10 +82,32 @@
 		};
 	};
 
+	// Close guard: a close gesture with unsaved edits raises the confirm sheet
+	// (the ✕ is the natural "I'm done" tap, so it must never silently drop
+	// work); an untouched draft closes straight through.
+	const requestClose = () => {
+		if (dirty) {
+			haptic('soft-tick');
+			confirmClose = true;
+
+			return;
+		}
+
+		onClose();
+	};
+
+	const discardAndClose = () => {
+		haptic('soft-tick');
+		confirmClose = false;
+		onClose();
+	};
+
 	const done = async () => {
 		if (saving) {
 			return;
 		}
+
+		confirmClose = false;
 
 		saving = true;
 		haptic('firm-tap');
@@ -134,55 +164,24 @@
 			options: { animate: false, frame: false, signature: false }
 		});
 
-	// Pin the editor height to the *actually visible* viewport on iOS. The CSS
-	// `100dvh` is the baseline, but iOS Chrome (WKWebView) doesn't always
-	// resolve it to the visible height — older engines fall back to `100vh`
-	// (the large viewport, toolbars retracted), pushing the sticky footer (the
-	// Done button) behind the bottom toolbar so it disappears (#551). Driving
-	// the height off `window.visualViewport` — the same source the bottom sheet
-	// uses for its keyboard inset — tracks the visible area reliably. No-op when
-	// `visualViewport` is unavailable (desktop / older engines): the CSS height
-	// stands.
-	$effect(() => {
-		if (!browser || !editorEl) {
-			return;
-		}
-
-		const viewport = window.visualViewport;
-
-		if (!viewport) {
-			return;
-		}
-
-		const el = editorEl;
-
-		const sync = () => {
-			el.style.height = `${viewport.height}px`;
-		};
-
-		// Passive: the listeners only read viewport metrics to set the height;
-		// they never call `preventDefault`.
-		const opts: AddEventListenerOptions = { passive: true };
-
-		sync();
-		viewport.addEventListener('resize', sync, opts);
-		viewport.addEventListener('scroll', sync, opts);
-
-		return () => {
-			viewport.removeEventListener('resize', sync, opts);
-			viewport.removeEventListener('scroll', sync, opts);
-			el.style.removeProperty('height');
-		};
-	});
-
-	// Escape dismisses the editor (discard — same as the X). Registered on the
-	// window so a key press anywhere closes it; SSR-safe via `$effect` (runs
+	// Escape runs the same close guard as the ✕: it confirms first when there
+	// are unsaved edits, otherwise dismisses. When the confirm sheet is already
+	// up, Escape dismisses just that sheet (back to editing). Registered on the
+	// window so a key press anywhere is caught; SSR-safe via `$effect` (runs
 	// only in the browser) and torn down on unmount.
 	$effect(() => {
 		const onKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Escape') {
-				onClose();
+			if (event.key !== 'Escape') {
+				return;
 			}
+
+			if (confirmClose) {
+				confirmClose = false;
+
+				return;
+			}
+
+			requestClose();
 		};
 
 		window.addEventListener('keydown', onKeyDown);
@@ -193,8 +192,16 @@
 	});
 </script>
 
+<!-- Scrim: a tap on the backdrop runs the same close guard as the ✕ so it
+     never silently drops unsaved edits. -->
 <div
-	bind:this={editorEl}
+	class="avatar-editor-scrim"
+	aria-hidden="true"
+	onclick={requestClose}
+	role="presentation"
+></div>
+
+<div
 	class="avatar-editor"
 	aria-label={t({ locale: $localeStore, key: 'profile.avatar.title' })}
 	aria-modal="true"
@@ -214,7 +221,7 @@
 		<button
 			class="avatar-editor-close"
 			aria-label={t({ locale: $localeStore, key: 'profile.avatar.discard' })}
-			onclick={onClose}
+			onclick={requestClose}
 			type="button"
 		>
 			<X aria-hidden="true" size={16} strokeWidth={2} />
@@ -287,6 +294,44 @@
 			{t({ locale: $localeStore, key: 'profile.avatar.done' })}
 		</button>
 	</div>
+
+	<!-- Unsaved-changes guard — fires when a close gesture lands with pending
+	     edits, so the natural "I'm done" tap never drops the user's work. -->
+	{#if confirmClose}
+		<!-- Dimmed overlay — a tap dismisses just the confirm sheet (back to
+		     editing), mirroring the editor's own backdrop. -->
+		<div
+			class="avatar-editor-confirm-scrim"
+			aria-hidden="true"
+			onclick={() => (confirmClose = false)}
+			role="presentation"
+		></div>
+		<!-- An `alertdialog` (not a second `dialog`): the editor itself is already
+		     the modal surface, and nesting a second `aria-modal` dialog inside it
+		     is invalid and confuses AT/focus. `aria-labelledby`/`-describedby`
+		     point at its own heading + body. -->
+		<div
+			class="avatar-editor-confirm-sheet"
+			aria-describedby="avatar-editor-confirm-sub"
+			aria-labelledby="avatar-editor-confirm-title"
+			role="alertdialog"
+		>
+			<h3 id="avatar-editor-confirm-title" class="avatar-editor-confirm-title">
+				{t({ locale: $localeStore, key: 'profile.avatar.discard_title' })}
+			</h3>
+			<p id="avatar-editor-confirm-sub" class="avatar-editor-confirm-sub">
+				{t({ locale: $localeStore, key: 'profile.avatar.discard_sub' })}
+			</p>
+			<div class="avatar-editor-confirm-row">
+				<button class="avatar-editor-confirm-discard" onclick={discardAndClose} type="button">
+					{t({ locale: $localeStore, key: 'profile.avatar.discard' })}
+				</button>
+				<button class="avatar-editor-confirm-save" disabled={saving} onclick={done} type="button">
+					{t({ locale: $localeStore, key: 'profile.avatar.save_changes' })}
+				</button>
+			</div>
+		</div>
+	{/if}
 </div>
 
 {#snippet tile({ part, value }: { part: ViciAvatarPartKey; value: string })}
@@ -319,30 +364,43 @@
 		overflow: hidden;
 	}
 
+	/* Dimmed backdrop behind the sheet — a tap runs the close guard. */
+	.avatar-editor-scrim {
+		position: fixed;
+		inset: 0;
+		z-index: 119;
+		background: rgba(14, 13, 11, 0.55);
+		-webkit-backdrop-filter: blur(2px);
+		backdrop-filter: blur(2px);
+	}
+
 	.avatar-editor {
 		position: fixed;
-		/* Size to the *dynamic* viewport (`dvh`), not `inset: 0`. A fixed
-		 * `inset: 0` resolves against iOS's *large* layout viewport (toolbars
-		 * retracted), so the bottom-anchored footer — the Done button — lands
-		 * behind the bottom toolbar and disappears. `100dvh` tracks the
-		 * visible height so the sticky footer stays in view. */
-		top: 0;
+		/* Bottom sheet capped at 90% of the *dynamic* viewport (`dvh`), so the
+		 * header + footer stay pinned and the option grid scrolls within. The
+		 * `dvh` cap tracks iOS's visible height (toolbars in/out) so the sticky
+		 * footer (the Done button) never lands behind the bottom toolbar. */
 		left: 0;
 		right: 0;
-		height: 100vh; /* fallback for engines without `dvh` */
-		height: 100dvh;
+		bottom: 0;
+		max-height: 90vh; /* fallback for engines without `dvh` */
+		max-height: 90dvh;
 		z-index: 120;
 		display: flex;
 		flex-direction: column;
+		border-top-left-radius: var(--r-20, 20px);
+		border-top-right-radius: var(--r-20, 20px);
+		border-top: 1px solid var(--border-base);
 		background: var(--bg-base);
 		color: var(--text-base);
+		box-shadow: 0 -18px 50px -20px rgba(0, 0, 0, 0.55);
 	}
 
 	.avatar-editor-head {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
-		padding: calc(14px + env(safe-area-inset-top, 0px)) 18px 10px;
+		padding: 14px 18px 10px;
 		border-bottom: 1px solid var(--border-base);
 	}
 
@@ -532,7 +590,9 @@
 	.avatar-editor-foot {
 		display: flex;
 		gap: 10px;
-		padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+		/* Generous safe-area floor so the footer clears the home indicator on
+		 * notched devices while still reading as a comfortable inset elsewhere. */
+		padding: 12px 18px max(28px, calc(12px + env(safe-area-inset-bottom, 0px)));
 		border-top: 1px solid var(--border-base);
 		background: var(--bg-base);
 	}
@@ -564,6 +624,82 @@
 	}
 
 	.avatar-editor-done:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	/* Discard-confirm — a sheet pinned to the bottom of the editor, over its
+	   own dimmed overlay. */
+	.avatar-editor-confirm-scrim {
+		position: absolute;
+		inset: 0;
+		z-index: 130;
+		background: rgba(14, 13, 11, 0.62);
+		-webkit-backdrop-filter: blur(6px);
+		backdrop-filter: blur(6px);
+		border-bottom-left-radius: inherit;
+		border-bottom-right-radius: inherit;
+	}
+
+	.avatar-editor-confirm-sheet {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 131;
+		padding: 22px 22px max(24px, calc(16px + env(safe-area-inset-bottom, 0px)));
+		border-top: 1px solid var(--border-base);
+		border-bottom-left-radius: inherit;
+		border-bottom-right-radius: inherit;
+		background: var(--bg-popover);
+		box-shadow: 0 -18px 50px -20px rgba(0, 0, 0, 0.55);
+	}
+
+	.avatar-editor-confirm-title {
+		margin: 0 0 6px;
+		font-family: var(--font-display);
+		font-size: var(--t-18);
+		font-weight: 700;
+		color: var(--text-base);
+	}
+
+	.avatar-editor-confirm-sub {
+		margin: 0 0 18px;
+		color: var(--text-muted);
+		font-size: var(--t-13);
+		line-height: var(--leading-snug);
+	}
+
+	.avatar-editor-confirm-row {
+		display: flex;
+		gap: 10px;
+	}
+
+	.avatar-editor-confirm-discard {
+		flex: 1;
+		padding: 12px 16px;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: transparent;
+		color: var(--no);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.avatar-editor-confirm-save {
+		flex: 1;
+		padding: 12px 16px;
+		border: 0;
+		border-radius: var(--r-pill);
+		background: var(--brand);
+		color: var(--color-primary-foreground);
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.avatar-editor-confirm-save:disabled {
 		opacity: 0.6;
 		cursor: default;
 	}
