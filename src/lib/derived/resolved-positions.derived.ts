@@ -1,4 +1,4 @@
-import { markets } from '$lib/derived/markets.derived';
+import { marketById } from '$lib/derived/market-by-id.derived';
 import { tradeHistory, tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 import type { ResolvedPosition } from '$lib/types/position';
 import { isSettledEvent, settledEventToResolvedPosition } from '$lib/utils/resolved-position.utils';
@@ -16,11 +16,9 @@ import { derived, type Readable } from 'svelte/store';
  * so consumers don't have to do the lookup themselves.
  */
 export const resolvedPositions: Readable<ResolvedPosition[]> = derived(
-	[tradeHistory, markets],
-	([$tradeHistory, $markets]) => {
-		const marketById = new Map($markets.map((m) => [m.id, m]));
-
-		return $tradeHistory
+	[tradeHistory, marketById],
+	([$tradeHistory, $marketById]) =>
+		$tradeHistory
 			.filter(isSettledEvent)
 			.map((event) => {
 				// Parse once and pass both pieces into the mapper so the
@@ -30,7 +28,7 @@ export const resolvedPositions: Readable<ResolvedPosition[]> = derived(
 				return settledEventToResolvedPosition({
 					event,
 					marketId,
-					market: marketById.get(marketId)
+					market: $marketById.get(marketId)
 				});
 			})
 			.sort((a, b) => {
@@ -40,8 +38,7 @@ export const resolvedPositions: Readable<ResolvedPosition[]> = derived(
 				}
 
 				return a.timestampNs > b.timestampNs ? -1 : 1;
-			});
-	}
+			})
 );
 
 /**
