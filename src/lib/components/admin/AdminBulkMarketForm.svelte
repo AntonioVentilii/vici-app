@@ -83,6 +83,8 @@
 				// `resolution` is the compulsory settlement clause: it must be a
 				// string within the registry's clause-length bound. (`description`
 				// is optional and falls back to the clause in createMarket.)
+				// Validate against the *trimmed* clause so the checks match what
+				// createMarket actually sends (it trims + caps before the call).
 				if (typeof item.resolution !== 'string') {
 					error = t({
 						locale: $localeStore,
@@ -93,7 +95,16 @@
 					return;
 				}
 
-				if (item.resolution.length > RESOLUTION_CLAUSE_MAX_LENGTH) {
+				const resolutionClause = item.resolution.trim();
+
+				// A whitespace-only clause is effectively a missing resolution.
+				if (resolutionClause.length === 0) {
+					error = t({ locale: $localeStore, key: 'admin.markets.bulk.error.missing_fields' });
+
+					return;
+				}
+
+				if (resolutionClause.length > RESOLUTION_CLAUSE_MAX_LENGTH) {
 					error = t({
 						locale: $localeStore,
 						key: 'admin.markets.bulk.error.resolution_too_long',
