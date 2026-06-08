@@ -29,6 +29,7 @@
 	import type { BattleState } from '$lib/types/battle';
 	import { shortLeagueId } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Social cohorts list page.
@@ -340,7 +341,7 @@
 		<ScreenHeader
 			back={{
 				label: t({ locale: $localeStore, key: 'leagues.back' }),
-				onBack: () => goto(AppPath.Arena)
+				onBack: () => goBack(resolve(AppPath.Arena))
 			}}
 			right={leaguesCreateAction}
 			title={t({ locale: $localeStore, key: 'leagues.title' })}

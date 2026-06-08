@@ -3,7 +3,7 @@
 	import { ArrowDown, ArrowUp, Minus, UserMinus, UserPlus } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
-	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
@@ -29,6 +29,7 @@
 	import type { StandingsWindow } from '$lib/types/standings';
 	import { shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
@@ -215,7 +216,7 @@
 	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'leaderboard.back' }),
-			onBack: () => goto(AppPath.Arena)
+			onBack: () => goBack(resolve(AppPath.Arena))
 		}}
 		title={t({ locale: $localeStore, key: 'leaderboard.title' })}
 	/>

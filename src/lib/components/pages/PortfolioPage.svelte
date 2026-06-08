@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { LineChart } from '@lucide/svelte/icons';
-	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
@@ -29,6 +29,7 @@
 	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
 	import { decimalFixedValueToNumber, relativeAgoBucketFromMs } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 	import {
 		formatPositionPnLWithOptionalUnit,
 		formatVxpBalance
@@ -314,7 +315,7 @@
 	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'portfolio.back' }),
-			onBack: () => goto(AppPath.Dash)
+			onBack: () => goBack(resolve(AppPath.Dash))
 		}}
 		right={portfolioAppbarRight}
 		title={t({ locale: $localeStore, key: 'portfolio.title' })}
