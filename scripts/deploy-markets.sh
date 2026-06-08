@@ -16,7 +16,9 @@
 #
 # The file is a JSON array of market objects (see scripts/data/markets.json).
 #
-# Consumed per row: title, description, expiryDate (ISO), locale, outcomes?
+# Consumed per row: title, description, resolution?, expiryDate (ISO), locale, outcomes?
+#   - `resolution` (the compulsory on-chain settlement clause) defaults to
+#     `description` when a row omits it, matching the icdc-core backfill.
 #   - a non-empty `outcomes` array makes the market Categorical; else Binary.
 #
 # NOT consumed by this script (kept for parity with the FE create flow, but
@@ -86,6 +88,11 @@ for ((i = 0; i < length; i++)); do
 	title=$(jq -r '.title' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
 	description=$(jq -r '.description' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
+	# Resolution clause: the compulsory on-chain description of how the market
+	# settles. Defaults to the description when a row omits `.resolution`,
+	# mirroring the icdc-core registry backfill so existing decks keep working.
+	resolution=$(jq -r '.resolution // .description' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
 	# BCP 47 locale tag for the market's title/description. Defaults to "en" when
 	# the data file omits it. The icdc-core registry stores this as metadata and
 	# does NOT include it in `series_id` hashing — translations remain off-chain.
@@ -112,6 +119,7 @@ for ((i = 0; i < length; i++)); do
 	dfx canister call --network "$NETWORK" registry add_series "(record {
         title = \"$title\";
         description = record { plain = \"$description\"; html = null; markdown = null };
+        resolution = record { clause = \"$resolution\" };
         expiry_ns = $expiration_ns;
         underlying = \"$underlying\";
         strike = null;
