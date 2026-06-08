@@ -1494,11 +1494,13 @@
 	z-index: 50;
 	background: transparent;
 	border-bottom: 1px solid transparent;
+	/* Do NOT transition backdrop-filter — iOS Safari repaints the blur layer on
+	   each frame of the transition, which reads as a flicker/tremble. The blur
+	   snaps; background/border/shadow fade. */
 	transition:
 		background 200ms var(--ease),
 		border-color 200ms var(--ease),
-		box-shadow 200ms var(--ease),
-		backdrop-filter 200ms var(--ease);
+		box-shadow 200ms var(--ease);
 }
 /* Desktop nav stays fully transparent even when scrolled — the logo, links and
    CTA float cleanly over the page rather than on a full-width frosted band. */
