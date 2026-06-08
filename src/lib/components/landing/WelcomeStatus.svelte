@@ -2,8 +2,9 @@
 	/**
 	 * Accuracy-as-status section: an anchored headline beside a board
 	 * that cycles three labelled tabs — Friends / Universities /
-	 * Workplace. A gentle ~5s auto-advance pauses on hover/focus and is
-	 * disabled under reduced-motion. Same footprint as a single board.
+	 * Workplace. A gentle ~5s auto-advance pauses on hover/focus, stops
+	 * for good once the visitor explicitly picks a tab, and is disabled
+	 * under reduced-motion. Same footprint as a single board.
 	 */
 	import { onDestroy } from 'svelte';
 	import {
@@ -38,32 +39,32 @@
 	const tabs = $derived<readonly StatusTab[]>([
 		{
 			id: 'friends',
-			label: 'welcome.v2.status.tab_friends',
-			caption: 'welcome.v2.status.cap_friends',
+			label: 'welcome.status.tab_friends',
+			caption: 'welcome.status.cap_friends',
 			rows: LANDING_STATUS_FRIENDS
 		},
 		{
 			id: 'uni',
-			label: 'welcome.v2.status.tab_uni',
-			caption: 'welcome.v2.status.cap_uni',
+			label: 'welcome.status.tab_uni',
+			caption: 'welcome.status.cap_uni',
 			rows: uniRows
 		},
 		{
 			id: 'work',
-			label: 'welcome.v2.status.tab_work',
-			caption: 'welcome.v2.status.cap_work',
+			label: 'welcome.status.tab_work',
+			caption: 'welcome.status.cap_work',
 			rows: [
 				{
 					rank: 1,
-					name: tt('welcome.v2.status.team_design'),
+					name: tt('welcome.status.team_design'),
 					acc: '76.0%',
 					team: true,
 					you: true,
 					delta: '▲ 2'
 				},
-				{ rank: 2, name: tt('welcome.v2.status.team_product'), acc: '74.6%', team: true },
-				{ rank: 3, name: tt('welcome.v2.status.team_sales'), acc: '72.2%', team: true },
-				{ rank: 4, name: tt('welcome.v2.status.team_eng'), acc: '70.9%', team: true }
+				{ rank: 2, name: tt('welcome.status.team_product'), acc: '74.6%', team: true },
+				{ rank: 3, name: tt('welcome.status.team_sales'), acc: '72.2%', team: true },
+				{ rank: 4, name: tt('welcome.status.team_eng'), acc: '70.9%', team: true }
 			]
 		}
 	]);
@@ -75,7 +76,17 @@
 	// tabbing through a control with the pointer away never resumes mid-focus.
 	let hovering = $state(false);
 	let focusWithin = $state(false);
-	const paused = $derived(hovering || focusWithin);
+	// An explicit tab pick stops the rotation for good: once the visitor has
+	// chosen a tab the board never auto-advances again this session, so it
+	// can't flip away from what they're reading. This is sticky — unlike the
+	// hover/focus pause above, it is never cleared.
+	let userPicked = $state(false);
+	const paused = $derived(hovering || focusWithin || userPicked);
+
+	const pickTab = (i: number): void => {
+		active = i;
+		userPicked = true;
+	};
 
 	// `focusout`/`pointerleave` confirm focus has actually left the container
 	// (relatedTarget can be null on click-away) before clearing focus-within.
@@ -83,7 +94,7 @@
 		(next instanceof Node && el.contains(next)) || el.contains(document.activeElement);
 
 	const tab = $derived(tabs[active]);
-	const headline = $derived(splitHeadline(tt('welcome.v2.status.headline')));
+	const headline = $derived(splitHeadline(tt('welcome.status.headline')));
 
 	let timer: ReturnType<typeof setInterval> | null = null;
 
@@ -111,21 +122,21 @@
 	onDestroy(clear);
 </script>
 
-<section id="status" class="v2-section v2-status">
-	<div class="v2-wrap">
-		<div class="v2-status-grid">
-			<div class="v2-status-copy">
-				<span class="v2-kicker">{tt('welcome.v2.status.kicker')}</span>
-				<h2 class="v2-h2">
+<section id="status" class="lpc-section lpc-status">
+	<div class="lpc-wrap">
+		<div class="lpc-status-grid">
+			<div class="lpc-status-copy">
+				<span class="lpc-kicker">{tt('welcome.status.kicker')}</span>
+				<h2 class="lpc-h2">
 					{headline.before}{#if headline.accent}<span class="acc">{headline.accent}</span
 						>{/if}{headline.after}
 				</h2>
-				<p class="v2-lede">{tt('welcome.v2.status.body')}</p>
+				<p class="lpc-lede">{tt('welcome.status.body')}</p>
 			</div>
 
 			<div
-				class="v2-status-slider"
-				aria-label={tt('welcome.v2.status.kicker')}
+				class="lpc-status-slider"
+				aria-label={tt('welcome.status.kicker')}
 				onfocusin={() => (focusWithin = true)}
 				onfocusout={(e) =>
 					(focusWithin = focusStillInside({ el: e.currentTarget, next: e.relatedTarget }))}
@@ -133,13 +144,13 @@
 				onpointerleave={() => (hovering = false)}
 				role="group"
 			>
-				<div class="v2-status-tabs" aria-label={tt('welcome.v2.status.kicker')} role="tablist">
+				<div class="lpc-status-tabs" aria-label={tt('welcome.status.kicker')} role="tablist">
 					{#each tabs as tb, i (tb.id)}
 						<button
-							class="v2-status-tab"
+							class="lpc-status-tab"
 							class:on={i === active}
 							aria-selected={i === active}
-							onclick={() => (active = i)}
+							onclick={() => pickTab(i)}
 							role="tab"
 							type="button"
 						>
@@ -149,23 +160,23 @@
 				</div>
 
 				{#key tab.id}
-					<div class="v2-board" role="tabpanel">
+					<div class="lpc-board" role="tabpanel">
 						{#each tab.rows as r (r.rank)}
-							<div class="v2-board-row" class:you={r.you}>
-								<span class="v2-board-rank">{r.rank}</span>
-								<span class="v2-board-name">
+							<div class="lpc-board-row" class:you={r.you}>
+								<span class="lpc-board-rank">{r.rank}</span>
+								<span class="lpc-board-name">
 									{r.team || r.you ? r.name : `@${r.name}`}
 									{#if r.you && r.delta}
-										<span class="v2-board-badge">{r.delta}</span>
+										<span class="lpc-board-badge">{r.delta}</span>
 									{/if}
 								</span>
-								<span class="v2-board-acc">{r.acc}</span>
+								<span class="lpc-board-acc">{r.acc}</span>
 							</div>
 						{/each}
 					</div>
 				{/key}
 
-				<div class="v2-board-climb">{tt(tab.caption)}</div>
+				<div class="lpc-board-climb">{tt(tab.caption)}</div>
 			</div>
 		</div>
 	</div>

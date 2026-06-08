@@ -242,9 +242,9 @@
 
 	const tt = (key: Parameters<typeof t>[0]['key']) => t({ locale: $localeStore, key });
 
-	const headline = $derived(splitHeadline(tt('welcome.v2.hero.headline')));
+	const headline = $derived(splitHeadline(tt('welcome.hero.headline')));
 	const cardMeta = $derived(
-		t({ locale: $localeStore, key: 'welcome.v2.hero.card_meta', params: { pct: YES } })
+		t({ locale: $localeStore, key: 'welcome.hero.card_meta', params: { pct: YES } })
 	);
 
 	onMount(() => {
@@ -254,16 +254,16 @@
 	});
 </script>
 
-<header class="v2-hero">
-	<div class="v2-wrap v2-hero-grid">
+<header class="lpc-hero">
+	<div class="lpc-wrap lpc-hero-grid">
 		<!-- Copy column — kicker + headline -->
-		<div class="v2-hero-copy">
-			<span class="v2-kicker v2-rise" data-i="0">
+		<div class="lpc-hero-copy">
+			<span class="lpc-kicker lpc-rise" data-i="0">
 				<span class="pulse" aria-hidden="true"></span>
-				{tt('welcome.v2.hero.kicker')}
+				{tt('welcome.hero.kicker')}
 			</span>
-			<div class="v2-rise" data-i="1">
-				<h1 class="v2-display">
+			<div class="lpc-rise" data-i="1">
+				<h1 class="lpc-display">
 					{headline.before}{#if headline.accent}<span class="acc">{headline.accent}</span
 						>{/if}{headline.after}
 				</h1>
@@ -271,18 +271,18 @@
 		</div>
 
 		<!-- Interactive card column -->
-		<div class="v2-hero-stage v2-rise" data-i="2">
-			<div class="v2-char-zone">
+		<div class="lpc-hero-stage lpc-rise" data-i="2">
+			<div class="lpc-char-zone">
 				{#if phase === 'rest'}
-					<div class="v2-char v2-char-in">
+					<div class="lpc-char lpc-char-in">
 						<ViciChar mood="encouraging" size={56} />
-						<div class="v2-pill">{tt('welcome.v2.hero.hint')}</div>
+						<div class="lpc-pill">{tt('welcome.hero.hint')}</div>
 					</div>
 				{/if}
 			</div>
 
-			<div class="v2-deck">
-				<div class="v2-deck-stack" aria-hidden="true"></div>
+			<div class="lpc-deck">
+				<div class="lpc-deck-stack" aria-hidden="true"></div>
 				{#if phase !== 'payoff'}
 					<div
 						style={cardStyle}
@@ -309,7 +309,7 @@
 									</div>
 									<LandingConsensusCompass yes={YES} />
 								</div>
-								<h2 class="flow-q">{tt('welcome.v2.hero.card_q')}</h2>
+								<h2 class="flow-q">{tt('welcome.hero.card_q')}</h2>
 							</div>
 							<div class="flow-body">
 								<div class="flow-art-bleed">
@@ -325,14 +325,14 @@
 									<div class="flow-probs-row">
 										<div class="flow-probs-side no" data-side="no">
 											<span class="flow-probs-pct">{NO}%</span>
-											<span class="flow-probs-label no">{tt('welcome.v2.hero.no')}</span>
+											<span class="flow-probs-label no">{tt('welcome.hero.no')}</span>
 										</div>
 										<div class="flow-probs-track" aria-hidden="true">
 											<div style="width:{NO}%;" class="flow-probs-fill-no"></div>
 											<div style="width:{YES}%;" class="flow-probs-fill-yes"></div>
 										</div>
 										<div class="flow-probs-side yes" data-side="yes">
-											<span class="flow-probs-label yes">{tt('welcome.v2.hero.yes')}</span>
+											<span class="flow-probs-label yes">{tt('welcome.hero.yes')}</span>
 											<span class="flow-probs-pct">{YES}%</span>
 										</div>
 									</div>
@@ -340,10 +340,10 @@
 										<div class="flow-probs-action no">
 											<span class="flow-probs-arrow">←</span>
 											<span class="flow-probs-payout">+{winNo}</span>
-											<span class="flow-probs-role">{tt('welcome.v2.hero.favorite')}</span>
+											<span class="flow-probs-role">{tt('welcome.hero.favorite')}</span>
 										</div>
 										<div class="flow-probs-action yes">
-											<span class="flow-probs-role">{tt('welcome.v2.hero.long_shot')}</span>
+											<span class="flow-probs-role">{tt('welcome.hero.long_shot')}</span>
 											<span class="flow-probs-payout">+{winYes}</span>
 											<span class="flow-probs-arrow">→</span>
 										</div>
@@ -354,82 +354,82 @@
 										{cardMeta}
 									</span>
 									<span style="letter-spacing:0.14em;" class="num mute t-eyebrow">
-										{tt('welcome.v2.hero.swipe_to_call')}
+										{tt('welcome.hero.swipe_to_call')}
 									</span>
 								</div>
 							</div>
-							<div style="opacity:{yesOv};" class="overlay yes">{tt('welcome.v2.hero.yes')}</div>
-							<div style="opacity:{noOv};" class="overlay no">{tt('welcome.v2.hero.no')}</div>
+							<div style="opacity:{yesOv};" class="overlay yes">{tt('welcome.hero.yes')}</div>
+							<div style="opacity:{noOv};" class="overlay no">{tt('welcome.hero.no')}</div>
 						</div>
 					</div>
 				{:else}
 					<div
-						class="v2-payoff"
+						class="lpc-payoff"
 						class:bold={contrarian}
 						class:climbed={climb}
 						aria-live="polite"
 						role="status"
 					>
 						{#if !reduce}
-							<div class="v2-flash" aria-hidden="true"></div>
-							<div class="v2-rays" aria-hidden="true"></div>
-							<div class="v2-confetti" aria-hidden="true">
+							<div class="lpc-flash" aria-hidden="true"></div>
+							<div class="lpc-rays" aria-hidden="true"></div>
+							<div class="lpc-confetti" aria-hidden="true">
 								{#each confetti as c, i (i)}
 									<i style={confettiStyle(c)}></i>
 								{/each}
 							</div>
-							<div class="v2-burst" aria-hidden="true">
+							<div class="lpc-burst" aria-hidden="true">
 								{#each sparks as s, i (i)}
 									<i style={sparkStyle(s)}></i>
 								{/each}
 							</div>
 						{/if}
-						<div class="v2-celebrate-char" class:bold={contrarian}>
+						<div class="lpc-celebrate-char" class:bold={contrarian}>
 							{#if contrarian}
 								<TricksterChar animate lightning size={132} />
 							{:else}
 								<OracleChar animate size={132} />
 							{/if}
 						</div>
-						<div class="v2-payoff-name">{contrarian ? 'TRICKSTER' : 'ORACLE'}</div>
-						<div class="v2-payoff-xp">+{xpShown}<small>VXP</small></div>
+						<div class="lpc-payoff-name">{contrarian ? 'TRICKSTER' : 'ORACLE'}</div>
+						<div class="lpc-payoff-xp">+{xpShown}<small>VXP</small></div>
 						{#if !climb}
-							<div class="v2-payoff-tally">{tt('welcome.v2.hero.tally')}</div>
+							<div class="lpc-payoff-tally">{tt('welcome.hero.tally')}</div>
 						{:else}
-							<div class="v2-climb">
-								<div class="v2-climb-head">
-									{tt('welcome.v2.hero.climb_to')}
+							<div class="lpc-climb">
+								<div class="lpc-climb-head">
+									{tt('welcome.hero.climb_to')}
 									<b>#{LANDING_HERO_CLIMB.rank}</b>
 								</div>
-								<div class="v2-climb-board" aria-hidden="true">
-									<div class="v2-climb-row you">
+								<div class="lpc-climb-board" aria-hidden="true">
+									<div class="lpc-climb-row you">
 										<span class="r">{LANDING_HERO_CLIMB.rank}</span>
 										<span class="h"
 											>@you<span class="climb-badge">▲ {LANDING_HERO_CLIMB.delta}</span></span
 										>
 										<span class="a">{climbAcc + 4}%</span>
 									</div>
-									<div class="v2-climb-row">
+									<div class="lpc-climb-row">
 										<span class="r">3</span>
 										<span class="h">@{LANDING_HERO_CLIMB.rival}</span>
 										<span class="a">{climbAcc}%</span>
 									</div>
-									<div class="v2-climb-row">
+									<div class="lpc-climb-row">
 										<span class="r">4</span>
 										<span class="h">@{LANDING_HERO_CLIMB.below}</span>
 										<span class="a">{climbAcc - 3}%</span>
 									</div>
 								</div>
-								<div class="v2-payoff-line">{tt('welcome.v2.hero.payoff')}</div>
+								<div class="lpc-payoff-line">{tt('welcome.hero.payoff')}</div>
 							</div>
 						{/if}
-						<div class="v2-payoff-actions">
-							<a class="btn btn-primary v2-payoff-cta" href={PublicPath.SignUp}>
-								{tt('welcome.v2.hero.payoff_cta')}
+						<div class="lpc-payoff-actions">
+							<a class="btn btn-primary lpc-payoff-cta" href={PublicPath.SignUp}>
+								{tt('welcome.hero.payoff_cta')}
 							</a>
 							<button
-								class="v2-reset"
-								aria-label={tt('welcome.v2.hero.try_another')}
+								class="lpc-reset"
+								aria-label={tt('welcome.hero.try_another')}
 								onclick={reset}
 								type="button"
 							>
@@ -441,14 +441,14 @@
 			</div>
 		</div>
 
-		<div class="v2-hero-tail">
-			<p class="v2-lede v2-rise" data-i="3">{tt('welcome.v2.hero.sub')}</p>
-			<div class="v2-hero-cta-row v2-rise" data-i="4">
+		<div class="lpc-hero-tail">
+			<p class="lpc-lede lpc-rise" data-i="3">{tt('welcome.hero.sub')}</p>
+			<div class="lpc-hero-cta-row lpc-rise" data-i="4">
 				<a class="btn btn-primary btn-lg" href={PublicPath.SignUp}>
-					{tt('welcome.v2.hero.cta')}
+					{tt('welcome.hero.cta')}
 					<ChevronRight size={16} strokeWidth={2.4} />
 				</a>
-				<span class="v2-cta-note">{tt('welcome.v2.hero.cta_note')}</span>
+				<span class="lpc-cta-note">{tt('welcome.hero.cta_note')}</span>
 			</div>
 		</div>
 	</div>

@@ -17,9 +17,9 @@
 	const tt = (key: MessageKey) => t({ locale: $localeStore, key });
 
 	const steps: readonly { n: string; key: MessageKey }[] = [
-		{ n: '01', key: 'welcome.v2.how.s1' },
-		{ n: '02', key: 'welcome.v2.how.s2' },
-		{ n: '03', key: 'welcome.v2.how.s3' }
+		{ n: '01', key: 'welcome.how.s1' },
+		{ n: '02', key: 'welcome.how.s2' },
+		{ n: '03', key: 'welcome.how.s3' }
 	];
 
 	// Doubled so the CSS marquee loops seamlessly.
@@ -60,34 +60,34 @@
 	const liveLabel = $derived(
 		t({
 			locale: $localeStore,
-			key: 'welcome.v2.proof.live',
+			key: 'welcome.proof.live',
 			params: { count: countLabel }
 		})
 	);
 </script>
 
-<section class="v2-proof">
-	<div class="v2-wrap v2-how">
+<section class="lpc-proof">
+	<div class="lpc-wrap lpc-how">
 		{#each steps as s (s.n)}
-			<div class="v2-how-step">
-				<span class="v2-how-n">{s.n}</span>
-				<span class="v2-how-t">{tt(s.key)}</span>
+			<div class="lpc-how-step">
+				<span class="lpc-how-n">{s.n}</span>
+				<span class="lpc-how-t">{tt(s.key)}</span>
 			</div>
 		{/each}
 	</div>
 
-	<div class="v2-wrap v2-proof-inner">
-		<div class="v2-proof-num"><span class="acc">{countLabel}</span></div>
-		<div class="v2-proof-label" aria-live="off">
+	<div class="lpc-wrap lpc-proof-inner">
+		<div class="lpc-proof-num"><span class="acc">{countLabel}</span></div>
+		<div class="lpc-proof-label" aria-live="off">
 			{liveLabel}
-			{tt('welcome.v2.proof.label')}
+			{tt('welcome.proof.label')}
 		</div>
 	</div>
 
-	<div class="v2-ticker" aria-hidden="true">
-		<div class="v2-ticker-track" class:paused={prefersReducedMotion()}>
+	<div class="lpc-ticker" aria-hidden="true">
+		<div class="lpc-ticker-track" class:paused={prefersReducedMotion()}>
 			{#each track as chip, i (i)}
-				<span class="v2-chip">
+				<span class="lpc-chip">
 					<span class="who">@{chip.who}</span>
 					<span class="side {chip.side === 'YES' ? 'yes' : 'no'}">{chip.side}</span>
 					{chip.q}
