@@ -2,6 +2,7 @@ import type { RegistryDid } from '$declarations';
 import { listOrders as listOrdersApi } from '$lib/api/clearing.api';
 import { addSeries, forkSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
+	DAY_IN_MS,
 	MILLISECOND_IN_NANOSECONDS,
 	PAYOFF_TYPE,
 	PRICE_DECIMALS,
@@ -30,7 +31,8 @@ import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.util
 import {
 	calculateCategoricalProbabilities,
 	calculateMarketStats,
-	mapMarketData
+	mapMarketData,
+	parseSettlementOutcome
 } from '$lib/utils/market.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
@@ -484,19 +486,7 @@ const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: 
 			// `fetchMarket` (detail) disagree: detail already degrades gracefully
 			// to `status = 'Resolved'` with `outcome = undefined`, and the list
 			// must do the same.
-			let outcome: Outcome | undefined;
-
-			try {
-				const parsed = JSON.parse(details ?? '{}');
-				outcome =
-					typeof parsed?.outcome === 'string' && parsed.outcome.length > 0
-						? parsed.outcome
-						: undefined;
-			} catch (e: unknown) {
-				console.error('Failed to parse settlement details', e);
-			}
-
-			acc[marketId] = { outcome };
+			acc[marketId] = { outcome: parseSettlementOutcome(details) };
 
 			return acc;
 		}, {});
@@ -704,24 +694,13 @@ const fetchMarket = async ({
 		(a) => a.type === ActivityType.SETTLEMENT && a.marketId === marketId
 	);
 
-	const parseResolutionOutcome = (details: string | undefined): Outcome | undefined => {
-		try {
-			const { outcome: settlementOutcome } = JSON.parse(details ?? '{}');
-
-			return settlementOutcome;
-		} catch (e: unknown) {
-			// Malformed settlement details should not block rendering the rest of the market; log and fall through so the market appears resolved without an outcome label.
-			console.error('Failed to parse outcome from activity', e);
-		}
-	};
-
 	const status: MarketStatus = nonNullish(resolution)
 		? 'Resolved'
 		: s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now())
 			? 'Expired'
 			: 'Open';
 	const outcome: Outcome | undefined = nonNullish(resolution)
-		? parseResolutionOutcome(resolution.details)
+		? parseSettlementOutcome(resolution.details)
 		: undefined;
 
 	return mapMarketData({
@@ -787,7 +766,7 @@ const SUGGESTED_BOOST_BASE = 5000;
  * picks. Tracked from `metadata.updatedAt` (set on every metadata
  * upsert in `market-metadata.services.ts`).
  */
-const SUGGESTED_DECAY_MS = 14 * 24 * 60 * 60 * 1000;
+const SUGGESTED_DECAY_MS = 14 * DAY_IN_MS;
 
 /**
  * Resolves the editorial-boost score for a market. Returns `0` for any
