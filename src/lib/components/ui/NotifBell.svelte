@@ -17,7 +17,16 @@
 	 * unread count. The numeric badge itself is `aria-hidden` (the count is
 	 * already in the label) and carries `aria-live` so assistive tech is told
 	 * when fresh notifications arrive while the bell is on screen.
+	 *
+	 * `light` tints the icon cream so the bell reads on a dark hero band
+	 * (the muted token disappears against those surfaces).
 	 */
+	interface Props {
+		light?: boolean;
+	}
+
+	const { light = false }: Props = $props();
+
 	const count = $derived($combinedInboxUnreadCount);
 	const badge = $derived(count > 9 ? '9+' : String(count));
 
@@ -28,6 +37,7 @@
 
 <button
 	class="notif-bell"
+	class:is-light={light}
 	aria-label={count > 0
 		? t({ locale: $localeStore, key: 'a11y.notifications_unread', params: { count } })
 		: t({ locale: $localeStore, key: 'a11y.notifications' })}
@@ -64,6 +74,11 @@
 	.notif-bell:hover {
 		color: var(--text-base);
 		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+	}
+
+	/* Cream variant for dark hero bands, where the muted token vanishes. */
+	.notif-bell.is-light {
+		color: var(--parchment);
 	}
 
 	.notif-bell-dot {

@@ -1,22 +1,14 @@
 <script lang="ts">
-	import type { Icon as LucideIcon } from '@lucide/svelte';
-	import {
-		Bell,
-		Check,
-		Flame,
-		Sparkles,
-		Swords,
-		Target,
-		UserPlus,
-		Users,
-		X
-	} from '@lucide/svelte/icons';
+	import { X } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import {
+		notificationDestination,
+		notificationKindConfig
+	} from '$lib/constants/notification-kind.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { clearInboxToast, initInboxToasts, latestInboxToast } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { InboxNotificationKind } from '$lib/types/inbox';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -28,18 +20,9 @@
 	 *
 	 * A11y: `role="status"` so assistive tech announces the arriving
 	 * notification; the dismiss control is a labelled `<button>`. Decorative
-	 * icons are `aria-hidden`.
+	 * icons are `aria-hidden`. The icon resolves through the shared
+	 * `NOTIFICATION_KIND_CONFIG` so the toast never drifts from the list rows.
 	 */
-
-	const kindIcons: Record<InboxNotificationKind, typeof LucideIcon> = {
-		resolve: Check,
-		streak: Flame,
-		social: Users,
-		challenge: Swords,
-		level: Sparkles,
-		market: Target,
-		friend_request: UserPlus
-	};
 
 	// Dwell windows mirror the source: begin the exit animation a beat before
 	// the toast is removed so the `notif-pop-out` keyframe can play out.
@@ -95,11 +78,19 @@
 	onMount(() => initInboxToasts());
 
 	const open = () => {
-		// `href` may be a dynamic path (e.g. `/markets/<id>`), so we route
-		// through `goto` with the raw string rather than the typed `resolve`.
+		// The destination may be a dynamic path (e.g. `/markets/<id>` when the
+		// toast deep-links to a market), so we route through `goto` with the
+		// raw string rather than the typed `resolve`.
 		const toast = $latestInboxToast;
 		clearInboxToast();
-		void goto(toast?.href ?? AppPath.Notifications);
+
+		if (toast === undefined) {
+			void goto(AppPath.Notifications);
+
+			return;
+		}
+
+		void goto(notificationDestination({ kind: toast.kind, mid: toast.mid, href: toast.href }));
 	};
 
 	const dismiss = () => {
@@ -112,7 +103,7 @@
 
 {#if $latestInboxToast}
 	{@const toast = $latestInboxToast}
-	{@const KindIcon = kindIcons[toast.kind] ?? Bell}
+	{@const KindIcon = notificationKindConfig(toast.kind).icon}
 	<div class="notif-pop" class:is-leaving={leaving} role="status">
 		<!-- The card body is a button so the whole toast is tappable; the
 		     dismiss control sits outside it to keep its own hit target. -->
