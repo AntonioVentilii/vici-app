@@ -336,13 +336,25 @@ export const LANDING_STATUS_FRIENDS: readonly LandingStatusRow[] = [
 	{ rank: 4, name: 'sofia_b', acc: '74.2%' }
 ] as const;
 
-/** University names per tab, illustrative of the kind of institutions that compete. */
-export const LANDING_STATUS_UNIVERSITIES: readonly string[] = [
-	'Stanford',
-	'Harvard',
-	'MIT',
-	'NYU'
-] as const;
+/**
+ * Market-matched universities per language — real institutions the visitor
+ * recognises, illustrative of the kind that compete. Proper nouns, so these are
+ * data (not translatable i18n strings). Languages without a list fall back to
+ * the en set.
+ */
+const LANDING_STATUS_UNIVERSITIES_BY_LANG: Record<string, readonly string[]> = {
+	en: ['Stanford', 'Harvard', 'MIT', 'NYU'],
+	es: ['UNAM', 'Buenos Aires (UBA)', 'Complutense Madrid', 'Andes'],
+	pt: ['USP', 'Unicamp', 'UFRJ', 'PUC-Rio'],
+	it: ['Politecnico Milano', 'Sapienza Roma', 'Bocconi', 'Torino'],
+	fr: ['Sorbonne', 'Sciences Po', 'PSL', 'Polytechnique'],
+	de: ['TU München', 'LMU München', 'Heidelberg', 'Humboldt Berlin']
+};
+
+/** The visitor's market-matched universities for a locale (en fallback). */
+export const landingStatusUniversities = (locale: string): readonly string[] =>
+	LANDING_STATUS_UNIVERSITIES_BY_LANG[locale.split('-')[0]] ??
+	LANDING_STATUS_UNIVERSITIES_BY_LANG.en;
 
 /* ── Landing proof ticker (live calls) ─────────────────────────────── */
 
