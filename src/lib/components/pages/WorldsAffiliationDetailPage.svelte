@@ -23,6 +23,7 @@
 		type AffiliationChampionship,
 		type AffiliationStatsDoc
 	} from '$lib/types/affiliation-stats';
+	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
@@ -213,9 +214,7 @@
 		return out;
 	});
 
-	const badgeStyle = $derived(
-		option?.color ? `background: ${option.color}; color: ${option.text ?? '#fff'};` : ''
-	);
+	const badgeStyle = $derived(affiliationChipStyle({ color: option?.color, text: option?.text }));
 
 	const identityWashStyle = $derived(
 		option?.color

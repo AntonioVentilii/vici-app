@@ -32,6 +32,7 @@
 	import type { UserStatsDoc } from '$lib/types/user-stats';
 	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
 	import { evaluateAchievements } from '$lib/utils/achievements.utils';
+	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { deterministicParts } from '$lib/utils/vici-avatar.utils';
 
@@ -583,8 +584,7 @@
 					<div class="profile-affil-chip-row">
 						{#if uniOption}
 							<span
-								style:background={uniOption.color}
-								style:color={uniOption.color ? (uniOption.text ?? '#F2ECDC') : undefined}
+								style={affiliationChipStyle({ color: uniOption.color, text: uniOption.text })}
 								class="school-chip"
 								class:has-brand={uniOption.color !== undefined}
 							>
@@ -594,8 +594,10 @@
 						{/if}
 						{#if countryOption}
 							<span
-								style:background={countryOption.color}
-								style:color={countryOption.color ? (countryOption.text ?? '#F2ECDC') : undefined}
+								style={affiliationChipStyle({
+									color: countryOption.color,
+									text: countryOption.text
+								})}
 								class="country-chip"
 								class:has-brand={countryOption.color !== undefined}
 							>
@@ -696,10 +698,10 @@
 					type="button"
 				>
 					<span
-						style:background={slot.filled && slot.kind !== 'country' ? slot.color : undefined}
-						style:color={slot.filled && slot.kind !== 'country' && slot.color
-							? (slot.text ?? '#F2ECDC')
-							: undefined}
+						style={affiliationChipStyle({
+							color: slot.filled && slot.kind !== 'country' ? (slot.color ?? undefined) : undefined,
+							text: slot.text ?? undefined
+						})}
 						class="affil-slot-icon"
 						class:has-brand={slot.filled && slot.kind !== 'country' && slot.color !== null}
 						aria-hidden="true"
