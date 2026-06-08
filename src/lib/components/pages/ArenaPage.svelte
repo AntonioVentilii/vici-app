@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import ArenaOverviewStrip from '$lib/components/arena/ArenaOverviewStrip.svelte';
+	import ArenaStandingHero from '$lib/components/arena/ArenaStandingHero.svelte';
 	import FriendsTab from '$lib/components/arena/FriendsTab.svelte';
 	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import BattlesInboxPage from '$lib/components/pages/BattlesInboxPage.svelte';
@@ -69,7 +69,7 @@
 
 <div class="arena-page">
 	<PageScaffold title={t({ locale: $localeStore, key: 'arena.title' })}>
-		<ArenaOverviewStrip onSelectLeaguesTab={() => (activeTab = 'leagues')} />
+		<ArenaStandingHero onSelectTab={(tab) => (activeTab = tab)} />
 
 		<div class="arena-tabs" aria-label="Arena sections" role="tablist">
 			{#each TABS as tab (tab)}

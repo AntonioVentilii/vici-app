@@ -3,79 +3,136 @@
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
+		affiliationRankComparator,
 		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Worlds featured WC podium + monthly compact card. Rendered twice on
-	 * the Battles inbox — once for the university roster and once for the
-	 * country roster — branching glyph-vs-flag rendering and i18n copy on
-	 * `kind`. The parent owns ranking/selection (via the shared
-	 * `compareAffiliationByLifetime` comparator); this component only
-	 * presents the precomputed top-3, the viewer's stats, and the rank, so
-	 * it never re-sorts.
+	 * Worlds battle card — one card per roster (school / country) that
+	 * folds the World Cup event and the monthly Season into a single
+	 * surface behind a `World Cup ⇄ Season` scope toggle. Replaces the
+	 * earlier twin-card shape (a featured WC card stacked over a compact
+	 * monthly card) so each roster reads as one always-live battle the
+	 * viewer pivots in place.
+	 *
+	 * The card owns its own scope ranking: it receives the full roster
+	 * `stats` and re-sorts by the active scope's accuracy (lifetime for
+	 * `wc`, monthly for `month`) with the shared rank comparator, then
+	 * presents the top-3 podium, the viewer's own row when affiliated,
+	 * and a `{days}d left` countdown. Tapping the card routes to the
+	 * roster's detail surface with the chosen scope so the deep link
+	 * lands on the same ranking the viewer was looking at.
+	 *
+	 * Accuracy basis note: the satellite does not yet write a WC-tagged
+	 * sub-bucket, so the `wc` scope ranks by lifetime accuracy and the
+	 * `month` scope by monthly accuracy — the same basis the Worlds
+	 * detail surface uses.
 	 */
 	interface Props {
 		kind: 'university' | 'country';
-		// Precomputed top-3 by lifetime (WC) accuracy.
-		top3: AffiliationStatsDoc[];
+		// Full roster stats; the card sorts these per the active scope.
+		stats: AffiliationStatsDoc[];
 		// Viewer's affiliation identifier, or undefined when unaffiliated.
 		myAffiliationIdentifier: string | undefined;
-		// Viewer's own stats doc within this roster (undefined when absent).
-		myStats: AffiliationStatsDoc | undefined;
-		// Viewer's rank within the roster (1-based; 0 when unranked).
-		myRank: number;
-		// Total roster size for the "rank / total" line.
+		// Total roster size for the "{rank} of {total}" line and meta.
 		total: number;
-		// Days until the WC final, or null when unavailable.
-		eventDaysLeft: number | null;
-		// Current month label for the monthly card tag.
-		currentMonthName: string;
-		// Apply the top separator that divides stacked sections.
+		// Days left in the WC event, or null when unavailable.
+		wcDaysLeft: number | null;
+		// Days left in the current month's season.
+		monthDaysLeft: number | null;
+		// Apply the top separator that divides stacked roster sections.
 		divided?: boolean;
-		onOpenWc: () => void;
-		onOpenMonth: () => void;
+		// Open the roster detail surface for the chosen scope.
+		onOpen: (scope: 'wc' | 'month') => void;
 	}
 
 	const {
 		kind,
-		top3,
+		stats,
 		myAffiliationIdentifier,
-		myStats,
-		myRank,
 		total,
-		eventDaysLeft,
-		currentMonthName,
+		wcDaysLeft,
+		monthDaysLeft,
 		divided = false,
-		onOpenWc,
-		onOpenMonth
+		onOpen
 	}: Props = $props();
+
+	type Scope = 'wc' | 'month';
+
+	let scope = $state<Scope>('wc');
 
 	const isCountry = $derived(kind === 'country');
 
 	const option = (id: string) => lookupWorldsAffiliation({ kind, id });
 
-	const eyebrowKey = $derived<MessageKey>(
-		isCountry ? 'battles.section.worlds_countries' : 'battles.section.worlds_universities'
+	const accForScope = ({ row, scope: sc }: { row: AffiliationStatsDoc; scope: Scope }): number =>
+		sc === 'wc' ? affiliationLifetimeAccuracy(row) : affiliationMonthlyAccuracy(row);
+
+	// Ranking follows the active scope's accuracy; the tie-break always
+	// uses lifetime `totalCalls`, matching the Worlds detail surface.
+	const sortedForScope = $derived.by(() => {
+		const activeScope = scope;
+
+		return [...stats].sort(
+			affiliationRankComparator({
+				accuracyOf: (row) => accForScope({ row, scope: activeScope }),
+				callsOf: (row) => row.totalCalls
+			})
+		);
+	});
+
+	const top3 = $derived(sortedForScope.slice(0, 3));
+
+	const myRank = $derived(
+		myAffiliationIdentifier !== undefined
+			? sortedForScope.findIndex((s) => s.affiliationIdentifier === myAffiliationIdentifier) + 1
+			: 0
 	);
-	const titleLedeKey = $derived<MessageKey>(
-		isCountry ? 'battles.country.wc_title_lede' : 'battles.uni.wc_title_lede'
-	);
-	const titleEmphKey = $derived<MessageKey>(
-		isCountry ? 'battles.country.wc_title_emph' : 'battles.uni.wc_title_emph'
-	);
-	const titleTailKey = $derived<MessageKey>(
-		isCountry ? 'battles.country.wc_title_tail' : 'battles.uni.wc_title_tail'
+
+	const myStats = $derived(
+		myAffiliationIdentifier !== undefined
+			? sortedForScope.find((s) => s.affiliationIdentifier === myAffiliationIdentifier)
+			: undefined
 	);
 
 	const myOption = $derived(
 		myAffiliationIdentifier !== undefined ? option(myAffiliationIdentifier) : undefined
 	);
 	const myName = $derived(myOption?.name ?? myAffiliationIdentifier ?? '');
+
+	const daysLeft = $derived(scope === 'wc' ? wcDaysLeft : monthDaysLeft);
+
+	const eyebrowKey = $derived<MessageKey>(
+		isCountry ? 'battles.section.worlds_countries' : 'battles.section.worlds_universities'
+	);
+
+	const open = () => onOpen(scope);
+
+	const onCardKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			open();
+		}
+	};
+
+	// Podium tile background — a top-down wash of the roster entry's brand
+	// colour fading into the surface. Gold (rank 1) layers a faint accent
+	// tint underneath; silver/bronze fade straight to transparent. Falls
+	// back to the medal-tinted CSS default when the entry has no colour.
+	const podiumStyle = ({ color, gold = false }: { color?: string; gold?: boolean }): string => {
+		if (!color) {
+			return '';
+		}
+
+		return gold
+			? `background: linear-gradient(180deg, ${color}33, color-mix(in srgb, var(--laurel) 6%, transparent) 70%), var(--bg-surface);`
+			: `background: linear-gradient(180deg, ${color}1a, transparent 70%), var(--bg-surface);`;
+	};
 </script>
 
 <section
@@ -95,48 +152,69 @@
 				</span>
 			{:else}
 				<span class="battles-section-head-meta num allcaps">
-					{t({
-						locale: $localeStore,
-						key: 'battles.your_school',
-						params: { name: myName }
-					})}
+					{t({ locale: $localeStore, key: 'battles.your_school', params: { name: myName } })}
 				</span>
 			{/if}
 		{/if}
 	</header>
 
-	<button class="battles-card is-featured" onclick={onOpenWc} type="button">
+	<div
+		class="battles-card"
+		aria-label={t({ locale: $localeStore, key: 'battles.card.open_standings_aria' })}
+		onclick={open}
+		onkeydown={onCardKeydown}
+		role="button"
+		tabindex="0"
+	>
 		<div class="battles-card-head">
 			<div class="battles-card-tags">
-				<span class="battles-tag is-wc">
-					{t({ locale: $localeStore, key: 'worlds.event.tag_wc' })}
-				</span>
 				<span class="battles-tag is-live">
 					{t({ locale: $localeStore, key: 'worlds.event.tag_live' })}
 				</span>
 			</div>
-			{#if eventDaysLeft !== null}
-				<span class="battles-card-timer num">
-					{t({
-						locale: $localeStore,
-						key: 'battles.card.days_left',
-						params: { days: eventDaysLeft }
-					})}
-				</span>
-			{/if}
+			<!-- The scope toggle lives inside the tappable card, so each
+			     toggle button stops propagation to avoid also opening the
+			     detail surface. -->
+			<div class="bout-scope-toggle" role="group">
+				<button
+					class:is-on={scope === 'wc'}
+					aria-pressed={scope === 'wc'}
+					onclick={(event) => {
+						event.stopPropagation();
+						scope = 'wc';
+					}}
+					type="button"
+				>
+					{t({ locale: $localeStore, key: 'battles.scope.world_cup' })}
+				</button>
+				<button
+					class:is-on={scope === 'month'}
+					aria-pressed={scope === 'month'}
+					onclick={(event) => {
+						event.stopPropagation();
+						scope = 'month';
+					}}
+					type="button"
+				>
+					{t({ locale: $localeStore, key: 'battles.scope.season' })}
+				</button>
+			</div>
 		</div>
-		<h3 class="battles-card-title">
-			{t({ locale: $localeStore, key: titleLedeKey })}
-			<span class="serif-italic">
-				{t({ locale: $localeStore, key: titleEmphKey })}
-			</span>
-			{t({ locale: $localeStore, key: titleTailKey })}
-		</h3>
+
 		<p class="battles-card-meta">
-			{#if isCountry}
-				{t({ locale: $localeStore, key: 'battles.country.wc_sub', params: { nations: total } })}
-			{:else}
-				{t({ locale: $localeStore, key: 'battles.uni.wc_sub', params: { schools: total } })}
+			{scope === 'wc'
+				? t({ locale: $localeStore, key: 'battles.card.scope_meta_wc' })
+				: t({ locale: $localeStore, key: 'battles.card.scope_meta_month' })}
+			·
+			{isCountry
+				? t({ locale: $localeStore, key: 'battles.card.count_nations', params: { count: total } })
+				: t({
+						locale: $localeStore,
+						key: 'battles.card.count_schools',
+						params: { count: total }
+					})}
+			{#if daysLeft !== null}
+				· {t({ locale: $localeStore, key: 'battles.card.days_left', params: { days: daysLeft } })}
 			{/if}
 		</p>
 
@@ -144,7 +222,7 @@
 			<div class="battles-podium">
 				{#if top3[1]}
 					{@const opt = option(top3[1].affiliationIdentifier)}
-					<div class="battles-pod-tile is-silver">
+					<div style={podiumStyle({ color: opt?.color })} class="battles-pod-tile is-silver">
 						<div class="num battles-pod-place">02</div>
 						<div class="battles-pod-name">
 							{#if isCountry && opt}<CountryFlag
@@ -154,13 +232,16 @@
 							{opt?.name ?? top3[1].affiliationIdentifier}
 						</div>
 						<div class="num battles-pod-pct">
-							{formatAccuracyPercent(affiliationLifetimeAccuracy(top3[1]))}
+							{formatAccuracyPercent(accForScope({ row: top3[1], scope }))}
 						</div>
 					</div>
 				{/if}
 				{#if top3[0]}
 					{@const opt = option(top3[0].affiliationIdentifier)}
-					<div class="battles-pod-tile is-gold">
+					<div
+						style={podiumStyle({ color: opt?.color, gold: true })}
+						class="battles-pod-tile is-gold"
+					>
 						<div class="num battles-pod-place">01</div>
 						<div class="battles-pod-name">
 							{#if isCountry && opt}<CountryFlag
@@ -170,13 +251,13 @@
 							{opt?.name ?? top3[0].affiliationIdentifier}
 						</div>
 						<div class="num battles-pod-pct">
-							{formatAccuracyPercent(affiliationLifetimeAccuracy(top3[0]))}
+							{formatAccuracyPercent(accForScope({ row: top3[0], scope }))}
 						</div>
 					</div>
 				{/if}
 				{#if top3[2]}
 					{@const opt = option(top3[2].affiliationIdentifier)}
-					<div class="battles-pod-tile is-bronze">
+					<div style={podiumStyle({ color: opt?.color })} class="battles-pod-tile is-bronze">
 						<div class="num battles-pod-place">03</div>
 						<div class="battles-pod-name">
 							{#if isCountry && opt}<CountryFlag
@@ -186,7 +267,7 @@
 							{opt?.name ?? top3[2].affiliationIdentifier}
 						</div>
 						<div class="num battles-pod-pct">
-							{formatAccuracyPercent(affiliationLifetimeAccuracy(top3[2]))}
+							{formatAccuracyPercent(accForScope({ row: top3[2], scope }))}
 						</div>
 					</div>
 				{/if}
@@ -195,7 +276,13 @@
 
 		{#if myAffiliationIdentifier !== undefined && myStats}
 			<div class="battles-your-row">
-				<span class="battles-your-em" aria-hidden="true">
+				<span
+					style={isCountry
+						? ''
+						: affiliationChipStyle({ color: myOption?.color, text: myOption?.text })}
+					class="battles-your-em"
+					aria-hidden="true"
+				>
 					{#if isCountry}
 						{#if myOption}<CountryFlag class="battles-your-flag" countryCode={myOption.id} />{/if}
 					{:else}
@@ -205,64 +292,24 @@
 				<span class="battles-your-text">
 					<b>{myName}</b>
 					·
-					{t({
-						locale: $localeStore,
-						key: 'battles.your_rank',
-						params: { rank: myRank, total }
-					})}
+					{t({ locale: $localeStore, key: 'battles.your_rank', params: { rank: myRank, total } })}
 				</span>
-				<span class="num battles-your-pct"
-					>{formatAccuracyPercent(affiliationLifetimeAccuracy(myStats))}</span
-				>
-			</div>
-		{/if}
-	</button>
-
-	<button class="battles-card is-compact" onclick={onOpenMonth} type="button">
-		<div class="battles-card-head">
-			<span class="battles-tag is-monthly">
-				{t({
-					locale: $localeStore,
-					key: 'battles.tag.monthly_all_calls',
-					params: { month: currentMonthName }
-				})}
-			</span>
-		</div>
-		{#if myAffiliationIdentifier !== undefined && myStats}
-			<div class="battles-your-row is-tight">
-				<span class="battles-your-em" aria-hidden="true">
-					{#if isCountry}
-						{#if myOption}<CountryFlag class="battles-your-flag" countryCode={myOption.id} />{/if}
-					{:else}
-						{myName.charAt(0)}
-					{/if}
+				<span class="num battles-your-pct">
+					{formatAccuracyPercent(accForScope({ row: myStats, scope }))}
 				</span>
-				<span class="battles-your-text">
-					<b>{myName}</b>
-					·
-					{t({
-						locale: $localeStore,
-						key: 'battles.your_rank',
-						params: { rank: myRank, total }
-					})}
-				</span>
-				<span class="num battles-your-pct"
-					>{formatAccuracyPercent(affiliationMonthlyAccuracy(myStats))}</span
-				>
 			</div>
 		{:else}
-			<p class="battles-card-meta">
-				{#if isCountry}
-					{t({ locale: $localeStore, key: 'battles.country.month_pick', params: { count: total } })}
-				{:else}
-					{t({ locale: $localeStore, key: 'battles.uni.month_pick', params: { count: total } })}
-				{/if}
+			<p class="battles-card-meta is-pick">
+				{isCountry
+					? t({ locale: $localeStore, key: 'battles.country.month_pick', params: { count: total } })
+					: t({ locale: $localeStore, key: 'battles.uni.month_pick', params: { count: total } })}
 			</p>
 		{/if}
+
 		<span class="battles-see-all allcaps">
 			{t({ locale: $localeStore, key: 'battles.see_full_standings' })}
 		</span>
-	</button>
+	</div>
 </section>
 
 <style lang="postcss">
@@ -273,7 +320,7 @@
 		gap: 0.5rem;
 	}
 
-	/* Separator between stacked surface sections — a hairline rule with a
+	/* Separator between stacked roster sections — a hairline rule with a
 	   short centered golden accent line riding the top edge. */
 	.battles-section.is-divided {
 		position: relative;
@@ -337,8 +384,9 @@
 		border-color: color-mix(in srgb, var(--laurel) 38%, var(--border-base));
 	}
 
-	.battles-card.is-compact {
-		padding: 0.75rem 0.9rem;
+	.battles-card:focus-visible {
+		outline: 2px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+		outline-offset: 2px;
 	}
 
 	.battles-card-head {
@@ -365,11 +413,6 @@
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		border-radius: var(--r-4, 0.25rem);
-	}
-
-	.battles-tag.is-wc {
-		background: color-mix(in srgb, #ff6b2a 14%, transparent);
-		color: #ff8a4c;
 	}
 
 	.battles-tag.is-live {
@@ -402,30 +445,42 @@
 		}
 	}
 
-	.battles-tag.is-monthly {
-		background: color-mix(in srgb, var(--laurel) 12%, transparent);
-		color: var(--laurel);
+	/* ─── scope toggle ───────────────────────────────────────── */
+	.bout-scope-toggle {
+		display: inline-flex;
+		gap: 2px;
+		flex: none;
+		padding: 2px;
+		background: color-mix(in srgb, var(--text-base) 4%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: 7px;
 	}
 
-	.battles-card-timer {
+	.bout-scope-toggle button {
+		appearance: none;
+		padding: 0.3rem 0.55rem;
+		font-family: var(--font-mono, var(--font-sans));
 		font-size: var(--t-10);
+		letter-spacing: 0.03em;
+		white-space: nowrap;
 		color: var(--text-muted);
+		background: none;
+		border: 0;
+		border-radius: 5px;
+		cursor: pointer;
+		transition:
+			background 160ms ease,
+			color 160ms ease;
 	}
 
-	.battles-card-title {
-		margin: 0 0 0.25rem;
-		font-family: var(--font-sans);
-		font-weight: 600;
-		font-size: 1.0625rem;
-		line-height: 1.25;
-		letter-spacing: var(--tracking-snug);
+	.bout-scope-toggle button.is-on {
 		color: var(--text-base);
-		text-wrap: balance;
+		background: var(--bg-surface);
 	}
 
-	.battles-card-title .serif-italic {
-		color: var(--laurel);
-		font-weight: 400;
+	.bout-scope-toggle button:focus-visible {
+		outline: 2px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+		outline-offset: 1px;
 	}
 
 	.battles-card-meta {
@@ -434,6 +489,11 @@
 		font-size: var(--t-10);
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-wide);
+	}
+
+	.battles-card-meta.is-pick {
+		margin-top: 0.3rem;
+		margin-bottom: 0;
 	}
 
 	/* ─── podium ─────────────────────────────────────────────── */
@@ -545,10 +605,6 @@
 		background: color-mix(in srgb, var(--laurel) 6%, transparent);
 		border: 1px solid color-mix(in srgb, var(--laurel) 18%, var(--border-base));
 		border-radius: var(--r-10, 0.6rem);
-	}
-
-	.battles-your-row.is-tight {
-		margin-top: 0.3rem;
 	}
 
 	.battles-your-em {
