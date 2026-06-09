@@ -13,8 +13,8 @@
 /** Apex domain all contact mailboxes hang off. */
 export const CONTACT_DOMAIN = 'vici.market';
 
-/** General support / help inbox. */
-export const SUPPORT_EMAIL = `support@${CONTACT_DOMAIN}`;
+/** General info / support / help inbox — the public-facing contact address. */
+export const INFO_EMAIL = `info@${CONTACT_DOMAIN}`;
 
 /** General hello / press inbox. */
 export const HELLO_EMAIL = `hello@${CONTACT_DOMAIN}`;
