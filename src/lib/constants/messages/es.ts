@@ -1513,6 +1513,7 @@ export const esMessages = {
 	'market.metadata.translations.locale_label': 'Idioma',
 	'market.metadata.translations.original_description': 'Descripción original',
 	'market.metadata.translations.original_outcome': 'Resultado original',
+	'market.metadata.translations.original_resolution': 'Resolución original',
 	'market.metadata.translations.original_title': 'Título original',
 	'market.metadata.translations.save': 'Guardar traducción',
 	'market.metadata.translations.saved': 'Traducción guardada',

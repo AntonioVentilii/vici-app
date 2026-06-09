@@ -1525,6 +1525,7 @@ export const deMessages = {
 	'market.metadata.translations.locale_label': 'Sprache',
 	'market.metadata.translations.original_description': 'Originalbeschreibung',
 	'market.metadata.translations.original_outcome': 'Originalergebnis',
+	'market.metadata.translations.original_resolution': 'Originalauflösung',
 	'market.metadata.translations.original_title': 'Originaltitel',
 	'market.metadata.translations.save': 'Übersetzung speichern',
 	'market.metadata.translations.saved': 'Übersetzung gespeichert',

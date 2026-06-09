@@ -8,7 +8,14 @@
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en",
-		"consensus": 0.18
+		"consensus": 0.18,
+		"translations": {
+			"it": {
+				"title": "Il Brasile vincerà i Mondiali 2026?",
+				"description": "Si risolve SÌ se il Brasile alza il trofeo dei Mondiali 2026 il 19 luglio 2026.",
+				"resolution": "Si risolve SÌ se il Brasile alza il trofeo dei Mondiali 2026 il 19 luglio 2026."
+			}
+		}
 	},
 	{
 		"title": "Will Spain win the 2026 World Cup?",
@@ -19,7 +26,14 @@
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en",
-		"consensus": 0.15
+		"consensus": 0.15,
+		"translations": {
+			"it": {
+				"title": "La Spagna vincerà i Mondiali 2026?",
+				"description": "Si risolve SÌ se la Spagna alza il trofeo dei Mondiali 2026 il 19 luglio 2026.",
+				"resolution": "Si risolve SÌ se la Spagna alza il trofeo dei Mondiali 2026 il 19 luglio 2026."
+			}
+		}
 	},
 	{
 		"title": "Will France win the 2026 World Cup?",
@@ -30,7 +44,14 @@
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en",
-		"consensus": 0.14
+		"consensus": 0.14,
+		"translations": {
+			"it": {
+				"title": "La Francia vincerà i Mondiali 2026?",
+				"description": "Si risolve SÌ se la Francia alza il trofeo dei Mondiali 2026 il 19 luglio 2026.",
+				"resolution": "Si risolve SÌ se la Francia alza il trofeo dei Mondiali 2026 il 19 luglio 2026."
+			}
+		}
 	},
 	{
 		"title": "Will Argentina defend their World Cup title?",

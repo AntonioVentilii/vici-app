@@ -25,7 +25,7 @@ type AppGetMarketMetadataResult = record { metadata : opt record { series_id : t
 
 type AppGetMarketTranslationArgs = record { series_id : text; locale : text };
 
-type AppGetMarketTranslationResult = record { translation : opt record { series_id : text; locale : text; title : text; description : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
+type AppGetMarketTranslationResult = record { translation : opt record { series_id : text; locale : text; title : text; description : text; resolution : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
 
 type AppGetMonthlyLeaderboardArgs = record { month_anchor : text };
 
@@ -75,7 +75,7 @@ type AppListLeagueMembersResult = record { items : vec record { league_id : text
 
 type AppListMarketTranslationsArgs = record { series_id : text };
 
-type AppListMarketTranslationsResult = record { items : vec record { series_id : text; locale : text; title : text; description : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
+type AppListMarketTranslationsResult = record { items : vec record { series_id : text; locale : text; title : text; description : text; resolution : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
 
 type AppListMyAffiliationsResult = record { university : opt record { member : text; kind : variant { university; country }; affiliation_identifier : text; joined_at_ms : float64; locked_until_ms : float64 }; country : opt record { member : text; kind : variant { university; country }; affiliation_identifier : text; joined_at_ms : float64; locked_until_ms : float64 } };
 
@@ -173,9 +173,9 @@ type AppUpsertMarketMetadataArgs = record { series_id : text; data : record { wh
 
 type AppUpsertMarketMetadataResult = record { metadata : record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; subtitle : opt text; updated_at : float64; updated_by : text } };
 
-type AppUpsertMarketTranslationArgs = record { series_id : text; locale : text; data : record { title : text; description : text; outcomes : vec record { id : text; title : text } } };
+type AppUpsertMarketTranslationArgs = record { series_id : text; locale : text; data : record { title : text; description : text; resolution : text; outcomes : vec record { id : text; title : text } } };
 
-type AppUpsertMarketTranslationResult = record { translation : record { series_id : text; locale : text; title : text; description : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
+type AppUpsertMarketTranslationResult = record { translation : record { series_id : text; locale : text; title : text; description : text; resolution : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
 
 type AppVerifySchoolCodeArgs = record { submission_id : text; code : text };
 
