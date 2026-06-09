@@ -4,6 +4,8 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
+	import { hasCountryFlag } from '$lib/constants/country-flags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 	import {
@@ -287,9 +289,13 @@
 					>
 						<span class="num worlds-battle-rank">{(i + 1).toString().padStart(2, '0')}</span>
 						<span class="worlds-battle-glyph" aria-hidden="true">
-							{kind === 'country'
-								? (option?.glyph ?? '?')
-								: (option?.name ?? row.affiliationIdentifier).charAt(0)}
+							{#if kind === 'country' && option && hasCountryFlag(option.id)}
+								<CountryFlag class="worlds-battle-flag" countryCode={option.id} />
+							{:else if kind === 'country'}
+								{option?.glyph ?? '?'}
+							{:else}
+								{(option?.name ?? row.affiliationIdentifier).charAt(0)}
+							{/if}
 						</span>
 						<div class="worlds-battle-meta">
 							<div class="worlds-battle-name">
@@ -340,9 +346,13 @@
 						{myRank.toString().padStart(2, '0')}
 					</span>
 					<span class="worlds-battle-glyph is-you" aria-hidden="true">
-						{kind === 'country'
-							? (myOption?.glyph ?? '?')
-							: (myOption?.name ?? myAffil.affiliationIdentifier).charAt(0)}
+						{#if kind === 'country' && myOption && hasCountryFlag(myOption.id)}
+							<CountryFlag class="worlds-battle-flag" countryCode={myOption.id} />
+						{:else if kind === 'country'}
+							{myOption?.glyph ?? '?'}
+						{:else}
+							{(myOption?.name ?? myAffil.affiliationIdentifier).charAt(0)}
+						{/if}
 					</span>
 					<div class="worlds-battle-meta">
 						<div class="worlds-battle-name worlds-battle-name-you">
@@ -605,6 +615,13 @@
 		background: color-mix(in srgb, var(--laurel) 14%, transparent);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-pill);
+		overflow: hidden;
+	}
+
+	.worlds-battle-glyph :global(.worlds-battle-flag) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	.worlds-battle-meta {
