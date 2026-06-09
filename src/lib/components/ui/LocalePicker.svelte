@@ -56,6 +56,22 @@
 	);
 	const currentLang = $derived(currentEntry ? currentEntry.id.split('-')[0] : null);
 
+	// A `hidden` base locale (e.g. `es`) is never rendered as a region row, so
+	// when it is the active locale — possible via legacy storage or browser
+	// detection — no option would show as selected. Represent it by its group's
+	// neutral (worldFlag) region, falling back to the first visible region, so
+	// the current selection is always reflected by a rendered option.
+	const selectedEntry = $derived.by<LocaleEntry | undefined>(() => {
+		if (!currentEntry || currentEntry.hidden !== true) {
+			return currentEntry;
+		}
+
+		const group = groups.find(({ lang }) => lang === currentLang);
+
+		return group?.regions.find(({ worldFlag }) => worldFlag) ?? group?.regions[0] ?? currentEntry;
+	});
+	const selectedId = $derived<AppLocale | undefined>(selectedEntry?.id);
+
 	// Auto-detected locale's entry — surfaced under "Suggested".
 	const detectedEntry = $derived<LocaleEntry | undefined>(
 		LOCALE_REGISTRY.find(({ id }) => id === detectedLocale)
@@ -113,11 +129,17 @@
 		/>
 	</div>
 
+	<!--
+		A list of native <button> rows, not a listbox: the container mixes
+		section headings and expandable language headers with the selectable
+		rows, so listbox/option semantics would misreport. Rows use native
+		button semantics and mark the active locale with `aria-current`.
+	-->
 	<div
 		style:max-height="{maxHeight}px"
 		class="lp-list"
 		aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
-		role="listbox"
+		role="group"
 	>
 		{#if trimmedQuery.length === 0 && detectedEntry}
 			<p class="lp-section num">{t({ locale: $localeStore, key: 'picker.suggested' })}</p>
@@ -125,9 +147,8 @@
 			<button
 				class="lp-row"
 				class:is-active={active}
-				aria-selected={active}
+				aria-current={active ? 'true' : undefined}
 				onclick={() => onPick(detectedEntry.id)}
-				role="option"
 				type="button"
 			>
 				<span class="lp-flag" aria-hidden="true">
@@ -164,13 +185,12 @@
 		{#each visibleGroups as group (group.lang)}
 			{#if group.regions.length <= 1}
 				{@const [region] = group.regions}
-				{@const active = region.id === current}
+				{@const active = region.id === selectedId}
 				<button
 					class="lp-row"
 					class:is-active={active}
-					aria-selected={active}
+					aria-current={active ? 'true' : undefined}
 					onclick={() => onPick(region.id)}
-					role="option"
 					type="button"
 				>
 					<span class="lp-flag" aria-hidden="true">
@@ -196,7 +216,7 @@
 			{:else}
 				{@const expanded = trimmedQuery.length > 0 || openLang === group.lang}
 				{@const langActive = currentLang === group.lang}
-				{@const activeRegion = langActive ? currentEntry : undefined}
+				{@const activeRegion = langActive ? selectedEntry : undefined}
 				<div class="lp-group">
 					<button
 						class="lp-row lp-row-header"
@@ -227,13 +247,12 @@
 					{#if expanded}
 						<div class="lp-regions">
 							{#each group.regions as region (region.id)}
-								{@const active = region.id === current}
+								{@const active = region.id === selectedId}
 								<button
 									class="lp-row lp-row-region"
 									class:is-active={active}
-									aria-selected={active}
+									aria-current={active ? 'true' : undefined}
 									onclick={() => onPick(region.id)}
-									role="option"
 									type="button"
 								>
 									<span class="lp-bar" class:is-active={active} aria-hidden="true"></span>

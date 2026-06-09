@@ -62,5 +62,11 @@ export const setLocale = (locale: AppLocale): void => {
 export const clearLocaleChoice = (): void => {
 	delStorage({ key: LOCALE_EXPLICIT_KEY });
 	explicitChoice.set(false);
-	localeStore.set({ key: LOCALE_STORAGE_KEY, value: detectedLocale });
+
+	// `reset` removes the persisted locale (not just overwrites it) and sets the
+	// in-memory store back to the detected seed. Removing the key is what lets a
+	// later visit re-detect from a clean slate — the first-visit catch above
+	// re-persists a fresh detection on next load. Overwriting with the current
+	// `detectedLocale` would instead leave a stored value that pins the locale.
+	localeStore.reset({ key: LOCALE_STORAGE_KEY });
 };
