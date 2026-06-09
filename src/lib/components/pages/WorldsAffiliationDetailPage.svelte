@@ -4,6 +4,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
+	import { hasCountryFlag } from '$lib/constants/country-flags.constants';
 	import {
 		lookupWorldsAffiliation,
 		WORLDS_COUNTRIES,
@@ -252,7 +254,13 @@
 
 	<section style={identityWashStyle} class="worlds-detail-identity">
 		{#if isCountry}
-			<span class="worlds-detail-flag" aria-hidden="true">{option?.glyph ?? '🏳️'}</span>
+			<span class="worlds-detail-flag" aria-hidden="true">
+				{#if option && hasCountryFlag(option.id)}
+					<CountryFlag class="worlds-detail-flag-svg" countryCode={option.id} />
+				{:else}
+					{option?.glyph ?? '🏳️'}
+				{/if}
+			</span>
 		{:else}
 			<span style={badgeStyle} class="worlds-detail-glyph" aria-hidden="true">
 				{headerName.charAt(0)}
@@ -497,6 +505,14 @@
 		height: 64px;
 		font-size: 2.875rem;
 		line-height: 1;
+	}
+
+	.worlds-detail-flag :global(.worlds-detail-flag-svg) {
+		width: 52px;
+		height: 39px;
+		border-radius: var(--r-6, 0.375rem);
+		object-fit: cover;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 	}
 
 	.worlds-detail-identity-text {
