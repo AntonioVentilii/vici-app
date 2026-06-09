@@ -10,6 +10,7 @@ import {
 	STRIKE,
 	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
+import { CURRENT_FEATURED_EVENT } from '$lib/constants/featured-event.constants';
 import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
 import type { AppLocale } from '$lib/constants/locale.constants';
 import type { MarketTag } from '$lib/constants/market-tags.constants';
@@ -29,6 +30,7 @@ import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market'
 import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { Activity } from '$lib/types/social';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
+import { participantMarketIds } from '$lib/utils/featured-event.utils';
 import {
 	calculateCategoricalProbabilities,
 	calculateMarketStats,
@@ -840,6 +842,13 @@ export const suggestedScore = ({
 };
 
 /**
+ * Score multiplier applied to the Flow markets tied to the team the user
+ * picked during onboarding — "40% more chance" to surface the user's
+ * country in the World Cup deck. See `rankMarkets`.
+ */
+export const FAVORITE_COUNTRY_BOOST = 1.4;
+
+/**
  * Ranks markets by editorial signal first (admin-flipped `suggested`,
  * linearly decayed over 14 days and auto-dropped on resolve), then
  * user interest, then a culture-fallback boost (so users with no
@@ -867,17 +876,27 @@ export const suggestedScore = ({
  * keyed by `seriesId`. When omitted, the suggested-market boost
  * silently no-ops — every other tier behaves identically, so callers
  * that haven't been migrated to pass metadata see no regression.
+ *
+ * `favoriteMarketIds` (optional) is the set of featured-event market ids
+ * tied to the team the user picked during onboarding
+ * (`preferences.favoriteParticipantId`, resolved via
+ * {@link participantMarketIds}). Markets in this set have their final
+ * score multiplied by {@link FAVORITE_COUNTRY_BOOST} so the user's
+ * country surfaces higher in the World Cup deck. Empty (no team picked,
+ * or the team has no linked markets) leaves the ranking untouched.
  */
 export const rankMarkets = ({
 	markets,
 	userInterests,
 	tagMappings,
-	metadataBySeries = {}
+	metadataBySeries = {},
+	favoriteMarketIds
 }: {
 	markets: Market[];
 	userInterests: Set<string>;
 	tagMappings: Record<string, MarketTag[]>;
 	metadataBySeries?: Record<string, MarketMetadata>;
+	favoriteMarketIds?: ReadonlySet<string>;
 }): Market[] => {
 	const nowMs = Date.now();
 
@@ -900,7 +919,14 @@ export const rankMarkets = ({
 		// `bestBid`/`bestAsk` aren't populated at sort time anyway.
 		const recencyScore = Number(m.createdAt) / 1e12;
 
-		return suggested + interestScore + cultureScore + recencyScore;
+		const score = suggested + interestScore + cultureScore + recencyScore;
+
+		// Lift the markets tied to the user's picked team by a flat 40%
+		// so their country trends to the top of the deck. Applied as a
+		// multiplier on the whole score (not an additive tier) so the
+		// boost scales with whatever already ranked the market — a
+		// suggested favourite stays ahead of a plain favourite.
+		return favoriteMarketIds?.has(m.id) === true ? score * FAVORITE_COUNTRY_BOOST : score;
 	};
 
 	return markets
@@ -953,11 +979,20 @@ export const getFlowQueue = async ({
 
 	const userInterests = new Set(profile.data.interests ?? []);
 
+	// Boost the featured-event markets tied to the team the user picked
+	// during onboarding. Empty when no team was picked, so the ranking is
+	// untouched for everyone who skipped the pick.
+	const favoriteMarketIds = participantMarketIds({
+		event: CURRENT_FEATURED_EVENT,
+		participantId: profile.data.preferences?.favoriteParticipantId ?? ''
+	});
+
 	return rankMarkets({
 		markets,
 		userInterests,
 		tagMappings: resolvedTags,
-		metadataBySeries: resolvedMeta
+		metadataBySeries: resolvedMeta,
+		favoriteMarketIds
 	});
 };
 
