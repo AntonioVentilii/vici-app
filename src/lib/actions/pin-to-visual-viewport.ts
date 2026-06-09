@@ -9,12 +9,15 @@ import { browser } from '$app/environment';
  * against the *large* layout viewport (toolbars retracted), so a bottom-docked
  * footer lands behind the browser's bottom toolbar and gets clipped. `dvh` is
  * supposed to track the visible height but iOS Chrome doesn't honour it
- * reliably. Driving the node's `top` + `height` off `visualViewport` overlays
- * it exactly on the visible region, so a `flex-end` child docks above the
- * toolbar.
+ * reliably. Driving the node's `top`/`left`/`width`/`height` off
+ * `visualViewport` overlays it exactly on the visible region (including the
+ * horizontal offset under pinch-zoom / iPad split view), so a `flex-end` child
+ * docks above the toolbar.
  *
- * No-op when `visualViewport` is unavailable (SSR / desktop / older engines) —
- * the node keeps its CSS height (the `100dvh` baseline stands).
+ * Runs wherever `visualViewport` exists, including desktop — there it simply
+ * mirrors the layout viewport (`offsetTop`/`offsetLeft` ≈ 0, size ≈ inner*), so
+ * the overlay is unchanged. It is a true no-op only when `visualViewport` is
+ * unavailable (SSR / older engines), where the CSS `100dvh` baseline stands.
  */
 export const pinToVisualViewport = (node: HTMLElement) => {
 	if (!browser) {
@@ -28,10 +31,13 @@ export const pinToVisualViewport = (node: HTMLElement) => {
 	}
 
 	const sync = () => {
-		// `top` tracks the visible region's offset within the layout viewport
-		// (notch / collapsed top bar); `height` is the visible height. Together
-		// they overlay the node on exactly the visible area.
+		// `top`/`left` track the visible region's offset within the layout
+		// viewport (notch, collapsed top bar, pinch-zoom, split view); `width`/
+		// `height` are its size. Together they overlay the node on exactly the
+		// visible area.
 		node.style.top = `${viewport.offsetTop}px`;
+		node.style.left = `${viewport.offsetLeft}px`;
+		node.style.width = `${viewport.width}px`;
 		node.style.height = `${viewport.height}px`;
 	};
 
@@ -48,6 +54,8 @@ export const pinToVisualViewport = (node: HTMLElement) => {
 			viewport.removeEventListener('resize', sync, opts);
 			viewport.removeEventListener('scroll', sync, opts);
 			node.style.removeProperty('top');
+			node.style.removeProperty('left');
+			node.style.removeProperty('width');
 			node.style.removeProperty('height');
 		}
 	};
