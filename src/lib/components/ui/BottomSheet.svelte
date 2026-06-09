@@ -166,12 +166,12 @@
 		flex-direction: column;
 		width: 100%;
 		max-width: 32rem;
-		/* Fill at most 92% of the (pinned) scrim height so the grip + body stay
-		 * within the visible area and the body scrolls inside. `92%` tracks the
-		 * scrim's true visible height (incl. when the keyboard shrinks it);
-		 * `92dvh`/`92vh` are the fallbacks for engines without `visualViewport`. */
-		max-height: 92vh;
-		max-height: 92dvh;
+		/* Fill at most 92% of the scrim so the grip + body stay within the
+		 * visible area and the body scrolls inside. `%` resolves against the
+		 * scrim, which always has a definite height — the inline `visualViewport`
+		 * pin (which also shrinks it when the keyboard opens) or the `100dvh` /
+		 * `100vh` CSS fallback — so no `dvh`/`vh` cap is needed here (and a `dvh`
+		 * cap would be wrong on iOS Chrome, which doesn't honour it). */
 		max-height: 92%;
 		/* Side inset defaults to the shared 1.1rem; hosts can override just
 		 * the horizontal padding via `--sheet-side-padding` (the `sidePadding`
