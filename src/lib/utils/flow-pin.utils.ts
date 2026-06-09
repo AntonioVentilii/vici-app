@@ -55,9 +55,13 @@ export const setPinnedFlowMarket = (id: string): void => {
 export const consumePinnedFlowMarket = (): string | undefined => {
 	const raw = storageGet<PinnedFlowMarket>({ key: FLOW_PIN_STORAGE_KEY });
 
-	if (nonNullish(raw)) {
-		storageDel({ key: FLOW_PIN_STORAGE_KEY });
-	}
+	// Clear unconditionally — even when the read came back missing OR
+	// malformed. A corrupt value surfaces from `storageGet` as `undefined`
+	// (the parse error is swallowed there), so gating the delete on a
+	// non-nullish result would leave a bad entry behind to re-trigger the
+	// failed parse on every Flow mount. removeItem on an absent key is a
+	// cheap no-op, and pins fire at most once anyway.
+	storageDel({ key: FLOW_PIN_STORAGE_KEY });
 
 	if (!isPinnedFlowMarket(raw)) {
 		return;
