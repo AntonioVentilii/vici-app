@@ -72,10 +72,24 @@
 	});
 	const selectedId = $derived<AppLocale | undefined>(selectedEntry?.id);
 
-	// Auto-detected locale's entry — surfaced under "Suggested".
-	const detectedEntry = $derived<LocaleEntry | undefined>(
-		LOCALE_REGISTRY.find(({ id }) => id === detectedLocale)
-	);
+	// The auto-detected locale can also be a hidden base (e.g. detection returns
+	// `es`), which has no region row of its own. Map it the same way as the
+	// active selection so the per-row AUTO badge lands on a rendered region
+	// instead of disappearing.
+	const detectedVisibleId = $derived.by<AppLocale | undefined>(() => {
+		const entry = LOCALE_REGISTRY.find(({ id }) => id === detectedLocale);
+
+		if (!entry || entry.hidden !== true) {
+			return detectedLocale;
+		}
+
+		const [lang] = entry.id.split('-');
+		const group = groups.find((g) => g.lang === lang);
+
+		return (
+			(group?.regions.find(({ worldFlag }) => worldFlag) ?? group?.regions[0])?.id ?? detectedLocale
+		);
+	});
 
 	// Track which language header is open. Seed from the active language so a
 	// returning user lands with their language drilled in.
@@ -141,43 +155,6 @@
 		aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
 		role="group"
 	>
-		{#if trimmedQuery.length === 0 && detectedEntry}
-			<p class="lp-section num">{t({ locale: $localeStore, key: 'picker.suggested' })}</p>
-			{@const active = detectedEntry.id === current}
-			<button
-				class="lp-row"
-				class:is-active={active}
-				aria-current={active ? 'true' : undefined}
-				onclick={() => onPick(detectedEntry.id)}
-				type="button"
-			>
-				<span class="lp-flag" aria-hidden="true">
-					{#if detectedEntry.worldFlag}
-						<Globe size={17} strokeWidth={1.8} />
-					{:else}
-						<CountryFlag class="lp-flag-img" countryCode={detectedEntry.region} />
-					{/if}
-				</span>
-				<span class="lp-row-text">
-					<span class="lp-row-title">
-						{detectedEntry.label}{detectedEntry.regionLabel &&
-						detectedEntry.regionLabel !== detectedEntry.label
-							? ` · ${detectedEntry.regionLabel}`
-							: ''}
-					</span>
-					<span class="lp-row-sub">{t({ locale: $localeStore, key: 'picker.detected' })}</span>
-				</span>
-				<span class="lp-auto num">{t({ locale: $localeStore, key: 'picker.auto' })}</span>
-				{#if active}
-					<Check class="lp-check" aria-hidden="true" size={17} strokeWidth={2.2} />
-				{/if}
-			</button>
-		{/if}
-
-		{#if trimmedQuery.length === 0}
-			<p class="lp-section num">{t({ locale: $localeStore, key: 'picker.all' })}</p>
-		{/if}
-
 		{#if visibleGroups.length === 0}
 			<p class="lp-empty num">{t({ locale: $localeStore, key: 'picker.no_match' })}</p>
 		{/if}
@@ -206,7 +183,7 @@
 							<span class="lp-row-sub">{group.name}</span>
 						{/if}
 					</span>
-					{#if detectedLocale === region.id}
+					{#if detectedVisibleId === region.id}
 						<span class="lp-auto num">{t({ locale: $localeStore, key: 'picker.auto' })}</span>
 					{/if}
 					{#if active}
@@ -269,7 +246,7 @@
 											<span class="lp-row-sub">{region.name}</span>
 										{/if}
 									</span>
-									{#if detectedLocale === region.id}
+									{#if detectedVisibleId === region.id}
 										<span class="lp-auto num"
 											>{t({ locale: $localeStore, key: 'picker.auto' })}</span
 										>
@@ -331,16 +308,6 @@
 		overflow-y: auto;
 		padding: 0 0.5rem 0.5rem;
 		-webkit-overflow-scrolling: touch;
-	}
-
-	.lp-section {
-		margin: 0;
-		padding: 0.75rem 0.75rem 0.375rem;
-		font-size: var(--t-10);
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps, 0.14em);
-		text-transform: uppercase;
-		color: var(--text-muted);
 	}
 
 	.lp-empty {
