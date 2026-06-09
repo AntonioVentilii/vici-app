@@ -1776,7 +1776,7 @@ export const itMessages = {
 	'profile.dashboard.achievements': 'Traguardi',
 	'profile.dashboard.affiliations.add': 'Aggiungi',
 	'profile.dashboard.affiliations.count': '{count} su {total}',
-	'profile.dashboard.affiliations.country': 'Cittadino',
+	'profile.dashboard.affiliations.country': 'Paese',
 	'profile.dashboard.affiliations.status_pending': 'In attesa',
 	'profile.dashboard.affiliations.status_verified': 'Verificata',
 	'profile.dashboard.affiliations.title': 'Affiliazioni',
