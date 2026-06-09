@@ -11,23 +11,26 @@
 		localeStore
 	} from '$lib/stores/locale.store';
 	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
-	import { t } from '$lib/utils/i18n.utils';
+	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Two-axis (Language ▸ Region) locale picker rendered as an in-frame sheet
-	 * docked to the bottom of the Settings surface. Keeps the bottom-sheet
-	 * chrome — scrim, grip, slide-up, focus trap, viewport pinning — and swaps
-	 * the inner content to the shared `LocalePicker`. A "Use automatic" footer
-	 * appears only when the active locale is an explicit choice.
+	 * Two-axis (Language ▸ Region) locale picker rendered as a bottom sheet
+	 * docked to the bottom of the viewport. Owns the bottom-sheet chrome —
+	 * scrim, grip, slide-up, focus trap, viewport pinning — and hosts the
+	 * shared `LocalePicker`. A "Use automatic" footer appears only when the
+	 * active locale is an explicit choice. Used by the Settings surface and the
+	 * landing nav (mobile), which pass their own `titleKey`.
 	 */
 	interface Props {
 		isOpen: boolean;
 		current: AppLocale;
 		onClose: () => void;
 		onPick: (locale: AppLocale) => void;
+		/** Catalog key for the sheet header (e.g. settings vs. landing). */
+		titleKey?: MessageKey;
 	}
 
-	const { isOpen, current, onClose, onPick }: Props = $props();
+	const { isOpen, current, onClose, onPick, titleKey = 'settings.language' }: Props = $props();
 
 	let sheetEl = $state<HTMLDivElement | undefined>();
 	let trap: FocusTrap | null = null;
@@ -102,7 +105,7 @@
 			<div class="lang-grip" aria-hidden="true"></div>
 
 			<div class="lang-head">
-				<h2 class="lang-title">{t({ locale: $localeStore, key: 'settings.language' })}</h2>
+				<h2 class="lang-title">{t({ locale: $localeStore, key: titleKey })}</h2>
 				<button
 					class="lang-close"
 					aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}

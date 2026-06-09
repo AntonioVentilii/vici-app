@@ -12,6 +12,7 @@
 	import { goto } from '$app/navigation';
 	import Logo from '$lib/components/layout/Logo.svelte';
 	import LocalePicker from '$lib/components/ui/LocalePicker.svelte';
+	import LocaleSheet from '$lib/components/ui/LocaleSheet.svelte';
 	import { LOCALE_REGISTRY, type AppLocale } from '$lib/constants/locale.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import {
@@ -54,10 +55,7 @@
 	let menuOpen = $state(false);
 	let langOpen = $state(false);
 	let dnavLangOpen = $state(false);
-	let langRef: HTMLDivElement | null = $state(null);
-	let langPopRef: HTMLDivElement | null = $state(null);
 	let dnavLangRef: HTMLDivElement | null = $state(null);
-	let langPopPos = $state<{ top: number; right: number } | null>(null);
 	let lpNavEl: HTMLElement | null = $state(null);
 
 	// Region the "Use automatic" reset would fall back to, for its sub-label.
@@ -180,36 +178,23 @@
 		return () => window.removeEventListener('keydown', onKey);
 	});
 
-	// Outside-click for the lang popovers
+	// Outside-click + Escape for the desktop lang popover. The mobile picker is
+	// a `LocaleSheet`, which owns its own scrim, Escape handling and focus trap.
 	$effect(() => {
-		if (!langOpen && !dnavLangOpen) {
+		if (!dnavLangOpen) {
 			return;
 		}
 
 		const onDoc = (e: MouseEvent) => {
 			const target = e.target as Node | null;
 
-			// The mobile popover lives outside `.lp-pill` to escape its
-			// `overflow: hidden` + `backdrop-filter` containing block, so
-			// "inside the popover" is checked separately from the globe ref.
-			if (
-				langOpen &&
-				langRef &&
-				target &&
-				!langRef.contains(target) &&
-				!(langPopRef && langPopRef.contains(target))
-			) {
-				langOpen = false;
-			}
-
-			if (dnavLangOpen && dnavLangRef && target && !dnavLangRef.contains(target)) {
+			if (dnavLangRef && target && !dnavLangRef.contains(target)) {
 				dnavLangOpen = false;
 			}
 		};
 
 		const onKey = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') {
-				langOpen = false;
 				dnavLangOpen = false;
 			}
 		};
@@ -220,36 +205,6 @@
 		return () => {
 			document.removeEventListener('mousedown', onDoc);
 			window.removeEventListener('keydown', onKey);
-		};
-	});
-
-	// Track the globe's viewport rect so the mobile lang popover — which
-	// is rendered outside `.lp-pill` to escape the pill's clipping — can
-	// anchor itself under the globe via `position: fixed`.
-	$effect(() => {
-		if (!langOpen || typeof window === 'undefined') {
-			langPopPos = null;
-
-			return;
-		}
-
-		const update = () => {
-			if (!langRef) {
-				return;
-			}
-
-			const r = langRef.getBoundingClientRect();
-			langPopPos = { top: r.bottom + 8, right: window.innerWidth - r.right };
-		};
-
-		update();
-		const root = scrollRoot ?? window;
-		root.addEventListener('scroll', update, { passive: true });
-		window.addEventListener('resize', update, { passive: true });
-
-		return () => {
-			root.removeEventListener('scroll', update);
-			window.removeEventListener('resize', update);
 		};
 	});
 
@@ -352,7 +307,7 @@
 					<div class="dnav-lang-pop">
 						<LocalePicker
 							current={$localeStore}
-							maxHeight={340}
+							maxHeight={440}
 							onPick={(loc) => setLocaleAndClose(loc)}
 						/>
 						{#if $localeChoiceExplicit}
@@ -414,7 +369,7 @@
 					<Logo href={PublicPath.Welcome} />
 				</span>
 				<div class="lp-pill-right">
-					<div bind:this={langRef} class="lp-lang-wrap">
+					<div class="lp-lang-wrap">
 						<button
 							class="lp-globe"
 							aria-expanded={langOpen}
@@ -513,37 +468,18 @@
 				</div>
 			{/if}
 		</div>
-
-		<!-- Lang popover lives outside `.lp-pill` so it isn't clipped by
-		     the pill's `overflow: hidden` + `backdrop-filter` containing
-		     block. Anchored under the globe via `position: fixed` using
-		     the rect tracked in `langPopPos`. -->
-		{#if langOpen && langPopPos}
-			<div
-				bind:this={langPopRef}
-				style:top="{langPopPos.top}px"
-				style:right="{langPopPos.right}px"
-				class="lp-lang-pop"
-			>
-				<LocalePicker
-					current={$localeStore}
-					maxHeight={320}
-					onPick={(loc) => setLocaleAndClose(loc)}
-				/>
-				{#if $localeChoiceExplicit}
-					<button class="lp-auto-reset" onclick={useAutomaticAndClose} type="button">
-						<Globe aria-hidden="true" size={15} strokeWidth={1.8} />
-						<span>
-							{t({ locale: $localeStore, key: 'picker.use_auto' })}{detectedRegionLabel
-								? ` · ${detectedRegionLabel}`
-								: ''}
-						</span>
-					</button>
-				{/if}
-			</div>
-		{/if}
 	</div>
 </nav>
+
+<!-- Mobile language picker: a bottom sheet (own scrim / grip / Escape /
+     focus trap), not a pill-anchored popover. -->
+<LocaleSheet
+	current={$localeStore}
+	isOpen={langOpen}
+	onClose={() => (langOpen = false)}
+	onPick={(loc) => setLocaleAndClose(loc)}
+	titleKey="a11y.language"
+/>
 
 {#if menuOpen}
 	<button
