@@ -72,6 +72,13 @@ export interface FlowArtRenderOptions {
 	// When true, draws an additional inset stroke frame inside the
 	// composition. Off by default; FlowCard layers a separate frame.
 	frame?: boolean;
+	// Optional market question text. Only the WC renderer consults it —
+	// to resolve a per-market template (result clash / qualification)
+	// from the question. Absent (the default at every non-WC call site
+	// and any WC site without the question handy) → behaviour unchanged:
+	// the WC renderer keeps its curated-recipe / nation / generic
+	// resolution exactly as before.
+	title?: string;
 }
 
 export interface Rng {
@@ -101,4 +108,8 @@ export interface RenderArgs {
 	// per nation) read this; everything else stays seed-derived via
 	// `rng`.
 	seed: string | number;
+	// Optional market question text. Only the WC renderer reads it (to
+	// resolve a per-market template from the question); undefined for
+	// every other renderer and any WC render without a question.
+	title?: string;
 }

@@ -49,7 +49,8 @@ export const renderFlowArt = ({
 	state = 'neutral',
 	theme = 'dark',
 	size = 240,
-	frame = false
+	frame = false,
+	title
 }: FlowArtRenderOptions): string => {
 	const renderer = RENDERERS[category] ?? renderMacro;
 	const categoryPalettes = PAL[category] ?? PAL.macro;
@@ -63,7 +64,7 @@ export const renderFlowArt = ({
 	// `url(#mwash)` would resolve to the first match in the document
 	// (potentially another card's gradient).
 	const uid = hashStr(seedKey).toString(36);
-	const body = renderer({ rng, p: pal, state, uid, seed });
+	const body = renderer({ rng, p: pal, state, uid, seed, title });
 
 	if (category === 'wc') {
 		// WC fills its own 280×100 background and is excluded from the
