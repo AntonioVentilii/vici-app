@@ -73,11 +73,11 @@ export interface FlowArtRenderOptions {
 	// composition. Off by default; FlowCard layers a separate frame.
 	frame?: boolean;
 	// Optional market question text. Only the WC renderer consults it —
-	// to resolve a per-market template (result clash / qualification)
-	// from the question. Absent (the default at every non-WC call site
-	// and any WC site without the question handy) → behaviour unchanged:
-	// the WC renderer keeps its curated-recipe / nation / generic
-	// resolution exactly as before.
+	// to resolve per-market artwork from the question, first via the
+	// authoritative `WC_MARKET_ART` catalogue, then the heuristic
+	// resolver. Absent (the default at every non-WC call site and any WC
+	// site without the question handy) → behaviour unchanged: the WC
+	// renderer keeps its curated-recipe / nation / generic resolution.
 	title?: string;
 }
 
@@ -108,8 +108,9 @@ export interface RenderArgs {
 	// per nation) read this; everything else stays seed-derived via
 	// `rng`.
 	seed: string | number;
-	// Optional market question text. Only the WC renderer reads it (to
-	// resolve a per-market template from the question); undefined for
-	// every other renderer and any WC render without a question.
+	// Optional market question text. Only the WC renderer reads it — to
+	// look up per-market artwork in the `WC_MARKET_ART` catalogue (then
+	// the heuristic resolver); undefined for every other renderer and any
+	// WC render without a question.
 	title?: string;
 }

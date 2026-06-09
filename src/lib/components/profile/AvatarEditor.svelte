@@ -620,8 +620,14 @@
 		flex-shrink: 0;
 		gap: 10px;
 		/* Generous safe-area floor so the footer clears the home indicator on
-		 * notched devices while still reading as a comfortable inset elsewhere. */
-		padding: 12px 18px max(28px, calc(12px + env(safe-area-inset-bottom, 0px)));
+		 * notched devices while still reading as a comfortable inset elsewhere.
+		 * `--ios-chrome-toolbar-inset` adds clearance for iOS Chrome's native
+		 * bottom toolbar (0 elsewhere). */
+		padding: 12px 18px
+			max(
+				28px,
+				calc(12px + env(safe-area-inset-bottom, 0px) + var(--ios-chrome-toolbar-inset, 0px))
+			);
 		border-top: 1px solid var(--border-base);
 		background: var(--bg-base);
 	}
@@ -676,7 +682,11 @@
 		right: 0;
 		bottom: 0;
 		z-index: 131;
-		padding: 22px 22px max(24px, calc(16px + env(safe-area-inset-bottom, 0px)));
+		padding: 22px 22px
+			max(
+				24px,
+				calc(16px + env(safe-area-inset-bottom, 0px) + var(--ios-chrome-toolbar-inset, 0px))
+			);
 		border-top: 1px solid var(--border-base);
 		border-bottom-left-radius: inherit;
 		border-bottom-right-radius: inherit;
