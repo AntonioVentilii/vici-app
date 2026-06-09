@@ -2372,7 +2372,7 @@ export const ptMessages = {
 	'welcome.hero.favorite': 'FAVORITO',
 	'welcome.hero.headline': 'Transforme seu “eu avisei” em prova.',
 	'welcome.hero.hint': 'Deslize a carta — esquerda não, direita sim',
-	'welcome.hero.kicker': 'Copa do Mundo FIFA 2026 · ao vivo',
+	'welcome.hero.kicker': 'Copa do Mundo FIFA 2026® · ao vivo',
 	'welcome.hero.long_shot': 'ZEBRA',
 	'welcome.hero.no': 'NÃO',
 	'welcome.hero.payoff': 'Desafie seus amigos.',

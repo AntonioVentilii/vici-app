@@ -16,7 +16,7 @@ export const es419Messages = {
 	'welcome.hero.cta_note': 'Gratis. Sin tarjeta. Sin trampa.',
 	'welcome.hero.headline': 'Que tu “te lo dije” tenga pruebas.',
 	'welcome.hero.hint': 'Desliza la carta — izquierda no, derecha sí',
-	'welcome.hero.kicker': 'Copa del Mundo FIFA 2026 · en vivo',
+	'welcome.hero.kicker': 'Copa del Mundo FIFA 2026® · en vivo',
 	'welcome.hero.payoff': 'Hora de desafiar a tus amigos.',
 	'welcome.hero.payoff_cta': 'Regístrate ahora',
 	'welcome.how.s1': 'Desliza una predicción real',

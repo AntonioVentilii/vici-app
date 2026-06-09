@@ -2255,7 +2255,7 @@ export const zhHansMessages = {
 	'welcome.hero.favorite': '热门',
 	'welcome.hero.headline': '把「我早就知道」变成铁证。',
 	'welcome.hero.hint': '滑动卡片 — 左滑表示否,右滑表示是',
-	'welcome.hero.kicker': 'FIFA 世界杯 2026 · 正在进行',
+	'welcome.hero.kicker': 'FIFA 世界杯 2026® · 正在进行',
 	'welcome.hero.long_shot': '黑马',
 	'welcome.hero.no': '否',
 	'welcome.hero.payoff': '向你的朋友发起挑战。',

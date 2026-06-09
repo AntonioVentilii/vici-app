@@ -2390,7 +2390,7 @@ export const frMessages = {
 	'welcome.hero.favorite': 'FAVORI',
 	'welcome.hero.headline': 'Transforme ton « je le savais » en preuve.',
 	'welcome.hero.hint': 'Swipe la carte — gauche non, droite oui',
-	'welcome.hero.kicker': 'Coupe du Monde FIFA 2026 · en direct',
+	'welcome.hero.kicker': 'Coupe du Monde FIFA 2026® · en direct',
 	'welcome.hero.long_shot': 'OUTSIDER',
 	'welcome.hero.no': 'NON',
 	'welcome.hero.payoff': 'Défie tes amis.',
