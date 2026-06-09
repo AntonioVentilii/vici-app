@@ -7,7 +7,7 @@
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { SUPPORT_EMAIL } from '$lib/constants/contact.constants';
+	import { INFO_EMAIL } from '$lib/constants/contact.constants';
 	import { PLAYGROUND_CLEARING_MARGIN_DECIMALS } from '$lib/constants/playground.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import {
@@ -510,7 +510,7 @@
 					<button class="del-retain-btn" onclick={pause30Days} type="button">
 						{t({ locale: $localeStore, key: 'settings.delete.stay_pause' })}
 					</button>
-					<a class="del-retain-btn" href="mailto:{SUPPORT_EMAIL}">
+					<a class="del-retain-btn" href="mailto:{INFO_EMAIL}">
 						{t({ locale: $localeStore, key: 'settings.delete.stay_contact' })}
 					</a>
 				</div>
