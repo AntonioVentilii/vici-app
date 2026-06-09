@@ -2,6 +2,9 @@ import { localeFallbackChain, type AppLocale } from '$lib/constants/locale.const
 import { deMessages } from '$lib/constants/messages/de';
 import { enMessages } from '$lib/constants/messages/en';
 import { esMessages } from '$lib/constants/messages/es';
+import { es419Messages } from '$lib/constants/messages/es-419';
+import { esArMessages } from '$lib/constants/messages/es-AR';
+import { esMxMessages } from '$lib/constants/messages/es-MX';
 import { frMessages } from '$lib/constants/messages/fr';
 import { itMessages } from '$lib/constants/messages/it';
 import { ptMessages } from '$lib/constants/messages/pt';
@@ -17,6 +20,9 @@ const catalogs: Partial<Record<AppLocale, Record<string, string>>> = {
 	en: enMessages,
 	it: itMessages,
 	es: esMessages,
+	'es-419': es419Messages,
+	'es-MX': esMxMessages,
+	'es-AR': esArMessages,
 	de: deMessages,
 	fr: frMessages,
 	pt: ptMessages,
