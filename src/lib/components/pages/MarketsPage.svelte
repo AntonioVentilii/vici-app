@@ -15,6 +15,7 @@
 	import type { Market } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
+	import { filterScheduledWcMarkets } from '$lib/utils/wc-schedule.utils';
 
 	/**
 	 * Markets screen — a section-based board (no filter chips). The World Cup
@@ -64,6 +65,16 @@
 	const matchesTag = ({ market, tag }: { market: Market; tag: MarketTag }): boolean =>
 		tagsByMarket[market.id]?.includes(tag) ?? false;
 
+	// Temporary hardcoded World-Cup release schedule: WC markets surface only
+	// once their Show Date (00:00 UTC) has arrived, and WC markets absent from
+	// the calendar stay hidden. Applied to the discovery feeds (available +
+	// trending) below; non-WC markets pass through, and the viewer's explicit
+	// Saved watchlist is intentionally left ungated. Re-derives on the minute
+	// tick so a market appears the moment its release lands.
+	const visibleMarkets = $derived(
+		filterScheduledWcMarkets({ markets: $markets, tagsByMarket, now: $minuteTick_ms })
+	);
+
 	// Volume-sort helper — the same trending signal the carousel uses, applied
 	// to give a stable deck that doesn't reshuffle as the user scans it.
 	// eslint-disable-next-line local-rules/prefer-object-params -- Array.sort comparators take two positional args by contract
@@ -83,7 +94,7 @@
 	// — matching the section label and the Open-only Trending rail — so resolved
 	// / expired markets never surface under "Available predictions".
 	const availableMarkets = $derived.by((): Market[] => {
-		const openMarkets = $markets.filter((m) => m.status === 'Open');
+		const openMarkets = visibleMarkets.filter((m) => m.status === 'Open');
 
 		if (!wcFocus) {
 			return [...openMarkets].sort(byVolumeDesc);
@@ -120,7 +131,7 @@
 	// Trending rail: highest-volume open markets. Our backend carries no curated
 	// "hot" flag, so volume is the proxy.
 	const trendingMarkets = $derived(
-		[...$markets]
+		[...visibleMarkets]
 			.filter((m) => m.status === 'Open')
 			.sort(byVolumeDesc)
 			.slice(0, TRENDING_LIMIT)
