@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { setPinnedFlowMarket } from '$lib/utils/flow-pin.utils';
 
 	// Short share-link alias. The share sheet hands out `/m/{id}?ref=…`
 	// (compact enough for SMS / social), while `/markets/{id}` is the
@@ -15,6 +16,12 @@
 	const id = $derived(page.params.id ?? '');
 
 	onMount(() => {
+		// This route is only ever reached from a shared link, so park the
+		// market for the next Flow entry to surface as the first card —
+		// surviving the detail page, sign-in, and (for a new user)
+		// onboarding. Dropped downstream if the viewer already called it.
+		setPinnedFlowMarket(id);
+
 		const { search } = page.url;
 		void goto(`${resolve(`${AppPath.Markets}/${id}`)}${search}`, { replaceState: true });
 	});
