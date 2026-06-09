@@ -121,6 +121,10 @@
 		void goto(`${resolve(AppPath.Arena)}/worlds/school/${id}`);
 	};
 
+	const goLeague = (id: string) => {
+		void goto(`${resolve(AppPath.Arena)}/leagues/${id}`);
+	};
+
 	const unitThisWeek = $derived(t({ locale: $localeStore, key: 'arena.hero.unit_this_week' }));
 
 	// Hydrate once the friend relations and affiliations have been
@@ -238,7 +242,7 @@
 							up: mine.rankDelta !== undefined ? Math.max(0, mine.rankDelta) : 0,
 							upSuffix: '',
 							unit: unitThisWeek,
-							onOpen: () => onSelectTab?.('leagues')
+							onOpen: () => goLeague(league.id)
 						});
 					}
 				} catch {
