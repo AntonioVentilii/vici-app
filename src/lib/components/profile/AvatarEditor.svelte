@@ -201,14 +201,14 @@
 	});
 </script>
 
-<!-- Scrim: a full-viewport flex column (`justify-content: flex-end`) that docks
-     the editor at the *visible* bottom. `use:pinToVisualViewport` sizes it to
-     the actually-visible region via `window.visualViewport`, because on iOS a
-     fixed overlay resolves against the large layout viewport (toolbars
-     retracted) and iOS Chrome doesn't honour `100dvh` — so a bottom-anchored
-     footer lands behind the bottom toolbar and gets clipped (#670, #673).
-     A tap on the backdrop runs the same close guard as the ✕ so it never
-     silently drops unsaved edits. -->
+<!-- Full-screen panel: an opaque overlay that fills the viewport.
+     `use:pinToVisualViewport` sizes it to the actually-visible region via
+     `window.visualViewport`, because on iOS a fixed overlay resolves against
+     the large layout viewport (toolbars retracted) and iOS Chrome doesn't
+     honour `100dvh` — so the pinned-bottom footer would otherwise land behind
+     the bottom toolbar and get clipped (#670, #673). A tap on any uncovered
+     scrim area runs the same close guard as the ✕ so it never silently drops
+     unsaved edits. -->
 <div
 	class="avatar-editor-scrim"
 	aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
@@ -375,20 +375,17 @@
 {/snippet}
 
 <style lang="postcss">
-	/* Lock background scroll while the full-screen editor is open. */
+	/* Lock background scroll + hide the floating pill-nav while the full-screen
+	   editor is open — the nav lives in a separate stacking context and would
+	   otherwise paint in front of the panel, and it isn't usable mid-edit. */
 	:global(body:has(.avatar-editor)) {
 		overflow: hidden;
 	}
 
-	/* Dimmed backdrop behind the sheet — a tap runs the close guard. It also
-	   docks the editor: a full-viewport flex column that `use:pinToVisualViewport`
-	   sizes (via inline `top`/`height`) to the *actually-visible* region. On iOS
-	   a fixed `inset: 0` / `bottom: 0` resolves against the *large* layout
-	   viewport (toolbars retracted), so the bottom-anchored footer lands behind
-	   the bottom toolbar and gets clipped (#670); `100dvh` is meant to track the
-	   visible height but iOS Chrome doesn't honour it, so the inline pin is the
-	   real fix. The `100dvh`/`100vh` here is the desktop / no-`visualViewport`
-	   fallback. `flex-end` docks the sheet at the visible bottom. */
+	:global(body:has(.avatar-editor) .pillnav-wrap) {
+		display: none;
+	}
+
 	/* Full-screen takeover (not a bottom sheet): an opaque panel that fills the
 	   visible viewport, matching the design. `use:pinToVisualViewport` sizes it
 	   to `window.visualViewport` so the sticky footer clears the iOS toolbar
@@ -406,17 +403,6 @@
 		display: flex;
 		flex-direction: column;
 		background: var(--bg-base);
-	}
-
-	/* Lock body scroll + hide the floating pill-nav while the editor is open —
-	   the nav lives in a separate stacking context and would otherwise paint in
-	   front of the full-screen panel, and it isn't usable mid-edit. */
-	:global(body:has(.avatar-editor-scrim)) {
-		overflow: hidden;
-	}
-
-	:global(body:has(.avatar-editor-scrim) .pillnav-wrap) {
-		display: none;
 	}
 
 	.avatar-editor {
