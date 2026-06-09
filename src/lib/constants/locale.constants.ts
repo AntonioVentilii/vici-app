@@ -43,7 +43,7 @@ export type LocaleTier = 'live' | 'soon';
  * variant declares an ordered `fallback` chain that `t()` walks on a missing
  * key, always ending at `en`.
  *
- * `flag`, `region` and `regionLabel` describe the geographic facet so a
+ * `region` and `regionLabel` describe the geographic facet so a
  * future region-aware picker can group variants under their language; the
  * current flat picker reads `id`, `label` and `short` only.
  */
@@ -60,8 +60,12 @@ export interface LocaleEntry {
 	readonly region: string;
 	/** Native region label shown in the picker (`México`, `中国大陆`, …). */
 	readonly regionLabel: string;
-	/** Region flag emoji shown by a region-aware picker. */
-	readonly flag: string;
+	/**
+	 * Show the world/globe icon instead of a country flag — for supra-national
+	 * rows (e.g. `en` Global, `es-419` Latin America). Country rows render the
+	 * SVG flag for their `region` via the shared CountryFlag component.
+	 */
+	readonly worldFlag?: boolean;
 	/** Ordered resolution chain walked on a missing key, ending at `en`. */
 	readonly fallback: readonly AppLocale[];
 	/** Neutral base dictionary for a language; backs its regional deltas. */
@@ -88,7 +92,7 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'EN',
 		region: 'US',
 		regionLabel: 'Global',
-		flag: '🌐',
+		worldFlag: true,
 		fallback: [],
 		tier: 'live'
 	},
@@ -102,7 +106,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'ES',
 		region: 'ES',
 		regionLabel: 'Español',
-		flag: '🌐',
 		fallback: ['en'],
 		base: true,
 		hidden: true,
@@ -115,7 +118,7 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: '419',
 		region: '419',
 		regionLabel: 'Latinoamérica',
-		flag: '🌎',
+		worldFlag: true,
 		fallback: ['es', 'en'],
 		tier: 'soon'
 	},
@@ -126,7 +129,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'MX',
 		region: 'MX',
 		regionLabel: 'México',
-		flag: '🇲🇽',
 		fallback: ['es-419', 'es', 'en'],
 		tier: 'soon'
 	},
@@ -137,7 +139,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'AR',
 		region: 'AR',
 		regionLabel: 'Argentina',
-		flag: '🇦🇷',
 		fallback: ['es-419', 'es', 'en'],
 		tier: 'soon'
 	},
@@ -148,7 +149,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'CO',
 		region: 'CO',
 		regionLabel: 'Colombia',
-		flag: '🇨🇴',
 		fallback: ['es-419', 'es', 'en'],
 		tier: 'soon'
 	},
@@ -161,7 +161,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'PT',
 		region: 'PT',
 		regionLabel: 'Portugal',
-		flag: '🇵🇹',
 		fallback: ['en'],
 		base: true,
 		tier: 'live'
@@ -173,7 +172,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'BR',
 		region: 'BR',
 		regionLabel: 'Brasil',
-		flag: '🇧🇷',
 		fallback: ['pt', 'en'],
 		tier: 'soon'
 	},
@@ -185,7 +183,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'IT',
 		region: 'IT',
 		regionLabel: 'Italia',
-		flag: '🇮🇹',
 		fallback: ['en'],
 		tier: 'live'
 	},
@@ -196,7 +193,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'FR',
 		region: 'FR',
 		regionLabel: 'France',
-		flag: '🇫🇷',
 		fallback: ['en'],
 		tier: 'live'
 	},
@@ -207,7 +203,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'DE',
 		region: 'DE',
 		regionLabel: 'Deutschland',
-		flag: '🇩🇪',
 		fallback: ['en'],
 		tier: 'live'
 	},
@@ -218,7 +213,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'NL',
 		region: 'NL',
 		regionLabel: 'Nederland',
-		flag: '🇳🇱',
 		fallback: ['en'],
 		tier: 'soon'
 	},
@@ -229,7 +223,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'PL',
 		region: 'PL',
 		regionLabel: 'Polska',
-		flag: '🇵🇱',
 		fallback: ['en'],
 		tier: 'soon'
 	},
@@ -240,7 +233,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'CS',
 		region: 'CZ',
 		regionLabel: 'Česko',
-		flag: '🇨🇿',
 		fallback: ['en'],
 		tier: 'soon'
 	},
@@ -251,7 +243,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'SK',
 		region: 'SK',
 		regionLabel: 'Slovensko',
-		flag: '🇸🇰',
 		fallback: ['en'],
 		tier: 'soon'
 	},
@@ -262,7 +253,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'RU',
 		region: 'RU',
 		regionLabel: 'Россия',
-		flag: '🇷🇺',
 		fallback: ['en'],
 		tier: 'soon'
 	},
@@ -273,7 +263,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'ZH',
 		region: 'CN',
 		regionLabel: '中国大陆',
-		flag: '🇨🇳',
 		fallback: ['en'],
 		tier: 'live'
 	},
@@ -284,7 +273,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'JA',
 		region: 'JP',
 		regionLabel: '日本',
-		flag: '🇯🇵',
 		fallback: ['en'],
 		tier: 'soon'
 	},
@@ -295,7 +283,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'KO',
 		region: 'KR',
 		regionLabel: '대한민국',
-		flag: '🇰🇷',
 		fallback: ['en'],
 		tier: 'soon'
 	},
@@ -306,7 +293,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'HI',
 		region: 'IN',
 		regionLabel: 'भारत',
-		flag: '🇮🇳',
 		fallback: ['en'],
 		tier: 'soon'
 	},
@@ -317,7 +303,6 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		short: 'VI',
 		region: 'VN',
 		regionLabel: 'Việt Nam',
-		flag: '🇻🇳',
 		fallback: ['en'],
 		tier: 'soon'
 	}
