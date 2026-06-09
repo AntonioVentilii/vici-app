@@ -65,15 +65,22 @@ export const detectBrowserLocale = (): AppLocale => {
  * "where is the user from" signal: the locale they picked (or the device
  * language we detected) carries a region.
  *
- * Supra-national locales (`worldFlag` — `en` Global, `es-419` Latin
- * America) resolve to no single country and return `undefined`, so the
- * caller skips the country boost rather than pinning everyone to one
- * nation's markets.
+ * Returns `undefined` (caller skips the boost) for locales whose region
+ * isn't a reliable country signal:
+ *
+ * - **Supra-national** (`worldFlag` — `en` Global, `es-419` Latin
+ *   America): no single country.
+ * - **Language bases** (`base` — `es` → `ES`, `pt` → `PT`):
+ *   `detectBrowserLocale` collapses every regional browser tag onto its
+ *   base (an `es-MX` or `pt-BR` device seeds `es` / `pt`), so a base
+ *   locale's region would pin auto-detected users to the wrong nation
+ *   (a Mexican boosted toward Spain). Only an explicitly country-scoped
+ *   locale (`es-MX`, `it`, `de`, …) carries a trustworthy country.
  */
 export const localeCountryCode = (locale: AppLocale): string | undefined => {
 	const entry = LOCALE_REGISTRY.find(({ id }) => id === locale);
 
-	if (nonNullish(entry) && entry.worldFlag !== true) {
+	if (nonNullish(entry) && entry.worldFlag !== true && entry.base !== true) {
 		return entry.region;
 	}
 };
