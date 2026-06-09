@@ -1753,7 +1753,6 @@ export const esMessages = {
 	'outcome.no_won': 'NO ganó',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES ganó',
-	'picker.auto': 'AUTO',
 	'picker.no_match': 'Sin resultados',
 	'picker.regions': '{n} regiones',
 	'picker.search': 'Buscar idioma',
