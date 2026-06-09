@@ -17,8 +17,7 @@ import { nonNullish } from '@dfinity/utils';
  *    English.
  *
  * This is the seed only: once a choice exists in storage it always wins, so
- * detection never overrides an explicit pick. Mirrors oisy-wallet's
- * `getDefaultLang`.
+ * detection never overrides an explicit pick.
  */
 export const detectBrowserLocale = (): AppLocale => {
 	if (!browser || typeof navigator === 'undefined') {

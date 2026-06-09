@@ -20,7 +20,7 @@ export const localeStore = initStorageStore<AppLocale>({
 // explicit pick from the language picker simply overwrites it. A presence
 // check (no parse, silent on failure) is enough to tell a first visit from a
 // returning one — we don't need the stored value here, only whether one
-// exists. Mirrors oisy-wallet, which saves the resolved language on init.
+// exists.
 if (browser && !hasStorage({ key: LOCALE_STORAGE_KEY })) {
 	setStorage({ key: LOCALE_STORAGE_KEY, value: detectedLocale });
 }
