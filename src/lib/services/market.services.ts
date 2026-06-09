@@ -842,9 +842,10 @@ export const suggestedScore = ({
 };
 
 /**
- * Score multiplier applied to the Flow markets tied to the team the user
- * picked during onboarding — "60% more chance" to surface the user's
- * country in the World Cup deck. See `rankMarkets`.
+ * Score multiplier applied to the Flow markets tied to the user's
+ * favourite team (`preferences.favoriteParticipantId`) — "60% more
+ * chance" to surface their country in the World Cup deck. See
+ * `rankMarkets`.
  */
 export const FAVORITE_COUNTRY_BOOST = 1.6;
 
@@ -878,12 +879,12 @@ export const FAVORITE_COUNTRY_BOOST = 1.6;
  * that haven't been migrated to pass metadata see no regression.
  *
  * `favoriteMarketIds` (optional) is the set of featured-event market ids
- * tied to the team the user picked during onboarding
- * (`preferences.favoriteParticipantId`, resolved via
- * {@link participantMarketIds}). Markets in this set have their final
- * score multiplied by {@link FAVORITE_COUNTRY_BOOST} so the user's
- * country surfaces higher in the World Cup deck. Empty (no team picked,
- * or the team has no linked markets) leaves the ranking untouched.
+ * tied to the user's favourite team (`preferences.favoriteParticipantId`,
+ * resolved via {@link participantMarketIds}). Markets in this set have
+ * their final score multiplied by {@link FAVORITE_COUNTRY_BOOST} so the
+ * user's country surfaces higher in the World Cup deck. Empty (no
+ * favourite set, or the team has no linked markets) leaves the ranking
+ * untouched.
  */
 export const rankMarkets = ({
 	markets,
@@ -921,8 +922,8 @@ export const rankMarkets = ({
 
 		const score = suggested + interestScore + cultureScore + recencyScore;
 
-		// Lift the markets tied to the user's picked team by a flat 60%
-		// so their country trends to the top of the deck. Applied as a
+		// Lift the markets tied to the user's favourite team by a flat
+		// 60% so their country trends to the top of the deck. Applied as a
 		// multiplier on the whole score (not an additive tier) so the
 		// boost scales with whatever already ranked the market — a
 		// suggested favourite stays ahead of a plain favourite.
@@ -979,9 +980,10 @@ export const getFlowQueue = async ({
 
 	const userInterests = new Set(profile.data.interests ?? []);
 
-	// Boost the featured-event markets tied to the team the user picked
-	// during onboarding. Empty when no team was picked, so the ranking is
-	// untouched for everyone who skipped the pick.
+	// Boost the featured-event markets tied to the user's favourite team.
+	// Read live off the profile on every build, so a team set or changed
+	// after onboarding takes effect on the next deck. Empty when no
+	// favourite is set, leaving the ranking untouched.
 	const favoriteMarketIds = participantMarketIds({
 		event: CURRENT_FEATURED_EVENT,
 		participantId: profile.data.preferences?.favoriteParticipantId ?? ''
