@@ -6,32 +6,40 @@ import type { MessageKey } from '$lib/utils/i18n.utils';
  *
  * Block-based on purpose: legal / help copy iterates across sections of
  * heading + paragraph + list, and storing them as structured data (vs.
- * a raw HTML string) keeps each block trivially translatable and styles
- * the renderer applies consistently across documents.
+ * a raw HTML string) keeps each block consistently styled by the renderer
+ * across documents.
  *
- * Translatable copy is referenced by `MessageKey`, resolved per-locale
- * at render time via `t(...)`. The only literals carried inline are
- * contact addresses — `mail` block text and the `{email}` params some
- * paragraphs interpolate — sourced from `contact.constants`, never the
- * i18n catalogs (they are identifiers, not translatable copy).
+ * Each text-bearing block, and the doc title / eyebrow, accepts EITHER an
+ * i18n key OR a literal string:
  *
- * The current copy is **placeholder**. Legal sign-off is required before
- * launch — the `Legal · …` eyebrow lines flag the docs that need it.
+ *  - **Keyed copy** (`key` / `itemKeys` / `titleKey` / `eyebrowKey`) is the
+ *    localized help docs (FAQ, Contact, How resolution works, Resolution
+ *    rules) — referenced by `MessageKey` and resolved per-locale at render
+ *    time via `t(...)`, so it mirrors across every live catalog.
+ *  - **Literal copy** (`text` / `items` / `title` / `eyebrow`) carries the
+ *    full English controlling text of the legal docs (Terms, Privacy). Legal
+ *    bodies are kept out of the i18n catalogs by design — the live locales
+ *    must mirror `en.ts` exactly and only English exists for these — so they
+ *    live as literal-text constants instead.
+ *
+ * Contact addresses are never translatable copy: `mail` block text and the
+ * `{email}` params some paragraphs interpolate come from `contact.constants`.
  */
 
 export type InfoDocBlock =
-	| { kind: 'lede'; key: MessageKey }
-	| { kind: 'h'; key: MessageKey }
-	| { kind: 'p'; key: MessageKey; params?: Record<string, string | number> }
+	| ({ kind: 'lede' } & ({ key: MessageKey } | { text: string }))
+	| ({ kind: 'h' } & ({ key: MessageKey } | { text: string }))
+	| ({ kind: 'p' } & (
+			| { key: MessageKey; params?: Record<string, string | number> }
+			| { text: string }
+	  ))
 	| { kind: 'list'; itemKeys: MessageKey[] }
+	| { kind: 'list'; items: string[] }
 	| { kind: 'mail'; text: string };
 
-export interface InfoDoc {
-	slug: string;
-	/** i18n key for the header title (also the page `<title>`). */
-	titleKey: MessageKey;
-	/** i18n key for the eyebrow line above the title. */
-	eyebrowKey: MessageKey;
-	/** Body content, rendered in order. */
-	blocks: InfoDocBlock[];
-}
+/** Header title (also the page `<title>`) — keyed for help docs, literal for legal. */
+type TitleSource = { titleKey: MessageKey } | { title: string };
+/** Eyebrow line above the title — keyed for help docs, literal for legal. */
+type EyebrowSource = { eyebrowKey: MessageKey } | { eyebrow: string };
+
+export type InfoDoc = { slug: string; blocks: InfoDocBlock[] } & TitleSource & EyebrowSource;

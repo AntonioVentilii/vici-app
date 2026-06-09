@@ -1159,31 +1159,6 @@ export const ptBRMessages = {
 	'info.doc.resolution-rules.b9': 'Casos limite',
 	'info.doc.resolution-rules.eyebrow': 'Jurídico · O procedimento completo',
 	'info.doc.resolution-rules.title': 'Regras de resolução',
-	'info.doc.terms.b0':
-		'Ao usar a VICI concordas com os termos abaixo. Estão escritos em linguagem simples. A versão juridicamente vinculativa é a que estás a ler agora.',
-	'info.doc.terms.b1': '1. O serviço',
-	'info.doc.terms.b10':
-		'Sem automação. Sem votação coordenada. Sem falsa identidade. Sem conteúdos proibidos pela lei aplicável.',
-	'info.doc.terms.b11': '6. Cessação',
-	'info.doc.terms.b12':
-		'Podes eliminar a tua conta a qualquer momento nas Definições. Podemos suspender uma conta que viole estes termos. Dir-te-emos o motivo.',
-	'info.doc.terms.b13': '7. Alterações',
-	'info.doc.terms.b14':
-		'As alterações substanciais são anunciadas na app pelo menos sete dias antes de entrarem em vigor. A utilização continuada após essa data constitui aceitação.',
-	'info.doc.terms.b2':
-		'A VICI é uma app de previsões gratuita. Disponibilizamos mercados que se resolvem em fontes públicas. Não facilitamos qualquer aposta de dinheiro.',
-	'info.doc.terms.b3': '2. A tua conta',
-	'info.doc.terms.b4':
-		'Comprometes-te a fornecer informação exata e a usar apenas uma conta. As contas múltiplas criadas para manipular classificações ou batalhas serão removidas sem aviso.',
-	'info.doc.terms.b5': '3. As tuas previsões',
-	'info.doc.terms.b6':
-		'Mantens a titularidade do histórico da tua conta. Reservamo-nos o direito de apresentar estatísticas agregadas e anonimizadas dele derivadas.',
-	'info.doc.terms.b7': '4. VXP',
-	'info.doc.terms.b8':
-		'O VXP é um crédito na app sem valor monetário. Não pode ser resgatado, transferido para fora da app nem trocado por moeda.',
-	'info.doc.terms.b9': '5. Conduta aceitável',
-	'info.doc.terms.eyebrow': 'Jurídico · Em vigor a 1 de maio de 2026',
-	'info.doc.terms.title': 'Termos de serviço',
 	'info.not_found.body':
 		'Nenhum documento corresponde a esse endereço. Tente outro link no rodapé ou volte para a página inicial.',
 	'info.not_found.title': 'Documento não encontrado',

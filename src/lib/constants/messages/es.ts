@@ -1155,31 +1155,6 @@ export const esMessages = {
 	'info.doc.resolution-rules.b9': 'Casos límite',
 	'info.doc.resolution-rules.eyebrow': 'Legal · El procedimiento completo',
 	'info.doc.resolution-rules.title': 'Reglas de resolución',
-	'info.doc.terms.b0':
-		'Al usar VICI aceptas los términos siguientes. Están escritos en lenguaje claro. La versión jurídicamente vinculante es la que estás leyendo ahora.',
-	'info.doc.terms.b1': '1. El servicio',
-	'info.doc.terms.b10':
-		'Sin automatización. Sin voto coordinado. Sin suplantación. Sin contenido prohibido por la ley aplicable.',
-	'info.doc.terms.b11': '6. Terminación',
-	'info.doc.terms.b12':
-		'Puedes eliminar tu cuenta en cualquier momento desde Ajustes. Podemos suspender una cuenta que infrinja estos términos. Te diremos el motivo.',
-	'info.doc.terms.b13': '7. Cambios',
-	'info.doc.terms.b14':
-		'Los cambios sustanciales se anuncian en la app al menos siete días antes de entrar en vigor. El uso continuado después de esa fecha constituye aceptación.',
-	'info.doc.terms.b2':
-		'VICI es una app de predicciones gratuita. Ofrecemos mercados que se resuelven con fuentes públicas. No facilitamos ninguna apuesta de dinero.',
-	'info.doc.terms.b3': '2. Tu cuenta',
-	'info.doc.terms.b4':
-		'Te comprometes a facilitar información precisa y a usar una sola cuenta. Las cuentas múltiples creadas para manipular clasificaciones o batallas se eliminarán sin previo aviso.',
-	'info.doc.terms.b5': '3. Tus predicciones',
-	'info.doc.terms.b6':
-		'Conservas la titularidad del historial de tu cuenta. Nos reservamos el derecho de mostrar estadísticas agregadas y anonimizadas derivadas de él.',
-	'info.doc.terms.b7': '4. VXP',
-	'info.doc.terms.b8':
-		'El VXP es un crédito dentro de la app sin valor monetario. No se puede canjear, transferir fuera de la app ni cambiar por divisa.',
-	'info.doc.terms.b9': '5. Conducta aceptable',
-	'info.doc.terms.eyebrow': 'Legal · En vigor desde el 1 de mayo de 2026',
-	'info.doc.terms.title': 'Términos del servicio',
 	'info.not_found.body':
 		'Ningún documento coincide con esa dirección. Prueba otro enlace del pie o vuelve a la página principal.',
 	'info.not_found.title': 'Documento no encontrado',
