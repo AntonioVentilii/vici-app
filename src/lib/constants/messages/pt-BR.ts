@@ -1776,7 +1776,7 @@ export const ptBRMessages = {
 	'profile.dashboard.achievements': 'Conquistas',
 	'profile.dashboard.affiliations.add': 'Adicionar',
 	'profile.dashboard.affiliations.count': '{count} de {total}',
-	'profile.dashboard.affiliations.country': 'Cidadão',
+	'profile.dashboard.affiliations.country': 'País',
 	'profile.dashboard.affiliations.status_pending': 'Pendente',
 	'profile.dashboard.affiliations.status_verified': 'Verificada',
 	'profile.dashboard.affiliations.title': 'Afiliações',
