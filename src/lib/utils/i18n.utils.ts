@@ -13,10 +13,11 @@ import { zhHansMessages } from '$lib/constants/messages/zh-Hans';
 import { nonNullish } from '@dfinity/utils';
 
 /**
- * Catalogs we ship today. A `soon` locale may either be absent here (no
- * catalog at all) or present with a *partial* catalog that defines only
- * the keys where it diverges from its fallback (e.g. `pt-BR` carries a
- * handful of landing keys over `pt`). Either way, `t()` resolves any
+ * Catalogs we ship today. A `soon` locale may be absent here (no catalog
+ * at all), present with a *partial* catalog that defines only the keys
+ * where it diverges from its fallback (e.g. the `es-419` landing deltas),
+ * or present with a *full* catalog (e.g. `pt-BR`, which today mirrors the
+ * Brazilian-voiced `pt` strings verbatim). In every case `t()` resolves any
  * missing key through the locale's fallback chain to a populated locale,
  * ending at `en`.
  */
