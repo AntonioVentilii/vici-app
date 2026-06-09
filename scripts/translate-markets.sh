@@ -111,7 +111,7 @@ while IFS=$'\t' read -r title locale data_candid; do
 	[[ -z "$title" || -z "$locale" ]] && continue
 	sid="${SID_BY_TITLE["$title"]:-}"
 	if [[ -z "$sid" ]]; then
-		echo "  SKIP (not on registry): $title"
+		echo "  SKIP (not on registry): [$locale] $title"
 		MISSING=$((MISSING + 1))
 		continue
 	fi
@@ -134,7 +134,7 @@ done < <(jq -r '
 	.[]
 	| .title as $mt
 	| (.translations // {}) | to_entries[]
-	| select((.value.title // "") != "")
+	| select((.value.title // "") | test("\\S"))
 	| [
 		$mt,
 		.key,
@@ -150,6 +150,6 @@ done < <(jq -r '
 	| join("	")
 ' "$MARKETS_FILE")
 
-echo "Done. Translated $TRANSLATED; failed $FAILED; $MISSING deck row(s) had no matching registry series."
+echo "Done. Translated $TRANSLATED; failed $FAILED; $MISSING translation(s) had no matching registry series."
 [[ "$FAILED" -gt 0 ]] && exit 1
 exit 0
