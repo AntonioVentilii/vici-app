@@ -1,4 +1,4 @@
-import { SUPPORT_EMAIL } from '$lib/constants/contact.constants';
+import { INFO_EMAIL } from '$lib/constants/contact.constants';
 import type { InfoDoc } from '$lib/types/info-doc';
 
 /**
@@ -142,7 +142,7 @@ export const TERMS: InfoDoc = {
 		{ kind: 'h', text: '18. Contact' },
 		{
 			kind: 'p',
-			text: `Wholesome Capital Limited Unit 2505, 25/F., Billion Plaza, 8 Cheung Yue Street, Lai Chi Kok, Kowloon, Hong Kong Email: ${SUPPORT_EMAIL}`
+			text: `Wholesome Capital Limited Unit 2505, 25/F., Billion Plaza, 8 Cheung Yue Street, Lai Chi Kok, Kowloon, Hong Kong Email: ${INFO_EMAIL}`
 		},
 		{ kind: 'h', text: 'Schedule A — United States' },
 		{
