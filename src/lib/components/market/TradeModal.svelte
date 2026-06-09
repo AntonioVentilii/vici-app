@@ -318,9 +318,11 @@
 		flex-direction: column;
 		width: 100%;
 		max-width: 32rem;
-		max-height: 92vh; /* fallback for engines without `dvh` */
-		max-height: 92dvh;
-		max-height: 92%; /* of the pinned, truly-visible scrim height */
+		/* 92% of the pinned scrim (its `visualViewport`-true visible height). `%`
+		 * resolves against the scrim's definite height, so no `dvh`/`vh` cap is
+		 * needed — and a `dvh` cap would be wrong on iOS Chrome. The ≥768px media
+		 * query overrides this with a centred-modal `dvh` cap. */
+		max-height: 92%;
 		padding: 0.5rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
 		overflow-y: auto;
 		background: var(--bg-popover);

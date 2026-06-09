@@ -407,16 +407,15 @@
 	}
 
 	.avatar-editor {
-		/* Bottom sheet that fills at most 90% of the (pinned) scrim height, so the
-		 * header + footer stay pinned and the option grid scrolls within. `90%`
-		 * tracks the scrim's true visible height; `90dvh`/`90vh` are the
-		 * fallbacks for engines without `visualViewport`. The scrim docks it at
-		 * the visible bottom (`flex-end`); `position: relative` anchors the
-		 * discard-confirm overlay below. */
+		/* Bottom sheet that fills at most 90% of the scrim, so the header + footer
+		 * stay pinned and the option grid scrolls within. `%` resolves against the
+		 * scrim's definite height (the inline `visualViewport` pin or the `100dvh`
+		 * / `100vh` CSS fallback), so no `dvh`/`vh` cap is needed — and a `dvh`
+		 * cap would be wrong on iOS Chrome. The scrim docks it at the visible
+		 * bottom (`flex-end`); `position: relative` anchors the discard-confirm
+		 * overlay below. */
 		position: relative;
 		width: 100%;
-		max-height: 90vh; /* fallback for engines without `dvh` */
-		max-height: 90dvh;
 		max-height: 90%;
 		display: flex;
 		flex-direction: column;
