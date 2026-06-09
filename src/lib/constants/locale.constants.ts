@@ -1,22 +1,359 @@
-export type AppLocale = 'en' | 'it' | 'es' | 'de' | 'fr' | 'pt' | 'zh-CN';
+export type AppLocale =
+	| 'en'
+	| 'es'
+	| 'es-419'
+	| 'es-MX'
+	| 'es-AR'
+	| 'es-CO'
+	| 'pt'
+	| 'pt-BR'
+	| 'it'
+	| 'fr'
+	| 'de'
+	| 'nl'
+	| 'pl'
+	| 'cs'
+	| 'sk'
+	| 'ru'
+	| 'zh-Hans'
+	| 'ja'
+	| 'ko'
+	| 'hi'
+	| 'vi';
 
 export const DEFAULT_LOCALE: AppLocale = 'en';
 
-// TODO: Pending additional locales to support: pt-BR, nl, pl, cs, sk, ru,
-// zh-Hans, ja, ko, hi, vi. The existing `zh-CN` entry corresponds to `zh-Hans`;
-// reconcile the naming when these are added.
+/**
+ * Launch readiness for a locale.
+ *
+ * - `live` — the catalog is populated and kept fully aligned to `en`
+ *   (enforced by `check:i18n`).
+ * - `soon` — registered for fallback resolution and the picker (browser
+ *   auto-detect targets only `live` locales), but the catalog is
+ *   absent or only partial. Missing keys resolve through the `fallback`
+ *   chain to `en`, so the UI always renders real copy — never a raw key.
+ */
+export type LocaleTier = 'live' | 'soon';
+
+/**
+ * A registered locale (BCP-47: `language[-Script][-REGION]`).
+ *
+ * One language splits into a neutral base plus regional variants. The base
+ * carries the language's shared copy and backs its regional deltas; it is
+ * marked `hidden` so it is not offered as a standalone region choice. Each
+ * variant declares an ordered `fallback` chain that `t()` walks on a missing
+ * key, always ending at `en`.
+ *
+ * `region` and `regionLabel` describe the geographic facet so a
+ * future region-aware picker can group variants under their language; the
+ * current flat picker reads `id`, `label` and `short` only.
+ */
+export interface LocaleEntry {
+	/** BCP-47 locale id and the value persisted in storage. */
+	readonly id: AppLocale;
+	/** Native language name, as shown to a speaker of that language. */
+	readonly label: string;
+	/** English name of the locale, for operator-facing surfaces. */
+	readonly name: string;
+	/** Short badge used by the picker rows (e.g. `EN`, `MX`). */
+	readonly short: string;
+	/** ISO-ish region code (`US`, `MX`, `419`, …). */
+	readonly region: string;
+	/** Native region label shown in the picker (`México`, `中国大陆`, …). */
+	readonly regionLabel: string;
+	/**
+	 * Show the world/globe icon instead of a country flag — for supra-national
+	 * rows (e.g. `en` Global, `es-419` Latin America). Country rows render the
+	 * SVG flag for their `region` via the shared CountryFlag component.
+	 */
+	readonly worldFlag?: boolean;
+	/** Ordered resolution chain walked on a missing key, ending at `en`. */
+	readonly fallback: readonly AppLocale[];
+	/** Neutral base dictionary for a language; backs its regional deltas. */
+	readonly base?: boolean;
+	/** Not offered as a standalone choice in the picker (base dictionaries). */
+	readonly hidden?: boolean;
+	/** Launch readiness — drives `check:i18n` strictness. */
+	readonly tier: LocaleTier;
+}
+
+/**
+ * The single source of truth for every locale the app knows about. Detection,
+ * fallback resolution and the catalog checker all derive from this list.
+ *
+ * Today's fully-translated locales (`en`, `it`, `es`, `de`, `fr`, `pt`,
+ * `zh-Hans`) are `live`; the rest are `soon` and resolve to English through
+ * their `fallback` chain until their catalogs land.
+ */
+export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
+	{
+		id: 'en',
+		label: 'English',
+		name: 'English',
+		short: 'EN',
+		region: 'US',
+		regionLabel: 'Global',
+		worldFlag: true,
+		fallback: [],
+		tier: 'live'
+	},
+
+	// Spanish — a hidden neutral base plus regional deltas. `es-419` is the
+	// Latin-American tier most LatAm variants fall back to.
+	{
+		id: 'es',
+		label: 'Español',
+		name: 'Spanish',
+		short: 'ES',
+		region: 'ES',
+		regionLabel: 'Español',
+		fallback: ['en'],
+		base: true,
+		hidden: true,
+		tier: 'live'
+	},
+	{
+		id: 'es-419',
+		label: 'Español',
+		name: 'Spanish (Latin America)',
+		short: '419',
+		region: '419',
+		regionLabel: 'Latinoamérica',
+		worldFlag: true,
+		fallback: ['es', 'en'],
+		tier: 'soon'
+	},
+	{
+		id: 'es-MX',
+		label: 'Español',
+		name: 'Spanish (Mexico)',
+		short: 'MX',
+		region: 'MX',
+		regionLabel: 'México',
+		fallback: ['es-419', 'es', 'en'],
+		tier: 'soon'
+	},
+	{
+		id: 'es-AR',
+		label: 'Español',
+		name: 'Spanish (Argentina)',
+		short: 'AR',
+		region: 'AR',
+		regionLabel: 'Argentina',
+		fallback: ['es-419', 'es', 'en'],
+		tier: 'soon'
+	},
+	{
+		id: 'es-CO',
+		label: 'Español',
+		name: 'Spanish (Colombia)',
+		short: 'CO',
+		region: 'CO',
+		regionLabel: 'Colombia',
+		fallback: ['es-419', 'es', 'en'],
+		tier: 'soon'
+	},
+
+	// Portuguese — Portugal is the neutral base, Brazil the populated variant.
+	{
+		id: 'pt',
+		label: 'Português',
+		name: 'Portuguese (Portugal)',
+		short: 'PT',
+		region: 'PT',
+		regionLabel: 'Portugal',
+		fallback: ['en'],
+		base: true,
+		tier: 'live'
+	},
+	{
+		id: 'pt-BR',
+		label: 'Português',
+		name: 'Portuguese (Brazil)',
+		short: 'BR',
+		region: 'BR',
+		regionLabel: 'Brasil',
+		fallback: ['pt', 'en'],
+		tier: 'soon'
+	},
+
+	{
+		id: 'it',
+		label: 'Italiano',
+		name: 'Italian',
+		short: 'IT',
+		region: 'IT',
+		regionLabel: 'Italia',
+		fallback: ['en'],
+		tier: 'live'
+	},
+	{
+		id: 'fr',
+		label: 'Français',
+		name: 'French',
+		short: 'FR',
+		region: 'FR',
+		regionLabel: 'France',
+		fallback: ['en'],
+		tier: 'live'
+	},
+	{
+		id: 'de',
+		label: 'Deutsch',
+		name: 'German',
+		short: 'DE',
+		region: 'DE',
+		regionLabel: 'Deutschland',
+		fallback: ['en'],
+		tier: 'live'
+	},
+	{
+		id: 'nl',
+		label: 'Nederlands',
+		name: 'Dutch',
+		short: 'NL',
+		region: 'NL',
+		regionLabel: 'Nederland',
+		fallback: ['en'],
+		tier: 'soon'
+	},
+	{
+		id: 'pl',
+		label: 'Polski',
+		name: 'Polish',
+		short: 'PL',
+		region: 'PL',
+		regionLabel: 'Polska',
+		fallback: ['en'],
+		tier: 'soon'
+	},
+	{
+		id: 'cs',
+		label: 'Čeština',
+		name: 'Czech',
+		short: 'CS',
+		region: 'CZ',
+		regionLabel: 'Česko',
+		fallback: ['en'],
+		tier: 'soon'
+	},
+	{
+		id: 'sk',
+		label: 'Slovenčina',
+		name: 'Slovak',
+		short: 'SK',
+		region: 'SK',
+		regionLabel: 'Slovensko',
+		fallback: ['en'],
+		tier: 'soon'
+	},
+	{
+		id: 'ru',
+		label: 'Русский',
+		name: 'Russian',
+		short: 'RU',
+		region: 'RU',
+		regionLabel: 'Россия',
+		fallback: ['en'],
+		tier: 'soon'
+	},
+	{
+		id: 'zh-Hans',
+		label: '简体中文',
+		name: 'Chinese (Simplified)',
+		short: 'ZH',
+		region: 'CN',
+		regionLabel: '中国大陆',
+		fallback: ['en'],
+		tier: 'live'
+	},
+	{
+		id: 'ja',
+		label: '日本語',
+		name: 'Japanese',
+		short: 'JA',
+		region: 'JP',
+		regionLabel: '日本',
+		fallback: ['en'],
+		tier: 'soon'
+	},
+	{
+		id: 'ko',
+		label: '한국어',
+		name: 'Korean',
+		short: 'KO',
+		region: 'KR',
+		regionLabel: '대한민국',
+		fallback: ['en'],
+		tier: 'soon'
+	},
+	{
+		id: 'hi',
+		label: 'हिन्दी',
+		name: 'Hindi',
+		short: 'HI',
+		region: 'IN',
+		regionLabel: 'भारत',
+		fallback: ['en'],
+		tier: 'soon'
+	},
+	{
+		id: 'vi',
+		label: 'Tiếng Việt',
+		name: 'Vietnamese',
+		short: 'VI',
+		region: 'VN',
+		regionLabel: 'Việt Nam',
+		fallback: ['en'],
+		tier: 'soon'
+	}
+] as const;
+
+/**
+ * The flat list the current picker UI iterates: every locale with a populated
+ * catalog (`tier: 'live'`). Carries the back-compat `{ id, label, short }`
+ * shape that `LanguageSheet`, `WelcomeNav` and `SettingsPage` read today.
+ *
+ * The `hidden` flag (a language's neutral base) is deliberately ignored here —
+ * it only matters for a future region-aware picker that groups regional
+ * variants under their language. The current flat picker has no region axis,
+ * so every live locale is offered directly.
+ *
+ * `soon` locales are registered in `LOCALE_REGISTRY` for detection and
+ * fallback, but stay out of this list until their catalogs land.
+ */
 export const SUPPORTED_LOCALES: readonly {
 	id: AppLocale;
 	label: string;
 	short: string;
-}[] = [
-	{ id: 'en', label: 'English', short: 'EN' },
-	{ id: 'it', label: 'Italiano', short: 'IT' },
-	{ id: 'es', label: 'Español', short: 'ES' },
-	{ id: 'de', label: 'Deutsch', short: 'DE' },
-	{ id: 'fr', label: 'Français', short: 'FR' },
-	{ id: 'pt', label: 'Português', short: 'PT' },
-	{ id: 'zh-CN', label: '简体中文', short: 'ZH' }
-] as const;
+}[] = LOCALE_REGISTRY.filter(({ tier }) => tier === 'live').map(({ id, label, short }) => ({
+	id,
+	label,
+	short
+}));
+
+/**
+ * Resolve a locale's fallback chain — itself first, then each entry in its
+ * registered `fallback`, always ending at `en`. Used by `t()` to render a
+ * populated locale's key when a `soon` (or partial) locale lacks it.
+ */
+export const localeFallbackChain = (locale: AppLocale): readonly AppLocale[] => {
+	const entry = LOCALE_REGISTRY.find(({ id }) => id === locale);
+	const chain: AppLocale[] = [locale];
+
+	if (entry) {
+		for (const next of entry.fallback) {
+			if (!chain.includes(next)) {
+				chain.push(next);
+			}
+		}
+	}
+
+	if (!chain.includes(DEFAULT_LOCALE)) {
+		chain.push(DEFAULT_LOCALE);
+	}
+
+	return chain;
+};
 
 export const LOCALE_STORAGE_KEY = 'vici.locale.v1';

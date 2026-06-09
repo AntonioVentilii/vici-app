@@ -2,8 +2,9 @@ import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 /**
  * Locale id on the wire. We stay as `j.string()` (not `j.enum([...])`) because
- * one of our supported locales is `zh-CN` and the Juno candid converter doesn't
- * tolerate hyphens in enum variants. The satellite service validates the value
+ * several registered locale ids contain a hyphen (e.g. `zh-Hans`) and the
+ * Juno candid converter doesn't tolerate hyphens in enum variants. The
+ * satellite service validates the value
  * against `SUPPORTED_LOCALES` from
  * [src/lib/constants/locale.constants.ts](src/lib/constants/locale.constants.ts)
  * at write time.

@@ -353,7 +353,7 @@ const LANDING_STATUS_UNIVERSITIES_BY_LANG: Record<string, readonly string[]> = {
 
 /**
  * The visitor's market-matched universities for a locale: full tag first (so a
- * region-specific list like `zh-CN` or `pt-BR` wins when present), then the base
+ * region-specific list like `zh-Hans` or `pt-BR` wins when present), then the base
  * language, then the `en` fallback.
  */
 export const landingStatusUniversities = (locale: string): readonly string[] =>
