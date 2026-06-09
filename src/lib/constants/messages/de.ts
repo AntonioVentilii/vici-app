@@ -1161,31 +1161,6 @@ export const deMessages = {
 	'info.doc.resolution-rules.b9': 'Sonderfälle',
 	'info.doc.resolution-rules.eyebrow': 'Rechtliches · Das vollständige Verfahren',
 	'info.doc.resolution-rules.title': 'Auflösungsregeln',
-	'info.doc.terms.b0':
-		'Mit der Nutzung von VICI stimmst du den folgenden Bedingungen zu. Sie sind in einfacher Sprache verfasst. Die rechtsverbindliche Fassung ist die, die du gerade liest.',
-	'info.doc.terms.b1': '1. Der Dienst',
-	'info.doc.terms.b10':
-		'Keine Automatisierung. Keine koordinierte Abstimmung. Keine Identitätsvortäuschung. Keine nach geltendem Recht verbotenen Inhalte.',
-	'info.doc.terms.b11': '6. Kündigung',
-	'info.doc.terms.b12':
-		'Du kannst dein Konto jederzeit in den Einstellungen löschen. Wir können ein Konto sperren, das gegen diese Bedingungen verstößt. Wir nennen dir den Grund.',
-	'info.doc.terms.b13': '7. Änderungen',
-	'info.doc.terms.b14':
-		'Wesentliche Änderungen werden mindestens sieben Tage vor ihrem Inkrafttreten in der App angekündigt. Die fortgesetzte Nutzung nach diesem Datum gilt als Zustimmung.',
-	'info.doc.terms.b2':
-		'VICI ist eine kostenlose Prognose-App. Wir stellen Märkte bereit, die über öffentliche Quellen aufgelöst werden. Wir ermöglichen keinerlei Geldwetten.',
-	'info.doc.terms.b3': '2. Dein Konto',
-	'info.doc.terms.b4':
-		'Du verpflichtest dich, korrekte Angaben zu machen und nur ein Konto zu nutzen. Mehrfachkonten, die zur Manipulation von Ranglisten oder Battles angelegt werden, werden ohne Vorankündigung entfernt.',
-	'info.doc.terms.b5': '3. Deine Prognosen',
-	'info.doc.terms.b6':
-		'Du behältst das Eigentum an deiner Kontohistorie. Wir behalten uns das Recht vor, daraus abgeleitete aggregierte und anonymisierte Statistiken anzuzeigen.',
-	'info.doc.terms.b7': '4. VXP',
-	'info.doc.terms.b8':
-		'VXP ist ein In-App-Guthaben ohne Geldwert. Es kann nicht eingelöst, außerhalb der App übertragen oder in Währung umgetauscht werden.',
-	'info.doc.terms.b9': '5. Akzeptables Verhalten',
-	'info.doc.terms.eyebrow': 'Rechtliches · Gültig ab 1. Mai 2026',
-	'info.doc.terms.title': 'Nutzungsbedingungen',
 	'info.not_found.body':
 		'Zu dieser Adresse passt kein Dokument. Versuche einen anderen Link im Footer oder kehre zur Startseite zurück.',
 	'info.not_found.title': 'Dokument nicht gefunden',
