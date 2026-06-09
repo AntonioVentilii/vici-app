@@ -381,7 +381,9 @@
 
 <!-- No titled page header: the accuracy hero is the dashboard masthead, so the
      content leads directly with the performance zone (the streak shows inline
-     inside the hero). -->
+     inside the hero). The page heading is kept for assistive tech only, so the
+     document outline still has a top-level h1 without a visible title. -->
+<h1 class="sr-only">{t({ locale: $localeStore, key: 'dash.title' })}</h1>
 {#if resolvedPosNotInit && callsPlaced > 0}
 	<!-- LOADING · trade-history not yet initialized — gating on `settledTotal`
 		     here would misroute a returning user to Day-1. Render nothing until
@@ -446,3 +448,17 @@
 {#if revealOpen}
 	<ResolutionReveal data={revealSnapshot} onDismiss={onRevealDismiss} onReview={onRevealReview} />
 {/if}
+
+<style lang="postcss">
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+</style>
