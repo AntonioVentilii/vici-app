@@ -8,7 +8,7 @@
 	 * rest of the landing surface.
 	 */
 	import { ChevronDown } from '@lucide/svelte/icons';
-	import { SUPPORT_EMAIL } from '$lib/constants/contact.constants';
+	import { INFO_EMAIL } from '$lib/constants/contact.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -103,8 +103,8 @@
 			class="dim t-body-sm"
 		>
 			{t({ locale: $localeStore, key: 'welcome.faq.contact_prefix' })}
-			<a style="color:var(--accent); font-weight:600;" href="mailto:{SUPPORT_EMAIL}">
-				{SUPPORT_EMAIL}
+			<a style="color:var(--accent); font-weight:600;" href="mailto:{INFO_EMAIL}">
+				{INFO_EMAIL}
 			</a>
 			{t({ locale: $localeStore, key: 'welcome.faq.contact_suffix' })}
 		</p>

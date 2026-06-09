@@ -7,7 +7,7 @@
 	 */
 	import Logo from '$lib/components/layout/Logo.svelte';
 	import { LATIN_MOTTO_LEAD, LATIN_MOTTO_TAIL } from '$lib/constants/brand.constants';
-	import { SUPPORT_EMAIL } from '$lib/constants/contact.constants';
+	import { INFO_EMAIL } from '$lib/constants/contact.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -38,7 +38,7 @@
 			links: [
 				{ label: 'footer.faq', href: '#faq' },
 				{ label: 'footer.trust', href: '#trust' },
-				{ label: 'footer.contact', href: `mailto:${SUPPORT_EMAIL}` }
+				{ label: 'footer.contact', href: `mailto:${INFO_EMAIL}` }
 			]
 		},
 		{
