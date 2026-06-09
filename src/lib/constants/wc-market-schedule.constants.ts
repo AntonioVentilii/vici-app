@@ -792,12 +792,23 @@ export const normalizeWcQuestion = (question: string): string =>
  * Show Date)` lookup from {@link WC_MARKET_SCHEDULE}. A question listed under
  * more than one date resolves to its earliest release, so a market is never
  * held back past the first day it was scheduled to appear.
+ *
+ * The **first** scheduled day is seeded as always-on (reveal `0`) so the WC
+ * feed is never empty before the calendar formally begins — the opening set
+ * is live the moment this ships, and every later set still unlocks at 00:00
+ * UTC of its own Show Date. Once the opening day is in the past this clamp is
+ * a no-op (its real timestamp would already be revealed), so it only bridges
+ * the pre-launch gap and never leaks a future day into the current one.
  */
 const buildRevealMap = (): ReadonlyMap<string, number> => {
 	const map = new Map<string, number>();
 
+	// Object key order is insertion order: the calendar is authored
+	// chronologically, so the first date is the opening set we seed as live.
+	const [openingDate] = Object.keys(WC_MARKET_SCHEDULE);
+
 	for (const [showDate, questions] of Object.entries(WC_MARKET_SCHEDULE)) {
-		const revealMs = Date.parse(`${showDate}T00:00:00.000Z`);
+		const revealMs = showDate === openingDate ? 0 : Date.parse(`${showDate}T00:00:00.000Z`);
 
 		for (const question of questions) {
 			const key = normalizeWcQuestion(question);
