@@ -5,6 +5,7 @@ import { esMessages } from '$lib/constants/messages/es';
 import { frMessages } from '$lib/constants/messages/fr';
 import { itMessages } from '$lib/constants/messages/it';
 import { ptMessages } from '$lib/constants/messages/pt';
+import { ptBRMessages } from '$lib/constants/messages/pt-BR';
 import { zhHansMessages } from '$lib/constants/messages/zh-Hans';
 import { nonNullish } from '@dfinity/utils';
 
@@ -20,6 +21,7 @@ const catalogs: Partial<Record<AppLocale, Record<string, string>>> = {
 	de: deMessages,
 	fr: frMessages,
 	pt: ptMessages,
+	'pt-BR': ptBRMessages,
 	'zh-Hans': zhHansMessages
 };
 
