@@ -843,10 +843,10 @@ export const suggestedScore = ({
 
 /**
  * Score multiplier applied to the Flow markets tied to the team the user
- * picked during onboarding — "40% more chance" to surface the user's
+ * picked during onboarding — "60% more chance" to surface the user's
  * country in the World Cup deck. See `rankMarkets`.
  */
-export const FAVORITE_COUNTRY_BOOST = 1.4;
+export const FAVORITE_COUNTRY_BOOST = 1.6;
 
 /**
  * Ranks markets by editorial signal first (admin-flipped `suggested`,
@@ -921,7 +921,7 @@ export const rankMarkets = ({
 
 		const score = suggested + interestScore + cultureScore + recencyScore;
 
-		// Lift the markets tied to the user's picked team by a flat 40%
+		// Lift the markets tied to the user's picked team by a flat 60%
 		// so their country trends to the top of the deck. Applied as a
 		// multiplier on the whole score (not an additive tier) so the
 		// boost scales with whatever already ranked the market — a
