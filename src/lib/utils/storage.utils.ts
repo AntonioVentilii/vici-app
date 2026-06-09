@@ -31,3 +31,17 @@ export const get = <T>({ key }: { key: string }): T | undefined => {
 		console.error(err);
 	}
 };
+
+/**
+ * Presence check that never parses the value and stays silent on failure —
+ * cheaper than `get` and, in a "storage blocked" scenario, doesn't add to the
+ * `console.error` noise. Use it when you only need to know whether a key was
+ * ever written, not its value (e.g. first-visit vs. returning-visit signals).
+ */
+export const has = ({ key }: { key: string }): boolean => {
+	try {
+		return browser && nonNullish(localStorage.getItem(key));
+	} catch (_err: unknown) {
+		return false;
+	}
+};
