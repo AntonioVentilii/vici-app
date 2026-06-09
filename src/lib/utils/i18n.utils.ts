@@ -8,13 +8,18 @@ import { esMxMessages } from '$lib/constants/messages/es-MX';
 import { frMessages } from '$lib/constants/messages/fr';
 import { itMessages } from '$lib/constants/messages/it';
 import { ptMessages } from '$lib/constants/messages/pt';
+import { ptBRMessages } from '$lib/constants/messages/pt-BR';
 import { zhHansMessages } from '$lib/constants/messages/zh-Hans';
 import { nonNullish } from '@dfinity/utils';
 
 /**
- * Catalogs we ship today. A registered locale with no catalog (a `soon`
- * locale) is simply absent here — `t()` resolves it through its fallback
- * chain to a populated locale, ending at `en`.
+ * Catalogs we ship today. A `soon` locale may be absent here (no catalog
+ * at all), present with a *partial* catalog that defines only the keys
+ * where it diverges from its fallback (e.g. the `es-419` landing deltas),
+ * or present with a *full* catalog (e.g. `pt-BR`, which today mirrors the
+ * Brazilian-voiced `pt` strings verbatim). In every case `t()` resolves any
+ * missing key through the locale's fallback chain to a populated locale,
+ * ending at `en`.
  */
 const catalogs: Partial<Record<AppLocale, Record<string, string>>> = {
 	en: enMessages,
@@ -26,6 +31,7 @@ const catalogs: Partial<Record<AppLocale, Record<string, string>>> = {
 	de: deMessages,
 	fr: frMessages,
 	pt: ptMessages,
+	'pt-BR': ptBRMessages,
 	'zh-Hans': zhHansMessages
 };
 
