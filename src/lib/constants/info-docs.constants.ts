@@ -1,8 +1,8 @@
 import {
 	HELLO_EMAIL,
+	INFO_EMAIL,
 	PRIVACY_EMAIL,
-	RESOLUTION_EMAIL,
-	SUPPORT_EMAIL
+	RESOLUTION_EMAIL
 } from '$lib/constants/contact.constants';
 import type { InfoDoc } from '$lib/types/info-doc';
 
@@ -163,7 +163,7 @@ const CONTACT: InfoDoc = {
 	blocks: [
 		{ kind: 'lede', key: 'info.doc.contact.b0' },
 		{ kind: 'h', key: 'info.doc.contact.b1' },
-		{ kind: 'mail', text: SUPPORT_EMAIL },
+		{ kind: 'mail', text: INFO_EMAIL },
 		{ kind: 'h', key: 'info.doc.contact.b3' },
 		{ kind: 'p', key: 'info.doc.contact.b4' },
 		{ kind: 'h', key: 'info.doc.contact.b5' },
