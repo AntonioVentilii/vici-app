@@ -1751,7 +1751,6 @@ export const itMessages = {
 	'outcome.no_won': 'NO ha vinto',
 	'outcome.yes': 'SÌ',
 	'outcome.yes_won': 'SÌ ha vinto',
-	'picker.auto': 'AUTO',
 	'picker.no_match': 'Nessun risultato',
 	'picker.regions': '{n} regioni',
 	'picker.search': 'Cerca lingua',

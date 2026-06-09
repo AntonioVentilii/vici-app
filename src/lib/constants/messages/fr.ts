@@ -1762,7 +1762,6 @@ export const frMessages = {
 	'outcome.no_won': 'NO a gagné',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES a gagné',
-	'picker.auto': 'AUTO',
 	'picker.no_match': 'Aucun résultat',
 	'picker.regions': '{n} régions',
 	'picker.search': 'Rechercher une langue',

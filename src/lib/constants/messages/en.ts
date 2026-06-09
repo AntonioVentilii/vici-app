@@ -1746,7 +1746,6 @@ export const enMessages = {
 	'outcome.no_won': 'NO won',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES won',
-	'picker.auto': 'AUTO',
 	'picker.no_match': 'No match',
 	'picker.regions': '{n} regions',
 	'picker.search': 'Search language',

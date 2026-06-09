@@ -1751,7 +1751,6 @@ export const ptBRMessages = {
 	'outcome.no_won': 'NO venceu',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES venceu',
-	'picker.auto': 'AUTO',
 	'picker.no_match': 'Sem resultados',
 	'picker.regions': '{n} regiões',
 	'picker.search': 'Pesquisar idioma',
