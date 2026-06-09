@@ -426,6 +426,9 @@
 							<Globe aria-hidden="true" />
 						</button>
 					</div>
+					<a class="lp-signin-top" href={PublicPath.SignIn}>
+						{t({ locale: $localeStore, key: 'nav.signin' })}
+					</a>
 					<button
 						class="btn btn-primary lp-cta"
 						onclick={() => goto(PublicPath.SignUp)}

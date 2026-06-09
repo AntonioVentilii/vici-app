@@ -1660,8 +1660,6 @@ export const zhHansMessages = {
 	'onboarding.beat3.tos.tail': '基于公开数据进行结算。',
 	'onboarding.beat3.tos.terms': '条款',
 	'onboarding.step_of': '· 第 {current} / {total} 节',
-	'onboarding.switch.prefix': '已是会员?',
-	'onboarding.switch.signin': '登录',
 	'outcome.canceled': '已取消',
 	'outcome.final_no': 'FINAL NO',
 	'outcome.final_yes': 'FINAL YES',
