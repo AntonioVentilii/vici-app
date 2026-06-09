@@ -2121,7 +2121,6 @@ export const esMessages = {
 	'arena.tabs.battles': 'Combates',
 	'arena.tabs.friends': 'Amigos',
 	'arena.tabs.leagues': 'Ligas',
-	'arena.title': 'Arena',
 	'arena.boundary.title': 'No se pudo cargar esta pestaña',
 	'arena.boundary.body':
 		'Algo salió mal al mostrar esta sección. Prueba con otra pestaña o vuelve a abrir Arena.',

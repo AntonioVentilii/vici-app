@@ -2134,7 +2134,6 @@ export const deMessages = {
 	'arena.tabs.battles': 'Battles',
 	'arena.tabs.friends': 'Freunde',
 	'arena.tabs.leagues': 'Ligen',
-	'arena.title': 'Arena',
 	'arena.boundary.title': 'Dieser Tab konnte nicht geladen werden',
 	'arena.boundary.body':
 		'Beim Anzeigen dieses Abschnitts ist ein Fehler aufgetreten. Versuche einen anderen Tab oder öffne die Arena erneut.',

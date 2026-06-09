@@ -96,6 +96,14 @@
 		onClose();
 	};
 
+	// Backdrop close: only when the tap lands on the scrim itself, never when it
+	// bubbles up from the editor chrome docked inside it.
+	const onScrimClick = (event: MouseEvent) => {
+		if (event.target === event.currentTarget) {
+			requestClose();
+		}
+	};
+
 	const discardAndClose = () => {
 		haptic('soft-tick');
 		confirmClose = false;
@@ -192,146 +200,151 @@
 	});
 </script>
 
-<!-- Scrim: a tap on the backdrop runs the same close guard as the ✕ so it
-     never silently drops unsaved edits. -->
+<!-- Scrim: a full-viewport flex column (`100dvh`, `justify-content: flex-end`)
+     that docks the editor at the *visible* bottom — on iOS the layout viewport
+     a fixed `bottom: 0` resolves against is the large viewport (toolbars
+     retracted), so a bottom-anchored footer lands behind the bottom toolbar and
+     gets clipped (#670). `100dvh` tracks the currently-visible height instead.
+     A tap on the backdrop runs the same close guard as the ✕ so it never
+     silently drops unsaved edits. -->
 <div
 	class="avatar-editor-scrim"
-	aria-hidden="true"
-	onclick={requestClose}
+	aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
+	onclick={onScrimClick}
 	role="presentation"
-></div>
-
-<div
-	class="avatar-editor"
-	aria-label={t({ locale: $localeStore, key: 'profile.avatar.title' })}
-	aria-modal="true"
-	role="dialog"
-	tabindex="-1"
 >
-	<!-- Header -->
-	<div class="avatar-editor-head">
-		<div class="avatar-editor-head-text">
-			<h2 class="avatar-editor-title">
-				{t({ locale: $localeStore, key: 'profile.avatar.title' })}
-			</h2>
-			<span class="avatar-editor-sub"
-				>{t({ locale: $localeStore, key: 'profile.avatar.subtitle' })}</span
-			>
-		</div>
-		<button
-			class="avatar-editor-close"
-			aria-label={t({ locale: $localeStore, key: 'profile.avatar.discard' })}
-			onclick={requestClose}
-			type="button"
-		>
-			<X aria-hidden="true" size={16} strokeWidth={2} />
-		</button>
-	</div>
-
-	<!-- Live hero -->
-	<div class="avatar-editor-hero">
-		<span class="avatar-editor-hero-art" aria-hidden="true">
-			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-			{@html heroSvg}
-		</span>
-		<span class="avatar-editor-caption">{caption}</span>
-	</div>
-
-	<!-- Tabs -->
-	<div class="avatar-editor-tabs" role="tablist">
-		{#each TABS as tab (tab.id)}
+	<div
+		class="avatar-editor"
+		aria-label={t({ locale: $localeStore, key: 'profile.avatar.title' })}
+		aria-modal="true"
+		role="dialog"
+		tabindex="-1"
+	>
+		<!-- Header -->
+		<div class="avatar-editor-head">
+			<div class="avatar-editor-head-text">
+				<h2 class="avatar-editor-title">
+					{t({ locale: $localeStore, key: 'profile.avatar.title' })}
+				</h2>
+				<span class="avatar-editor-sub"
+					>{t({ locale: $localeStore, key: 'profile.avatar.subtitle' })}</span
+				>
+			</div>
 			<button
-				class="avatar-editor-tab"
-				class:is-active={activeTab === tab.id}
-				aria-selected={activeTab === tab.id}
-				onclick={() => {
-					haptic('soft-tick');
-					activeTab = tab.id;
-				}}
-				role="tab"
+				class="avatar-editor-close"
+				aria-label={t({ locale: $localeStore, key: 'profile.avatar.discard' })}
+				onclick={requestClose}
 				type="button"
 			>
-				{t({ locale: $localeStore, key: tab.key })}
+				<X aria-hidden="true" size={16} strokeWidth={2} />
 			</button>
-		{/each}
-	</div>
+		</div>
 
-	<!-- Option grid -->
-	<div class="avatar-editor-body">
-		{#if activeTab === 'hair'}
-			<p class="avatar-editor-group-label">
-				{t({ locale: $localeStore, key: 'profile.avatar.group.colour' })}
-			</p>
-			<div class="avatar-editor-grid">
-				{#each AVATAR_PARTS.hair as value (value)}
-					{@render tile({ part: 'hair', value })}
-				{/each}
-			</div>
-			<p class="avatar-editor-group-label avatar-editor-group-label-second">
-				{t({ locale: $localeStore, key: 'profile.avatar.group.style' })}
-			</p>
-			<div class="avatar-editor-grid">
-				{#each AVATAR_PARTS.hairStyle as value (value)}
-					{@render tile({ part: 'hairStyle', value })}
-				{/each}
-			</div>
-		{:else}
-			<div class="avatar-editor-grid" class:is-wide={activeTab === 'bg'}>
-				{#each AVATAR_PARTS[activeTab] as value (value)}
-					{@render tile({ part: activeTab, value })}
-				{/each}
-			</div>
-		{/if}
-	</div>
+		<!-- Live hero -->
+		<div class="avatar-editor-hero">
+			<span class="avatar-editor-hero-art" aria-hidden="true">
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				{@html heroSvg}
+			</span>
+			<span class="avatar-editor-caption">{caption}</span>
+		</div>
 
-	<!-- Sticky footer -->
-	<div class="avatar-editor-foot">
-		<button class="avatar-editor-surprise" onclick={surpriseMe} type="button">
-			<Shuffle aria-hidden="true" size={16} strokeWidth={1.8} />
-			{t({ locale: $localeStore, key: 'profile.avatar.surprise' })}
-		</button>
-		<button class="avatar-editor-done" disabled={saving} onclick={done} type="button">
-			{t({ locale: $localeStore, key: 'profile.avatar.done' })}
-		</button>
-	</div>
+		<!-- Tabs -->
+		<div class="avatar-editor-tabs" role="tablist">
+			{#each TABS as tab (tab.id)}
+				<button
+					class="avatar-editor-tab"
+					class:is-active={activeTab === tab.id}
+					aria-selected={activeTab === tab.id}
+					onclick={() => {
+						haptic('soft-tick');
+						activeTab = tab.id;
+					}}
+					role="tab"
+					type="button"
+				>
+					{t({ locale: $localeStore, key: tab.key })}
+				</button>
+			{/each}
+		</div>
 
-	<!-- Unsaved-changes guard — fires when a close gesture lands with pending
+		<!-- Option grid -->
+		<div class="avatar-editor-body">
+			{#if activeTab === 'hair'}
+				<p class="avatar-editor-group-label">
+					{t({ locale: $localeStore, key: 'profile.avatar.group.colour' })}
+				</p>
+				<div class="avatar-editor-grid">
+					{#each AVATAR_PARTS.hair as value (value)}
+						{@render tile({ part: 'hair', value })}
+					{/each}
+				</div>
+				<p class="avatar-editor-group-label avatar-editor-group-label-second">
+					{t({ locale: $localeStore, key: 'profile.avatar.group.style' })}
+				</p>
+				<div class="avatar-editor-grid">
+					{#each AVATAR_PARTS.hairStyle as value (value)}
+						{@render tile({ part: 'hairStyle', value })}
+					{/each}
+				</div>
+			{:else}
+				<div class="avatar-editor-grid" class:is-wide={activeTab === 'bg'}>
+					{#each AVATAR_PARTS[activeTab] as value (value)}
+						{@render tile({ part: activeTab, value })}
+					{/each}
+				</div>
+			{/if}
+		</div>
+
+		<!-- Sticky footer -->
+		<div class="avatar-editor-foot">
+			<button class="avatar-editor-surprise" onclick={surpriseMe} type="button">
+				<Shuffle aria-hidden="true" size={16} strokeWidth={1.8} />
+				{t({ locale: $localeStore, key: 'profile.avatar.surprise' })}
+			</button>
+			<button class="avatar-editor-done" disabled={saving} onclick={done} type="button">
+				{t({ locale: $localeStore, key: 'profile.avatar.done' })}
+			</button>
+		</div>
+
+		<!-- Unsaved-changes guard — fires when a close gesture lands with pending
 	     edits, so the natural "I'm done" tap never drops the user's work. -->
-	{#if confirmClose}
-		<!-- Dimmed overlay — a tap dismisses just the confirm sheet (back to
+		{#if confirmClose}
+			<!-- Dimmed overlay — a tap dismisses just the confirm sheet (back to
 		     editing), mirroring the editor's own backdrop. -->
-		<div
-			class="avatar-editor-confirm-scrim"
-			aria-hidden="true"
-			onclick={() => (confirmClose = false)}
-			role="presentation"
-		></div>
-		<!-- An `alertdialog` (not a second `dialog`): the editor itself is already
+			<div
+				class="avatar-editor-confirm-scrim"
+				aria-hidden="true"
+				onclick={() => (confirmClose = false)}
+				role="presentation"
+			></div>
+			<!-- An `alertdialog` (not a second `dialog`): the editor itself is already
 		     the modal surface, and nesting a second `aria-modal` dialog inside it
 		     is invalid and confuses AT/focus. `aria-labelledby`/`-describedby`
 		     point at its own heading + body. -->
-		<div
-			class="avatar-editor-confirm-sheet"
-			aria-describedby="avatar-editor-confirm-sub"
-			aria-labelledby="avatar-editor-confirm-title"
-			role="alertdialog"
-		>
-			<h3 id="avatar-editor-confirm-title" class="avatar-editor-confirm-title">
-				{t({ locale: $localeStore, key: 'profile.avatar.discard_title' })}
-			</h3>
-			<p id="avatar-editor-confirm-sub" class="avatar-editor-confirm-sub">
-				{t({ locale: $localeStore, key: 'profile.avatar.discard_sub' })}
-			</p>
-			<div class="avatar-editor-confirm-row">
-				<button class="avatar-editor-confirm-discard" onclick={discardAndClose} type="button">
-					{t({ locale: $localeStore, key: 'profile.avatar.discard' })}
-				</button>
-				<button class="avatar-editor-confirm-save" disabled={saving} onclick={done} type="button">
-					{t({ locale: $localeStore, key: 'profile.avatar.save_changes' })}
-				</button>
+			<div
+				class="avatar-editor-confirm-sheet"
+				aria-describedby="avatar-editor-confirm-sub"
+				aria-labelledby="avatar-editor-confirm-title"
+				role="alertdialog"
+			>
+				<h3 id="avatar-editor-confirm-title" class="avatar-editor-confirm-title">
+					{t({ locale: $localeStore, key: 'profile.avatar.discard_title' })}
+				</h3>
+				<p id="avatar-editor-confirm-sub" class="avatar-editor-confirm-sub">
+					{t({ locale: $localeStore, key: 'profile.avatar.discard_sub' })}
+				</p>
+				<div class="avatar-editor-confirm-row">
+					<button class="avatar-editor-confirm-discard" onclick={discardAndClose} type="button">
+						{t({ locale: $localeStore, key: 'profile.avatar.discard' })}
+					</button>
+					<button class="avatar-editor-confirm-save" disabled={saving} onclick={done} type="button">
+						{t({ locale: $localeStore, key: 'profile.avatar.save_changes' })}
+					</button>
+				</div>
 			</div>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>
 
 {#snippet tile({ part, value }: { part: ViciAvatarPartKey; value: string })}
@@ -364,28 +377,39 @@
 		overflow: hidden;
 	}
 
-	/* Dimmed backdrop behind the sheet — a tap runs the close guard. */
+	/* Dimmed backdrop behind the sheet — a tap runs the close guard. It also
+	   docks the editor: a full-viewport flex column sized to the *dynamic*
+	   viewport (`dvh`), not `inset: 0`. On iOS the layout viewport a fixed
+	   `inset: 0` / `bottom: 0` resolves against is the *large* viewport
+	   (toolbars retracted), so the bottom-anchored footer lands behind the
+	   bottom toolbar and gets clipped (#670). `100dvh` + `flex-end` dock the
+	   sheet at the currently-visible bottom instead. */
 	.avatar-editor-scrim {
 		position: fixed;
-		inset: 0;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 100vh; /* fallback for engines without `dvh` */
+		height: 100dvh;
 		z-index: 119;
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		align-items: center;
 		background: rgba(14, 13, 11, 0.55);
 		-webkit-backdrop-filter: blur(2px);
 		backdrop-filter: blur(2px);
 	}
 
 	.avatar-editor {
-		position: fixed;
 		/* Bottom sheet capped at 90% of the *dynamic* viewport (`dvh`), so the
 		 * header + footer stay pinned and the option grid scrolls within. The
-		 * `dvh` cap tracks iOS's visible height (toolbars in/out) so the sticky
-		 * footer (the Done button) never lands behind the bottom toolbar. */
-		left: 0;
-		right: 0;
-		bottom: 0;
+		 * scrim docks it at the visible bottom (`flex-end`); `position: relative`
+		 * anchors the discard-confirm overlay below. */
+		position: relative;
+		width: 100%;
 		max-height: 90vh; /* fallback for engines without `dvh` */
 		max-height: 90dvh;
-		z-index: 120;
 		display: flex;
 		flex-direction: column;
 		border-top-left-radius: var(--r-20, 20px);

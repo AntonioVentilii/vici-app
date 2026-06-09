@@ -2114,7 +2114,6 @@ export const itMessages = {
 	'arena.tabs.battles': 'Scontri',
 	'arena.tabs.friends': 'Amici',
 	'arena.tabs.leagues': 'Leghe',
-	'arena.title': 'Arena',
 	'arena.boundary.title': 'Impossibile caricare questa scheda',
 	'arena.boundary.body':
 		"Si è verificato un errore durante la visualizzazione di questa sezione. Prova un'altra scheda o riapri l'Arena.",

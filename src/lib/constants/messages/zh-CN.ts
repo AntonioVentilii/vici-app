@@ -2011,7 +2011,6 @@ export const zhCnMessages = {
 	'arena.tabs.battles': '对决',
 	'arena.tabs.friends': '好友',
 	'arena.tabs.leagues': '联赛',
-	'arena.title': 'Arena',
 	'arena.boundary.title': '无法加载此标签页',
 	'arena.boundary.body': '渲染此版块时出现问题。请尝试其他标签页或重新打开竞技场。',
 	'arena.boundary.retry': '重试',
