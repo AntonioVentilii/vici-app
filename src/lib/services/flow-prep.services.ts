@@ -38,6 +38,16 @@ export interface PrepareFlowOpts {
 	featuredEventTag: string | undefined;
 	signedIn: boolean;
 	exclude?: ReadonlyArray<string>;
+	/**
+	 * Market id to surface as the first card, set when the viewer arrived from
+	 * a shared prediction link (see `consumePinnedFlowMarket`). Pinned ahead of
+	 * the ranked deck and exempt from the featured-event scope and the
+	 * seen-exclude set — a deliberately shared link wins over those soft
+	 * filters. NOT exempt from the prior-call filter: a market the viewer
+	 * already called stays dropped (#595), so a shared link they've already
+	 * predicted on simply shows their normal deck.
+	 */
+	pinnedMarketId?: string;
 }
 
 /**
@@ -53,7 +63,8 @@ export const prepareFlow = async ({
 	domain,
 	featuredEventTag,
 	signedIn,
-	exclude = []
+	exclude = [],
+	pinnedMarketId
 }: PrepareFlowOpts): Promise<PreparedFlow> => {
 	// Tags and full metadata both project the same public
 	// `MARKET_METADATA` collection, so scan it once and derive the tag
@@ -126,12 +137,28 @@ export const prepareFlow = async ({
 		// event-scope fallback above.
 		const filtered = afterExclude.length > 0 ? afterExclude : afterPrior;
 
+		// Surface a shared-link market as the first card, ahead of the ranked
+		// deck. Sourced from the *full* `queue` (pre featured-event scope) so a
+		// shared market outside the live tentpole still pins, and prepended
+		// *before* the slice so a low-ranked market isn't trimmed off the end.
+		// The prior-call filter still wins: a called market is absent from
+		// `queue`'s callable set anyway — guarded explicitly here too — so an
+		// already-predicted shared link falls through to the normal deck.
+		const pinnedMarket = nonNullish(pinnedMarketId)
+			? queue.find((m) => m.id === pinnedMarketId)
+			: undefined;
+		const pinned =
+			nonNullish(pinnedMarket) && !priorCallIds.has(pinnedMarket.id) ? pinnedMarket : undefined;
+		const deck = nonNullish(pinned)
+			? [pinned, ...filtered.filter((m) => m.id !== pinned.id)]
+			: filtered;
+
 		// Slice to the deck cap *before* enrichment so the order-book
 		// fan-out is bounded by `MAX_MARKETS` instead of by the total
 		// number of open series. The ranker doesn't need book data
 		// (see `getFlowQueue`), so the lite list is sufficient to pick
 		// the top-N — we only pay the round-trips for what we display.
-		return filtered.slice(0, MAX_MARKETS);
+		return deck.slice(0, MAX_MARKETS);
 	})();
 	const deckIdsPromise = deckPromise.then((deck) => deck.map((m) => m.id));
 
