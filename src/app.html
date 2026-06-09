@@ -111,6 +111,25 @@
 				} catch (e) {}
 			})();
 
+			// Pre-paint iOS flag. Stamp `data-ios` on <html> so landing CSS can
+			// drop the live backdrop-filter blur on the nav pill: iOS WebKit
+			// (every iOS browser, Chrome included) re-rasterizes a blur pinned
+			// over scrolling content every frame and it flickers. iPadOS reports
+			// as "MacIntel" with a touch screen, so check maxTouchPoints too.
+			(function () {
+				try {
+					var ua = navigator.userAgent || '';
+					var isIOS =
+						/iP(ad|hone|od)/.test(ua) ||
+						(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+					if (isIOS) {
+						document.documentElement.setAttribute('data-ios', '');
+					}
+				} catch (e) {
+					/* non-iOS fallthrough is fine */
+				}
+			})();
+
 			// Flash-free locale boot. Runs before the first paint so
 			// <html lang>, dir, and [data-locale] are correct on the first
 			// frame — the static-host equivalent of SSR locale negotiation.

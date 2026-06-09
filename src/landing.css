@@ -1051,16 +1051,6 @@
 		box-shadow 200ms,
 		max-width 280ms cubic-bezier(0.2, 0.7, 0.2, 1);
 	overflow: hidden;
-	/* iOS WebKit (incl. Chrome on iOS) re-rasterizes a backdrop-filter layer
-	   that lives under a position: sticky ancestor on every scroll frame unless
-	   the element sits on its own stable compositing layer — which reads as the
-	   pill flickering while scrolling the landing page. Pin it to a GPU layer so
-	   the blur backing stays put. The transform goes on the pill, not the sticky
-	   `.lp-nav` (a transformed ancestor would break the sticky positioning). */
-	transform: translateZ(0);
-	-webkit-transform: translateZ(0);
-	backface-visibility: hidden;
-	-webkit-backface-visibility: hidden;
 }
 [data-theme='light'] .lp-pill,
 [data-theme='peach'] .lp-pill {
@@ -1103,6 +1093,43 @@
 [data-theme='peach'] .lp-pill.open {
 	background: rgba(255, 243, 232, 0.97);
 }
+
+/* iOS: drop the live backdrop blur on the nav pill.
+   ----------------------------------------------------------------------------
+   A live `backdrop-filter` that stays pinned in the viewport while the page
+   scrolls behind it must re-blur the moving backdrop every frame. Blink
+   (Android/desktop Chrome) composites that smoothly; iOS WebKit — which every
+   iOS browser including Chrome is built on — re-rasterizes the blur per frame
+   and it reads as a flicker. Layer promotion (translateZ/will-change) can't fix
+   it: the sampled backdrop genuinely changes each frame, so there's nothing
+   stable to cache. The robust fix is to not run a live blur on iOS at all.
+   `data-ios` is stamped on <html> pre-paint in app.html. We keep the frosted
+   blur everywhere it composites cleanly and fall back to a near-opaque surface
+   on iOS — the scrolled/open states are already ~0.92–0.97 alpha, so dropping
+   the blur and going nearly solid is a barely-perceptible change. */
+html[data-ios] .lp-nav .lp-pill {
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+}
+html[data-ios] .lp-nav.is-scrolled .lp-pill {
+	background: rgba(20, 18, 15, 0.98);
+}
+html[data-ios][data-theme='light'] .lp-nav.is-scrolled .lp-pill {
+	background: rgba(242, 236, 220, 0.98);
+}
+html[data-ios][data-theme='peach'] .lp-nav.is-scrolled .lp-pill {
+	background: rgba(250, 224, 204, 0.98);
+}
+html[data-ios] .lp-pill.open {
+	background: rgba(20, 18, 15, 0.99);
+}
+html[data-ios][data-theme='light'] .lp-pill.open {
+	background: rgba(250, 247, 235, 0.99);
+}
+html[data-ios][data-theme='peach'] .lp-pill.open {
+	background: rgba(255, 243, 232, 0.99);
+}
+
 .lp-pill-topline {
 	padding: 8px 8px 8px 20px;
 	display: flex;
