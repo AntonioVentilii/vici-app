@@ -13,7 +13,7 @@ export const esArMessages = {
 	'welcome.hero.cta_note': 'Gratis. Sin tarjeta. Sin vueltas.',
 	'welcome.hero.headline': 'Ese “te lo dije”, ahora con pruebas.',
 	'welcome.hero.hint': 'Deslizá la carta — izquierda no, derecha sí',
-	'welcome.hero.kicker': 'Mundial FIFA 2026 · en vivo',
+	'welcome.hero.kicker': 'Mundial FIFA 2026® · en vivo',
 	'welcome.hero.payoff_cta': 'Registrate ahora',
 	'welcome.hero.sub':
 		'El juego de pronósticos del Mundial, gratis. Armá una liga con tus amigos, palpitá todo el torneo y mirá quién la pega.',
