@@ -2,6 +2,7 @@
 	import { X } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
+	import { pinToVisualViewport } from '$lib/actions/pin-to-visual-viewport';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -184,6 +185,7 @@
 	onclick={onClose}
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
 	role="presentation"
+	use:pinToVisualViewport
 >
 	<div
 		bind:this={sheetEl}
@@ -289,13 +291,16 @@
 
 	.confirm-scrim {
 		position: fixed;
-		/* `100dvh` rather than a fixed `inset: 0`: on iOS the large layout
-		 * viewport that `inset: 0` resolves against pushes the bottom-docked
-		 * panel behind the dynamic bottom toolbar, clipping its CTA. */
+		/* `use:pinToVisualViewport` sizes this to the *actually-visible* region
+		 * (inline `top`/`height` from `window.visualViewport`): on iOS a fixed
+		 * overlay resolves against the large layout viewport and iOS Chrome
+		 * doesn't honour `100dvh`, so the bottom-docked panel lands behind the
+		 * dynamic bottom toolbar and its CTA gets clipped (#670). The
+		 * `100dvh`/`100vh` below is the desktop / no-`visualViewport` fallback. */
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 100vh; /* fallback for engines without `dvh` */
+		height: 100vh; /* fallback for engines without `dvh` / visualViewport */
 		height: 100dvh;
 		z-index: 80;
 		display: flex;
@@ -315,6 +320,7 @@
 		max-width: 32rem;
 		max-height: 92vh; /* fallback for engines without `dvh` */
 		max-height: 92dvh;
+		max-height: 92%; /* of the pinned, truly-visible scrim height */
 		padding: 0.5rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
 		overflow-y: auto;
 		background: var(--bg-popover);
