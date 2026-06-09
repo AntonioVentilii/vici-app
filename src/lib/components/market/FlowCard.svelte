@@ -40,7 +40,8 @@
 		// to a hash-derived bucket when the market has no tags.
 		category?: FlowArtCategory | string;
 		// Optional editorial sub-line ("FOMC · rate-cut call"). When
-		// undefined, FlowCard derives a short fallback from the description.
+		// undefined, FlowCard resolves one from metadata, the curated
+		// WC-market table, or — as a last resort — the market description.
 		subtitle?: string;
 		// When set, the card has already been committed to a side and is
 		// playing the commit-feedback beat before the parent unmounts it.
@@ -247,21 +248,34 @@
 	const showPriorOnFront = $derived(Boolean(priorCall));
 	const whyNowText = $derived(formatWhyNowChip(metadata?.whyNow));
 
+	// The descriptive blurb is only a usable editorial accent when it
+	// carries context distinct from the settlement clause. Markets
+	// historically defaulted `resolution` to `description`, so when the two
+	// are identical the description adds nothing the back card's RESOLVES
+	// YES IF section doesn't already state — surfacing it as an italic
+	// front-card line reads as a snippet, not an accent. Suppress it in
+	// that case; otherwise trim the distinct blurb for the last-resort line.
+	const descriptionSubtitle = $derived.by<string | undefined>(() => {
+		const description = market.description.trim();
+
+		if (description.length === 0 || description === market.resolution.trim()) {
+			return;
+		}
+
+		return description;
+	});
+
 	// Subtitle resolution order:
 	//   1. Explicit `subtitle` prop (parent override)
 	//   2. `metadata.subtitle` from the satellite (admin-curated)
 	//   3. Curated WC-market lookup (`wc-market-subtitles.constants.ts`)
-	//      — fallback for the tentpole markets the deck ships with
-	//   4. undefined → row is hidden
-	//
-	// Neither the descriptive blurb (`market.description`) nor the
-	// settlement clause (`market.resolution`) is used as a fallback here.
-	// They're long, prose-shaped, and belong under RESOLVES YES IF on the
-	// back card (the clause drives `FlowResolutionBlock`). Surfacing either
-	// here as truncated italic ("YES if that date is the hottest daily
-	// maximum tem…") reads as a snippet rather than an editorial accent.
+	//      — the tentpole markets the deck ships with
+	//   4. Description blurb — only when it differs from the settlement
+	//      clause (see `descriptionSubtitle`); a pure resolution echo is
+	//      suppressed so no description-derived line shows
+	//   5. undefined → row is hidden
 	const subtitleText = $derived(
-		subtitle ?? metadata?.subtitle ?? lookupWcMarketSubtitle(market.id)
+		subtitle ?? metadata?.subtitle ?? lookupWcMarketSubtitle(market.id) ?? descriptionSubtitle
 	);
 
 	// Per-card reset: clear flip + latch + drag whenever the market
