@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Check, Shuffle, X } from '@lucide/svelte/icons';
 	import { untrack } from 'svelte';
+	import { pinToVisualViewport } from '$lib/actions/pin-to-visual-viewport';
 	import { saveMyAvatarParts } from '$lib/stores/avatar.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -200,11 +201,12 @@
 	});
 </script>
 
-<!-- Scrim: a full-viewport flex column (`100dvh`, `justify-content: flex-end`)
-     that docks the editor at the *visible* bottom — on iOS the layout viewport
-     a fixed `bottom: 0` resolves against is the large viewport (toolbars
-     retracted), so a bottom-anchored footer lands behind the bottom toolbar and
-     gets clipped (#670). `100dvh` tracks the currently-visible height instead.
+<!-- Scrim: a full-viewport flex column (`justify-content: flex-end`) that docks
+     the editor at the *visible* bottom. `use:pinToVisualViewport` sizes it to
+     the actually-visible region via `window.visualViewport`, because on iOS a
+     fixed overlay resolves against the large layout viewport (toolbars
+     retracted) and iOS Chrome doesn't honour `100dvh` — so a bottom-anchored
+     footer lands behind the bottom toolbar and gets clipped (#670, #673).
      A tap on the backdrop runs the same close guard as the ✕ so it never
      silently drops unsaved edits. -->
 <div
@@ -212,6 +214,7 @@
 	aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
 	onclick={onScrimClick}
 	role="presentation"
+	use:pinToVisualViewport
 >
 	<div
 		class="avatar-editor"
@@ -378,18 +381,20 @@
 	}
 
 	/* Dimmed backdrop behind the sheet — a tap runs the close guard. It also
-	   docks the editor: a full-viewport flex column sized to the *dynamic*
-	   viewport (`dvh`), not `inset: 0`. On iOS the layout viewport a fixed
-	   `inset: 0` / `bottom: 0` resolves against is the *large* viewport
-	   (toolbars retracted), so the bottom-anchored footer lands behind the
-	   bottom toolbar and gets clipped (#670). `100dvh` + `flex-end` dock the
-	   sheet at the currently-visible bottom instead. */
+	   docks the editor: a full-viewport flex column that `use:pinToVisualViewport`
+	   sizes (via inline `top`/`height`) to the *actually-visible* region. On iOS
+	   a fixed `inset: 0` / `bottom: 0` resolves against the *large* layout
+	   viewport (toolbars retracted), so the bottom-anchored footer lands behind
+	   the bottom toolbar and gets clipped (#670); `100dvh` is meant to track the
+	   visible height but iOS Chrome doesn't honour it, so the inline pin is the
+	   real fix. The `100dvh`/`100vh` here is the desktop / no-`visualViewport`
+	   fallback. `flex-end` docks the sheet at the visible bottom. */
 	.avatar-editor-scrim {
 		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 100vh; /* fallback for engines without `dvh` */
+		height: 100vh; /* fallback for engines without `dvh` / visualViewport */
 		height: 100dvh;
 		z-index: 119;
 		display: flex;
@@ -402,14 +407,16 @@
 	}
 
 	.avatar-editor {
-		/* Bottom sheet capped at 90% of the *dynamic* viewport (`dvh`), so the
-		 * header + footer stay pinned and the option grid scrolls within. The
-		 * scrim docks it at the visible bottom (`flex-end`); `position: relative`
-		 * anchors the discard-confirm overlay below. */
+		/* Bottom sheet that fills at most 90% of the scrim, so the header + footer
+		 * stay pinned and the option grid scrolls within. `%` resolves against the
+		 * scrim's definite height (the inline `visualViewport` pin or the `100dvh`
+		 * / `100vh` CSS fallback), so no `dvh`/`vh` cap is needed — and a `dvh`
+		 * cap would be wrong on iOS Chrome. The scrim docks it at the visible
+		 * bottom (`flex-end`); `position: relative` anchors the discard-confirm
+		 * overlay below. */
 		position: relative;
 		width: 100%;
-		max-height: 90vh; /* fallback for engines without `dvh` */
-		max-height: 90dvh;
+		max-height: 90%;
 		display: flex;
 		flex-direction: column;
 		border-top-left-radius: var(--r-20, 20px);

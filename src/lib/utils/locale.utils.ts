@@ -10,11 +10,13 @@ import { nonNullish } from '@dfinity/utils';
  *
  * Matching is two-tier and walks the navigator list in priority order:
  *
- * 1. **Exact tag** (case-insensitive) — a `zh-CN` browser lands on the
- *    `zh-CN` catalog rather than collapsing onto a bare `zh` primary subtag.
- * 2. **Primary subtag** — `de-DE`, `de-AT` and `de` all resolve to `de`, so a
- *    regional variant maps onto its base catalog instead of dropping to
- *    English.
+ * 1. **Exact tag** (case-insensitive) — a browser tag that exactly matches a
+ *    shipped locale wins (e.g. a `zh-Hans` browser → `zh-Hans`).
+ * 2. **Primary subtag** — `pt-BR`, `pt-PT` and `pt` all resolve to `pt`, and
+ *    `de-DE` / `de-AT` / `de` to `de`, so a regional variant maps onto its base
+ *    catalog instead of dropping to English. A region-specific catalog (e.g.
+ *    `pt-BR`) isn't browser-detected while it's `soon` — it's offered in the
+ *    picker, not auto-selected.
  *
  * This is the seed only: once a choice exists in storage it always wins, so
  * detection never overrides an explicit pick.

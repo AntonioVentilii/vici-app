@@ -11,13 +11,16 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Logo from '$lib/components/layout/Logo.svelte';
-	import {
-		LOCALE_STORAGE_KEY,
-		SUPPORTED_LOCALES,
-		type AppLocale
-	} from '$lib/constants/locale.constants';
+	import LocalePicker from '$lib/components/ui/LocalePicker.svelte';
+	import { LOCALE_REGISTRY, type AppLocale } from '$lib/constants/locale.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
-	import { localeStore } from '$lib/stores/locale.store';
+	import {
+		clearLocaleChoice,
+		detectedLocale,
+		localeChoiceExplicit,
+		localeStore,
+		setLocale
+	} from '$lib/stores/locale.store';
 	import { theme } from '$lib/stores/theme.store';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -52,11 +55,42 @@
 	let langOpen = $state(false);
 	let dnavLangOpen = $state(false);
 	let langRef: HTMLDivElement | null = $state(null);
-	let langPopRef: HTMLUListElement | null = $state(null);
+	let langPopRef: HTMLDivElement | null = $state(null);
 	let dnavLangRef: HTMLDivElement | null = $state(null);
 	let langPopPos = $state<{ top: number; right: number } | null>(null);
+	let lpNavEl: HTMLElement | null = $state(null);
 
-	const LOCALES = SUPPORTED_LOCALES;
+	// Region the "Use automatic" reset would fall back to, for its sub-label.
+	const detectedRegionLabel = $derived(
+		LOCALE_REGISTRY.find(({ id }) => id === detectedLocale)?.regionLabel ?? null
+	);
+
+	// What actually scrolls differs by platform: on iOS the landing scrolls
+	// inside the `.lpc` viewport (contained scroll, like the authenticated app
+	// shell — see `html[data-ios] .lpc` in `landing.css`), everywhere else the
+	// window scrolls. Resolve it at mount by walking up to the nearest
+	// scrollable ancestor so frost-on-scroll, scroll-spy and smooth-scroll all
+	// track whichever one is live, with no per-platform branching elsewhere.
+	let scrollRoot: HTMLElement | Window | null = null;
+
+	const findScrollRoot = (el: HTMLElement | null): HTMLElement | Window => {
+		let node: HTMLElement | null = el?.parentElement ?? null;
+
+		while (node) {
+			const oy = getComputedStyle(node).overflowY;
+
+			if (oy === 'auto' || oy === 'scroll') {
+				return node;
+			}
+
+			node = node.parentElement;
+		}
+
+		return window;
+	};
+
+	const scrollTopOf = (root: HTMLElement | Window): number =>
+		root === window ? window.scrollY : (root as HTMLElement).scrollTop;
 
 	onMount(() => {
 		if (typeof document !== 'undefined') {
@@ -66,18 +100,24 @@
 			document.documentElement.setAttribute('data-accent', 'laurel');
 		}
 
+		// Resolve whichever element actually scrolls: the `.lpc` viewport on
+		// iOS (contained scroll) or the window everywhere else.
+		const root = findScrollRoot(lpNavEl);
+		scrollRoot = root;
+
 		// Hysteresis (8px to engage, 4px to release) so iOS momentum/rubber-band
 		// jitter around the threshold can't rapidly toggle the scrolled state and
 		// make the nav background tremble. A small deadband, not a single edge.
 		const onScroll = () => {
-			const y = window.scrollY;
+			const y = scrollTopOf(root);
 			scrolled = scrolled ? y > 4 : y > 8;
 		};
 
 		onScroll();
-		window.addEventListener('scroll', onScroll, { passive: true });
+		root.addEventListener('scroll', onScroll, { passive: true });
 
-		// Scroll spy
+		// Scroll spy — observe against the live scroll root so it still fires
+		// when `.lpc` (not the window) is the scroller.
 		const els = sections
 			.map((s) => document.getElementById(s.id))
 			.filter((el): el is HTMLElement => Boolean(el));
@@ -92,7 +132,11 @@
 								}
 							});
 						},
-						{ rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.3, 0.6] }
+						{
+							root: root === window ? null : (root as HTMLElement),
+							rootMargin: '-30% 0px -55% 0px',
+							threshold: [0, 0.3, 0.6]
+						}
 					);
 
 		if (io) {
@@ -100,7 +144,7 @@
 		}
 
 		return () => {
-			window.removeEventListener('scroll', onScroll);
+			root.removeEventListener('scroll', onScroll);
 
 			if (io) {
 				io.disconnect();
@@ -199,11 +243,12 @@
 		};
 
 		update();
-		window.addEventListener('scroll', update, { passive: true });
+		const root = scrollRoot ?? window;
+		root.addEventListener('scroll', update, { passive: true });
 		window.addEventListener('resize', update, { passive: true });
 
 		return () => {
-			window.removeEventListener('scroll', update);
+			root.removeEventListener('scroll', update);
 			window.removeEventListener('resize', update);
 		};
 	});
@@ -226,13 +271,42 @@
 			}
 
 			e.preventDefault();
-			const y = el.getBoundingClientRect().top + window.scrollY - 72;
-			window.scrollTo({ top: y, behavior: 'smooth' });
+			const root = scrollRoot ?? window;
+
+			if (root === window) {
+				const y = el.getBoundingClientRect().top + window.scrollY - 72;
+				window.scrollTo({ top: y, behavior: 'smooth' });
+			} else {
+				const rootEl = root as HTMLElement;
+				const y =
+					el.getBoundingClientRect().top -
+					rootEl.getBoundingClientRect().top +
+					rootEl.scrollTop -
+					72;
+				rootEl.scrollTo({ top: y, behavior: 'smooth' });
+			}
+
 			history.replaceState(null, '', `#${id}`);
 		};
 
+	// Mobile menu links: scroll via `onLinkClick` (works whether the window or
+	// `.lpc` is the active scroller — native `#` fragment scrolling is
+	// unreliable on iOS once the document is locked) then close the sheet.
+	const onMenuLinkClick =
+		(id: string) =>
+		(e: MouseEvent): void => {
+			onLinkClick(id)(e);
+			closeMenu();
+		};
+
 	const setLocaleAndClose = (loc: AppLocale) => {
-		localeStore.set({ key: LOCALE_STORAGE_KEY, value: loc });
+		setLocale(loc);
+		langOpen = false;
+		dnavLangOpen = false;
+	};
+
+	const useAutomaticAndClose = () => {
+		clearLocaleChoice();
 		langOpen = false;
 		dnavLangOpen = false;
 	};
@@ -275,27 +349,23 @@
 					<Globe aria-hidden="true" />
 				</button>
 				{#if dnavLangOpen}
-					<ul
-						class="dnav-lang-pop"
-						aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
-						role="listbox"
-					>
-						{#each LOCALES as l (l.id)}
-							<li>
-								<button
-									class="dnav-lang-item"
-									class:active={$localeStore === l.id}
-									aria-selected={$localeStore === l.id}
-									onclick={() => setLocaleAndClose(l.id)}
-									role="option"
-									type="button"
-								>
-									<span class="num dnav-lang-short">{l.short}</span>
-									<span class="dnav-lang-label">{l.label}</span>
-								</button>
-							</li>
-						{/each}
-					</ul>
+					<div class="dnav-lang-pop">
+						<LocalePicker
+							current={$localeStore}
+							maxHeight={340}
+							onPick={(loc) => setLocaleAndClose(loc)}
+						/>
+						{#if $localeChoiceExplicit}
+							<button class="lp-auto-reset" onclick={useAutomaticAndClose} type="button">
+								<Globe aria-hidden="true" size={15} strokeWidth={1.8} />
+								<span>
+									{t({ locale: $localeStore, key: 'picker.use_auto' })}{detectedRegionLabel
+										? ` · ${detectedRegionLabel}`
+										: ''}
+								</span>
+							</button>
+						{/if}
+					</div>
 				{/if}
 			</div>
 			<div
@@ -331,6 +401,7 @@
 
 <!-- ─── Pill nav (mobile/tablet, <1024px) ─── -->
 <nav
+	bind:this={lpNavEl}
 	class="lp-nav lp-root"
 	class:is-open={menuOpen}
 	class:is-scrolled={scrolled}
@@ -393,7 +464,7 @@
 
 					<nav class="lp-menu-links">
 						{#each sections as section, i (section.id)}
-							<a href="#{section.id}" onclick={closeMenu}>
+							<a href="#{section.id}" onclick={onMenuLinkClick(section.id)}>
 								<span class="ix">0{i + 1}</span>
 								<span class="ltext">{navLabel(section)}</span>
 							</a>
@@ -445,30 +516,28 @@
 		     block. Anchored under the globe via `position: fixed` using
 		     the rect tracked in `langPopPos`. -->
 		{#if langOpen && langPopPos}
-			<ul
+			<div
 				bind:this={langPopRef}
 				style:top="{langPopPos.top}px"
 				style:right="{langPopPos.right}px"
 				class="lp-lang-pop"
-				aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
-				role="listbox"
 			>
-				{#each LOCALES as l (l.id)}
-					<li>
-						<button
-							class="lp-lang-item"
-							class:active={$localeStore === l.id}
-							aria-selected={$localeStore === l.id}
-							onclick={() => setLocaleAndClose(l.id)}
-							role="option"
-							type="button"
-						>
-							<span class="num lp-lang-short">{l.short}</span>
-							<span class="lp-lang-label">{l.label}</span>
-						</button>
-					</li>
-				{/each}
-			</ul>
+				<LocalePicker
+					current={$localeStore}
+					maxHeight={320}
+					onPick={(loc) => setLocaleAndClose(loc)}
+				/>
+				{#if $localeChoiceExplicit}
+					<button class="lp-auto-reset" onclick={useAutomaticAndClose} type="button">
+						<Globe aria-hidden="true" size={15} strokeWidth={1.8} />
+						<span>
+							{t({ locale: $localeStore, key: 'picker.use_auto' })}{detectedRegionLabel
+								? ` · ${detectedRegionLabel}`
+								: ''}
+						</span>
+					</button>
+				{/if}
+			</div>
 		{/if}
 	</div>
 </nav>
