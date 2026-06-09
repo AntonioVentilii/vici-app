@@ -2223,9 +2223,12 @@ a.title-action::after {
 	top: 92px;
 	z-index: 20;
 	display: inline-flex;
-	align-items: baseline;
+	/* Center every part on a common line — the side label, the larger stake
+	   number and the small "IN PLAY"/bonus run at different sizes, so baseline
+	   alignment left the small caps sitting low against the number. */
+	align-items: center;
 	gap: 4px;
-	padding: 5px 11px 4px;
+	padding: 5px 11px;
 	border-radius: 999px;
 	background: var(--laurel);
 	color: var(--ink);
@@ -2246,7 +2249,6 @@ a.title-action::after {
 	text-transform: uppercase;
 	font-weight: 700;
 	opacity: 0.9;
-	align-self: center;
 	padding-right: 6px;
 	margin-right: 2px;
 	border-right: 1px solid rgba(14, 13, 11, 0.25);
