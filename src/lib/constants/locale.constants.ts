@@ -28,7 +28,8 @@ export const DEFAULT_LOCALE: AppLocale = 'en';
  *
  * - `live` — the catalog is populated and kept fully aligned to `en`
  *   (enforced by `check:i18n`).
- * - `soon` — registered for resolution and detection, but the catalog is
+ * - `soon` — registered for fallback resolution and the picker (browser
+ *   auto-detect targets only `live` locales), but the catalog is
  *   absent or only partial. Missing keys resolve through the `fallback`
  *   chain to `en`, so the UI always renders real copy — never a raw key.
  */

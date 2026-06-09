@@ -110,6 +110,13 @@ const main = () => {
 		const missing = [...baseKeys].filter((key) => !localeKeys.has(key));
 		const extra = [...localeKeys].filter((key) => !baseKeys.has(key));
 
+		if (tier !== 'live' && tier !== 'soon') {
+			console.error(
+				`✗ ${locale}: unknown tier '${tier}' in LOCALE_REGISTRY (expected 'live' or 'soon').`
+			);
+			process.exit(1);
+		}
+
 		if (tier === 'soon') {
 			// `soon` locales fall back to English: an absent catalog is fine, and
 			// a partial one (missing some `en` keys) is fine too. We still reject
