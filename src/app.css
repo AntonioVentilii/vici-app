@@ -52,7 +52,21 @@
 
 /* ─── VICI Design System ─── dark-first, warm near-black canvas */
 
+/* Extra bottom clearance for the NATIVE bottom toolbar that non-Safari iOS
+ * browsers (Chrome / Firefox / Edge / Google app) paint over the web view. No
+ * web API reports that toolbar's height, so bottom-docked sheet footers add the
+ * `--ios-chrome-toolbar-inset` token (declared in `:root` below) to lift their
+ * CTA above it. `data-ios-chrome` is stamped pre-paint in app.html; the token is
+ * `0px` everywhere else, so the inset is inert off non-Safari iOS. Tunable in
+ * one place — adjust if the CTA still clips or floats too high. */
+html[data-ios-chrome] {
+	--ios-chrome-toolbar-inset: 56px;
+}
+
 :root {
+	/* Bottom clearance for non-Safari iOS browser chrome (see above); 0 elsewhere. */
+	--ios-chrome-toolbar-inset: 0px;
+
 	/* Canvas */
 	--ink: #0e0d0b;
 	--ink-deep: #080705;

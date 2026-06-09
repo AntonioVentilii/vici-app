@@ -177,7 +177,7 @@
 		 * the horizontal padding via `--sheet-side-padding` (the `sidePadding`
 		 * prop) without disturbing the top / safe-area-bottom metrics. */
 		padding: 0.5rem var(--sheet-side-padding, 1.1rem)
-			calc(1.1rem + env(safe-area-inset-bottom, 0px));
+			calc(1.1rem + env(safe-area-inset-bottom, 0px) + var(--ios-chrome-toolbar-inset, 0px));
 		background: var(--bg-popover);
 		border-top: 1px solid var(--border-base);
 		border-top-left-radius: 22px;
@@ -223,7 +223,7 @@
 	.sheet-footer {
 		flex-shrink: 0;
 		padding-top: 0.7rem;
-		padding-bottom: env(safe-area-inset-bottom, 0px);
+		padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--ios-chrome-toolbar-inset, 0px));
 		margin-top: 0.2rem;
 		border-top: 1px solid color-mix(in srgb, var(--border-base) 60%, transparent);
 	}

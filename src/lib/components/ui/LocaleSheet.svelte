@@ -171,7 +171,8 @@
 		width: 100%;
 		max-width: 28rem;
 		max-height: 86%;
-		padding: 0.5rem 0.5rem calc(1rem + env(safe-area-inset-bottom, 0px));
+		padding: 0.5rem 0.5rem
+			calc(1rem + env(safe-area-inset-bottom, 0px) + var(--ios-chrome-toolbar-inset, 0px));
 		background: var(--bg-popover);
 		border-top: 1px solid var(--border-strong);
 		border-top-left-radius: 28px;
