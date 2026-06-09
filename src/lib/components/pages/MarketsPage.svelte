@@ -1,5 +1,4 @@
 <script lang="ts">
-	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import MarketsBeyondCupCard from '$lib/components/market/MarketsBeyondCupCard.svelte';
 	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
 	import MarketsListRow from '$lib/components/market/MarketsListRow.svelte';
@@ -43,11 +42,12 @@
 	const wcFocus = $derived(phase === 'wc-focus' || phase === 'bridge');
 	const isOpen = $derived(phase === 'open');
 
-	// Header context chip: the featured event, surfaced as a single mono chip
-	// while the board is laser-focused on it. Chips-only header — no title or
-	// subtitle. Omitted once no event is in focus (`open` / `off`).
-	const eventChips = $derived(
-		wcFocus ? [{ label: t({ locale: $localeStore, key: 'markets.wc_eyebrow' }) }] : undefined
+	// Header context eyebrow: the featured event, surfaced as a mono-uppercase
+	// eyebrow line (matching the Dash accuracy / Arena standing eyebrow) while
+	// the board is laser-focused on it. Omitted once no event is in focus
+	// (`open` / `off`).
+	const eventEyebrow = $derived(
+		wcFocus ? t({ locale: $localeStore, key: 'markets.wc_eyebrow' }) : undefined
 	);
 
 	// Loading covers both feeds the board depends on: the markets list and the
@@ -154,9 +154,14 @@
 </script>
 
 <div class="screen-scroll">
-	<!-- Chips-only header: no title or subtitle, just the featured-event
-	     context chip (omitted entirely once no event is in focus). -->
-	<ScreenHeader chips={eventChips} variant="section" />
+	<!-- Header context eyebrow: the featured event as a mono-uppercase eyebrow
+	     line — matching the Dash / Arena eyebrow treatment — omitted entirely
+	     once no event is in focus. -->
+	{#if eventEyebrow}
+		<div class="markets-eyebrow-row">
+			<span class="markets-eyebrow">{eventEyebrow}</span>
+		</div>
+	{/if}
 
 	<!-- `open` phase: the Cup has resolved. Recap the viewer's World-Cup run at
 	     the top of the board and convert it into broader play. -->
@@ -258,3 +263,22 @@
 		</div>
 	{/if}
 </div>
+
+<style lang="postcss">
+	/* Featured-event eyebrow row — sits where the header bar would, padded to
+	   the screen edge so it lines up with the section headers below. */
+	.markets-eyebrow-row {
+		padding: 10px var(--spacing-edge);
+	}
+
+	/* Mono-uppercase eyebrow matching the Dash accuracy / Arena standing
+	   eyebrow treatment, so the World Cup context reads as a section eyebrow
+	   rather than a pill chip. */
+	.markets-eyebrow {
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: var(--t-10);
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+	}
+</style>
