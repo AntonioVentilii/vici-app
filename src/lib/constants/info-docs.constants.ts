@@ -1,5 +1,5 @@
 import { HELLO_EMAIL, INFO_EMAIL, RESOLUTION_EMAIL } from '$lib/constants/contact.constants';
-import { PRIVACY, TERMS } from '$lib/constants/legal-docs.constants';
+import { COOKIE, IMPRINT, PRIVACY, TERMS } from '$lib/constants/legal-docs.constants';
 import type { InfoDoc } from '$lib/types/info-doc';
 
 /**
@@ -124,6 +124,8 @@ const CONTACT: InfoDoc = {
 export const INFO_DOCS: Readonly<Record<string, InfoDoc>> = Object.freeze({
 	terms: TERMS,
 	privacy: PRIVACY,
+	cookies: COOKIE,
+	imprint: IMPRINT,
 	'resolution-rules': RESOLUTION_RULES,
 	'how-resolution-works': HOW_RESOLUTION_WORKS,
 	faq: FAQ,

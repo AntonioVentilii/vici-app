@@ -1979,6 +1979,8 @@ export const itMessages = {
 	'settings.language.no_match': 'Nessun risultato',
 	'settings.language.search': 'Cerca lingua',
 	'settings.legal': 'Legale',
+	'settings.legal.cookies': 'Cookie policy',
+	'settings.legal.imprint': 'Note legali',
 	'settings.legal.privacy': 'Privacy policy',
 	'settings.legal.rules': 'Regole di risoluzione',
 	'settings.legal.terms': 'Termini di servizio',

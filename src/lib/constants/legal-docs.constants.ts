@@ -378,3 +378,87 @@ export const PRIVACY: InfoDoc = {
 		}
 	]
 };
+
+export const COOKIE: InfoDoc = {
+	slug: 'cookies',
+	title: 'Cookie Policy',
+	eyebrow: 'Legal · Effective 10 June 2026',
+	blocks: [
+		{ kind: 'p', text: 'Last updated: 10 June 2026' },
+		{ kind: 'h', text: '1. What this policy covers' },
+		{
+			kind: 'lede',
+			text: 'This Cookie Policy explains how Vici, operated by Wholesome Capital Limited (see Legal Notice), uses cookies and similar technologies (such as local storage and SDKs) on vici.market and our applications. It should be read together with our Privacy Policy.'
+		},
+		{ kind: 'h', text: '2. The categories we use' },
+		{
+			kind: 'list',
+			items: [
+				'Strictly necessary — required to run the Service: sign-in, session, security and fraud prevention. These are always active and do not require consent.',
+				'Analytics — help us understand and improve how the Service is used.',
+				'Advertising and attribution — used by third-party partners to show and measure ads and to attribute installs. These may share device and usage data with those partners. See Privacy Policy Section 6.'
+			]
+		},
+		{ kind: 'h', text: '3. Consent' },
+		{
+			kind: 'p',
+			text: 'For users in the EU/EEA and the United Kingdom, non-essential cookies and similar technologies (analytics where applicable, and all advertising/attribution technologies) are set only after you give consent through our consent banner. You can accept, reject, or choose categories, and you can change or withdraw your choice at any time via "Cookie Settings". Strictly necessary technologies are not affected.'
+		},
+		{
+			kind: 'p',
+			text: 'For users in other regions, we use cookies as described here and provide controls required by local law (for example, opt-outs for US users — see "Your Privacy Choices").'
+		},
+		{ kind: 'h', text: '4. The cookies we use' },
+		{
+			kind: 'p',
+			text: 'A detailed list of the specific cookies and similar technologies we use — their provider, category, purpose and duration — will be published here.'
+		},
+		{ kind: 'h', text: '5. Managing cookies' },
+		{
+			kind: 'p',
+			text: 'You can manage non-essential cookies any time through Cookie Settings in the footer. You can also control cookies through your browser or device settings, though disabling strictly necessary cookies may break parts of the Service.'
+		},
+		{ kind: 'h', text: '6. Changes and contact' },
+		{
+			kind: 'p',
+			text: `We may update this policy; we will revise the "Last updated" date for material changes. Questions: ${INFO_EMAIL}.`
+		}
+	]
+};
+
+export const IMPRINT: InfoDoc = {
+	slug: 'imprint',
+	title: 'Legal notice',
+	eyebrow: 'Legal · Imprint',
+	blocks: [
+		{ kind: 'lede', text: 'Provider information under applicable disclosure requirements.' },
+		{ kind: 'h', text: 'Provider' },
+		{ kind: 'p', text: 'Wholesome Capital Limited' },
+		{ kind: 'p', text: 'A private company limited by shares, incorporated in Hong Kong SAR.' },
+		{ kind: 'h', text: 'Registered office' },
+		{
+			kind: 'p',
+			text: 'Unit 2505, 25/F., Billion Plaza, 8 Cheung Yue Street, Lai Chi Kok, Kowloon, Hong Kong'
+		},
+		{ kind: 'h', text: 'Company details' },
+		{
+			kind: 'list',
+			items: [
+				'Business Registration Number: 2391347',
+				'VAT/Tax ID: Not applicable — Hong Kong does not levy VAT/GST'
+			]
+		},
+		{ kind: 'h', text: 'Contact' },
+		{ kind: 'mail', text: INFO_EMAIL },
+		{ kind: 'h', text: 'EU legal representative (Digital Services Act, Art. 13)' },
+		{
+			kind: 'p',
+			text: 'An EU legal representative will be appointed for the service offered to users in the EU — located in an EU member state, with a publicly accessible contact — and their details will be published here. See Privacy Policy Rider A.'
+		},
+		{ kind: 'h', text: 'UK representative (UK GDPR, Art. 27)' },
+		{
+			kind: 'p',
+			text: 'A UK representative will be appointed if the UK is served (separate from the EU representative), and their details will be published here. See Privacy Policy Rider B.'
+		}
+	]
+};

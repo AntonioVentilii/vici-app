@@ -1882,6 +1882,8 @@ export const zhHansMessages = {
 	'settings.language.no_match': '无匹配',
 	'settings.language.search': '搜索语言',
 	'settings.legal': '法律',
+	'settings.legal.cookies': 'Cookie 政策',
+	'settings.legal.imprint': '法律声明',
 	'settings.legal.privacy': '隐私政策',
 	'settings.legal.rules': '裁定规则',
 	'settings.legal.terms': '服务条款',
