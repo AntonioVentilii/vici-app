@@ -10,12 +10,15 @@
 
 	const { market }: Props = $props();
 
+	// Trim before testing emptiness so a whitespace-only clause falls back to
+	// the templated sentence, matching FlowResolutionBlock.
+	const resolutionClause = $derived(market.resolution?.trim() ?? '');
 	const closesLabel = $derived(formatDate(market.expiryDate));
 </script>
 
 <!-- Resolution rules inline card. The body either renders the market's
-     own description (the canonical resolution criterion authored by the
-     market creator) or falls back to a templated sentence referencing
+     own resolution clause (the binding settlement criterion authored by
+     the market creator) or falls back to a templated sentence referencing
      the close date. A footer carries the resolution source and the
      settles date so the block answers "how / where / when" at a glance,
      mirroring the Flow back-card resolution structure. This card sits
@@ -25,8 +28,8 @@
 		{t({ locale: $localeStore, key: 'market.detail.resolution.eyebrow' })}
 	</span>
 	<p class="market-resolution-body">
-		{#if market.description !== ''}
-			{market.description}
+		{#if resolutionClause !== ''}
+			{resolutionClause}
 		{:else}
 			{t({
 				locale: $localeStore,
