@@ -16,14 +16,38 @@
 import { WC_NATION_KITS, type WCKit } from '$lib/constants/flow-art-wc.constants';
 
 // Template ids the WC renderer knows how to draw. Kept a string union
-// so the renderer's dispatch is exhaustive at the type level.
-export type WcTemplateId = 'kit-clash' | 'qualify-bracket';
+// so the renderer's dispatch is exhaustive at the type level. The first
+// two are the heuristic-resolver pair; the rest are driven by the
+// authoritative `WC_MARKET_ART` catalogue (one brief-matched scene per
+// live market) and rendered by `renderWcTemplate`.
+export type WcTemplateId =
+	| 'kit-clash'
+	| 'qualify-bracket'
+	| 'ball-in-net'
+	| 'split-pitch'
+	| 'keeper-wall'
+	| 'penalty-spot'
+	| 'podium'
+	| 'stopwatch'
+	| 'referee-card'
+	| 'stadium-clock'
+	| 'striker-juggle'
+	| 'player-figure'
+	| 'crest-ladder'
+	| 'host-flags'
+	| 'debutant-door'
+	| 'draw-balls'
+	| 'wildcard-icon';
 
 export interface WcResolvedTemplate {
 	templateId: WcTemplateId;
-	// Resolved kit colours for the parsed team(s). `teamB` only present
-	// for the two-sided `kit-clash` template.
-	teamA: WCKit;
+	// Resolved kit colours for the parsed team(s). Optional because most
+	// catalogue templates (props, podium, player) carry zero or one team:
+	// `teamA` is the focal nation (kit-clash / crest-ladder left,
+	// qualify / player / podium nation), `teamB` only the two-sided
+	// templates' right side. A template with no resolved kit renders in a
+	// neutral palette rather than crashing.
+	teamA?: WCKit;
 	teamB?: WCKit;
 }
 
