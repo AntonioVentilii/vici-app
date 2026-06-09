@@ -472,8 +472,11 @@
 .flow-body {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
-	padding: 12px 20px 16px;
+	/* Roomier 16px stack with a tight 4px lead under the head and a 14px
+	   bottom inset, so the art, probability split, action row and foot read
+	   as four cleanly separated groups rather than one dense block. */
+	gap: 16px;
+	padding: 4px 20px 14px;
 	/* Grow to fill the remaining card height so the probs block's
 	   `margin-top:auto` pins it to the bottom and the foot never floats
 	   mid-card. `min-height:0` lets the body shrink below its intrinsic
@@ -485,6 +488,9 @@
 }
 .flow-foot {
 	font-size: 11px;
+	/* Small lead above the foot so the "X% say YES / SWIPE TO CALL" line
+	   sits apart from the action row above it. */
+	padding-top: 4px;
 }
 
 /* Edge-to-edge MarketArtwork — `bleed` mode: negative side margins
@@ -493,11 +499,12 @@
 .flow-body .flow-art-bleed {
 	position: relative;
 	width: calc(100% + 40px);
-	/* Prefer 150px but flex-shrink toward a 96px floor when the card is
+	/* Prefer 130px but flex-shrink toward a 96px floor when the card is
 	   short, so the head/probs/foot stay fully visible inside the deck
 	   on small phones. At desktop deck height there is spare room, so the
-	   art keeps its full 150px. */
-	flex: 0 1 150px;
+	   art keeps its full 130px — a shorter band that leaves the
+	   probability split, action row and foot more room to breathe. */
+	flex: 0 1 130px;
 	min-height: 96px;
 	margin: 0 -20px;
 	overflow: hidden;
@@ -2028,7 +2035,9 @@ html[data-ios] .lpc {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: 22px;
+	/* Generous lead between the kicker and the headline so the title
+	   reads as the standalone focal point of the hero. */
+	gap: 28px;
 }
 .lpc-hero-stage {
 	grid-area: stage;
@@ -2044,7 +2053,9 @@ html[data-ios] .lpc {
 	display: flex;
 	flex-direction: column;
 	gap: 22px;
-	margin-top: 22px;
+	/* Wider gap below the headline (which lives in the copy row above) so
+	   the lede + CTA tail sits clearly apart from the title. */
+	margin-top: 28px;
 }
 .lpc-hero-cta-row {
 	display: flex;
