@@ -1788,7 +1788,7 @@ export const frMessages = {
 	'profile.dashboard.achievements': 'Succès',
 	'profile.dashboard.affiliations.add': 'Ajouter',
 	'profile.dashboard.affiliations.count': '{count} sur {total}',
-	'profile.dashboard.affiliations.country': 'Citoyen',
+	'profile.dashboard.affiliations.country': 'Pays',
 	'profile.dashboard.affiliations.status_pending': 'En attente',
 	'profile.dashboard.affiliations.status_verified': 'Vérifiée',
 	'profile.dashboard.affiliations.title': 'Affiliations',
