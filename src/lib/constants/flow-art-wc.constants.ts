@@ -264,3 +264,74 @@ export const WC_NATIONS: Record<string, WCNation> = {
 // hair-style="cap" branch reads naturally.
 export const WC_CAP_DARK = '#2A211A';
 export const WC_CAP_BAND = WC_HAIR.charcoal;
+
+// ---- Per-nation kit colour pairs (resolver-driven templates) -------
+// The runtime question→template resolver
+// (`utils/flow-art/wc/resolve-template.ts`) parses nation names out of
+// the live market question and looks the kit colours up here. Keyed by
+// the lowercased canonical nation name as it appears in the question
+// text (article words like "the" stripped by the resolver before the
+// lookup). Each pair is `{ primary, secondary }` — the two dominant kit
+// / flag colours used by the `kit-clash` and `qualify-bracket`
+// templates so each nation's card reads distinct.
+//
+// Distinct from `WC_NATIONS` above: that table is keyed by alpha-2 code
+// and carries full figure traits for the advancement (`wc-{cc}-*`)
+// scenes; this table is keyed by name and carries only the two-colour
+// kit the templates need. Names with no entry resolve to `null`
+// (generic fallback) — never a crash.
+export interface WCKit {
+	primary: string;
+	secondary: string;
+}
+
+export const WC_NATION_KITS: Record<string, WCKit> = {
+	algeria: { primary: '#006233', secondary: '#C8102E' },
+	argentina: { primary: '#75AADB', secondary: '#F2ECDC' },
+	australia: { primary: '#F1BF00', secondary: '#006A4E' },
+	austria: { primary: '#C8102E', secondary: '#F2ECDC' },
+	belgium: { primary: '#ED2939', secondary: '#FAE042' },
+	'bosnia and herzegovina': { primary: '#002395', secondary: '#FAE042' },
+	brazil: { primary: '#FFD800', secondary: '#0F8C3A' },
+	canada: { primary: '#C8102E', secondary: '#F2ECDC' },
+	'cape verde': { primary: '#003893', secondary: '#F2ECDC' },
+	colombia: { primary: '#FCD116', secondary: '#003893' },
+	croatia: { primary: '#C8102E', secondary: '#171796' },
+	curaçao: { primary: '#002B7F', secondary: '#F9D616' },
+	czechia: { primary: '#11457E', secondary: '#C8102E' },
+	'dr congo': { primary: '#007FFF', secondary: '#F7D618' },
+	ecuador: { primary: '#FFD100', secondary: '#0072CE' },
+	egypt: { primary: '#C8102E', secondary: '#F2ECDC' },
+	england: { primary: '#F2ECDC', secondary: '#C8102E' },
+	france: { primary: '#0055A4', secondary: '#EF4135' },
+	germany: { primary: '#F2ECDC', secondary: '#000000' },
+	ghana: { primary: '#006B3F', secondary: '#FCD116' },
+	haiti: { primary: '#00209F', secondary: '#D21034' },
+	iran: { primary: '#239F40', secondary: '#DA0000' },
+	iraq: { primary: '#007A3D', secondary: '#CE1126' },
+	'ivory coast': { primary: '#F77F00', secondary: '#009E60' },
+	japan: { primary: '#0A1A6B', secondary: '#BC002D' },
+	jordan: { primary: '#007A3D', secondary: '#CE1126' },
+	'korea republic': { primary: '#C8102E', secondary: '#003478' },
+	mexico: { primary: '#006847', secondary: '#CE1126' },
+	morocco: { primary: '#C1272D', secondary: '#006233' },
+	'new zealand': { primary: '#000000', secondary: '#F2ECDC' },
+	netherlands: { primary: '#EE7700', secondary: '#21468B' },
+	norway: { primary: '#BA0C2F', secondary: '#00205B' },
+	panama: { primary: '#DA121A', secondary: '#072357' },
+	paraguay: { primary: '#0038A8', secondary: '#D52B1E' },
+	portugal: { primary: '#DA291C', secondary: '#046A38' },
+	qatar: { primary: '#8A1538', secondary: '#F2ECDC' },
+	'saudi arabia': { primary: '#006C35', secondary: '#F2ECDC' },
+	scotland: { primary: '#0065BF', secondary: '#F2ECDC' },
+	senegal: { primary: '#00853F', secondary: '#FDEF42' },
+	'south africa': { primary: '#007A4D', secondary: '#FCB514' },
+	spain: { primary: '#C8102E', secondary: '#F1BF00' },
+	sweden: { primary: '#006AA7', secondary: '#FECC02' },
+	switzerland: { primary: '#C8102E', secondary: '#F2ECDC' },
+	tunisia: { primary: '#E70013', secondary: '#F2ECDC' },
+	türkiye: { primary: '#E30A17', secondary: '#F2ECDC' },
+	'united states': { primary: '#0A3161', secondary: '#C8102E' },
+	uruguay: { primary: '#5CBFEB', secondary: '#F2ECDC' },
+	uzbekistan: { primary: '#1EB53A', secondary: '#0099B5' }
+};
