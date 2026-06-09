@@ -389,6 +389,12 @@
 	   visible height but iOS Chrome doesn't honour it, so the inline pin is the
 	   real fix. The `100dvh`/`100vh` here is the desktop / no-`visualViewport`
 	   fallback. `flex-end` docks the sheet at the visible bottom. */
+	/* Full-screen takeover (not a bottom sheet): an opaque panel that fills the
+	   visible viewport, matching the design. `use:pinToVisualViewport` sizes it
+	   to `window.visualViewport` so the sticky footer clears the iOS toolbar
+	   (#670/#673); the `100dvh`/`100vh` here is the desktop / no-`visualViewport`
+	   fallback. The floating pill-nav is hidden while open (see the `:global`
+	   rules below) so it can't sit in front of the panel. */
 	.avatar-editor-scrim {
 		position: fixed;
 		top: 0;
@@ -399,32 +405,33 @@
 		z-index: 119;
 		display: flex;
 		flex-direction: column;
-		justify-content: flex-end;
-		align-items: center;
-		background: rgba(14, 13, 11, 0.55);
-		-webkit-backdrop-filter: blur(2px);
-		backdrop-filter: blur(2px);
+		background: var(--bg-base);
+	}
+
+	/* Lock body scroll + hide the floating pill-nav while the editor is open —
+	   the nav lives in a separate stacking context and would otherwise paint in
+	   front of the full-screen panel, and it isn't usable mid-edit. */
+	:global(body:has(.avatar-editor-scrim)) {
+		overflow: hidden;
+	}
+
+	:global(body:has(.avatar-editor-scrim) .pillnav-wrap) {
+		display: none;
 	}
 
 	.avatar-editor {
-		/* Bottom sheet that fills at most 90% of the scrim, so the header + footer
-		 * stay pinned and the option grid scrolls within. `%` resolves against the
-		 * scrim's definite height (the inline `visualViewport` pin or the `100dvh`
-		 * / `100vh` CSS fallback), so no `dvh`/`vh` cap is needed — and a `dvh`
-		 * cap would be wrong on iOS Chrome. The scrim docks it at the visible
-		 * bottom (`flex-end`); `position: relative` anchors the discard-confirm
-		 * overlay below. */
+		/* Fills the scrim (full-screen). The header + footer stay pinned and the
+		 * option grid (`.avatar-editor-body`, `flex: 1; overflow-y: auto`) scrolls
+		 * within. `min-height: 0` lets that inner scroll work inside the flex
+		 * column. `position: relative` anchors the discard-confirm overlay below. */
 		position: relative;
+		flex: 1;
+		min-height: 0;
 		width: 100%;
-		max-height: 90%;
 		display: flex;
 		flex-direction: column;
-		border-top-left-radius: var(--r-20, 20px);
-		border-top-right-radius: var(--r-20, 20px);
-		border-top: 1px solid var(--border-base);
 		background: var(--bg-base);
 		color: var(--text-base);
-		box-shadow: 0 -18px 50px -20px rgba(0, 0, 0, 0.55);
 	}
 
 	.avatar-editor-head {
