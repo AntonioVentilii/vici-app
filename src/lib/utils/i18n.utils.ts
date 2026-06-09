@@ -1,20 +1,26 @@
-import type { AppLocale } from '$lib/constants/locale.constants';
+import { localeFallbackChain, type AppLocale } from '$lib/constants/locale.constants';
 import { deMessages } from '$lib/constants/messages/de';
 import { enMessages } from '$lib/constants/messages/en';
 import { esMessages } from '$lib/constants/messages/es';
 import { frMessages } from '$lib/constants/messages/fr';
 import { itMessages } from '$lib/constants/messages/it';
 import { ptMessages } from '$lib/constants/messages/pt';
-import { zhCnMessages } from '$lib/constants/messages/zh-CN';
+import { zhHansMessages } from '$lib/constants/messages/zh-Hans';
+import { nonNullish } from '@dfinity/utils';
 
-const catalogs: Record<AppLocale, Record<string, string>> = {
+/**
+ * Catalogs we ship today. A registered locale with no catalog (a `soon`
+ * locale) is simply absent here — `t()` resolves it through its fallback
+ * chain to a populated locale, ending at `en`.
+ */
+const catalogs: Partial<Record<AppLocale, Record<string, string>>> = {
 	en: enMessages,
 	it: itMessages,
 	es: esMessages,
 	de: deMessages,
 	fr: frMessages,
 	pt: ptMessages,
-	'zh-CN': zhCnMessages
+	'zh-Hans': zhHansMessages
 };
 
 export type MessageKey = keyof typeof enMessages;
@@ -45,8 +51,17 @@ export const t = ({
 	key: MessageKey;
 	params?: Record<string, string | number>;
 }): string => {
-	const catalog = catalogs[locale] ?? catalogs.en;
-	const template = catalog[key] ?? catalogs.en[key] ?? key;
+	// Walk the locale's fallback chain (itself → registered fallbacks → en)
+	// and take the first catalog that actually carries the key. A `soon`
+	// locale with no catalog, or a partial one missing this key, renders the
+	// first populated ancestor's copy — never the raw key.
+	for (const candidate of localeFallbackChain(locale)) {
+		const template = catalogs[candidate]?.[key];
 
-	return interpolate({ template, params });
+		if (nonNullish(template)) {
+			return interpolate({ template, params });
+		}
+	}
+
+	return interpolate({ template: enMessages[key] ?? key, params });
 };

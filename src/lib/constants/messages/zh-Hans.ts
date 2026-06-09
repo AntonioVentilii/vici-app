@@ -1,4 +1,4 @@
-export const zhCnMessages = {
+export const zhHansMessages = {
 	'a11y.appearance': '外观',
 	'a11y.banner_juno_console': '打开 Juno 控制台以创建用于测试的新卫星',
 	'a11y.checking_signin': '正在检查登录状态',

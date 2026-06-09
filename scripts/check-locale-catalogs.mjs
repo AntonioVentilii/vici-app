@@ -1,10 +1,18 @@
 #!/usr/bin/env node
 /**
- * Verify every locale catalog under `src/lib/constants/messages/` exposes
- * the same key set as `en.ts` (the source of truth).
+ * Verify the locale catalogs under `src/lib/constants/messages/` against
+ * `en.ts` (the source of truth), with strictness driven by each locale's
+ * registered `tier` in `locale.constants.ts`:
  *
- * Exits non-zero on any drift, with a per-locale report of missing /
- * extra keys. Wired into `npm run check:i18n` and `npm run lint`.
+ * - `live` — must exist and expose exactly the `en` key set (no missing,
+ *   no extra). This is the original behaviour.
+ * - `soon` — may be absent (no catalog file at all) or partial (a subset of
+ *   `en` keys). Missing keys resolve through the locale's fallback chain to
+ *   English at runtime, so a partial catalog is valid. Only `extra` keys
+ *   (keys not present in `en`) are flagged.
+ *
+ * Exits non-zero on any drift, with a per-locale report. Wired into
+ * `npm run check:i18n` and `npm run lint`.
  *
  * See `docs/ai/frontend/i18n.md`.
  */
@@ -39,42 +47,47 @@ const extractKeys = (filePath) => {
 };
 
 /**
- * Read `SUPPORTED_LOCALES` from `locale.constants.ts` so the script
- * stays in lock-step with the type without hand-maintaining a list.
+ * Read `LOCALE_REGISTRY` from `locale.constants.ts` so the script stays in
+ * lock-step with the registry without hand-maintaining a list. Returns each
+ * locale's `id` paired with its `tier`, which drives how strictly its catalog
+ * is checked.
  *
- * @returns {string[]}
+ * @returns {{ id: string, tier: string }[]}
  */
-const readSupportedLocales = () => {
+const readRegistry = () => {
 	const source = fs.readFileSync(localeConstantsPath, 'utf8');
-	const block = source.match(/SUPPORTED_LOCALES[\s\S]*?\[([\s\S]*?)\]\s*as const/);
+	const block = source.match(/LOCALE_REGISTRY[\s\S]*?\[([\s\S]*?)\]\s*as const/);
 
 	if (block === null) {
 		throw new Error(
-			`Could not parse SUPPORTED_LOCALES in ${path.relative(process.cwd(), localeConstantsPath)}`
+			`Could not parse LOCALE_REGISTRY in ${path.relative(process.cwd(), localeConstantsPath)}`
 		);
 	}
 
-	const ids = [];
-	const re = /id:\s*'([^']+)'/g;
+	const locales = [];
+	// Each entry spans multiple lines; capture the `id` and the `tier` that
+	// belongs to the same object literal. `tier` always follows `id` within
+	// an entry, so a non-greedy span between them is unambiguous.
+	const re = /id:\s*'([^']+)'[\s\S]*?tier:\s*'([^']+)'/g;
 	let match;
 
 	while ((match = re.exec(block[1])) !== null) {
-		ids.push(match[1]);
+		locales.push({ id: match[1], tier: match[2] });
 	}
 
-	if (ids.length === 0) {
-		throw new Error('SUPPORTED_LOCALES is empty — nothing to check.');
+	if (locales.length === 0) {
+		throw new Error('LOCALE_REGISTRY is empty — nothing to check.');
 	}
 
-	return ids;
+	return locales;
 };
 
 const main = () => {
-	const supportedLocales = readSupportedLocales();
+	const registry = readRegistry();
 	const baseLocale = 'en';
 
-	if (!supportedLocales.includes(baseLocale)) {
-		console.error(`Source-of-truth locale '${baseLocale}' is not in SUPPORTED_LOCALES.`);
+	if (!registry.some(({ id }) => id === baseLocale)) {
+		console.error(`Source-of-truth locale '${baseLocale}' is not in LOCALE_REGISTRY.`);
 		process.exit(1);
 	}
 
@@ -87,39 +100,49 @@ const main = () => {
 
 	const baseKeys = extractKeys(baseFile);
 	const failures = [];
+	const otherLocales = registry.filter(({ id }) => id !== baseLocale);
+	let liveChecked = 0;
 
-	const otherLocales = supportedLocales.filter((locale) => locale !== baseLocale);
-
-	for (const locale of otherLocales) {
+	for (const { id: locale, tier } of otherLocales) {
 		const catalogPath = path.join(messagesDir, `${locale}.ts`);
+		const hasCatalog = fs.existsSync(catalogPath);
+		const localeKeys = hasCatalog ? extractKeys(catalogPath) : new Set();
+		const missing = [...baseKeys].filter((key) => !localeKeys.has(key));
+		const extra = [...localeKeys].filter((key) => !baseKeys.has(key));
 
-		if (!fs.existsSync(catalogPath)) {
-			failures.push({ locale, missing: [...baseKeys], extra: [], status: 'absent' });
+		if (tier === 'soon') {
+			// `soon` locales fall back to English: an absent catalog is fine, and
+			// a partial one (missing some `en` keys) is fine too. We still reject
+			// `extra` keys — a key not in `en` can never resolve through fallback.
+			if (hasCatalog && extra.length > 0) {
+				failures.push({ locale, tier, missing: [], extra, status: 'extra-keys' });
+			}
 		} else {
-			const localeKeys = extractKeys(catalogPath);
-			const missing = [...baseKeys].filter((key) => !localeKeys.has(key));
-			const extra = [...localeKeys].filter((key) => !baseKeys.has(key));
+			// `live` locales must exist and align exactly with `en`.
+			liveChecked += 1;
 
-			if (missing.length > 0 || extra.length > 0) {
-				failures.push({ locale, missing, extra, status: 'drift' });
+			if (!hasCatalog) {
+				failures.push({ locale, tier, missing: [...baseKeys], extra: [], status: 'absent' });
+			} else if (missing.length > 0 || extra.length > 0) {
+				failures.push({ locale, tier, missing, extra, status: 'drift' });
 			}
 		}
 	}
 
 	if (failures.length === 0) {
 		console.log(
-			`✓ i18n catalogs aligned across ${supportedLocales.length} locales (${baseKeys.size} keys).`
+			`✓ i18n catalogs aligned across ${liveChecked + 1} live locales (${baseKeys.size} keys); soon locales fall back to English.`
 		);
 		process.exit(0);
 	}
 
 	console.error('✗ i18n catalog drift detected.\n');
 
-	for (const { locale, missing, extra, status } of failures) {
+	for (const { locale, tier, missing, extra, status } of failures) {
 		if (status === 'absent') {
-			console.error(`  [${locale}] catalog file is missing.`);
+			console.error(`  [${locale}] (${tier}) catalog file is missing.`);
 		} else {
-			console.error(`  [${locale}]`);
+			console.error(`  [${locale}] (${tier})`);
 
 			if (missing.length > 0) {
 				console.error(`    missing (${missing.length}):`);
@@ -140,7 +163,7 @@ const main = () => {
 	}
 
 	console.error(
-		'\nFix: add the missing keys to each locale catalog under src/lib/constants/messages/.'
+		'\nFix: live locales must mirror en.ts exactly; soon locales may be absent or partial but must not add keys missing from en.'
 	);
 	console.error('See docs/ai/frontend/i18n.md.');
 	process.exit(1);

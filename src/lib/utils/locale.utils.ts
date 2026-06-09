@@ -10,8 +10,8 @@ import { nonNullish } from '@dfinity/utils';
  *
  * Matching is two-tier and walks the navigator list in priority order:
  *
- * 1. **Exact tag** (case-insensitive) — a `zh-CN` browser lands on the
- *    `zh-CN` catalog rather than collapsing onto a bare `zh` primary subtag.
+ * 1. **Exact tag** (case-insensitive) — a `pt-BR` browser lands on the
+ *    `pt-BR` locale rather than collapsing onto a bare `pt` primary subtag.
  * 2. **Primary subtag** — `de-DE`, `de-AT` and `de` all resolve to `de`, so a
  *    regional variant maps onto its base catalog instead of dropping to
  *    English.

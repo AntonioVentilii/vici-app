@@ -20,7 +20,7 @@
 	const { isOpen, onClose, onJoined }: Props = $props();
 
 	// The helper sentence carries a `{code}` slot so spacing and trailing
-	// punctuation stay locale-correct (zh-CN ends on 。, not "."); we split
+	// punctuation stay locale-correct (zh-Hans ends on 。, not "."); we split
 	// the localized copy on that slot and drop the accent-tinted sample
 	// token (our real 6-char invite shape) into the gap. Mirrors the field
 	// placeholder, which renders the same shared sample.
