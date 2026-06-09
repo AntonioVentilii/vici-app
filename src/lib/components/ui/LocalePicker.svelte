@@ -72,6 +72,25 @@
 	});
 	const selectedId = $derived<AppLocale | undefined>(selectedEntry?.id);
 
+	// The auto-detected locale can also be a hidden base (e.g. detection returns
+	// `es`), which has no region row of its own. Map it the same way as the
+	// active selection so the per-row AUTO badge lands on a rendered region
+	// instead of disappearing.
+	const detectedVisibleId = $derived.by<AppLocale | undefined>(() => {
+		const entry = LOCALE_REGISTRY.find(({ id }) => id === detectedLocale);
+
+		if (!entry || entry.hidden !== true) {
+			return detectedLocale;
+		}
+
+		const [lang] = entry.id.split('-');
+		const group = groups.find((g) => g.lang === lang);
+
+		return (
+			(group?.regions.find(({ worldFlag }) => worldFlag) ?? group?.regions[0])?.id ?? detectedLocale
+		);
+	});
+
 	// Track which language header is open. Seed from the active language so a
 	// returning user lands with their language drilled in.
 	let openLang = $state<string | null>(null);
@@ -164,7 +183,7 @@
 							<span class="lp-row-sub">{group.name}</span>
 						{/if}
 					</span>
-					{#if detectedLocale === region.id}
+					{#if detectedVisibleId === region.id}
 						<span class="lp-auto num">{t({ locale: $localeStore, key: 'picker.auto' })}</span>
 					{/if}
 					{#if active}
@@ -227,7 +246,7 @@
 											<span class="lp-row-sub">{region.name}</span>
 										{/if}
 									</span>
-									{#if detectedLocale === region.id}
+									{#if detectedVisibleId === region.id}
 										<span class="lp-auto num"
 											>{t({ locale: $localeStore, key: 'picker.auto' })}</span
 										>
