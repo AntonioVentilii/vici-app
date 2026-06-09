@@ -24,7 +24,6 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DeleteAccountFlow from '$lib/components/settings/DeleteAccountFlow.svelte';
-	import LocaleSheet from '$lib/components/settings/LocaleSheet.svelte';
 	import SetRow from '$lib/components/settings/SetRow.svelte';
 	import SetSegmented from '$lib/components/settings/SetSegmented.svelte';
 	import SetToggle from '$lib/components/settings/SetToggle.svelte';
@@ -32,6 +31,7 @@
 	import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import LocaleSheet from '$lib/components/ui/LocaleSheet.svelte';
 	import { Collection } from '$lib/constants/collections.constants';
 	import { LOCALE_REGISTRY } from '$lib/constants/locale.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
