@@ -35,7 +35,7 @@
 	`PageScaffold` — the dashboard owns its own chrome. The loading / empty
 	states keep the simple centered card.
 -->
-<div class="profile-page pb-24">
+<div class="profile-page">
 	{#if $userStore.profile}
 		<ProfileDashboard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
 	{:else if $authBusy}

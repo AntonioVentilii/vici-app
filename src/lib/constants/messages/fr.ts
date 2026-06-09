@@ -2136,7 +2136,6 @@ export const frMessages = {
 	'arena.tabs.battles': 'Duels',
 	'arena.tabs.friends': 'Amis',
 	'arena.tabs.leagues': 'Ligues',
-	'arena.title': 'Arena',
 	'arena.boundary.title': 'Impossible de charger cet onglet',
 	'arena.boundary.body':
 		"Une erreur s'est produite lors de l'affichage de cette section. Essaie un autre onglet ou rouvre l'Arena.",

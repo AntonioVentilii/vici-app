@@ -102,9 +102,9 @@
 	   when motion is allowed, so these keyframes never run for a
 	   reduced-motion user (belt-and-braces media query below as well). */
 	.vici-avatar :global(.va-bob) {
-		animation: vici-avatar-bob 5.5s ease-in-out infinite;
+		animation: vici-avatar-bob 3.4s ease-in-out infinite;
 		transform-box: fill-box;
-		transform-origin: 50% 100%;
+		transform-origin: center;
 	}
 
 	.vici-avatar :global(.va-blink) {
@@ -118,7 +118,7 @@
 			transform: translateY(0);
 		}
 		50% {
-			transform: translateY(-1.1px);
+			transform: translateY(-2px);
 		}
 	}
 
