@@ -98,6 +98,9 @@
 	const SKIP_THRESHOLD = 110;
 	const SETTLE_MS = 220;
 	const TAP_PX = 6;
+	// Front-card subtitle is a single italic accent line; clamp the
+	// description-derived fallback so it can't crowd the card body.
+	const DESCRIPTION_SUBTITLE_MAX_LENGTH = 60;
 
 	// Resolved category — single source of truth across the surface so
 	// untagged markets hash identically here, in FlowMode, etc.
@@ -262,7 +265,19 @@
 			return;
 		}
 
-		return description;
+		// Curated subtitles sit around ~40–60 chars; the front-card row is
+		// a single italic accent line, so a long description must be clamped
+		// to avoid pushing into the card body. Trim on a word boundary and
+		// append an ellipsis when truncated.
+		if (description.length <= DESCRIPTION_SUBTITLE_MAX_LENGTH) {
+			return description;
+		}
+
+		const clipped = description.slice(0, DESCRIPTION_SUBTITLE_MAX_LENGTH);
+		const lastSpace = clipped.lastIndexOf(' ');
+		const trimmed = (lastSpace > 0 ? clipped.slice(0, lastSpace) : clipped).trimEnd();
+
+		return `${trimmed}…`;
 	});
 
 	// Subtitle resolution order:

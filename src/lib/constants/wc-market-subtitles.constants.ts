@@ -6,11 +6,12 @@
  * June 2". Keyed by the canonical market id used in `getFlowQueue` and
  * the satellite metadata (the same id scheme the artwork recipes use).
  *
- * Until the satellite exposes a per-market `subtitle` field on
- * `MarketMetadata`, FlowCard uses this map as the source of truth for
- * WC markets; non-WC markets without a curated entry simply hide
- * the subtitle row (the raw description belongs on the back card
- * under RESOLVES YES IF, not as front-card editorial copy).
+ * This map is one link in FlowCard's subtitle resolution order:
+ * explicit prop → `MarketMetadata.subtitle` (admin-curated) → this
+ * curated WC lookup → a length-clamped `market.description` blurb
+ * (only when it differs from the settlement clause) → hidden. So a
+ * market without a curated entry here no longer necessarily hides the
+ * row; it can still fall back to a guarded description line.
  *
  * The `·` separator and `&` join the line's two beats; lines stay terse
  * so they read as an editorial accent rather than a sentence. WC markets
