@@ -4,47 +4,25 @@ import {
 	PRIVACY_EMAIL,
 	RESOLUTION_EMAIL
 } from '$lib/constants/contact.constants';
+import { TERMS } from '$lib/constants/legal-docs.constants';
 import type { InfoDoc } from '$lib/types/info-doc';
 
 /**
  * Public information documents — Terms, Privacy, Resolution Rules,
  * FAQ, Contact, "How resolution works".
  *
- * **PLACEHOLDER COPY.** The `Legal · …` eyebrow lines mark documents
- * that must clear legal review before launch. The structure (blocks,
- * eyebrow + title, slug paths) is production-shaped — only the words
- * need to flow through legal.
+ * The localized help docs (FAQ, Contact, How resolution works, Resolution
+ * rules) route their copy through i18n: every block references a
+ * `MessageKey` (`info.doc.${slug}.${block}`) resolved per-locale at render
+ * time. The full controlling legal docs (Terms — and Privacy in turn) carry
+ * their English bodies as literal-text constants, kept out of the i18n
+ * catalogs by design; see `legal-docs.constants`.
  *
- * Copy is routed through i18n: every block references a `MessageKey`
- * (`info.doc.${slug}.${block}`) resolved per-locale at render time.
  * Email addresses are real contact identifiers, not translatable copy:
  * they come from `contact.constants` — `mail` blocks carry the constant
  * directly, and paragraphs that mention an address interpolate it via the
  * `{email}` param so the literal never duplicates across locales.
  */
-
-const TERMS: InfoDoc = {
-	slug: 'terms',
-	titleKey: 'info.doc.terms.title',
-	eyebrowKey: 'info.doc.terms.eyebrow',
-	blocks: [
-		{ kind: 'lede', key: 'info.doc.terms.b0' },
-		{ kind: 'h', key: 'info.doc.terms.b1' },
-		{ kind: 'p', key: 'info.doc.terms.b2' },
-		{ kind: 'h', key: 'info.doc.terms.b3' },
-		{ kind: 'p', key: 'info.doc.terms.b4' },
-		{ kind: 'h', key: 'info.doc.terms.b5' },
-		{ kind: 'p', key: 'info.doc.terms.b6' },
-		{ kind: 'h', key: 'info.doc.terms.b7' },
-		{ kind: 'p', key: 'info.doc.terms.b8' },
-		{ kind: 'h', key: 'info.doc.terms.b9' },
-		{ kind: 'p', key: 'info.doc.terms.b10' },
-		{ kind: 'h', key: 'info.doc.terms.b11' },
-		{ kind: 'p', key: 'info.doc.terms.b12' },
-		{ kind: 'h', key: 'info.doc.terms.b13' },
-		{ kind: 'p', key: 'info.doc.terms.b14' }
-	]
-};
 
 const PRIVACY: InfoDoc = {
 	slug: 'privacy',

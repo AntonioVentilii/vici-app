@@ -1163,31 +1163,6 @@ export const frMessages = {
 	'info.doc.resolution-rules.b9': 'Cas particuliers',
 	'info.doc.resolution-rules.eyebrow': 'Mentions légales · La procédure complète',
 	'info.doc.resolution-rules.title': 'Règles de résolution',
-	'info.doc.terms.b0':
-		'En utilisant VICI, tu acceptes les conditions ci-dessous. Elles sont rédigées en langage clair. La version juridiquement contraignante est celle que tu lis en ce moment.',
-	'info.doc.terms.b1': '1. Le service',
-	'info.doc.terms.b10':
-		'Pas d’automatisation. Pas de vote coordonné. Pas d’usurpation d’identité. Aucun contenu interdit par la loi applicable.',
-	'info.doc.terms.b11': '6. Résiliation',
-	'info.doc.terms.b12':
-		'Tu peux supprimer ton compte à tout moment depuis les Réglages. Nous pouvons suspendre un compte qui enfreint ces conditions. Nous t’en indiquerons la raison.',
-	'info.doc.terms.b13': '7. Modifications',
-	'info.doc.terms.b14':
-		'Les modifications substantielles sont annoncées dans l’app au moins sept jours avant leur entrée en vigueur. La poursuite de l’utilisation après cette date vaut acceptation.',
-	'info.doc.terms.b2':
-		'VICI est une app de prédictions gratuite. Nous proposons des marchés qui se résolvent sur des sources publiques. Nous ne facilitons aucun pari d’argent.',
-	'info.doc.terms.b3': '2. Ton compte',
-	'info.doc.terms.b4':
-		'Tu t’engages à fournir des informations exactes et à n’utiliser qu’un seul compte. Les comptes multiples créés pour manipuler les classements ou les battles seront supprimés sans préavis.',
-	'info.doc.terms.b5': '3. Tes prédictions',
-	'info.doc.terms.b6':
-		'Tu conserves la propriété de l’historique de ton compte. Nous nous réservons le droit d’afficher des statistiques agrégées et anonymisées qui en sont dérivées.',
-	'info.doc.terms.b7': '4. VXP',
-	'info.doc.terms.b8':
-		'Le VXP est un crédit dans l’app sans valeur monétaire. Il ne peut être ni échangé, ni transféré hors de l’app, ni converti en devise.',
-	'info.doc.terms.b9': '5. Conduite acceptable',
-	'info.doc.terms.eyebrow': 'Mentions légales · En vigueur le 1er mai 2026',
-	'info.doc.terms.title': 'Conditions d’utilisation',
 	'info.not_found.body':
 		'Aucun document ne correspond à cette adresse. Essayez un autre lien dans le pied de page ou retournez à l’accueil.',
 	'info.not_found.title': 'Document introuvable',
