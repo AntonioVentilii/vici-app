@@ -55,8 +55,36 @@
 	let langPopRef: HTMLUListElement | null = $state(null);
 	let dnavLangRef: HTMLDivElement | null = $state(null);
 	let langPopPos = $state<{ top: number; right: number } | null>(null);
+	let lpNavEl: HTMLElement | null = $state(null);
 
 	const LOCALES = SUPPORTED_LOCALES;
+
+	// What actually scrolls differs by platform: on iOS the landing scrolls
+	// inside the `.lpc` viewport (contained scroll, like the authenticated app
+	// shell — see `html[data-ios] .lpc` in `landing.css`), everywhere else the
+	// window scrolls. Resolve it at mount by walking up to the nearest
+	// scrollable ancestor so frost-on-scroll, scroll-spy and smooth-scroll all
+	// track whichever one is live, with no per-platform branching elsewhere.
+	let scrollRoot: HTMLElement | Window | null = null;
+
+	const findScrollRoot = (el: HTMLElement | null): HTMLElement | Window => {
+		let node: HTMLElement | null = el?.parentElement ?? null;
+
+		while (node) {
+			const oy = getComputedStyle(node).overflowY;
+
+			if (oy === 'auto' || oy === 'scroll') {
+				return node;
+			}
+
+			node = node.parentElement;
+		}
+
+		return window;
+	};
+
+	const scrollTopOf = (root: HTMLElement | Window): number =>
+		root === window ? window.scrollY : (root as HTMLElement).scrollTop;
 
 	onMount(() => {
 		if (typeof document !== 'undefined') {
@@ -66,18 +94,24 @@
 			document.documentElement.setAttribute('data-accent', 'laurel');
 		}
 
+		// Resolve whichever element actually scrolls: the `.lpc` viewport on
+		// iOS (contained scroll) or the window everywhere else.
+		const root = findScrollRoot(lpNavEl);
+		scrollRoot = root;
+
 		// Hysteresis (8px to engage, 4px to release) so iOS momentum/rubber-band
 		// jitter around the threshold can't rapidly toggle the scrolled state and
 		// make the nav background tremble. A small deadband, not a single edge.
 		const onScroll = () => {
-			const y = window.scrollY;
+			const y = scrollTopOf(root);
 			scrolled = scrolled ? y > 4 : y > 8;
 		};
 
 		onScroll();
-		window.addEventListener('scroll', onScroll, { passive: true });
+		root.addEventListener('scroll', onScroll, { passive: true });
 
-		// Scroll spy
+		// Scroll spy — observe against the live scroll root so it still fires
+		// when `.lpc` (not the window) is the scroller.
 		const els = sections
 			.map((s) => document.getElementById(s.id))
 			.filter((el): el is HTMLElement => Boolean(el));
@@ -92,7 +126,11 @@
 								}
 							});
 						},
-						{ rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.3, 0.6] }
+						{
+							root: root === window ? null : (root as HTMLElement),
+							rootMargin: '-30% 0px -55% 0px',
+							threshold: [0, 0.3, 0.6]
+						}
 					);
 
 		if (io) {
@@ -100,7 +138,7 @@
 		}
 
 		return () => {
-			window.removeEventListener('scroll', onScroll);
+			root.removeEventListener('scroll', onScroll);
 
 			if (io) {
 				io.disconnect();
@@ -199,11 +237,12 @@
 		};
 
 		update();
-		window.addEventListener('scroll', update, { passive: true });
+		const root = scrollRoot ?? window;
+		root.addEventListener('scroll', update, { passive: true });
 		window.addEventListener('resize', update, { passive: true });
 
 		return () => {
-			window.removeEventListener('scroll', update);
+			root.removeEventListener('scroll', update);
 			window.removeEventListener('resize', update);
 		};
 	});
@@ -226,8 +265,21 @@
 			}
 
 			e.preventDefault();
-			const y = el.getBoundingClientRect().top + window.scrollY - 72;
-			window.scrollTo({ top: y, behavior: 'smooth' });
+			const root = scrollRoot ?? window;
+
+			if (root === window) {
+				const y = el.getBoundingClientRect().top + window.scrollY - 72;
+				window.scrollTo({ top: y, behavior: 'smooth' });
+			} else {
+				const rootEl = root as HTMLElement;
+				const y =
+					el.getBoundingClientRect().top -
+					rootEl.getBoundingClientRect().top +
+					rootEl.scrollTop -
+					72;
+				rootEl.scrollTo({ top: y, behavior: 'smooth' });
+			}
+
 			history.replaceState(null, '', `#${id}`);
 		};
 
@@ -331,6 +383,7 @@
 
 <!-- ─── Pill nav (mobile/tablet, <1024px) ─── -->
 <nav
+	bind:this={lpNavEl}
 	class="lp-nav lp-root"
 	class:is-open={menuOpen}
 	class:is-scrolled={scrolled}
