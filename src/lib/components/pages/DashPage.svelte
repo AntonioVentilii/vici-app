@@ -29,7 +29,6 @@
 	import DashResolutionBanner from '$lib/components/dash/DashResolutionBanner.svelte';
 	import DashStackCard from '$lib/components/dash/DashStackCard.svelte';
 	import DashStackSheet from '$lib/components/dash/DashStackSheet.svelte';
-	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import ResolutionReveal from '$lib/components/market/ResolutionReveal.svelte';
 	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
@@ -350,23 +349,6 @@
 	});
 	const firstCallTimer = $derived(firstCallEntry ? timerOf(firstCallEntry.market) : '');
 
-	// Page-chrome eyebrow.
-	const headerEyebrow = $derived.by(() => {
-		if (isDay0) {
-			return t({ locale: $localeStore, key: 'dash.dz.header_eyebrow_day0' });
-		}
-
-		if (isDay1Pending) {
-			return t({ locale: $localeStore, key: 'dash.dz.header_eyebrow_day1' });
-		}
-
-		return t({
-			locale: $localeStore,
-			key: 'dash.build.header_eyebrow',
-			params: { count: streak }
-		});
-	});
-
 	onMount(async () => {
 		if (profile === undefined) {
 			return;
@@ -397,58 +379,61 @@
 	});
 </script>
 
-<PageScaffold eyebrow={headerEyebrow} title={t({ locale: $localeStore, key: 'dash.title' })}>
-	{#if resolvedPosNotInit && callsPlaced > 0}
-		<!-- LOADING · trade-history not yet initialized — gating on `settledTotal`
+<!-- No titled page header: the accuracy hero is the dashboard masthead, so the
+     content leads directly with the performance zone (the streak shows inline
+     inside the hero). The page heading is kept for assistive tech only, so the
+     document outline still has a top-level h1 without a visible title. -->
+<h1 class="sr-only">{t({ locale: $localeStore, key: 'dash.title' })}</h1>
+{#if resolvedPosNotInit && callsPlaced > 0}
+	<!-- LOADING · trade-history not yet initialized — gating on `settledTotal`
 		     here would misroute a returning user to Day-1. Render nothing until
 		     the resolved-positions store is ready (the window is brief). -->
-	{:else if isDay0 || isDay1Pending}
-		<div class="db-screen">
-			<DashBuildZero
-				day1={isDay1Pending}
-				{firstCallRow}
-				{firstCallTimer}
+{:else if isDay0 || isDay1Pending}
+	<div class="db-screen">
+		<DashBuildZero
+			day1={isDay1Pending}
+			{firstCallRow}
+			{firstCallTimer}
+			{holdingsDisplay}
+			{inPlayDisplay}
+			{moreRows}
+			pendingCount={liveCallCount}
+			{starterRows}
+		/>
+	</div>
+{:else}
+	<div class="db-screen">
+		<!-- Resolution banner · while-you-were-away -->
+		{#if digest.count > 0}
+			<DashResolutionBanner {digest} onOpen={openReveal} />
+		{/if}
+
+		<div class="db-body">
+			<!-- ZONE 1 · PERFORMANCE -->
+			<DashBuildHero
+				{accuracyPct}
+				{accuracyValue}
+				{friendsAhead}
+				{friendsTotal}
+				{sessionDelta}
+				{streak}
+			/>
+
+			<!-- ZONE 2 · STACK -->
+			<DashStackCard
 				{holdingsDisplay}
 				{inPlayDisplay}
-				{moreRows}
-				pendingCount={liveCallCount}
-				{starterRows}
+				onOpen={() => (sheetOpen = true)}
+				{todayDelta}
 			/>
+
+			<!-- ZONE 3 · CALLS -->
+			<DashCallsZone {openCalls} {resolvedCalls} resolvedTotal={settledTotal} />
 		</div>
-	{:else}
-		<div class="db-screen">
-			<!-- Resolution banner · while-you-were-away -->
-			{#if digest.count > 0}
-				<DashResolutionBanner {digest} onOpen={openReveal} />
-			{/if}
 
-			<div class="db-body">
-				<!-- ZONE 1 · PERFORMANCE -->
-				<DashBuildHero
-					{accuracyPct}
-					{accuracyValue}
-					{friendsAhead}
-					{friendsTotal}
-					{sessionDelta}
-					{streak}
-				/>
-
-				<!-- ZONE 2 · STACK -->
-				<DashStackCard
-					{holdingsDisplay}
-					{inPlayDisplay}
-					onOpen={() => (sheetOpen = true)}
-					{todayDelta}
-				/>
-
-				<!-- ZONE 3 · CALLS -->
-				<DashCallsZone {openCalls} {resolvedCalls} resolvedTotal={settledTotal} />
-			</div>
-
-			<div style:height="28px"></div>
-		</div>
-	{/if}
-</PageScaffold>
+		<div style:height="28px"></div>
+	</div>
+{/if}
 
 <DashStackSheet
 	{holdingsDisplay}
@@ -463,3 +448,17 @@
 {#if revealOpen}
 	<ResolutionReveal data={revealSnapshot} onDismiss={onRevealDismiss} onReview={onRevealReview} />
 {/if}
+
+<style lang="postcss">
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+</style>
