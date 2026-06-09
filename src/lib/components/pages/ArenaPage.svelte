@@ -3,7 +3,6 @@
 	import { browser } from '$app/environment';
 	import ArenaStandingHero from '$lib/components/arena/ArenaStandingHero.svelte';
 	import FriendsTab from '$lib/components/arena/FriendsTab.svelte';
-	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import BattlesInboxPage from '$lib/components/pages/BattlesInboxPage.svelte';
 	import LeaguesPage from '$lib/components/pages/LeaguesPage.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -13,8 +12,9 @@
 	 * Arena — the three-tab page (Friends / Leagues /
 	 * Battles) that anchors every cohort surface. Each tab embeds the
 	 * existing page component with `embedded={true}` so their own
-	 * appbars stay quiet; the tabbed parent renders the single
-	 * "Arena" appbar above the tab strip.
+	 * appbars stay quiet. The page leads with the standing hero (its
+	 * own eyebrow carries the context, e.g. GLOBAL RANK) directly above
+	 * the tab strip — there's no page-title header.
 	 *
 	 * Tab state persists in localStorage under `vici.arena-tab`,
 	 * so a user returning to /arena lands on the tab they last
@@ -68,56 +68,54 @@
 </script>
 
 <div class="arena-page">
-	<PageScaffold title={t({ locale: $localeStore, key: 'arena.title' })}>
-		<ArenaStandingHero onSelectTab={(tab) => (activeTab = tab)} />
+	<ArenaStandingHero onSelectTab={(tab) => (activeTab = tab)} />
 
-		<div class="arena-tabs" aria-label="Arena sections" role="tablist">
-			{#each TABS as tab (tab)}
-				<button
-					class="arena-tab"
-					class:is-active={activeTab === tab}
-					aria-selected={activeTab === tab}
-					onclick={() => (activeTab = tab)}
-					role="tab"
-					type="button"
-				>
-					{t({ locale: $localeStore, key: TAB_LABEL_KEY[tab] })}
-				</button>
-			{/each}
-		</div>
+	<div class="arena-tabs" aria-label="Arena sections" role="tablist">
+		{#each TABS as tab (tab)}
+			<button
+				class="arena-tab"
+				class:is-active={activeTab === tab}
+				aria-selected={activeTab === tab}
+				onclick={() => (activeTab = tab)}
+				role="tab"
+				type="button"
+			>
+				{t({ locale: $localeStore, key: TAB_LABEL_KEY[tab] })}
+			</button>
+		{/each}
+	</div>
 
-		<div class="arena-panel" role="tabpanel">
-			<!-- Defend against malformed / legacy profile data: a single friend
-			     row with an out-of-shape value could throw while rendering the
-			     active tab. Because the app is `ssr=false`, an unhandled throw
-			     escalates to the SvelteKit client error page (full-screen 500).
-			     The boundary keeps any residual data-shape failure inline so the
-			     rest of the Arena shell (appbar + tab strip) stays usable. -->
-			<svelte:boundary>
-				{#if activeTab === 'friends'}
-					<FriendsTab />
-				{:else if activeTab === 'leagues'}
-					<LeaguesPage embedded />
-				{:else if activeTab === 'battles'}
-					<BattlesInboxPage embedded />
-				{/if}
+	<div class="arena-panel" role="tabpanel">
+		<!-- Defend against malformed / legacy profile data: a single friend
+		     row with an out-of-shape value could throw while rendering the
+		     active tab. Because the app is `ssr=false`, an unhandled throw
+		     escalates to the SvelteKit client error page (full-screen 500).
+		     The boundary keeps any residual data-shape failure inline so the
+		     rest of the Arena shell (hero + tab strip) stays usable. -->
+		<svelte:boundary>
+			{#if activeTab === 'friends'}
+				<FriendsTab />
+			{:else if activeTab === 'leagues'}
+				<LeaguesPage embedded />
+			{:else if activeTab === 'battles'}
+				<BattlesInboxPage embedded />
+			{/if}
 
-				{#snippet failed(_error, reset)}
-					<div class="arena-boundary" role="alert">
-						<p class="arena-boundary-title">
-							{t({ locale: $localeStore, key: 'arena.boundary.title' })}
-						</p>
-						<p class="arena-boundary-body">
-							{t({ locale: $localeStore, key: 'arena.boundary.body' })}
-						</p>
-						<button class="arena-boundary-retry" onclick={reset} type="button">
-							{t({ locale: $localeStore, key: 'arena.boundary.retry' })}
-						</button>
-					</div>
-				{/snippet}
-			</svelte:boundary>
-		</div>
-	</PageScaffold>
+			{#snippet failed(_error, reset)}
+				<div class="arena-boundary" role="alert">
+					<p class="arena-boundary-title">
+						{t({ locale: $localeStore, key: 'arena.boundary.title' })}
+					</p>
+					<p class="arena-boundary-body">
+						{t({ locale: $localeStore, key: 'arena.boundary.body' })}
+					</p>
+					<button class="arena-boundary-retry" onclick={reset} type="button">
+						{t({ locale: $localeStore, key: 'arena.boundary.retry' })}
+					</button>
+				</div>
+			{/snippet}
+		</svelte:boundary>
+	</div>
 </div>
 
 <style lang="postcss">
@@ -125,7 +123,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
-		padding: 0 1.25rem 6rem;
+		/* No page-title header: the standing hero leads the page, so a small
+		   top inset keeps it off the chrome. The scroll viewport already
+		   reserves bottom-nav clearance (`--bn-clear`), so no extra
+		   padding-bottom is needed here. */
+		padding: 0.5rem 1.25rem 0;
 	}
 
 	/* Segmented-control tab strip: the container carries a tinted

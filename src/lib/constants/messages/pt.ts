@@ -2121,7 +2121,6 @@ export const ptMessages = {
 	'arena.tabs.battles': 'Duelos',
 	'arena.tabs.friends': 'Amigos',
 	'arena.tabs.leagues': 'Ligas',
-	'arena.title': 'Arena',
 	'arena.boundary.title': 'Não foi possível carregar esta aba',
 	'arena.boundary.body': 'Ocorreu um erro ao exibir esta seção. Tente outra aba ou reabra a Arena.',
 	'arena.boundary.retry': 'Tentar novamente',
