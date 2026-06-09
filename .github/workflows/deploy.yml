@@ -59,7 +59,10 @@ jobs:
         env:
           JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
 
+      # `--prune` deletes superseded content-hashed assets. Without it `#dapp`
+      # grows every deploy until asset certification exceeds the IC's
+      # 40B-instruction message limit and the site 503s ("Invalid tree root hash").
       - name: Deploy to Juno
         uses: junobuild/juno-action@main
         with:
-          args: hosting deploy
+          args: hosting deploy --prune
