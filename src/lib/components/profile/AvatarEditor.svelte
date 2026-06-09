@@ -524,6 +524,11 @@
 
 	.avatar-editor-body {
 		flex: 1;
+		/* `min-height: 0` lets this flex child shrink below its content so the
+		 * grid scrolls *inside* the panel — without it the body keeps its full
+		 * intrinsic height and pushes the footer past the panel's bottom edge
+		 * (clipped behind the iOS browser toolbar). */
+		min-height: 0;
 		overflow-y: auto;
 		padding: 6px 18px 24px;
 	}
@@ -612,6 +617,7 @@
 
 	.avatar-editor-foot {
 		display: flex;
+		flex-shrink: 0;
 		gap: 10px;
 		/* Generous safe-area floor so the footer clears the home indicator on
 		 * notched devices while still reading as a comfortable inset elsewhere. */
