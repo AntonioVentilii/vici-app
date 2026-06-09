@@ -15,9 +15,9 @@
 	 *
 	 * Layout: VICI wordmark + category deck badge ("WORLD CUP" /
 	 * "N CATS") + a daily-goal bolt chip on the left, streak flame +
-	 * bell on the right. A secondary row carries `idx / total` + `+xp
-	 * VXP this session` and a thin progress bar. Tapping the wordmark
-	 * exits Flow.
+	 * bell on the right. A secondary row carries the daily-goal count
+	 * (`done / total`) + `+xp VXP this session` and a thin progress bar.
+	 * Tapping the wordmark exits Flow.
 	 *
 	 * The bolt chip, the secondary row's count text, and the thin progress
 	 * bar all track the same day-long goal (`dailyGoalDone` /

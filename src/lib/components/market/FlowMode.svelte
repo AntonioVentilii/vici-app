@@ -1018,8 +1018,9 @@
 	{:else if entered}
 		<!-- Persistent Flow header: VICI wordmark + deck-scope chip +
 		     bolt streak chip on the left; bell on the right. Secondary
-		     row carries `idx / total` and `+xp VXP this session` over a
-		     thin progress bar. Tapping the wordmark exits Flow. -->
+		     row carries the daily-goal count (`done / total`) and `+xp VXP
+		     this session` over a thin progress bar. Tapping the wordmark
+		     exits Flow. -->
 		<FlowTopBar
 			categoryLabel={topBarCategoryLabel}
 			{dailyGoalDone}
