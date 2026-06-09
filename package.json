@@ -26,6 +26,7 @@
 		"init:registry": "./scripts/init/init.registry.sh",
 		"deploy:markets": "./scripts/deploy-markets.sh",
 		"tag:markets": "./scripts/tag-markets.sh",
+		"translate:markets": "./scripts/translate-markets.sh",
 		"init:icdc": "npm run init:clearing && npm run init:icdc-engine && npm run init:registry && npm run init:icdc-dev-bootstrap",
 		"test:engine-sync": "./scripts/test/test-engine-sync.sh",
 		"init:vxp-treasury": "./scripts/init/init.vxp-treasury.sh",
