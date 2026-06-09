@@ -29,6 +29,18 @@
 
 	onMount(() => {
 		document.title = 'VICI';
+
+		// Opt the landing into the contained-scroll viewport (see `.lpc` in
+		// `landing.css`). On iOS this moves scrolling off the document into
+		// `.lpc`, so the address bar never collapses mid-scroll and the sticky
+		// nav can't judder — the same model the authenticated app shell uses.
+		// The flag scopes the body lock to this page; every other route keeps
+		// its natural body scroll.
+		document.documentElement.dataset.landingScroll = '1';
+
+		return () => {
+			delete document.documentElement.dataset.landingScroll;
+		};
 	});
 </script>
 
