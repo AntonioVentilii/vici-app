@@ -1108,35 +1108,6 @@ export const frMessages = {
 	'info.doc.how-resolution-works.b9': 'Si une source publie de façon ambiguë',
 	'info.doc.how-resolution-works.eyebrow': 'Aide · Résolution',
 	'info.doc.how-resolution-works.title': 'Comment fonctionne la résolution',
-	'info.doc.privacy.b0':
-		'Ce que nous collectons, pourquoi nous le collectons, avec qui nous le partageons. En bref : nous collectons le moins possible.',
-	'info.doc.privacy.b1': 'Ce que nous collectons',
-	'info.doc.privacy.b10':
-		'L’accès, l’export, la rectification et la suppression de tes données sont disponibles sur demande à {email}. Nous répondons sous trente jours.',
-	'info.doc.privacy.b11': 'Cookies',
-	'info.doc.privacy.b12':
-		'Nous stockons un seul jeton de session. Nous n’utilisons pas de cookies de suivi.',
-	'info.doc.privacy.b2.i0':
-		'Compte : ton handle, ton e-mail, ta langue et ta préférence d’apparence',
-	'info.doc.privacy.b2.i1':
-		'Prédictions : chaque call que tu fais, quand tu l’as fait, le résultat',
-	'info.doc.privacy.b2.i2':
-		'Appareil : un jeton de session dans le localStorage ; aucun identifiant publicitaire',
-	'info.doc.privacy.b2.i3':
-		'Affiliation : l’établissement que tu choisis pour Worlds (verrouillé 90 jours après un changement)',
-	'info.doc.privacy.b3': 'Comment nous l’utilisons',
-	'info.doc.privacy.b4.i0': 'Pour calculer ta précision, ta série, ton rang et tes VXP',
-	'info.doc.privacy.b4.i1': 'Pour afficher ton handle dans les classements auxquels tu participes',
-	'info.doc.privacy.b4.i2': 'Pour répondre aux demandes de support',
-	'info.doc.privacy.b5': 'Avec qui nous le partageons',
-	'info.doc.privacy.b6':
-		'Aucune publicité de tiers. Aucun courtier en données. Des statistiques agrégées et anonymisées peuvent apparaître dans des contenus éditoriaux (p. ex. « 64% des utilisateurs ont appelé YES »). Tes calls individuels sont visibles par les ligues que tu rejoins.',
-	'info.doc.privacy.b7': 'Où elles résident',
-	'info.doc.privacy.b8':
-		'Serveurs dans l’Union européenne. Les données sont chiffrées au repos et en transit.',
-	'info.doc.privacy.b9': 'Tes droits',
-	'info.doc.privacy.eyebrow': 'Mentions légales · En vigueur le 1er mai 2026',
-	'info.doc.privacy.title': 'Politique de confidentialité',
 	'info.doc.resolution-rules.b0':
 		'La procédure exacte par laquelle chaque marché sur VICI est résolu. Source de référence : ce document.',
 	'info.doc.resolution-rules.b1': 'Avant la mise en ligne',

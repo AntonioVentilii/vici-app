@@ -1,10 +1,5 @@
-import {
-	HELLO_EMAIL,
-	INFO_EMAIL,
-	PRIVACY_EMAIL,
-	RESOLUTION_EMAIL
-} from '$lib/constants/contact.constants';
-import { TERMS } from '$lib/constants/legal-docs.constants';
+import { HELLO_EMAIL, INFO_EMAIL, RESOLUTION_EMAIL } from '$lib/constants/contact.constants';
+import { PRIVACY, TERMS } from '$lib/constants/legal-docs.constants';
 import type { InfoDoc } from '$lib/types/info-doc';
 
 /**
@@ -23,38 +18,6 @@ import type { InfoDoc } from '$lib/types/info-doc';
  * directly, and paragraphs that mention an address interpolate it via the
  * `{email}` param so the literal never duplicates across locales.
  */
-
-const PRIVACY: InfoDoc = {
-	slug: 'privacy',
-	titleKey: 'info.doc.privacy.title',
-	eyebrowKey: 'info.doc.privacy.eyebrow',
-	blocks: [
-		{ kind: 'lede', key: 'info.doc.privacy.b0' },
-		{ kind: 'h', key: 'info.doc.privacy.b1' },
-		{
-			kind: 'list',
-			itemKeys: [
-				'info.doc.privacy.b2.i0',
-				'info.doc.privacy.b2.i1',
-				'info.doc.privacy.b2.i2',
-				'info.doc.privacy.b2.i3'
-			]
-		},
-		{ kind: 'h', key: 'info.doc.privacy.b3' },
-		{
-			kind: 'list',
-			itemKeys: ['info.doc.privacy.b4.i0', 'info.doc.privacy.b4.i1', 'info.doc.privacy.b4.i2']
-		},
-		{ kind: 'h', key: 'info.doc.privacy.b5' },
-		{ kind: 'p', key: 'info.doc.privacy.b6' },
-		{ kind: 'h', key: 'info.doc.privacy.b7' },
-		{ kind: 'p', key: 'info.doc.privacy.b8' },
-		{ kind: 'h', key: 'info.doc.privacy.b9' },
-		{ kind: 'p', key: 'info.doc.privacy.b10', params: { email: PRIVACY_EMAIL } },
-		{ kind: 'h', key: 'info.doc.privacy.b11' },
-		{ kind: 'p', key: 'info.doc.privacy.b12' }
-	]
-};
 
 const RESOLUTION_RULES: InfoDoc = {
 	slug: 'resolution-rules',
