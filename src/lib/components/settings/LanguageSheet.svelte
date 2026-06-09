@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Check, Search, X } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
+	import { pinToVisualViewport } from '$lib/actions/pin-to-visual-viewport';
 	import { SUPPORTED_LOCALES, type AppLocale } from '$lib/constants/locale.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
@@ -101,6 +102,7 @@
 		onclick={close}
 		onkeydown={(e) => e.key === 'Escape' && close()}
 		role="presentation"
+		use:pinToVisualViewport
 	>
 		<div
 			bind:this={sheetEl}
@@ -195,7 +197,16 @@
 	   while the sheet is open so the docked panel owns the bottom slot. */
 	.lang-scrim {
 		position: fixed;
-		inset: 0;
+		/* `use:pinToVisualViewport` sizes this to the *actually-visible* region
+		 * via `window.visualViewport`; on iOS a fixed `inset: 0` resolves against
+		 * the large layout viewport and iOS Chrome doesn't honour `100dvh`, so the
+		 * flex-end sheet would clip behind the bottom toolbar / keyboard (#670).
+		 * The `100dvh`/`100vh` is the desktop / no-`visualViewport` fallback. */
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 100vh; /* fallback for engines without `dvh` / visualViewport */
+		height: 100dvh;
 		z-index: 80;
 		display: flex;
 		flex-direction: column;

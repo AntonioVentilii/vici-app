@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { browser } from '$app/environment';
+	import { pinToVisualViewport } from '$lib/actions/pin-to-visual-viewport';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -81,47 +82,6 @@
 			}
 		};
 	});
-
-	/**
-	 * Drive `--kb-inset` off `window.visualViewport` so the sheet lifts
-	 * above the on-screen keyboard. The overlap is the slice of the
-	 * layout viewport the keyboard covers: `innerHeight − visualViewport
-	 * height − offsetTop`, floored at 0 (no negative insets when the
-	 * keyboard is closed). No-op when `visualViewport` is unavailable
-	 * (desktop / older engines), so the hooks stay inert there.
-	 */
-	$effect(() => {
-		if (!browser || !isOpen || !sheetEl) {
-			return;
-		}
-
-		const viewport = window.visualViewport;
-
-		if (!viewport) {
-			return;
-		}
-
-		const el = sheetEl;
-
-		const sync = () => {
-			const overlap = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
-			el.style.setProperty('--kb-inset', `${overlap}px`);
-		};
-
-		// Passive: the listeners only read viewport metrics to drive the
-		// `--kb-inset` CSS var; they never call `preventDefault`.
-		const opts: AddEventListenerOptions = { passive: true };
-
-		sync();
-		viewport.addEventListener('resize', sync, opts);
-		viewport.addEventListener('scroll', sync, opts);
-
-		return () => {
-			viewport.removeEventListener('resize', sync, opts);
-			viewport.removeEventListener('scroll', sync, opts);
-			el.style.removeProperty('--kb-inset');
-		};
-	});
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
@@ -133,6 +93,7 @@
 		onclick={close}
 		onkeydown={(e) => e.key === 'Escape' && close()}
 		role="presentation"
+		use:pinToVisualViewport
 	>
 		<div
 			bind:this={sheetEl}
@@ -174,15 +135,20 @@
 
 	.sheet-scrim {
 		position: fixed;
-		/* Size to the *dynamic* viewport (`dvh`), not `inset: 0`. On iOS the
-		 * layout viewport a fixed `inset: 0` resolves against is the *large*
-		 * viewport (toolbars retracted), so its bottom edge — where the sheet
-		 * docks via `flex-end` — sits behind the bottom toolbar, clipping the
-		 * footer CTA. `100dvh` tracks the currently-visible height instead. */
+		/* `use:pinToVisualViewport` sizes this to the *actually-visible* region
+		 * (inline `top`/`left`/`width`/`height` from `window.visualViewport`),
+		 * which is the only reliable measure on iOS. A fixed `inset: 0` resolves
+		 * against the *large* layout viewport (toolbars retracted) and iOS Chrome
+		 * doesn't honour `100dvh`, so the sheet — docked at this scrim's bottom
+		 * via `flex-end` — would land behind the bottom toolbar and clip its CTA
+		 * (#670). `visualViewport.height` also excludes the on-screen keyboard, so
+		 * the same pin lifts the sheet above the keyboard — no `--kb-inset`
+		 * needed. The `100dvh`/`100vh` here is the desktop / no-`visualViewport`
+		 * fallback. */
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 100vh; /* fallback for engines without `dvh` */
+		height: 100vh; /* fallback for engines without `dvh` / visualViewport */
 		height: 100dvh;
 		z-index: 80;
 		display: flex;
@@ -200,22 +166,13 @@
 		flex-direction: column;
 		width: 100%;
 		max-width: 32rem;
-		/* Lift the sheet above the on-screen keyboard: hosts may set
-		 * `--kb-inset` to the keyboard height so the docked edge tracks
-		 * it. The flex-end scrim positions the sheet via margin (not
-		 * `bottom`), so anchor through `margin-bottom`; the height cap
-		 * shrinks in step so the body still scrolls. Defaults to `0px`,
-		 * so the hooks are inert until something sets `--kb-inset`. */
-		margin-bottom: var(--kb-inset, 0px);
-		/* Layered fallbacks, weakest first: `92vh` for engines without `dvh`;
-		 * `92dvh` (tracks the visible height under the iOS dynamic toolbar) for
-		 * those without `max()`; the floored `calc()` for the rest. A large
-		 * `--kb-inset` can drive the `calc()` negative, collapsing the cap —
-		 * `max()` floors it at `0px`. */
+		/* Fill at most 92% of the (pinned) scrim height so the grip + body stay
+		 * within the visible area and the body scrolls inside. `92%` tracks the
+		 * scrim's true visible height (incl. when the keyboard shrinks it);
+		 * `92dvh`/`92vh` are the fallbacks for engines without `visualViewport`. */
 		max-height: 92vh;
 		max-height: 92dvh;
-		max-height: max(0px, calc(92dvh - var(--kb-inset, 0px)));
-		transition: margin-bottom 0.22s var(--ease-vici);
+		max-height: 92%;
 		/* Side inset defaults to the shared 1.1rem; hosts can override just
 		 * the horizontal padding via `--sheet-side-padding` (the `sidePadding`
 		 * prop) without disturbing the top / safe-area-bottom metrics. */
@@ -233,10 +190,6 @@
 		.sheet-scrim,
 		.sheet {
 			animation: none;
-		}
-
-		.sheet {
-			transition: none;
 		}
 	}
 
