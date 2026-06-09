@@ -1,5 +1,7 @@
+import { WC_MARKET_ART } from '$lib/constants/flow-art-wc-markets.constants';
 import {
 	WC_HAIR,
+	WC_NATION_KITS,
 	WC_NATIONS,
 	WC_SHIRT,
 	WC_SKIN,
@@ -7,10 +9,16 @@ import {
 	type WCHairStyle,
 	type WCNation
 } from '$lib/constants/flow-art-wc.constants';
+import { normalizeWcQuestion } from '$lib/constants/wc-market-schedule.constants';
 import { makeRng } from '$lib/utils/flow-art/rng';
 import type { RenderArgs } from '$lib/utils/flow-art/types';
 import { makeWcHelpers, type WcHelpers } from '$lib/utils/flow-art/wc/helpers';
 import { WC_RECIPES } from '$lib/utils/flow-art/wc/recipes';
+import {
+	resolveWcTemplate,
+	type WcResolvedTemplate
+} from '$lib/utils/flow-art/wc/resolve-template';
+import { renderWcTemplate } from '$lib/utils/flow-art/wc/templates';
 
 // ---- WC — Faceted Editorial system (curated, per market) -----
 // Coordinate space is 280×100 (slice fill) — the wide full-bleed
@@ -33,7 +41,7 @@ import { WC_RECIPES } from '$lib/utils/flow-art/wc/recipes';
 // (`wc-spot wc-spot-left/right` and `wc-cnf wc-cnf-${i}`) and the
 // figure wraps in `<g class="wc-figure">`. The matching keyframes
 // live in `FlowArtFrame.svelte` and respect `prefers-reduced-motion`.
-export const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
+export const renderWC = ({ p, state, uid, seed, title }: RenderArgs): string => {
 	const h = makeWcHelpers(p, uid);
 
 	// === FALLBACK (seed-varied) ==============================
@@ -161,13 +169,57 @@ export const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 		);
 	};
 
-	// Resolution order: curated recipe → known nation → seed-varied
-	// fallback. The nation tier only fires on non-curated ids (recipes
-	// win first), so it can't shadow a hand-authored scene.
+	// Resolution order: curated recipe → known nation → authoritative
+	// per-market catalogue (`WC_MARKET_ART`, keyed by normalized question)
+	// → question-derived heuristic template → seed-varied fallback.
+	// Recipes and the hand-authored nation scenes win first so neither is
+	// shadowed. The catalogue + heuristic tiers only fire when a `title`
+	// (the market question) is supplied — otherwise the generic fallback
+	// renders exactly as before, so call sites that don't pass a title are
+	// completely unaffected.
 	const nationCode = /^wc-([a-z]{2})(?:-|$)/.exec(seedKey)?.[1];
 	const nation = nationCode ? WC_NATIONS[nationCode] : undefined;
 	const recipeFn = WC_RECIPES[seedKey];
-	let s = recipeFn ? recipeFn(h) : nation ? nationScene(h, nation) : generativeFallback(h, seedKey);
+
+	// Resolve the authoritative catalogue entry (if any) for this market's
+	// question into a renderable template descriptor: team / nation names
+	// are looked up in `WC_NATION_KITS`; an unknown name simply omits the
+	// kit and the template falls back to a neutral palette (never crashes).
+	const catalogueTemplate = (rawTitle?: string | null): WcResolvedTemplate | null => {
+		const key = rawTitle ? normalizeWcQuestion(rawTitle) : '';
+		const art = key.length > 0 ? WC_MARKET_ART[key] : undefined;
+
+		if (!art) {
+			return null;
+		}
+
+		// `nation` and `teamA` both feed the single-focal-team slot.
+		const focalName = art.teamA ?? art.nation;
+
+		return {
+			templateId: art.template,
+			teamA: focalName ? WC_NATION_KITS[focalName] : undefined,
+			teamB: art.teamB ? WC_NATION_KITS[art.teamB] : undefined
+		};
+	};
+
+	let s: string;
+
+	if (recipeFn) {
+		s = recipeFn(h);
+	} else if (nation) {
+		s = nationScene(h, nation);
+	} else {
+		// Same id → same scene: seed the template's detail PRNG off the
+		// raw market id only (not theme / state), matching the generative
+		// fallback's stability contract. The catalogue (authoritative,
+		// brief-matched) is tried first, then the heuristic resolver.
+		const template = catalogueTemplate(title) ?? resolveWcTemplate({ question: title });
+		const templateBody = template
+			? renderWcTemplate({ template, h, g: makeRng(`wc-template::${seedKey}`), uid })
+			: '';
+		s = templateBody.length > 0 ? templateBody : generativeFallback(h, seedKey);
+	}
 
 	// Lost → desaturated veil over whichever scene fired.
 	if (state === 'lost') {
