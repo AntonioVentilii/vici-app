@@ -2380,7 +2380,7 @@ export const esMessages = {
 	'welcome.hero.favorite': 'FAVORITO',
 	'welcome.hero.headline': 'Que tu “te lo dije” tenga pruebas.',
 	'welcome.hero.hint': 'Desliza la carta — izquierda no, derecha sí',
-	'welcome.hero.kicker': 'Copa del Mundo FIFA 2026 · en vivo',
+	'welcome.hero.kicker': 'Copa del Mundo FIFA 2026® · en vivo',
 	'welcome.hero.long_shot': 'TAPADO',
 	'welcome.hero.no': 'NO',
 	'welcome.hero.payoff': 'Desafía a tus amigos.',

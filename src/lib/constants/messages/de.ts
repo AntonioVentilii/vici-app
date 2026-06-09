@@ -2392,7 +2392,7 @@ export const deMessages = {
 	'welcome.hero.favorite': 'FAVORIT',
 	'welcome.hero.headline': 'Für Besserwisser.',
 	'welcome.hero.hint': 'Swipe die Karte — links nein, rechts ja',
-	'welcome.hero.kicker': 'FIFA WM 2026 · live',
+	'welcome.hero.kicker': 'FIFA WM 2026® · live',
 	'welcome.hero.long_shot': 'AUSSENSEITER',
 	'welcome.hero.no': 'NEIN',
 	'welcome.hero.payoff': 'Fordere deine Freunde heraus.',
