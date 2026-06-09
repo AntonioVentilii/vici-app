@@ -7,7 +7,7 @@
 		type AppLocale,
 		type LocaleEntry
 	} from '$lib/constants/locale.constants';
-	import { detectedLocale, localeStore } from '$lib/stores/locale.store';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -18,8 +18,7 @@
 	 * Languages list from `localeLanguageGroups()`; a multi-region language
 	 * (Spanish, Portuguese) renders an expandable header drilling into its
 	 * regional editions, while a single-region language collapses to one direct
-	 * pick row. The auto-detected locale carries an AUTO badge and a "Suggested"
-	 * section; an explicit choice exposes a "Use automatic" reset (rendered by
+	 * pick row. An explicit choice exposes a "Use automatic" reset (rendered by
 	 * the host surface) so a user is never trapped.
 	 *
 	 * Flags diverge from emoji: country region rows render the SVG
@@ -71,25 +70,6 @@
 		return group?.regions.find(({ worldFlag }) => worldFlag) ?? group?.regions[0] ?? currentEntry;
 	});
 	const selectedId = $derived<AppLocale | undefined>(selectedEntry?.id);
-
-	// The auto-detected locale can also be a hidden base (e.g. detection returns
-	// `es`), which has no region row of its own. Map it the same way as the
-	// active selection so the per-row AUTO badge lands on a rendered region
-	// instead of disappearing.
-	const detectedVisibleId = $derived.by<AppLocale | undefined>(() => {
-		const entry = LOCALE_REGISTRY.find(({ id }) => id === detectedLocale);
-
-		if (!entry || entry.hidden !== true) {
-			return detectedLocale;
-		}
-
-		const [lang] = entry.id.split('-');
-		const group = groups.find((g) => g.lang === lang);
-
-		return (
-			(group?.regions.find(({ worldFlag }) => worldFlag) ?? group?.regions[0])?.id ?? detectedLocale
-		);
-	});
 
 	// Track which language header is open. Seed from the active language so a
 	// returning user lands with their language drilled in.
@@ -183,9 +163,6 @@
 							<span class="lp-row-sub">{group.name}</span>
 						{/if}
 					</span>
-					{#if detectedVisibleId === region.id}
-						<span class="lp-auto num">{t({ locale: $localeStore, key: 'picker.auto' })}</span>
-					{/if}
 					{#if active}
 						<Check class="lp-check" aria-hidden="true" size={17} strokeWidth={2.2} />
 					{/if}
@@ -246,11 +223,6 @@
 											<span class="lp-row-sub">{region.name}</span>
 										{/if}
 									</span>
-									{#if detectedVisibleId === region.id}
-										<span class="lp-auto num"
-											>{t({ locale: $localeStore, key: 'picker.auto' })}</span
-										>
-									{/if}
 									{#if active}
 										<Check class="lp-check" aria-hidden="true" size={17} strokeWidth={2.2} />
 									{/if}
@@ -419,18 +391,6 @@
 	}
 
 	.lp-row-sub.is-region {
-		color: var(--color-primary);
-	}
-
-	.lp-auto {
-		flex-shrink: 0;
-		padding: 0.125rem 0.4375rem;
-		border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
-		border-radius: var(--r-pill, 999px);
-		font-size: var(--t-10);
-		font-weight: 800;
-		letter-spacing: 0.12em;
-		line-height: 1;
 		color: var(--color-primary);
 	}
 
