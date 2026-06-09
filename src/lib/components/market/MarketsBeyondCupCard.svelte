@@ -2,13 +2,10 @@
 	import { Check, ChevronDown, ChevronRight, Lock } from '@lucide/svelte';
 	import { slide } from 'svelte/transition';
 	import { categoryLabel, MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
-	import {
-		decisiveSettledCount,
-		resolvedPositionsNotInitialized
-	} from '$lib/derived/resolved-positions.derived';
+	import { decisiveSettledCount } from '$lib/derived/resolved-positions.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
-	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
+	import type { Market } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
@@ -20,40 +17,76 @@
 	 * calibrated accuracy and a progress bar toward {@link UNLOCK_ACC}, and
 	 * expands to preview the locked categories.
 	 *
-	 * Accuracy source: the viewer's persisted `profile.accuracy` (a 0..100
-	 * win-rate), surfaced through `displayAccuracyPct` so a user with no settled
-	 * calls yet reads the same optimistic 100% the rest of their own stat
-	 * surfaces show (see `accuracy.utils`) rather than a discouraging 0%.
+	 * The gate is EARNED, not optimistic: it reads the viewer's *real* decisive
+	 * win-rate (`profile.accuracy`, a 0..100 figure that is `0` until calls
+	 * settle) — never the empty-state 100% that own-stat surfaces show — and
+	 * requires both a minimum sample of decisive calls
+	 * ({@link BEYOND_CUP_MIN_CALLS}) and the accuracy threshold. A brand-new
+	 * user therefore reads LOCKED at their real 0%, so the skill gate can't be
+	 * unlocked before any skill is shown.
+	 *
+	 * `BEYOND_CUP_MIN_CALLS` is a dedicated gate (no app-wide lifetime min-calls
+	 * display constant exists — the leaderboard's `MIN_CALLS_FOR_RANK` is 50 and
+	 * the monthly award's `MONTHLY_MIN_CALLS` is month-scoped, both wrong here).
 	 *
 	 * Locked categories = the closed `MARKET_TAGS` taxonomy minus `wc`. There is
 	 * no buy path here — the gate only previews what unlocking opens.
 	 */
 
+	interface Props {
+		/** All known markets, used to count the open non-World-Cup lines. */
+		markets: Market[];
+		/** Per-market tag lookup (`market.id` → tags), from `$marketTags`. */
+		tagsByMarket: Record<string, MarketTag[]>;
+		/** Whether tag metadata has loaded — the count is `0` until it has. */
+		tagsInitialized: boolean;
+	}
+
+	const { markets, tagsByMarket, tagsInitialized }: Props = $props();
+
 	/** Calibrated-accuracy threshold (0..1) to unlock the non-World-Cup board. */
 	const UNLOCK_ACC = 0.75;
 
+	/**
+	 * Minimum decisive (won/lost) settled calls before the gate can unlock.
+	 * Below this the win-rate is too noisy to certify skill (a single 1/1
+	 * would otherwise clear the bar), so the gate stays locked regardless of
+	 * the percentage.
+	 */
+	const BEYOND_CUP_MIN_CALLS = 30;
+
 	let open = $state(false);
 
-	// Display percentage (0..100, no trailing '%'), optimistic-empty handled by
-	// `displayAccuracyPct`. Round to a whole point for the headline + progress.
-	const accuracyPctRaw = $derived(
-		Number(
-			displayAccuracyPct({
-				accuracy: $userStore.profile?.accuracy ?? 0,
-				settledCount: $decisiveSettledCount,
-				initialized: !$resolvedPositionsNotInitialized
-			})
-		)
-	);
+	// Real decisive win-rate (0..100), NOT the optimistic empty-state 100%: the
+	// gate must be earned, so a user with no settled calls reads their true 0%.
+	const accuracyPctRaw = $derived($userStore.profile?.accuracy ?? 0);
+	const settledCount = $derived($decisiveSettledCount);
 
-	const pct = $derived(Math.round(accuracyPctRaw));
+	// Headline percent and remaining points are both derived from the same raw
+	// value the lock state uses, so the headline can never read "75% / 0 to go"
+	// while still locked (74.6 → rounds to 75 but is below the 0.75 bar). The
+	// percent rounds DOWN so it never overshoots the unrounded comparison.
 	const target = $derived(Math.round(UNLOCK_ACC * 100));
-	const unlocked = $derived(accuracyPctRaw / 100 >= UNLOCK_ACC);
+	const pct = $derived(Math.floor(accuracyPctRaw));
+	const unlocked = $derived(
+		settledCount >= BEYOND_CUP_MIN_CALLS && accuracyPctRaw / 100 >= UNLOCK_ACC
+	);
 	const progress = $derived(Math.max(0, Math.min(1, accuracyPctRaw / 100 / UNLOCK_ACC)));
 	const remaining = $derived(Math.max(0, target - pct));
 
 	// Locked categories: the closed taxonomy minus the World-Cup category.
 	const lockedCategories = $derived<MarketTag[]>(MARKET_TAGS.filter((tag) => tag !== 'wc'));
+
+	// What unlocking opens, counted in MARKETS (not categories): open lines that
+	// aren't World-Cup. `0` until tags load so the headline never overcounts.
+	const nonWcOpenMarketsCount = $derived(
+		tagsInitialized
+			? markets.filter(
+					(market) =>
+						market.status === 'Open' && !(tagsByMarket[market.id]?.includes('wc') ?? false)
+				).length
+			: 0
+	);
 
 	const toggle = () => (open = !open);
 </script>
@@ -79,7 +112,7 @@
 							{t({
 								locale: $localeStore,
 								key: 'markets.beyond.ready',
-								params: { count: lockedCategories.length }
+								params: { count: nonWcOpenMarketsCount }
 							})}
 						{:else}
 							{t({
@@ -125,7 +158,7 @@
 				</p>
 				<div class="beyond-tiles">
 					{#each lockedCategories as category (category)}
-						<div class="beyond-tile row between" aria-disabled="true">
+						<div class="beyond-tile row between">
 							<span class="beyond-tile-label t-body-sm fw-600" class:unlocked>
 								{categoryLabel({ category, variant: 'full', locale: $localeStore })}
 							</span>

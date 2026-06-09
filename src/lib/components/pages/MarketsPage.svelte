@@ -49,7 +49,11 @@
 		wcFocus ? [{ label: t({ locale: $localeStore, key: 'markets.wc_eyebrow' }) }] : undefined
 	);
 
-	const loading = $derived($marketsNotInitialized);
+	// Loading covers both feeds the board depends on: the markets list and — in
+	// World-Cup focus, where the board filters by the `wc` tag — the tag
+	// metadata. Without the tag guard, `availableMarkets` is briefly empty while
+	// tags fetch, flashing the "no markets" empty state over loaded markets.
+	const loading = $derived($marketsNotInitialized || (wcFocus && $marketTagsNotInitialized));
 
 	const savedSet = $derived(new Set($preferencesStore.savedMarketIds));
 	// Saved = the viewer's watchlist, kept even if an entry isn't World Cup.
@@ -75,17 +79,21 @@
 	// category only (the single open event); once the arc opens up (`open` /
 	// `off`) it's every market — so the page keeps working past the Cup. Gated
 	// on tag metadata being initialized so a WC filter doesn't collapse the board
-	// to empty before tags load.
+	// to empty before tags load. Both branches list only `Open` (callable) lines
+	// — matching the section label and the Open-only Trending rail — so resolved
+	// / expired markets never surface under "Available predictions".
 	const availableMarkets = $derived.by((): Market[] => {
+		const openMarkets = $markets.filter((m) => m.status === 'Open');
+
 		if (!wcFocus) {
-			return [...$markets].sort(byVolumeDesc);
+			return [...openMarkets].sort(byVolumeDesc);
 		}
 
 		if ($marketTagsNotInitialized) {
 			return [];
 		}
 
-		return $markets.filter((m) => matchesTag({ market: m, tag: 'wc' }));
+		return openMarkets.filter((m) => matchesTag({ market: m, tag: 'wc' }));
 	});
 
 	// Resolving soon: available lines closing within the window, soonest first.
@@ -142,7 +150,11 @@
 	{/if}
 
 	<!-- Beyond the Cup — the skill-gate unlock goal, surfaced high. -->
-	<MarketsBeyondCupCard />
+	<MarketsBeyondCupCard
+		markets={$markets}
+		{tagsByMarket}
+		tagsInitialized={!$marketTagsNotInitialized}
+	/>
 
 	<!-- Trending rail. -->
 	{#if trendingMarkets.length > 0}
@@ -160,7 +172,18 @@
 		<h3>{t({ locale: $localeStore, key: 'markets.section.saved' })}</h3>
 		<span class="mute t-sub">{savedMarkets.length}</span>
 	</div>
-	{#if savedMarkets.length === 0}
+	{#if loading}
+		<!-- Suppress the "nothing saved yet" card while markets load — saved IDs
+		     may exist but their markets haven't resolved into the list yet. -->
+		<div style="gap: 8px; padding: 0 20px 20px;" class="col">
+			{#each Array(2) as _, index (index)}
+				<div
+					style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
+					aria-hidden="true"
+				></div>
+			{/each}
+		</div>
+	{:else if savedMarkets.length === 0}
 		<div style="margin: 4px 20px 20px;" class="card-empty">
 			<span class="c-eyebrow">{t({ locale: $localeStore, key: 'markets.section.saved' })}</span>
 			<span style="line-height: 1.25;" class="c-title"
