@@ -808,7 +808,18 @@ const buildRevealMap = (): ReadonlyMap<string, number> => {
 	const [openingDate] = Object.keys(WC_MARKET_SCHEDULE);
 
 	for (const [showDate, questions] of Object.entries(WC_MARKET_SCHEDULE)) {
-		const revealMs = showDate === openingDate ? 0 : Date.parse(`${showDate}T00:00:00.000Z`);
+		// This calendar is hand-edited, so a typo'd Show Date would otherwise
+		// parse to `NaN` and silently hide its whole set forever. Fail loud at
+		// module load (dev/CI) instead so the mistake is caught immediately.
+		const parsedMs = Date.parse(`${showDate}T00:00:00.000Z`);
+
+		if (Number.isNaN(parsedMs)) {
+			throw new Error(
+				`Invalid WC schedule Show Date "${showDate}" — expected an ISO YYYY-MM-DD key.`
+			);
+		}
+
+		const revealMs = showDate === openingDate ? 0 : parsedMs;
 
 		for (const question of questions) {
 			const key = normalizeWcQuestion(question);

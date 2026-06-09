@@ -50,11 +50,15 @@
 		wcFocus ? [{ label: t({ locale: $localeStore, key: 'markets.wc_eyebrow' }) }] : undefined
 	);
 
-	// Loading covers both feeds the board depends on: the markets list and — in
-	// World-Cup focus, where the board filters by the `wc` tag — the tag
-	// metadata. Without the tag guard, `availableMarkets` is briefly empty while
-	// tags fetch, flashing the "no markets" empty state over loaded markets.
-	const loading = $derived($marketsNotInitialized || (wcFocus && $marketTagsNotInitialized));
+	// Loading covers both feeds the board depends on: the markets list and the
+	// tag metadata. Tags are required in *every* phase now, not just World-Cup
+	// focus: the discovery feeds (available + trending) run through the WC
+	// release schedule, which identifies WC markets by tag — an empty tag map
+	// would make every market look non-WC and let unreleased WC markets leak in.
+	// Without the guard the board also flashes the "no markets" empty state over
+	// loaded markets while tags fetch. Tags load globally in the (app) shell and
+	// resolve to `{}` even on failure, so this never stalls.
+	const loading = $derived($marketsNotInitialized || $marketTagsNotInitialized);
 
 	const savedSet = $derived(new Set($preferencesStore.savedMarketIds));
 	// Saved = the viewer's watchlist, kept even if an entry isn't World Cup.
