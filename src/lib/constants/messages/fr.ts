@@ -1991,6 +1991,8 @@ export const frMessages = {
 	'settings.language.no_match': 'Aucun résultat',
 	'settings.language.search': 'Rechercher une langue',
 	'settings.legal': 'Légal',
+	'settings.legal.cookies': 'Politique de cookies',
+	'settings.legal.imprint': 'Mentions légales',
 	'settings.legal.privacy': 'Politique de confidentialité',
 	'settings.legal.rules': 'Règles de résolution',
 	'settings.legal.terms': 'Conditions de service',

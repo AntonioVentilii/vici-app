@@ -1985,6 +1985,8 @@ export const esMessages = {
 	'settings.language.no_match': 'Sin resultados',
 	'settings.language.search': 'Buscar idioma',
 	'settings.legal': 'Legal',
+	'settings.legal.cookies': 'Política de cookies',
+	'settings.legal.imprint': 'Aviso legal',
 	'settings.legal.privacy': 'Política de privacidad',
 	'settings.legal.rules': 'Reglas de resolución',
 	'settings.legal.terms': 'Términos de servicio',

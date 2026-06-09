@@ -1998,6 +1998,8 @@ export const deMessages = {
 	'settings.language.no_match': 'Keine Treffer',
 	'settings.language.search': 'Sprache suchen',
 	'settings.legal': 'Rechtliches',
+	'settings.legal.cookies': 'Cookie-Richtlinie',
+	'settings.legal.imprint': 'Impressum',
 	'settings.legal.privacy': 'Datenschutzerklärung',
 	'settings.legal.rules': 'Auflösungsregeln',
 	'settings.legal.terms': 'Nutzungsbedingungen',
