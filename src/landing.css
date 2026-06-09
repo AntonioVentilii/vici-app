@@ -1808,7 +1808,12 @@ html[data-ios][data-theme='peach'] .lp-nav .lp-pill.open {
 	color: var(--fg);
 	background: rgba(242, 236, 220, 0.06);
 }
-.dnav-cta {
+/* Scoped under `.lp-root` so this compact-pill override outranks the
+   base `.lp-root .btn` rule (same two-class specificity, but this is
+   defined later) — otherwise the base's larger padding / 12px radius
+   wins and the desktop CTA renders as a big rounded rectangle instead
+   of the intended pill. */
+.lp-root .dnav-cta {
 	padding: 9px 18px;
 	font-size: 13px;
 	border-radius: 999px;
@@ -1825,7 +1830,7 @@ html[data-ios][data-theme='peach'] .lp-nav .lp-pill.open {
 .dnav-theme-dot:focus-visible {
 	border-radius: 999px;
 }
-.dnav-cta:focus-visible {
+.lp-root .dnav-cta:focus-visible {
 	border-radius: 999px;
 }
 .dnav-globe:focus-visible {
