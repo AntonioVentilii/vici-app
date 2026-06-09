@@ -201,14 +201,14 @@
 	});
 </script>
 
-<!-- Scrim: a full-viewport flex column (`justify-content: flex-end`) that docks
-     the editor at the *visible* bottom. `use:pinToVisualViewport` sizes it to
-     the actually-visible region via `window.visualViewport`, because on iOS a
-     fixed overlay resolves against the large layout viewport (toolbars
-     retracted) and iOS Chrome doesn't honour `100dvh` — so a bottom-anchored
-     footer lands behind the bottom toolbar and gets clipped (#670, #673).
-     A tap on the backdrop runs the same close guard as the ✕ so it never
-     silently drops unsaved edits. -->
+<!-- Full-screen panel: an opaque overlay that fills the viewport.
+     `use:pinToVisualViewport` sizes it to the actually-visible region via
+     `window.visualViewport`, because on iOS a fixed overlay resolves against
+     the large layout viewport (toolbars retracted) and iOS Chrome doesn't
+     honour `100dvh` — so the pinned-bottom footer would otherwise land behind
+     the bottom toolbar and get clipped (#670, #673). A tap on any uncovered
+     scrim area runs the same close guard as the ✕ so it never silently drops
+     unsaved edits. -->
 <div
 	class="avatar-editor-scrim"
 	aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
@@ -375,20 +375,23 @@
 {/snippet}
 
 <style lang="postcss">
-	/* Lock background scroll while the full-screen editor is open. */
+	/* Lock background scroll + hide the floating pill-nav while the full-screen
+	   editor is open — the nav lives in a separate stacking context and would
+	   otherwise paint in front of the panel, and it isn't usable mid-edit. */
 	:global(body:has(.avatar-editor)) {
 		overflow: hidden;
 	}
 
-	/* Dimmed backdrop behind the sheet — a tap runs the close guard. It also
-	   docks the editor: a full-viewport flex column that `use:pinToVisualViewport`
-	   sizes (via inline `top`/`height`) to the *actually-visible* region. On iOS
-	   a fixed `inset: 0` / `bottom: 0` resolves against the *large* layout
-	   viewport (toolbars retracted), so the bottom-anchored footer lands behind
-	   the bottom toolbar and gets clipped (#670); `100dvh` is meant to track the
-	   visible height but iOS Chrome doesn't honour it, so the inline pin is the
-	   real fix. The `100dvh`/`100vh` here is the desktop / no-`visualViewport`
-	   fallback. `flex-end` docks the sheet at the visible bottom. */
+	:global(body:has(.avatar-editor) .pillnav-wrap) {
+		display: none;
+	}
+
+	/* Full-screen takeover (not a bottom sheet): an opaque panel that fills the
+	   visible viewport, matching the design. `use:pinToVisualViewport` sizes it
+	   to `window.visualViewport` so the sticky footer clears the iOS toolbar
+	   (#670/#673); the `100dvh`/`100vh` here is the desktop / no-`visualViewport`
+	   fallback. The floating pill-nav is hidden while open (see the `:global`
+	   rules below) so it can't sit in front of the panel. */
 	.avatar-editor-scrim {
 		position: fixed;
 		top: 0;
@@ -399,32 +402,22 @@
 		z-index: 119;
 		display: flex;
 		flex-direction: column;
-		justify-content: flex-end;
-		align-items: center;
-		background: rgba(14, 13, 11, 0.55);
-		-webkit-backdrop-filter: blur(2px);
-		backdrop-filter: blur(2px);
+		background: var(--bg-base);
 	}
 
 	.avatar-editor {
-		/* Bottom sheet that fills at most 90% of the scrim, so the header + footer
-		 * stay pinned and the option grid scrolls within. `%` resolves against the
-		 * scrim's definite height (the inline `visualViewport` pin or the `100dvh`
-		 * / `100vh` CSS fallback), so no `dvh`/`vh` cap is needed — and a `dvh`
-		 * cap would be wrong on iOS Chrome. The scrim docks it at the visible
-		 * bottom (`flex-end`); `position: relative` anchors the discard-confirm
-		 * overlay below. */
+		/* Fills the scrim (full-screen). The header + footer stay pinned and the
+		 * option grid (`.avatar-editor-body`, `flex: 1; overflow-y: auto`) scrolls
+		 * within. `min-height: 0` lets that inner scroll work inside the flex
+		 * column. `position: relative` anchors the discard-confirm overlay below. */
 		position: relative;
+		flex: 1;
+		min-height: 0;
 		width: 100%;
-		max-height: 90%;
 		display: flex;
 		flex-direction: column;
-		border-top-left-radius: var(--r-20, 20px);
-		border-top-right-radius: var(--r-20, 20px);
-		border-top: 1px solid var(--border-base);
 		background: var(--bg-base);
 		color: var(--text-base);
-		box-shadow: 0 -18px 50px -20px rgba(0, 0, 0, 0.55);
 	}
 
 	.avatar-editor-head {
