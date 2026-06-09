@@ -29,8 +29,9 @@
 		// still drives the SVG's internal resolution.
 		fill?: boolean;
 		// Optional market question text. Only the WC renderer consults it
-		// (to resolve a per-market template from the question); omitting
-		// it leaves every render — WC or otherwise — unchanged.
+		// — to look up per-market artwork in the `WC_MARKET_ART` catalogue
+		// (then the heuristic resolver); omitting it leaves every render —
+		// WC or otherwise — unchanged.
 		title?: string;
 		// Optional extra class on the wrapper for layout overrides.
 		class?: string;
