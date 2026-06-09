@@ -451,8 +451,7 @@
 	.avatar-editor-sub {
 		font-family: var(--font-mono);
 		font-size: var(--t-10);
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
+		letter-spacing: var(--tracking-snug);
 		color: var(--text-muted);
 	}
 
