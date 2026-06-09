@@ -310,17 +310,18 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 ] as const;
 
 /**
- * The flat list the current picker UI iterates: every locale with a populated
- * catalog (`tier: 'live'`). Carries the back-compat `{ id, label, short }`
- * shape that `LanguageSheet`, `WelcomeNav` and `SettingsPage` read today.
+ * The flat list of locales with a populated catalog (`tier: 'live'`), carrying
+ * a compact `{ id, label, short }` shape. It is the allowlist for the live,
+ * fully-translated set: browser auto-detection only ever resolves to one of
+ * these (see `detectBrowserLocale`), and the market-translation surfaces gate
+ * their per-locale fields against it.
  *
  * The `hidden` flag (a language's neutral base) is deliberately ignored here —
- * it only matters for a future region-aware picker that groups regional
- * variants under their language. The current flat picker has no region axis,
- * so every live locale is offered directly.
+ * grouping by language/region is the picker's concern, handled by
+ * `localeLanguageGroups`, which reads the full registry.
  *
- * `soon` locales are registered in `LOCALE_REGISTRY` for detection and
- * fallback, but stay out of this list until their catalogs land.
+ * `soon` locales are registered in `LOCALE_REGISTRY` for detection fallback and
+ * the picker, but stay out of this list until their catalogs land.
  */
 export const SUPPORTED_LOCALES: readonly {
 	id: AppLocale;
@@ -331,6 +332,81 @@ export const SUPPORTED_LOCALES: readonly {
 	label,
 	short
 }));
+
+/**
+ * A language grouped with its selectable regional editions, for the two-axis
+ * (Language ▸ Region) picker.
+ *
+ * `lang` is the primary subtag shared by every region in the group (`es`,
+ * `pt`, `en`, …). `label` / `name` carry the language's native and English
+ * names. `regions` lists the selectable editions in registry order, with
+ * `hidden` base dictionaries excluded — a base only anchors the group and
+ * backs its deltas, it is never offered as a standalone choice.
+ *
+ * A group with a single region renders as a direct pick row; a group with
+ * several renders an expandable header drilling into its region rows.
+ */
+export interface LocaleLanguageGroup {
+	/** Primary subtag shared by the group (`es`, `pt`, `en`, …). */
+	readonly lang: string;
+	/** Native language name (from the group's anchor entry). */
+	readonly label: string;
+	/** English language name (from the group's anchor entry). */
+	readonly name: string;
+	/** Selectable regional editions, registry order, `hidden` bases excluded. */
+	readonly regions: readonly LocaleEntry[];
+}
+
+/**
+ * Group the registry into languages with their selectable regional editions
+ * for the two-axis picker. Entries are bucketed by primary subtag in registry
+ * order; `hidden` base dictionaries are dropped from the visible `regions` but
+ * still seed the group's native/English name when they anchor the language.
+ *
+ * The base entry (when present) supplies the group's language-level `label` /
+ * `name`; otherwise the first visible region does. This keeps a multi-region
+ * language (Spanish, Portuguese) under one native header while single-region
+ * languages collapse to a single direct row.
+ */
+export const localeLanguageGroups = (): readonly LocaleLanguageGroup[] => {
+	const order: string[] = [];
+	const byLang = new Map<string, { anchor: LocaleEntry; regions: LocaleEntry[] }>();
+
+	for (const entry of LOCALE_REGISTRY) {
+		const [lang] = entry.id.split('-');
+		let bucket = byLang.get(lang);
+
+		if (!bucket) {
+			bucket = { anchor: entry, regions: [] };
+			byLang.set(lang, bucket);
+			order.push(lang);
+		}
+
+		// A `base` entry is the language's canonical anchor for naming even
+		// though it never shows as a region row.
+		if (entry.base === true) {
+			bucket.anchor = entry;
+		}
+
+		if (entry.hidden !== true) {
+			bucket.regions.push(entry);
+		}
+	}
+
+	const groups: LocaleLanguageGroup[] = [];
+
+	for (const lang of order) {
+		const bucket = byLang.get(lang);
+
+		if (bucket && bucket.regions.length > 0) {
+			const { anchor, regions } = bucket;
+
+			groups.push({ lang, label: anchor.label, name: anchor.name, regions });
+		}
+	}
+
+	return groups;
+};
 
 /**
  * Resolve a locale's fallback chain — itself first, then each entry in its

@@ -24,7 +24,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DeleteAccountFlow from '$lib/components/settings/DeleteAccountFlow.svelte';
-	import LanguageSheet from '$lib/components/settings/LanguageSheet.svelte';
+	import LocaleSheet from '$lib/components/settings/LocaleSheet.svelte';
 	import SetRow from '$lib/components/settings/SetRow.svelte';
 	import SetSegmented from '$lib/components/settings/SetSegmented.svelte';
 	import SetToggle from '$lib/components/settings/SetToggle.svelte';
@@ -33,11 +33,11 @@
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { Collection } from '$lib/constants/collections.constants';
-	import { LOCALE_STORAGE_KEY, SUPPORTED_LOCALES } from '$lib/constants/locale.constants';
+	import { LOCALE_REGISTRY } from '$lib/constants/locale.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
-	import { localeStore } from '$lib/stores/locale.store';
+	import { localeStore, setLocale } from '$lib/stores/locale.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { theme } from '$lib/stores/theme.store';
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';
@@ -53,12 +53,14 @@
 	// `DeleteAccountFlow`; this page only owns the open/close toggle.
 	let deleteSheetOpen = $state(false);
 
-	// Language picker — the searchable list lives in `LanguageSheet`;
-	// the row below opens it and reflects the active locale.
+	// Language picker — the two-axis (Language ▸ Region) picker lives in
+	// `LocaleSheet`; the row below opens it and reflects the active locale.
+	// Resolved against the full registry so a regional edition (e.g. `pt-BR`)
+	// shows its own native label and short code, not just the live base set.
 	let langSheetOpen = $state(false);
 
 	const activeLocale = $derived(
-		SUPPORTED_LOCALES.find((locale) => locale.id === $localeStore) ?? SUPPORTED_LOCALES[0]
+		LOCALE_REGISTRY.find((locale) => locale.id === $localeStore) ?? LOCALE_REGISTRY[0]
 	);
 
 	let signOutStatus = $state<ButtonStatus>('enabled');
@@ -529,12 +531,12 @@
 		onSignOut={dropAuth}
 	/>
 
-	<LanguageSheet
+	<LocaleSheet
 		current={$localeStore}
 		isOpen={langSheetOpen}
 		onClose={() => (langSheetOpen = false)}
 		onPick={(locale) => {
-			localeStore.set({ key: LOCALE_STORAGE_KEY, value: locale });
+			setLocale(locale);
 			langSheetOpen = false;
 		}}
 	/>
