@@ -1108,33 +1108,6 @@ export const deMessages = {
 	'info.doc.how-resolution-works.b9': 'Wenn eine Quelle mehrdeutig veröffentlicht',
 	'info.doc.how-resolution-works.eyebrow': 'Hilfe · Auflösung',
 	'info.doc.how-resolution-works.title': 'So funktioniert die Auflösung',
-	'info.doc.privacy.b0':
-		'Was wir erheben, warum wir es erheben, mit wem wir es teilen. Kurzfassung: Wir erheben so wenig wie möglich.',
-	'info.doc.privacy.b1': 'Was wir erheben',
-	'info.doc.privacy.b10':
-		'Auskunft, Export, Berichtigung und Löschung deiner Daten sind auf Anfrage an {email} verfügbar. Wir antworten innerhalb von dreißig Tagen.',
-	'info.doc.privacy.b11': 'Cookies',
-	'info.doc.privacy.b12':
-		'Wir speichern ein einziges Sitzungstoken. Wir verwenden keine Tracking-Cookies.',
-	'info.doc.privacy.b2.i0': 'Konto: dein Handle, deine E-Mail, Sprache und Darstellungspräferenz',
-	'info.doc.privacy.b2.i1':
-		'Prognosen: jeder Call, den du machst, wann du ihn gemacht hast, das Ergebnis',
-	'info.doc.privacy.b2.i2': 'Gerät: ein Sitzungstoken im localStorage; keine Werbe-IDs',
-	'info.doc.privacy.b2.i3':
-		'Zugehörigkeit: die Schule, die du für Worlds auswählst (nach einer Änderung 90 Tage gesperrt)',
-	'info.doc.privacy.b3': 'Wie wir sie verwenden',
-	'info.doc.privacy.b4.i0': 'Um deine Genauigkeit, Serie, Platzierung und VXP zu berechnen',
-	'info.doc.privacy.b4.i1': 'Um deinen Handle in Ranglisten anzuzeigen, an denen du teilnimmst',
-	'info.doc.privacy.b4.i2': 'Um Support-Anfragen zu beantworten',
-	'info.doc.privacy.b5': 'Mit wem wir sie teilen',
-	'info.doc.privacy.b6':
-		'Keine Werbung von Dritten. Keine Datenhändler. Aggregierte, anonymisierte Statistiken können in redaktionellen Inhalten erscheinen (z. B. „64% der Nutzer riefen YES“). Deine einzelnen Calls sind für Ligen sichtbar, denen du beitrittst.',
-	'info.doc.privacy.b7': 'Wo sie liegen',
-	'info.doc.privacy.b8':
-		'Server in der Europäischen Union. Daten werden im Ruhezustand und bei der Übertragung verschlüsselt.',
-	'info.doc.privacy.b9': 'Deine Rechte',
-	'info.doc.privacy.eyebrow': 'Rechtliches · Gültig ab 1. Mai 2026',
-	'info.doc.privacy.title': 'Datenschutzerklärung',
 	'info.doc.resolution-rules.b0':
 		'Das genaue Verfahren, nach dem jeder Markt auf VICI aufgelöst wird. Maßgebliche Quelle: dieses Dokument.',
 	'info.doc.resolution-rules.b1': 'Vor der Listung',

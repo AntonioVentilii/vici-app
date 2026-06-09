@@ -1102,32 +1102,6 @@ export const ptMessages = {
 	'info.doc.how-resolution-works.b9': 'Se uma fonte publicar de forma ambígua',
 	'info.doc.how-resolution-works.eyebrow': 'Ajuda · Resolução',
 	'info.doc.how-resolution-works.title': 'Como funciona a resolução',
-	'info.doc.privacy.b0':
-		'O que recolhemos, porque o recolhemos, com quem o partilhamos. Versão curta: recolhemos o menos possível.',
-	'info.doc.privacy.b1': 'O que recolhemos',
-	'info.doc.privacy.b10':
-		'O acesso, a exportação, a retificação e a eliminação dos teus dados estão disponíveis a pedido para {email}. Respondemos no prazo de trinta dias.',
-	'info.doc.privacy.b11': 'Cookies',
-	'info.doc.privacy.b12': 'Armazenamos um único token de sessão. Não usamos cookies de rastreio.',
-	'info.doc.privacy.b2.i0': 'Conta: o teu handle, e-mail, idioma e preferência de aparência',
-	'info.doc.privacy.b2.i1': 'Previsões: cada call que fazes, quando o fizeste, o resultado',
-	'info.doc.privacy.b2.i2':
-		'Dispositivo: um token de sessão no localStorage; sem identificadores de publicidade',
-	'info.doc.privacy.b2.i3':
-		'Afiliação: a escola que selecionas para Worlds (bloqueada durante 90 dias após uma alteração)',
-	'info.doc.privacy.b3': 'Como o usamos',
-	'info.doc.privacy.b4.i0': 'Para calcular a tua precisão, sequência, posição e VXP',
-	'info.doc.privacy.b4.i1': 'Para mostrar o teu handle nas classificações em que participas',
-	'info.doc.privacy.b4.i2': 'Para responder a pedidos de suporte',
-	'info.doc.privacy.b5': 'Com quem partilhamos',
-	'info.doc.privacy.b6':
-		'Sem publicidade de terceiros. Sem intermediários de dados. Podem aparecer estatísticas agregadas e anonimizadas em conteúdos editoriais (por ex. “64% dos utilizadores chamaram YES”). Os teus calls individuais são visíveis para as ligas a que te juntas.',
-	'info.doc.privacy.b7': 'Onde residem',
-	'info.doc.privacy.b8':
-		'Servidores na União Europeia. Os dados são cifrados em repouso e em trânsito.',
-	'info.doc.privacy.b9': 'Os teus direitos',
-	'info.doc.privacy.eyebrow': 'Jurídico · Em vigor a 1 de maio de 2026',
-	'info.doc.privacy.title': 'Política de privacidade',
 	'info.doc.resolution-rules.b0':
 		'O procedimento exato pelo qual cada mercado na VICI é resolvido. Fonte autorizada: este documento.',
 	'info.doc.resolution-rules.b1': 'Antes da listagem',
