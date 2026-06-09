@@ -793,7 +793,11 @@
 		display: block;
 		position: relative;
 		width: 100%;
-		height: clamp(208px, 50vw, 268px);
+		/* Tall enough to clear the bust figure (≤244px) with headroom above the
+		   head, so the avatar reads fully (the figure is bottom-anchored, so the
+		   extra height becomes breathing room over the head rather than a bigger
+		   bust). */
+		height: clamp(272px, 64vw, 304px);
 		padding: 0;
 		border: 0;
 		overflow: hidden;
