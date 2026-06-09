@@ -5,6 +5,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import Authn from '$lib/components/authn/Authn.svelte';
 	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
+	import VisualViewportProbe from '$lib/components/dev/VisualViewportProbe.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
 	import { initAnalytics } from '$lib/services/analytics.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -80,3 +81,5 @@
 <Notifications />
 
 <TweaksPanel />
+
+<VisualViewportProbe />
