@@ -842,9 +842,9 @@ export const suggestedScore = ({
 };
 
 /**
- * Score multiplier applied to the Flow markets tied to the team the user
- * picked during onboarding — "60% more chance" to surface the user's
- * country in the World Cup deck. See `rankMarkets`.
+ * Score multiplier applied to the Flow markets for the user's home
+ * country — "60% more chance" to surface their country in the World Cup
+ * deck. See `rankMarkets`.
  */
 export const FAVORITE_COUNTRY_BOOST = 1.6;
 
@@ -878,12 +878,11 @@ export const FAVORITE_COUNTRY_BOOST = 1.6;
  * that haven't been migrated to pass metadata see no regression.
  *
  * `favoriteMarketIds` (optional) is the set of featured-event market ids
- * tied to the team the user picked during onboarding
- * (`preferences.favoriteParticipantId`, resolved via
+ * for the user's home country (resolved from their locale region via
  * {@link participantMarketIds}). Markets in this set have their final
  * score multiplied by {@link FAVORITE_COUNTRY_BOOST} so the user's
- * country surfaces higher in the World Cup deck. Empty (no team picked,
- * or the team has no linked markets) leaves the ranking untouched.
+ * country surfaces higher in the World Cup deck. Empty (country unknown,
+ * or not a participant) leaves the ranking untouched.
  */
 export const rankMarkets = ({
 	markets,
@@ -921,8 +920,8 @@ export const rankMarkets = ({
 
 		const score = suggested + interestScore + cultureScore + recencyScore;
 
-		// Lift the markets tied to the user's picked team by a flat 60%
-		// so their country trends to the top of the deck. Applied as a
+		// Lift the markets for the user's home country by a flat 60% so
+		// their country trends to the top of the deck. Applied as a
 		// multiplier on the whole score (not an additive tier) so the
 		// boost scales with whatever already ranked the market — a
 		// suggested favourite stays ahead of a plain favourite.
@@ -952,15 +951,23 @@ export const rankMarkets = ({
  * shares them with the signals derivation) can pass them in to avoid
  * a duplicate satellite round-trip. Plain values, promises, or
  * promise-wrapped results all work — `Promise.all` collapses them.
+ *
+ * `countryCode` is the user's home country (ISO region of their active
+ * locale — see `localeCountryCode`). When it matches a featured-event
+ * participant, that country's markets get the favourite boost in
+ * {@link rankMarkets}. `undefined` (supra-national locale, or a country
+ * not in the event) leaves the ranking untouched.
  */
 export const getFlowQueue = async ({
 	domain,
 	tagMappings,
-	metadataBySeries
+	metadataBySeries,
+	countryCode
 }: {
 	domain: RegistryDid.BalanceDomain;
 	tagMappings?: Record<string, MarketTag[]> | Promise<Record<string, MarketTag[]>>;
 	metadataBySeries?: Record<string, MarketMetadata> | Promise<Record<string, MarketMetadata>>;
+	countryCode?: string;
 }): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();
@@ -979,12 +986,13 @@ export const getFlowQueue = async ({
 
 	const userInterests = new Set(profile.data.interests ?? []);
 
-	// Boost the featured-event markets tied to the team the user picked
-	// during onboarding. Empty when no team was picked, so the ranking is
-	// untouched for everyone who skipped the pick.
+	// Boost the featured-event markets for the user's home country (the
+	// region of their active locale). Empty when the locale is
+	// supra-national or the country isn't in the event, so the ranking is
+	// untouched for everyone we can't place.
 	const favoriteMarketIds = participantMarketIds({
 		event: CURRENT_FEATURED_EVENT,
-		participantId: profile.data.preferences?.favoriteParticipantId ?? ''
+		participantId: countryCode ?? ''
 	});
 
 	return rankMarkets({

@@ -1,5 +1,10 @@
 import { browser } from '$app/environment';
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type AppLocale } from '$lib/constants/locale.constants';
+import {
+	DEFAULT_LOCALE,
+	LOCALE_REGISTRY,
+	SUPPORTED_LOCALES,
+	type AppLocale
+} from '$lib/constants/locale.constants';
 import { nonNullish } from '@dfinity/utils';
 
 /**
@@ -51,4 +56,24 @@ export const detectBrowserLocale = (): AppLocale => {
 	}
 
 	return DEFAULT_LOCALE;
+};
+
+/**
+ * The country a locale places the user in — its ISO region code (`IT`,
+ * `MX`, `BR`, …), which doubles as the join key against featured-event
+ * participants (World Cup teams are ISO-3166 alpha-2). This is our only
+ * "where is the user from" signal: the locale they picked (or the device
+ * language we detected) carries a region.
+ *
+ * Supra-national locales (`worldFlag` — `en` Global, `es-419` Latin
+ * America) resolve to no single country and return `undefined`, so the
+ * caller skips the country boost rather than pinning everyone to one
+ * nation's markets.
+ */
+export const localeCountryCode = (locale: AppLocale): string | undefined => {
+	const entry = LOCALE_REGISTRY.find(({ id }) => id === locale);
+
+	if (nonNullish(entry) && entry.worldFlag !== true) {
+		return entry.region;
+	}
 };

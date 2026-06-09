@@ -4,8 +4,10 @@ import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 import { userSignedIn } from '$lib/derived/user.derived';
 import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
+import { localeStore } from '$lib/stores/locale.store';
 import { userStore } from '$lib/stores/user.store';
 import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
+import { localeCountryCode } from '$lib/utils/locale.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { derived, get, writable, type Readable } from 'svelte/store';
 
@@ -44,6 +46,9 @@ const runBuild = async (
 	const domain = get(balanceDomain);
 	const signedIn = get(userSignedIn);
 	const featuredEventTag = currentTag();
+	// The user's home country, from their active locale's region — boosts
+	// that country's markets in the World Cup deck (see `rankMarkets`).
+	const countryCode = localeCountryCode(get(localeStore));
 
 	let result: PreparedFlow | undefined;
 
@@ -52,7 +57,8 @@ const runBuild = async (
 			domain,
 			featuredEventTag,
 			signedIn,
-			exclude
+			exclude,
+			countryCode
 		});
 	} catch (e: unknown) {
 		// Non-fatal — keep `result` undefined so callers leave the

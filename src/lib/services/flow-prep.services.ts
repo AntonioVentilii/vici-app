@@ -38,6 +38,12 @@ export interface PrepareFlowOpts {
 	featuredEventTag: string | undefined;
 	signedIn: boolean;
 	exclude?: ReadonlyArray<string>;
+	/**
+	 * The user's home country (ISO region of their active locale). When it
+	 * matches a featured-event participant, that country's markets are
+	 * boosted in the ranker — see `getFlowQueue` / `rankMarkets`.
+	 */
+	countryCode?: string;
 }
 
 /**
@@ -53,7 +59,8 @@ export const prepareFlow = async ({
 	domain,
 	featuredEventTag,
 	signedIn,
-	exclude = []
+	exclude = [],
+	countryCode
 }: PrepareFlowOpts): Promise<PreparedFlow> => {
 	// Tags and full metadata both project the same public
 	// `MARKET_METADATA` collection, so scan it once and derive the tag
@@ -68,7 +75,8 @@ export const prepareFlow = async ({
 	const queuePromise = getFlowQueue({
 		domain,
 		tagMappings: tagsPromise,
-		metadataBySeries: metadataPromise
+		metadataBySeries: metadataPromise,
+		countryCode
 	});
 
 	// Markets the viewer has already called drop out of the deck entirely:

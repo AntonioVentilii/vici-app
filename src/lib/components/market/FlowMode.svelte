@@ -74,6 +74,7 @@
 	import { probabilityToPercent } from '$lib/utils/format.utils';
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { localeCountryCode } from '$lib/utils/locale.utils';
 	import type { MarketPriceSeries } from '$lib/utils/market-price-history.utils';
 	import {
 		DAILY_HARD_CAP,
@@ -327,7 +328,8 @@
 				: await prepareFlow({
 						domain: $balanceDomain,
 						featuredEventTag: expectedTag,
-						signedIn: nonNullish($userStore.user)
+						signedIn: nonNullish($userStore.user),
+						countryCode: localeCountryCode($localeStore)
 					});
 
 			({
