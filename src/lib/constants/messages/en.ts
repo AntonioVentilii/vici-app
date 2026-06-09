@@ -1771,7 +1771,7 @@ export const enMessages = {
 	'profile.dashboard.achievements': 'Achievements',
 	'profile.dashboard.affiliations.add': 'Add',
 	'profile.dashboard.affiliations.count': '{count} of {total}',
-	'profile.dashboard.affiliations.country': 'Citizen',
+	'profile.dashboard.affiliations.country': 'Country',
 	'profile.dashboard.affiliations.status_pending': 'Pending',
 	'profile.dashboard.affiliations.status_verified': 'Verified',
 	'profile.dashboard.affiliations.title': 'Affiliations',
