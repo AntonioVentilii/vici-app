@@ -278,12 +278,23 @@ export const WC_CAP_BAND = WC_HAIR.charcoal;
 // Distinct from `WC_NATIONS` above: that table is keyed by alpha-2 code
 // and carries full figure traits for the advancement (`wc-{cc}-*`)
 // scenes; this table is keyed by name and carries only the two-colour
-// kit the templates need. Names with no entry resolve to `null`
-// (generic fallback) — never a crash.
+// kit the templates need. A name with no entry omits the kit, so the
+// catalogue template renders in `WC_KIT_NEUTRAL` (below) rather than a
+// generic fallback — never a crash.
 export interface WCKit {
 	primary: string;
 	secondary: string;
 }
+
+// Neutral two-colour kit for catalogue templates whose market carries no
+// (or an unknown) nation — the Vici parchment / ink pair, matching the
+// "vici parchment/ink" register some briefs call for. Lets a prop scene
+// render its full composition in a brand-true palette rather than
+// dropping to the generic fallback.
+export const WC_KIT_NEUTRAL: WCKit = {
+	primary: WC_SHIRT.cream,
+	secondary: WC_SHIRT.dark
+};
 
 export const WC_NATION_KITS: Record<string, WCKit> = {
 	algeria: { primary: '#006233', secondary: '#C8102E' },
