@@ -284,6 +284,7 @@ export interface AppGetMarketTranslationResult {
 					series_id: string;
 					locale: string;
 					description: string;
+					resolution: string;
 					outcomes: Array<{ id: string; title: string }>;
 				}
 		  ];
@@ -629,6 +630,7 @@ export interface AppListMarketTranslationsResult {
 		series_id: string;
 		locale: string;
 		description: string;
+		resolution: string;
 		outcomes: Array<{ id: string; title: string }>;
 	}>;
 }
@@ -1027,6 +1029,7 @@ export interface AppUpsertMarketTranslationArgs {
 	data: {
 		title: string;
 		description: string;
+		resolution: string;
 		outcomes: Array<{ id: string; title: string }>;
 	};
 	series_id: string;
@@ -1040,6 +1043,7 @@ export interface AppUpsertMarketTranslationResult {
 		series_id: string;
 		locale: string;
 		description: string;
+		resolution: string;
 		outcomes: Array<{ id: string; title: string }>;
 	};
 }

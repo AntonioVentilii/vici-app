@@ -1492,6 +1492,7 @@ export const enMessages = {
 	'market.metadata.translations.locale_label': 'Language',
 	'market.metadata.translations.original_description': 'Original description',
 	'market.metadata.translations.original_outcome': 'Original outcome',
+	'market.metadata.translations.original_resolution': 'Original resolution',
 	'market.metadata.translations.original_title': 'Original title',
 	'market.metadata.translations.save': 'Save translation',
 	'market.metadata.translations.saved': 'Translation saved',

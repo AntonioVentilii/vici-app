@@ -103,6 +103,7 @@ export const upsertMarketTranslation = ({
 		locale: validated,
 		title: data.title,
 		description: data.description,
+		resolution: data.resolution,
 		outcomes: data.outcomes ?? [],
 		updatedAt: Number(time() / 1_000_000n),
 		updatedBy: callerText()

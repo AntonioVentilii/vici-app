@@ -1514,6 +1514,7 @@ export const itMessages = {
 	'market.metadata.translations.locale_label': 'Lingua',
 	'market.metadata.translations.original_description': 'Descrizione originale',
 	'market.metadata.translations.original_outcome': 'Esito originale',
+	'market.metadata.translations.original_resolution': 'Risoluzione originale',
 	'market.metadata.translations.original_title': 'Titolo originale',
 	'market.metadata.translations.save': 'Salva traduzione',
 	'market.metadata.translations.saved': 'Traduzione salvata',

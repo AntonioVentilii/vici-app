@@ -23,6 +23,7 @@ export const OutcomeTranslationSchema = j.strictObject({
 export const MarketTranslationInputSchema = j.strictObject({
 	title: j.string(),
 	description: j.string(),
+	resolution: j.string(),
 	outcomes: j.array(OutcomeTranslationSchema).default([])
 });
 
@@ -31,6 +32,7 @@ export const MarketTranslationSchema = j.strictObject({
 	locale: AppLocaleSchema,
 	title: j.string(),
 	description: j.string(),
+	resolution: j.string(),
 	outcomes: j.array(OutcomeTranslationSchema).default([]),
 	updatedAt: j.number(),
 	updatedBy: PrincipalTextSchema

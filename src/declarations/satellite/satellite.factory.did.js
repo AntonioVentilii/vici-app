@@ -284,6 +284,7 @@ export const idlFactory = ({ IDL }) => {
 				series_id: IDL.Text,
 				locale: IDL.Text,
 				description: IDL.Text,
+				resolution: IDL.Text,
 				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
 			})
 		)
@@ -755,6 +756,7 @@ export const idlFactory = ({ IDL }) => {
 				series_id: IDL.Text,
 				locale: IDL.Text,
 				description: IDL.Text,
+				resolution: IDL.Text,
 				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
 			})
 		)
@@ -1206,6 +1208,7 @@ export const idlFactory = ({ IDL }) => {
 		data: IDL.Record({
 			title: IDL.Text,
 			description: IDL.Text,
+			resolution: IDL.Text,
 			outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
 		}),
 		series_id: IDL.Text,
@@ -1219,6 +1222,7 @@ export const idlFactory = ({ IDL }) => {
 			series_id: IDL.Text,
 			locale: IDL.Text,
 			description: IDL.Text,
+			resolution: IDL.Text,
 			outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
 		})
 	});

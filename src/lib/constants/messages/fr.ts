@@ -1524,6 +1524,7 @@ export const frMessages = {
 	'market.metadata.translations.locale_label': 'Langue',
 	'market.metadata.translations.original_description': 'Description originale',
 	'market.metadata.translations.original_outcome': 'Résultat original',
+	'market.metadata.translations.original_resolution': 'Résolution originale',
 	'market.metadata.translations.original_title': 'Titre original',
 	'market.metadata.translations.save': 'Enregistrer la traduction',
 	'market.metadata.translations.saved': 'Traduction enregistrée',
