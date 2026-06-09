@@ -1779,7 +1779,7 @@ export const esMessages = {
 	'profile.dashboard.achievements': 'Logros',
 	'profile.dashboard.affiliations.add': 'Añadir',
 	'profile.dashboard.affiliations.count': '{count} de {total}',
-	'profile.dashboard.affiliations.country': 'Ciudadano',
+	'profile.dashboard.affiliations.country': 'País',
 	'profile.dashboard.affiliations.status_pending': 'Pendiente',
 	'profile.dashboard.affiliations.status_verified': 'Verificada',
 	'profile.dashboard.affiliations.title': 'Afiliaciones',

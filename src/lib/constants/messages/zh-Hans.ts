@@ -1693,7 +1693,7 @@ export const zhHansMessages = {
 	'profile.dashboard.achievements': '成就',
 	'profile.dashboard.affiliations.add': '添加',
 	'profile.dashboard.affiliations.count': '{count} / {total}',
-	'profile.dashboard.affiliations.country': '公民',
+	'profile.dashboard.affiliations.country': '国家/地区',
 	'profile.dashboard.affiliations.status_pending': '待验证',
 	'profile.dashboard.affiliations.status_verified': '已验证',
 	'profile.dashboard.affiliations.title': '归属',

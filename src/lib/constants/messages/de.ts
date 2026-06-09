@@ -1790,7 +1790,7 @@ export const deMessages = {
 	'profile.dashboard.achievements': 'Erfolge',
 	'profile.dashboard.affiliations.add': 'Hinzufügen',
 	'profile.dashboard.affiliations.count': '{count} von {total}',
-	'profile.dashboard.affiliations.country': 'Bürger',
+	'profile.dashboard.affiliations.country': 'Land',
 	'profile.dashboard.affiliations.status_pending': 'Ausstehend',
 	'profile.dashboard.affiliations.status_verified': 'Bestätigt',
 	'profile.dashboard.affiliations.title': 'Zugehörigkeiten',
