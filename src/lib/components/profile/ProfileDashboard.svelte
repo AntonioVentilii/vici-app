@@ -826,7 +826,12 @@
 		height: 100% !important;
 	}
 
-	/* Soft fade into the page — short + low so it never clips the bust. */
+	/* Soft fade into the page — short + low so it never clips the bust.
+	   Fade from the page colour at *zero alpha*, not bare `transparent`:
+	   `transparent` is transparent-black, so over the avatar's coloured
+	   backdrop the gradient passed through a muddy grey midtone that read as a
+	   faint seam. The relative-colour start keeps the fade in the bg hue; the
+	   plain-`transparent` line is the fallback for engines without `rgb(from …)`. */
 	.profile-hero-fade {
 		position: absolute;
 		left: 0;
@@ -834,6 +839,11 @@
 		bottom: 0;
 		height: 14%;
 		background: linear-gradient(to bottom, transparent 0%, var(--bg-base) 100%);
+		background: linear-gradient(
+			to bottom,
+			rgb(from var(--bg-base) r g b / 0) 0%,
+			var(--bg-base) 100%
+		);
 		pointer-events: none;
 	}
 
