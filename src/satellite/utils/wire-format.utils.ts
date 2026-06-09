@@ -276,6 +276,7 @@ export const MarketTranslationWireSchema = j.strictObject({
 	locale: j.string(),
 	title: j.string(),
 	description: j.string(),
+	resolution: j.string(),
 	outcomes: j.array(OutcomeTranslationWireSchema).default([]),
 	updatedAt: j.number(),
 	updatedBy: PrincipalTextSchema
@@ -288,6 +289,7 @@ interface AppMarketTranslationLike {
 	locale: string;
 	title: string;
 	description: string;
+	resolution: string;
 	outcomes?: { id: string; title: string }[];
 	updatedAt: number;
 	updatedBy: string;
@@ -300,6 +302,7 @@ export const toWireMarketTranslation = (
 	locale: translation.locale,
 	title: translation.title,
 	description: translation.description,
+	resolution: translation.resolution,
 	outcomes: translation.outcomes ?? [],
 	updatedAt: translation.updatedAt,
 	updatedBy: translation.updatedBy
@@ -318,6 +321,7 @@ export const fromWireMarketTranslation = (
 	locale: translation.locale,
 	title: translation.title,
 	description: translation.description,
+	resolution: translation.resolution,
 	outcomes: translation.outcomes,
 	updatedAt: translation.updatedAt,
 	updatedBy: translation.updatedBy

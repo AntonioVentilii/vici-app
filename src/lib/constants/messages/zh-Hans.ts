@@ -1432,6 +1432,7 @@ export const zhHansMessages = {
 	'market.metadata.translations.locale_label': '语言',
 	'market.metadata.translations.original_description': '原始描述',
 	'market.metadata.translations.original_outcome': '原始结果',
+	'market.metadata.translations.original_resolution': '原始结算条款',
 	'market.metadata.translations.original_title': '原始标题',
 	'market.metadata.translations.save': '保存翻译',
 	'market.metadata.translations.saved': '翻译已保存',

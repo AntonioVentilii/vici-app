@@ -35,6 +35,7 @@
 	let selectedLocale = $state<AppLocale>(DEFAULT_LOCALE);
 	let titleInput = $state('');
 	let descriptionInput = $state('');
+	let resolutionInput = $state('');
 	let outcomeInputs = $state<Record<string, string>>({});
 	const cache = new SvelteMap<AppLocale, MarketTranslation>();
 	let loaded = $state(false);
@@ -45,12 +46,14 @@
 	const allComplete = $derived(
 		titleInput.trim().length > 0 &&
 			descriptionInput.trim().length > 0 &&
+			resolutionInput.trim().length > 0 &&
 			translatableOutcomes.every((o) => (outcomeInputs[o.id] ?? '').trim().length > 0)
 	);
 
 	const applyTranslation = (translation: MarketTranslation | undefined) => {
 		titleInput = translation?.title ?? '';
 		descriptionInput = translation?.description ?? '';
+		resolutionInput = translation?.resolution ?? '';
 		const map = new Map((translation?.outcomes ?? []).map((entry) => [entry.id, entry.title]));
 		outcomeInputs = translatableOutcomes.reduce<Record<string, string>>((acc, outcome) => {
 			acc[outcome.id] = map.get(outcome.id) ?? '';
@@ -106,6 +109,7 @@
 				data: {
 					title: titleInput.trim(),
 					description: descriptionInput.trim(),
+					resolution: resolutionInput.trim(),
 					outcomes: translatableOutcomes.map((outcome) => ({
 						id: outcome.id,
 						title: (outcomeInputs[outcome.id] ?? '').trim()
@@ -205,6 +209,26 @@
 					key: 'market.metadata.translations.translation_placeholder'
 				})}
 				bind:value={descriptionInput}
+			></textarea>
+		</div>
+
+		<div class="translations-row">
+			<div class="translations-cell">
+				<span class="translations-label">
+					{t({
+						locale: $localeStore,
+						key: 'market.metadata.translations.original_resolution'
+					})}
+				</span>
+				<p class="translations-original">{market.resolution}</p>
+			</div>
+			<textarea
+				class="translations-input translations-textarea"
+				placeholder={t({
+					locale: $localeStore,
+					key: 'market.metadata.translations.translation_placeholder'
+				})}
+				bind:value={resolutionInput}
 			></textarea>
 		</div>
 

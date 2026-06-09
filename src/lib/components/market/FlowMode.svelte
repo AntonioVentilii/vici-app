@@ -56,6 +56,7 @@
 		resolveFlowArtCategory,
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
+	import { consumePinnedFlowMarket } from '$lib/utils/flow-pin.utils';
 	import {
 		canExtendSession,
 		isDailyCapReached,
@@ -317,17 +318,27 @@
 			// still in flight) or a cold start falls through to an
 			// on-demand build so the user never sees markets from
 			// the previous scope.
+			// A market parked by a shared prediction link (see
+			// `consumePinnedFlowMarket`). Consume it once so it surfaces as the
+			// first card of *this* entry only. When set we skip the pre-warmed
+			// cache — it was built without the pin — and pay an on-demand build
+			// so the shared market can lead the deck. Dropped by `prepareFlow`
+			// if the viewer already called it.
+			const pinnedMarketId = consumePinnedFlowMarket();
 			const expectedTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
-			const cached = peekFlow({
-				domain: $balanceDomain,
-				featuredEventTag: expectedTag
-			});
+			const cached = isNullish(pinnedMarketId)
+				? peekFlow({
+						domain: $balanceDomain,
+						featuredEventTag: expectedTag
+					})
+				: undefined;
 			const prepared: PreparedFlow = nonNullish(cached)
 				? cached
 				: await prepareFlow({
 						domain: $balanceDomain,
 						featuredEventTag: expectedTag,
-						signedIn: nonNullish($userStore.user)
+						signedIn: nonNullish($userStore.user),
+						pinnedMarketId
 					});
 
 			({
