@@ -2374,7 +2374,7 @@ export const itMessages = {
 	'welcome.hero.favorite': 'FAVORITA',
 	'welcome.hero.headline': 'Trasforma il tuo “lo sapevo” in prova.',
 	'welcome.hero.hint': 'Swipe la carta — sinistra no, destra sì',
-	'welcome.hero.kicker': 'Coppa del Mondo FIFA 2026 · live',
+	'welcome.hero.kicker': 'Coppa del Mondo FIFA 2026® · live',
 	'welcome.hero.long_shot': 'OUTSIDER',
 	'welcome.hero.no': 'NO',
 	'welcome.hero.payoff': 'Sfida i tuoi amici.',

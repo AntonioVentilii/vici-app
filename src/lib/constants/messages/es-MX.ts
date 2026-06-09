@@ -13,7 +13,7 @@ export const esMxMessages = {
 	'welcome.hero.cta': 'Haz tu primer pronóstico',
 	'welcome.hero.cta_note': 'Gratis. Sin tarjeta. Sin trucos.',
 	'welcome.hero.headline': 'Tu “te lo dije”, ahora con pruebas.',
-	'welcome.hero.kicker': 'Mundial FIFA 2026 · en vivo',
+	'welcome.hero.kicker': 'Mundial FIFA 2026® · en vivo',
 	'welcome.hero.sub':
 		'El juego de pronósticos del Mundial, gratis. Arma una liga con tus amigos, atínale a todo el torneo y mira quién la rifa.',
 	'welcome.proof.live': 'personas están pronosticando el Mundial ahorita.',
