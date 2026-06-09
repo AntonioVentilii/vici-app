@@ -2374,7 +2374,7 @@ export const enMessages = {
 	'welcome.hero.favorite': 'FAVORITE',
 	'welcome.hero.headline': 'Turn “I knew it” into proof.',
 	'welcome.hero.hint': 'Swipe the card — left for no, right for yes',
-	'welcome.hero.kicker': 'FIFA World Cup 2026 · live now',
+	'welcome.hero.kicker': 'FIFA World Cup 2026® · live now',
 	'welcome.hero.long_shot': 'LONG SHOT',
 	'welcome.hero.no': 'NO',
 	'welcome.hero.payoff': 'Challenge your friends.',
