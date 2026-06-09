@@ -1744,8 +1744,6 @@ export const itMessages = {
 	'onboarding.beat3.tos.tail': 'Risoluzione su dati pubblici.',
 	'onboarding.beat3.tos.terms': 'Termini',
 	'onboarding.step_of': '· {current} di {total}',
-	'onboarding.switch.prefix': 'Sei già dei nostri?',
-	'onboarding.switch.signin': 'Accedi',
 	'outcome.canceled': 'Annullato',
 	'outcome.final_no': 'FINAL NO',
 	'outcome.final_yes': 'FINAL YES',

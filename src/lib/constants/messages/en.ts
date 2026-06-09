@@ -1739,8 +1739,6 @@ export const enMessages = {
 	'onboarding.beat3.tos.tail': 'Resolution on public data.',
 	'onboarding.beat3.tos.terms': 'Terms',
 	'onboarding.step_of': '· {current} of {total}',
-	'onboarding.switch.prefix': 'Already a member?',
-	'onboarding.switch.signin': 'Sign in',
 	'outcome.canceled': 'Canceled',
 	'outcome.final_no': 'FINAL NO',
 	'outcome.final_yes': 'FINAL YES',

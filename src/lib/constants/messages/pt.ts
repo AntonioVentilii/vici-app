@@ -1739,8 +1739,6 @@ export const ptMessages = {
 	'onboarding.beat3.tos.tail': 'Resolução por dados públicos.',
 	'onboarding.beat3.tos.terms': 'Termos',
 	'onboarding.step_of': '· {current} de {total}',
-	'onboarding.switch.prefix': 'Já tem conta?',
-	'onboarding.switch.signin': 'Entrar',
 	'outcome.canceled': 'Cancelado',
 	'outcome.final_no': 'FINAL NO',
 	'outcome.final_yes': 'FINAL YES',
