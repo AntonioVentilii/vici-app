@@ -1090,30 +1090,6 @@ export const enMessages = {
 	'info.doc.how-resolution-works.b9': 'If a source publishes ambiguously',
 	'info.doc.how-resolution-works.eyebrow': 'Help · Resolution',
 	'info.doc.how-resolution-works.title': 'How resolution works',
-	'info.doc.privacy.b0':
-		'What we collect, why we collect it, who we share it with. Short version: we collect as little as we can.',
-	'info.doc.privacy.b1': 'What we collect',
-	'info.doc.privacy.b10':
-		'Access, export, correction, and deletion of your data are available on request to {email}. We respond within thirty days.',
-	'info.doc.privacy.b11': 'Cookies',
-	'info.doc.privacy.b12': 'We store one session token. We do not use tracking cookies.',
-	'info.doc.privacy.b2.i0': 'Account: your handle, email, language and appearance preference',
-	'info.doc.privacy.b2.i1': 'Predictions: every call you make, when you made it, the outcome',
-	'info.doc.privacy.b2.i2': 'Device: a session token in localStorage; no advertising IDs',
-	'info.doc.privacy.b2.i3':
-		'Affiliation: the school you self-select for Worlds (locked for 90 days after change)',
-	'info.doc.privacy.b3': 'How we use it',
-	'info.doc.privacy.b4.i0': 'To compute your accuracy, streak, rank, and VXP',
-	'info.doc.privacy.b4.i1': 'To display your handle on leaderboards you opt into',
-	'info.doc.privacy.b4.i2': 'To answer support requests',
-	'info.doc.privacy.b5': 'Who we share with',
-	'info.doc.privacy.b6':
-		'No third-party advertising. No data brokers. Aggregated, anonymised statistics may appear in editorial content (e.g. “64% of users called YES”). Your individual calls are visible to leagues you join.',
-	'info.doc.privacy.b7': 'Where it lives',
-	'info.doc.privacy.b8': 'Servers in the European Union. Data is encrypted at rest and in transit.',
-	'info.doc.privacy.b9': 'Your rights',
-	'info.doc.privacy.eyebrow': 'Legal · Effective May 1, 2026',
-	'info.doc.privacy.title': 'Privacy policy',
 	'info.doc.resolution-rules.b0':
 		'The exact procedure by which every market on VICI is resolved. Authoritative source: this document.',
 	'info.doc.resolution-rules.b1': 'Pre-listing',

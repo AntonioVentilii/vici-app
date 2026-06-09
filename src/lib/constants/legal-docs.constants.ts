@@ -151,3 +151,230 @@ export const TERMS: InfoDoc = {
 		}
 	]
 };
+
+export const PRIVACY: InfoDoc = {
+	slug: 'privacy',
+	title: 'Privacy Policy',
+	eyebrow: 'Legal · Effective 10 June 2026',
+	blocks: [
+		{ kind: 'p', text: 'Last updated: 10 June 2026' },
+		{ kind: 'h', text: '1. Who we are' },
+		{
+			kind: 'lede',
+			text: 'Vici ("Vici", "we", "us", "our") is operated by Wholesome Capital Limited, a private company limited by shares incorporated in Hong Kong SAR, Business Registration Number 2391347.'
+		},
+		{
+			kind: 'p',
+			text: 'We are the controller of the personal data described in this policy — meaning we decide why and how it is processed. Because Vici runs on a decentralised network (see Section 5), there is no separate hosting company acting as our processor; we alone are responsible for your data.'
+		},
+		{
+			kind: 'p',
+			text: `For any privacy question or to exercise your rights, contact us at ${INFO_EMAIL}.`
+		},
+		{ kind: 'h', text: '2. Nature of the service, availability and age' },
+		{
+			kind: 'p',
+			text: 'Nature of the service. Vici is a free-to-play prediction game provided for entertainment only. VXP and any other in-game points or currencies have no monetary value, cannot be purchased, sold, transferred, exchanged, withdrawn or redeemed for money, cryptocurrency, prizes or anything of value, and exist solely within the game. Vici does not offer real-money wagering, betting, gambling, or the trading of financial instruments, and predictions made in Vici are for entertainment and are not financial, investment or betting advice.'
+		},
+		{
+			kind: 'p',
+			text: 'Availability. Vici is available globally to eligible users. The service is offered only where it is lawful; it is void where prohibited, and you are responsible for ensuring your use of Vici is legal in your location.'
+		},
+		{
+			kind: 'p',
+			text: 'Age. You must be at least 18 years old to use Vici. We do not knowingly collect personal data from anyone under 18; if we learn that we have, we will delete it.'
+		},
+		{ kind: 'h', text: '3. What personal data we collect' },
+		{
+			kind: 'p',
+			text: 'We collect only what we need to run the game and improve it. Depending on how you use Vici, this may include:'
+		},
+		{
+			kind: 'list',
+			items: [
+				'Account and identity data — the identifier you sign in with and any profile details you choose to add (e.g. display name). You can sign in with Google, Apple, or a passkey. When you use Google or Apple, we receive a limited set of identity data from them (such as a unique identifier and, depending on your settings, your name and email; Apple may provide a private relay email). Passkeys use device-based cryptography and do not involve a third-party identity provider.',
+				'Prediction and gameplay data — the predictions you make, your stakes, your VXP balance and history, accuracy and outcomes, and other in-game activity. This is core to providing the service and to leaderboards.',
+				'Device and usage data — basic technical information such as device type, browser, approximate region (derived from IP), and how you interact with the app, collected for analytics and security.',
+				'Communications — if you contact us, the content of that correspondence and the address you used.',
+				'Advertising and attribution data — see Section 6.'
+			]
+		},
+		{
+			kind: 'p',
+			text: 'We do not collect real-money payment information, because there is nothing to purchase.'
+		},
+		{ kind: 'h', text: '4. Why we use your data, and on what basis' },
+		{
+			kind: 'p',
+			text: 'We apply the following protections to all users, worldwide, as our baseline standard:'
+		},
+		{
+			kind: 'list',
+			items: [
+				'Create and operate your account; provide the game, predictions, VXP and leaderboards — Necessary to provide the service you requested',
+				'Keep the service secure and prevent abuse or fraud — Our legitimate interest in a safe, fair product',
+				'Understand and improve how the product is used — Our legitimate interest in improving the service; analytics configured to minimise data (Section 5)',
+				'Show and measure advertising — Consent where required; otherwise legitimate interest — see Section 6',
+				'Respond to your messages — Necessary to handle your request',
+				'Comply with legal obligations — Legal obligation'
+			]
+		},
+		{
+			kind: 'p',
+			text: 'Where your local law requires your consent for a specific use (for example advertising cookies or tracking for users in the EU/EEA and UK), we ask for it first and you can withdraw it at any time. See Sections 6 and 13.'
+		},
+		{ kind: 'h', text: '5. Where your data is stored (hosting and data location)' },
+		{
+			kind: 'p',
+			text: "Vici runs on the Internet Computer Protocol (ICP), a decentralised public network, using the Juno platform. Our application data and analytics data are hosted on ICP's European subnet, which is composed exclusively of nodes located within Europe. As a result, the personal data in our containers is stored and replicated only on nodes inside the European region."
+		},
+		{
+			kind: 'p',
+			text: 'We are the sole controller of these containers and the data in them. The Internet Computer supports data mutability and deletion, which means we are able to amend or erase your personal data on request and to give effect to the rights described in Section 11.'
+		},
+		{ kind: 'h', text: '6. Advertising and attribution' },
+		{
+			kind: 'p',
+			text: 'Vici is supported in part by advertising. Where we integrate third-party advertising, attribution or measurement technologies, those providers act as separate controllers or processors and may receive certain device and usage data. Data handled by those third parties is governed by their own terms and may be processed outside the European region — it does not stay within the ICP European subnet described in Section 5.'
+		},
+		{
+			kind: 'p',
+			text: 'For users in the EU/EEA and the UK, non-essential advertising and tracking technologies are loaded only after you consent (see Section 13); you can change or withdraw consent at any time.'
+		},
+		{
+			kind: 'p',
+			text: 'We will name the advertising and attribution partners we actually use here, describe what they receive, and provide opt-out or consent controls.'
+		},
+		{ kind: 'h', text: '7. Who we share your data with' },
+		{ kind: 'p', text: 'We keep sharing to a minimum. We may share data with:' },
+		{
+			kind: 'list',
+			items: [
+				'Authentication providers — Google and Apple, when you choose to sign in with them; they act as independent providers under their own privacy policies, and the sign-in step is processed on their (US-based) infrastructure. Passkey sign-in does not involve a third-party provider.',
+				'Advertising and attribution partners, as described in Section 6, where applicable.',
+				'Authorities or third parties where we are legally required to, or to protect the rights, safety and integrity of Vici and its users.'
+			]
+		},
+		{ kind: 'p', text: 'We do not sell your personal data for money.' },
+		{ kind: 'h', text: '8. International data transfers' },
+		{
+			kind: 'p',
+			text: 'Because our data is hosted in the European region (Section 5), if you use Vici from outside Europe your data is transferred to the European region for storage. The EU/EEA is widely recognised as providing a high standard of data protection, so transfers in this direction are generally permitted under the laws of the markets we serve. Where your local law requires specific safeguards or disclosures, we comply with them.'
+		},
+		{ kind: 'h', text: '9. How long we keep your data' },
+		{
+			kind: 'p',
+			text: 'We keep your personal data only for as long as needed to provide the service and for the purposes set out above, after which it is deleted or anonymised.'
+		},
+		{ kind: 'h', text: '10. How we protect your data' },
+		{
+			kind: 'p',
+			text: 'We use appropriate technical and organisational measures to protect your personal data against loss, misuse and unauthorised access. No system is perfectly secure, but we take reasonable steps to keep your data safe and to respond to any incident appropriately.'
+		},
+		{ kind: 'h', text: '11. Your rights' },
+		{
+			kind: 'p',
+			text: 'We extend the following rights to all users as our baseline, subject to your local law:'
+		},
+		{
+			kind: 'list',
+			items: [
+				'Access — confirmation of whether we process your data and a copy of it.',
+				'Rectification — correct inaccurate or incomplete data.',
+				'Erasure — ask us to delete your data.',
+				'Restriction — ask us to limit how we use your data.',
+				'Portability — receive your data in a portable format.',
+				'Objection — object to certain processing, including profiling for our legitimate interests.',
+				'Withdraw consent — where we rely on consent, withdraw it at any time without affecting prior processing.'
+			]
+		},
+		{
+			kind: 'p',
+			text: `To exercise any of these, contact ${INFO_EMAIL}. We respond within the time your local law requires. You may also have the right to complain to your local data protection authority (see the relevant regional rider).`
+		},
+		{ kind: 'h', text: '12. Children and age' },
+		{
+			kind: 'p',
+			text: 'Vici is intended for adults and restricted to users aged 18 and over. We do not knowingly collect personal data from anyone under 18; if we become aware that we have, we will delete it as soon as possible.'
+		},
+		{ kind: 'h', text: '13. Cookies, consent and similar technologies' },
+		{
+			kind: 'p',
+			text: 'We use a limited set of cookies and similar technologies for sign-in, security and analytics, and — subject to consent where required — for advertising.'
+		},
+		{
+			kind: 'p',
+			text: 'For users in the EU/EEA and the UK, non-essential cookies and tracking technologies are deployed only after you give consent through our consent banner, and you can change or withdraw that consent at any time.'
+		},
+		{ kind: 'h', text: '14. Changes to this policy' },
+		{
+			kind: 'p',
+			text: 'We may update this policy from time to time. When we do, we will revise the "Last updated" date above and, for material changes, take reasonable steps to notify you.'
+		},
+		{ kind: 'h', text: '15. Contact us' },
+		{
+			kind: 'p',
+			text: `Wholesome Capital Limited Unit 2505, 25/F., Billion Plaza, 8 Cheung Yue Street, Lai Chi Kok, Kowloon, Hong Kong Email: ${INFO_EMAIL}`
+		},
+		{ kind: 'h', text: 'Regional riders' },
+		{ kind: 'h', text: 'A. European Union / EEA' },
+		{
+			kind: 'p',
+			text: 'If you are in the EU/EEA, the GDPR applies to the processing of your personal data and you have the full rights set out in Section 11, plus the right to complain to your local supervisory authority.'
+		},
+		{
+			kind: 'list',
+			items: [
+				'EU representative (GDPR Art. 27). As a controller established outside the EU offering services to EU users, we are required to appoint an EU representative and will publish their contact details here.',
+				'Consent. Advertising/tracking technologies are consent-gated for EU/EEA users (Sections 6 and 13).'
+			]
+		},
+		{ kind: 'h', text: 'B. United Kingdom' },
+		{
+			kind: 'p',
+			text: "If you are in the UK, the UK GDPR and Data Protection Act 2018 apply; you have the full rights in Section 11 and may complain to the Information Commissioner's Office (ICO)."
+		},
+		{
+			kind: 'list',
+			items: [
+				'UK representative (UK GDPR Art. 27). As a controller outside the UK offering services to UK users, we are required to appoint a UK representative and will publish their contact details here.'
+			]
+		},
+		{ kind: 'h', text: 'C. Brazil (LGPD)' },
+		{
+			kind: 'p',
+			text: 'If you are in Brazil, the Lei Geral de Proteção de Dados (LGPD) applies. You have the rights to confirmation of processing and access; to correct incomplete, inaccurate or out-of-date data; to anonymise, block or delete unnecessary or excessive data or data not processed in line with the LGPD; to portability; to delete data processed with your consent; to information about the public and private bodies we share data with; to information about the consequences of refusing consent; and to withdraw consent. You may exercise these by contacting us (Section 15) and may also petition the national authority, the Autoridade Nacional de Proteção de Dados (ANPD).'
+		},
+		{
+			kind: 'p',
+			text: 'Legal bases. We process your personal data on the bases set out in Article 7 of the LGPD — principally the provision of a service you requested, our legitimate interests in operating and securing the service, compliance with legal obligations, and, for advertising and other non-essential purposes, your consent. The data, purposes and bases are described in Sections 3 to 6.'
+		},
+		{
+			kind: 'p',
+			text: 'Data Protection Officer (Encarregado). We will appoint a data protection officer (encarregado) for Brazil and publish their contact details here; until then, you can reach us about your personal data at the contact in Section 15.'
+		},
+		{
+			kind: 'p',
+			text: 'Children and adolescents. Vici is restricted to users aged 18 and over (Section 12), and we do not knowingly process the personal data of children or adolescents.'
+		},
+		{ kind: 'h', text: 'D. Mexico (LFPDPPP)' },
+		{
+			kind: 'p',
+			text: 'If you are in Mexico, the Federal Law on the Protection of Personal Data Held by Private Parties applies. Mexico requires a privacy notice (Aviso de Privacidad) to be made available at or before the moment your data is collected, identifying the controller, the data collected, the purposes (distinguishing those that need consent from those that do not), and the legal basis. You hold ARCO rights — Access, Rectification, Cancellation and Opposition. A standalone Aviso de Privacidad in Spanish is published separately.'
+		},
+		{ kind: 'h', text: 'E. Nigeria (NDPA 2023) and Indonesia (PDP Law)' },
+		{
+			kind: 'p',
+			text: 'If you are in Nigeria, the Nigeria Data Protection Act applies; if you are in Indonesia, the Personal Data Protection Law applies. In both, you have rights broadly comparable to Section 11.'
+		},
+		{ kind: 'h', text: 'F. United States' },
+		{
+			kind: 'p',
+			text: 'Vici is made available to users in the United States as a free-to-play game with no monetary value (see Section 2, "Nature of the service"). Vici is not a licensed gambling operator, a sweepstakes promotion, or a regulated prediction/derivatives market, and offers no real-money play, purchase, or payout.'
+		},
+		{
+			kind: 'p',
+			text: `Where applicable, US state privacy laws (such as the California Consumer Privacy Act) give you rights to access, delete, correct and opt out of the "sale" or "sharing" of your personal data; to exercise them, contact ${INFO_EMAIL}.`
+		}
+	]
+};
