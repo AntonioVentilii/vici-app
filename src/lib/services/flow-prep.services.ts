@@ -7,6 +7,7 @@ import type { Market, MarketId } from '$lib/types/market';
 import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { UserMarketSignals } from '$lib/types/market-signals';
 import { deriveCalledMarketIds } from '$lib/utils/market-signals.utils';
+import { filterScheduledWcMarkets } from '$lib/utils/wc-schedule.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
@@ -105,16 +106,27 @@ export const prepareFlow = async ({
 		const tagsByMarket = tagMap as Record<string, string[]>;
 		const excludeSet = new Set(exclude);
 
+		// Temporary hardcoded World-Cup release schedule: a WC market is
+		// withheld until its Show Date (00:00 UTC), and WC markets absent
+		// from the calendar stay hidden entirely. Applied to the whole
+		// queue up front so withheld markets can't leak back in through the
+		// featured-scope fallback below. Non-WC markets pass through.
+		const visibleQueue = filterScheduledWcMarkets({
+			markets: queue,
+			tagsByMarket,
+			now: Date.now()
+		});
+
 		// When a featured event is active, narrow to markets carrying
 		// the event's category tag so the swipe deck tracks the live
 		// tentpole. Fall back to the full queue when the filter would
 		// empty the deck — users always see *some* content.
 		const eventScoped = !isNullish(featuredEventTag)
-			? queue.filter((market) =>
+			? visibleQueue.filter((market) =>
 					(tagsByMarket[market.id] ?? []).some((tag) => tag === featuredEventTag)
 				)
 			: [];
-		const sourceQueue = eventScoped.length > 0 ? eventScoped : queue;
+		const sourceQueue = eventScoped.length > 0 ? eventScoped : visibleQueue;
 
 		// Hard filter, no recycle: if the viewer has genuinely called every
 		// open market, the empty deck is the *correct* surface ("you're all
