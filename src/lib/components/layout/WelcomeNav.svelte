@@ -283,6 +283,16 @@
 			history.replaceState(null, '', `#${id}`);
 		};
 
+	// Mobile menu links: scroll via `onLinkClick` (works whether the window or
+	// `.lpc` is the active scroller — native `#` fragment scrolling is
+	// unreliable on iOS once the document is locked) then close the sheet.
+	const onMenuLinkClick =
+		(id: string) =>
+		(e: MouseEvent): void => {
+			onLinkClick(id)(e);
+			closeMenu();
+		};
+
 	const setLocaleAndClose = (loc: AppLocale) => {
 		localeStore.set({ key: LOCALE_STORAGE_KEY, value: loc });
 		langOpen = false;
@@ -446,7 +456,7 @@
 
 					<nav class="lp-menu-links">
 						{#each sections as section, i (section.id)}
-							<a href="#{section.id}" onclick={closeMenu}>
+							<a href="#{section.id}" onclick={onMenuLinkClick(section.id)}>
 								<span class="ix">0{i + 1}</span>
 								<span class="ltext">{navLabel(section)}</span>
 							</a>

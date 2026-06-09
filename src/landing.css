@@ -1923,7 +1923,7 @@ html[data-ios][data-theme='peach'] .lp-nav .lp-pill.open {
    ----------------------------------------------------------------------------
    iOS Chrome runs inside the OS WebView and collapses its address bar on
    *document* scroll; it can't animate pinned `position: sticky` elements in step
-   with that WebView resize, so the sticky nav pill juders as you scroll. Android
+   with that WebView resize, so the sticky nav pill judders as you scroll. Android
    and desktop resize smoothly, so they're unaffected. The authenticated app
    shell already sidesteps this by never scrolling the document — it locks the
    body and scrolls an inner viewport (`html[data-app] body { overflow: hidden }`
