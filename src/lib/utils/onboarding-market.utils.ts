@@ -82,6 +82,7 @@ export const buildOnboardingFirstCallMarket = ({
 		id: parseMarketId(rawId),
 		title,
 		description: title,
+		resolution: title,
 		creator: ANONYMOUS_CREATOR,
 		expiryDate: BigInt(Math.trunc(event.finalAt_ms)),
 		createdAt: BigInt(Math.trunc(nowMs - 7 * DAY_IN_MS)),

@@ -31,7 +31,19 @@ export type FlowAction = CallSide | 'SKIP';
 export interface Market {
 	id: MarketId;
 	title: string;
+	/**
+	 * Free-text descriptive blurb (the series `description`). The "what is this
+	 * market about" summary shown on the market card — distinct from
+	 * {@link resolution}, which is the binding settlement clause.
+	 */
 	description: string;
+	/**
+	 * The settlement clause (`Series.resolution.clause`) stating how the market
+	 * resolves. Surfaced under the "Resolution" / "Resolves YES if" sections of
+	 * the detail and Flow back cards. Compulsory on-chain, so always present;
+	 * historically markets defaulted it to their description.
+	 */
+	resolution: string;
 	creator: PrincipalText;
 	expiryDate: bigint; // timestamp in ms
 	createdAt: bigint; // timestamp in ms
