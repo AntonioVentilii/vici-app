@@ -1569,7 +1569,7 @@ export const deMessages = {
 	'markets.section.saved': 'Gespeichert',
 	'markets.section.trending': 'Im Trend',
 	'markets.see_all': 'Alle ansehen',
-	'markets.wc_eyebrow': 'Weltmeisterschaft 2026',
+	'markets.wc_eyebrow': 'FIFA World Cup 2026®',
 	'markets.wc_recap.accuracy': 'Trefferquote',
 	'markets.wc_recap.calls': 'Tipps abgegeben',
 	'markets.wc_recap.cta': 'Alle Märkte erkunden',

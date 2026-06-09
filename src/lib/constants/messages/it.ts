@@ -1556,7 +1556,7 @@ export const itMessages = {
 	'markets.section.saved': 'Salvati',
 	'markets.section.trending': 'Di tendenza',
 	'markets.see_all': 'Vedi tutto',
-	'markets.wc_eyebrow': 'Coppa del Mondo 2026',
+	'markets.wc_eyebrow': 'FIFA World Cup 2026®',
 	'markets.wc_recap.accuracy': 'Precisione',
 	'markets.wc_recap.calls': 'Pronostici fatti',
 	'markets.wc_recap.cta': 'Esplora tutti i mercati',

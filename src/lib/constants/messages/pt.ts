@@ -1552,7 +1552,7 @@ export const ptMessages = {
 	'markets.section.saved': 'Guardados',
 	'markets.section.trending': 'Em alta',
 	'markets.see_all': 'Ver tudo',
-	'markets.wc_eyebrow': 'Campeonato do Mundo 2026',
+	'markets.wc_eyebrow': 'FIFA World Cup 2026®',
 	'markets.wc_recap.accuracy': 'Precisão',
 	'markets.wc_recap.calls': 'Palpites feitos',
 	'markets.wc_recap.cta': 'Explorar todos os mercados',
