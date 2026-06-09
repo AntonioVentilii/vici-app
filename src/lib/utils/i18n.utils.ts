@@ -7,6 +7,7 @@ import { esArMessages } from '$lib/constants/messages/es-AR';
 import { esMxMessages } from '$lib/constants/messages/es-MX';
 import { frMessages } from '$lib/constants/messages/fr';
 import { itMessages } from '$lib/constants/messages/it';
+import { jaMessages } from '$lib/constants/messages/ja';
 import { ptMessages } from '$lib/constants/messages/pt';
 import { ptBRMessages } from '$lib/constants/messages/pt-BR';
 import { zhHansMessages } from '$lib/constants/messages/zh-Hans';
@@ -30,6 +31,7 @@ const catalogs: Partial<Record<AppLocale, Record<string, string>>> = {
 	'es-AR': esArMessages,
 	de: deMessages,
 	fr: frMessages,
+	ja: jaMessages,
 	pt: ptMessages,
 	'pt-BR': ptBRMessages,
 	'zh-Hans': zhHansMessages
