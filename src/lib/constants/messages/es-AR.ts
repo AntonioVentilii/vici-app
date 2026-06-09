@@ -6,7 +6,7 @@
  * pega/sin vueltas" idiom). Everything else resolves through the fallback
  * chain (`es-419` → `es` → `en`).
  */
-export const esArMessages: Record<string, string> = {
+export const esArMessages = {
 	'welcome.close.cta': 'Empezá a predecir — gratis',
 	'welcome.close.headline': 'Se viene el Mundial. Palpitalo antes de que pase.',
 	'welcome.hero.cta': 'Hacé tu primera predicción',

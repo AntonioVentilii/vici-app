@@ -7,7 +7,7 @@
  * safe as the floor every LatAm region (`es-MX`, `es-AR`, `es-CO`, …) backs
  * onto; intentionally flavour-neutral rather than country-specific.
  */
-export const es419Messages: Record<string, string> = {
+export const es419Messages = {
 	'welcome.close.cta': 'Empieza a predecir — gratis',
 	'welcome.close.headline': 'Ya viene el Mundial. Predícelo antes de que pase.',
 	'welcome.hero.card_meta': '{pct}% dice que SÍ',

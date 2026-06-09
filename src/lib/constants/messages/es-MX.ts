@@ -6,7 +6,7 @@
  * the local hero card). Everything else resolves through the fallback chain
  * (`es-419` → `es` → `en`).
  */
-export const esMxMessages: Record<string, string> = {
+export const esMxMessages = {
 	'welcome.close.cta': 'Empieza a pronosticar — gratis',
 	'welcome.close.headline': 'Ya viene el Mundial. Pronostícalo antes de que pase.',
 	'welcome.hero.card_q': '¿México llega al quinto partido?',
