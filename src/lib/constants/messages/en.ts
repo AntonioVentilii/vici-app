@@ -1510,7 +1510,7 @@ export const enMessages = {
 	'markets.section.saved': 'Saved',
 	'markets.section.trending': 'Trending',
 	'markets.see_all': 'See all',
-	'markets.wc_eyebrow': 'World Cup 2026',
+	'markets.wc_eyebrow': 'FIFA World Cup 2026®',
 	'markets.wc_recap.accuracy': 'Accuracy',
 	'markets.wc_recap.calls': 'Calls made',
 	'markets.wc_recap.cta': 'Explore all markets',
