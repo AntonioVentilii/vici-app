@@ -28,6 +28,10 @@
 		// horizontally rather than letterboxing in the middle. `size`
 		// still drives the SVG's internal resolution.
 		fill?: boolean;
+		// Optional market question text. Only the WC renderer consults it
+		// (to resolve a per-market template from the question); omitting
+		// it leaves every render — WC or otherwise — unchanged.
+		title?: string;
 		// Optional extra class on the wrapper for layout overrides.
 		class?: string;
 	}
@@ -39,10 +43,11 @@
 		size = 220,
 		frame = false,
 		fill = false,
+		title,
 		class: extraClass = ''
 	}: Props = $props();
 
-	const svg = $derived(renderFlowArt({ category, seed, state, theme: $theme, size, frame }));
+	const svg = $derived(renderFlowArt({ category, seed, state, theme: $theme, size, frame, title }));
 	// `wc` renders into a 280×100 viewBox; default categories are 1:1.
 	// Mirror that aspect on the host so the SVG isn't squished.
 	const viewBox = $derived(flowArtViewBox(category));
