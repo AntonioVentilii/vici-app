@@ -1021,13 +1021,11 @@
 		     row carries `idx / total` and `+xp VXP this session` over a
 		     thin progress bar. Tapping the wordmark exits Flow. -->
 		<FlowTopBar
-			{betsCount}
 			categoryLabel={topBarCategoryLabel}
 			{dailyGoalDone}
 			dailyGoalTarget={sittingGoal}
 			{dailyStreak}
 			{flameStage}
-			{maxBets}
 			onExit={backToMarkets}
 			{xp}
 		/>

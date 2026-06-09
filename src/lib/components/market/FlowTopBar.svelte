@@ -19,16 +19,15 @@
 	 * VXP this session` and a thin progress bar. Tapping the wordmark
 	 * exits Flow.
 	 *
-	 * The bolt chip tracks the day-long goal (`dailyGoalDone` /
-	 * `dailyGoalTarget`). The secondary row's count text reads this
-	 * sitting's calls (`betsCount / maxBets`), but the thin progress bar
-	 * under it fills against the day-long goal so it resumes where the day
-	 * left off — re-entering Flow part-way through the day shows the day's
-	 * accumulated progress, not a bar reset to empty.
+	 * The bolt chip, the secondary row's count text, and the thin progress
+	 * bar all track the same day-long goal (`dailyGoalDone` /
+	 * `dailyGoalTarget`), so the three read in lockstep and resume where the
+	 * day left off — re-entering Flow part-way through the day shows the
+	 * day's accumulated progress, never a count or bar reset to empty, and
+	 * Push-to-15 lifts the shared denominator from ten to fifteen rather
+	 * than re-framing only one of them.
 	 */
 	interface Props {
-		maxBets: number;
-		betsCount: number;
 		dailyGoalDone: number;
 		dailyGoalTarget: number;
 		dailyStreak: number;
@@ -39,8 +38,6 @@
 	}
 
 	const {
-		maxBets,
-		betsCount,
 		dailyGoalDone,
 		dailyGoalTarget,
 		dailyStreak,
@@ -52,7 +49,7 @@
 
 	// Fill against the day-long goal (cumulative) so the bar resumes from
 	// the day's accumulated progress instead of resetting to empty on a
-	// fresh sitting. The count text above still reads this sitting's calls.
+	// fresh sitting. The count text above reads the same cumulative frame.
 	const progressPct = $derived(
 		dailyGoalTarget > 0 ? Math.min(100, (dailyGoalDone / dailyGoalTarget) * 100) : 0
 	);
@@ -135,7 +132,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'flow.progress_count',
-					params: { done: betsCount, total: maxBets }
+					params: { done: dailyGoalDone, total: dailyGoalTarget }
 				})}
 			</span>
 			<span class="num flow-progress-xp">
