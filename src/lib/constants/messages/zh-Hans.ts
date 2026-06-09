@@ -1453,7 +1453,7 @@ export const zhHansMessages = {
 	'markets.section.saved': '已保存',
 	'markets.section.trending': '热门',
 	'markets.see_all': '查看全部',
-	'markets.wc_eyebrow': '2026 世界杯',
+	'markets.wc_eyebrow': 'FIFA World Cup 2026®',
 	'markets.wc_recap.accuracy': '准确率',
 	'markets.wc_recap.calls': '判断次数',
 	'markets.wc_recap.cta': '探索所有市场',
