@@ -1,20 +1,14 @@
 <script lang="ts">
-	import { SvelteSet } from 'svelte/reactivity';
-	import { get } from 'svelte/store';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
+	import MarketsBeyondCupCard from '$lib/components/market/MarketsBeyondCupCard.svelte';
 	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
-	import MarketsCategoryChips, {
-		type MarketsCategoryFilter
-	} from '$lib/components/market/MarketsCategoryChips.svelte';
 	import MarketsListRow from '$lib/components/market/MarketsListRow.svelte';
 	import WorldCupRecapCard from '$lib/components/market/WorldCupRecapCard.svelte';
-	import {
-		MARKET_TAG_LABEL_KEYS,
-		primaryMarketTag,
-		type MarketTag
-	} from '$lib/constants/market-tags.constants';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
+	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { marketTags, marketTagsNotInitialized } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
+	import { minuteTick_ms } from '$lib/derived/time.derived';
 	import { worldCupPhase } from '$lib/derived/world-cup.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
@@ -23,61 +17,34 @@
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
-	 * Markets screen — chip rail (Saved + per-category) above a
-	 * Trending carousel and the main list. Data comes from the
-	 * `$markets` derived store plus
-	 * `$preferencesStore.savedMarketIds`; the saved-ids persistence
-	 * is keyed under `vici.saved-markets` in localStorage.
+	 * Markets screen — a section-based board (no filter chips). The World Cup
+	 * is the in-focus category; every other category stays locked behind the
+	 * "Beyond the Cup" skill gate (`MarketsBeyondCupCard`), surfaced high. The
+	 * board itself is three sections: Saved (the viewer's watchlist), Resolving
+	 * soon (the soonest-closing available lines), and Available predictions.
+	 *
+	 * Placing a call happens in Flow — this board has no buy path; rows deep-link
+	 * to market detail. Saved-ids persist under `vici.saved-markets` via
+	 * `$preferencesStore.savedMarketIds`.
 	 */
+
+	// A market counts as "resolving soon" when it closes within this window.
+	// Our market type has no curated `fast` flag, so we proxy it by closeness to
+	// the `expiryDate` — the soonest-closing lines surface first, framing the
+	// board as "what settles soon" for new users.
+	const RESOLVING_SOON_WINDOW_MS = 7 * DAY_IN_MS;
 	const TRENDING_LIMIT = 8;
-	const SAVED_RAIL_LIMIT = 6;
-	// How many non-WC markets the `bridge`-phase "Beyond the Cup" rail seeds —
-	// enough to preview the post-Cup deck without competing with the focus.
-	const BEYOND_RAIL_LIMIT = 6;
 
-	// Initial focus: in the WC-focused phases of the retention arc
-	// (`wc-focus` / `bridge`) the Markets list opens laser-focused on the
-	// World Cup (the `wc` tag is the default filter and the other categories
-	// collapse behind "More markets →"). In `open` (the Cup has resolved) and
-	// `off` (no opt-in) the list keeps its all-categories shape. Read once at
-	// init via `get` — the phase doesn't flip mid-session in practice, and
-	// tying the default to a live `$derived` would fight the user once they
-	// pick another chip.
-	const initialPhase = get(worldCupPhase);
-	let cat = $state<MarketsCategoryFilter>(
-		initialPhase === 'wc-focus' || initialPhase === 'bridge' ? 'wc' : 'all'
-	);
-
-	// The retention-arc phase drives the WC chrome live. `wc-focus` and
-	// `bridge` both keep the laser focus (event eyebrow + collapsed
-	// "More markets →" rail); `bridge` additionally seeds the "Beyond the
-	// Cup" rail below. `open` (Cup resolved) and `off` revert to the
-	// all-categories shape — so the focus chrome disappears the moment the
-	// phase advances mid-session.
+	// The retention-arc phase drives the WC chrome live. `wc-focus` / `bridge`
+	// keep the laser focus on the World Cup; `open` (the Cup resolved) and `off`
+	// widen the board to every category (there's no focused event to anchor on).
 	const phase = $derived($worldCupPhase);
 	const wcFocus = $derived(phase === 'wc-focus' || phase === 'bridge');
-	const isBridge = $derived(phase === 'bridge');
 	const isOpen = $derived(phase === 'open');
 
-	// When the arc advances into `open` mid-session (the heartbeat crosses the
-	// final), the World-Cup focus is over — drop the lingering `wc` filter back
-	// to all-categories so the list and section title match the recap card and
-	// the documented `open` behaviour. Guarded on the transition so it never
-	// fights a user who deliberately picks the `wc` chip while in `open`.
-	let prevPhase = $state(initialPhase);
-	$effect(() => {
-		if (prevPhase !== 'open' && phase === 'open' && cat === 'wc') {
-			cat = 'all';
-		}
-
-		prevPhase = phase;
-	});
-
-	// Header context chip: the currently featured event, surfaced as a single
-	// mono chip while the list is laser-focused on it. The Markets header is a
-	// chips-only row — no title or subtitle — so the chip carries the context.
-	// In the `open` / `off` phases there is no featured event and the chip (and
-	// therefore the whole header strip) is omitted.
+	// Header context chip: the featured event, surfaced as a single mono chip
+	// while the board is laser-focused on it. Chips-only header — no title or
+	// subtitle. Omitted once no event is in focus (`open` / `off`).
 	const eventChips = $derived(
 		wcFocus ? [{ label: t({ locale: $localeStore, key: 'markets.wc_eyebrow' }) }] : undefined
 	);
@@ -85,6 +52,7 @@
 	const loading = $derived($marketsNotInitialized);
 
 	const savedSet = $derived(new Set($preferencesStore.savedMarketIds));
+	// Saved = the viewer's watchlist, kept even if an entry isn't World Cup.
 	const savedMarkets = $derived($markets.filter((m) => savedSet.has(m.id)));
 
 	const tagsByMarket = $derived($marketTags);
@@ -92,122 +60,66 @@
 	const matchesTag = ({ market, tag }: { market: Market; tag: MarketTag }): boolean =>
 		tagsByMarket[market.id]?.includes(tag) ?? false;
 
-	// Tags that currently resolve to at least one loaded market. Drives the
-	// chip rail so we don't surface categories that would render the empty
-	// state — the user can't filter into a dead end. Markets without
-	// metadata contribute nothing here (the lookup returns `undefined`).
-	//
-	// Returns `undefined` while the tag store is still uninitialized so the
-	// chip rail falls back to the full taxonomy rather than collapsing to a
-	// single "All" chip during the first paint.
-	const availableTags = $derived.by((): SvelteSet<MarketTag> | undefined => {
+	// Volume-sort helper — the same trending signal the carousel uses, applied
+	// to give a stable deck that doesn't reshuffle as the user scans it.
+	// eslint-disable-next-line local-rules/prefer-object-params -- Array.sort comparators take two positional args by contract
+	const byVolumeDesc = (a: Market, b: Market): number => {
+		if (b.totalVolume === a.totalVolume) {
+			return 0;
+		}
+
+		return b.totalVolume > a.totalVolume ? 1 : -1;
+	};
+
+	// The "available" board. While the World Cup is in focus the board is the WC
+	// category only (the single open event); once the arc opens up (`open` /
+	// `off`) it's every market — so the page keeps working past the Cup. Gated
+	// on tag metadata being initialized so a WC filter doesn't collapse the board
+	// to empty before tags load.
+	const availableMarkets = $derived.by((): Market[] => {
+		if (!wcFocus) {
+			return [...$markets].sort(byVolumeDesc);
+		}
+
 		if ($marketTagsNotInitialized) {
-			return;
-		}
-
-		const set = new SvelteSet<MarketTag>();
-
-		for (const m of $markets) {
-			const tags = tagsByMarket[m.id];
-
-			if (tags !== undefined) {
-				for (const tag of tags) {
-					set.add(tag);
-				}
-			}
-		}
-
-		return set;
-	});
-
-	// Filter the deck: saved-only when the saved chip is active,
-	// otherwise either all open markets or those carrying the active
-	// category tag. Ordered by totalVolume DESC — the same trending
-	// signal the carousels use — for a stable deck that doesn't
-	// reshuffle as the user scans it.
-	const list = $derived.by((): Market[] => {
-		const base = ((): Market[] => {
-			if (cat === 'saved') {
-				return savedMarkets;
-			}
-
-			if (cat === 'all') {
-				return $markets;
-			}
-
-			const tag = cat as MarketTag;
-
-			return $markets.filter((m) => matchesTag({ market: m, tag }));
-		})();
-
-		return [...base].sort((a, b) => {
-			if (b.totalVolume === a.totalVolume) {
-				return 0;
-			}
-
-			return b.totalVolume > a.totalVolume ? 1 : -1;
-		});
-	});
-
-	// Our backend doesn't carry a hand-curated "hot" flag, so the
-	// trending carousel proxies by sorting open markets by
-	// `totalVolume` desc.
-	const trendingMarkets = $derived(
-		[...$markets]
-			.filter((m) => m.status === 'Open')
-			.sort((a, b) => {
-				if (b.totalVolume === a.totalVolume) {
-					return 0;
-				}
-
-				return b.totalVolume > a.totalVolume ? 1 : -1;
-			})
-			.slice(0, TRENDING_LIMIT)
-	);
-
-	// "Beyond the Cup" rail (bridge phase): a handful of the highest-volume
-	// non-WC markets, previewed *before* the Cup resolves to pre-empt the
-	// post-Cup cliff. Proxies "curated" by volume — the same trending signal
-	// the carousels use — and excludes anything tagged `wc` so it genuinely
-	// widens the deck. Gated on tag metadata being initialized: `matchesTag`
-	// returns false against the empty fallback, so without this a WC market
-	// could leak into the non-WC rail before tags load. Empty otherwise.
-	const beyondMarkets = $derived.by((): Market[] => {
-		if (!isBridge || $marketTagsNotInitialized) {
 			return [];
 		}
 
-		return [...$markets]
-			.filter((m) => m.status === 'Open' && !matchesTag({ market: m, tag: 'wc' }))
-			.sort((a, b) => {
-				if (b.totalVolume === a.totalVolume) {
-					return 0;
-				}
+		return $markets.filter((m) => matchesTag({ market: m, tag: 'wc' }));
+	});
 
-				return b.totalVolume > a.totalVolume ? 1 : -1;
+	// Resolving soon: available lines closing within the window, soonest first.
+	const resolvingSoon = $derived.by((): Market[] => {
+		const now = $minuteTick_ms;
+
+		return availableMarkets
+			.filter((m) => {
+				const expiry = Number(m.expiryDate);
+
+				return expiry > now && expiry - now <= RESOLVING_SOON_WINDOW_MS;
 			})
-			.slice(0, BEYOND_RAIL_LIMIT);
+			.sort((a, b) => Number(a.expiryDate) - Number(b.expiryDate));
 	});
 
-	// Section title — "All markets" / "Saved" / the active category's
-	// label.
-	const sectionTitle = $derived.by((): string => {
-		if (cat === 'all') {
-			return t({ locale: $localeStore, key: 'markets.section.all' });
-		}
+	const resolvingSoonIds = $derived(new Set(resolvingSoon.map((m) => m.id)));
 
-		if (cat === 'saved') {
-			return t({ locale: $localeStore, key: 'markets.section.saved' });
-		}
+	// Available predictions: the rest of the available board (everything not
+	// already surfaced in "Resolving soon"), volume-sorted.
+	const restMarkets = $derived(
+		[...availableMarkets].filter((m) => !resolvingSoonIds.has(m.id)).sort(byVolumeDesc)
+	);
 
-		return t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[cat] });
-	});
+	// Trending rail: highest-volume open markets. Our backend carries no curated
+	// "hot" flag, so volume is the proxy.
+	const trendingMarkets = $derived(
+		[...$markets]
+			.filter((m) => m.status === 'Open')
+			.sort(byVolumeDesc)
+			.slice(0, TRENDING_LIMIT)
+	);
 
-	// The Trending rail is a volume-sorted preview of the deck below — the main
-	// list is already sorted by the same `totalVolume` signal. "See all" on the
-	// rail therefore brings the user down to the full, scrollable list rather
-	// than to a separate route. Bind the list section so we can scroll to it,
-	// honouring `prefers-reduced-motion` (no smooth animation when reduced).
+	// "See all" on the trending rail scrolls to the main list rather than a
+	// separate route — the list is sorted by the same volume signal.
 	let mainListEl: HTMLElement | undefined = $state();
 
 	const scrollToMainList = (): void => {
@@ -223,55 +135,17 @@
 	     context chip (omitted entirely once no event is in focus). -->
 	<ScreenHeader chips={eventChips} variant="section" />
 
-	<!-- Category chips with Saved filter prepended. In WC-focus mode the
-	     rail opens on the World Cup with the rest behind "More markets →". -->
-	<MarketsCategoryChips
-		active={cat}
-		{availableTags}
-		onChange={(next) => (cat = next)}
-		savedCount={savedMarkets.length}
-		{wcFocus}
-	/>
-
-	<!-- `open` phase: the Cup has resolved. Recap the user's World-Cup run
-		     at the top of the list and convert it into broader play. The list
-		     itself behaves as all-categories (no WC default). -->
+	<!-- `open` phase: the Cup has resolved. Recap the viewer's World-Cup run at
+	     the top of the board and convert it into broader play. -->
 	{#if isOpen}
-		<WorldCupRecapCard onExplore={() => (cat = 'all')} />
+		<WorldCupRecapCard onExplore={scrollToMainList} />
 	{/if}
 
-	<!-- `bridge` phase: still WC-focused, but seed a "Beyond the Cup" rail
-		     of curated non-WC markets before the Cup ends — a soft landing for
-		     the post-Cup cliff. Shown on the focused (`wc`) view only, so it
-		     doesn't double up once the user expands to other categories. -->
-	{#if isBridge && cat === 'wc' && beyondMarkets.length > 0}
-		<p class="beyond-eyebrow dim t-body-sm">
-			{t({ locale: $localeStore, key: 'markets.beyond.line' })}
-		</p>
-		<MarketsCarousel
-			markets={beyondMarkets}
-			tagsBySeries={tagsByMarket}
-			title={t({ locale: $localeStore, key: 'markets.beyond.title' })}
-		/>
-	{/if}
+	<!-- Beyond the Cup — the skill-gate unlock goal, surfaced high. -->
+	<MarketsBeyondCupCard />
 
-	<!-- Saved carousel only visible on All view -->
-	{#if cat === 'all' && savedMarkets.length > 0}
-		<MarketsCarousel
-			markets={savedMarkets.slice(0, SAVED_RAIL_LIMIT)}
-			moreLabel={t({
-				locale: $localeStore,
-				key: 'markets.see_all_count',
-				params: { count: savedMarkets.length }
-			})}
-			onMore={() => (cat = 'saved')}
-			tagsBySeries={tagsByMarket}
-			title={t({ locale: $localeStore, key: 'markets.section.saved' })}
-		/>
-	{/if}
-
-	<!-- Trending on All view -->
-	{#if cat === 'all' && trendingMarkets.length > 0}
+	<!-- Trending rail. -->
+	{#if trendingMarkets.length > 0}
 		<MarketsCarousel
 			markets={trendingMarkets}
 			moreLabel={t({ locale: $localeStore, key: 'markets.see_all' })}
@@ -281,50 +155,68 @@
 		/>
 	{/if}
 
-	<!-- Main list with Saved empty state. card-empty owns the dashed
-		     border + the c-eyebrow / c-title / c-body type ramp. -->
-	{#if cat === 'saved' && list.length === 0 && !loading}
-		<div style="margin: 20px 20px 24px;" class="card-empty">
+	<!-- Saved (primary) — the viewer's watchlist. -->
+	<div class="section-h">
+		<h3>{t({ locale: $localeStore, key: 'markets.section.saved' })}</h3>
+		<span class="mute t-sub">{savedMarkets.length}</span>
+	</div>
+	{#if savedMarkets.length === 0}
+		<div style="margin: 4px 20px 20px;" class="card-empty">
 			<span class="c-eyebrow">{t({ locale: $localeStore, key: 'markets.section.saved' })}</span>
-			<span class="c-title">{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}</span>
+			<span style="line-height: 1.25;" class="c-title"
+				>{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}</span
+			>
 			<p class="c-body">
 				{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
 			</p>
 		</div>
 	{:else}
-		<div bind:this={mainListEl} style="scroll-margin-top: 12px;" class="section-h">
-			<h3>{sectionTitle}</h3>
-			<span class="mute t-sub">{list.length}</span>
+		<div style="gap: 0; padding: 0 20px 20px;" class="col">
+			{#each savedMarkets as m (m.id)}
+				<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+			{/each}
 		</div>
+	{/if}
 
-		{#if loading}
-			<div style="gap: 8px; padding: 0 20px 20px;" class="col">
-				{#each Array(4) as _, index (index)}
-					<div
-						style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
-						aria-hidden="true"
-					></div>
-				{/each}
-			</div>
-		{:else if list.length === 0}
-			<div style="margin: 0 20px 20px;" class="card-empty">
-				<p class="c-body">
-					{t({ locale: $localeStore, key: 'markets.empty' })}
-				</p>
-			</div>
-		{:else}
-			<div style="gap: 0; padding: 0 20px 20px;" class="col">
-				{#each list as m (m.id)}
-					<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
-				{/each}
-			</div>
-		{/if}
+	<!-- Resolving soon — the soonest-closing available lines first. -->
+	{#if resolvingSoon.length > 0}
+		<div class="section-h">
+			<h3>{t({ locale: $localeStore, key: 'markets.section.resolving_soon' })}</h3>
+			<span class="mute t-sub">{resolvingSoon.length}</span>
+		</div>
+		<div style="gap: 0; padding: 0 20px 20px;" class="col">
+			{#each resolvingSoon as m (m.id)}
+				<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+			{/each}
+		</div>
+	{/if}
+
+	<!-- Available predictions — the rest of the available board. -->
+	<div bind:this={mainListEl} style="scroll-margin-top: 12px;" class="section-h">
+		<h3>{t({ locale: $localeStore, key: 'markets.section.available' })}</h3>
+		<span class="mute t-sub">{restMarkets.length}</span>
+	</div>
+
+	{#if loading}
+		<div style="gap: 8px; padding: 0 20px 20px;" class="col">
+			{#each Array(4) as _, index (index)}
+				<div
+					style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
+					aria-hidden="true"
+				></div>
+			{/each}
+		</div>
+	{:else if restMarkets.length === 0}
+		<div style="margin: 0 20px 20px;" class="card-empty">
+			<p class="c-body">
+				{t({ locale: $localeStore, key: 'markets.empty' })}
+			</p>
+		</div>
+	{:else}
+		<div style="gap: 0; padding: 0 20px calc(96px + env(safe-area-inset-bottom, 0px));" class="col">
+			{#each restMarkets as m (m.id)}
+				<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+			{/each}
+		</div>
 	{/if}
 </div>
-
-<style lang="postcss">
-	.beyond-eyebrow {
-		margin: 4px 20px 0;
-		max-width: 48ch;
-	}
-</style>
