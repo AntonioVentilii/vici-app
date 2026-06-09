@@ -1667,7 +1667,6 @@ export const zhHansMessages = {
 	'outcome.no_won': 'NO 获胜',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES 获胜',
-	'picker.auto': '自动',
 	'picker.no_match': '无匹配',
 	'picker.regions': '{n} 个地区',
 	'picker.search': '搜索语言',

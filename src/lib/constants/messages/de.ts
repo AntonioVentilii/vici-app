@@ -1765,7 +1765,6 @@ export const deMessages = {
 	'outcome.no_won': 'NO gewonnen',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES gewonnen',
-	'picker.auto': 'AUTO',
 	'picker.no_match': 'Kein Treffer',
 	'picker.regions': '{n} Regionen',
 	'picker.search': 'Sprache suchen',
