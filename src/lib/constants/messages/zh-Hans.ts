@@ -1094,29 +1094,6 @@ export const zhHansMessages = {
 	'info.doc.resolution-rules.b9': '边缘情形',
 	'info.doc.resolution-rules.eyebrow': '法律 · 完整流程',
 	'info.doc.resolution-rules.title': '结算规则',
-	'info.doc.terms.b0':
-		'使用 VICI 即表示你同意以下条款。它们以通俗语言写成。具有法律约束力的版本就是你正在阅读的这一份。',
-	'info.doc.terms.b1': '1. 服务',
-	'info.doc.terms.b10': '不得使用自动化。不得协同投票。不得冒充他人。不得发布适用法律禁止的内容。',
-	'info.doc.terms.b11': '6. 终止',
-	'info.doc.terms.b12':
-		'你可以随时在“设置”中删除你的账户。我们可能会暂停违反这些条款的账户。我们会告知你原因。',
-	'info.doc.terms.b13': '7. 变更',
-	'info.doc.terms.b14': '重大变更会在生效前至少七天在应用内公告。在该日期之后继续使用即表示同意。',
-	'info.doc.terms.b2':
-		'VICI 是一款免费的预测应用。我们提供以公开来源结算的市场。我们不促成任何金钱投注。',
-	'info.doc.terms.b3': '2. 你的账户',
-	'info.doc.terms.b4':
-		'你同意提供准确的信息并仅使用一个账户。为操纵排行榜或对决而创建的多个账户将被恕不另行通知地移除。',
-	'info.doc.terms.b5': '3. 你的预测',
-	'info.doc.terms.b6':
-		'你保留对账户历史的所有权。我们保留展示由其衍生的聚合及匿名化统计数据的权利。',
-	'info.doc.terms.b7': '4. VXP',
-	'info.doc.terms.b8':
-		'VXP 是一种无货币价值的应用内积分。它不能兑现、不能转移到应用之外，也不能兑换为货币。',
-	'info.doc.terms.b9': '5. 可接受的行为',
-	'info.doc.terms.eyebrow': '法律 · 2026 年 5 月 1 日生效',
-	'info.doc.terms.title': '服务条款',
 	'info.not_found.body': '没有匹配该地址的文档。试试页脚的其他链接，或返回首页。',
 	'info.not_found.title': '未找到文档',
 	'invite.friend_added_body': '可以在好友列表里找到他/她，对方那边也会同步显示。',

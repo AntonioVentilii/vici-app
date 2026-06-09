@@ -1155,31 +1155,6 @@ export const itMessages = {
 	'info.doc.resolution-rules.b9': 'Casi limite',
 	'info.doc.resolution-rules.eyebrow': 'Legale · La procedura completa',
 	'info.doc.resolution-rules.title': 'Regole di risoluzione',
-	'info.doc.terms.b0':
-		'Usando VICI accetti i termini qui sotto. Sono scritti in linguaggio semplice. La versione giuridicamente vincolante è quella che stai leggendo ora.',
-	'info.doc.terms.b1': '1. Il servizio',
-	'info.doc.terms.b10':
-		'Nessuna automazione. Nessun voto coordinato. Nessuna impersonificazione. Nessun contenuto vietato dalla legge applicabile.',
-	'info.doc.terms.b11': '6. Risoluzione',
-	'info.doc.terms.b12':
-		'Puoi eliminare il tuo account in qualsiasi momento dalle Impostazioni. Possiamo sospendere un account che viola questi termini. Ti spiegheremo il perché.',
-	'info.doc.terms.b13': '7. Modifiche',
-	'info.doc.terms.b14':
-		'Le modifiche sostanziali vengono annunciate nell’app almeno sette giorni prima che entrino in vigore. L’uso continuato dopo tale data costituisce accettazione.',
-	'info.doc.terms.b2':
-		'VICI è un’app di previsioni gratuita. Forniamo mercati che si risolvono su fonti pubbliche. Non agevoliamo alcuna scommessa di denaro.',
-	'info.doc.terms.b3': '2. Il tuo account',
-	'info.doc.terms.b4':
-		'Ti impegni a fornire informazioni accurate e a usare un solo account. Gli account multipli creati per manipolare classifiche o battaglie verranno rimossi senza preavviso.',
-	'info.doc.terms.b5': '3. Le tue previsioni',
-	'info.doc.terms.b6':
-		'Mantieni la titolarità del tuo storico account. Ci riserviamo il diritto di mostrare statistiche aggregate e anonimizzate da esso derivate.',
-	'info.doc.terms.b7': '4. VXP',
-	'info.doc.terms.b8':
-		'Il VXP è un credito nell’app senza valore monetario. Non può essere riscattato, trasferito al di fuori dell’app né scambiato con valuta.',
-	'info.doc.terms.b9': '5. Condotta accettabile',
-	'info.doc.terms.eyebrow': 'Legale · In vigore dal 1° maggio 2026',
-	'info.doc.terms.title': 'Termini di servizio',
 	'info.not_found.body':
 		'Nessun documento corrisponde a questo indirizzo. Prova un altro link nel footer o torna alla home.',
 	'info.not_found.title': 'Documento non trovato',

@@ -29,8 +29,16 @@
 
 	let { doc }: Props = $props();
 
-	// Resolve the document title once for the header + `<title>`.
-	const title = $derived(t({ locale: $localeStore, key: doc.titleKey }));
+	// Resolve the document title once for the header + `<title>` —
+	// literal for legal docs, keyed (localized) for help docs.
+	const title = $derived(
+		'title' in doc ? doc.title : t({ locale: $localeStore, key: doc.titleKey })
+	);
+
+	// Eyebrow line — literal for legal docs, keyed for help docs.
+	const eyebrow = $derived(
+		'eyebrow' in doc ? doc.eyebrow : t({ locale: $localeStore, key: doc.eyebrowKey })
+	);
 
 	// Back target: signed-in users came from Settings; signed-out
 	// (pre-onboarding) users came from the Welcome / signup flow.
@@ -56,22 +64,32 @@
 	</header>
 
 	<div class="info-body">
-		<div class="info-eyebrow allcaps">{t({ locale: $localeStore, key: doc.eyebrowKey })}</div>
+		<div class="info-eyebrow allcaps">{eyebrow}</div>
 
 		<article class="info-article">
 			{#each doc.blocks as block, i (i)}
 				{#if block.kind === 'lede'}
-					<p class="info-lede serif-italic">{t({ locale: $localeStore, key: block.key })}</p>
+					<p class="info-lede serif-italic">
+						{'text' in block ? block.text : t({ locale: $localeStore, key: block.key })}
+					</p>
 				{:else if block.kind === 'h'}
-					<h2 class="info-heading">{t({ locale: $localeStore, key: block.key })}</h2>
+					<h2 class="info-heading">
+						{'text' in block ? block.text : t({ locale: $localeStore, key: block.key })}
+					</h2>
 				{:else if block.kind === 'p'}
 					<p class="info-paragraph">
-						{t({ locale: $localeStore, key: block.key, params: block.params })}
+						{'text' in block
+							? block.text
+							: t({
+									locale: $localeStore,
+									key: block.key,
+									params: 'params' in block ? block.params : undefined
+								})}
 					</p>
 				{:else if block.kind === 'list'}
 					<ul class="info-list">
-						{#each block.itemKeys as itemKey, j (j)}
-							<li class="info-list-item">{t({ locale: $localeStore, key: itemKey })}</li>
+						{#each 'items' in block ? block.items : block.itemKeys.map( (k) => t( { locale: $localeStore, key: k } ) ) as item, j (j)}
+							<li class="info-list-item">{item}</li>
 						{/each}
 					</ul>
 				{:else if block.kind === 'mail'}

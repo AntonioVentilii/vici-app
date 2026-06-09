@@ -1140,31 +1140,6 @@ export const enMessages = {
 	'info.doc.resolution-rules.b9': 'Edge cases',
 	'info.doc.resolution-rules.eyebrow': 'Legal · The full procedure',
 	'info.doc.resolution-rules.title': 'Resolution rules',
-	'info.doc.terms.b0':
-		'By using VICI you agree to the terms below. They are written in plain language. The legally binding version is the one you are reading now.',
-	'info.doc.terms.b1': '1. The service',
-	'info.doc.terms.b10':
-		'No automation. No coordinated voting. No impersonation. No content prohibited by applicable law.',
-	'info.doc.terms.b11': '6. Termination',
-	'info.doc.terms.b12':
-		'You may delete your account at any time from Settings. We may suspend an account that violates these terms. We will tell you why.',
-	'info.doc.terms.b13': '7. Changes',
-	'info.doc.terms.b14':
-		'Material changes are announced in-app at least seven days before they take effect. Continued use after that date is agreement.',
-	'info.doc.terms.b2':
-		'VICI is a free predictions app. We provide markets that resolve on public sources. We do not facilitate any wagering of money.',
-	'info.doc.terms.b3': '2. Your account',
-	'info.doc.terms.b4':
-		'You agree to provide accurate information and to use one account only. Multiple accounts created to manipulate leaderboards or battles will be removed without notice.',
-	'info.doc.terms.b5': '3. Your predictions',
-	'info.doc.terms.b6':
-		'You retain ownership of your account history. We retain the right to display aggregated and anonymised statistics derived from it.',
-	'info.doc.terms.b7': '4. VXP',
-	'info.doc.terms.b8':
-		'VXP is an in-app credit with no monetary value. It cannot be redeemed, transferred outside the app, or exchanged for currency.',
-	'info.doc.terms.b9': '5. Acceptable conduct',
-	'info.doc.terms.eyebrow': 'Legal · Effective May 1, 2026',
-	'info.doc.terms.title': 'Terms of service',
 	'info.not_found.body':
 		'No document matches that address. Try one of the links in the footer or head back to the home page.',
 	'info.not_found.title': 'Document not found',
