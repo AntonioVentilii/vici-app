@@ -281,6 +281,7 @@ const AppGetMarketTranslationResultSchema = j.strictObject({
 			locale: j.string(),
 			title: j.string(),
 			description: j.string(),
+			resolution: j.string(),
 			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
 			updatedAt: j.number(),
 			updatedBy: j.string()
@@ -868,6 +869,7 @@ const AppListMarketTranslationsResultSchema = j.strictObject({
 			locale: j.string(),
 			title: j.string(),
 			description: j.string(),
+			resolution: j.string(),
 			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
 			updatedAt: j.number(),
 			updatedBy: j.string()
@@ -1831,6 +1833,7 @@ const AppUpsertMarketTranslationArgsSchema = j.strictObject({
 	data: j.strictObject({
 		title: j.string(),
 		description: j.string(),
+		resolution: j.string(),
 		outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() }))
 	})
 });
@@ -1840,6 +1843,7 @@ const AppUpsertMarketTranslationResultSchema = j.strictObject({
 		locale: j.string(),
 		title: j.string(),
 		description: j.string(),
+		resolution: j.string(),
 		outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
 		updatedAt: j.number(),
 		updatedBy: j.string()

@@ -1515,6 +1515,7 @@ export const ptBRMessages = {
 	'market.metadata.translations.locale_label': 'Idioma',
 	'market.metadata.translations.original_description': 'Descrição original',
 	'market.metadata.translations.original_outcome': 'Desfecho original',
+	'market.metadata.translations.original_resolution': 'Resolução original',
 	'market.metadata.translations.original_title': 'Título original',
 	'market.metadata.translations.save': 'Salvar tradução',
 	'market.metadata.translations.saved': 'Tradução salva',

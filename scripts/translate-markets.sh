@@ -17,13 +17,15 @@
 #       "it": {
 #         "title": "Il Brasile vincerà i Mondiali 2026?",
 #         "description": "Si risolve SÌ se il Brasile alza il trofeo...",
+#         "resolution": "Si risolve SÌ se il Brasile alza il trofeo il 19 luglio 2026.",
 #         "outcomes": [{ "id": "yes", "title": "Sì" }, { "id": "no", "title": "No" }]
 #       },
-#       "es": { "title": "...", "description": "...", "outcomes": [...] }
+#       "es": { "title": "...", "description": "...", "resolution": "...", "outcomes": [...] }
 #     }
 #   }
-# `outcomes` is optional (defaults to an empty vec). Rows without a non-empty
-# `translations.<locale>.title` are skipped for that locale.
+# `description`/`resolution` default to an empty string and `outcomes` to an
+# empty vec when absent. Rows without a non-empty `translations.<locale>.title`
+# are skipped for that locale.
 #
 # Usage:
 #   ./scripts/translate-markets.sh <markets-json-file> [--local|--staging|--production]
@@ -140,6 +142,7 @@ done < <(jq -r '
 		.key,
 		( "record { title = " + (.value.title | candid_text)
 		  + "; description = " + ((.value.description // "") | candid_text)
+		  + "; resolution = " + ((.value.resolution // "") | candid_text)
 		  + "; outcomes = vec { "
 		  + ((.value.outcomes // [])
 		     | map("record { id = " + (.id | candid_text) + "; title = " + (.title | candid_text) + " }")
