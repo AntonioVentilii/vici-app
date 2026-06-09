@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { getDoc, signOut } from '@junobuild/core';
 	import {
-		Activity,
 		Bell,
 		ChevronLeft,
 		ChevronRight,
@@ -35,7 +34,6 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { Collection } from '$lib/constants/collections.constants';
 	import { LOCALE_STORAGE_KEY, SUPPORTED_LOCALES } from '$lib/constants/locale.constants';
-	import { MARKET_TAGS } from '$lib/constants/market-tags.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
@@ -46,7 +44,7 @@
 	import type { ButtonStatus } from '$lib/types/components';
 	import type { SettingsVisibility } from '$lib/types/preferences';
 	import type { UserProfile } from '$lib/types/profile';
-	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { resolveSignInMethod } from '$lib/utils/signin-method.utils';
 	import { visibilityToProfile } from '$lib/utils/visibility.utils';
@@ -188,55 +186,6 @@
 		})
 	);
 
-	// Flow deck card --------------------------------------------------
-	// Two-way segmented control: `all` shows the category-pill grid,
-	// `wc` flips the deck to World Cup markets only. Mirrors the
-	// SetSegmented on the SettingsScreen — when `wc` is selected the
-	// pill grid is hidden and a single explanatory line surfaces.
-	type FlowDeckMode = 'all' | 'wc';
-
-	const flowDeckMode = $derived<FlowDeckMode>($preferencesStore.worldCupMode ? 'wc' : 'all');
-
-	const flowDeckTabOptions = $derived([
-		{ value: 'all', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.all' }) },
-		{ value: 'wc', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.wc' }) }
-	]);
-
-	// `wc` lives on its own tab next to "All categories"; the grid only
-	// surfaces the other tags so the user doesn't see the same control in
-	// two places.
-	const settingsCategoryTags = $derived(MARKET_TAGS.filter((tag) => tag !== 'wc'));
-	const flowTagsEnabled = $derived(
-		($preferencesStore.flowTags ?? []).filter((tag) => tag !== 'wc').length
-	);
-	const flowDeckSub = $derived(
-		flowDeckMode === 'wc'
-			? t({ locale: $localeStore, key: 'settings.flow_deck.sub_wc' })
-			: flowTagsEnabled <= 1
-				? t({ locale: $localeStore, key: 'settings.flow_deck.sub_one' })
-				: t({
-						locale: $localeStore,
-						key: 'settings.flow_deck.sub',
-						params: { enabled: flowTagsEnabled, total: settingsCategoryTags.length }
-					})
-	);
-
-	const tagLabelKey = (tag: string): MessageKey =>
-		`settings.flow_deck.category.${tag}` as MessageKey;
-
-	const toggleFlowTag = (tag: string) => {
-		preferencesStore.update((prefs) => {
-			const current = prefs.flowTags ?? [...MARKET_TAGS];
-			const next = current.includes(tag) ? current.filter((c) => c !== tag) : [...current, tag];
-
-			return { ...prefs, flowTags: next.length === 0 ? [tag] : next };
-		});
-	};
-
-	const setFlowDeckMode = (mode: FlowDeckMode) => {
-		preferencesStore.update((prefs) => ({ ...prefs, worldCupMode: mode === 'wc' }));
-	};
-
 	// Profile-visibility write. The settings-grouped source of truth is
 	// `preferences.sharing.profileVisibility`; the top-level
 	// `profile.visibility` enum is mirrored on every write because that is
@@ -373,57 +322,6 @@
 					</div>
 				</div>
 				<AppearancePicker variant="tiles" />
-			</div>
-
-			<div class="settings-flow-deck">
-				<div class="settings-flow-deck-head">
-					<span class="settings-flow-deck-icon" aria-hidden="true">
-						<Activity size={16} strokeWidth={1.8} />
-					</span>
-					<div class="settings-flow-deck-titles">
-						<p class="settings-flow-deck-label">
-							{t({ locale: $localeStore, key: 'settings.flow_deck' })}
-						</p>
-						<p class="settings-flow-deck-sub">{flowDeckSub}</p>
-					</div>
-				</div>
-
-				<div class="settings-flow-deck-tabs" role="tablist">
-					{#each flowDeckTabOptions as tab (tab.value)}
-						<button
-							class="settings-flow-deck-tab"
-							class:is-active={flowDeckMode === tab.value}
-							aria-selected={flowDeckMode === tab.value}
-							onclick={() => setFlowDeckMode(tab.value as FlowDeckMode)}
-							role="tab"
-							type="button"
-						>
-							{tab.label}
-						</button>
-					{/each}
-				</div>
-
-				{#if flowDeckMode === 'all'}
-					<div class="settings-flow-deck-grid" role="group">
-						{#each settingsCategoryTags as tag (tag)}
-							{@const enabled = ($preferencesStore.flowTags ?? []).includes(tag)}
-							<button
-								class="settings-flow-deck-pill"
-								class:is-active={enabled}
-								aria-pressed={enabled}
-								onclick={() => toggleFlowTag(tag)}
-								type="button"
-							>
-								<span class="settings-flow-deck-pill-dot" aria-hidden="true"></span>
-								{t({ locale: $localeStore, key: tagLabelKey(tag) })}
-							</button>
-						{/each}
-					</div>
-				{:else}
-					<p class="settings-flow-deck-hint">
-						{t({ locale: $localeStore, key: 'settings.flow_deck.wc_only' })}
-					</p>
-				{/if}
 			</div>
 
 			<SetRow
@@ -771,158 +669,6 @@
 		margin: 0;
 		color: var(--text-muted);
 		font-size: var(--t-12);
-	}
-
-	/* Flow deck preference card ---------------------------------- */
-	.settings-flow-deck {
-		display: flex;
-		flex-direction: column;
-		gap: 0.85rem;
-		padding: 0.875rem;
-		background: var(--bg-surface);
-	}
-
-	.settings-flow-deck-head {
-		display: flex;
-		align-items: center;
-		gap: 0.65rem;
-	}
-
-	.settings-flow-deck-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-		color: var(--text-muted);
-	}
-
-	.settings-flow-deck-titles {
-		display: flex;
-		min-width: 0;
-		flex: 1;
-		flex-direction: column;
-		gap: 0.1rem;
-	}
-
-	.settings-flow-deck-label {
-		margin: 0;
-		color: var(--text-base);
-		font-size: var(--t-14);
-		font-weight: 700;
-	}
-
-	.settings-flow-deck-sub {
-		margin: 0;
-		color: var(--text-muted);
-		font-size: var(--t-12);
-	}
-
-	.settings-flow-deck-tabs {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.25rem;
-		padding: 0.25rem;
-		border: 1px solid var(--border-base);
-		border-radius: 0.85rem;
-		background: var(--bg-popover);
-	}
-
-	.settings-flow-deck-tab {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.55rem 0.5rem;
-		border: 0;
-		border-radius: 0.65rem;
-		background: transparent;
-		color: var(--text-muted);
-		font-size: var(--t-13);
-		font-weight: 600;
-		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			color var(--d-hover) var(--ease-vici);
-	}
-
-	.settings-flow-deck-tab.is-active {
-		background: var(--bg-surface);
-		color: var(--text-base);
-		box-shadow: var(--shadow-card);
-	}
-
-	.settings-flow-deck-grid {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.5rem;
-	}
-
-	/* Category toggle chip. 8-px rounded rectangle (intentionally
-	   NOT a pill — the squarer geometry pairs better with the dense
-	   2-col grid of categories). Off-state is a neutral wash + base
-	   border; on-state lifts to `--laurel-glow` fill + accent border
-	   + accent text + accent-tinted dot. Light / peach theme
-	   overrides below swap the off-state to a darker ink wash. */
-	.settings-flow-deck-pill {
-		display: inline-flex;
-		align-items: center;
-		gap: 10px;
-		padding: 10px 12px;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--text-base) 4%, transparent);
-		color: var(--fg-dim);
-		font-size: var(--t-13);
-		font-weight: 500;
-		cursor: pointer;
-		text-align: left;
-		transition:
-			border-color var(--d-hover) var(--ease-vici),
-			background-color var(--d-hover) var(--ease-vici),
-			color var(--d-hover) var(--ease-vici);
-	}
-
-	.settings-flow-deck-pill:hover {
-		background: color-mix(in srgb, var(--text-base) 7%, transparent);
-		border-color: var(--border-strong);
-		color: var(--text-base);
-	}
-
-	:global([data-theme='light']) .settings-flow-deck-pill,
-	:global([data-theme='peach']) .settings-flow-deck-pill {
-		background: rgba(14, 13, 11, 0.03);
-	}
-
-	:global([data-theme='light']) .settings-flow-deck-pill:hover,
-	:global([data-theme='peach']) .settings-flow-deck-pill:hover {
-		background: rgba(14, 13, 11, 0.06);
-	}
-
-	.settings-flow-deck-pill.is-active {
-		background: var(--laurel-glow);
-		border-color: var(--color-primary);
-		color: var(--color-primary);
-	}
-
-	.settings-flow-deck-pill-dot {
-		display: inline-block;
-		width: 8px;
-		height: 8px;
-		border-radius: var(--r-pill);
-		background: var(--fg-faint);
-		flex-shrink: 0;
-		transition: background var(--d-hover) var(--ease-vici);
-	}
-
-	.settings-flow-deck-pill.is-active .settings-flow-deck-pill-dot {
-		background: var(--color-primary);
-	}
-
-	.settings-flow-deck-hint {
-		margin: 0;
-		padding: 0.65rem 0.25rem 0.15rem;
-		color: var(--text-muted);
-		font-size: var(--t-12);
-		text-align: center;
 	}
 
 	.settings-about {
