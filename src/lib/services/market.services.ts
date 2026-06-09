@@ -843,9 +843,9 @@ export const suggestedScore = ({
 
 /**
  * Score multiplier applied to the Flow markets tied to the user's
- * favourite team (`preferences.favoriteParticipantId`) — "60% more
- * chance" to surface their country in the World Cup deck. See
- * `rankMarkets`.
+ * favourite team (`preferences.favoriteParticipantId`) — a 60% score
+ * boost that lifts their country higher in the World Cup deck ranking
+ * (a deterministic sort, not a probabilistic draw). See `rankMarkets`.
  */
 export const FAVORITE_COUNTRY_BOOST = 1.6;
 
