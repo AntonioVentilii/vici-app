@@ -11,13 +11,16 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Logo from '$lib/components/layout/Logo.svelte';
-	import {
-		LOCALE_STORAGE_KEY,
-		SUPPORTED_LOCALES,
-		type AppLocale
-	} from '$lib/constants/locale.constants';
+	import LocalePicker from '$lib/components/ui/LocalePicker.svelte';
+	import { LOCALE_REGISTRY, type AppLocale } from '$lib/constants/locale.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
-	import { localeStore } from '$lib/stores/locale.store';
+	import {
+		clearLocaleChoice,
+		detectedLocale,
+		localeChoiceExplicit,
+		localeStore,
+		setLocale
+	} from '$lib/stores/locale.store';
 	import { theme } from '$lib/stores/theme.store';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -52,12 +55,15 @@
 	let langOpen = $state(false);
 	let dnavLangOpen = $state(false);
 	let langRef: HTMLDivElement | null = $state(null);
-	let langPopRef: HTMLUListElement | null = $state(null);
+	let langPopRef: HTMLDivElement | null = $state(null);
 	let dnavLangRef: HTMLDivElement | null = $state(null);
 	let langPopPos = $state<{ top: number; right: number } | null>(null);
 	let lpNavEl: HTMLElement | null = $state(null);
 
-	const LOCALES = SUPPORTED_LOCALES;
+	// Region the "Use automatic" reset would fall back to, for its sub-label.
+	const detectedRegionLabel = $derived(
+		LOCALE_REGISTRY.find(({ id }) => id === detectedLocale)?.regionLabel ?? null
+	);
 
 	// What actually scrolls differs by platform: on iOS the landing scrolls
 	// inside the `.lpc` viewport (contained scroll, like the authenticated app
@@ -294,7 +300,13 @@
 		};
 
 	const setLocaleAndClose = (loc: AppLocale) => {
-		localeStore.set({ key: LOCALE_STORAGE_KEY, value: loc });
+		setLocale(loc);
+		langOpen = false;
+		dnavLangOpen = false;
+	};
+
+	const useAutomaticAndClose = () => {
+		clearLocaleChoice();
 		langOpen = false;
 		dnavLangOpen = false;
 	};
@@ -337,27 +349,23 @@
 					<Globe aria-hidden="true" />
 				</button>
 				{#if dnavLangOpen}
-					<ul
-						class="dnav-lang-pop"
-						aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
-						role="listbox"
-					>
-						{#each LOCALES as l (l.id)}
-							<li>
-								<button
-									class="dnav-lang-item"
-									class:active={$localeStore === l.id}
-									aria-selected={$localeStore === l.id}
-									onclick={() => setLocaleAndClose(l.id)}
-									role="option"
-									type="button"
-								>
-									<span class="num dnav-lang-short">{l.short}</span>
-									<span class="dnav-lang-label">{l.label}</span>
-								</button>
-							</li>
-						{/each}
-					</ul>
+					<div class="dnav-lang-pop">
+						<LocalePicker
+							current={$localeStore}
+							maxHeight={340}
+							onPick={(loc) => setLocaleAndClose(loc)}
+						/>
+						{#if $localeChoiceExplicit}
+							<button class="lp-auto-reset" onclick={useAutomaticAndClose} type="button">
+								<Globe aria-hidden="true" size={15} strokeWidth={1.8} />
+								<span>
+									{t({ locale: $localeStore, key: 'picker.use_auto' })}{detectedRegionLabel
+										? ` · ${detectedRegionLabel}`
+										: ''}
+								</span>
+							</button>
+						{/if}
+					</div>
 				{/if}
 			</div>
 			<div
@@ -508,30 +516,28 @@
 		     block. Anchored under the globe via `position: fixed` using
 		     the rect tracked in `langPopPos`. -->
 		{#if langOpen && langPopPos}
-			<ul
+			<div
 				bind:this={langPopRef}
 				style:top="{langPopPos.top}px"
 				style:right="{langPopPos.right}px"
 				class="lp-lang-pop"
-				aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
-				role="listbox"
 			>
-				{#each LOCALES as l (l.id)}
-					<li>
-						<button
-							class="lp-lang-item"
-							class:active={$localeStore === l.id}
-							aria-selected={$localeStore === l.id}
-							onclick={() => setLocaleAndClose(l.id)}
-							role="option"
-							type="button"
-						>
-							<span class="num lp-lang-short">{l.short}</span>
-							<span class="lp-lang-label">{l.label}</span>
-						</button>
-					</li>
-				{/each}
-			</ul>
+				<LocalePicker
+					current={$localeStore}
+					maxHeight={320}
+					onPick={(loc) => setLocaleAndClose(loc)}
+				/>
+				{#if $localeChoiceExplicit}
+					<button class="lp-auto-reset" onclick={useAutomaticAndClose} type="button">
+						<Globe aria-hidden="true" size={15} strokeWidth={1.8} />
+						<span>
+							{t({ locale: $localeStore, key: 'picker.use_auto' })}{detectedRegionLabel
+								? ` · ${detectedRegionLabel}`
+								: ''}
+						</span>
+					</button>
+				{/if}
+			</div>
 		{/if}
 	</div>
 </nav>
