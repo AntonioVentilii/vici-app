@@ -1983,6 +1983,8 @@ export const enMessages = {
 	'settings.language.no_match': 'No match',
 	'settings.language.search': 'Search language',
 	'settings.legal': 'Legal',
+	'settings.legal.cookies': 'Cookie Policy',
+	'settings.legal.imprint': 'Legal notice',
 	'settings.legal.privacy': 'Privacy policy',
 	'settings.legal.rules': 'Resolution rules',
 	'settings.legal.terms': 'Terms of service',
