@@ -3,10 +3,7 @@
 	import OnboardingBeat1Card from '$lib/components/onboarding/OnboardingBeat1Card.svelte';
 	import OnboardingBeat2 from '$lib/components/onboarding/OnboardingBeat2.svelte';
 	import OnboardingBeat3 from '$lib/components/onboarding/OnboardingBeat3.svelte';
-	import { PublicPath } from '$lib/constants/routes.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
-	import { localeStore } from '$lib/stores/locale.store';
-	import { t } from '$lib/utils/i18n.utils';
 
 	/**
 	 * Onboarding orchestrator. Outer `.ob.ob-v2` envelope, inline
@@ -96,13 +93,6 @@
 </script>
 
 <div class="ob ob-v2">
-	{#if !authenticated}
-		<a class="ob-switch-link" aria-label="Sign in" href={PublicPath.SignIn}>
-			{t({ locale: $localeStore, key: 'onboarding.switch.prefix' })}
-			<span class="acc">{t({ locale: $localeStore, key: 'onboarding.switch.signin' })}</span>
-		</a>
-	{/if}
-
 	<div class="ob-wrap">
 		<div class="ob-body-wrap">
 			{#if beat === '1a'}

@@ -1755,8 +1755,6 @@ export const frMessages = {
 	'onboarding.beat3.tos.tail': 'Résolution sur données publiques.',
 	'onboarding.beat3.tos.terms': 'Conditions',
 	'onboarding.step_of': '· {current} sur {total}',
-	'onboarding.switch.prefix': 'Déjà membre ?',
-	'onboarding.switch.signin': 'Connecte-toi',
 	'outcome.canceled': 'Annulé',
 	'outcome.final_no': 'FINAL NO',
 	'outcome.final_yes': 'FINAL YES',

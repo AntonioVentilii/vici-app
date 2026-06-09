@@ -1746,8 +1746,6 @@ export const esMessages = {
 	'onboarding.beat3.tos.tail': 'Resolución con datos públicos.',
 	'onboarding.beat3.tos.terms': 'Términos',
 	'onboarding.step_of': '· {current} de {total}',
-	'onboarding.switch.prefix': '¿Ya tienes cuenta?',
-	'onboarding.switch.signin': 'Inicia sesión',
 	'outcome.canceled': 'Cancelado',
 	'outcome.final_no': 'FINAL NO',
 	'outcome.final_yes': 'FINAL YES',

@@ -1758,8 +1758,6 @@ export const deMessages = {
 	'onboarding.beat3.tos.tail': 'Auflösung anhand öffentlicher Daten.',
 	'onboarding.beat3.tos.terms': 'AGB',
 	'onboarding.step_of': '· {current} von {total}',
-	'onboarding.switch.prefix': 'Schon dabei?',
-	'onboarding.switch.signin': 'Einloggen',
 	'outcome.canceled': 'Abgebrochen',
 	'outcome.final_no': 'FINAL NO',
 	'outcome.final_yes': 'FINAL YES',
