@@ -1120,13 +1120,16 @@ html[data-ios][data-theme='light'] .lp-nav.is-scrolled .lp-pill {
 html[data-ios][data-theme='peach'] .lp-nav.is-scrolled .lp-pill {
 	background: rgba(250, 224, 204, 0.98);
 }
-html[data-ios] .lp-pill.open {
+/* `.lp-nav` ties these to the same specificity as the `.is-scrolled` rule
+   above so the open surface wins by source order — an opened menu reads the
+   same whether or not the page is scrolled. */
+html[data-ios] .lp-nav .lp-pill.open {
 	background: rgba(20, 18, 15, 0.99);
 }
-html[data-ios][data-theme='light'] .lp-pill.open {
+html[data-ios][data-theme='light'] .lp-nav .lp-pill.open {
 	background: rgba(250, 247, 235, 0.99);
 }
-html[data-ios][data-theme='peach'] .lp-pill.open {
+html[data-ios][data-theme='peach'] .lp-nav .lp-pill.open {
 	background: rgba(255, 243, 232, 0.99);
 }
 
