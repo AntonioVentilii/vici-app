@@ -186,7 +186,7 @@ export const renderWC = ({ p, state, uid, seed, title }: RenderArgs): string => 
 		// fallback's stability contract.
 		const template = resolveWcTemplate({ question: title });
 		const templateBody = template
-			? renderWcTemplate({ template, h, g: makeRng(`wc-template::${seedKey}`) })
+			? renderWcTemplate({ template, h, g: makeRng(`wc-template::${seedKey}`), uid })
 			: '';
 		s = templateBody.length > 0 ? templateBody : generativeFallback(h, seedKey);
 	}

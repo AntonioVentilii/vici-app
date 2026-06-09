@@ -116,7 +116,17 @@ const kitClash = ({
 // forward bracket arrow (the "open door / forward bracket" brief). The
 // crest-block is the nation's two-colour split; the arrow is drawn in
 // the palette foreground so it recolours per theme.
-const qualifyBracket = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): string => {
+const qualifyBracket = ({
+	h,
+	g,
+	teamA,
+	uid
+}: {
+	h: WcHelpers;
+	g: Rng;
+	teamA: WCKit;
+	uid: string;
+}): string => {
 	const { p } = h;
 
 	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
@@ -136,7 +146,11 @@ const qualifyBracket = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit })
 	// nudged left of the bracket so it reads as "entering" it.
 	const cx = 78;
 	const cy = 50;
-	const crestId = `wccrest-${g.int(1000, 9999)}`;
+	// Deterministic, render-scoped id (not random): SVG `defs` ids are
+	// document-scoped, so a random id could collide across FlowArtFrames on the
+	// same page and make `clip-path` reference the wrong path. `uid` is unique
+	// per render.
+	const crestId = `wccrest-${uid}`;
 	s += `<defs><clipPath id="${crestId}"><path d="M ${cx - 22} ${cy - 26} L ${cx + 22} ${cy - 26} L ${cx + 22} ${cy + 8} Q ${cx + 22} ${cy + 26} ${cx} ${cy + 30} Q ${cx - 22} ${cy + 26} ${cx - 22} ${cy + 8} Z"/></clipPath></defs>`;
 	s += `<g clip-path="url(#${crestId})">`;
 	s += `<rect x="${cx - 22}" y="${cy - 26}" width="44" height="56" fill="${teamA.primary}"/>`;
@@ -159,18 +173,22 @@ const qualifyBracket = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit })
 export const renderWcTemplate = ({
 	template,
 	h,
-	g
+	g,
+	uid
 }: {
 	template: WcResolvedTemplate;
 	h: WcHelpers;
 	g: Rng;
+	/** Per-render unique id used to scope SVG `defs` ids so they can't collide
+	 *  across FlowArtFrames on the same page. */
+	uid: string;
 }): string => {
 	if (template.templateId === 'kit-clash' && template.teamB) {
 		return kitClash({ h, g, teamA: template.teamA, teamB: template.teamB });
 	}
 
 	if (template.templateId === 'qualify-bracket') {
-		return qualifyBracket({ h, g, teamA: template.teamA });
+		return qualifyBracket({ h, g, teamA: template.teamA, uid });
 	}
 
 	// Unreachable for the implemented ids; an empty string lets the
