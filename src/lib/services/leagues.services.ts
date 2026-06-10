@@ -403,15 +403,17 @@ export const createLeague = async ({
 /**
  * Edit an owner-mutable league field. Only the current owner can call
  * this; the satellite assert hard-rejects anyone else. On the edit path
- * `id`, `createdAtMs`, `inviteCode`, `emblem`, and `privacy` stay
- * frozen — `name` and `imageUrl` are the freely-mutable fields.
+ * `id`, `createdAtMs`, `inviteCode`, and `emblem` stay frozen — `name`,
+ * `privacy`, and `imageUrl` are the mutable fields.
  *
  * Pass `name` to rename (trimmed + re-validated against the same 3–40
  * char window the create flow enforces; an invalid name throws before
- * any write). Pass `imageUrl` to set or change the cover image, or
- * `null` to clear it (the field is dropped from the doc so a
- * cover-less league carries an absent field, matching the assert's
- * non-empty rule). Omitting a field leaves it untouched.
+ * any write). Pass `privacy` to change the league's visibility (any of
+ * the three variants; the assert range-checks it). Pass `imageUrl` to
+ * set or change the cover image, or `null` to clear it (the field is
+ * dropped from the doc so a cover-less league carries an absent field,
+ * matching the assert's non-empty rule). Omitting a field leaves it
+ * untouched.
  *
  * Re-reads the existing doc so we round-trip the server's `version`
  * token — Juno's optimistic-concurrency guard rejects an update that
@@ -422,10 +424,13 @@ export const createLeague = async ({
 export const updateLeague = async ({
 	id,
 	name,
+	privacy,
 	imageUrl
 }: {
 	id: string;
 	name?: string;
+	/** New three-way visibility, or omitted to leave as-is. */
+	privacy?: LeaguePrivacy;
 	/** New cover-image URL, `null` to clear, or omitted to leave as-is. */
 	imageUrl?: string | null;
 }): Promise<LeagueDoc> => {
@@ -450,6 +455,10 @@ export const updateLeague = async ({
 		}
 
 		next.name = trimmedName;
+	}
+
+	if (privacy !== undefined) {
+		next.privacy = privacy;
 	}
 
 	if (imageUrl !== undefined) {

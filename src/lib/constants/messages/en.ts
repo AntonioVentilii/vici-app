@@ -1196,6 +1196,22 @@ export const enMessages = {
 	'leagues.create.privacy_invite': 'Invite-only',
 	'leagues.create.privacy_open': 'Open',
 	'leagues.create.privacy_private': 'Private',
+	'leagues.privacy.cancel': 'Cancel',
+	'leagues.privacy.confirm_open_body':
+		'Open leagues are publicly discoverable: current members will appear in public lists and friend recommendations. You can switch back later, but this can’t be undone for anyone who has already seen it.',
+	'leagues.privacy.confirm_open_confirm': 'Make public',
+	'leagues.privacy.confirm_open_title': 'Make this league public?',
+	'leagues.privacy.desc_invite':
+		'Not publicly listed. Joinable by invite code, and recommended to members’ friends.',
+	'leagues.privacy.desc_open':
+		'Publicly listed. Anyone can find and join it, and it’s recommended to members’ friends.',
+	'leagues.privacy.desc_private':
+		'Hidden. Reachable only by invite code, and never surfaced anywhere.',
+	'leagues.privacy.edit_label': 'Change privacy',
+	'leagues.privacy.save': 'Save',
+	'leagues.privacy.saving': 'Saving…',
+	'leagues.privacy.sub': 'Choose who can find and join this league.',
+	'leagues.privacy.title': 'League privacy',
 	'leagues.create.submitting': 'Creating…',
 	'leagues.challenge.cta_send': 'Send challenge',
 	'leagues.challenge.duration_days': '{count} days',

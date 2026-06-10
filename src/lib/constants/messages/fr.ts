@@ -1214,6 +1214,22 @@ export const frMessages = {
 	'leagues.create.privacy_invite': 'Sur invitation',
 	'leagues.create.privacy_open': 'Ouverte',
 	'leagues.create.privacy_private': 'Privée',
+	'leagues.privacy.cancel': 'Annuler',
+	'leagues.privacy.confirm_open_body':
+		'Les ligues ouvertes sont visibles publiquement : les membres actuels apparaîtront dans les listes publiques et les recommandations aux amis. Vous pourrez revenir en arrière plus tard, mais c’est irréversible pour quiconque l’a déjà vue.',
+	'leagues.privacy.confirm_open_confirm': 'Rendre publique',
+	'leagues.privacy.confirm_open_title': 'Rendre cette ligue publique ?',
+	'leagues.privacy.desc_invite':
+		'Non répertoriée publiquement. Accessible par code d’invitation et recommandée aux amis des membres.',
+	'leagues.privacy.desc_open':
+		'Répertoriée publiquement. Tout le monde peut la trouver et la rejoindre, et elle est recommandée aux amis des membres.',
+	'leagues.privacy.desc_private':
+		'Masquée. Accessible uniquement par code d’invitation et jamais affichée nulle part.',
+	'leagues.privacy.edit_label': 'Modifier la confidentialité',
+	'leagues.privacy.save': 'Enregistrer',
+	'leagues.privacy.saving': 'Enregistrement…',
+	'leagues.privacy.sub': 'Choisissez qui peut trouver cette ligue et la rejoindre.',
+	'leagues.privacy.title': 'Confidentialité de la ligue',
 	'leagues.detail.hero_chip_invite': 'Sur invitation',
 	'leagues.detail.hero_chip_kind': 'Ligue',
 	'leagues.detail.hero_chip_open': 'Ouverte',

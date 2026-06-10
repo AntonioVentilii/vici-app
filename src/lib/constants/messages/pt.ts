@@ -1210,6 +1210,22 @@ export const ptMessages = {
 	'leagues.create.privacy_invite': 'Apenas por convite',
 	'leagues.create.privacy_open': 'Aberta',
 	'leagues.create.privacy_private': 'Privada',
+	'leagues.privacy.cancel': 'Cancelar',
+	'leagues.privacy.confirm_open_body':
+		'As ligas abertas são descobertas publicamente: os membros atuais aparecerão em listas públicas e recomendações a amigos. Pode voltar atrás mais tarde, mas isso não pode ser anulado para quem já a viu.',
+	'leagues.privacy.confirm_open_confirm': 'Tornar pública',
+	'leagues.privacy.confirm_open_title': 'Tornar esta liga pública?',
+	'leagues.privacy.desc_invite':
+		'Não listada publicamente. Acesso por código de convite e recomendada aos amigos dos membros.',
+	'leagues.privacy.desc_open':
+		'Listada publicamente. Qualquer pessoa pode encontrá-la e aderir, e é recomendada aos amigos dos membros.',
+	'leagues.privacy.desc_private':
+		'Oculta. Acessível apenas por código de convite e nunca apresentada em lado nenhum.',
+	'leagues.privacy.edit_label': 'Alterar privacidade',
+	'leagues.privacy.save': 'Guardar',
+	'leagues.privacy.saving': 'A guardar…',
+	'leagues.privacy.sub': 'Escolha quem pode encontrar esta liga e aderir.',
+	'leagues.privacy.title': 'Privacidade da liga',
 	'leagues.detail.hero_chip_invite': 'Apenas por convite',
 	'leagues.detail.hero_chip_kind': 'Liga',
 	'leagues.detail.hero_chip_open': 'Aberta',

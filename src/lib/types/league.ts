@@ -36,8 +36,9 @@ export interface LeagueDoc {
 	 */
 	emblem?: string;
 	/**
-	 * Three-way visibility, chosen once at creation and frozen alongside
-	 * the identity fields (see the assert):
+	 * Three-way visibility, set at creation and owner-mutable thereafter
+	 * (the owner can tighten or loosen a league's visibility; see the
+	 * assert and `updateLeague`):
 	 *
 	 * - {@link LeaguePrivacy.OPEN} — publicly listed + joinable; surfaced
 	 *   in challenge pools and friend recommendations to anyone.
