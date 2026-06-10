@@ -844,6 +844,9 @@ export interface AppSearchProfilesResult {
 export interface AppSendFriendRequestArgs {
 	target: string;
 }
+export interface AppSettleFounderAwardsResult {
+	settled: number;
+}
 export interface AppSettleReferralArgs {
 	referee: string;
 }
@@ -1153,6 +1156,7 @@ export interface _SERVICE {
 	app_resume_my_account: ActorMethod<[], AppResumeMyAccountResult>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
+	app_settle_founder_awards: ActorMethod<[], AppSettleFounderAwardsResult>;
 	app_settle_referral: ActorMethod<[AppSettleReferralArgs], undefined>;
 	app_submit_school: ActorMethod<[AppSubmitSchoolArgs], AppSubmitSchoolResult>;
 	app_sweep_expired_deletions: ActorMethod<[], AppSweepExpiredDeletionsResult>;
