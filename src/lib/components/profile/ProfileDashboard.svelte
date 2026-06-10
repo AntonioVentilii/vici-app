@@ -5,21 +5,25 @@
 	import { resolve } from '$app/paths';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
 	import MenagerieBadge from '$lib/components/menagerie/MenagerieBadge.svelte';
+	import MenagerieBadgeSkeleton from '$lib/components/menagerie/MenagerieBadgeSkeleton.svelte';
 	import AvatarEditor from '$lib/components/profile/AvatarEditor.svelte';
 	import HandleEditor from '$lib/components/profile/HandleEditor.svelte';
 	import ProfileOracleInsight from '$lib/components/profile/ProfileOracleInsight.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import NotifBell from '$lib/components/ui/NotifBell.svelte';
 	import ViciAvatar from '$lib/components/ui/ViciAvatar.svelte';
+	import { MENAGERIE } from '$lib/constants/menagerie.constants';
 	import { nicknameUniqueKey } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { SCHOOL_PASS2_ENABLED } from '$lib/constants/school-picker.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { marketById } from '$lib/derived/market-by-id.derived';
+	import { myMenagerieLoading, myMenagerieRows } from '$lib/derived/menagerie.derived';
 	import { userIsAdmin } from '$lib/derived/user.derived';
+	import { loadMyMenagerieSignals } from '$lib/services/menagerie.services';
 	import { upsertProfile } from '$lib/services/profile.services';
-	import { getMyReferralCode, listMyReferrals } from '$lib/services/referral.services';
+	import { getMyReferralCode } from '$lib/services/referral.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { myAvatarParts } from '$lib/stores/avatar.store';
@@ -34,7 +38,6 @@
 	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
-	import { menagerieRows, menagerieStatsFromProfile } from '$lib/utils/menagerie.utils';
 	import { avatarBackdropPlanes, deterministicParts } from '$lib/utils/vici-avatar.utils';
 
 	interface Props {
@@ -452,27 +455,13 @@
 
 	/* Achievements — the Menagerie trophy layer ------------------------ */
 
-	// Referral count (Parrot) — the profile doc doesn't carry it, so it's
-	// loaded once and folded into the live menagerie stats. Best-effort: a
-	// failed load just leaves Parrot at its baseline.
-	let referralCount = $state(0);
-
-	// Global rank + ranked total (Goat) — from the cached "all" standings
-	// window when loaded.
-	const menagerieSignals = $derived({
-		referrals: referralCount,
-		rank: globalRank,
-		totalRanked: $globalStandingsStore.get('all')?.entries.length
-	});
-
-	const menagerieStats = $derived(
-		menagerieStatsFromProfile({ profile, signals: menagerieSignals })
-	);
-
 	// All twelve animals, decorated with each one's live tier + progress and
-	// sorted earned-first — the same ordering the Album route uses, so the
-	// profile rail leads with the trophies the owner has actually earned.
-	const menagerieRailRows = $derived(menagerieRows(menagerieStats));
+	// sorted earned-first, plus the load gate — both read from the single shared
+	// `menagerie.derived` source the Album route also reads, so a trophy can
+	// never show as earned here yet locked there. `myMenagerieLoading` holds the
+	// rail in its skeleton state until the rank / referral signals resolve, so a
+	// not-yet-loaded rank never flashes as a grey "locked" tile.
+	const menagerieRailRows = $derived($myMenagerieRows);
 
 	onMount(() => {
 		if (!isOwnProfile) {
@@ -487,14 +476,10 @@
 			}
 		})();
 
-		void (async () => {
-			try {
-				const referrals = await listMyReferrals();
-				referralCount = referrals.length;
-			} catch (_: unknown) {
-				// Best-effort: Parrot stays at its baseline if this fails.
-			}
-		})();
+		// Hydrate the Menagerie's live signals (global standings + referral count)
+		// into the shared store the rail derives from. Best-effort: each leg
+		// settles independently and leaves its trophy at baseline on failure.
+		void loadMyMenagerieSignals();
 
 		// Fetch the viewer's referral code so the hero's "Invite Friends" CTA can
 		// build the canonical `/join/{code}` share URL. The code is assigned by the
@@ -726,28 +711,38 @@
 			</button>
 		</div>
 		<div class="profile-achievements-rail">
-			{#each menagerieRailRows as row (row.animal.slug)}
-				{@const earned = row.tier !== null}
-				<button
-					class="profile-menagerie-tile"
-					onclick={() => goto(resolve(AppPath.Album))}
-					type="button"
-				>
-					<MenagerieBadge size={68} slug={row.animal.slug} tier={row.tier} />
-					<span class="profile-menagerie-name">
-						{t({ locale: $localeStore, key: row.animal.nameKey })}
-					</span>
-					{#if earned}
-						<span class="profile-menagerie-concept">
-							{t({ locale: $localeStore, key: row.animal.conceptKey })}
+			{#if $myMenagerieLoading}
+				{#each MENAGERIE as animal (animal.slug)}
+					<div class="profile-menagerie-tile is-skeleton">
+						<MenagerieBadgeSkeleton size={68} />
+						<span class="profile-menagerie-name-skeleton animate-pulse"></span>
+						<span class="profile-menagerie-concept-skeleton animate-pulse"></span>
+					</div>
+				{/each}
+			{:else}
+				{#each menagerieRailRows as row (row.animal.slug)}
+					{@const earned = row.tier !== null}
+					<button
+						class="profile-menagerie-tile"
+						onclick={() => goto(resolve(AppPath.Album))}
+						type="button"
+					>
+						<MenagerieBadge size={68} slug={row.animal.slug} tier={row.tier} />
+						<span class="profile-menagerie-name">
+							{t({ locale: $localeStore, key: row.animal.nameKey })}
 						</span>
-					{:else}
-						<span class="profile-menagerie-concept is-locked">
-							{t({ locale: $localeStore, key: 'menagerie.locked' })}
-						</span>
-					{/if}
-				</button>
-			{/each}
+						{#if earned}
+							<span class="profile-menagerie-concept">
+								{t({ locale: $localeStore, key: row.animal.conceptKey })}
+							</span>
+						{:else}
+							<span class="profile-menagerie-concept is-locked">
+								{t({ locale: $localeStore, key: 'menagerie.locked' })}
+							</span>
+						{/if}
+					</button>
+				{/each}
+			{/if}
 		</div>
 	</section>
 
@@ -1334,6 +1329,28 @@
 
 	.profile-menagerie-concept.is-locked {
 		color: var(--text-muted);
+	}
+
+	/* Skeleton tile — same footprint as a real tile, with the badge + the two
+	   text lines replaced by pulsing placeholders while the trophy signals load. */
+	.profile-menagerie-tile.is-skeleton {
+		cursor: default;
+	}
+
+	.profile-menagerie-name-skeleton {
+		width: 4.5rem;
+		height: 0.8125rem;
+		margin-top: 0.75rem;
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--text-base) 12%, transparent);
+	}
+
+	.profile-menagerie-concept-skeleton {
+		width: 3rem;
+		height: 0.625rem;
+		margin-top: 0.375rem;
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 	}
 
 	/* Confirmation toast — floats above the pill-nav after a handle
