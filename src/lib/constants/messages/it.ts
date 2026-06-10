@@ -1008,7 +1008,7 @@ export const itMessages = {
 	'footer.help': 'AIUTO',
 	'footer.signin': 'Accedi',
 	'footer.disclosure':
-		'VICI è un gioco di pronostici gratuito a scopo di intrattenimento. Per giocare bisogna avere almeno 13 anni. I VXP sono punti di gioco senza valore monetario: non possono essere scommessi, comprati, venduti né convertiti in denaro. Ogni mercato si chiude su dati pubblici. © 2026 VICI.',
+		'VICI è un gioco di pronostici gratuito a scopo di intrattenimento. Per giocare bisogna avere almeno 18 anni. I VXP sono punti di gioco senza valore monetario: non possono essere scommessi, comprati, venduti né convertiti in denaro. Ogni mercato si chiude su dati pubblici. © 2026 VICI.',
 	'footer.fifa':
 		'FIFA e World Cup sono marchi registrati di FIFA. VICI non è affiliata, approvata o sponsorizzata da FIFA. Tutti i nomi di squadre e tornei sono usati solo a scopo identificativo.',
 	'footer.leaderboard': 'Classifica',
