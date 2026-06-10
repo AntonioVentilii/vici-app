@@ -317,8 +317,9 @@
 	const starterRows = $derived(openMarketsByVolume.slice(0, 3).map(toZeroRow));
 	const moreRows = $derived(openMarketsByVolume.slice(0, 2).map(toZeroRow));
 
-	// Day-1 first call — the single live position, reframed for the in-flight row.
-	const firstCallEntry = $derived.by<{ market: Market; side: 'YES' | 'NO' } | undefined>(() => {
+	// Day-1 calibrating caption — names when the soonest-expiring live position
+	// settles. The in-flight list itself is the full `openCalls` set below.
+	const firstCallEntry = $derived.by<{ market: Market } | undefined>(() => {
 		const [position] = [...activePositionsAll].sort((a, b) => {
 			const ma = marketById.get(a.marketId);
 			const mb = marketById.get(b.marketId);
@@ -331,21 +332,7 @@
 			return;
 		}
 
-		return { market, side: position.outcomeId === 'YES' ? 'YES' : 'NO' };
-	});
-
-	const firstCallRow = $derived.by<ZeroMarketRow | undefined>(() => {
-		if (firstCallEntry === undefined) {
-			return;
-		}
-
-		return {
-			marketId: firstCallEntry.market.id,
-			question: firstCallEntry.market.title,
-			side: firstCallEntry.side,
-			context: categoryOf(firstCallEntry.market),
-			timer: timerOf(firstCallEntry.market)
-		};
+		return { market };
 	});
 	const firstCallTimer = $derived(firstCallEntry ? timerOf(firstCallEntry.market) : '');
 
@@ -392,11 +379,11 @@
 	<div class="db-screen">
 		<DashBuildZero
 			day1={isDay1Pending}
-			{firstCallRow}
 			{firstCallTimer}
 			{holdingsDisplay}
 			{inPlayDisplay}
 			{moreRows}
+			{openCalls}
 			pendingCount={liveCallCount}
 			{starterRows}
 		/>
