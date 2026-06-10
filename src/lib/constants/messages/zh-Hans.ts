@@ -2382,7 +2382,9 @@ export const zhHansMessages = {
 	'worlds.picker.school.status_verified': '已验证学校',
 	'worlds.picker.school.use': '使用 →',
 	'worlds.picker.school.use_existing': '使用 {name} →',
+	'worlds.picker.school.verified_body': '你在 {name} 的身份已确认。',
 	'worlds.picker.school.verified_by_email': '通过学校邮箱验证',
+	'worlds.picker.school.verified_title': '验证成功',
 	'worlds.picker.school.verify_cta': '验证 →',
 	'worlds.picker.school.verify_explainer':
 		'我们会向你的学校邮箱发送 6 位验证码。输入它以验证你在 {name} 的成员身份。',
