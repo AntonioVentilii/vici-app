@@ -25,8 +25,13 @@
 //   stadium-clock   — "Big blocky stadium clock at 45' with a single
 //                      ball".
 //   striker-juggle  — "Blocky striker mid-strike juggling two balls".
-//   player-figure   — "Generic blocky figure in {Nation} kit" (goal /
-//                      card / assist) — single nation bust + accent.
+//   player-figure   — "Generic blocky figure in {Nation} kit celebrating
+//                      a goal" — single nation bust + a celebratory ball.
+//   player-card     — "Generic blocky {Nation} player beside a raised
+//                      card" — the bust + a raised booking-amber card.
+//   player-assist   — "Generic blocky {Nation} playmaker threading a
+//                      pass, arrow to a team-mate" — the bust + a curved
+//                      pass arrow to a small team-mate marker.
 //   crest-ladder    — "Two crest-blocks on a ladder, the favoured one a
 //                      rung higher".
 //   host-flags      — "Three blocky flags — Mexico, USA, Canada".
@@ -660,6 +665,94 @@ const playerFigure = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): 
 	return s;
 };
 
+// A raised booking card in amber/yellow — the disciplinary counterpart of
+// the shared scarlet `redCardProp`. The card colour is fixed (booking
+// amber, `WC_SHIRT.gold`) like referee-card's scarlet; only the player
+// figure beside it carries the team palette.
+const amberCardProp = ({ cx, cy, rot = 12 }: { cx: number; cy: number; rot?: number }): string =>
+	`<g transform="rotate(${rot} ${cx} ${cy})">` +
+	`<rect x="${cx - 7}" y="${cy - 10}" width="14" height="20" fill="${WC_SHIRT.gold}"/>` +
+	`<rect x="${cx - 7}" y="${cy - 10}" width="14" height="20" fill="none" stroke="#0E0D0B" stroke-width="0.4" opacity="0.5"/>` +
+	`</g>`;
+
+// player-card — a single blocky bust in the featured nation's kit beside a
+// raised amber booking card (the Player "be booked / shown a card" prop).
+// Figure + field wash use the team palette exactly as `player-figure`
+// does; the card stays fixed booking-amber regardless of the team. A
+// blocky forearm angles up to the card, echoing referee-card's raised arm.
+const playerCard = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): string => {
+	const { p } = h;
+
+	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
+	s += `<polygon points="0,0 200,0 160,100 0,100" fill="${teamA.primary}" opacity="0.26"/>`;
+	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.4"/>`;
+	// Corner accent block in the kit's secondary colour.
+	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
+
+	s += h.wcFace({
+		cx: 96,
+		cy: 52,
+		skin: g.pick(['umber', 'olive', 'almond', 'sand', 'bronze', 'mahog'] as const),
+		hair: g.pick(['jet', 'charcoal', 'brown', 'auburn', 'blonde'] as const),
+		hairStyle: g.pick(['short', 'curly', 'cap'] as const),
+		shirt: teamA.primary,
+		shirtShadow: shadeDown(teamA.primary),
+		stripe: teamA.secondary,
+		emotion: 'focus'
+	});
+
+	// Raised forearm in the kit colour angling up toward the card.
+	s += `<polygon points="120,72 132,70 176,30 168,24 124,62 116,66" fill="${teamA.primary}"/>`;
+	s += `<rect x="118" y="60" width="8" height="8" rx="1" fill="#B98968"/>`;
+
+	// The booking card — fixed amber, raised beside/above the player.
+	s += amberCardProp({ cx: 188, cy: 28, rot: 14 });
+
+	return s;
+};
+
+// player-assist — a single blocky playmaker bust in the featured nation's
+// kit threading a pass: an arrow sweeps from the playmaker to a small
+// team-mate marker node on the right (the Player "register an assist"
+// prop). National palette throughout, exactly as `player-figure`.
+const playerAssist = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): string => {
+	const { p } = h;
+
+	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
+	s += `<polygon points="0,0 200,0 160,100 0,100" fill="${teamA.primary}" opacity="0.26"/>`;
+	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.4"/>`;
+	// Corner accent block in the kit's secondary colour.
+	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
+
+	s += h.wcFace({
+		cx: 96,
+		cy: 52,
+		skin: g.pick(['umber', 'olive', 'almond', 'sand', 'bronze', 'mahog'] as const),
+		hair: g.pick(['jet', 'charcoal', 'brown', 'auburn', 'blonde'] as const),
+		hairStyle: g.pick(['short', 'curly', 'cap'] as const),
+		shirt: teamA.primary,
+		shirtShadow: shadeDown(teamA.primary),
+		stripe: teamA.secondary,
+		emotion: 'focus'
+	});
+
+	// Small team-mate marker node on the right, in the team palette.
+	const mateY = 40 + g.range(-4, 4);
+	s += `<circle cx="236" cy="${mateY.toFixed(1)}" r="8" fill="${teamA.primary}"/>`;
+	s += `<circle cx="236" cy="${mateY.toFixed(1)}" r="8" fill="none" stroke="${p.fg}" stroke-width="0.6" opacity="0.55"/>`;
+	s += `<circle cx="236" cy="${(mateY - 11).toFixed(1)}" r="3.4" fill="#B98968"/>`;
+
+	// Threaded pass — a curved arrow sweeping from the playmaker to the
+	// team-mate, arrowhead landing at the marker's near edge.
+	const arc = `M 138 58 Q 188 ${(mateY + 24).toFixed(1)} 224 ${(mateY + 4).toFixed(1)}`;
+	s += `<path d="${arc}" fill="none" stroke="${p.fg}" stroke-width="1.4" opacity="0.6" stroke-linecap="round"/>`;
+	s += `<polygon points="224,${(mateY + 4).toFixed(1)} 217,${(mateY + 1).toFixed(1)} 219,${(mateY + 9).toFixed(1)}" fill="${p.fg}" opacity="0.7"/>`;
+	// The ball at the playmaker's feet, where the pass originates.
+	s += h.ballProp({ cx: 134, cy: 62, r: 6 });
+
+	return s;
+};
+
 // crest-ladder — two crest-blocks on a stepped ladder, the favoured one
 // a rung higher (the head-to-head "finish above" beat). teamA is the
 // favoured (higher) side.
@@ -855,6 +948,10 @@ export const renderWcTemplate = ({
 			return strikerJuggle({ h, g, teamA: a, teamB: b });
 		case 'player-figure':
 			return playerFigure({ h, g, teamA: a });
+		case 'player-card':
+			return playerCard({ h, g, teamA: a });
+		case 'player-assist':
+			return playerAssist({ h, g, teamA: a });
 		case 'crest-ladder':
 			return crestLadder({ h, teamA: a, teamB: b, uid });
 		case 'host-flags':
