@@ -531,11 +531,13 @@ const refereeCard = ({
 	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
 	s += `<rect x="270" y="78" width="10" height="22" fill="${teamB.secondary}" opacity="0.7"/>`;
 
-	// Referee bust (neutral dark kit) on the left.
+	// Referee bust (neutral dark kit) on the left. The skin tone is hoisted
+	// so the raised hand below carries the referee's own face skin.
+	const skin = g.pick(['umber', 'almond', 'sand', 'bronze'] as const);
 	s += h.wcFace({
 		cx: 96,
 		cy: 52,
-		skin: g.pick(['umber', 'almond', 'sand', 'bronze'] as const),
+		skin,
 		hair: g.pick(['jet', 'charcoal', 'brown'] as const),
 		hairStyle: 'short',
 		shirt: WC_SHIRT.ref,
@@ -543,9 +545,10 @@ const refereeCard = ({
 		emotion: 'focus'
 	});
 
-	// Raised arm — a blocky forearm angling up to the card.
+	// Raised arm — a blocky forearm angling up to the card; the hand block
+	// matches the referee's face skin.
 	s += `<polygon points="120,72 132,70 176,30 168,24 124,62 116,66" fill="${WC_SHIRT.ref}"/>`;
-	s += `<rect x="118" y="60" width="8" height="8" rx="1" fill="#B98968"/>`;
+	s += `<rect x="118" y="60" width="8" height="8" rx="1" fill="${WC_SKIN[skin].base}"/>`;
 
 	// The card — true scarlet, slight rotation.
 	s += h.redCardProp({ cx: 188, cy: 28, rot: 14 });
