@@ -994,7 +994,7 @@ export const enMessages = {
 	'footer.help': 'HELP',
 	'footer.imprint': 'Legal notice',
 	'footer.disclosure':
-		'VICI is a free-to-play prediction game for entertainment. Players must be 13 or older. VXP is in-game points with no cash value and cannot be wagered, bought, sold, or redeemed for money. Every market settles on public record. © 2026 VICI.',
+		'VICI is a free-to-play prediction game for entertainment. Players must be 18 or older. VXP is in-game points with no cash value and cannot be wagered, bought, sold, or redeemed for money. Every market settles on public record. © 2026 VICI.',
 	'footer.fifa':
 		'FIFA and World Cup are registered trademarks of FIFA. VICI is not affiliated with, endorsed by, or sponsored by FIFA. All team and tournament names are used for identification only.',
 	'footer.legal': 'LEGAL',

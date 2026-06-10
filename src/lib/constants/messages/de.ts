@@ -1011,7 +1011,7 @@ export const deMessages = {
 	'footer.help': 'HILFE',
 	'footer.imprint': 'Impressum',
 	'footer.disclosure':
-		'VICI ist ein kostenloses Tippspiel zur Unterhaltung. Zum Mitspielen musst du mindestens 13 Jahre alt sein. VXP sind Spielpunkte ohne Geldwert: Sie können nicht gewettet, gekauft, verkauft oder in Geld umgewandelt werden. Jeder Markt entscheidet sich auf öffentlichen Daten. © 2026 VICI.',
+		'VICI ist ein kostenloses Tippspiel zur Unterhaltung. Zum Mitspielen musst du mindestens 18 Jahre alt sein. VXP sind Spielpunkte ohne Geldwert: Sie können nicht gewettet, gekauft, verkauft oder in Geld umgewandelt werden. Jeder Markt entscheidet sich auf öffentlichen Daten. © 2026 VICI.',
 	'footer.fifa':
 		'FIFA und World Cup sind eingetragene Marken der FIFA. VICI steht in keiner Verbindung zur FIFA und wird von ihr weder unterstützt noch gesponsert. Alle Team- und Turniernamen dienen nur der Identifikation.',
 	'footer.legal': 'RECHTLICHES',
