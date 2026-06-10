@@ -66,8 +66,15 @@ const waitForSignedInPage = async ({ page }: { page: Page }): Promise<void> => {
 
 	try {
 		await page.waitForLoadState('networkidle', { timeout: NETWORK_IDLE_BEST_EFFORT_MS });
-	} catch {
-		// Best-effort: see the comment block above.
+	} catch (err) {
+		// Best-effort: only the bounded `networkidle` timeout is expected and
+		// safe to swallow (see the comment block above). Anything else — page
+		// closed, browser crash, navigation aborted — is a real failure that
+		// must surface here rather than resurface as a confusing error at the
+		// later assertion / screenshot step.
+		if (!(err instanceof Error) || err.name !== 'TimeoutError') {
+			throw err;
+		}
 	}
 };
 
