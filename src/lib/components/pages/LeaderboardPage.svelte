@@ -8,6 +8,7 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import { USD_DECIMALS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { globalStandingsRows, type StandingsRow } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -27,9 +28,10 @@
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Relation } from '$lib/types/relation';
 	import type { StandingsWindow } from '$lib/types/standings';
-	import { shortenPrincipal } from '$lib/utils/format.utils';
+	import { decimalFixedValueToNumber, shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
+	import { formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
@@ -44,8 +46,9 @@
 	 * Layout is a single column:
 	 *  - chip-style window tabs at the top
 	 *  - 3-tile podium row (top-3, #1 gets the gold halo + tinted bg)
-	 *  - flat list of rest rows (rank + ↑/↓ delta, avatar, handle + streak,
-	 *    accuracy on the right — coloured `--yes` once accuracy ≥ 78%)
+	 *  - flat list of rest rows (rank + ↑/↓ delta, avatar, handle + the
+	 *    ranking VXP + streak, accuracy on the right — coloured `--yes` once
+	 *    accuracy ≥ 78%)
 	 *
 	 * Rank, the prior-window delta, and accuracy are authoritative from the
 	 * clearing canister; handle / avatar / streak are overlaid from the shared
@@ -112,6 +115,20 @@
 
 	const handleOf = (row: StandingsRow): string =>
 		row.nickname && row.nickname.length > 0 ? row.nickname : shortenPrincipal(row.owner);
+
+	// The VXP the ranking is built on: net realized P&L over the window. The
+	// rows are ordered by this figure (descending), so surfacing it makes the
+	// order legible — accuracy stays the headline stat but no longer reads as
+	// the rank driver. `realizedPnl` is a signed `USD_DECIMALS` fixed-point
+	// value (the realized-cashflow convention), decoded via
+	// `decimalFixedValueToNumber`; the magnitude is rendered as whole VXP and
+	// prefixed with the swing sign (`+` / `−`), zero shown unsigned.
+	const rankingVxp = (entry: StandingsRow['entry']): string => {
+		const value = decimalFixedValueToNumber({ value: entry.realizedPnl, decimals: USD_DECIMALS });
+		const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+
+		return `${sign}${formatWholeVxpMagnitude(value)}`;
+	};
 
 	const rankOf = (owner: string): number =>
 		rankedRows.find((row) => row.owner === owner)?.entry.rank ?? 0;
@@ -285,6 +302,13 @@
 						{row.isSelf ? t({ locale: $localeStore, key: 'leaderboard.you' }) : handleOf(row)}
 					</div>
 					<div class="leaderboard-podium-acc num">{row.entry.accuracy}%</div>
+					<div class="leaderboard-podium-vxp num">
+						{t({
+							locale: $localeStore,
+							key: 'leaderboard.row.vxp',
+							params: { vxp: rankingVxp(row.entry) }
+						})}
+					</div>
 				</button>
 			{/each}
 		</div>
@@ -326,8 +350,8 @@
 								<span class="leaderboard-row-meta num">
 									{t({
 										locale: $localeStore,
-										key: 'leaderboard.row.settled',
-										params: { count: row.entry.settledCount }
+										key: 'leaderboard.row.vxp',
+										params: { vxp: rankingVxp(row.entry) }
 									})} · {t({
 										locale: $localeStore,
 										key: 'leaderboard.row.streak',
@@ -569,6 +593,15 @@
 		font-size: var(--t-13);
 		font-weight: 600;
 		color: var(--color-primary);
+	}
+
+	/* The VXP that drives the rank, under the headline accuracy. */
+	.leaderboard-podium-vxp {
+		margin-top: 0.05rem;
+		font-size: 0.65rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		color: var(--text-muted);
 	}
 
 	/* Rest rows — simple flat row card. */
