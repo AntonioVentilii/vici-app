@@ -581,16 +581,18 @@
 				return;
 			}
 
-			// Verification is terminal. Show a success beat, commit the
-			// affiliation best-effort underneath it, then auto-dismiss — a
-			// redundant or blocked commit must not block the close.
+			// Verification is terminal. Show a success beat, then auto-dismiss
+			// after a fixed hold. The affiliation commit runs in the
+			// background (it catches / logs its own errors) — awaiting it
+			// would let a slow write drag the success beat out and reintroduce
+			// the "feels stuck" problem, and a redundant or blocked commit
+			// must not block the close.
 			haptic('celebration');
 			verifiedName = verifyTarget?.name ?? addName.trim();
 			mode = 'verified';
 
-			const beat = sleep(VERIFIED_HOLD_MS);
-			await commitAfterVerify(affiliationIdentifier);
-			await beat;
+			void commitAfterVerify(affiliationIdentifier);
+			await sleep(VERIFIED_HOLD_MS);
 
 			onPicked?.();
 			onClose();
