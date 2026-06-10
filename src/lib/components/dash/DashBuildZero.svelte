@@ -17,18 +17,19 @@
 	 * - **Day 0** (`day1 === false`): no calls placed. A calibrating accuracy
 	 *   hero (muted dash + dotted baseline), the starter balance card, and a
 	 *   "start with one of these" list of real open markets.
-	 * - **Day 1+** (`day1 === true`): first call placed, none settled. The hero
+	 * - **Day 1+** (`day1 === true`): calls placed, none settled. The hero
 	 *   still calibrates but names when the first call settles; the stack shows
-	 *   holdings + in-play; the call list shows the in-flight call and a couple
+	 *   holdings + in-play; the call list shows every in-flight call and a couple
 	 *   of accessible markets to add while waiting.
 	 *
-	 * The markets and the first call are real (shaped by the host from the
-	 * markets / positions stores); only the trend line is intentionally absent
+	 * The markets and the calls are real (shaped by the host from the markets /
+	 * positions / orders stores); only the trend line is intentionally absent
 	 * until a call resolves.
 	 */
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DashCallRow from '$lib/components/dash/DashCallRow.svelte';
+	import type { OpenCallRow } from '$lib/components/dash/DashCallsZone.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -46,8 +47,8 @@
 		firstCallTimer: string;
 		/** Starter markets (Day 0) — real open markets to make a first call on. */
 		starterRows: ZeroMarketRow[];
-		/** The user's single open position, shaped (Day 1+). */
-		firstCallRow: ZeroMarketRow | undefined;
+		/** Every open call (positions + resting orders), soonest-first (Day 1+). */
+		openCalls: OpenCallRow[];
 		/** Markets to add while waiting (Day 1). */
 		moreRows: ZeroMarketRow[];
 	}
@@ -59,9 +60,16 @@
 		pendingCount,
 		firstCallTimer,
 		starterRows,
-		firstCallRow,
+		openCalls,
 		moreRows
 	}: Props = $props();
+
+	const PREVIEW = 3;
+
+	// The in-flight list previews the soonest-expiring calls and reveals the rest
+	// inline, mirroring the standard build's Open tab (see `DashCallsZone`).
+	let expanded = $state(false);
+	const openVisible = $derived(expanded ? openCalls : openCalls.slice(0, PREVIEW));
 
 	const openMarket = (marketId: string): void => {
 		void goto(resolve(`${AppPath.Markets}/${marketId}`));
@@ -142,19 +150,32 @@
 					>{t({ locale: $localeStore, key: 'dash.build.zero_in_flight' })}</span
 				>
 			</div>
-			{#if firstCallRow}
-				<DashCallRow
-					context={firstCallRow.context}
-					dot="pending"
-					end={firstCallRow.timer}
-					onClick={() => firstCallRow && openMarket(firstCallRow.marketId)}
-					question={firstCallRow.question}
-					side={firstCallRow.side}
-				/>
-			{:else}
+			{#if openCalls.length === 0}
 				<div class="db-empty">
 					{t({ locale: $localeStore, key: 'dash.dz.active_day1_pending_body' })}
 				</div>
+			{:else}
+				{#each openVisible as row (row.key)}
+					<DashCallRow
+						context={row.context}
+						dot="pending"
+						end={row.timer}
+						onClick={() => openMarket(row.marketId)}
+						question={row.question}
+						side={row.side}
+					/>
+				{/each}
+				{#if openCalls.length > PREVIEW}
+					<button class="db-callmore" onclick={() => (expanded = !expanded)} type="button">
+						{expanded
+							? t({ locale: $localeStore, key: 'dash.build.show_less' })
+							: t({
+									locale: $localeStore,
+									key: 'dash.build.see_all_open',
+									params: { count: openCalls.length }
+								})}
+					</button>
+				{/if}
 			{/if}
 		</div>
 		<div class="db-calls">

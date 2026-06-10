@@ -11,7 +11,6 @@
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import NotifBell from '$lib/components/ui/NotifBell.svelte';
 	import ViciAvatar from '$lib/components/ui/ViciAvatar.svelte';
-	import { profileJoinUrl } from '$lib/constants/contact.constants';
 	import { nicknameUniqueKey } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { SCHOOL_PASS2_ENABLED } from '$lib/constants/school-picker.constants';
@@ -20,7 +19,7 @@
 	import { marketById } from '$lib/derived/market-by-id.derived';
 	import { userIsAdmin } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
-	import { listMyReferrals } from '$lib/services/referral.services';
+	import { getMyReferralCode, listMyReferrals } from '$lib/services/referral.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { myAvatarParts } from '$lib/stores/avatar.store';
@@ -175,12 +174,33 @@
 
 	/* Invite Friends — growth loop ------------------------------------- */
 
-	// The hero CTA shares the viewer's public profile link. Native share sheet
-	// when available; otherwise copy to clipboard with a toast fallback so the
-	// loop still closes on desktop / unsupported browsers. The `/join/{handle}`
-	// link feeds the referral / Parrot achievement as friends join.
+	// The viewer's auto-assigned referral code, fetched on mount so the share
+	// URL is ready synchronously when the CTA is tapped — `navigator.share()`
+	// must fire inside the user gesture (an `await` first makes iOS Safari drop
+	// it for losing user activation), so we can't resolve the code on demand.
+	let inviteCode = $state<string | undefined>(undefined);
+
+	// Canonical invite URL — `https://{origin}/join/{code}`. The slug is the viewer's
+	// stable referral code (never their mutable handle), so a shared link never rots on a
+	// rename. `/join/[code]` and `/i/[code]` render the same landing, so this resolves the
+	// same as the Arena Friends hero's `/i/{code}` link. The handle-based `/join/{handle}`
+	// link this used to build had no matching route and 404'd.
+	const inviteUrl = $derived(
+		inviteCode !== undefined && typeof window !== 'undefined'
+			? `${window.location.origin}/join/${inviteCode}`
+			: undefined
+	);
+
+	// The hero CTA shares the viewer's invite link. Native share sheet when
+	// available; otherwise copy to clipboard with a toast fallback so the loop
+	// still closes on desktop / unsupported browsers.
 	const handleInviteFriends = async () => {
-		const url = profileJoinUrl(profile.nickname ?? '');
+		const url = inviteUrl;
+
+		if (url === undefined) {
+			return;
+		}
+
 		const shareText = t({ locale: $localeStore, key: 'profile.dashboard.invite_share_text' });
 
 		if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
@@ -476,6 +496,18 @@
 			}
 		})();
 
+		// Fetch the viewer's referral code so the hero's "Invite Friends" CTA can
+		// build the canonical `/join/{code}` share URL. The code is assigned by the
+		// satellite profile hook on first profile create (backfilled on the next
+		// save for older accounts) — if it's missing the CTA simply hides.
+		void (async () => {
+			try {
+				inviteCode = await getMyReferralCode();
+			} catch (_: unknown) {
+				// Best-effort: CTA hides if the code can't be resolved.
+			}
+		})();
+
 		void refreshMyAffiliations();
 	});
 </script>
@@ -573,7 +605,7 @@
 				<span class="num profile-hero-credibility">{topPercentLabel}</span>
 			{/if}
 
-			{#if isOwnProfile}
+			{#if isOwnProfile && inviteUrl !== undefined}
 				<button
 					class="profile-hero-invite"
 					onclick={() => void handleInviteFriends()}
