@@ -60,7 +60,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'mexico'
 	},
 	'will a goal be scored in the first half of czechia vs south africa?': {
-		template: 'stadium-clock'
+		template: 'stadium-clock',
+		teamA: 'czechia',
+		teamB: 'south africa'
 	},
 	'will a goal be scored in the first half of egypt vs iran?': {
 		template: 'stadium-clock',
@@ -83,7 +85,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'sweden'
 	},
 	'will a goal be scored in the first half of mexico vs south africa?': {
-		template: 'stadium-clock'
+		template: 'stadium-clock',
+		teamA: 'mexico',
+		teamB: 'south africa'
 	},
 	'will a goal be scored in the first half of norway vs france?': {
 		template: 'stadium-clock',
@@ -96,13 +100,19 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'dr congo'
 	},
 	'will a goal be scored in the first half of portugal vs uzbekistan?': {
-		template: 'stadium-clock'
+		template: 'stadium-clock',
+		teamA: 'portugal',
+		teamB: 'uzbekistan'
 	},
 	'will a goal be scored in the first half of spain vs saudi arabia?': {
-		template: 'stadium-clock'
+		template: 'stadium-clock',
+		teamA: 'spain',
+		teamB: 'saudi arabia'
 	},
 	'will a goal be scored in the first half of switzerland vs canada?': {
-		template: 'stadium-clock'
+		template: 'stadium-clock',
+		teamA: 'switzerland',
+		teamB: 'canada'
 	},
 	'will a goal be scored in the first half of tunisia vs japan?': {
 		template: 'stadium-clock',
@@ -419,7 +429,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'iran'
 	},
 	'will any player receive a red card in bosnia and herzegovina vs qatar?': {
-		template: 'referee-card'
+		template: 'referee-card',
+		teamA: 'bosnia and herzegovina',
+		teamB: 'qatar'
 	},
 	'will any player receive a red card in brazil vs morocco?': {
 		template: 'referee-card',
@@ -427,7 +439,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'morocco'
 	},
 	'will any player receive a red card in canada vs bosnia and herzegovina?': {
-		template: 'referee-card'
+		template: 'referee-card',
+		teamA: 'canada',
+		teamB: 'bosnia and herzegovina'
 	},
 	'will any player receive a red card in canada vs qatar?': {
 		template: 'referee-card',
@@ -535,7 +549,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'iraq'
 	},
 	'will any player receive a red card in south africa vs korea republic?': {
-		template: 'referee-card'
+		template: 'referee-card',
+		teamA: 'south africa',
+		teamB: 'korea republic'
 	},
 	'will any player receive a red card in spain vs cape verde?': {
 		template: 'referee-card',
@@ -543,7 +559,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'cape verde'
 	},
 	'will any player receive a red card in switzerland vs bosnia and herzegovina?': {
-		template: 'referee-card'
+		template: 'referee-card',
+		teamA: 'switzerland',
+		teamB: 'bosnia and herzegovina'
 	},
 	'will any player receive a red card in the netherlands vs japan?': {
 		template: 'referee-card',
@@ -556,7 +574,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'sweden'
 	},
 	'will any player receive a red card in the united states vs australia?': {
-		template: 'referee-card'
+		template: 'referee-card',
+		teamA: 'united states',
+		teamB: 'australia'
 	},
 	'will any player receive a red card in tunisia vs the netherlands?': {
 		template: 'referee-card',
@@ -564,7 +584,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'netherlands'
 	},
 	'will any player receive a red card in türkiye vs the united states?': {
-		template: 'referee-card'
+		template: 'referee-card',
+		teamA: 'türkiye',
+		teamB: 'united states'
 	},
 	'will any player receive a red card in uruguay vs cape verde?': {
 		template: 'referee-card',
@@ -1107,7 +1129,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	'will canada beat switzerland?': { template: 'kit-clash', teamA: 'canada', teamB: 'switzerland' },
 	'will canada reach the round of 32?': { template: 'qualify-bracket', teamA: 'canada' },
 	'will canada score 2 or more goals against bosnia and herzegovina?': {
-		template: 'striker-juggle'
+		template: 'striker-juggle',
+		teamA: 'canada',
+		teamB: 'bosnia and herzegovina'
 	},
 	'will canada score 2 or more goals against qatar?': {
 		template: 'striker-juggle',
@@ -1977,7 +2001,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	'will switzerland beat canada?': { template: 'kit-clash', teamA: 'switzerland', teamB: 'canada' },
 	'will switzerland beat qatar?': { template: 'kit-clash', teamA: 'switzerland', teamB: 'qatar' },
 	'will switzerland keep a clean sheet against bosnia and herzegovina?': {
-		template: 'keeper-wall'
+		template: 'keeper-wall',
+		teamA: 'switzerland',
+		teamB: 'bosnia and herzegovina'
 	},
 	'will switzerland keep a clean sheet against canada?': {
 		template: 'keeper-wall',
@@ -2056,111 +2082,181 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	},
 	'will the netherlands win group f?': { template: 'podium', nation: 'netherlands' },
 	'will the opening goal come inside the first 15 minutes of argentina vs algeria?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'argentina',
+		teamB: 'algeria'
 	},
 	'will the opening goal come inside the first 15 minutes of belgium vs iran?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'belgium',
+		teamB: 'iran'
 	},
 	'will the opening goal come inside the first 15 minutes of bosnia and herzegovina vs qatar?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'bosnia and herzegovina',
+		teamB: 'qatar'
 	},
 	'will the opening goal come inside the first 15 minutes of brazil vs haiti?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'brazil',
+		teamB: 'haiti'
 	},
 	'will the opening goal come inside the first 15 minutes of colombia vs dr congo?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'colombia',
+		teamB: 'dr congo'
 	},
 	'will the opening goal come inside the first 15 minutes of croatia vs ghana?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'croatia',
+		teamB: 'ghana'
 	},
 	'will the opening goal come inside the first 15 minutes of curaçao vs ivory coast?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'curaçao',
+		teamB: 'ivory coast'
 	},
 	'will the opening goal come inside the first 15 minutes of dr congo vs uzbekistan?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'dr congo',
+		teamB: 'uzbekistan'
 	},
 	'will the opening goal come inside the first 15 minutes of ecuador vs curaçao?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'ecuador',
+		teamB: 'curaçao'
 	},
 	'will the opening goal come inside the first 15 minutes of england vs croatia?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'england',
+		teamB: 'croatia'
 	},
 	'will the opening goal come inside the first 15 minutes of england vs ghana?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'england',
+		teamB: 'ghana'
 	},
 	'will the opening goal come inside the first 15 minutes of france vs iraq?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'france',
+		teamB: 'iraq'
 	},
 	'will the opening goal come inside the first 15 minutes of france vs senegal?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'france',
+		teamB: 'senegal'
 	},
 	'will the opening goal come inside the first 15 minutes of haiti vs scotland?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'haiti',
+		teamB: 'scotland'
 	},
 	'will the opening goal come inside the first 15 minutes of jordan vs algeria?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'jordan',
+		teamB: 'algeria'
 	},
 	'will the opening goal come inside the first 15 minutes of jordan vs argentina?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'jordan',
+		teamB: 'argentina'
 	},
 	'will the opening goal come inside the first 15 minutes of korea republic vs czechia?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'korea republic',
+		teamB: 'czechia'
 	},
 	'will the opening goal come inside the first 15 minutes of mexico vs korea republic?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'mexico',
+		teamB: 'korea republic'
 	},
 	'will the opening goal come inside the first 15 minutes of morocco vs haiti?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'morocco',
+		teamB: 'haiti'
 	},
 	'will the opening goal come inside the first 15 minutes of new zealand vs belgium?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'new zealand',
+		teamB: 'belgium'
 	},
 	'will the opening goal come inside the first 15 minutes of new zealand vs egypt?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'new zealand',
+		teamB: 'egypt'
 	},
 	'will the opening goal come inside the first 15 minutes of paraguay vs australia?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'paraguay',
+		teamB: 'australia'
 	},
 	'will the opening goal come inside the first 15 minutes of qatar vs switzerland?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'qatar',
+		teamB: 'switzerland'
 	},
 	'will the opening goal come inside the first 15 minutes of saudi arabia vs uruguay?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'saudi arabia',
+		teamB: 'uruguay'
 	},
 	'will the opening goal come inside the first 15 minutes of senegal vs iraq?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'senegal',
+		teamB: 'iraq'
 	},
 	'will the opening goal come inside the first 15 minutes of south africa vs korea republic?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'south africa',
+		teamB: 'korea republic'
 	},
 	'will the opening goal come inside the first 15 minutes of spain vs cape verde?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'spain',
+		teamB: 'cape verde'
 	},
 	'will the opening goal come inside the first 15 minutes of sweden vs tunisia?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'sweden',
+		teamB: 'tunisia'
 	},
 	'will the opening goal come inside the first 15 minutes of switzerland vs bosnia and herzegovina?':
-		{ template: 'stopwatch' },
+		{ template: 'stopwatch', teamA: 'switzerland', teamB: 'bosnia and herzegovina' },
 	'will the opening goal come inside the first 15 minutes of the netherlands vs japan?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'netherlands',
+		teamB: 'japan'
 	},
 	'will the opening goal come inside the first 15 minutes of the netherlands vs sweden?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'netherlands',
+		teamB: 'sweden'
 	},
 	'will the opening goal come inside the first 15 minutes of the united states vs australia?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'united states',
+		teamB: 'australia'
 	},
 	'will the opening goal come inside the first 15 minutes of the united states vs paraguay?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'united states',
+		teamB: 'paraguay'
 	},
 	'will the opening goal come inside the first 15 minutes of tunisia vs the netherlands?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'tunisia',
+		teamB: 'netherlands'
 	},
 	'will the opening goal come inside the first 15 minutes of uruguay vs spain?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'uruguay',
+		teamB: 'spain'
 	},
 	'will the opening goal come inside the first 15 minutes of uzbekistan vs colombia?': {
-		template: 'stopwatch'
+		template: 'stopwatch',
+		teamA: 'uzbekistan',
+		teamB: 'colombia'
 	},
 	'will the united states beat australia?': {
 		template: 'kit-clash',
@@ -2543,7 +2639,9 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		teamB: 'cape verde'
 	},
 	'will there be 4 or more goals in switzerland vs bosnia and herzegovina?': {
-		template: 'ball-in-net'
+		template: 'ball-in-net',
+		teamA: 'switzerland',
+		teamB: 'bosnia and herzegovina'
 	},
 	'will there be 4 or more goals in the netherlands vs japan?': {
 		template: 'ball-in-net',
