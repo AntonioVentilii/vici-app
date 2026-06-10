@@ -1573,14 +1573,37 @@ html[data-ios][data-theme='peach'] .lp-nav .lp-pill.open {
 		border-color 200ms var(--ease),
 		box-shadow 200ms var(--ease);
 }
-/* Desktop nav stays fully transparent even when scrolled — the logo, links and
-   CTA float cleanly over the page rather than on a full-width frosted band. */
+/* Once scrolled, the desktop nav frosts into a full-width band so the logo,
+   links and CTA read against a contrasting surface instead of floating over
+   live hero content. Backdrop blur snaps (it's excluded from the transition
+   above); background/border/shadow fade. Per-theme alphas mirror the mobile
+   `.lp-pill` scrolled surface. */
 .dnav.is-scrolled {
-	background: transparent;
+	background: rgba(20, 18, 15, 0.85);
+	-webkit-backdrop-filter: saturate(140%) blur(14px);
+	backdrop-filter: saturate(140%) blur(14px);
+	border-bottom-color: var(--border);
+	box-shadow: 0 14px 32px -20px rgba(0, 0, 0, 0.55);
+}
+[data-theme='light'] .dnav.is-scrolled {
+	background: rgba(242, 236, 220, 0.85);
+}
+[data-theme='peach'] .dnav.is-scrolled {
+	background: rgba(250, 224, 204, 0.88);
+}
+/* iOS WebKit re-rasterizes a live backdrop blur every scrolled frame (reads as
+   flicker — see the `.lp-pill` note below), so drop the blur and go near-opaque
+   on iOS instead. Covers iPad landscape, which reaches the ≥1024px desktop nav. */
+html[data-ios] .dnav.is-scrolled {
 	-webkit-backdrop-filter: none;
 	backdrop-filter: none;
-	border-bottom-color: transparent;
-	box-shadow: none;
+	background: rgba(20, 18, 15, 0.96);
+}
+html[data-ios][data-theme='light'] .dnav.is-scrolled {
+	background: rgba(242, 236, 220, 0.96);
+}
+html[data-ios][data-theme='peach'] .dnav.is-scrolled {
+	background: rgba(250, 224, 204, 0.96);
 }
 .dnav-skip {
 	position: absolute;
