@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import WelcomePage from '$lib/components/pages/WelcomePage.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { SIGNED_IN_FLAG_KEY } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -9,17 +11,35 @@
 
 	// Root landing gate.
 	//
-	// - Signed-in cold loads are short-circuited by the inline `<head>`
-	//   script in `app.html` (reads the `vici.signed-in` localStorage
-	//   flag) so no UI paints before the bounce.
-	// - For warm in-app navigations to `/`, this $effect bounces to
-	//   `/flow` once `userSignedIn` resolves — Flow mode is the
-	//   canonical first surface for every authenticated session.
-	// - For signed-out visitors, we render `WelcomePage` only once the
-	//   auth handshake has settled, leaving the brand-coloured shell
-	//   blank in the brief unresolved window. This guarantees the
-	//   marketing surface never flashes for a signed-in user that the
-	//   inline script missed (private mode, cleared storage, etc.).
+	// - Signed-in sessions are bounced to `/flow` once `userSignedIn`
+	//   resolves — Flow mode is the canonical first surface for every
+	//   authenticated session. This is always a client-side `goto`, never
+	//   a full document load: a hard navigation would re-fetch the document
+	//   from the IC HTTP gateway, which occasionally flashes the gateway's
+	//   own "500 Internal error" page mid-handshake (#753). Routing in-SPA
+	//   keeps us on the already-loaded document, so there is nothing to
+	//   500.
+	// - While the auth handshake is still unresolved, a device that carries
+	//   the `signed-in` hint (`SIGNED_IN_FLAG_KEY`, written by `Authn` on
+	//   every auth transition) is almost certainly resuming a session and
+	//   about to bounce to `/flow`, so we hold a branded spinner. Everyone
+	//   else sees the blank brand shell — this keeps the marketing surface
+	//   from ever flashing for a signed-in user the hint missed (private
+	//   mode, cleared storage), and a stale hint only costs a brief spinner
+	//   before `WelcomePage`.
+	// - For signed-out visitors, we render `WelcomePage` once the auth
+	//   handshake has settled.
+	// One-time, non-reactive snapshot of the device hint — read once at
+	// mount, never re-read, so a plain const (not `$state`) is correct.
+	const resumingSession = ((): boolean => {
+		try {
+			return localStorage.getItem(SIGNED_IN_FLAG_KEY) === '1';
+		} catch {
+			// Private mode / storage disabled — fall through to the blank shell.
+			return false;
+		}
+	})();
+
 	$effect(() => {
 		if ($userSignedIn) {
 			void goto(resolve(AppPath.Flow), { replaceState: true });
@@ -34,6 +54,10 @@
 
 {#if $userSignedOutResolved}
 	<WelcomePage />
+{:else if resumingSession}
+	<div class="bg-background flex min-h-dvh items-center justify-center">
+		<LoadingSpinner center={false} size="lg" />
+	</div>
 {:else}
 	<div class="bg-background min-h-dvh"></div>
 {/if}

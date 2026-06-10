@@ -20,12 +20,13 @@
 
 	/**
 	 * Write (or clear) the `SIGNED_IN_FLAG_KEY` hint that this device has an
-	 * authenticated session. Read by the inline `<head>` script in `app.html`
-	 * to do a no-flash redirect from `/` to `/flow` for signed-in cold loads
-	 * (so the marketing surface never paints before SvelteKit hydrates and the
-	 * real auth state resolves). Wrapped in try/catch for SSR / private-mode
-	 * safety — a missing flag just means the regular in-page gate handles the
-	 * redirect.
+	 * authenticated session. Read by the root gate (`src/routes/+page.svelte`)
+	 * on a cold load of `/`: while the auth handshake is still unresolved, a
+	 * device carrying this hint is almost certainly resuming a session, so the
+	 * gate holds a branded spinner (instead of the blank brand shell) until it
+	 * bounces to `/flow` via a client-side `goto`. Wrapped in try/catch for SSR
+	 * / private-mode safety — a missing flag just means the gate shows the
+	 * blank shell during that window instead.
 	 */
 	const setSignedInFlag = (signedIn: boolean): void => {
 		if (!browser) {
