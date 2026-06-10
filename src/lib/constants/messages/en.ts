@@ -1038,30 +1038,36 @@ export const enMessages = {
 	'info.doc.contact.b7': 'Press, partnerships, and league sponsorship',
 	'info.doc.contact.eyebrow': 'Help · Support',
 	'info.doc.contact.title': 'Contact support',
-	'info.doc.faq.b0': 'What is VXP?',
-	'info.doc.faq.b1':
-		'VXP is the in-app prediction credit. Make calls to earn it. It is not currency. It cannot be redeemed. It is the unit of your track record.',
-	'info.doc.faq.b10': 'What is a contrarian win?',
+	'info.doc.faq.b0': 'New here? The whole loop in 30 seconds.',
+	'info.doc.faq.b1': 'Quick tutorial',
+	'info.doc.faq.b10': 'Why did my streak reset?',
 	'info.doc.faq.b11':
-		'A call you made against the consensus (<30% on your side at the time of the call) that subsequently resolved in your favor.',
-	'info.doc.faq.b12': 'Who can see my predictions?',
-	'info.doc.faq.b13':
-		'Your handle and accuracy are public on global leaderboards, league standings, and Worlds battles you opt into. Individual market calls are visible only to leagues you belong to.',
-	'info.doc.faq.b14': 'How do battles work?',
-	'info.doc.faq.b15':
-		'Battles are time-bound competitions between leagues or universities. Average accuracy during the window determines the winner. A minimum number of calls is required to qualify.',
-	'info.doc.faq.b2': 'Is this real money?',
-	'info.doc.faq.b3':
-		'No. VICI is a free app for human judgment. There is no deposit, no withdrawal, no payout. Real-money markets are explored separately.',
-	'info.doc.faq.b4': 'How is my accuracy calculated?',
-	'info.doc.faq.b5':
-		'Resolved calls divided by total resolved calls. Open calls do not count until the market settles.',
-	'info.doc.faq.b6': 'Why did my streak reset?',
-	'info.doc.faq.b7':
 		'Streak counts consecutive days with at least one call. A blank day resets it. The streak flame shows your current run; longest is preserved.',
-	'info.doc.faq.b8': 'Can I delete a call?',
-	'info.doc.faq.b9':
+	'info.doc.faq.b12': 'Can I delete a call?',
+	'info.doc.faq.b13':
 		'No. Every call is permanent the moment you commit. This is the entire premise of building a record.',
+	'info.doc.faq.b14': 'What is a contrarian win?',
+	'info.doc.faq.b15':
+		'A call you made against the consensus (<30% on your side at the time of the call) that subsequently resolved in your favor.',
+	'info.doc.faq.b16': 'Who can see my predictions?',
+	'info.doc.faq.b17':
+		'Your handle and accuracy are public on global leaderboards, league standings, and Worlds battles you opt into. Individual market calls are visible only to leagues you belong to.',
+	'info.doc.faq.b18': 'How do battles work?',
+	'info.doc.faq.b19':
+		'Battles are time-bound competitions between leagues or universities. Average accuracy during the window determines the winner. A minimum number of calls is required to qualify.',
+	'info.doc.faq.b2':
+		'Open Flow and a market card appears. Swipe right to call YES, left for NO, up to skip. Tap the card to flip it for context and the full odds.',
+	'info.doc.faq.b3':
+		'Each call stakes VXP at the market’s odds — long shots pay more, favourites pay less. Make your daily 10 calls to grow your streak; your accuracy and rank build as calls resolve.',
+	'info.doc.faq.b4': 'What is VXP?',
+	'info.doc.faq.b5':
+		'VXP is the in-app prediction credit. Make calls to earn it. It is not currency. It cannot be redeemed. It is the unit of your track record.',
+	'info.doc.faq.b6': 'Is this real money?',
+	'info.doc.faq.b7':
+		'No. VICI is a free app for human judgment. There is no deposit, no withdrawal, no payout. Real-money markets are explored separately.',
+	'info.doc.faq.b8': 'How is my accuracy calculated?',
+	'info.doc.faq.b9':
+		'Resolved calls divided by total resolved calls. Open calls do not count until the market settles.',
 	'info.doc.faq.eyebrow': 'Help · FAQ',
 	'info.doc.faq.title': 'Frequently asked',
 	'info.doc.how-resolution-works.b0':

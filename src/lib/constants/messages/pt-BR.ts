@@ -1044,89 +1044,94 @@ export const ptBRMessages = {
 	'info.back': 'Voltar',
 	'info.back_to_settings': 'Voltar aos ajustes',
 	'info.doc.contact.b0':
-		'Somos um time pequeno. A maioria das perguntas é respondida nas FAQ. Para tudo o resto, escreva diretamente para nós.',
+		'Somos um time pequeno. A maioria das dúvidas é respondida nas FAQ. Para o resto, escreva direto pra gente.',
 	'info.doc.contact.b1': 'E-mail',
 	'info.doc.contact.b3': 'Tempo de resposta',
 	'info.doc.contact.b4':
-		'No prazo de dois dias úteis. As contestações de resolução têm prioridade e são respondidas no prazo de vinte e quatro horas.',
+		'Em até dois dias úteis. Contestações de resolução têm prioridade e são respondidas em vinte e quatro horas.',
 	'info.doc.contact.b5': 'O que incluir',
-	'info.doc.contact.b6.i0': 'Seu handle (@exemplo)',
-	'info.doc.contact.b6.i1': 'O mercado ou a tela a que a pergunta diz respeito',
-	'info.doc.contact.b6.i2': 'Uma captura de tela, se possível',
+	'info.doc.contact.b6.i0': 'Seu nome (@exemplo)',
+	'info.doc.contact.b6.i1': 'O mercado ou a tela sobre a qual é a dúvida',
+	'info.doc.contact.b6.i2': 'Um print, se possível',
 	'info.doc.contact.b7': 'Imprensa, parcerias e patrocínio de ligas',
 	'info.doc.contact.eyebrow': 'Ajuda · Suporte',
-	'info.doc.contact.title': 'Contactar o suporte',
-	'info.doc.faq.b0': 'O que é o VXP?',
-	'info.doc.faq.b1':
-		'O VXP é o crédito de previsão no app. Faça calls para ganhá-lo. Não é uma moeda. Não pode ser resgatado. É a unidade do seu histórico.',
-	'info.doc.faq.b10': 'O que é uma vitória contra a corrente?',
+	'info.doc.contact.title': 'Falar com o suporte',
+	'info.doc.faq.b0': 'Chegou agora? Todo o mecanismo em 30 segundos.',
+	'info.doc.faq.b1': 'Tutorial rápido',
+	'info.doc.faq.b10': 'Por que minha sequência zerou?',
 	'info.doc.faq.b11':
-		'Um call que você fez contra o consenso (<30% do seu lado no momento do call) que depois se resolveu a seu favor.',
-	'info.doc.faq.b12': 'Quem pode ver as minhas previsões?',
+		'A sequência conta dias consecutivos com pelo menos uma previsão. Um dia em branco zera. A chama mostra sua sequência atual; a mais longa fica guardada.',
+	'info.doc.faq.b12': 'Posso apagar uma previsão?',
 	'info.doc.faq.b13':
-		'Seu handle e sua precisão são públicos nas classificações globais, nas classificações de liga e nas batalhas de Worlds em que você participa. Os calls individuais nos mercados só são visíveis para as ligas a que você pertence.',
-	'info.doc.faq.b14': 'Como funcionam as batalhas?',
+		'Não. Cada previsão é definitiva no momento em que você confirma. É justamente disso que se trata construir um histórico.',
+	'info.doc.faq.b14': 'O que é uma vitória na contramão?',
 	'info.doc.faq.b15':
-		'As batalhas são competições com tempo limitado entre ligas ou universidades. A precisão média durante a janela determina o vencedor. É necessário um número mínimo de calls para qualificar.',
-	'info.doc.faq.b2': 'Isto é dinheiro real?',
+		'Uma previsão feita contra o consenso (abaixo de 30% no seu lado na hora da previsão) que depois se resolveu a seu favor.',
+	'info.doc.faq.b16': 'Quem vê minhas previsões?',
+	'info.doc.faq.b17':
+		'Seu nome e sua precisão são públicos nos rankings globais, nas ligas e nos duelos Worlds de que você participa. Suas previsões individuais só são vistas pelas ligas das quais você faz parte.',
+	'info.doc.faq.b18': 'Como funcionam os duelos?',
+	'info.doc.faq.b19':
+		'Duelos são competições por tempo limitado entre ligas ou universidades. A precisão média no período decide o vencedor. É preciso um mínimo de previsões para se classificar.',
+	'info.doc.faq.b2':
+		'Abra o Flow e aparece o card de um mercado. Arraste para a direita para dizer SIM, para a esquerda para NÃO, para cima para pular. Toque no card para virá-lo e ver o contexto e as cotações completas.',
 	'info.doc.faq.b3':
-		'Não. A VICI é uma app gratuita para o juízo humano. Não há depósito, levantamento nem pagamento. Os mercados com dinheiro real são explorados separadamente.',
-	'info.doc.faq.b4': 'Como é calculada a minha precisão?',
+		'Cada previsão compromete VXP nas cotações do mercado — resultados improváveis rendem mais, favoritos menos. Faça suas 10 previsões por dia para aumentar sua sequência; sua precisão e sua posição sobem à medida que os mercados se resolvem.',
+	'info.doc.faq.b4': 'O que é VXP?',
 	'info.doc.faq.b5':
-		'Calls resolvidos a dividir pelo total de calls resolvidos. Os calls em aberto não contam até o mercado se resolver.',
-	'info.doc.faq.b6': 'Porque é que a minha sequência foi reiniciada?',
+		'VXP é o crédito de previsão interno do app. Você ganha fazendo previsões. Não é dinheiro. Não é convertível. É a unidade do seu histórico.',
+	'info.doc.faq.b6': 'É dinheiro de verdade?',
 	'info.doc.faq.b7':
-		'A sequência conta dias consecutivos com pelo menos um call. Um dia em branco a reinicia. A chama da sequência mostra sua série atual; a mais longa é preservada.',
-	'info.doc.faq.b8': 'Posso eliminar um call?',
+		'Não. O VICI é um app gratuito dedicado ao julgamento humano. Sem depósitos, sem saques, sem pagamentos em dinheiro. Mercados com dinheiro real são tratados à parte.',
+	'info.doc.faq.b8': 'Como minha precisão é calculada?',
 	'info.doc.faq.b9':
-		'Não. Cada call é permanente no momento em que o confirmas. É essa toda a premissa de construir um histórico.',
+		'Previsões certas divididas pelo total de previsões resolvidas. Previsões em aberto não contam até o mercado se resolver.',
 	'info.doc.faq.eyebrow': 'Ajuda · FAQ',
 	'info.doc.faq.title': 'Perguntas frequentes',
 	'info.doc.how-resolution-works.b0':
-		'Todos os mercados na VICI resolvem-se numa única fonte pública e identificada. Sem painel de moderação. Sem debate. A fonte decide.',
+		'Todo mercado na VICI é resolvido por uma única fonte pública declarada. Sem comitê, sem debate. Quem decide é a fonte.',
 	'info.doc.how-resolution-works.b1': 'O princípio',
 	'info.doc.how-resolution-works.b10':
-		'A redação da Vici avalia de acordo com o critério publicado. As decisões e a fundamentação são publicadas publicamente no painel de resolução no verso do cartão do mercado.',
+		'A redação da Vici avalia conforme o critério publicado. As decisões e a justificativa são publicadas abertamente no painel de resolução no verso do card.',
 	'info.doc.how-resolution-works.b2':
-		'Um mercado de previsões só funciona se ambos os lados conhecerem as regras no momento em que fazem um call. Antes de qualquer mercado entrar no ar, indicamos a fonte pública exata que o decidirá — um registro de um regulador, um resultado de uma federação, um fornecedor de dados reconhecido.',
-	'info.doc.how-resolution-works.b3': 'O que vês em cada cartão',
+		'Um mercado de previsões só funciona se os dois lados conhecem as regras no momento em que fazem a previsão. Antes de um mercado abrir, publicamos a fonte pública exata que vai decidi-lo — uma decisão de um regulador, um resultado de federação, um provedor de dados reconhecido.',
+	'info.doc.how-resolution-works.b3': 'O que você vê em cada card',
 	'info.doc.how-resolution-works.b4.i0':
-		'Critério de resolução · a condição YES exata, escrita em linguagem simples',
+		'Critério de resolução · a condição exata do SIM, em linguagem clara',
 	'info.doc.how-resolution-works.b4.i1': 'Fonte · a publicação ou o feed que decide',
-	'info.doc.how-resolution-works.b4.i2':
-		'Se resolve · a data de calendário em que a fonte publica o resultado',
+	'info.doc.how-resolution-works.b4.i2': 'Fecha em · a data em que a fonte publica o resultado',
 	'info.doc.how-resolution-works.b5': 'Quando a fonte publica',
 	'info.doc.how-resolution-works.b6':
-		'O mercado congela no fecho da negociação na data de resolução. O resultado publicado é registado em cada call feito no mercado. Os vencedores ganham VXP à taxa apresentada quando fizeram o call. Quem perde não ganha nada.',
-	'info.doc.how-resolution-works.b7': 'Se uma fonte não publicar',
+		'O mercado congela no fechamento, na data de vencimento. O resultado publicado é registrado em cada previsão feita no mercado. Quem acertou ganha VXP na taxa mostrada no momento da previsão. Quem errou não ganha nada.',
+	'info.doc.how-resolution-works.b7': 'Se uma fonte não publica',
 	'info.doc.how-resolution-works.b8':
-		'Raro mas documentado. O mercado é anulado. Cada participante recupera na totalidade o que empenhou. Não são atribuídos pontos de precisão em qualquer sentido.',
-	'info.doc.how-resolution-works.b9': 'Se uma fonte publicar de forma ambígua',
+		'Raro, mas previsto. O mercado é anulado. Cada participante recebe sua contribuição de volta por inteiro. Nenhum ponto de acerto é concedido.',
+	'info.doc.how-resolution-works.b9': 'Se uma fonte publica de forma ambígua',
 	'info.doc.how-resolution-works.eyebrow': 'Ajuda · Resolução',
 	'info.doc.how-resolution-works.title': 'Como funciona a resolução',
 	'info.doc.resolution-rules.b0':
-		'O procedimento exato pelo qual cada mercado na VICI é resolvido. Fonte autorizada: este documento.',
-	'info.doc.resolution-rules.b1': 'Antes da listagem',
+		'O procedimento exato pelo qual cada mercado no VICI é resolvido. Fonte oficial: este documento.',
+	'info.doc.resolution-rules.b1': 'Antes da publicação',
 	'info.doc.resolution-rules.b10.i0':
-		'Resultado ambíguo → a redação da Vici avalia de acordo com o critério. A decisão e a fundamentação são publicadas publicamente.',
+		'Resultado ambíguo → a redação da Vici avalia conforme o critério. A decisão e a justificativa são publicadas abertamente.',
 	'info.doc.resolution-rules.b10.i1':
-		'A fonte não publica → mercado anulado, VXP devolvido, sem efeito na precisão em qualquer sentido.',
+		'A fonte não publica → mercado anulado, aportes devolvidos, sem efeito na precisão.',
 	'info.doc.resolution-rules.b10.i2':
-		'A fonte altera a sua metodologia a meio da janela → mercado anulado, salvo se a alteração for irrelevante.',
+		'A fonte muda a metodologia com a janela aberta → mercado anulado, a menos que a mudança seja irrelevante.',
 	'info.doc.resolution-rules.b11': 'Contestações',
 	'info.doc.resolution-rules.b12':
-		'Qualquer participante pode apresentar uma contestação de resolução no prazo de setenta e duas horas, enviando um e-mail para {email} com o seu handle, o id do mercado e o fundamento da contestação. As contestações são analisadas pela redação e respondidas no prazo de vinte e quatro horas.',
+		'Quem fez uma previsão pode abrir uma contestação em até setenta e duas horas escrevendo para {email} com seu nome, o id do mercado e o motivo da contestação. As contestações são analisadas pela redação e respondidas em vinte e quatro horas.',
 	'info.doc.resolution-rules.b2':
-		'Antes de um mercado abrir a previsões, dois factos são fixados e publicados no verso do cartão do mercado: o critério de resolução (a condição YES em linguagem simples) e a fonte (o feed de dados público e identificado que decidirá).',
-	'info.doc.resolution-rules.b3': 'Janela de negociação',
+		'Antes de um mercado abrir para previsões, dois fatos são fixados e publicados no verso do card: o critério de resolução (a condição do SIM em linguagem simples) e a fonte (o feed de dados público declarado que vai decidir).',
+	'info.doc.resolution-rules.b3': 'Janela de previsão',
 	'info.doc.resolution-rules.b4':
-		'As previsões são aceites desde a abertura até ao fecho de negociação apresentado. Após o fecho, os calls ficam bloqueados. O mercado entra na janela de resolução.',
+		'As previsões são aceitas da abertura até o fechamento indicado. Após o fechamento, as previsões ficam travadas. O mercado entra na janela de resolução.',
 	'info.doc.resolution-rules.b5': 'Janela de resolução',
 	'info.doc.resolution-rules.b6':
-		'A fonte identificada deve publicar dentro da janela de resolução (normalmente sete dias de calendário após o fecho de negociação, mais tempo para fontes que publicam num calendário fixo).',
+		'A fonte declarada deve publicar dentro da janela de resolução (normalmente sete dias corridos após o fechamento, mais para fontes que publicam em calendário fixo).',
 	'info.doc.resolution-rules.b7': 'Registro do resultado',
 	'info.doc.resolution-rules.b8':
-		'No prazo de vinte e quatro horas após a publicação da fonte, o resultado é registrado em cada call. As vitórias e derrotas aparecem de imediato na sua Dash.',
+		'Em até vinte e quatro horas após a publicação da fonte, o resultado é registrado em cada previsão. Acertos e erros aparecem na hora no seu Dash.',
 	'info.doc.resolution-rules.b9': 'Casos limite',
 	'info.doc.resolution-rules.eyebrow': 'Jurídico · O procedimento completo',
 	'info.doc.resolution-rules.title': 'Regras de resolução',
