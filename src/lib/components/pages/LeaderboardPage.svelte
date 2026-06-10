@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Doc } from '@junobuild/core';
-	import { ArrowDown, ArrowUp, Minus, UserMinus, UserPlus } from '@lucide/svelte/icons';
+	import { UserMinus, UserPlus } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { resolve } from '$app/paths';
@@ -8,6 +8,7 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import { USD_DECIMALS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { globalStandingsRows, type StandingsRow } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -27,33 +28,41 @@
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Relation } from '$lib/types/relation';
 	import type { StandingsWindow } from '$lib/types/standings';
-	import { shortenPrincipal } from '$lib/utils/format.utils';
+	import { decimalFixedValueToNumber, shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
+	import { formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
 	 * Global standings.
 	 *
 	 * Three windows (`This week` / `This month` / `All time`) each read their
-	 * own slice of the clearing canister's `list_leaderboard` ranking (by net
-	 * realized P&L over a fixed calendar window). Switching a window lazily
-	 * loads + caches that slice, so a revisit renders instantly while a refresh
-	 * runs in the background.
+	 * own slice of the clearing canister's `list_leaderboard` aggregate (over a
+	 * fixed calendar window). Switching a window lazily loads + caches that
+	 * slice, so a revisit renders instantly while a refresh runs in the
+	 * background.
+	 *
+	 * The board ranks by **accuracy** — being right is the score. The canister
+	 * returns the slice ordered by net P&L; `globalStandingsRows` re-ranks it by
+	 * accuracy (with a min-settled floor so a 1-call 100% can't take #1) and
+	 * stamps each row's `displayRank` (its 1-based position in that order). We
+	 * render `displayRank`, never `entry.rank` (which is the canister's P&L
+	 * rank).
 	 *
 	 * Layout is a single column:
 	 *  - chip-style window tabs at the top
 	 *  - 3-tile podium row (top-3, #1 gets the gold halo + tinted bg)
-	 *  - flat list of rest rows (rank + ↑/↓ delta, avatar, handle + streak,
-	 *    accuracy on the right — coloured `--yes` once accuracy ≥ 78%)
+	 *  - flat list of rest rows (rank, avatar, handle + VXP · streak, accuracy on
+	 *    the right — coloured `--yes` once accuracy ≥ 78%)
 	 *
-	 * Rank, the prior-window delta, and accuracy are authoritative from the
-	 * clearing canister; handle / avatar / streak are overlaid from the shared
-	 * profile cache (the viewer's own row from their live profile). The
-	 * viewer's own row carries an accent border + tinted bg and is never
-	 * tappable; every other row / podium tile opens a mini-profile bottom sheet
-	 * with an add- or remove-friend action that routes through the same
-	 * `relation.services` the Friends tab uses.
+	 * Accuracy, settled count and net VXP are authoritative from the clearing
+	 * canister; handle / avatar / streak are overlaid from the shared profile
+	 * cache (the viewer's own row from their live profile). The viewer's own row
+	 * carries an accent border + tinted bg and is never tappable; every other
+	 * row / podium tile opens a mini-profile bottom sheet with an add- or
+	 * remove-friend action that routes through the same `relation.services` the
+	 * Friends tab uses.
 	 */
 
 	const windows: { id: StandingsWindow; labelKey: MessageKey }[] = [
@@ -113,8 +122,21 @@
 	const handleOf = (row: StandingsRow): string =>
 		row.nickname && row.nickname.length > 0 ? row.nickname : shortenPrincipal(row.owner);
 
+	// The board's accuracy-ordered position (NOT the canister P&L rank), so the
+	// mini-profile sheet agrees with the row the user tapped.
 	const rankOf = (owner: string): number =>
-		rankedRows.find((row) => row.owner === owner)?.entry.rank ?? 0;
+		rankedRows.find((row) => row.owner === owner)?.displayRank ?? 0;
+
+	// Net realized P&L over the window, shown as whole VXP with a +/− sign.
+	// `realizedPnl` is a signed `USD_DECIMALS` fixed-point value, so decode it
+	// via `decimalFixedValueToNumber` (NOT `/1e8`); `formatWholeVxpMagnitude`
+	// then renders the magnitude (sub-1 wins read `<1`, not a misleading `0`).
+	const formatRowVxp = (realizedPnl: bigint): string => {
+		const value = decimalFixedValueToNumber({ value: realizedPnl, decimals: USD_DECIMALS });
+		const sign = value < 0 ? '−' : '+';
+
+		return `${sign}${formatWholeVxpMagnitude(value)}`;
+	};
 
 	// ── Friend state ────────────────────────────────────────────────
 	const friendOwners = $derived(
@@ -194,23 +216,10 @@
 	};
 </script>
 
-<!-- ↑/↓ rank-delta pill. Positive delta = climbed (better rank), negative =
-     dropped, 0 = held. `undefined` (newcomer / no prior window) shows nothing. -->
-{#snippet rankDelta(delta: number | undefined)}
-	{#if delta !== undefined && delta > 0}
-		<span class="lb-delta lb-delta-up num">
-			<ArrowUp aria-hidden="true" size={11} strokeWidth={2.4} />{delta}
-		</span>
-	{:else if delta !== undefined && delta < 0}
-		<span class="lb-delta lb-delta-down num">
-			<ArrowDown aria-hidden="true" size={11} strokeWidth={2.4} />{Math.abs(delta)}
-		</span>
-	{:else if delta === 0}
-		<span class="lb-delta lb-delta-flat">
-			<Minus aria-hidden="true" size={11} strokeWidth={2.4} />
-		</span>
-	{/if}
-{/snippet}
+<!-- The ↑/↓ rank-delta pill was dropped here: it was derived from the canister's
+     prior *P&L* rank, which is meaningless now that the board is ordered by
+     accuracy — it would point the wrong way and mislead. The `rankDelta` field
+     stays on the model for other (P&L-ranked) surfaces. -->
 
 <div class="leaderboard-page">
 	<ScreenHeader
@@ -271,7 +280,7 @@
 					type="button"
 					in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 24, delay: i * 100 }}
 				>
-					<div class="leaderboard-podium-rank num allcaps">#{row.entry.rank}</div>
+					<div class="leaderboard-podium-rank num allcaps">#{row.displayRank}</div>
 					<div class="leaderboard-podium-avatar-wrap">
 						<Avatar
 							class={i === 0 ? 'leaderboard-podium-avatar-lg' : 'leaderboard-podium-avatar-md'}
@@ -309,8 +318,7 @@
 					>
 						<span class="leaderboard-row-left">
 							<span class="leaderboard-row-rank-wrap">
-								<span class="leaderboard-row-rank num">#{row.entry.rank}</span>
-								{@render rankDelta(row.entry.rankDelta)}
+								<span class="leaderboard-row-rank num">#{row.displayRank}</span>
 							</span>
 							<Avatar
 								class="leaderboard-row-avatar"
@@ -326,8 +334,8 @@
 								<span class="leaderboard-row-meta num">
 									{t({
 										locale: $localeStore,
-										key: 'leaderboard.row.settled',
-										params: { count: row.entry.settledCount }
+										key: 'leaderboard.row.vxp',
+										params: { vxp: formatRowVxp(row.entry.realizedPnl) }
 									})} · {t({
 										locale: $localeStore,
 										key: 'leaderboard.row.streak',
@@ -647,29 +655,6 @@
 	.leaderboard-row.is-you .leaderboard-row-rank {
 		color: var(--color-primary);
 		font-weight: 700;
-	}
-
-	/* ↑/↓ rank-delta pill under the rank number. */
-	.lb-delta {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.05rem;
-		font-size: 0.6rem;
-		font-weight: 700;
-		line-height: 1;
-	}
-
-	.lb-delta-up {
-		color: var(--yes);
-	}
-
-	.lb-delta-down {
-		color: var(--no);
-	}
-
-	.lb-delta-flat {
-		color: var(--text-muted);
-		opacity: 0.6;
 	}
 
 	:global(.leaderboard-row-avatar) {
