@@ -1576,8 +1576,9 @@ html[data-ios][data-theme='peach'] .lp-nav .lp-pill.open {
 /* Once scrolled, the desktop nav frosts into a full-width band so the logo,
    links and CTA read against a contrasting surface instead of floating over
    live hero content. Backdrop blur snaps (it's excluded from the transition
-   above); background/border/shadow fade. Per-theme alphas mirror the mobile
-   `.lp-pill` scrolled surface. */
+   above); background/border/shadow fade. Per-theme alphas sit a touch below
+   the mobile `.lp-pill` scrolled surface — this band is full-width and also
+   carries blur, so a lighter surface still reads clearly. */
 .dnav.is-scrolled {
 	background: rgba(20, 18, 15, 0.85);
 	-webkit-backdrop-filter: saturate(140%) blur(14px);
