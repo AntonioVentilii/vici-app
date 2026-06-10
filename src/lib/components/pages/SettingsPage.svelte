@@ -493,6 +493,16 @@
 				onclick={() => goto(resolve(`${PublicPath.Info}/privacy`))}
 			/>
 			<SetRow
+				icon={Globe}
+				label={t({ locale: $localeStore, key: 'settings.legal.aviso' })}
+				onclick={() => goto(resolve(`${PublicPath.Info}/aviso`))}
+			/>
+			<SetRow
+				icon={Globe}
+				label={t({ locale: $localeStore, key: 'settings.legal.aviso_br' })}
+				onclick={() => goto(resolve(`${PublicPath.Info}/aviso-br`))}
+			/>
+			<SetRow
 				icon={Cookie}
 				label={t({ locale: $localeStore, key: 'settings.legal.cookies' })}
 				onclick={() => goto(resolve(`${PublicPath.Info}/cookies`))}
