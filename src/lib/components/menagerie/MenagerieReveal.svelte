@@ -216,10 +216,14 @@
 
 <style lang="postcss">
 	/*
-		The reveal is a DARK celebratory takeover in every theme. Its scrim is
-		always near-black, so text / CTA / badge frame use fixed on-dark colours
-		(otherwise light / peach themes would render dark-on-dark and the CTA would
-		vanish). Local token overrides at the bottom keep child rules on-dark.
+		The reveal is a celebratory takeover whose surfaces are driven by a local
+		`--mr-*` token set: scrim, the foreground tiers (`--mr-fg` / `-dim` /
+		`-mute`), the badge-frame wash, and the CTA fill / ink. The dark theme
+		keeps the original near-black takeover; the light / peach overrides at the
+		bottom of the block re-point those tokens so the celebration reads as a
+		LIGHT takeover (otherwise the on-dark text / CTA looked blacked-out against
+		the warm canvas). The colour bloom / rays use `mix-blend-mode:
+		screen`, which the per-theme blend overrides keep legible either way.
 	*/
 	.mr-root {
 		position: fixed;
@@ -231,10 +235,18 @@
 		padding-bottom: 88px;
 		overflow: hidden;
 
-		--fg: #f2ecdc;
-		--fg-dim: rgba(242, 236, 220, 0.74);
-		--fg-mute: rgba(242, 236, 220, 0.52);
-		--border-strong: rgba(242, 236, 220, 0.18);
+		/* Dark-theme defaults — the near-black takeover. */
+		--mr-scrim: rgba(10, 9, 8, 0.88);
+		--mr-fg: #f2ecdc;
+		--mr-fg-dim: rgba(242, 236, 220, 0.74);
+		--mr-fg-mute: rgba(242, 236, 220, 0.52);
+		--mr-border: rgba(242, 236, 220, 0.18);
+		--mr-spark: #f2ecdc;
+		--mr-cta-fg: #16140f;
+		--mr-cta-glow: rgba(242, 236, 220, 0.4);
+		--mr-frame-fill-a: rgba(242, 236, 220, 0.07);
+		--mr-frame-fill-b: rgba(242, 236, 220, 0.015);
+		--mr-frame-border: rgba(242, 236, 220, 0.05);
 	}
 
 	.mr-scrim {
@@ -244,7 +256,7 @@
 		border: 0;
 		padding: 0;
 		cursor: pointer;
-		background: rgba(10, 9, 8, 0.88);
+		background: var(--mr-scrim);
 		backdrop-filter: blur(16px);
 		-webkit-backdrop-filter: blur(16px);
 		animation: mr-scrim-in 0.45s ease both;
@@ -406,7 +418,7 @@
 		width: 5px;
 		height: 5px;
 		border-radius: 50%;
-		background: #f2ecdc;
+		background: var(--mr-spark);
 		opacity: 0;
 		transform: rotate(calc(var(--i) * 51.4deg)) translateX(0);
 		animation: mr-spark 1.4s ease-out calc(0.5s + var(--i) * 0.06s) infinite;
@@ -464,7 +476,7 @@
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		margin-top: 8px;
-		color: var(--fg);
+		color: var(--mr-fg);
 	}
 
 	.mr-tierline {
@@ -485,23 +497,23 @@
 	}
 
 	.mr-concept {
-		color: var(--fg-dim);
+		color: var(--mr-fg-dim);
 		padding-left: 9px;
-		border-left: 1px solid var(--border-strong);
+		border-left: 1px solid var(--mr-border);
 	}
 
 	.mr-oracle {
 		font-family: var(--font-serif, Georgia, serif);
 		font-style: italic;
 		font-size: 15px;
-		color: var(--fg-dim);
+		color: var(--mr-fg-dim);
 		margin-top: 10px;
 	}
 
 	.mr-rule {
 		font-size: 13px;
 		line-height: 1.5;
-		color: var(--fg-mute);
+		color: var(--mr-fg-mute);
 		max-width: 320px;
 		margin: 8px auto 0;
 	}
@@ -514,12 +526,12 @@
 		font-family: inherit;
 		font-size: 14px;
 		font-weight: 600;
-		color: #16140f;
-		background: var(--fg);
+		color: var(--mr-cta-fg);
+		background: var(--mr-fg);
 		padding: 13px 28px;
 		border-radius: 999px;
 		transition: transform 0.12s ease;
-		box-shadow: 0 10px 30px -10px rgba(242, 236, 220, 0.4);
+		box-shadow: 0 10px 30px -10px var(--mr-cta-glow);
 	}
 
 	.mr-cta:hover {
@@ -534,7 +546,7 @@
 		margin-top: 10px;
 		font-size: 11px;
 		letter-spacing: 0.04em;
-		color: var(--fg-mute);
+		color: var(--mr-fg-mute);
 		opacity: 0.7;
 	}
 
@@ -555,10 +567,46 @@
 		}
 	}
 
-	/* Pin the on-dark badge frame inside the reveal regardless of page theme. */
+	/* Badge frame inside the reveal — driven by the same `--mr-*` tokens so it
+	   tracks the takeover's tone (a light wash on dark, a soft ink wash on the
+	   light / peach takeover). */
 	.mr-root :global(.mb-frame) {
-		background: linear-gradient(160deg, rgba(242, 236, 220, 0.07), rgba(242, 236, 220, 0.015));
-		border: 1px solid rgba(242, 236, 220, 0.05);
+		background: linear-gradient(160deg, var(--mr-frame-fill-a), var(--mr-frame-fill-b));
+		border: 1px solid var(--mr-frame-border);
+	}
+
+	/*
+		Light / peach takeover. The scrim becomes a warm light wash and the
+		foreground tiers / CTA flip to ink so the celebration reads on-light
+		instead of blacked-out. The colour bloom / rays use `mix-blend-mode:
+		screen` (designed for a dark base) — on a light scrim that lightens to
+		near-nothing, so we swap them to `multiply` to keep the animal's colour
+		readable as a tint.
+	*/
+	:global([data-theme='light']) .mr-root,
+	:global([data-theme='peach']) .mr-root {
+		--mr-scrim: rgba(250, 246, 234, 0.9);
+		--mr-fg: var(--text-base);
+		--mr-fg-dim: var(--fg-dim);
+		--mr-fg-mute: var(--text-muted);
+		--mr-border: var(--border-strong);
+		--mr-spark: var(--laurel-deep);
+		--mr-cta-fg: var(--text-inverse);
+		--mr-cta-glow: rgba(61, 36, 25, 0.28);
+		--mr-frame-fill-a: rgba(61, 36, 25, 0.05);
+		--mr-frame-fill-b: rgba(61, 36, 25, 0.012);
+		--mr-frame-border: rgba(61, 36, 25, 0.06);
+	}
+
+	:global([data-theme='peach']) .mr-root {
+		--mr-scrim: rgba(255, 234, 217, 0.92);
+	}
+
+	:global([data-theme='light']) .mr-bloom,
+	:global([data-theme='peach']) .mr-bloom,
+	:global([data-theme='light']) .mr-rays,
+	:global([data-theme='peach']) .mr-rays {
+		mix-blend-mode: multiply;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
