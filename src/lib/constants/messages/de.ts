@@ -1043,93 +1043,99 @@ export const deMessages = {
 	'info.back': 'Zurück',
 	'info.back_to_settings': 'Zurück zu den Einstellungen',
 	'info.doc.contact.b0':
-		'Wir sind ein kleines Team. Die meisten Fragen werden in den FAQ beantwortet. Für alles andere schreib uns direkt.',
+		'Wir sind ein kleines Team. Die meisten Fragen beantwortet die FAQ. Für alles andere schreib uns direkt.',
 	'info.doc.contact.b1': 'E-Mail',
 	'info.doc.contact.b3': 'Antwortzeit',
 	'info.doc.contact.b4':
-		'Innerhalb von zwei Werktagen. Auflösungsstreitigkeiten werden vorrangig behandelt und innerhalb von vierundzwanzig Stunden beantwortet.',
+		'Innerhalb von zwei Werktagen. Abrechnungs-Einsprüche werden bevorzugt behandelt und innerhalb von vierundzwanzig Stunden beantwortet.',
 	'info.doc.contact.b5': 'Was du angeben solltest',
-	'info.doc.contact.b6.i0': 'Dein Handle (@beispiel)',
-	'info.doc.contact.b6.i1': 'Der Markt oder der Screen, um den es bei der Frage geht',
-	'info.doc.contact.b6.i2': 'Wenn möglich ein Screenshot',
+	'info.doc.contact.b6.i0': 'Dein Name (@beispiel)',
+	'info.doc.contact.b6.i1': 'Den Markt oder Bildschirm, um den es geht',
+	'info.doc.contact.b6.i2': 'Wenn möglich einen Screenshot',
 	'info.doc.contact.b7': 'Presse, Partnerschaften und Liga-Sponsoring',
 	'info.doc.contact.eyebrow': 'Hilfe · Support',
 	'info.doc.contact.title': 'Support kontaktieren',
-	'info.doc.faq.b0': 'Was ist VXP?',
-	'info.doc.faq.b1':
-		'VXP ist das Prognose-Guthaben in der App. Mach Calls, um es zu verdienen. Es ist keine Währung. Es kann nicht eingelöst werden. Es ist die Einheit deiner Bilanz.',
-	'info.doc.faq.b10': 'Was ist ein Sieg gegen den Trend?',
+	'info.doc.faq.b0': 'Neu hier? Das ganze Prinzip in 30 Sekunden.',
+	'info.doc.faq.b1': 'Schnell-Tutorial',
+	'info.doc.faq.b10': 'Warum wurde meine Serie zurückgesetzt?',
 	'info.doc.faq.b11':
-		'Ein Call, den du gegen den Konsens gemacht hast (<30% auf deiner Seite zum Zeitpunkt des Calls) und der sich danach zu deinen Gunsten aufgelöst hat.',
-	'info.doc.faq.b12': 'Wer kann meine Prognosen sehen?',
+		'Die Serie zählt aufeinanderfolgende Tage mit mindestens einer Prognose. Ein leerer Tag setzt sie zurück. Die Flamme zeigt deine aktuelle Serie; die längste bleibt gespeichert.',
+	'info.doc.faq.b12': 'Kann ich eine Prognose löschen?',
 	'info.doc.faq.b13':
-		'Dein Handle und deine Genauigkeit sind öffentlich in globalen Ranglisten, Liga-Tabellen und Worlds-Battles, an denen du teilnimmst. Einzelne Markt-Calls sind nur für Ligen sichtbar, denen du angehörst.',
-	'info.doc.faq.b14': 'Wie funktionieren Battles?',
+		'Nein. Jede Prognose ist endgültig, sobald du sie bestätigst. Genau darum geht es beim Aufbau einer Bilanz.',
+	'info.doc.faq.b14': 'Was ist ein Gegen-den-Strom-Treffer?',
 	'info.doc.faq.b15':
-		'Battles sind zeitlich begrenzte Wettbewerbe zwischen Ligen oder Universitäten. Die durchschnittliche Genauigkeit im Zeitfenster bestimmt den Sieger. Zur Qualifikation ist eine Mindestanzahl an Calls erforderlich.',
-	'info.doc.faq.b2': 'Ist das echtes Geld?',
+		'Eine Prognose gegen den Konsens (unter 30 % auf deiner Seite zum Zeitpunkt der Prognose), die sich später zu deinen Gunsten entschieden hat.',
+	'info.doc.faq.b16': 'Wer sieht meine Prognosen?',
+	'info.doc.faq.b17':
+		'Dein Name und deine Trefferquote sind in den globalen Ranglisten, Ligen und Worlds-Duellen, an denen du teilnimmst, öffentlich. Einzelne Prognosen sehen nur die Ligen, in denen du bist.',
+	'info.doc.faq.b18': 'Wie funktionieren Duelle?',
+	'info.doc.faq.b19':
+		'Duelle sind zeitlich begrenzte Wettbewerbe zwischen Ligen oder Universitäten. Die durchschnittliche Trefferquote im Zeitraum entscheidet. Für die Qualifikation ist eine Mindestanzahl an Prognosen nötig.',
+	'info.doc.faq.b2':
+		'Öffne Flow und eine Marktkarte erscheint. Wisch nach rechts für JA, nach links für NEIN, nach oben zum Überspringen. Tippe die Karte an, um sie zu drehen und Kontext sowie alle Quoten zu sehen.',
 	'info.doc.faq.b3':
-		'Nein. VICI ist eine kostenlose App für menschliches Urteilsvermögen. Es gibt keine Einzahlung, keine Auszahlung, keine Ausschüttung. Echtgeld-Märkte werden separat erprobt.',
-	'info.doc.faq.b4': 'Wie wird meine Genauigkeit berechnet?',
+		'Jede Prognose setzt VXP zu den Marktquoten ein — unwahrscheinliche Ausgänge bringen mehr, Favoriten weniger. Gib deine 10 Prognosen am Tag ab, um deine Serie auszubauen; Trefferquote und Rang steigen, sobald die Märkte entschieden werden.',
+	'info.doc.faq.b4': 'Was ist VXP?',
 	'info.doc.faq.b5':
-		'Aufgelöste Calls geteilt durch die Gesamtzahl der aufgelösten Calls. Offene Calls zählen erst, wenn der Markt aufgelöst ist.',
-	'info.doc.faq.b6': 'Warum wurde meine Serie zurückgesetzt?',
+		'VXP ist das app-interne Prognoseguthaben. Du verdienst es durch Prognosen. Es ist kein Geld. Es ist nicht auszahlbar. Es ist die Einheit deiner Bilanz.',
+	'info.doc.faq.b6': 'Ist das echtes Geld?',
 	'info.doc.faq.b7':
-		'Die Serie zählt aufeinanderfolgende Tage mit mindestens einem Call. Ein leerer Tag setzt sie zurück. Die Serienflamme zeigt deine aktuelle Serie; die längste bleibt erhalten.',
-	'info.doc.faq.b8': 'Kann ich einen Call löschen?',
+		'Nein. VICI ist eine kostenlose App für menschliches Urteilsvermögen. Keine Einzahlung, keine Auszahlung, kein Geldgewinn. Echtgeld-Märkte werden separat behandelt.',
+	'info.doc.faq.b8': 'Wie wird meine Trefferquote berechnet?',
 	'info.doc.faq.b9':
-		'Nein. Jeder Call ist im Moment der Bestätigung endgültig. Das ist die gesamte Prämisse, eine Bilanz aufzubauen.',
+		'Richtige Prognosen geteilt durch alle entschiedenen Prognosen. Offene Prognosen zählen erst, wenn der Markt entschieden ist.',
 	'info.doc.faq.eyebrow': 'Hilfe · FAQ',
 	'info.doc.faq.title': 'Häufige Fragen',
 	'info.doc.how-resolution-works.b0':
-		'Jeder Markt auf VICI wird über eine einzige, benannte öffentliche Quelle aufgelöst. Kein Moderationsgremium. Keine Debatte. Die Quelle entscheidet.',
+		'Jeder Markt auf VICI wird über eine einzige, benannte öffentliche Quelle entschieden. Kein Gremium, keine Debatte. Die Quelle entscheidet.',
 	'info.doc.how-resolution-works.b1': 'Das Prinzip',
 	'info.doc.how-resolution-works.b10':
-		'Die Vici-Redaktion prüft anhand des veröffentlichten Kriteriums. Entscheidungen und Begründungen werden öffentlich im Auflösungsbereich auf der Kartenrückseite des Marktes veröffentlicht.',
+		'Die Vici-Redaktion prüft anhand des veröffentlichten Kriteriums. Entscheidungen und Begründungen werden offen im Abrechnungsfeld auf der Kartenrückseite veröffentlicht.',
 	'info.doc.how-resolution-works.b2':
-		'Ein Prognosemarkt funktioniert nur, wenn beide Seiten die Regeln im Moment ihres Calls kennen. Bevor ein Markt live geht, benennen wir die genaue öffentliche Quelle, die ihn entscheidet — eine Behördenmeldung, ein Verbandsergebnis, ein anerkannter Datenanbieter.',
+		'Ein Prognosemarkt funktioniert nur, wenn beide Seiten die Regeln kennen, sobald sie ihre Prognose abgeben. Bevor ein Markt startet, veröffentlichen wir die genaue öffentliche Quelle, die ihn entscheidet — eine Behördenmeldung, ein Verbandsergebnis, ein anerkannter Datenanbieter.',
 	'info.doc.how-resolution-works.b3': 'Was du auf jeder Karte siehst',
 	'info.doc.how-resolution-works.b4.i0':
-		'Auflösungskriterium · die genaue YES-Bedingung, in einfacher Sprache',
+		'Abrechnungskriterium · die genaue JA-Bedingung, in klaren Worten',
 	'info.doc.how-resolution-works.b4.i1':
 		'Quelle · die Veröffentlichung oder der Feed, der entscheidet',
 	'info.doc.how-resolution-works.b4.i2':
-		'Auflösung · das Kalenderdatum, an dem die Quelle das Ergebnis veröffentlicht',
+		'Schließt · das Datum, an dem die Quelle das Ergebnis veröffentlicht',
 	'info.doc.how-resolution-works.b5': 'Wenn die Quelle veröffentlicht',
 	'info.doc.how-resolution-works.b6':
-		'Der Markt friert am Handelsschluss zum Auflösungsdatum ein. Das veröffentlichte Ergebnis wird für jeden im Markt getätigten Call erfasst. Gewinner erhalten VXP zum Kurs, der bei ihrem Call angezeigt wurde. Verlierer erhalten nichts.',
+		'Der Markt friert zum Handelsschluss am Schließdatum ein. Das veröffentlichte Ergebnis wird auf jede Prognose im Markt angewendet. Wer richtig lag, erhält VXP zum Kurs, der bei der Prognose angezeigt wurde. Wer falsch lag, erhält nichts.',
 	'info.doc.how-resolution-works.b7': 'Wenn eine Quelle nicht veröffentlicht',
 	'info.doc.how-resolution-works.b8':
-		'Selten, aber dokumentiert. Der Markt wird annulliert. Jeder Teilnehmer erhält seinen Einsatz vollständig zurück. Es werden in keine Richtung Genauigkeitspunkte vergeben.',
+		'Selten, aber vorgesehen. Der Markt wird annulliert. Jede teilnehmende Person erhält ihren Einsatz vollständig zurück. Es werden keine Trefferpunkte vergeben.',
 	'info.doc.how-resolution-works.b9': 'Wenn eine Quelle mehrdeutig veröffentlicht',
-	'info.doc.how-resolution-works.eyebrow': 'Hilfe · Auflösung',
-	'info.doc.how-resolution-works.title': 'So funktioniert die Auflösung',
+	'info.doc.how-resolution-works.eyebrow': 'Hilfe · Abrechnung',
+	'info.doc.how-resolution-works.title': 'So wird abgerechnet',
 	'info.doc.resolution-rules.b0':
-		'Das genaue Verfahren, nach dem jeder Markt auf VICI aufgelöst wird. Maßgebliche Quelle: dieses Dokument.',
+		'Das genaue Verfahren, nach dem jeder Markt auf VICI entschieden wird. Maßgebliche Quelle: dieses Dokument.',
 	'info.doc.resolution-rules.b1': 'Vor der Listung',
 	'info.doc.resolution-rules.b10.i0':
-		'Mehrdeutiges Ergebnis → die Vici-Redaktion prüft anhand des Kriteriums. Entscheidung und Begründung werden öffentlich veröffentlicht.',
+		'Mehrdeutiges Ergebnis → die Vici-Redaktion prüft anhand des Kriteriums. Entscheidung und Begründung werden offen veröffentlicht.',
 	'info.doc.resolution-rules.b10.i1':
-		'Quelle veröffentlicht nicht → Markt annulliert, Einsätze zurückerstattet, kein Effekt auf die Genauigkeit in beide Richtungen.',
+		'Quelle veröffentlicht nicht → Markt annulliert, Einsätze zurück, kein Effekt auf die Trefferquote.',
 	'info.doc.resolution-rules.b10.i2':
-		'Quelle ändert ihre Methodik mitten im Fenster → Markt annulliert, sofern die Änderung nicht unwesentlich ist.',
-	'info.doc.resolution-rules.b11': 'Streitigkeiten',
+		'Quelle ändert ihre Methodik im laufenden Fenster → Markt annulliert, sofern die Änderung nicht unerheblich ist.',
+	'info.doc.resolution-rules.b11': 'Einsprüche',
 	'info.doc.resolution-rules.b12':
-		'Jeder Teilnehmer kann innerhalb von zweiundsiebzig Stunden eine Auflösungsstreitigkeit einreichen, indem er an {email} mit seinem Handle, der Markt-ID und der Begründung der Streitigkeit schreibt. Streitigkeiten werden von der Redaktion geprüft und innerhalb von vierundzwanzig Stunden beantwortet.',
+		'Wer eine Prognose abgegeben hat, kann innerhalb von zweiundsiebzig Stunden Einspruch einlegen — per E-Mail an {email} mit Name, Markt-ID und Begründung. Einsprüche werden von der Redaktion geprüft und innerhalb von vierundzwanzig Stunden beantwortet.',
 	'info.doc.resolution-rules.b2':
-		'Bevor ein Markt für Prognosen öffnet, werden zwei Fakten festgelegt und auf der Rückseite der Marktkarte veröffentlicht: das Auflösungskriterium (die YES-Bedingung in einfacher Sprache) und die Quelle (der benannte öffentliche Datenfeed, der entscheidet).',
-	'info.doc.resolution-rules.b3': 'Handelsfenster',
+		'Bevor ein Markt für Prognosen öffnet, werden zwei Fakten festgelegt und auf der Kartenrückseite veröffentlicht: das Abrechnungskriterium (die JA-Bedingung in klaren Worten) und die Quelle (der benannte öffentliche Datenfeed, der entscheidet).',
+	'info.doc.resolution-rules.b3': 'Prognosefenster',
 	'info.doc.resolution-rules.b4':
-		'Prognosen werden von der Eröffnung bis zum angezeigten Handelsschluss angenommen. Nach Schluss sind die Calls gesperrt. Der Markt tritt in das Auflösungsfenster ein.',
-	'info.doc.resolution-rules.b5': 'Auflösungsfenster',
+		'Prognosen werden von der Eröffnung bis zum angezeigten Handelsschluss angenommen. Nach Schluss sind die Prognosen gesperrt. Der Markt tritt in das Abrechnungsfenster ein.',
+	'info.doc.resolution-rules.b5': 'Abrechnungsfenster',
 	'info.doc.resolution-rules.b6':
-		'Die benannte Quelle muss innerhalb des Auflösungsfensters veröffentlichen (in der Regel sieben Kalendertage nach Handelsschluss, länger bei Quellen, die nach einem festen Zeitplan veröffentlichen).',
+		'Die benannte Quelle muss innerhalb des Abrechnungsfensters veröffentlichen (in der Regel sieben Kalendertage nach Handelsschluss, länger bei Quellen mit festem Veröffentlichungsrhythmus).',
 	'info.doc.resolution-rules.b7': 'Ergebniserfassung',
 	'info.doc.resolution-rules.b8':
-		'Innerhalb von vierundzwanzig Stunden nach Veröffentlichung der Quelle wird das Ergebnis für jeden Call erfasst. Siege und Niederlagen erscheinen sofort auf deiner Dash.',
+		'Innerhalb von vierundzwanzig Stunden nach Veröffentlichung der Quelle wird das Ergebnis auf jede Prognose angewendet. Treffer und Fehlschläge erscheinen sofort auf deinem Dash.',
 	'info.doc.resolution-rules.b9': 'Sonderfälle',
 	'info.doc.resolution-rules.eyebrow': 'Rechtliches · Das vollständige Verfahren',
-	'info.doc.resolution-rules.title': 'Auflösungsregeln',
+	'info.doc.resolution-rules.title': 'Abrechnungsregeln',
 	'info.not_found.body':
 		'Zu dieser Adresse passt kein Dokument. Versuche einen anderen Link im Footer oder kehre zur Startseite zurück.',
 	'info.not_found.title': 'Dokument nicht gefunden',
