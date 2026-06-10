@@ -64,10 +64,11 @@ export const TOAST_DEFAULT_MS = 5_000;
 
 /**
  * localStorage hint that this device has an authenticated session. Written
- * by `Authn.svelte` on every auth-state transition and read by the no-flash
- * redirect script in `app.html` (which keeps its own string literal, since
- * it's inline pre-hydration HTML that can't import). Centralised here so the
- * TS-side writers/clearers share one source of truth. Anything that fails a
- * sign-in MUST clear this, or a stale `'1'` keeps bouncing `/` → `/flow`.
+ * by `Authn.svelte` on every auth-state transition and read by the root gate
+ * (`src/routes/+page.svelte`) to hold a resume spinner on `/` while the auth
+ * handshake is still unresolved. Centralised here so the TS-side
+ * writers/clearers/readers share one source of truth. Anything that fails a
+ * sign-in MUST clear this, or a stale `'1'` makes the gate hold its resume
+ * spinner waiting for a session that never arrives.
  */
 export const SIGNED_IN_FLAG_KEY = 'vici.signed-in';
