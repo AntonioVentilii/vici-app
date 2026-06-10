@@ -2499,7 +2499,9 @@ export const enMessages = {
 	'worlds.picker.school.status_verified': 'Verified school',
 	'worlds.picker.school.use': 'Use →',
 	'worlds.picker.school.use_existing': 'Use {name} →',
+	'worlds.picker.school.verified_body': 'Your membership of {name} is confirmed.',
 	'worlds.picker.school.verified_by_email': 'Verified via school email',
+	'worlds.picker.school.verified_title': "You're verified",
 	'worlds.picker.school.verify_cta': 'Verify →',
 	'worlds.picker.school.verify_explainer':
 		'We email a 6-digit code to your school address. Type it back to verify your membership of {name}.',

@@ -21,6 +21,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 	import { affiliationDaysLeft } from '$lib/utils/affiliation-stats.utils';
+	import { sleep } from '$lib/utils/async.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { detectUserCountryCode } from '$lib/utils/locale-country.utils';
@@ -100,6 +101,11 @@
 	const isUniversity = $derived(kind === 'university');
 	const pass2 = $derived(isUniversity && SCHOOL_PASS2_ENABLED);
 
+	// How long the "you're verified" confirmation stays on screen before
+	// the sheet auto-dismisses — long enough to register, short enough not
+	// to feel stuck.
+	const VERIFIED_HOLD_MS = 1400;
+
 	// When launched via the profile's "Verify your school" CTA, resolve the
 	// school to verify so the sheet can open directly on its email step
 	// (only for a verifiable directory university — Pass-2 on + has domains).
@@ -124,7 +130,13 @@
 	 * reaches; the rest are the university Pass-2 add/verify flow,
 	 * reachable only when {@link SCHOOL_PASS2_ENABLED} is on.
 	 */
-	type Mode = 'browse' | 'verify-existing' | 'add-confirm' | 'add-form' | 'add-verifying';
+	type Mode =
+		| 'browse'
+		| 'verify-existing'
+		| 'add-confirm'
+		| 'add-form'
+		| 'add-verifying'
+		| 'verified';
 	let mode = $state<Mode>(initialVerifyTarget !== null ? 'verify-existing' : 'browse');
 
 	let query = $state('');
@@ -142,6 +154,9 @@
 	let verifyTarget = $state<WorldsAffiliationOption | null>(initialVerifyTarget);
 	let verifyError = $state<string | null>(null);
 	let submitting = $state(false);
+	// School name shown on the post-verify success beat (resolved at the
+	// moment of success — the directory target's name, else the typed one).
+	let verifiedName = $state('');
 
 	/**
 	 * Region tabs (university kind only). `LATAM` / `MEA` entries have no
@@ -387,6 +402,7 @@
 		verifyTarget = null;
 		verifyError = null;
 		submitting = false;
+		verifiedName = '';
 	};
 
 	const openAddConfirm = () => {
@@ -445,6 +461,39 @@
 	const commitVerified = async (option: WorldsAffiliationOption) => {
 		selected = option.id;
 		await handleCommit();
+	};
+
+	/**
+	 * Commit the affiliation row *after* a successful code verification.
+	 * Unlike {@link handleCommit}, a failure here must never strand the
+	 * user on the code screen: `verifySchoolCode` has already flipped the
+	 * profile's `schoolStatus` server-side, so verification is terminal.
+	 * We still join / switch the row when it differs, but a redundant
+	 * commit (already affiliated with this exact school) or a blocked one
+	 * (90-day lock) is swallowed — the verification stands regardless.
+	 */
+	const commitAfterVerify = async (affiliationIdentifier: string) => {
+		// Already on this exact affiliation — verification was the whole
+		// point; there's nothing to join or switch.
+		if (currentForKind === affiliationIdentifier) {
+			return;
+		}
+
+		try {
+			if (currentDoc !== undefined) {
+				await switchAffiliation({
+					kind,
+					currentAffiliationIdentifier: currentDoc.affiliationIdentifier,
+					currentLockedUntilMs: currentDoc.lockedUntilMs,
+					nextAffiliationIdentifier: affiliationIdentifier
+				});
+			} else {
+				await joinAffiliation({ kind, affiliationIdentifier });
+			}
+		} catch (err) {
+			// Non-fatal: the verification itself already succeeded.
+			console.error('AffiliationPickerModal: post-verify commit failed', err);
+		}
 	};
 
 	// Send a 6-digit code for the add-your-own flow.
@@ -520,20 +569,31 @@
 				throw new Error(result.message ?? 'invalid-code');
 			}
 
-			haptic('triple-tap');
-			const target = verifyTarget;
+			// Resolve the school to commit: an existing directory row, or the
+			// canonical id the verify endpoint minted for a brand-new school
+			// (backend B.1) that has no directory entry yet.
+			const affiliationIdentifier = verifyTarget?.id ?? result.schoolId;
 
-			if (target !== null) {
-				await commitVerified(target);
-			} else if (result.schoolId !== undefined) {
-				// New school: use the canonical id returned by the verify
-				// endpoint (backend B.1) — no directory entry exists yet.
-				selected = result.schoolId;
-				await handleCommit();
-			} else {
+			if (affiliationIdentifier === undefined) {
 				// No target and no schoolId in the response — unexpected.
 				verifyError = t({ locale: $localeStore, key: 'worlds.picker.school.error_verify' });
+
+				return;
 			}
+
+			// Verification is terminal. Show a success beat, commit the
+			// affiliation best-effort underneath it, then auto-dismiss — a
+			// redundant or blocked commit must not block the close.
+			haptic('celebration');
+			verifiedName = verifyTarget?.name ?? addName.trim();
+			mode = 'verified';
+
+			const beat = sleep(VERIFIED_HOLD_MS);
+			await commitAfterVerify(affiliationIdentifier);
+			await beat;
+
+			onPicked?.();
+			onClose();
 		} catch {
 			verifyError = t({ locale: $localeStore, key: 'worlds.picker.school.error_code' });
 		} finally {
@@ -669,7 +729,7 @@
 <BottomSheet footer={pickerFooter} {isOpen} onClose={handleClose}>
 	<div class="affil-picker">
 		<header class="affil-picker-head">
-			{#if mode !== 'browse'}
+			{#if mode !== 'browse' && mode !== 'verified'}
 				<button
 					class="affil-picker-icon-btn"
 					aria-label={tr('worlds.picker.back')}
@@ -691,6 +751,8 @@
 					{tr('worlds.picker.school.add_title')}
 				{:else if mode === 'add-form'}
 					{tr('worlds.picker.school.verify_school_title')}
+				{:else if mode === 'verified'}
+					{tr('worlds.picker.school.verified_title')}
 				{:else}
 					{tr('worlds.picker.school.inbox_title')}
 				{/if}
@@ -922,6 +984,15 @@
 				onSubmit={() => void submitCode()}
 				{submitting}
 			/>
+		{:else if mode === 'verified'}
+			<div class="affil-picker-verified">
+				<span class="affil-picker-verified-icon" aria-hidden="true">
+					<Check size={28} strokeWidth={2.4} />
+				</span>
+				<h3 class="affil-picker-verified-msg serif-italic">
+					{tr('worlds.picker.school.verified_body', { name: verifiedName })}
+				</h3>
+			</div>
 		{/if}
 	</div>
 </BottomSheet>
@@ -932,6 +1003,57 @@
 		flex-direction: column;
 		gap: 0.7rem;
 		padding: 0.25rem 0 0.5rem;
+	}
+
+	/* Post-verify success beat — a centered laurel tick that pops in,
+	   shown briefly before the sheet auto-dismisses. */
+	.affil-picker-verified {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.9rem;
+		padding: 1.6rem 0 1rem;
+		text-align: center;
+	}
+
+	.affil-picker-verified-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 64px;
+		height: 64px;
+		color: var(--laurel);
+		background: color-mix(in srgb, var(--laurel) 12%, transparent);
+		border: 1px solid color-mix(in srgb, var(--laurel) 32%, transparent);
+		border-radius: var(--r-pill);
+		animation: affil-verified-pop 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+	}
+
+	.affil-picker-verified-msg {
+		margin: 0;
+		max-width: 30ch;
+		font-size: var(--t-20, 1.25rem);
+		line-height: 1.3;
+		color: var(--text-base);
+		overflow-wrap: anywhere;
+	}
+
+	@keyframes affil-verified-pop {
+		from {
+			transform: scale(0.6);
+			opacity: 0;
+		}
+
+		to {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.affil-picker-verified-icon {
+			animation: none;
+		}
 	}
 
 	.affil-picker-head {

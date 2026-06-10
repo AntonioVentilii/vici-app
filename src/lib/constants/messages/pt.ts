@@ -2505,7 +2505,9 @@ export const ptMessages = {
 	'worlds.picker.school.status_verified': 'Escola verificada',
 	'worlds.picker.school.use': 'Usar →',
 	'worlds.picker.school.use_existing': 'Usar {name} →',
+	'worlds.picker.school.verified_body': 'A tua inscrição em {name} está confirmada.',
 	'worlds.picker.school.verified_by_email': 'Verificada por e-mail escolar',
+	'worlds.picker.school.verified_title': 'Verificado',
 	'worlds.picker.school.verify_cta': 'Verificar →',
 	'worlds.picker.school.verify_explainer':
 		'Enviamos um código de 6 dígitos para o teu endereço escolar. Digita-o para verificares a tua adesão a {name}.',

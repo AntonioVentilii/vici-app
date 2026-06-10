@@ -35,3 +35,11 @@ export const withTimeout = <T>({
 
 	return Promise.race<T>([operation, timeout]).finally(() => clearTimeout(timer));
 };
+
+/**
+ * Resolve after `durationMs`. A tiny promisified `setTimeout` for the
+ * "hold a beat before dismissing" pattern — e.g. letting a success
+ * confirmation stay on screen for a moment before a sheet auto-closes.
+ */
+export const sleep = (durationMs: number): Promise<void> =>
+	new Promise((resolve) => setTimeout(resolve, durationMs));

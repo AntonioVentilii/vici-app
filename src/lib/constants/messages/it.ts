@@ -2501,7 +2501,9 @@ export const itMessages = {
 	'worlds.picker.school.status_verified': 'Scuola verificata',
 	'worlds.picker.school.use': 'Usa →',
 	'worlds.picker.school.use_existing': 'Usa {name} →',
+	'worlds.picker.school.verified_body': 'La tua iscrizione a {name} è confermata.',
 	'worlds.picker.school.verified_by_email': 'Verificata via email scolastica',
+	'worlds.picker.school.verified_title': 'Verifica completata',
 	'worlds.picker.school.verify_cta': 'Verifica →',
 	'worlds.picker.school.verify_explainer':
 		'Inviamo un codice di 6 cifre al tuo indirizzo scolastico. Reinseriscilo per verificare la tua appartenenza a {name}.',
