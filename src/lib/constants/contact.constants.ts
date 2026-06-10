@@ -13,17 +13,28 @@
 /** Apex domain all contact mailboxes hang off. */
 export const CONTACT_DOMAIN = 'vici.market';
 
+/**
+ * Assembles a full address from its local-part and the apex domain,
+ * joining them with an `@` produced at runtime (`String.fromCharCode(64)`
+ * is the `@` character) rather than written as a literal. This is an
+ * anti-harvest measure: the served source never carries a contiguous
+ * `local@domain` string for naive scrapers to lift, while every consumer
+ * still gets the exact same address at runtime.
+ */
+const at = String.fromCharCode(64);
+const buildEmail = (local: string): string => `${local}${at}${CONTACT_DOMAIN}`;
+
 /** General info / support / help inbox — the public-facing contact address. */
-export const INFO_EMAIL = `info@${CONTACT_DOMAIN}`;
+export const INFO_EMAIL = buildEmail('info');
 
 /** General hello / press inbox. */
-export const HELLO_EMAIL = `hello@${CONTACT_DOMAIN}`;
+export const HELLO_EMAIL = buildEmail('hello');
 
 /** Privacy / data-rights requests (referenced from the privacy policy). */
-export const PRIVACY_EMAIL = `privacy@${CONTACT_DOMAIN}`;
+export const PRIVACY_EMAIL = buildEmail('privacy');
 
 /** Resolution-dispute filings (referenced from the resolution rules). */
-export const RESOLUTION_EMAIL = `resolution@${CONTACT_DOMAIN}`;
+export const RESOLUTION_EMAIL = buildEmail('resolution');
 
 /**
  * Public profile-share link for the growth loop. The Profile hero's "Invite
