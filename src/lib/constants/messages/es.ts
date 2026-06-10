@@ -1981,6 +1981,8 @@ export const esMessages = {
 	'settings.language.no_match': 'Sin resultados',
 	'settings.language.search': 'Buscar idioma',
 	'settings.legal': 'Legal',
+	'settings.legal.aviso': 'Aviso de Privacidad (México)',
+	'settings.legal.aviso_br': 'Aviso de Privacidade (Brasil)',
 	'settings.legal.cookies': 'Política de cookies',
 	'settings.legal.imprint': 'Aviso legal',
 	'settings.legal.privacy': 'Política de privacidad',
