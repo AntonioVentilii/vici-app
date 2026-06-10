@@ -5,6 +5,7 @@
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { InfoDoc } from '$lib/types/info-doc';
+	import { mailtoHref } from '$lib/utils/email.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
@@ -93,7 +94,7 @@
 						{/each}
 					</ul>
 				{:else if block.kind === 'mail'}
-					<a class="info-mail num" href="mailto:{block.text}">{block.text}</a>
+					<a class="info-mail num" href={mailtoHref(block.text)}>{block.text}</a>
 				{/if}
 			{/each}
 		</article>

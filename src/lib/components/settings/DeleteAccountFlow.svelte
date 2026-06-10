@@ -25,6 +25,7 @@
 	import type { ButtonStatus } from '$lib/types/components';
 	import { EXIT_SIGNAL_NOTE_MAX_LENGTH, type ExitSignalReason } from '$lib/types/exit-signal';
 	import type { LeagueMemberDoc } from '$lib/types/league-member';
+	import { mailtoHref } from '$lib/utils/email.utils';
 	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
 	import { shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -510,7 +511,7 @@
 					<button class="del-retain-btn" onclick={pause30Days} type="button">
 						{t({ locale: $localeStore, key: 'settings.delete.stay_pause' })}
 					</button>
-					<a class="del-retain-btn" href="mailto:{INFO_EMAIL}">
+					<a class="del-retain-btn" href={mailtoHref(INFO_EMAIL)}>
 						{t({ locale: $localeStore, key: 'settings.delete.stay_contact' })}
 					</a>
 				</div>
