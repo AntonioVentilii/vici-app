@@ -19,6 +19,11 @@
 // is asserted against the brief histogram at author time. Do not
 // hand-edit individual rows — regenerate the whole table if the
 // catalogue changes.
+//
+// The catalogue covers the player-prop templates `player-card`
+// (booking) and `player-assist` (assist) alongside `player-figure`
+// (goal), so a future manual regeneration follows the same
+// brief→template classification and won't revert these rows.
 
 import type { WcTemplateId } from '$lib/utils/flow-art/wc/resolve-template';
 
@@ -1117,7 +1122,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	},
 	'will brazil win group c?': { template: 'podium', nation: 'brazil' },
 	"will bruno fernandes register an assist in portugal's opening match vs dr congo?": {
-		template: 'player-figure',
+		template: 'player-assist',
 		nation: 'portugal'
 	},
 	'will canada beat bosnia and herzegovina?': {
@@ -1165,7 +1170,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	},
 	'will cape verde win group h?': { template: 'podium', nation: 'cape verde' },
 	"will casemiro be booked in brazil's opening match vs morocco?": {
-		template: 'player-figure',
+		template: 'player-card',
 		nation: 'brazil'
 	},
 	"will christian pulisic score in the united states' opening match vs paraguay?": {
@@ -1268,7 +1273,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	},
 	'will czechia win group a?': { template: 'podium', nation: 'czechia' },
 	"will declan rice be booked in england's opening match vs croatia?": {
-		template: 'player-figure',
+		template: 'player-card',
 		nation: 'england'
 	},
 	'will dr congo beat colombia?': { template: 'kit-clash', teamA: 'dr congo', teamB: 'colombia' },
@@ -1375,7 +1380,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		nation: 'norway'
 	},
 	"will florian wirtz register an assist in germany's opening match vs curaçao?": {
-		template: 'player-figure',
+		template: 'player-assist',
 		nation: 'germany'
 	},
 	'will france beat iraq?': { template: 'kit-clash', teamA: 'france', teamB: 'iraq' },
@@ -1460,7 +1465,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	'will ghana vs panama end in a draw?': { template: 'kit-clash', teamA: 'ghana', teamB: 'panama' },
 	'will ghana win group l?': { template: 'podium', nation: 'ghana' },
 	"will granit xhaka be booked in switzerland's opening match vs qatar?": {
-		template: 'player-figure',
+		template: 'player-card',
 		nation: 'switzerland'
 	},
 	'will haiti beat brazil?': { template: 'kit-clash', teamA: 'haiti', teamB: 'brazil' },
@@ -1526,7 +1531,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	},
 	'will ivory coast win group e?': { template: 'podium', nation: 'ivory coast' },
 	"will james rodríguez register an assist in colombia's opening match vs uzbekistan?": {
-		template: 'player-figure',
+		template: 'player-assist',
 		nation: 'colombia'
 	},
 	'will japan beat sweden?': { template: 'kit-clash', teamA: 'japan', teamB: 'sweden' },
@@ -1565,7 +1570,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	},
 	'will jordan win group j?': { template: 'podium', nation: 'jordan' },
 	"will jude bellingham register an assist in england's opening match vs croatia?": {
-		template: 'player-figure',
+		template: 'player-assist',
 		nation: 'england'
 	},
 	"will jude bellingham score in england's opening match vs croatia?": {
@@ -1581,7 +1586,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		nation: 'germany'
 	},
 	"will kevin de bruyne register an assist in belgium's opening match vs egypt?": {
-		template: 'player-figure',
+		template: 'player-assist',
 		nation: 'belgium'
 	},
 	'will korea republic beat czechia?': {
@@ -1628,7 +1633,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		nation: 'spain'
 	},
 	"will lionel messi register an assist in argentina's opening match vs algeria?": {
-		template: 'player-figure',
+		template: 'player-assist',
 		nation: 'argentina'
 	},
 	"will lionel messi score in argentina's opening match vs algeria?": {
@@ -1640,11 +1645,11 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		nation: 'colombia'
 	},
 	"will luka modrić be booked in croatia's opening match vs england?": {
-		template: 'player-figure',
+		template: 'player-card',
 		nation: 'croatia'
 	},
 	"will martin ødegaard register an assist in norway's opening match vs iraq?": {
-		template: 'player-figure',
+		template: 'player-assist',
 		nation: 'norway'
 	},
 	'will mexico (vs south africa), the usa (vs paraguay) and canada (vs bosnia and herzegovina) all win their opening matches?':
@@ -1731,7 +1736,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	},
 	'will new zealand win group g?': { template: 'podium', nation: 'new zealand' },
 	"will nicolás otamendi be booked in argentina's opening match vs algeria?": {
-		template: 'player-figure',
+		template: 'player-card',
 		nation: 'argentina'
 	},
 	'will norway beat france?': { template: 'kit-clash', teamA: 'norway', teamB: 'france' },
@@ -1789,11 +1794,11 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	},
 	'will paraguay win group d?': { template: 'podium', nation: 'paraguay' },
 	"will pedri register an assist in spain's opening match vs cape verde?": {
-		template: 'player-figure',
+		template: 'player-assist',
 		nation: 'spain'
 	},
 	"will pervis estupiñán be booked in ecuador's opening match vs ivory coast?": {
-		template: 'player-figure',
+		template: 'player-card',
 		nation: 'ecuador'
 	},
 	'will portugal beat colombia?': { template: 'kit-clash', teamA: 'portugal', teamB: 'colombia' },
@@ -1850,7 +1855,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 	},
 	'will qatar win group b?': { template: 'podium', nation: 'qatar' },
 	"will rodri be booked in spain's opening match vs cape verde?": {
-		template: 'player-figure',
+		template: 'player-card',
 		nation: 'spain'
 	},
 	"will sadio mané score in senegal's opening match vs france?": {
@@ -2771,7 +2776,7 @@ export const WC_MARKET_ART: Record<string, WcMarketArt> = {
 		nation: 'brazil'
 	},
 	"will wataru endo be booked in japan's opening match vs the netherlands?": {
-		template: 'player-figure',
+		template: 'player-card',
 		nation: 'japan'
 	}
 };
