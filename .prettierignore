@@ -2,6 +2,9 @@ pnpm-lock.yaml
 package-lock.json
 yarn.lock
 
+# Owned by release-please — let it control the formatting.
+CHANGELOG.md
+
 # Claude Code agent worktrees (full repo checkouts) and local settings
 .claude/worktrees/
 .claude/settings.local.json

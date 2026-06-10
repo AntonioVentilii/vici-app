@@ -1,0 +1,32 @@
+{
+	"$schema": "https://raw.githubusercontent.com/googleapis/release-please/v17.1.3/schemas/config.json",
+	"bump-minor-pre-major": true,
+	"bump-patch-for-minor-pre-major": true,
+	"pull-request-title-pattern": "chore(release): v${version}",
+	"packages": {
+		".": {
+			"release-type": "node",
+			"extra-files": [
+				{
+					"type": "json",
+					"path": "package.json",
+					"jsonpath": "$.juno.functions.version"
+				}
+			]
+		}
+	},
+	"changelog-sections": [
+		{ "type": "feat", "section": "Features" },
+		{ "type": "fix", "section": "Bug Fixes" },
+		{ "type": "perf", "section": "Performance Improvements" },
+		{ "type": "deps", "section": "Dependencies" },
+		{ "type": "revert", "section": "Reverts" },
+		{ "type": "docs", "section": "Documentation" },
+		{ "type": "style", "section": "Styles" },
+		{ "type": "chore", "section": "Miscellaneous Chores" },
+		{ "type": "refactor", "section": "Code Refactoring" },
+		{ "type": "test", "section": "Tests" },
+		{ "type": "build", "section": "Build System" },
+		{ "type": "ci", "section": "Continuous Integration" }
+	]
+}

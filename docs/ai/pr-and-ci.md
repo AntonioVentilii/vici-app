@@ -131,20 +131,33 @@ fixes back to your branch on PRs from non-forks; you should still run
 
 ## 5. CI jobs you must keep green
 
-| Workflow      | Job(s)             | What it runs                                                                                                                                                                                                                                     |
-| ------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `checks.yml`  | `format`           | `npm run format`. Auto-commits prettier fixes on non-fork PRs.                                                                                                                                                                                   |
-| `checks.yml`  | `lint`             | `npm run lint` (prettier `--check` + eslint).                                                                                                                                                                                                    |
-| `checks.yml`  | `check`            | `npm run check` (`svelte-check`).                                                                                                                                                                                                                |
-| `checks.yml`  | `satellite-schema` | `juno functions build --lang ts` then fails if `src/satellite/{satellite,satellite_extension}.did`, `api-schemas.ts`, or `src/declarations/satellite/**` drift. Run `npm run juno:functions:build` locally and commit the result.                |
-| `checks.yml`  | `checks-pass`      | Aggregator — must be green to merge.                                                                                                                                                                                                             |
-| `deploy.yml`  | deploy             | `functions build` + `functions upgrade` (Administrator `JUNO_TOKEN`) **then** `hosting deploy` (OIDC), in one sequential job — upgrades the satellite functions and ships the frontend. Runs on `v*` tags and via manual dispatch. Don't bypass. |
-| `publish.yml` | publish            | `functions build` + `functions publish` (OIDC) — stages the functions wasm to the satellite CDN. Runs on `v*` tags and manual dispatch.                                                                                                          |
+| Workflow             | Job(s)             | What it runs                                                                                                                                                                                                                                     |
+| -------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `checks.yml`         | `format`           | `npm run format`. Auto-commits prettier fixes on non-fork PRs.                                                                                                                                                                                   |
+| `checks.yml`         | `lint`             | `npm run lint` (prettier `--check` + eslint).                                                                                                                                                                                                    |
+| `checks.yml`         | `check`            | `npm run check` (`svelte-check`).                                                                                                                                                                                                                |
+| `checks.yml`         | `satellite-schema` | `juno functions build --lang ts` then fails if `src/satellite/{satellite,satellite_extension}.did`, `api-schemas.ts`, or `src/declarations/satellite/**` drift. Run `npm run juno:functions:build` locally and commit the result.                |
+| `checks.yml`         | `checks-pass`      | Aggregator — must be green to merge.                                                                                                                                                                                                             |
+| `deploy.yml`         | deploy             | `functions build` + `functions upgrade` (Administrator `JUNO_TOKEN`) **then** `hosting deploy` (OIDC), in one sequential job — upgrades the satellite functions and ships the frontend. Runs on `v*` tags and via manual dispatch. Don't bypass. |
+| `publish.yml`        | publish            | `functions build` + `functions publish` (OIDC) — stages the functions wasm to the satellite CDN. Runs on `v*` tags and manual dispatch.                                                                                                          |
+| `release-please.yml` | release-please     | On every `main` push, maintains a standing "release PR" (version bump + `CHANGELOG.md`) from Conventional Commits. Merging that PR cuts the `vX.Y.Z` tag. Does **not** touch the satellite, so it's outside the `juno-satellite` group.          |
 
 Neither `deploy.yml` nor `publish.yml` runs on a `main` push: both are
 **`v*`-tag + manual-dispatch only**, so merging to `main` ships nothing on its
 own. Cutting a `v*` tag is the deliberate release event that deploys the
 satellite and frontend; use manual dispatch for an off-tag run.
+
+The `v*` tag is produced by **release-please** (`release-please.yml`), not by
+hand: it bumps the version and regenerates `CHANGELOG.md` in a standing release
+PR, and merging that PR cuts the tag. So **merging the release PR is the
+release event** — it cascades into `deploy.yml` + `publish.yml`. release-please
+keeps `package.json#version` and `package.json#juno.functions.version` in
+lockstep (config `extra-files`), so from the first release on, the two numbers
+are identical. For the cut tag to actually trigger the two deploy workflows,
+release-please must run with the `RELEASE_PLEASE_PAT` secret (a tag created with
+the default `GITHUB_TOKEN` does not trigger further workflows); without it, the
+release PR still works but you must dispatch `deploy.yml` / `publish.yml`
+manually after the tag lands.
 
 `config apply` (**applies** `juno.config.ts` — collection rules + authentication
 config — to the production satellite) is **run manually**, not in CI. Use

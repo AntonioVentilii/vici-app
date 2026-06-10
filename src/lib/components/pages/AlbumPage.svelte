@@ -4,17 +4,23 @@
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import MenagerieBadge from '$lib/components/menagerie/MenagerieBadge.svelte';
-	import { MENAGERIE_TIER_RANK, type MenagerieSlug } from '$lib/constants/menagerie.constants';
+	import MenagerieBadgeSkeleton from '$lib/components/menagerie/MenagerieBadgeSkeleton.svelte';
+	import {
+		MENAGERIE,
+		MENAGERIE_TIER_RANK,
+		type MenagerieSlug
+	} from '$lib/constants/menagerie.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { listMyReferrals } from '$lib/services/referral.services';
+	import {
+		myMenagerieLoading,
+		myMenagerieRows,
+		myMenagerieStats
+	} from '$lib/derived/menagerie.derived';
+	import { loadMyMenagerieSignals } from '$lib/services/menagerie.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { globalStandingsStore } from '$lib/stores/standings.store';
-	import { userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
 	import {
 		menagerieConceptKey,
-		menagerieRows,
-		menagerieStatsFromProfile,
 		menagerieTierColor,
 		type MenagerieRow
 	} from '$lib/utils/menagerie.utils';
@@ -33,50 +39,19 @@
 	 * tiles — see the per-hook notes in `$lib/utils/menagerie.utils`.
 	 */
 
-	// Referral count (Parrot) — loaded once; the profile doc doesn't carry it.
-	let referralCount = $state(0);
-
+	// The trophy layer reads from the single shared `menagerie.derived` source —
+	// the same stats / rows / load gate the profile rail reads — so an animal can
+	// never resolve to a different tier across the two surfaces. On mount we
+	// hydrate its live signals (global standings + referral count); until they
+	// resolve, `loading` holds the grid in its skeleton state so a not-yet-loaded
+	// rank never flashes as a grey "locked" trophy.
 	onMount(() => {
-		void (async () => {
-			try {
-				const referrals = await listMyReferrals();
-				referralCount = referrals.length;
-			} catch {
-				// Best-effort: Parrot just stays at its baseline if this fails.
-			}
-		})();
+		void loadMyMenagerieSignals();
 	});
 
-	// Global rank (Goat) from the cached "all" leaderboard window, if loaded.
-	const selfRank = $derived.by((): { rank: number; total: number } | undefined => {
-		const result = $globalStandingsStore.get('all');
-		const owner = $userStore.profile?.owner;
-
-		if (!result || !owner) {
-			return;
-		}
-
-		const self = result.entries.find((entry) => entry.owner === owner);
-
-		if (!self) {
-			return;
-		}
-
-		return { rank: self.rank, total: result.entries.length };
-	});
-
-	const stats = $derived(
-		menagerieStatsFromProfile({
-			profile: $userStore.profile,
-			signals: {
-				referrals: referralCount,
-				rank: selfRank?.rank,
-				totalRanked: selfRank?.total
-			}
-		})
-	);
-
-	const rows = $derived(menagerieRows(stats));
+	const stats = $derived($myMenagerieStats);
+	const rows = $derived($myMenagerieRows);
+	const loading = $derived($myMenagerieLoading);
 	const earned = $derived(rows.filter((row) => row.tier !== null).length);
 	const total = $derived(rows.length);
 
@@ -100,7 +75,11 @@
 			{t({ locale: $localeStore, key: 'menagerie.collection' })}
 		</span>
 		<div class="men-progress-counts">
-			<span class="num men-progress-earned">{earned}</span>
+			{#if loading}
+				<span class="men-progress-earned-skeleton animate-pulse"></span>
+			{:else}
+				<span class="num men-progress-earned">{earned}</span>
+			{/if}
 			<span class="men-progress-of">
 				{t({ locale: $localeStore, key: 'menagerie.earned_of', params: { total } })}
 			</span>
@@ -109,39 +88,49 @@
 			class="men-progress-bar"
 			aria-valuemax={total}
 			aria-valuemin="0"
-			aria-valuenow={earned}
+			aria-valuenow={loading ? 0 : earned}
 			role="progressbar"
 		>
-			<span style:width={`${total === 0 ? 0 : (earned / total) * 100}%`}></span>
+			<span style:width={`${loading || total === 0 ? 0 : (earned / total) * 100}%`}></span>
 		</div>
 	</section>
 
 	<div class="men-grid">
-		{#each rows as row, i (row.animal.slug)}
-			{@const { tier } = row}
-			{@const earnedOne = tier !== null}
-			{@const conceptKey = menagerieConceptKey({ slug: row.animal.slug, tier })}
-			<button
-				style:--ti={i}
-				class="men-tile"
-				class:is-earned={earnedOne}
-				onclick={() => (openSlug = row.animal.slug)}
-				type="button"
-			>
-				<MenagerieBadge size={84} slug={row.animal.slug} {stats} {tier} />
-				<span class="men-tile-name">{t({ locale: $localeStore, key: row.animal.nameKey })}</span>
-				<span
-					style:color={earnedOne ? menagerieTierColor(tier) : 'var(--text-muted)'}
-					class="men-tile-concept"
+		{#if loading}
+			{#each MENAGERIE as animal (animal.slug)}
+				<div class="men-tile is-skeleton">
+					<MenagerieBadgeSkeleton size={84} />
+					<span class="men-tile-name-skeleton animate-pulse"></span>
+					<span class="men-tile-concept-skeleton animate-pulse"></span>
+				</div>
+			{/each}
+		{:else}
+			{#each rows as row, i (row.animal.slug)}
+				{@const { tier } = row}
+				{@const earnedOne = tier !== null}
+				{@const conceptKey = menagerieConceptKey({ slug: row.animal.slug, tier })}
+				<button
+					style:--ti={i}
+					class="men-tile"
+					class:is-earned={earnedOne}
+					onclick={() => (openSlug = row.animal.slug)}
+					type="button"
 				>
-					{#if earnedOne && conceptKey}
-						{t({ locale: $localeStore, key: conceptKey })}
-					{:else}
-						{t({ locale: $localeStore, key: 'menagerie.locked' })}
-					{/if}
-				</span>
-			</button>
-		{/each}
+					<MenagerieBadge size={84} slug={row.animal.slug} {stats} {tier} />
+					<span class="men-tile-name">{t({ locale: $localeStore, key: row.animal.nameKey })}</span>
+					<span
+						style:color={earnedOne ? menagerieTierColor(tier) : 'var(--text-muted)'}
+						class="men-tile-concept"
+					>
+						{#if earnedOne && conceptKey}
+							{t({ locale: $localeStore, key: conceptKey })}
+						{:else}
+							{t({ locale: $localeStore, key: 'menagerie.locked' })}
+						{/if}
+					</span>
+				</button>
+			{/each}
+		{/if}
 	</div>
 
 	{#if openRow}
@@ -389,6 +378,37 @@
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		text-align: center;
+	}
+
+	/* Skeleton tiles — same footprint as a real tile, with the badge + the two
+	   text lines replaced by pulsing placeholders while the trophy signals load. */
+	.men-tile.is-skeleton {
+		cursor: default;
+		animation: none;
+	}
+
+	.men-tile-name-skeleton {
+		width: 4rem;
+		height: 0.8125rem;
+		margin-top: 12px;
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--text-base) 12%, transparent);
+	}
+
+	.men-tile-concept-skeleton {
+		width: 2.75rem;
+		height: 0.6875rem;
+		margin-top: 6px;
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
+	}
+
+	.men-progress-earned-skeleton {
+		display: inline-block;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--text-base) 12%, transparent);
 	}
 
 	/* ── Detail sheet ── */
