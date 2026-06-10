@@ -122,7 +122,7 @@
 				>
 					{t({ locale: $localeStore, key: 'leagues.privacy.cancel' })}
 				</button>
-				<button class="league-form-submit is-danger" disabled={submitting} type="submit">
+				<button class="league-form-submit is-danger" disabled={!canSubmit} type="submit">
 					{t({
 						locale: $localeStore,
 						key: submitting ? 'leagues.privacy.saving' : 'leagues.privacy.confirm_open_confirm'
