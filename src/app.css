@@ -67,6 +67,13 @@ html[data-ios-chrome] {
 	/* Bottom clearance for non-Safari iOS browser chrome (see above); 0 elsewhere. */
 	--ios-chrome-toolbar-inset: 0px;
 
+	/* Bottom inset every docked sheet/panel footer must clear: the device
+	   safe area plus iOS Chrome's native bottom toolbar. Single source —
+	   footers add their own base padding on top: calc(<base> + var(--docked-footer-inset)). */
+	--docked-footer-inset: calc(
+		env(safe-area-inset-bottom, 0px) + var(--ios-chrome-toolbar-inset, 0px)
+	);
+
 	/* Canvas */
 	--ink: #0e0d0b;
 	--ink-deep: #080705;

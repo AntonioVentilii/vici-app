@@ -323,8 +323,7 @@
 		 * needed — and a `dvh` cap would be wrong on iOS Chrome. The ≥768px media
 		 * query overrides this with a centred-modal `dvh` cap. */
 		max-height: 92%;
-		padding: 0.5rem 1.25rem
-			calc(1.25rem + env(safe-area-inset-bottom, 0px) + var(--ios-chrome-toolbar-inset, 0px));
+		padding: 0.5rem 1.25rem calc(1.25rem + var(--docked-footer-inset));
 		overflow-y: auto;
 		background: var(--bg-popover);
 		border-top: 1px solid var(--border-base);
