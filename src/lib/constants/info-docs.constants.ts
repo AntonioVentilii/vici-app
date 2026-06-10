@@ -85,9 +85,9 @@ const FAQ: InfoDoc = {
 	titleKey: 'info.doc.faq.title',
 	eyebrowKey: 'info.doc.faq.eyebrow',
 	blocks: [
-		{ kind: 'h', key: 'info.doc.faq.b0' },
-		{ kind: 'p', key: 'info.doc.faq.b1' },
-		{ kind: 'h', key: 'info.doc.faq.b2' },
+		{ kind: 'lede', key: 'info.doc.faq.b0' },
+		{ kind: 'h', key: 'info.doc.faq.b1' },
+		{ kind: 'p', key: 'info.doc.faq.b2' },
 		{ kind: 'p', key: 'info.doc.faq.b3' },
 		{ kind: 'h', key: 'info.doc.faq.b4' },
 		{ kind: 'p', key: 'info.doc.faq.b5' },
@@ -100,7 +100,11 @@ const FAQ: InfoDoc = {
 		{ kind: 'h', key: 'info.doc.faq.b12' },
 		{ kind: 'p', key: 'info.doc.faq.b13' },
 		{ kind: 'h', key: 'info.doc.faq.b14' },
-		{ kind: 'p', key: 'info.doc.faq.b15' }
+		{ kind: 'p', key: 'info.doc.faq.b15' },
+		{ kind: 'h', key: 'info.doc.faq.b16' },
+		{ kind: 'p', key: 'info.doc.faq.b17' },
+		{ kind: 'h', key: 'info.doc.faq.b18' },
+		{ kind: 'p', key: 'info.doc.faq.b19' }
 	]
 };
 

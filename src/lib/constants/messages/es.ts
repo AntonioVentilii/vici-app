@@ -1039,89 +1039,95 @@ export const esMessages = {
 	'info.back': 'Atrás',
 	'info.back_to_settings': 'Volver a ajustes',
 	'info.doc.contact.b0':
-		'Somos un equipo pequeño. La mayoría de las preguntas se responden en las FAQ. Para cualquier otra cosa, escríbenos directamente.',
-	'info.doc.contact.b1': 'Correo electrónico',
+		'Somos un equipo pequeño. La mayoría de las dudas se resuelven en las FAQ. Para lo demás, escríbenos directamente.',
+	'info.doc.contact.b1': 'Correo',
 	'info.doc.contact.b3': 'Tiempo de respuesta',
 	'info.doc.contact.b4':
-		'En un plazo de dos días hábiles. Las disputas de resolución tienen prioridad y se responden en veinticuatro horas.',
+		'En un máximo de dos días hábiles. Las disputas de resolución tienen prioridad y se responden en veinticuatro horas.',
 	'info.doc.contact.b5': 'Qué incluir',
-	'info.doc.contact.b6.i0': 'Tu handle (@ejemplo)',
-	'info.doc.contact.b6.i1': 'El mercado o la pantalla sobre la que trata la pregunta',
+	'info.doc.contact.b6.i0': 'Tu usuario (@ejemplo)',
+	'info.doc.contact.b6.i1': 'El mercado o la pantalla sobre la que preguntas',
 	'info.doc.contact.b6.i2': 'Una captura de pantalla si es posible',
 	'info.doc.contact.b7': 'Prensa, alianzas y patrocinio de ligas',
 	'info.doc.contact.eyebrow': 'Ayuda · Soporte',
 	'info.doc.contact.title': 'Contactar con soporte',
-	'info.doc.faq.b0': '¿Qué es el VXP?',
-	'info.doc.faq.b1':
-		'El VXP es el crédito de predicción dentro de la app. Haz llamadas para ganarlo. No es una moneda. No se puede canjear. Es la unidad de tu historial.',
-	'info.doc.faq.b10': '¿Qué es una victoria a contracorriente?',
+	'info.doc.faq.b0': '¿Eres nuevo? Todo el mecanismo en 30 segundos.',
+	'info.doc.faq.b1': 'Tutorial rápido',
+	'info.doc.faq.b10': '¿Por qué se reinició mi racha?',
 	'info.doc.faq.b11':
-		'Una llamada que hiciste contra el consenso (<30% de tu lado en el momento de la llamada) que después se resolvió a tu favor.',
-	'info.doc.faq.b12': '¿Quién puede ver mis predicciones?',
+		'La racha cuenta días consecutivos con al menos una predicción. Un día en blanco la reinicia. La llama muestra tu racha actual; la más larga queda guardada.',
+	'info.doc.faq.b12': '¿Puedo borrar una predicción?',
 	'info.doc.faq.b13':
-		'Tu handle y tu precisión son públicos en las clasificaciones globales, las posiciones de liga y las batallas de Worlds en las que participas. Las llamadas individuales de mercado solo son visibles para las ligas a las que perteneces.',
-	'info.doc.faq.b14': '¿Cómo funcionan las batallas?',
+		'No. Cada predicción es definitiva en cuanto la confirmas. De eso se trata construir un historial.',
+	'info.doc.faq.b14': '¿Qué es una victoria a contracorriente?',
 	'info.doc.faq.b15':
-		'Las batallas son competiciones con límite de tiempo entre ligas o universidades. La precisión media durante la ventana determina al ganador. Se requiere un número mínimo de llamadas para clasificar.',
-	'info.doc.faq.b2': '¿Esto es dinero real?',
+		'Una predicción hecha contra el consenso (menos del 30 % en tu lado al momento de predecir) que luego se resolvió a tu favor.',
+	'info.doc.faq.b16': '¿Quién ve mis predicciones?',
+	'info.doc.faq.b17':
+		'Tu usuario y tu precisión son públicos en las clasificaciones globales, las ligas y los duelos Worlds en los que participas. Tus predicciones individuales solo las ven las ligas a las que perteneces.',
+	'info.doc.faq.b18': '¿Cómo funcionan los duelos?',
+	'info.doc.faq.b19':
+		'Los duelos son competiciones por tiempo limitado entre ligas o universidades. La precisión media del periodo decide al ganador. Hace falta un mínimo de predicciones para clasificar.',
+	'info.doc.faq.b2':
+		'Abre Flow y aparece la tarjeta de un mercado. Desliza a la derecha para decir SÍ, a la izquierda para NO, hacia arriba para saltar. Toca la tarjeta para girarla y ver el contexto y las cuotas completas.',
 	'info.doc.faq.b3':
-		'No. VICI es una app gratuita para el juicio humano. No hay depósitos, retiros ni pagos. Los mercados con dinero real se exploran por separado.',
-	'info.doc.faq.b4': '¿Cómo se calcula mi precisión?',
+		'Cada predicción compromete VXP a las cuotas del mercado — los resultados improbables rinden más, los favoritos menos. Haz tus 10 predicciones al día para hacer crecer tu racha; tu precisión y tu puesto suben a medida que los mercados se resuelven.',
+	'info.doc.faq.b4': '¿Qué es el VXP?',
 	'info.doc.faq.b5':
-		'Llamadas resueltas dividido entre el total de llamadas resueltas. Las llamadas abiertas no cuentan hasta que el mercado se resuelve.',
-	'info.doc.faq.b6': '¿Por qué se reinició mi racha?',
+		'El VXP es el crédito de predicción interno de la app. Lo ganas haciendo predicciones. No es dinero. No es convertible. Es la unidad de tu historial.',
+	'info.doc.faq.b6': '¿Es dinero real?',
 	'info.doc.faq.b7':
-		'La racha cuenta los días consecutivos con al menos una llamada. Un día en blanco la reinicia. La llama de la racha muestra tu serie actual; la más larga se conserva.',
-	'info.doc.faq.b8': '¿Puedo eliminar una llamada?',
+		'No. VICI es una app gratuita dedicada al juicio humano. Sin depósitos, sin retiros, sin pagos en dinero. Los mercados con dinero real se tratan por separado.',
+	'info.doc.faq.b8': '¿Cómo se calcula mi precisión?',
 	'info.doc.faq.b9':
-		'No. Cada llamada es permanente en el momento en que la confirmas. Esa es toda la premisa de construir un historial.',
+		'Predicciones acertadas divididas entre el total de predicciones resueltas. Las predicciones abiertas no cuentan hasta que el mercado se resuelve.',
 	'info.doc.faq.eyebrow': 'Ayuda · FAQ',
 	'info.doc.faq.title': 'Preguntas frecuentes',
 	'info.doc.how-resolution-works.b0':
-		'Cada mercado en VICI se resuelve con una única fuente pública y nombrada. Sin panel de moderación. Sin debate. La fuente decide.',
+		'Cada mercado en VICI se resuelve con una única fuente pública declarada. Sin comité, sin debate. Decide la fuente.',
 	'info.doc.how-resolution-works.b1': 'El principio',
 	'info.doc.how-resolution-works.b10':
-		'La redacción de Vici revisa según el criterio publicado. Las decisiones y los motivos se publican públicamente en el panel de resolución del reverso de la tarjeta del mercado.',
+		'La redacción de Vici evalúa según el criterio publicado. Las decisiones y su razonamiento se publican abiertamente en el panel de resolución del reverso de la tarjeta.',
 	'info.doc.how-resolution-works.b2':
-		'Un mercado de predicciones solo funciona si ambas partes conocen las reglas en el momento de hacer una llamada. Antes de que un mercado se publique, indicamos la fuente pública exacta que lo decidirá: la resolución de un regulador, el resultado de una federación, un proveedor de datos reconocido.',
+		'Un mercado de predicciones solo funciona si ambas partes conocen las reglas en el momento de hacer su predicción. Antes de que un mercado se abra, publicamos la fuente pública exacta que lo decidirá — una resolución de un regulador, un resultado de una federación, un proveedor de datos reconocido.',
 	'info.doc.how-resolution-works.b3': 'Lo que ves en cada tarjeta',
 	'info.doc.how-resolution-works.b4.i0':
-		'Criterio de resolución · la condición YES precisa, escrita en lenguaje claro',
+		'Criterio de resolución · la condición exacta del SÍ, en lenguaje claro',
 	'info.doc.how-resolution-works.b4.i1': 'Fuente · la publicación o el feed que decide',
 	'info.doc.how-resolution-works.b4.i2':
-		'Se resuelve · la fecha de calendario en que la fuente publica el resultado',
+		'Se cierra · la fecha en que la fuente publica el resultado',
 	'info.doc.how-resolution-works.b5': 'Cuando la fuente publica',
 	'info.doc.how-resolution-works.b6':
-		'El mercado se congela al cierre de la negociación en la fecha de resolución. El resultado publicado se registra en cada llamada hecha en el mercado. Los ganadores obtienen VXP a la tasa mostrada cuando hicieron la llamada. Quienes pierden no obtienen nada.',
+		'El mercado se congela al cierre en la fecha de vencimiento. El resultado publicado se registra en cada predicción hecha en el mercado. Quien acertó gana VXP a la tasa mostrada al hacer su predicción. Quien falló no gana nada.',
 	'info.doc.how-resolution-works.b7': 'Si una fuente no publica',
 	'info.doc.how-resolution-works.b8':
-		'Raro pero documentado. El mercado se anula. Cada participante recupera íntegro lo que puso en juego. No se otorgan puntos de precisión en ningún sentido.',
+		'Raro, pero previsto. El mercado se anula. Cada participante recupera su aporte íntegro. No se otorgan puntos de acierto.',
 	'info.doc.how-resolution-works.b9': 'Si una fuente publica de forma ambigua',
 	'info.doc.how-resolution-works.eyebrow': 'Ayuda · Resolución',
-	'info.doc.how-resolution-works.title': 'Cómo funciona la resolución',
+	'info.doc.how-resolution-works.title': 'Cómo se resuelve',
 	'info.doc.resolution-rules.b0':
-		'El procedimiento exacto por el que se resuelve cada mercado en VICI. Fuente autorizada: este documento.',
+		'El procedimiento exacto por el que se resuelve cada mercado en VICI. Fuente con valor oficial: este documento.',
 	'info.doc.resolution-rules.b1': 'Antes de la publicación',
 	'info.doc.resolution-rules.b10.i0':
-		'Resultado ambiguo → la redacción de Vici revisa según el criterio. La decisión y el razonamiento se publican públicamente.',
+		'Resultado ambiguo → la redacción de Vici evalúa según el criterio. La decisión y su razonamiento se publican abiertamente.',
 	'info.doc.resolution-rules.b10.i1':
-		'La fuente no publica → mercado anulado, VXP devuelto, sin efecto en la precisión en ningún sentido.',
+		'La fuente no publica → mercado anulado, aportes devueltos, sin efecto en la precisión.',
 	'info.doc.resolution-rules.b10.i2':
-		'La fuente cambia su metodología a mitad de ventana → mercado anulado salvo que el cambio sea irrelevante.',
+		'La fuente cambia su metodología con la ventana abierta → mercado anulado, salvo que el cambio sea irrelevante.',
 	'info.doc.resolution-rules.b11': 'Disputas',
 	'info.doc.resolution-rules.b12':
-		'Cualquier participante puede presentar una disputa de resolución en un plazo de setenta y dos horas escribiendo a {email} con su handle, el id del mercado y el fundamento de la disputa. Las disputas son revisadas por la redacción y se responden en veinticuatro horas.',
+		'Quien haya hecho una predicción puede presentar una disputa en un plazo de setenta y dos horas escribiendo a {email} con su usuario, el id del mercado y el motivo de la disputa. Las disputas las revisa la redacción y se responden en veinticuatro horas.',
 	'info.doc.resolution-rules.b2':
-		'Antes de que un mercado se abra a predicciones, se fijan y publican dos hechos en el reverso de la tarjeta del mercado: el criterio de resolución (la condición YES en lenguaje claro) y la fuente (el feed de datos público y nombrado que decidirá).',
-	'info.doc.resolution-rules.b3': 'Ventana de negociación',
+		'Antes de que un mercado abra a predicciones, se fijan y publican dos datos en el reverso de la tarjeta: el criterio de resolución (la condición del SÍ en lenguaje claro) y la fuente (el feed de datos público declarado que decidirá).',
+	'info.doc.resolution-rules.b3': 'Ventana de predicción',
 	'info.doc.resolution-rules.b4':
-		'Las predicciones se aceptan desde la apertura hasta el cierre de negociación indicado. Tras el cierre, las llamadas quedan bloqueadas. El mercado entra en la ventana de resolución.',
+		'Las predicciones se aceptan desde la apertura hasta el cierre indicado. Tras el cierre, las predicciones quedan bloqueadas. El mercado entra en la ventana de resolución.',
 	'info.doc.resolution-rules.b5': 'Ventana de resolución',
 	'info.doc.resolution-rules.b6':
-		'La fuente nombrada debe publicar dentro de la ventana de resolución (normalmente siete días naturales tras el cierre de negociación, más tiempo para las fuentes que publican con un calendario fijo).',
+		'La fuente declarada debe publicar dentro de la ventana de resolución (normalmente siete días naturales tras el cierre, más para fuentes que publican con calendario fijo).',
 	'info.doc.resolution-rules.b7': 'Registro del resultado',
 	'info.doc.resolution-rules.b8':
-		'En un plazo de veinticuatro horas desde la publicación de la fuente, el resultado se registra en cada llamada. Las victorias y derrotas aparecen de inmediato en tu Dash.',
+		'En las veinticuatro horas siguientes a la publicación de la fuente, el resultado se registra en cada predicción. Aciertos y fallos aparecen de inmediato en tu Dash.',
 	'info.doc.resolution-rules.b9': 'Casos límite',
 	'info.doc.resolution-rules.eyebrow': 'Legal · El procedimiento completo',
 	'info.doc.resolution-rules.title': 'Reglas de resolución',
