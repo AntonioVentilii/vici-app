@@ -124,15 +124,25 @@
 						(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 					if (isIOS) {
 						document.documentElement.setAttribute('data-ios', '');
+						// Standalone / PWA mode (added to Home Screen) has NO browser
+						// bottom bar, so the inset would just push docked footers up
+						// for nothing — detect it via the legacy `navigator.standalone`
+						// (iOS-only) plus the standard display-mode media query.
+						var standalone =
+							(window.navigator && window.navigator.standalone === true) ||
+							(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 						// Every iOS browser draws a NATIVE bottom bar over the web
 						// view: the Chrome/Firefox/Edge/Google-app toolbars AND
 						// Safari's own bottom bar (confirmed on device — it overlays
 						// docked modal footers the same way). The page renders UNDER
 						// it and no web API (visualViewport / dvh / svh /
 						// safe-area-inset) reports its height, so a bottom-docked CTA
-						// gets clipped. Stamp the flag for ALL iOS so CSS can add
+						// gets clipped. Stamp the flag for ALL iOS browsers — but NOT
+						// standalone/PWA, which has no browser bar — so CSS can add
 						// `--ios-bottom-bar-inset` to docked footers.
-						document.documentElement.setAttribute('data-ios-bottom-bar', '');
+						if (!standalone) {
+							document.documentElement.setAttribute('data-ios-bottom-bar', '');
+						}
 					}
 				} catch (e) {
 					/* non-iOS fallthrough is fine */
