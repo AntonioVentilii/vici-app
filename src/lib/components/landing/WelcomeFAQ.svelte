@@ -11,6 +11,7 @@
 	import { INFO_EMAIL } from '$lib/constants/contact.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { mailtoHref } from '$lib/utils/email.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	type FaqIndex = 1 | 2 | 3 | 4 | 5 | 6;
@@ -103,7 +104,7 @@
 			class="dim t-body-sm"
 		>
 			{t({ locale: $localeStore, key: 'welcome.faq.contact_prefix' })}
-			<a style="color:var(--accent); font-weight:600;" href="mailto:{INFO_EMAIL}">
+			<a style="color:var(--accent); font-weight:600;" href={mailtoHref(INFO_EMAIL)}>
 				{INFO_EMAIL}
 			</a>
 			{t({ locale: $localeStore, key: 'welcome.faq.contact_suffix' })}
