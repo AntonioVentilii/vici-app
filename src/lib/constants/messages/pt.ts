@@ -1,3 +1,7 @@
+// European Portuguese (pt-PT). The base Portuguese catalog, written in the
+// European variant (equipa, ecrã, utilizador, telemóvel) with pt-PT grammar
+// (estar a + infinitive, clitic placement, tu register). Distinct from the
+// Brazilian `pt-BR` catalog, which is maintained as its own variant.
 export const ptMessages = {
 	'a11y.appearance': 'Aparência',
 	'a11y.banner_juno_console': 'Abre o Juno Console para criar um novo Satellite para testes',
@@ -77,7 +81,7 @@ export const ptMessages = {
 	'battles.create.wager_none': 'Sem aposta',
 	'battles.create.wager_value': '{amount} VXP',
 	'battles.intro.body':
-		'Um duelo de precisão cronometrado. Liga contra liga. Escola contra escola. O retrospeto entre vocês.',
+		'Um duelo de precisão cronometrado. Liga contra liga. Escola contra escola. O registo entre vocês.',
 	'battles.intro.dismiss': 'Dispensar',
 	'battles.intro.lede': '“O que é um duelo?”',
 	'battles.intro.start': 'Iniciar uma batalha',
@@ -157,7 +161,7 @@ export const ptMessages = {
 	'flow.entry.away_sub': '{count} liquidadas · {wins} corretas · {losses} perdidas',
 	'flow.entry.away_copy_win':
 		'As tuas previsões renderam enquanto estiveste fora — mantém o ritmo.',
-	'flow.entry.away_copy_loss': 'A multidão virou este lote — deixa pra lá, as próximas são tuas.',
+	'flow.entry.away_copy_loss': 'A multidão virou este lote — deixa para lá, as próximas são tuas.',
 	'flow.entry.away_more': '+{count} mais na tua carteira',
 	'flow.reso.aria_label': 'Previsões liquidadas enquanto estiveste fora',
 	'flow.reso.eyebrow': 'ENQUANTO ESTIVESTE FORA',

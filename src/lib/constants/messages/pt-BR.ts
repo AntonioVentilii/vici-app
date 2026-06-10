@@ -1,8 +1,9 @@
-// Brazilian Portuguese. Today this mirrors the `pt` catalog verbatim — the
-// shipped `pt` strings are already written in Brazilian voice (você, time,
-// tela, turnê, …). It is kept as its own full catalog so that when the base
-// `pt` is later adjusted toward European Portuguese, pt-BR stays correct
-// without a migration. Fallback chain remains `pt-BR` → `pt` → `en`.
+// Brazilian Portuguese (pt-BR). Maintained as its own Brazilian variant —
+// distinct from the base `pt` catalog, which is European Portuguese (pt-PT).
+// pt-BR no longer derives from `pt`; the two are independent variants with
+// their own vocabulary (você, time, tela, turnê) and grammar. The fallback
+// chain `pt-BR` → `pt` → `en` still holds, so any missing pt-BR key surfaces
+// the European string before English.
 export const ptBRMessages = {
 	'a11y.appearance': 'Aparência',
 	'a11y.banner_juno_console': 'Abra o Juno Console para criar um novo Satellite para testes',
@@ -211,13 +212,13 @@ export const ptBRMessages = {
 	'flow.share.card_saved': 'Card salvo — publique',
 	'flow.share.preview_alt': 'Card de previsão para compartilhar',
 	'flow.feedback.vxp': 'VXP',
-	'flow.coach.hint_yes.txt': 'desliza para a direita para ',
+	'flow.coach.hint_yes.txt': 'deslize para a direita para ',
 	'flow.coach.hint_yes.acc': 'SIM',
 	'flow.coach.hint_tap.txt': 'toque para ',
 	'flow.coach.hint_tap.acc': 'detalhe',
-	'flow.coach.hint_skip.txt': 'desliza para cima para ',
+	'flow.coach.hint_skip.txt': 'deslize para cima para ',
 	'flow.coach.hint_skip.acc': 'PULAR',
-	'flow.coach.hint_no.txt': 'desliza para a esquerda para ',
+	'flow.coach.hint_no.txt': 'deslize para a esquerda para ',
 	'flow.coach.hint_no.acc': 'NÃO',
 	'flow.coach.hint_idle.txt': 'sua vez ',
 	'flow.coach.hint_idle.acc': '⚡',
@@ -415,7 +416,7 @@ export const ptBRMessages = {
 	'admin.dashboard.sub':
 		'Gerencie mercados, crie novas oportunidades, resolva previsões expiradas e administre administradores.',
 	'admin.dashboard.title': 'Painel do Admin',
-	'admin.diagnostics.haptics_description': 'Teste o vocabulário de vibração num telemóvel real.',
+	'admin.diagnostics.haptics_description': 'Teste o vocabulário de vibração em um celular real.',
 	'admin.diagnostics.title': 'Diagnóstico',
 	'admin.haptics.android_floored': 'sim — limite aplicado',
 	'admin.haptics.android_label': 'android',
@@ -795,22 +796,22 @@ export const ptBRMessages = {
 	'dash.active.see_all': 'Ver todas as {count}',
 	'dash.categories.eyebrow': 'Por categoria',
 	'dash.dz.active_day1_pending_body':
-		'A tua previsão está em voo — resolve-se quando o mercado fechar.',
+		'Sua previsão está em voo — se resolve quando o mercado fechar.',
 	'dash.dz.available': 'Disponível',
 	'dash.dz.crowd_yes': 'Multidão · {pct}% SIM',
 	'dash.dz.header_eyebrow_day0': 'Dia zero · bem-vindo',
-	'dash.dz.header_eyebrow_day1': 'Dia 1 · a tua previsão está em voo',
-	'dash.dz.hero_cta_day0': 'Faz a tua primeira previsão',
+	'dash.dz.header_eyebrow_day1': 'Dia 1 · sua previsão está em voo',
+	'dash.dz.hero_cta_day0': 'Faça sua primeira previsão',
 	'dash.dz.hero_cta_day1': 'Abrir Flow',
 	'dash.dz.hero_eyebrow_day0': 'Dia 0 · bem-vindo',
-	'dash.dz.hero_eyebrow_day1': 'Dia 1 · a tua previsão está em voo',
+	'dash.dz.hero_eyebrow_day1': 'Dia 1 · sua previsão está em voo',
 	'dash.dz.hero_foot_day0':
-		'Faz previsões no Flow · o teu histórico constrói-se aqui à medida que se resolvem',
+		'Faça previsões no Flow · seu histórico se constrói aqui à medida que se resolvem',
 	'dash.dz.hero_foot_day1': '{count} previsões abertas · {balance} VXP disponíveis',
 	'dash.dz.hero_quote_day0': '“Acta non verba.”',
 	'dash.dz.hero_quote_day1': '“Alea iacta est.”',
 	'dash.dz.hero_trans_day0': 'Atos, não palavras.',
-	'dash.dz.hero_trans_day1': 'A sorte está lançada. A tua primeira previsão está em voo.',
+	'dash.dz.hero_trans_day1': 'A sorte está lançada. Sua primeira previsão está em voo.',
 	'dash.dz.holdings_caption': 'Pacote inicial. Gasta-o em previsões — ganha para o fazer crescer.',
 	'dash.dz.lifetime_zero': '0 ganhos',
 	'dash.dz.n_open': '{count} ABERTAS',
@@ -819,25 +820,25 @@ export const ptBRMessages = {
 	'dash.dz.open_pos_ctx': '{stake} VXP · feita hoje',
 	'dash.dz.open_pos_payout': 'pagamento · multidão {pct}% SIM',
 	'dash.dz.open_pos_payout_unknown': 'pagamento',
-	'dash.dz.oracle_locked_label': 'Oráculo · a tua primeira revelação',
+	'dash.dz.oracle_locked_label': 'Oráculo · sua primeira revelação',
 	'dash.dz.oracle_locked_quote': 'Acerta onde a maioria erra. O Oráculo observa.',
-	'dash.dz.oracle_locked_sub': 'Desbloqueia na tua primeira vitória contra a multidão',
-	'dash.dz.past_empty_body': 'A tua primeira previsão resolve-se em breve. Aparece aqui depois.',
+	'dash.dz.oracle_locked_sub': 'Desbloqueia na sua primeira vitória contra a multidão',
+	'dash.dz.past_empty_body': 'Sua primeira previsão se resolve em breve. Aparece aqui depois.',
 	'dash.dz.past_empty_quote': '“Paciência.”',
-	'dash.dz.pinned_tag': 'Mercado inicial · toca para prever',
+	'dash.dz.pinned_tag': 'Mercado inicial · toque para prever',
 	'dash.dz.rank_alma_mater': 'Alma Mater',
-	'dash.dz.rank_alma_mater_sub': 'toca para entrar',
+	'dash.dz.rank_alma_mater_sub': 'toque para entrar',
 	'dash.dz.rank_best_cat': 'Melhor cat.',
 	'dash.dz.rank_best_cat_sub': 'após 5 previsões',
 	'dash.dz.rank_global_sub_day0': 'faz uma previsão para te classificares',
 	'dash.dz.rank_global_sub_day1': 'após a resolução',
 	'dash.dz.rank_pick': 'Escolher →',
-	'dash.dz.tap_to_call': 'Toca para prever no Flow',
+	'dash.dz.tap_to_call': 'Toque para prever no Flow',
 	'dash.dz.today_in_flow': 'Hoje no Flow',
 	'dash.dz.trend_body_day0':
-		'A tua linha de precisão aparece aqui assim que a tua primeira previsão se resolver.',
+		'Sua linha de precisão aparece aqui assim que sua primeira previsão se resolver.',
 	'dash.dz.trend_body_day1':
-		'A tua linha aparece no momento em que a tua primeira previsão se resolver.',
+		'Sua linha aparece no momento em que sua primeira previsão se resolver.',
 	'dash.dz.trend_quote_day0': '“Afina-se a cada previsão.”',
 	'dash.dz.trend_quote_day1': '“Patientia vincit.”',
 	'dash.dz.trend_tag_day0': 'PENDENTE',
@@ -930,7 +931,7 @@ export const ptBRMessages = {
 	'flow.cap.eyebrow': 'É O DIA',
 	'flow.cap.invite': 'Convidar um amigo',
 	'flow.cap.title': 'Volte amanhã.',
-	'flow.caption': 'DESLIZAR → CONFIRMA · TOCAR PARA DETALHES · ↑ PARA PULAR',
+	'flow.caption': 'DESLIZAR → CONFIRME · TOCAR PARA DETALHES · ↑ PARA PULAR',
 	'flow.companion.trickster': 'Só {pct}% discordam. Audaz.',
 	'flow.daily_goal_aria': 'Meta diária',
 	'flow.daily_streak_aria': 'Sequência diária',
@@ -1043,27 +1044,27 @@ export const ptBRMessages = {
 	'info.back': 'Voltar',
 	'info.back_to_settings': 'Voltar aos ajustes',
 	'info.doc.contact.b0':
-		'Somos uma equipa pequena. A maioria das perguntas é respondida nas FAQ. Para tudo o resto, escreve-nos diretamente.',
+		'Somos um time pequeno. A maioria das perguntas é respondida nas FAQ. Para tudo o resto, escreva diretamente para nós.',
 	'info.doc.contact.b1': 'E-mail',
 	'info.doc.contact.b3': 'Tempo de resposta',
 	'info.doc.contact.b4':
 		'No prazo de dois dias úteis. As contestações de resolução têm prioridade e são respondidas no prazo de vinte e quatro horas.',
 	'info.doc.contact.b5': 'O que incluir',
-	'info.doc.contact.b6.i0': 'O teu handle (@exemplo)',
-	'info.doc.contact.b6.i1': 'O mercado ou o ecrã a que a pergunta diz respeito',
-	'info.doc.contact.b6.i2': 'Uma captura de ecrã, se possível',
+	'info.doc.contact.b6.i0': 'Seu handle (@exemplo)',
+	'info.doc.contact.b6.i1': 'O mercado ou a tela a que a pergunta diz respeito',
+	'info.doc.contact.b6.i2': 'Uma captura de tela, se possível',
 	'info.doc.contact.b7': 'Imprensa, parcerias e patrocínio de ligas',
 	'info.doc.contact.eyebrow': 'Ajuda · Suporte',
 	'info.doc.contact.title': 'Contactar o suporte',
 	'info.doc.faq.b0': 'O que é o VXP?',
 	'info.doc.faq.b1':
-		'O VXP é o crédito de previsão na app. Faz calls para o ganhar. Não é uma moeda. Não pode ser resgatado. É a unidade do teu histórico.',
+		'O VXP é o crédito de previsão no app. Faça calls para ganhá-lo. Não é uma moeda. Não pode ser resgatado. É a unidade do seu histórico.',
 	'info.doc.faq.b10': 'O que é uma vitória contra a corrente?',
 	'info.doc.faq.b11':
-		'Um call que fizeste contra o consenso (<30% do teu lado no momento do call) que depois se resolveu a teu favor.',
+		'Um call que você fez contra o consenso (<30% do seu lado no momento do call) que depois se resolveu a seu favor.',
 	'info.doc.faq.b12': 'Quem pode ver as minhas previsões?',
 	'info.doc.faq.b13':
-		'O teu handle e a tua precisão são públicos nas classificações globais, nas classificações de liga e nas batalhas de Worlds em que participas. Os calls individuais nos mercados só são visíveis para as ligas a que pertences.',
+		'Seu handle e sua precisão são públicos nas classificações globais, nas classificações de liga e nas batalhas de Worlds em que você participa. Os calls individuais nos mercados só são visíveis para as ligas a que você pertence.',
 	'info.doc.faq.b14': 'Como funcionam as batalhas?',
 	'info.doc.faq.b15':
 		'As batalhas são competições com tempo limitado entre ligas ou universidades. A precisão média durante a janela determina o vencedor. É necessário um número mínimo de calls para qualificar.',
@@ -1075,7 +1076,7 @@ export const ptBRMessages = {
 		'Calls resolvidos a dividir pelo total de calls resolvidos. Os calls em aberto não contam até o mercado se resolver.',
 	'info.doc.faq.b6': 'Porque é que a minha sequência foi reiniciada?',
 	'info.doc.faq.b7':
-		'A sequência conta dias consecutivos com pelo menos um call. Um dia em branco reinicia-a. A chama da sequência mostra a tua série atual; a mais longa é preservada.',
+		'A sequência conta dias consecutivos com pelo menos um call. Um dia em branco a reinicia. A chama da sequência mostra sua série atual; a mais longa é preservada.',
 	'info.doc.faq.b8': 'Posso eliminar um call?',
 	'info.doc.faq.b9':
 		'Não. Cada call é permanente no momento em que o confirmas. É essa toda a premissa de construir um histórico.',
@@ -1087,13 +1088,13 @@ export const ptBRMessages = {
 	'info.doc.how-resolution-works.b10':
 		'A redação da Vici avalia de acordo com o critério publicado. As decisões e a fundamentação são publicadas publicamente no painel de resolução no verso do cartão do mercado.',
 	'info.doc.how-resolution-works.b2':
-		'Um mercado de previsões só funciona se ambos os lados conhecerem as regras no momento em que fazem um call. Antes de qualquer mercado entrar no ar, indicamos a fonte pública exata que o decidirá — um registo de um regulador, um resultado de uma federação, um fornecedor de dados reconhecido.',
+		'Um mercado de previsões só funciona se ambos os lados conhecerem as regras no momento em que fazem um call. Antes de qualquer mercado entrar no ar, indicamos a fonte pública exata que o decidirá — um registro de um regulador, um resultado de uma federação, um fornecedor de dados reconhecido.',
 	'info.doc.how-resolution-works.b3': 'O que vês em cada cartão',
 	'info.doc.how-resolution-works.b4.i0':
 		'Critério de resolução · a condição YES exata, escrita em linguagem simples',
 	'info.doc.how-resolution-works.b4.i1': 'Fonte · a publicação ou o feed que decide',
 	'info.doc.how-resolution-works.b4.i2':
-		'Resolve-se · a data de calendário em que a fonte publica o resultado',
+		'Se resolve · a data de calendário em que a fonte publica o resultado',
 	'info.doc.how-resolution-works.b5': 'Quando a fonte publica',
 	'info.doc.how-resolution-works.b6':
 		'O mercado congela no fecho da negociação na data de resolução. O resultado publicado é registado em cada call feito no mercado. Os vencedores ganham VXP à taxa apresentada quando fizeram o call. Quem perde não ganha nada.',
@@ -1123,9 +1124,9 @@ export const ptBRMessages = {
 	'info.doc.resolution-rules.b5': 'Janela de resolução',
 	'info.doc.resolution-rules.b6':
 		'A fonte identificada deve publicar dentro da janela de resolução (normalmente sete dias de calendário após o fecho de negociação, mais tempo para fontes que publicam num calendário fixo).',
-	'info.doc.resolution-rules.b7': 'Registo do resultado',
+	'info.doc.resolution-rules.b7': 'Registro do resultado',
 	'info.doc.resolution-rules.b8':
-		'No prazo de vinte e quatro horas após a publicação da fonte, o resultado é registado em cada call. As vitórias e derrotas aparecem de imediato na tua Dash.',
+		'No prazo de vinte e quatro horas após a publicação da fonte, o resultado é registrado em cada call. As vitórias e derrotas aparecem de imediato na sua Dash.',
 	'info.doc.resolution-rules.b9': 'Casos limite',
 	'info.doc.resolution-rules.eyebrow': 'Jurídico · O procedimento completo',
 	'info.doc.resolution-rules.title': 'Regras de resolução',
@@ -1133,30 +1134,30 @@ export const ptBRMessages = {
 		'Nenhum documento corresponde a esse endereço. Tente outro link no rodapé ou volte para a página inicial.',
 	'info.not_found.title': 'Documento não encontrado',
 	'invite.friend_added_body':
-		'Podes encontrá-lo na tua lista de Amigos. Ele também te verá do lado dele.',
+		'Você pode encontrá-lo na sua lista de Amigos. Ele também verá você do lado dele.',
 	'invite.friend_added_title': 'Amigo adicionado',
 	'invite.friend_failed_body':
-		'Não foi possível concluir a amizade a partir desse link. Tenta novamente mais tarde.',
+		'Não foi possível concluir a amizade a partir desse link. Tente novamente mais tarde.',
 	'invite.friend_failed_title': 'Não foi possível adicionar o amigo',
-	'invite.generic_error_body': 'Algo correu mal ao resolver o convite. Tenta novamente mais tarde.',
+	'invite.generic_error_body': 'Algo deu errado ao resolver o convite. Tente novamente mais tarde.',
 	'invite.generic_error_title': 'Convite indisponível',
-	'invite.invalid_body': 'Esse link de convite não parece válido. Pede um novo.',
+	'invite.invalid_body': 'Esse link de convite não parece válido. Peça um novo.',
 	'invite.invalid_title': 'Link de convite inválido',
 	'invite.resolving': 'A resolver convite…',
-	'invite.self_body': 'Não podes usar o teu próprio link de convite.',
-	'invite.self_title': 'Esse é o teu link',
+	'invite.self_body': 'Você não pode usar seu próprio link de convite.',
+	'invite.self_title': 'Esse é o seu link',
 	'invite.sheet.body':
-		'Já és membro do VICI, por isso o convite de {handle} não pode pagar bónus de VXP. Mesmo assim, podes adicioná-lo como amigo para comparar previsões e apoiar as decisões um do outro.',
+		'Você já é membro do VICI, por isso o convite de {handle} não pode pagar bônus de VXP. Mesmo assim, você pode adicioná-lo como amigo para comparar previsões e apoiar as decisões um do outro.',
 	'invite.sheet.bullet_friendship': 'Vão aparecer instantaneamente na lista de Amigos um do outro.',
 	'invite.sheet.bullet_no_bonus':
-		'Sem bónus de VXP — os +500 VXP estão reservados para novos registos.',
+		'Sem bônus de VXP — os +500 VXP estão reservados para novos cadastros.',
 	'invite.sheet.cta_add': 'Adicionar {handle} como amigo',
 	'invite.sheet.cta_skip': 'Agora não',
 	'invite.sheet.eyebrow': 'Convite de',
-	'invite.sheet.tag': 'quer adicionar-te como amigo',
-	'invite.sheet.title': 'Já és membro',
+	'invite.sheet.tag': 'quer adicionar você como amigo',
+	'invite.sheet.title': 'Você já é membro',
 	'invite.unknown_body':
-		'Esse código de convite não consta dos registos. Pede ao remetente um link novo.',
+		'Esse código de convite não consta dos registros. Peça ao remetente um link novo.',
 	'invite.unknown_title': 'Convite desconhecido',
 	'layout.domain.playground': 'PLAYGROUND',
 	'layout.domain.settlement': 'SETTLEMENT',
@@ -1777,7 +1778,7 @@ export const ptBRMessages = {
 	'profile.avatar.surprise': 'Surpreenda-me',
 	'profile.avatar.caption': '{mood} · {trait}',
 	'profile.avatar.caption_plain': '{mood} · Sem traço distintivo',
-	'profile.avatar.save_failed_title': 'Não foi possível guardar o avatar',
+	'profile.avatar.save_failed_title': 'Não foi possível salvar o avatar',
 	'profile.avatar.save_failed': 'Tente novamente num instante.',
 	'profile.avatar.tab.face': 'Rosto',
 	'profile.avatar.tab.hair': 'Cabelo',
@@ -2445,13 +2446,13 @@ export const ptBRMessages = {
 	'worlds.picker.school.add_title': 'Adicione a sua universidade',
 	'worlds.picker.school.adding': 'A adicionar',
 	'worlds.picker.school.code_body':
-		'Digite o código de 6 dígitos que enviámos. Verifique o spam se não estiver na caixa.',
+		'Digite o código de 6 dígitos que enviamos. Verifique o spam se não estiver na caixa.',
 	'worlds.picker.school.code_label': 'Código de 6 dígitos',
 	'worlds.picker.school.code_sent_to': 'Enviado para {email}',
 	'worlds.picker.school.consumer_blocked':
 		'Gmail / Yahoo / iCloud não contam. Use o endereço fornecido pela sua escola.',
 	'worlds.picker.school.continue': 'Continuar →',
-	'worlds.picker.school.detected_from_email': 'detetado do seu e-mail',
+	'worlds.picker.school.detected_from_email': 'detectado do seu e-mail',
 	'worlds.picker.school.domain_belongs': 'Esse domínio pertence a {name} — vamos adicioná-lo lá.',
 	'worlds.picker.school.dupe_title': 'Já existe — escolhe uma?',
 	'worlds.picker.school.email_label': 'E-mail escolar',
@@ -2516,31 +2517,31 @@ export const ptBRMessages = {
 	'worlds.you.suffix': 'VOCÊ',
 	'onboarding.handoff.account_exists_title': 'Bem-vindo de volta',
 	'onboarding.handoff.account_exists':
-		'Mantivemos o teu handle existente (@{nickname}). O que acabaste de escolher foi descartado.',
+		'Mantivemos seu handle existente (@{nickname}). O que você acabou de escolher foi descartado.',
 	'onboarding.handoff.collision_title': 'O handle já não está disponível',
 	'onboarding.handoff.collision':
-		'Alguém ficou com @{handle} enquanto iniciavas sessão. Escolhe um novo no teu perfil.',
+		'Alguém ficou com @{handle} enquanto você iniciava sessão. Escolha um novo no seu perfil.',
 	'onboarding.handoff.failed_title': 'Não foi possível concluir a configuração',
 	'onboarding.handoff.failed':
-		'Não foi possível aplicar as tuas escolhas de configuração. Podes editá-las no teu perfil.',
-	'profile.dashboard.nickname_save_failed_title': 'Não foi possível guardar o nickname',
-	'profile.dashboard.nickname_save_failed': 'Tenta novamente daqui a pouco.',
+		'Não foi possível aplicar suas escolhas de configuração. Você pode editá-las no seu perfil.',
+	'profile.dashboard.nickname_save_failed_title': 'Não foi possível salvar o nickname',
+	'profile.dashboard.nickname_save_failed': 'Tente novamente daqui a pouco.',
 	'profile.dashboard.nickname_taken_title': 'Nickname em uso',
-	'profile.dashboard.nickname_taken': '@{nickname} já está em uso. Escolhe outro.',
+	'profile.dashboard.nickname_taken': '@{nickname} já está em uso. Escolha outro.',
 	'onboarding.handoff.referral_failed_title': 'Código de referência não aplicado',
 	'onboarding.handoff.referral_failed':
-		'O código que introduziste não pôde ser resgatado: {reason}',
-	'onboarding.handoff.referral_late_title': 'Janela de bónus fechada',
+		'O código que você inseriu não pôde ser resgatado: {reason}',
+	'onboarding.handoff.referral_late_title': 'Janela de bônus fechada',
 	'onboarding.handoff.referral_late':
-		'Registaste-te mais de 24 horas depois de clicar no link — sem bónus VXP, mas mesmo assim adicionámos quem te convidou como amigo.',
+		'Você se cadastrou mais de 24 horas depois de clicar no link — sem bônus VXP, mas mesmo assim adicionamos quem convidou você como amigo.',
 	'onboarding.handoff.referral_ok_title': 'Referência aplicada',
-	'onboarding.handoff.referral_ok': 'Tu e quem te convidou recebem {amount} VXP cada.',
+	'onboarding.handoff.referral_ok': 'Você e quem convidou você recebem {amount} VXP cada.',
 	'profile.dashboard.referrals.code_pending':
-		'Guarda o teu perfil novamente para gerar o teu código. É só um toque.',
+		'Salve seu perfil novamente para gerar seu código. É só um toque.',
 	'profile.dashboard.referrals.code_pending_failed':
-		'Não foi possível gerar o teu código. Tenta novamente.',
-	'profile.dashboard.referrals.share': 'Partilhar',
+		'Não foi possível gerar seu código. Tente novamente.',
+	'profile.dashboard.referrals.share': 'Compartilhar',
 	'profile.dashboard.referrals.share_text':
-		'Junta-te ao VICI com o meu código {code} — recebemos ambos {amount} VXP.',
-	'profile.dashboard.referrals.share_title': 'Junta-te a mim no VICI'
+		'Junte-se ao VICI com o meu código {code} — recebemos ambos {amount} VXP.',
+	'profile.dashboard.referrals.share_title': 'Junte-se a mim no VICI'
 } as const;
