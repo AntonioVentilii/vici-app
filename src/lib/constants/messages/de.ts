@@ -1994,6 +1994,8 @@ export const deMessages = {
 	'settings.language.no_match': 'Keine Treffer',
 	'settings.language.search': 'Sprache suchen',
 	'settings.legal': 'Rechtliches',
+	'settings.legal.aviso': 'Aviso de Privacidad (México)',
+	'settings.legal.aviso_br': 'Aviso de Privacidade (Brasil)',
 	'settings.legal.cookies': 'Cookie-Richtlinie',
 	'settings.legal.imprint': 'Impressum',
 	'settings.legal.privacy': 'Datenschutzerklärung',

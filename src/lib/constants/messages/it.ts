@@ -1975,6 +1975,8 @@ export const itMessages = {
 	'settings.language.no_match': 'Nessun risultato',
 	'settings.language.search': 'Cerca lingua',
 	'settings.legal': 'Legale',
+	'settings.legal.aviso': 'Aviso de Privacidad (México)',
+	'settings.legal.aviso_br': 'Aviso de Privacidade (Brasil)',
 	'settings.legal.cookies': 'Cookie policy',
 	'settings.legal.imprint': 'Note legali',
 	'settings.legal.privacy': 'Privacy policy',
