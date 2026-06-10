@@ -1890,7 +1890,7 @@ export const frMessages = {
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Compte',
 	'settings.account.email': 'E-mail',
-	'settings.account.email.empty': 'Aucun email enregistré',
+	'settings.account.email.empty': 'Aucun e-mail enregistré',
 	'settings.account.email.verified': 'vérifié',
 	'settings.account.signin_method': 'Méthode de connexion',
 	'settings.account.signin_method.ii': 'Internet Identity',
