@@ -159,7 +159,9 @@
 	 * as "Top 100%" on an unranked or unloaded profile.
 	 */
 	const topPercentLabel = $derived.by<string | undefined>(() => {
-		const total = $globalStandingsStore.get('all')?.entries.length;
+		// The window's `total` is the full ranked population (`entries` is only the
+		// paged slice), so the credibility line agrees with Goat's percentile.
+		const total = $globalStandingsStore.get('all')?.total;
 
 		if (globalRank === undefined || total === undefined || total <= 0) {
 			return;

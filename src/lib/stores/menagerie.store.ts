@@ -18,3 +18,16 @@ export const myReferralCountStore = writable<number | undefined>(undefined);
  * perpetual skeleton. Sticks `true` across navigation once set.
  */
 export const myMenagerieSignalsLoaded = writable<boolean>(false);
+
+/**
+ * Drop the previous principal's Menagerie signal caches on an auth transition
+ * (sign-out, user switch, bootstrap). Without this the referral count would
+ * briefly back the next principal's Parrot tier, and the `signalsLoaded` gate —
+ * which sticks `true` — would skip the skeleton state so the new identity sees
+ * the old one's trophies flash before its own signals load. Called from
+ * `Authn` alongside the other user-scoped store resets.
+ */
+export const clearMyMenagerieSignals = (): void => {
+	myReferralCountStore.set(undefined);
+	myMenagerieSignalsLoaded.set(false);
+};

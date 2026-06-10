@@ -38,7 +38,10 @@ export const myMenagerieStats: Readable<MenagerieStats> = derived(
 			signals: {
 				referrals: $referrals ?? 0,
 				rank: idx === -1 ? undefined : idx + 1,
-				totalRanked: $standings.get('all')?.entries.length
+				// The window's `total` is the full ranked population; `entries` is only
+				// the fetched (paged-capped) slice, so its length undercounts and would
+				// inflate the percentile → over-grant Goat's tier.
+				totalRanked: $standings.get('all')?.total
 			}
 		});
 	}
