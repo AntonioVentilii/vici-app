@@ -10,6 +10,7 @@
 	import { INFO_EMAIL } from '$lib/constants/contact.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { mailtoHref } from '$lib/utils/email.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	interface FooterLink {
@@ -30,7 +31,7 @@
 			links: [
 				{ label: 'footer.faq', href: '#faq' },
 				{ label: 'footer.rules', href: `${PublicPath.Info}/resolution-rules` },
-				{ label: 'footer.contact', href: `mailto:${INFO_EMAIL}` }
+				{ label: 'footer.contact', href: mailtoHref(INFO_EMAIL) }
 			]
 		},
 		{
