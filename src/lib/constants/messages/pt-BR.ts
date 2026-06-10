@@ -2454,7 +2454,7 @@ export const ptBRMessages = {
 	'worlds.picker.school.consumer_blocked':
 		'Gmail / Yahoo / iCloud não contam. Use o endereço fornecido pela sua escola.',
 	'worlds.picker.school.continue': 'Continuar →',
-	'worlds.picker.school.detected_from_email': 'detetado do seu e-mail',
+	'worlds.picker.school.detected_from_email': 'detectado do seu e-mail',
 	'worlds.picker.school.domain_belongs': 'Esse domínio pertence a {name} — vamos adicioná-lo lá.',
 	'worlds.picker.school.dupe_title': 'Já existe — escolha uma?',
 	'worlds.picker.school.email_label': 'E-mail escolar',
