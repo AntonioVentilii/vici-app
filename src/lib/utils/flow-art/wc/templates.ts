@@ -37,17 +37,24 @@
 //
 // Coordinate space is the WC band's 280×100 (see `wc/render.ts`).
 
-import { WC_KIT_NEUTRAL, WC_SHIRT, type WCKit } from '$lib/constants/flow-art-wc.constants';
+import {
+	WC_KIT_NEUTRAL,
+	WC_NATION_KITS,
+	WC_SHIRT,
+	type WCKit
+} from '$lib/constants/flow-art-wc.constants';
 import type { Rng } from '$lib/utils/flow-art/types';
 import type { WcHelpers } from '$lib/utils/flow-art/wc/helpers';
 import type { WcResolvedTemplate } from '$lib/utils/flow-art/wc/resolve-template';
 
-// Host-nation flag trios for the Mexico / USA / Canada special.
+// Host-nation flag pairs for the three-host special, drawn from the
+// shared nation-kit table (Mexico / USA / Canada) so the host palettes
+// stay in lockstep with every other card rather than re-hardcoding them.
 const HOST_FLAGS: ReadonlyArray<{ a: string; b: string }> = [
-	{ a: '#006847', b: '#CE1126' }, // Mexico
-	{ a: '#0A3161', b: '#C8102E' }, // USA
-	{ a: '#C8102E', b: '#F2ECDC' } // Canada
-];
+	WC_NATION_KITS['mexico'],
+	WC_NATION_KITS['united states'],
+	WC_NATION_KITS['canada']
+].map((kit) => ({ a: kit.primary, b: kit.secondary }));
 
 // Pick a readable ink for a kit shadow plane sitting under the figure.
 // The figure layer uses fixed inks (see `wcFace`) so this only tunes
@@ -432,12 +439,30 @@ const podium = ({ h, teamA, uid }: { h: WcHelpers; teamA: WCKit; uid: string }):
 };
 
 // stopwatch — a big blocky stopwatch reading ~15' with a fast ball-blur
-// streaking past (the "goal in first 15 / early goal" prop).
-const stopwatch = ({ h, g }: { h: WcHelpers; g: Rng }): string => {
+// streaking past (the "goal in first 15 / early goal" prop). The two
+// sides' kits split the field + tint the ball-blur lane, so the early
+// goal reads in the fixture's national palette; the dial, hand and
+// ball-blur stay fixed regardless of the teams.
+const stopwatch = ({
+	h,
+	g,
+	teamA,
+	teamB
+}: {
+	h: WcHelpers;
+	g: Rng;
+	teamA: WCKit;
+	teamB: WCKit;
+}): string => {
 	const { p } = h;
 
 	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
+	s += `<rect x="0" y="0" width="140" height="100" fill="${teamA.primary}" opacity="0.2"/>`;
+	s += `<rect x="140" y="0" width="140" height="100" fill="${teamB.primary}" opacity="0.2"/>`;
 	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.45"/>`;
+	// Corner accent blocks in each side's secondary colour.
+	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
+	s += `<rect x="270" y="78" width="10" height="22" fill="${teamB.secondary}" opacity="0.7"/>`;
 
 	const cx = 96;
 	const cy = 52;
@@ -475,12 +500,30 @@ const stopwatch = ({ h, g }: { h: WcHelpers; g: Rng }): string => {
 };
 
 // referee-card — a blocky referee arm raising a card, true scarlet
-// reserved for the card (the "booking / card shown" prop).
-const refereeCard = ({ h, g }: { h: WcHelpers; g: Rng }): string => {
+// reserved for the card (the "booking / card shown" prop). The two
+// sides' kits wash the field as a diagonal split + corner accent
+// blocks, so the card sits in the fixture's national palette; the ref
+// bust, raised arm and scarlet card stay fixed regardless of the teams.
+const refereeCard = ({
+	h,
+	g,
+	teamA,
+	teamB
+}: {
+	h: WcHelpers;
+	g: Rng;
+	teamA: WCKit;
+	teamB: WCKit;
+}): string => {
 	const { p } = h;
 
 	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
+	s += `<polygon points="0,0 150,0 110,100 0,100" fill="${teamA.primary}" opacity="0.26"/>`;
+	s += `<polygon points="150,0 280,0 280,100 110,100" fill="${teamB.primary}" opacity="0.26"/>`;
 	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.5"/>`;
+	// Corner accent blocks in each side's secondary colour.
+	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
+	s += `<rect x="270" y="78" width="10" height="22" fill="${teamB.secondary}" opacity="0.7"/>`;
 
 	// Referee bust (neutral dark kit) on the left.
 	s += h.wcFace({
@@ -538,12 +581,27 @@ const stadiumClock = ({
 };
 
 // striker-juggle — a blocky striker mid-strike, juggling two balls (the
-// "brace / multi-goal player" prop). Single bust + two balls arcing.
-const strikerJuggle = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): string => {
+// "brace / multi-goal player" prop). Single bust in the scoring side's
+// kit (teamA primary), the opponent (teamB) supplying a secondary accent
+// — a wash band on the far side + a tint on the trailing ball — so the
+// fixture reads as a two-side contest rather than one neutral kit.
+const strikerJuggle = ({
+	h,
+	g,
+	teamA,
+	teamB
+}: {
+	h: WcHelpers;
+	g: Rng;
+	teamA: WCKit;
+	teamB: WCKit;
+}): string => {
 	const { p } = h;
 
 	let s = h.bgPerspective(WC_SHIRT.cream);
 	s += `<rect width="280" height="100" fill="${teamA.primary}" opacity="0.16"/>`;
+	// Opponent accent band on the far (right) side.
+	s += `<polygon points="200,0 280,0 280,100 232,100" fill="${teamB.primary}" opacity="0.14"/>`;
 
 	s += `<g transform="rotate(-4 132 56)">`;
 	s += h.wcFace({
@@ -562,7 +620,10 @@ const strikerJuggle = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }):
 	// Two balls arcing above, with motion arcs.
 	s += `<path d="M 196 70 Q 210 30 224 70" fill="none" stroke="${p.fg}" stroke-width="0.6" opacity="0.4"/>`;
 	s += h.ballProp({ cx: 200, cy: 30 + g.range(-3, 3), r: 7 });
-	s += h.ballProp({ cx: 222, cy: 56 + g.range(-3, 3), r: 6 });
+	const trailY = 56 + g.range(-3, 3);
+	s += h.ballProp({ cx: 222, cy: trailY, r: 6 });
+	// Faint opponent tint on the trailing ball.
+	s += `<circle cx="222" cy="${trailY.toFixed(1)}" r="6" fill="${teamB.primary}" opacity="0.16"/>`;
 
 	return s;
 };
@@ -785,13 +846,13 @@ export const renderWcTemplate = ({
 		case 'podium':
 			return podium({ h, teamA: a, uid });
 		case 'stopwatch':
-			return stopwatch({ h, g });
+			return stopwatch({ h, g, teamA: a, teamB: b });
 		case 'referee-card':
-			return refereeCard({ h, g });
+			return refereeCard({ h, g, teamA: a, teamB: b });
 		case 'stadium-clock':
 			return stadiumClock({ h, teamA: a, teamB: b });
 		case 'striker-juggle':
-			return strikerJuggle({ h, g, teamA: a });
+			return strikerJuggle({ h, g, teamA: a, teamB: b });
 		case 'player-figure':
 			return playerFigure({ h, g, teamA: a });
 		case 'crest-ladder':
