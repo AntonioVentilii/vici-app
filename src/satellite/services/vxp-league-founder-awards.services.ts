@@ -301,7 +301,10 @@ export const onLeagueSetForFounderVxpPayout = async (ctx: OnSetDocContext): Prom
 		});
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
-		const user = key.length > 0 ? key : Principal.fromUint8Array(caller).toText();
+		// `key` is the league id for this collection — the user is the
+		// writing caller (the founder), logged separately so a payout
+		// failure is traceable to the right principal.
+		const user = Principal.fromUint8Array(caller).toText();
 
 		logError({
 			message: 'hook_error',
