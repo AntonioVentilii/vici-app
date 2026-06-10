@@ -1007,7 +1007,7 @@ export const ptMessages = {
 	'footer.help': 'AJUDA',
 	'footer.signin': 'Entrar',
 	'footer.disclosure':
-		'A VICI é um jogo de palpites gratuito para entretenimento. É preciso ter 13 anos ou mais para jogar. Os VXP são pontos de jogo sem valor monetário: não podem ser arriscados, comprados, vendidos nem trocados por dinheiro. Cada mercado resolve em dados públicos. © 2026 VICI.',
+		'A VICI é um jogo de palpites gratuito para entretenimento. É preciso ter 18 anos ou mais para jogar. Os VXP são pontos de jogo sem valor monetário: não podem ser arriscados, comprados, vendidos nem trocados por dinheiro. Cada mercado resolve em dados públicos. © 2026 VICI.',
 	'footer.fifa':
 		'FIFA e World Cup são marcas registadas da FIFA. A VICI não é afiliada à FIFA nem é por ela endossada ou patrocinada. Todos os nomes de seleções e torneios são usados apenas para identificação.',
 	'footer.leaderboard': 'Ranking',

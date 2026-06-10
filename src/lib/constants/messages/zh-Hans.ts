@@ -959,7 +959,7 @@ export const zhHansMessages = {
 	'footer.help': '帮助',
 	'footer.signin': '登录',
 	'footer.disclosure':
-		'VICI 是一款免费的娱乐性预测游戏。玩家须年满 13 周岁。VXP 为游戏内积分,无现金价值,不可用于下注、买卖或兑换现金。每个市场均依据公开数据结算。© 2026 VICI。',
+		'VICI 是一款免费的娱乐性预测游戏。玩家须年满 18 周岁。VXP 为游戏内积分,无现金价值,不可用于下注、买卖或兑换现金。每个市场均依据公开数据结算。© 2026 VICI。',
 	'footer.fifa':
 		'FIFA 与 World Cup 均为 FIFA 的注册商标。VICI 与 FIFA 无任何关联,亦未获其认可或赞助。所有球队及赛事名称仅用于标识。',
 	'footer.leaderboard': '排行榜',
