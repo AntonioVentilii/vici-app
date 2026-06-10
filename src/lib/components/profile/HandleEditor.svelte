@@ -211,7 +211,7 @@
 	};
 </script>
 
-<BottomSheet isOpen={true} {onClose}>
+{#snippet body()}
 	<div class="handle-editor">
 		<div class="handle-editor-head">
 			<h3 class="handle-editor-title">
@@ -283,17 +283,30 @@
 			>
 				{t({ locale: $localeStore, key: hintKey })}
 			</p>
-
-			<div class="handle-editor-actions">
-				<button class="handle-editor-cancel" onclick={onClose} type="button">
-					{t({ locale: $localeStore, key: 'profile.dashboard.cancel' })}
-				</button>
-				<button class="handle-editor-save" disabled={!canSave} onclick={save} type="button">
-					{t({ locale: $localeStore, key: 'profile.handle.save' })}
-				</button>
-			</div>
 		{/if}
 	</div>
+{/snippet}
+
+<!-- Actions live in the sheet's pinned footer (a `flex-shrink: 0` sibling
+	after the scrolling body) rather than inside the scrolling body, so the
+	Save / Cancel CTAs stay in view when the soft keyboard or iOS browser
+	chrome shrinks the visual viewport — otherwise the buttons sit at the
+	tail of the body's scroll region and clip below the visible area, out of
+	reach (#739). Only rendered when unlocked; the locked state has no
+	actions, so the sheet falls back to the single-scroller layout. -->
+{#snippet actions()}
+	<div class="handle-editor-actions">
+		<button class="handle-editor-cancel" onclick={onClose} type="button">
+			{t({ locale: $localeStore, key: 'profile.dashboard.cancel' })}
+		</button>
+		<button class="handle-editor-save" disabled={!canSave} onclick={save} type="button">
+			{t({ locale: $localeStore, key: 'profile.handle.save' })}
+		</button>
+	</div>
+{/snippet}
+
+<BottomSheet footer={locked ? undefined : actions} isOpen={true} {onClose}>
+	{@render body()}
 </BottomSheet>
 
 <style lang="postcss">
@@ -411,10 +424,11 @@
 		color: var(--no);
 	}
 
+	/* No top margin: the sheet footer that hosts this row already supplies
+	 * the separating top spacing + hairline rule. */
 	.handle-editor-actions {
 		display: flex;
 		gap: 0.5rem;
-		margin-top: 0.75rem;
 	}
 
 	.handle-editor-cancel,
