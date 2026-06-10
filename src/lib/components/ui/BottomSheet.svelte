@@ -41,7 +41,7 @@
 		 * after the scrolling `.sheet-body`, so a primary CTA stays in view
 		 * no matter how long the body grows — the body scrolls under it. The
 		 * footer carries the docked-footer bottom inset itself (safe area +
-		 * iOS Chrome toolbar, via `--docked-footer-inset`); the sheet's own
+		 * iOS bottom bar, via `--docked-footer-inset`); the sheet's own
 		 * bottom inset collapses to the side metric when a footer is present
 		 * so the inset isn't doubled. Leave unset for the legacy single-
 		 * scroller layout (body owns the bottom inset).
