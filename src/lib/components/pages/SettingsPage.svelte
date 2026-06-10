@@ -4,6 +4,7 @@
 		Bell,
 		ChevronLeft,
 		ChevronRight,
+		Cookie,
 		Eye,
 		Globe,
 		Info,
@@ -12,6 +13,7 @@
 		Lock,
 		Mail,
 		Moon,
+		Scale,
 		Search,
 		Share2,
 		Sun,
@@ -491,9 +493,29 @@
 				onclick={() => goto(resolve(`${PublicPath.Info}/privacy`))}
 			/>
 			<SetRow
+				icon={Globe}
+				label={t({ locale: $localeStore, key: 'settings.legal.aviso' })}
+				onclick={() => goto(resolve(`${PublicPath.Info}/aviso`))}
+			/>
+			<SetRow
+				icon={Globe}
+				label={t({ locale: $localeStore, key: 'settings.legal.aviso_br' })}
+				onclick={() => goto(resolve(`${PublicPath.Info}/aviso-br`))}
+			/>
+			<SetRow
+				icon={Cookie}
+				label={t({ locale: $localeStore, key: 'settings.legal.cookies' })}
+				onclick={() => goto(resolve(`${PublicPath.Info}/cookies`))}
+			/>
+			<SetRow
 				icon={Info}
 				label={t({ locale: $localeStore, key: 'settings.legal.rules' })}
 				onclick={() => goto(resolve(`${PublicPath.Info}/resolution-rules`))}
+			/>
+			<SetRow
+				icon={Scale}
+				label={t({ locale: $localeStore, key: 'settings.legal.imprint' })}
+				onclick={() => goto(resolve(`${PublicPath.Info}/imprint`))}
 			/>
 		</SettingsSection>
 

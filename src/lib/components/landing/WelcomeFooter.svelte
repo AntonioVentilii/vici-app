@@ -1,8 +1,8 @@
 <script lang="ts">
 	/**
 	 * Landing footer — brand block (wordmark + tagline + Latin motto)
-	 * beside three link columns (Product / Help / Legal), then the FIFA
-	 * registered-trademark line and the entertainment / 13+ / VXP-has-
+	 * beside two link columns (Help / Legal), then the FIFA
+	 * registered-trademark line and the entertainment / VXP-has-
 	 * no-cash-value disclosure.
 	 */
 	import Logo from '$lib/components/layout/Logo.svelte';
@@ -27,18 +27,10 @@
 
 	const cols: readonly FooterCol[] = [
 		{
-			heading: 'footer.product',
-			links: [
-				{ label: 'footer.app', href: PublicPath.SignIn },
-				{ label: 'footer.signin', href: PublicPath.SignIn },
-				{ label: 'footer.leaderboard', href: '#status' }
-			]
-		},
-		{
 			heading: 'footer.help',
 			links: [
 				{ label: 'footer.faq', href: '#faq' },
-				{ label: 'footer.trust', href: '#trust' },
+				{ label: 'footer.rules', href: `${PublicPath.Info}/resolution-rules` },
 				{ label: 'footer.contact', href: mailtoHref(INFO_EMAIL) }
 			]
 		},
@@ -47,7 +39,7 @@
 			links: [
 				{ label: 'footer.terms', href: `${PublicPath.Info}/terms` },
 				{ label: 'footer.privacy', href: `${PublicPath.Info}/privacy` },
-				{ label: 'footer.rules', href: `${PublicPath.Info}/resolution-rules` }
+				{ label: 'footer.imprint', href: `${PublicPath.Info}/imprint` }
 			]
 		}
 	];

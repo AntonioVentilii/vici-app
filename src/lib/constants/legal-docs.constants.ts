@@ -378,3 +378,309 @@ export const PRIVACY: InfoDoc = {
 		}
 	]
 };
+
+export const COOKIE: InfoDoc = {
+	slug: 'cookies',
+	title: 'Cookie Policy',
+	eyebrow: 'Legal · Effective 10 June 2026',
+	blocks: [
+		{ kind: 'p', text: 'Last updated: 10 June 2026' },
+		{ kind: 'h', text: '1. What this policy covers' },
+		{
+			kind: 'lede',
+			text: 'This Cookie Policy explains how Vici, operated by Wholesome Capital Limited (see Legal Notice), uses cookies and similar technologies (such as local storage and SDKs) on vici.market and our applications. It should be read together with our Privacy Policy.'
+		},
+		{ kind: 'h', text: '2. The categories we use' },
+		{
+			kind: 'list',
+			items: [
+				'Strictly necessary — required to run the Service: sign-in, session, security and fraud prevention. These are always active and do not require consent.',
+				'Analytics — help us understand and improve how the Service is used.',
+				'Advertising and attribution — used by third-party partners to show and measure ads and to attribute installs. These may share device and usage data with those partners. See Privacy Policy Section 6.'
+			]
+		},
+		{ kind: 'h', text: '3. Consent' },
+		{
+			kind: 'p',
+			text: 'For users in the EU/EEA and the United Kingdom, non-essential cookies and similar technologies (analytics where applicable, and all advertising/attribution technologies) are set only after you give consent through our consent banner. You can accept, reject, or choose categories, and you can change or withdraw your choice at any time via "Cookie Settings". Strictly necessary technologies are not affected.'
+		},
+		{
+			kind: 'p',
+			text: 'For users in other regions, we use cookies as described here and provide controls required by local law (for example, opt-outs for US users — see "Your Privacy Choices").'
+		},
+		{ kind: 'h', text: '4. The cookies we use' },
+		{
+			kind: 'p',
+			text: 'A detailed list of the specific cookies and similar technologies we use — their provider, category, purpose and duration — will be published here.'
+		},
+		{ kind: 'h', text: '5. Managing cookies' },
+		{
+			kind: 'p',
+			text: 'You can manage non-essential cookies any time through Cookie Settings in the footer. You can also control cookies through your browser or device settings, though disabling strictly necessary cookies may break parts of the Service.'
+		},
+		{ kind: 'h', text: '6. Changes and contact' },
+		{
+			kind: 'p',
+			text: `We may update this policy; we will revise the "Last updated" date for material changes. Questions: ${INFO_EMAIL}.`
+		}
+	]
+};
+
+export const IMPRINT: InfoDoc = {
+	slug: 'imprint',
+	title: 'Legal notice',
+	eyebrow: 'Legal · Imprint',
+	blocks: [
+		{ kind: 'lede', text: 'Provider information under applicable disclosure requirements.' },
+		{ kind: 'h', text: 'Provider' },
+		{ kind: 'p', text: 'Wholesome Capital Limited' },
+		{ kind: 'p', text: 'A private company limited by shares, incorporated in Hong Kong SAR.' },
+		{ kind: 'h', text: 'Registered office' },
+		{
+			kind: 'p',
+			text: 'Unit 2505, 25/F., Billion Plaza, 8 Cheung Yue Street, Lai Chi Kok, Kowloon, Hong Kong'
+		},
+		{ kind: 'h', text: 'Company details' },
+		{
+			kind: 'list',
+			items: [
+				'Business Registration Number: 2391347',
+				'VAT/Tax ID: Not applicable — Hong Kong does not levy VAT/GST'
+			]
+		},
+		{ kind: 'h', text: 'Contact' },
+		{ kind: 'mail', text: INFO_EMAIL },
+		{ kind: 'h', text: 'EU legal representative (Digital Services Act, Art. 13)' },
+		{
+			kind: 'p',
+			text: 'An EU legal representative will be appointed for the service offered to users in the EU — located in an EU member state, with a publicly accessible contact — and their details will be published here. See Privacy Policy Rider A.'
+		},
+		{ kind: 'h', text: 'UK representative (UK GDPR, Art. 27)' },
+		{
+			kind: 'p',
+			text: 'A UK representative will be appointed if the UK is served (separate from the EU representative), and their details will be published here. See Privacy Policy Rider B.'
+		}
+	]
+};
+
+/**
+ * Mexico privacy notice ("Aviso de Privacidad"). A controlling regional
+ * document written in Spanish and carried verbatim: it is inherently a
+ * single-language regional notice (Mexican ARCO rights), so its body lives
+ * here as literal blocks rather than routing through the i18n catalogs.
+ * The `info@` address is the real contact identifier from `contact.constants`.
+ */
+export const AVISO_MX: InfoDoc = {
+	slug: 'aviso',
+	title: 'Aviso de Privacidad',
+	eyebrow: 'Legal · México · Vigente 10 de junio de 2026',
+	blocks: [
+		{ kind: 'p', text: 'Última actualización: 10 de junio de 2026' },
+		{ kind: 'h', text: '1. Identidad y domicilio del responsable' },
+		{
+			kind: 'lede',
+			text: 'Wholesome Capital Limited ("Vici", "nosotros"), sociedad constituida en Hong Kong SAR (Business Registration Number 2391347), es responsable del tratamiento de sus datos personales conforme al presente Aviso de Privacidad.'
+		},
+		{
+			kind: 'p',
+			text: `Para cualquier asunto relacionado con sus datos personales puede contactarnos en ${INFO_EMAIL}.`
+		},
+		{ kind: 'h', text: '2. Datos personales que recabamos' },
+		{
+			kind: 'p',
+			text: 'Para prestarle el servicio de Vici —un juego de pronósticos gratuito y con fines de entretenimiento, en el que VXP y demás elementos del juego no tienen valor monetario— podemos recabar:'
+		},
+		{
+			kind: 'list',
+			items: [
+				'Datos de identificación y de cuenta: el identificador con el que inicia sesión (mediante Google, Apple o una llave de acceso / passkey) y los datos de perfil que decida proporcionar (por ejemplo, nombre para mostrar). Al usar Google o Apple recibimos datos limitados de identidad de dichos proveedores (como un identificador y, según su configuración, su nombre y correo; Apple puede proporcionar un correo de relevo privado). El inicio de sesión con passkey no involucra a un proveedor externo.',
+				'Datos de actividad en el juego: los pronósticos que realiza, los VXP que destina a cada pronóstico, su saldo e historial de VXP, su precisión y resultados, y demás actividad dentro del juego.',
+				'Datos técnicos y de uso: tipo de dispositivo, navegador, región aproximada (derivada de la dirección IP) y la forma en que interactúa con la aplicación, con fines de análisis y seguridad.',
+				'Comunicaciones: el contenido de su correspondencia si nos contacta.',
+				'Datos de publicidad y atribución: según se describe en la sección 4 y en nuestra Política de Privacidad.'
+			]
+		},
+		{
+			kind: 'p',
+			text: 'No recabamos datos personales sensibles ni información de pago, ya que no hay nada que comprar en el servicio.'
+		},
+		{ kind: 'h', text: '3. Finalidades del tratamiento' },
+		{
+			kind: 'p',
+			text: 'Finalidades primarias (necesarias para prestarle el servicio):'
+		},
+		{
+			kind: 'list',
+			items: [
+				'crear y administrar su cuenta y permitirle usar el juego, los pronósticos, los VXP y las tablas de clasificación;',
+				'mantener la seguridad del servicio y prevenir fraudes y abusos;',
+				'atender sus solicitudes y comunicaciones; y',
+				'cumplir con obligaciones legales aplicables.'
+			]
+		},
+		{
+			kind: 'p',
+			text: 'Finalidades secundarias (no necesarias para el servicio y que requieren su consentimiento):'
+		},
+		{
+			kind: 'list',
+			items: [
+				'mostrarle y medir publicidad personalizada; y',
+				'enviarle comunicaciones promocionales sobre Vici.'
+			]
+		},
+		{
+			kind: 'p',
+			text: `Usted puede negar el consentimiento para las finalidades secundarias, sin que ello afecte la prestación del servicio. Para hacerlo, envíe su solicitud a ${INFO_EMAIL}. Si no manifiesta su negativa, podremos tratar sus datos para dichas finalidades conforme a la ley aplicable.`
+		},
+		{ kind: 'h', text: '4. Publicidad y tecnologías de rastreo' },
+		{
+			kind: 'p',
+			text: 'Vici se financia en parte con publicidad. Cuando integramos tecnologías de publicidad, atribución o medición de terceros, dichos terceros pueden recibir ciertos datos técnicos y de uso y los tratan conforme a sus propios términos. Para estas tecnologías no esenciales solicitamos su consentimiento previo a través de nuestro mecanismo de consentimiento, y usted puede modificarlo o retirarlo en cualquier momento.'
+		},
+		{ kind: 'h', text: '5. Dónde se almacenan sus datos y transferencias' },
+		{
+			kind: 'p',
+			text: 'Vici opera sobre la red descentralizada Internet Computer Protocol (ICP). Sus datos se almacenan en la subred europea de ICP, integrada exclusivamente por nodos ubicados en Europa; por ello, sus datos personales se conservan y replican únicamente en nodos dentro de la región europea. Esto implica una transferencia internacional de sus datos hacia infraestructura ubicada en Europa, región reconocida por un alto nivel de protección de datos.'
+		},
+		{
+			kind: 'p',
+			text: 'Salvo lo anterior y las transferencias a proveedores de publicidad descritas en la sección 4, no transferimos sus datos a terceros, excepto cuando sea necesario para cumplir una obligación legal, atender un requerimiento de autoridad competente, o proteger los derechos, la seguridad y la integridad de Vici y de sus usuarios.'
+		},
+		{ kind: 'h', text: '6. Sus derechos ARCO y revocación del consentimiento' },
+		{
+			kind: 'p',
+			text: 'Usted tiene derecho a Acceder a sus datos personales, Rectificar los que sean inexactos o incompletos, Cancelar los que considere que no estamos tratando conforme a la ley y Oponerse a su tratamiento (derechos ARCO). También puede revocar el consentimiento que nos haya otorgado y limitar el uso o divulgación de sus datos.'
+		},
+		{
+			kind: 'p',
+			text: `Para ejercer cualquiera de estos derechos, envíe su solicitud a ${INFO_EMAIL}, indicando su nombre, una forma de contacto, una descripción clara de los datos o del derecho que desea ejercer, y los elementos que permitan localizar sus datos. Responderemos en los plazos que establece la ley aplicable.`
+		},
+		{ kind: 'h', text: '7. Uso de cookies y tecnologías similares' },
+		{
+			kind: 'p',
+			text: 'Utilizamos cookies y tecnologías similares para el inicio de sesión, la seguridad y el análisis y —sujeto a su consentimiento— para publicidad. Puede gestionar su consentimiento a través de nuestro mecanismo de consentimiento.'
+		},
+		{ kind: 'h', text: '8. Cambios al Aviso de Privacidad' },
+		{
+			kind: 'p',
+			text: 'Podemos actualizar este Aviso de Privacidad. Cuando lo hagamos, publicaremos la versión vigente en vici.market y actualizaremos la fecha de "Última actualización".'
+		},
+		{ kind: 'h', text: '9. Edad mínima' },
+		{
+			kind: 'p',
+			text: 'Vici está dirigido únicamente a personas mayores de 18 años. No recabamos conscientemente datos de menores de esa edad.'
+		},
+		{ kind: 'h', text: '10. Contacto' },
+		{ kind: 'p', text: 'Wholesome Capital Limited' },
+		{
+			kind: 'p',
+			text: 'Unit 2505, 25/F., Billion Plaza, 8 Cheung Yue Street, Lai Chi Kok, Kowloon, Hong Kong'
+		},
+		{ kind: 'mail', text: INFO_EMAIL }
+	]
+};
+
+/**
+ * Brazil privacy notice ("Aviso de Privacidade"). A controlling regional
+ * document written in Brazilian Portuguese and carried verbatim: it is
+ * inherently a single-language regional notice (LGPD), so its body lives
+ * here as literal blocks rather than routing through the i18n catalogs.
+ * The `info@` address is the real contact identifier from `contact.constants`.
+ */
+export const AVISO_BR: InfoDoc = {
+	slug: 'aviso-br',
+	title: 'Aviso de Privacidade',
+	eyebrow: 'Legal · Brasil · Em vigor em 10 de junho de 2026',
+	blocks: [
+		{ kind: 'p', text: 'Última atualização: 10 de junho de 2026' },
+		{ kind: 'h', text: '1. Quem somos (controlador)' },
+		{
+			kind: 'lede',
+			text: 'A Wholesome Capital Limited ("Vici", "nós"), sociedade constituída em Hong Kong SAR (Business Registration Number 2391347), é a controladora dos seus dados pessoais nos termos da Lei Geral de Proteção de Dados (Lei nº 13.709/2018, "LGPD").'
+		},
+		{
+			kind: 'p',
+			text: `Para qualquer assunto relacionado aos seus dados pessoais, entre em contato pelo e-mail ${INFO_EMAIL}.`
+		},
+		{ kind: 'h', text: '2. Dados pessoais que coletamos' },
+		{
+			kind: 'p',
+			text: 'Para oferecer o Vici —um jogo de previsões gratuito e com finalidade de entretenimento, no qual os VXP e demais itens do jogo não possuem valor monetário— podemos coletar:'
+		},
+		{
+			kind: 'list',
+			items: [
+				'Dados de identificação e de conta: o identificador com o qual você faz login (via Google, Apple ou uma chave de acesso / passkey) e os dados de perfil que você optar por fornecer (por exemplo, nome de exibição). Ao usar Google ou Apple, recebemos dados limitados de identidade desses provedores (como um identificador e, conforme suas configurações, seu nome e e-mail; a Apple pode fornecer um e-mail de retransmissão privado). O login com passkey não envolve um provedor externo.',
+				'Dados de atividade no jogo: as previsões que você faz, os VXP que você destina a cada previsão, seu saldo e histórico de VXP, sua precisão e resultados, e demais atividades dentro do jogo.',
+				'Dados técnicos e de uso: tipo de dispositivo, navegador, região aproximada (derivada do endereço IP) e a forma como você interage com o aplicativo, para fins de análise e segurança.',
+				'Comunicações: o conteúdo da sua correspondência, caso entre em contato conosco.',
+				'Dados de publicidade e atribuição: conforme descrito na seção 4 e em nossa Política de Privacidade.'
+			]
+		},
+		{
+			kind: 'p',
+			text: 'Não coletamos dados pessoais sensíveis nem informações de pagamento, já que não há nada a comprar no serviço.'
+		},
+		{ kind: 'h', text: '3. Finalidades e bases legais do tratamento' },
+		{
+			kind: 'p',
+			text: 'Tratamos seus dados pessoais com base nas hipóteses do art. 7º da LGPD, conforme a finalidade:'
+		},
+		{
+			kind: 'list',
+			items: [
+				'criar e administrar sua conta e permitir o uso do jogo, das previsões, dos VXP e das tabelas de classificação — execução de serviço solicitado por você (art. 7º, V);',
+				'manter a segurança do serviço e prevenir fraudes e abusos — legítimo interesse (art. 7º, IX);',
+				'atender às suas solicitações e comunicações — execução de serviço e atendimento (art. 7º, V);',
+				'cumprir obrigações legais e regulatórias aplicáveis (art. 7º, II); e',
+				'exibir e medir publicidade personalizada e enviar comunicações promocionais — mediante o seu consentimento (art. 7º, I), que pode ser revogado a qualquer momento.'
+			]
+		},
+		{ kind: 'h', text: '4. Publicidade e tecnologias de rastreamento' },
+		{
+			kind: 'p',
+			text: 'O Vici é mantido em parte por publicidade. Quando integramos tecnologias de publicidade, atribuição ou medição de terceiros, esses terceiros podem receber determinados dados técnicos e de uso e os tratam conforme seus próprios termos. Para essas tecnologias não essenciais solicitamos o seu consentimento prévio por meio do nosso mecanismo de consentimento, e você pode alterá-lo ou revogá-lo a qualquer momento.'
+		},
+		{ kind: 'h', text: '5. Onde seus dados são armazenados e transferências internacionais' },
+		{
+			kind: 'p',
+			text: 'O Vici opera sobre a rede descentralizada Internet Computer Protocol (ICP). Seus dados são armazenados na sub-rede europeia da ICP, composta exclusivamente por nós localizados na Europa; assim, seus dados pessoais são mantidos e replicados apenas em nós dentro da região europeia. Isso implica uma transferência internacional dos seus dados para infraestrutura localizada na Europa, região reconhecida por um alto nível de proteção de dados, nos termos do art. 33 da LGPD.'
+		},
+		{
+			kind: 'p',
+			text: 'Salvo o acima e as transferências a fornecedores de publicidade descritas na seção 4, não compartilhamos seus dados com terceiros, exceto quando necessário para cumprir obrigação legal, atender requisição de autoridade competente, ou proteger os direitos, a segurança e a integridade do Vici e de seus usuários.'
+		},
+		{ kind: 'h', text: '6. Seus direitos como titular' },
+		{
+			kind: 'p',
+			text: 'Nos termos do art. 18 da LGPD, você tem direito a: confirmação da existência de tratamento; acesso aos dados; correção de dados incompletos, inexatos ou desatualizados; anonimização, bloqueio ou eliminação de dados desnecessários, excessivos ou tratados em desconformidade com a lei; portabilidade; eliminação dos dados tratados com base no consentimento; informação sobre as entidades com as quais compartilhamos seus dados; informação sobre a possibilidade de não fornecer consentimento e suas consequências; e revogação do consentimento.'
+		},
+		{
+			kind: 'p',
+			text: `Para exercer qualquer um desses direitos, envie sua solicitação para ${INFO_EMAIL}, indicando seu nome, uma forma de contato e uma descrição clara do direito que deseja exercer. Responderemos nos prazos previstos na legislação aplicável. Você também pode peticionar à Autoridade Nacional de Proteção de Dados (ANPD).`
+		},
+		{ kind: 'h', text: '7. Encarregado (DPO)' },
+		{
+			kind: 'p',
+			text: 'Designaremos um Encarregado pelo Tratamento de Dados Pessoais para o Brasil e publicaremos os seus dados de contato aqui. Até lá, você pode tratar de assuntos relativos aos seus dados pessoais pelo contato indicado na seção 10.'
+		},
+		{ kind: 'h', text: '8. Cookies e tecnologias similares' },
+		{
+			kind: 'p',
+			text: 'Utilizamos cookies e tecnologias similares para login, segurança e análise e —mediante o seu consentimento— para publicidade. Você pode gerenciar o seu consentimento por meio do nosso mecanismo de consentimento.'
+		},
+		{ kind: 'h', text: '9. Alterações e idade mínima' },
+		{
+			kind: 'p',
+			text: 'Podemos atualizar este Aviso de Privacidade. Quando o fizermos, publicaremos a versão vigente em vici.market e atualizaremos a data de "Última atualização". O Vici destina-se exclusivamente a pessoas maiores de 18 anos e não tratamos conscientemente dados pessoais de crianças e adolescentes.'
+		},
+		{ kind: 'h', text: '10. Contato' },
+		{ kind: 'p', text: 'Wholesome Capital Limited' },
+		{
+			kind: 'p',
+			text: 'Unit 2505, 25/F., Billion Plaza, 8 Cheung Yue Street, Lai Chi Kok, Kowloon, Hong Kong'
+		},
+		{ kind: 'mail', text: INFO_EMAIL }
+	]
+};

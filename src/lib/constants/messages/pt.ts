@@ -1,3 +1,7 @@
+// European Portuguese (pt-PT). The base Portuguese catalog, written in the
+// European variant (equipa, ecrã, utilizador, telemóvel) with pt-PT grammar
+// (estar a + infinitive, clitic placement, tu register). Distinct from the
+// Brazilian `pt-BR` catalog, which is maintained as its own variant.
 export const ptMessages = {
 	'a11y.appearance': 'Aparência',
 	'a11y.banner_juno_console': 'Abre o Juno Console para criar um novo Satellite para testes',
@@ -77,7 +81,7 @@ export const ptMessages = {
 	'battles.create.wager_none': 'Sem aposta',
 	'battles.create.wager_value': '{amount} VXP',
 	'battles.intro.body':
-		'Um duelo de precisão cronometrado. Liga contra liga. Escola contra escola. O retrospeto entre vocês.',
+		'Um duelo de precisão cronometrado. Liga contra liga. Escola contra escola. O registo entre vocês.',
 	'battles.intro.dismiss': 'Dispensar',
 	'battles.intro.lede': '“O que é um duelo?”',
 	'battles.intro.start': 'Iniciar uma batalha',
@@ -157,7 +161,7 @@ export const ptMessages = {
 	'flow.entry.away_sub': '{count} liquidadas · {wins} corretas · {losses} perdidas',
 	'flow.entry.away_copy_win':
 		'As tuas previsões renderam enquanto estiveste fora — mantém o ritmo.',
-	'flow.entry.away_copy_loss': 'A multidão virou este lote — deixa pra lá, as próximas são tuas.',
+	'flow.entry.away_copy_loss': 'A multidão virou este lote — deixa para lá, as próximas são tuas.',
 	'flow.entry.away_more': '+{count} mais na tua carteira',
 	'flow.reso.aria_label': 'Previsões liquidadas enquanto estiveste fora',
 	'flow.reso.eyebrow': 'ENQUANTO ESTIVESTE FORA',
@@ -1001,23 +1005,19 @@ export const ptMessages = {
 	'flow.streak_combo': 'Sequência ×{count}',
 	'flow.title_a': 'Um deslize.',
 	'flow.title_b': 'Uma previsão.',
-	'footer.app': 'App',
 	'footer.contact': 'Contacto',
 	'footer.faq': 'FAQ',
 	'footer.help': 'AJUDA',
-	'footer.signin': 'Entrar',
+	'footer.imprint': 'Aviso legal',
 	'footer.disclosure':
-		'A VICI é um jogo de palpites gratuito para entretenimento. É preciso ter 13 anos ou mais para jogar. Os VXP são pontos de jogo sem valor monetário: não podem ser arriscados, comprados, vendidos nem trocados por dinheiro. Cada mercado resolve em dados públicos. © 2026 VICI.',
+		'A VICI é um jogo de palpites gratuito para entretenimento. É preciso ter 18 anos ou mais para jogar. Os VXP são pontos de jogo sem valor monetário: não podem ser arriscados, comprados, vendidos nem trocados por dinheiro. Cada mercado resolve em dados públicos. © 2026 VICI.',
 	'footer.fifa':
 		'FIFA e World Cup são marcas registadas da FIFA. A VICI não é afiliada à FIFA nem é por ela endossada ou patrocinada. Todos os nomes de seleções e torneios são usados apenas para identificação.',
-	'footer.leaderboard': 'Ranking',
 	'footer.legal': 'JURÍDICO',
 	'footer.privacy': 'Privacidade',
-	'footer.product': 'PRODUTO',
 	'footer.rules': 'Regras de resolução',
 	'footer.tagline': 'Um mercado de previsões feito para quem acha que tem razão.',
 	'footer.terms': 'Termos',
-	'footer.trust': 'Confiança',
 	'friends.add.error.empty': 'Insere primeiro um Principal ID.',
 	'hero.lede_a':
 		'Desliza por previsões reais. Direita para YES, esquerda para NO. Constrói um histórico de estar',
@@ -1980,6 +1980,10 @@ export const ptMessages = {
 	'settings.language.no_match': 'Nenhum resultado',
 	'settings.language.search': 'Procurar idioma',
 	'settings.legal': 'Jurídico',
+	'settings.legal.aviso': 'Aviso de Privacidad (México)',
+	'settings.legal.aviso_br': 'Aviso de Privacidade (Brasil)',
+	'settings.legal.cookies': 'Política de cookies',
+	'settings.legal.imprint': 'Aviso legal',
 	'settings.legal.privacy': 'Política de privacidade',
 	'settings.legal.rules': 'Regras de resolução',
 	'settings.legal.terms': 'Termos de serviço',
