@@ -127,15 +127,24 @@
 	const rankOf = (owner: string): number =>
 		rankedRows.find((row) => row.owner === owner)?.displayRank ?? 0;
 
-	// Net realized P&L over the window, shown as whole VXP with a +/− sign.
-	// `realizedPnl` is a signed `USD_DECIMALS` fixed-point value, so decode it
-	// via `decimalFixedValueToNumber` (NOT `/1e8`); `formatWholeVxpMagnitude`
-	// then renders the magnitude (sub-1 wins read `<1`, not a misleading `0`).
+	// Net realized P&L over the window, shown as whole VXP with a +/− sign on a
+	// real swing only. `realizedPnl` is a signed `USD_DECIMALS` fixed-point
+	// value, so decode it via `decimalFixedValueToNumber` (NOT `/1e8`);
+	// `formatWholeVxpMagnitude` then renders the magnitude (sub-1 wins read `<1`,
+	// not a misleading `0`). A zero net P&L renders as a plain `0` (never `+0`),
+	// and a non-finite/NaN decode falls back to the same unsigned `0`.
 	const formatRowVxp = (realizedPnl: bigint): string => {
 		const value = decimalFixedValueToNumber({ value: realizedPnl, decimals: USD_DECIMALS });
-		const sign = value < 0 ? '−' : '+';
+		const magnitude = formatWholeVxpMagnitude(value);
 
-		return `${sign}${formatWholeVxpMagnitude(value)}`;
+		// Only sign a real swing: a zero net P&L reads as `0` (never `+0`/`−0`),
+		// and a non-finite/NaN decode falls back to the unsigned `0` magnitude.
+		// Matches the swing convention in `ResolutionReveal` / `FlowEntry`.
+		if (magnitude === '0' || !Number.isFinite(value)) {
+			return magnitude;
+		}
+
+		return `${value < 0 ? '−' : '+'}${magnitude}`;
 	};
 
 	// ── Friend state ────────────────────────────────────────────────
