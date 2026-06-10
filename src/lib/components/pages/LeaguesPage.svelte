@@ -11,7 +11,7 @@
 	import LeagueListCard from '$lib/components/leagues/LeagueListCard.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import type { LeagueWithRole } from '$lib/services/leagues.services';
+	import { settleFounderAwards, type LeagueWithRole } from '$lib/services/leagues.services';
 	import { findOwnStanding, getLeagueStandings } from '$lib/services/standings.services';
 	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
 	import {
@@ -26,6 +26,7 @@
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import { t } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
+	import { refreshAllBalances } from '$lib/utils/refresh.utils';
 
 	/**
 	 * Social cohorts list page.
@@ -111,6 +112,28 @@
 
 	const founded = $derived(rows.filter((r) => r.role === 'owner'));
 	const joined = $derived(rows.filter((r) => r.role !== 'owner'));
+
+	// Retroactively back-pay the "Founder +100 VXP" reward for any league
+	// the caller founded before the founder-award hook shipped. Gated on the
+	// loaded list actually containing an owned league — so a member who never
+	// founded one makes no (state-changing) update call — and fired at most
+	// once per mount. Idempotent server-side; refresh balances only when
+	// something was newly settled so the credit shows without a reload.
+	let founderSettleTried = false;
+
+	$effect(() => {
+		if (founderSettleTried || founded.length === 0) {
+			return;
+		}
+
+		founderSettleTried = true;
+
+		void settleFounderAwards().then((settled) => {
+			if (settled > 0) {
+				refreshAllBalances();
+			}
+		});
+	});
 
 	// "Friends are in" — public leagues the caller's confirmed friends are
 	// in but the caller is not. Capped at two so the row stays a discovery

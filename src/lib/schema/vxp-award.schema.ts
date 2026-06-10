@@ -14,7 +14,8 @@ export const VxpAwardTypeSchema = j.enum([
 	'achievement',
 	'comeback',
 	'flow_milestone',
-	'flow_overtime'
+	'flow_overtime',
+	'league_founder'
 ]);
 
 export const VxpAwardStatusSchema = j.enum(['pending', 'paid', 'failed']);
