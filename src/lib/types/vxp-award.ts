@@ -23,6 +23,8 @@ import type { Principal } from '@icp-sdk/core/principal';
  *                      threshold ever.
  *  - `flow_overtime` — user reached 15+ calls in a UTC day (overtime
  *                      finish). Once per UTC day.
+ *  - `league_founder` — user founded a league. One reward per league they
+ *                      own (keyed by league id), capped per account.
  */
 export type VxpAwardType =
 	| 'streak'
@@ -33,7 +35,8 @@ export type VxpAwardType =
 	| 'achievement'
 	| 'comeback'
 	| 'flow_milestone'
-	| 'flow_overtime';
+	| 'flow_overtime'
+	| 'league_founder';
 
 /**
  * Payout lifecycle for a single award. Once `paid`, the doc is immutable
@@ -64,6 +67,7 @@ export interface VxpAwardDoc {
 	 *  - `worlds_podium` — `'<YYYY-MM>_gold' | '<YYYY-MM>_silver' | '<YYYY-MM>_bronze'`.
 	 *  - `flow_milestone` — the crossed threshold as text: `'10' | '100' | '500' | '1000'`.
 	 *  - `flow_overtime` — the UTC day bucket: `'<YYYY-MM-DD>'`.
+	 *  - `league_founder` — the founded league's id (one per league owned).
 	 */
 	awardKey: string;
 	/** Payout amount in VXP base units, decimal string. */

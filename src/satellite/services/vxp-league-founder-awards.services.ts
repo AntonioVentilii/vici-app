@@ -1,0 +1,303 @@
+import { VXP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
+import { Collection } from '$lib/constants/collections.constants';
+import {
+	VXP_LEAGUE_FOUNDER_MAX_AWARDS,
+	VXP_LEAGUE_FOUNDER_REWARD_BASE_UNITS
+} from '$lib/constants/vxp-economy.constants';
+import type { LeagueDoc } from '$lib/types/league';
+import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
+import { logError, logInfo } from '$satellite/utils/logger.utils';
+import { transferWithBadFeeRetry } from '$satellite/utils/vxp-payout.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
+import { Principal } from '@icp-sdk/core/principal';
+import type { OnSetDocContext } from '@junobuild/functions';
+import { IcrcLedgerCanister } from '@junobuild/functions/canisters/ledger/icrc';
+import {
+	countDocsStore,
+	decodeDocData,
+	encodeDocData,
+	getDocStore,
+	setDocStore
+} from '@junobuild/functions/sdk';
+
+/**
+ * League-founder hook. Runs after every `leagues` write; on the
+ * *creation* write (no `before` doc) it credits the founder the
+ * "Founder +100 VXP" the create-league CTA promises and persists the
+ * payout in `vxp_awards`.
+ *
+ * This hook genuinely fires because `leagues` rows are written by the
+ * **client** (`createLeague` calls `setDoc`), and Juno only invokes
+ * `onSetDoc` for client `set_doc` writes — not for serverless
+ * `setDocStore` (the trap that silently dropped the referral payout).
+ *
+ * Idempotency is structural: the award doc key is
+ * `${recipient}/league_founder/${leagueId}` — a second hook firing for
+ * the same league collides with the first and the assert blocks the
+ * duplicate write. No timestamp-based dedupe needed.
+ *
+ * Founding a league is free, so an uncapped per-league payout would be
+ * an unbounded mint; a per-account cap of
+ * {@link VXP_LEAGUE_FOUNDER_MAX_AWARDS} bounds the total, counted off the
+ * caller's own `league_founder` award docs.
+ */
+
+const AWARD_TYPE = 'league_founder' as const;
+
+const persistAward = ({
+	caller,
+	recipient,
+	leagueId,
+	doc
+}: {
+	caller: Uint8Array;
+	recipient: string;
+	leagueId: string;
+	doc: VxpAwardDoc;
+}): void => {
+	const key = vxpAwardKey({ recipient, awardType: AWARD_TYPE, awardKey: leagueId });
+
+	setDocStore({
+		caller,
+		collection: Collection.VXP_AWARDS,
+		key,
+		doc: {
+			data: encodeDocData(doc)
+		}
+	});
+};
+
+const updateAward = ({
+	caller,
+	recipient,
+	leagueId,
+	patch
+}: {
+	caller: Uint8Array;
+	recipient: string;
+	leagueId: string;
+	patch: Partial<VxpAwardDoc> & Pick<VxpAwardDoc, 'status'>;
+}): void => {
+	const key = vxpAwardKey({ recipient, awardType: AWARD_TYPE, awardKey: leagueId });
+	const existing = getDocStore({
+		collection: Collection.VXP_AWARDS,
+		key,
+		caller
+	});
+
+	if (isNullish(existing)) {
+		return;
+	}
+
+	const existingDoc = decodeDocData<VxpAwardDoc>(existing.data);
+	const next: VxpAwardDoc = { ...existingDoc, ...patch };
+
+	setDocStore({
+		caller,
+		collection: Collection.VXP_AWARDS,
+		key,
+		doc: {
+			data: encodeDocData(next),
+			version: existing.version
+		}
+	});
+};
+
+/**
+ * Count of `league_founder` award docs this recipient already owns. The
+ * docs are keyed `{recipient}/league_founder/{leagueId}`, so the builder
+ * with an empty `awardKey` yields the caller's founder-award key prefix;
+ * `matcher.key` is matched as a regex by the datastore, so anchor it to
+ * the start to bound the scan to just this caller's founder docs.
+ */
+const founderAwardCount = ({
+	caller,
+	recipient
+}: {
+	caller: Uint8Array;
+	recipient: string;
+}): number => {
+	const prefix = vxpAwardKey({ recipient, awardType: AWARD_TYPE, awardKey: '' });
+
+	return Number(
+		countDocsStore({
+			collection: Collection.VXP_AWARDS,
+			caller,
+			params: { matcher: { key: `^${prefix}` } }
+		})
+	);
+};
+
+const payFounderReward = async ({
+	ledger,
+	caller,
+	recipient,
+	leagueId
+}: {
+	ledger: IcrcLedgerCanister;
+	caller: Uint8Array;
+	recipient: string;
+	leagueId: string;
+}): Promise<void> => {
+	const amount = VXP_LEAGUE_FOUNDER_REWARD_BASE_UNITS;
+	const earnedAtMs = Date.now();
+
+	// Idempotency: if this league's award doc already exists, skip — the
+	// assert rejects duplicate creations anyway, but checking up front
+	// avoids the wasted ledger call on a hook re-fire.
+	const key = vxpAwardKey({ recipient, awardType: AWARD_TYPE, awardKey: leagueId });
+	const existing = getDocStore({
+		collection: Collection.VXP_AWARDS,
+		key,
+		caller
+	});
+
+	if (nonNullish(existing)) {
+		return;
+	}
+
+	// Per-account cap: founding a league is free, so bound the total mint.
+	if (founderAwardCount({ caller, recipient }) >= VXP_LEAGUE_FOUNDER_MAX_AWARDS) {
+		logInfo({
+			message: 'league_founder_award_capped',
+			detail: { user: recipient, league: leagueId, cap: VXP_LEAGUE_FOUNDER_MAX_AWARDS }
+		});
+
+		return;
+	}
+
+	const pending: VxpAwardDoc = {
+		recipient,
+		awardType: AWARD_TYPE,
+		awardKey: leagueId,
+		amountBaseUnits: amount.toString(),
+		status: 'pending',
+		earnedAtMs
+	};
+
+	try {
+		persistAward({ caller, recipient, leagueId, doc: pending });
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+
+		// Most likely cause: a concurrent hook firing already wrote the
+		// pending doc. Either way, surface and stop — the other firing will
+		// (or has already) issued the transfer.
+		logInfo({
+			message: 'league_founder_award_pending_blocked',
+			detail: { user: recipient, league: leagueId, error: msg }
+		});
+
+		return;
+	}
+
+	const result = await transferWithBadFeeRetry({
+		ledger,
+		toOwner: Principal.fromText(recipient),
+		amount,
+		memo: `vxp:league_founder:${leagueId}`
+	});
+
+	if (result.ok) {
+		logInfo({
+			message: 'league_founder_award_paid',
+			detail: {
+				user: recipient,
+				league: leagueId,
+				amount: amount.toString(),
+				block_index: result.blockIndex.toString()
+			}
+		});
+
+		updateAward({
+			caller,
+			recipient,
+			leagueId,
+			patch: {
+				status: 'paid',
+				paidAtMs: Date.now(),
+				blockIndex: result.blockIndex.toString()
+			}
+		});
+
+		return;
+	}
+
+	logError({
+		message: 'league_founder_award_failed',
+		detail: {
+			user: recipient,
+			league: leagueId,
+			amount: amount.toString(),
+			error: result.error
+		}
+	});
+
+	updateAward({
+		caller,
+		recipient,
+		leagueId,
+		patch: {
+			status: 'failed',
+			errorMessage: result.error
+		}
+	});
+};
+
+/**
+ * Leagues post-write hook — wired into the `leagues` dispatch in
+ * `satellite/index.ts`. Pays the founder reward once, on creation.
+ */
+export const onLeagueSetForFounderVxpPayout = async (ctx: OnSetDocContext): Promise<void> => {
+	const {
+		caller,
+		data: {
+			collection,
+			key,
+			data: { before, after }
+		}
+	} = ctx;
+
+	try {
+		if (collection !== Collection.LEAGUES) {
+			return;
+		}
+
+		// Only the creation write mints the reward. Edits (rename, privacy,
+		// cover image) carry a `before` doc and must not re-pay.
+		if (nonNullish(before)) {
+			return;
+		}
+
+		const league = decodeDocData<LeagueDoc>(after.data);
+		const callerText = Principal.fromUint8Array(caller).toText();
+
+		// Pay the owner, and only when the founder is the writing caller —
+		// the `vxp_awards` assert binds recipient to caller, and a league is
+		// created by its owner (`createLeague` sets `owner` to the signer).
+		if (league.owner !== callerText) {
+			return;
+		}
+
+		const ledger = new IcrcLedgerCanister({
+			canisterId: Principal.fromText(VXP_LEDGER_CANISTER_ID)
+		});
+
+		await payFounderReward({
+			ledger,
+			caller,
+			recipient: callerText,
+			leagueId: league.id
+		});
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		const user = key.length > 0 ? key : Principal.fromUint8Array(caller).toText();
+
+		logError({
+			message: 'hook_error',
+			detail: { hook: 'league_founder_award', league: key, user, error: msg }
+		});
+
+		throw e;
+	}
+};

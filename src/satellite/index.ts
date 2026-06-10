@@ -137,6 +137,7 @@ import { onProfileSetForAchievementAward } from '$satellite/services/vxp-achieve
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimCalibrationRewardFn } from '$satellite/services/vxp-calibration.services';
 import { onProfileSetForComebackRestore } from '$satellite/services/vxp-comeback-awards.services';
+import { onLeagueSetForFounderVxpPayout } from '$satellite/services/vxp-league-founder-awards.services';
 import {
 	onProfileSetForVxpOnboarding,
 	onTradeActivityForVxpOnboarding
@@ -1151,7 +1152,8 @@ const setDocCollections = [
 	Collection.ACTIVITIES,
 	Collection.PROFILES,
 	Collection.ROLES,
-	Collection.REFERRALS
+	Collection.REFERRALS,
+	Collection.LEAGUES
 ] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
@@ -1187,7 +1189,8 @@ export const onSetDoc = defineHook<OnSetDoc>({
 			[Collection.PROFILES]: onProfileSetComposed,
 			[Collection.ACTIVITIES]: onActivitySetComposed,
 			[Collection.ROLES]: syncRoleToEngineOnSet,
-			[Collection.REFERRALS]: onReferralSetForVxpPayout
+			[Collection.REFERRALS]: onReferralSetForVxpPayout,
+			[Collection.LEAGUES]: onLeagueSetForFounderVxpPayout
 		};
 
 		await fn[context.data.collection]?.(context);
