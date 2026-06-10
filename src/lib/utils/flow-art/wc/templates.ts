@@ -46,6 +46,7 @@ import {
 	WC_KIT_NEUTRAL,
 	WC_NATION_KITS,
 	WC_SHIRT,
+	WC_SKIN,
 	type WCKit
 } from '$lib/constants/flow-art-wc.constants';
 import type { Rng } from '$lib/utils/flow-art/types';
@@ -689,10 +690,11 @@ const playerCard = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): st
 	// Corner accent block in the kit's secondary colour.
 	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
 
+	const skin = g.pick(['umber', 'olive', 'almond', 'sand', 'bronze', 'mahog'] as const);
 	s += h.wcFace({
 		cx: 96,
 		cy: 52,
-		skin: g.pick(['umber', 'olive', 'almond', 'sand', 'bronze', 'mahog'] as const),
+		skin,
 		hair: g.pick(['jet', 'charcoal', 'brown', 'auburn', 'blonde'] as const),
 		hairStyle: g.pick(['short', 'curly', 'cap'] as const),
 		shirt: teamA.primary,
@@ -701,9 +703,10 @@ const playerCard = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): st
 		emotion: 'focus'
 	});
 
-	// Raised forearm in the kit colour angling up toward the card.
+	// Raised forearm in the kit colour angling up toward the card; the
+	// hand block carries the player's own face skin tone.
 	s += `<polygon points="120,72 132,70 176,30 168,24 124,62 116,66" fill="${teamA.primary}"/>`;
-	s += `<rect x="118" y="60" width="8" height="8" rx="1" fill="#B98968"/>`;
+	s += `<rect x="118" y="60" width="8" height="8" rx="1" fill="${WC_SKIN[skin].base}"/>`;
 
 	// The booking card — fixed amber, raised beside/above the player.
 	s += amberCardProp({ cx: 188, cy: 28, rot: 14 });
@@ -724,10 +727,11 @@ const playerAssist = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): 
 	// Corner accent block in the kit's secondary colour.
 	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
 
+	const skin = g.pick(['umber', 'olive', 'almond', 'sand', 'bronze', 'mahog'] as const);
 	s += h.wcFace({
 		cx: 96,
 		cy: 52,
-		skin: g.pick(['umber', 'olive', 'almond', 'sand', 'bronze', 'mahog'] as const),
+		skin,
 		hair: g.pick(['jet', 'charcoal', 'brown', 'auburn', 'blonde'] as const),
 		hairStyle: g.pick(['short', 'curly', 'cap'] as const),
 		shirt: teamA.primary,
@@ -736,11 +740,12 @@ const playerAssist = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): 
 		emotion: 'focus'
 	});
 
-	// Small team-mate marker node on the right, in the team palette.
+	// Small team-mate marker node on the right, in the team palette; the
+	// marker head shares the playmaker's skin tone (same-tone teammates).
 	const mateY = 40 + g.range(-4, 4);
 	s += `<circle cx="236" cy="${mateY.toFixed(1)}" r="8" fill="${teamA.primary}"/>`;
 	s += `<circle cx="236" cy="${mateY.toFixed(1)}" r="8" fill="none" stroke="${p.fg}" stroke-width="0.6" opacity="0.55"/>`;
-	s += `<circle cx="236" cy="${(mateY - 11).toFixed(1)}" r="3.4" fill="#B98968"/>`;
+	s += `<circle cx="236" cy="${(mateY - 11).toFixed(1)}" r="3.4" fill="${WC_SKIN[skin].base}"/>`;
 
 	// Threaded pass — a curved arrow sweeping from the playmaker to the
 	// team-mate, arrowhead landing at the marker's near edge.

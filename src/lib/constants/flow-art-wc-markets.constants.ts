@@ -19,6 +19,11 @@
 // is asserted against the brief histogram at author time. Do not
 // hand-edit individual rows — regenerate the whole table if the
 // catalogue changes.
+//
+// The catalogue covers the player-prop templates `player-card`
+// (booking) and `player-assist` (assist) alongside `player-figure`
+// (goal), so a future manual regeneration follows the same
+// brief→template classification and won't revert these rows.
 
 import type { WcTemplateId } from '$lib/utils/flow-art/wc/resolve-template';
 
