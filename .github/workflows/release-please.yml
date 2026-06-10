@@ -44,4 +44,8 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_PAT || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-          target-branch: ${{ github.ref_name }}
+          # Pinned to main, not github.ref_name: workflow_dispatch can run from
+          # any branch, and a dynamic target would let a dispatch on a non-main
+          # branch cut a v* tag there — which deploy.yml/publish.yml trigger on
+          # (push: tags: v*). Releases only ever come off main.
+          target-branch: main
