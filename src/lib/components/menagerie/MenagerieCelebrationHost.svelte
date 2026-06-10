@@ -2,8 +2,9 @@
 	import { onMount } from 'svelte';
 	import MenagerieReveal from '$lib/components/menagerie/MenagerieReveal.svelte';
 	import MenagerieSprite from '$lib/components/menagerie/MenagerieSprite.svelte';
+	import { myMenagerieStats } from '$lib/derived/menagerie.derived';
+	import { loadMyMenagerieSignals } from '$lib/services/menagerie.services';
 	import { persistEarnedMenagerie } from '$lib/services/profile.services';
-	import { listMyReferrals } from '$lib/services/referral.services';
 	import { flowBeatActiveStore } from '$lib/stores/flow-beat.store';
 	import {
 		advanceMenagerieCelebration,
@@ -11,9 +12,8 @@
 		menagerieCelebrationStore,
 		resetMenagerieCelebrations
 	} from '$lib/stores/menagerie-celebration.store';
-	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { userStore } from '$lib/stores/user.store';
-	import { detectNewMenagerieTiers, menagerieStatsFromProfile } from '$lib/utils/menagerie.utils';
+	import { detectNewMenagerieTiers } from '$lib/utils/menagerie.utils';
 
 	// App-shell celebration pipeline for the Menagerie trophy layer. Mounted once
 	// at the (app) shell so a freshly-crossed tier celebrates on any surface.
@@ -27,44 +27,18 @@
 	//   4. Render the reveal, HELD while a Flow character beat is on screen so the
 	//      two never collide (card → character beat → trophy).
 	//
-	// Beyond the stats carried on the profile doc, the host best-effort sources
-	// the same live signals the achievements screen (`AlbumPage`) uses — referral
-	// count + global rank — so Parrot / Goat / Badger can also celebrate from the
-	// always-mounted host instead of only on the grid. Any source that's missing
-	// just leaves its animal at baseline; it never blocks the host.
+	// Beyond the stats carried on the profile doc, the host reads the SAME shared
+	// `menagerie.derived` snapshot the profile rail + album grid render from —
+	// referral count + global rank folded in — so Parrot / Goat / Badger
+	// celebrate from exactly the tier the user sees, never a divergent one. The
+	// host is always mounted at the (app) shell, so it also hydrates those live
+	// signals app-wide; any source that's missing just leaves its animal at
+	// baseline. It never blocks the host.
 
 	const profile = $derived($userStore.profile);
 
-	// Referral count (Parrot) — loaded once; the profile doc doesn't carry it.
-	let referralCount = $state(0);
-
 	onMount(() => {
-		void (async () => {
-			try {
-				const referrals = await listMyReferrals();
-				referralCount = referrals.length;
-			} catch {
-				// Best-effort: Parrot just stays at its baseline if this fails.
-			}
-		})();
-	});
-
-	// Global rank (Goat) from the cached "all" leaderboard window, when loaded.
-	const selfRank = $derived.by((): { rank: number; total: number } | undefined => {
-		const result = $globalStandingsStore.get('all');
-		const owner = profile?.owner;
-
-		if (!result || !owner) {
-			return;
-		}
-
-		const self = result.entries.find((entry) => entry.owner === owner);
-
-		if (!self) {
-			return;
-		}
-
-		return { rank: self.rank, total: result.entries.length };
+		void loadMyMenagerieSignals();
 	});
 
 	// Guard so the seed / detect pass runs once per distinct earned-set + ledger
@@ -81,14 +55,7 @@
 			return;
 		}
 
-		const stats = menagerieStatsFromProfile({
-			profile: current,
-			signals: {
-				referrals: referralCount,
-				rank: selfRank?.rank,
-				totalRanked: selfRank?.total
-			}
-		});
+		const stats = $myMenagerieStats;
 		const diff = detectNewMenagerieTiers({ stats, celebrated: current.earnedMenagerie });
 
 		// Signature = the earned-set + whether the ledger was seeded. Re-running
