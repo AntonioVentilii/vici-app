@@ -10,7 +10,11 @@
 	import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { authBusy, userSignedIn } from '$lib/derived/user.derived';
-	import { claimReferralFriendship, lookupReferralCode } from '$lib/services/referral.services';
+	import {
+		claimReferralFriendship,
+		lookupReferralCode,
+		lookupReferralCodeByHandle
+	} from '$lib/services/referral.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -20,7 +24,14 @@
 	 * Invite-link landing — the shared body behind both canonical invite URLs, `/i/[code]` and
 	 * `/join/[code]`. Both routes carry the same 8-char Crockford-base32 referral code in their
 	 * `[code]` slug and render this component, so the two paths behave identically (single source
-	 * of truth — no duplicated branching). Branches on the caller's auth state:
+	 * of truth — no duplicated branching).
+	 *
+	 * Legacy `/join/{handle}` links (shared before the slug became code-based) carry a handle
+	 * instead of a code. When the slug isn't a valid code, the landing resolves it to the owner's
+	 * code via `lookupReferralCodeByHandle` (a public query — works pre-auth) and continues with
+	 * the resolved code; an unknown handle falls through to the same "invalid invite" toast.
+	 *
+	 * Branches on the caller's auth state:
 	 *
 	 *   1. **Invalid code shape** — bail to home with an error toast.
 	 *   2. **Signed-out (or a brand-new account still mid-onboarding)** — stash the code
@@ -47,6 +58,11 @@
 
 	const rawCode = $derived(page.params.code ?? '');
 	const normalizedCode = $derived(rawCode.toUpperCase().trim());
+
+	// The referral code the rest of the flow acts on. Usually identical to `normalizedCode`, but
+	// for a legacy `/join/{handle}` link it's the code resolved from the handle. Set once in
+	// `handleInvite`; read by the signup stash and the friendship-claim CTA.
+	let activeCode = $state<string | undefined>(undefined);
 	const onboardingCompleted = $derived(
 		$userStore.profile?.preferences?.onboardingCompleted === true
 	);
@@ -85,7 +101,7 @@
 		void handleInvite();
 	});
 
-	const stashCodeForSignup = () => {
+	const stashCodeForSignup = (code: string) => {
 		try {
 			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
 			const parsed: Record<string, unknown> =
@@ -100,7 +116,7 @@
 							}
 						})()
 					: {};
-			parsed.referralCode = normalizedCode;
+			parsed.referralCode = code;
 			localStorage.setItem(PENDING_ONBOARDING_STORAGE_KEY, JSON.stringify(parsed));
 		} catch {
 			// Best-effort: signup still works without attribution if storage is unavailable.
@@ -116,24 +132,46 @@
 	};
 
 	const handleInvite = async () => {
-		if (!REFERRAL_CODE_REGEX.test(normalizedCode)) {
-			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'invite.invalid_title' }),
-				message: t({ locale: $localeStore, key: 'invite.invalid_body' }),
-				type: 'error',
-				duration: 4000
-			});
-			mode = 'redirecting';
-			goHome();
+		// Resolve the effective referral code. A canonical link already carries the code in its
+		// slug; a legacy `/join/{handle}` link carries a handle, so when the slug isn't a valid
+		// code we resolve it to the owner's code (a public query — works pre-auth). An unknown
+		// handle (or a malformed slug that's neither) lands on the same "invalid invite" toast.
+		let code = normalizedCode;
 
-			return;
+		if (!REFERRAL_CODE_REGEX.test(code)) {
+			let resolvedFromHandle: string | undefined;
+
+			try {
+				resolvedFromHandle = await lookupReferralCodeByHandle({ handle: rawCode.trim() });
+			} catch (err: unknown) {
+				console.error('Invite handle resolve failed', err);
+			}
+
+			const candidate = resolvedFromHandle?.toUpperCase().trim();
+
+			if (candidate === undefined || !REFERRAL_CODE_REGEX.test(candidate)) {
+				notificationsStore.add({
+					title: t({ locale: $localeStore, key: 'invite.invalid_title' }),
+					message: t({ locale: $localeStore, key: 'invite.invalid_body' }),
+					type: 'error',
+					duration: 4000
+				});
+				mode = 'redirecting';
+				goHome();
+
+				return;
+			}
+
+			code = candidate;
 		}
+
+		activeCode = code;
 
 		// Signed-out OR a brand-new account still mid-onboarding → stash + route
 		// to signup. Returning users fall through to the friendship sheet (see
 		// `needsOnboarding`).
 		if (!$userSignedIn || needsOnboarding) {
-			stashCodeForSignup();
+			stashCodeForSignup(code);
 			mode = 'redirecting';
 			goSignup();
 
@@ -143,7 +181,7 @@
 		// Existing signed-in user. Resolve the referrer principal so the sheet can show "you
 		// can't redeem (no bonus) but here's the inviter — add as friend".
 		try {
-			const owner = await lookupReferralCode({ code: normalizedCode });
+			const owner = await lookupReferralCode({ code });
 
 			if (owner === undefined) {
 				notificationsStore.add({
@@ -193,14 +231,14 @@
 	let claiming = $state(false);
 
 	const handleAddAsFriend = async () => {
-		if (claiming || referrerPrincipal === undefined) {
+		if (claiming || referrerPrincipal === undefined || activeCode === undefined) {
 			return;
 		}
 
 		claiming = true;
 
 		try {
-			await claimReferralFriendship({ code: normalizedCode });
+			await claimReferralFriendship({ code: activeCode });
 
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'invite.friend_added_title' }),

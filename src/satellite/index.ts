@@ -20,6 +20,7 @@ import { UserProfileSchema } from '$lib/schema/profile.schema';
 import {
 	ClaimReferralFriendshipArgsSchema,
 	LookupReferralCodeArgsSchema,
+	LookupReferralCodeByHandleArgsSchema,
 	RedeemReferralCodeArgsSchema,
 	SettleReferralArgsSchema
 } from '$lib/schema/referral.schema';
@@ -98,6 +99,7 @@ import {
 	claimReferralFriendshipFn,
 	getMyReferralCodeFn,
 	listMyReferralsFn,
+	lookupReferralCodeByHandleFn,
 	lookupReferralCodeFn,
 	onProfileSetForReferralCode,
 	onReferralSetForVxpPayout,
@@ -449,6 +451,17 @@ export const lookupReferralCode = defineQuery({
 		owner: PrincipalTextSchema.optional()
 	}),
 	handler: lookupReferralCodeFn
+});
+
+// Resolves a public handle → that user's referral code, backing the legacy `/join/{handle}`
+// invite links that predate the code-based slug. The landing only calls this when the slug
+// isn't a valid code.
+export const lookupReferralCodeByHandle = defineQuery({
+	args: LookupReferralCodeByHandleArgsSchema,
+	result: j.strictObject({
+		code: j.string().optional()
+	}),
+	handler: lookupReferralCodeByHandleFn
 });
 
 export const listMyReferrals = defineQuery({

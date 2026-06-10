@@ -105,6 +105,10 @@ type AppLookupReferralCodeArgs = record { code : text };
 
 type AppLookupReferralCodeResult = record { owner : opt text };
 
+type AppLookupReferralCodeByHandleArgs = record { handle : text };
+
+type AppLookupReferralCodeByHandleResult = record { code : opt text };
+
 type AppSearchProfilesArgs = record { query_str : text };
 
 type AppSearchProfilesResult = record { items : vec record { owner : text; nickname : text; avatar : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; unlocked_achievements : vec text; contrarian_wins : float64; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
@@ -216,6 +220,7 @@ service : {
 	app_list_worlds_roster : (AppListWorldsRosterArgs) -> (AppListWorldsRosterResult) query;
 	app_lookup_league_by_invite : (AppLookupLeagueByInviteArgs) -> (AppLookupLeagueByInviteResult) query;
 	app_lookup_referral_code : (AppLookupReferralCodeArgs) -> (AppLookupReferralCodeResult) query;
+	app_lookup_referral_code_by_handle : (AppLookupReferralCodeByHandleArgs) -> (AppLookupReferralCodeByHandleResult) query;
 	app_search_profiles : (AppSearchProfilesArgs) -> (AppSearchProfilesResult) query;
 	app_accept_friend_request : (AppAcceptFriendRequestArgs) -> ();
 	app_cancel_friend_request : (AppCancelFriendRequestArgs) -> ();

@@ -36,6 +36,21 @@ export const lookupReferralCode = async ({
 };
 
 /**
+ * Resolves a public handle (nickname) to that user's referral code, or `undefined` if the handle
+ * is unknown (or its owner has no code yet). Backs the legacy `/join/{handle}` invite links: the
+ * invite landing falls back to this when the URL slug isn't a valid referral code.
+ */
+export const lookupReferralCodeByHandle = async ({
+	handle
+}: {
+	handle: string;
+}): Promise<string | undefined> => {
+	const { code } = await functions.lookupReferralCodeByHandle({ handle });
+
+	return code;
+};
+
+/**
  * Submits a referral code redemption for the current caller. The satellite enforces:
  * - one-time per referee (the call traps on a second invocation),
  * - the caller must have a profile,

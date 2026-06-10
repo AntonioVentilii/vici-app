@@ -17,6 +17,14 @@ export const LookupReferralCodeArgsSchema = j.strictObject({
 });
 
 /**
+ * Args for {@link lookupReferralCodeByHandle}. Resolves a public handle (nickname) to that user's
+ * referral code, backing the legacy `/join/{handle}` invite links that predate the code-based slug.
+ */
+export const LookupReferralCodeByHandleArgsSchema = j.strictObject({
+	handle: j.string()
+});
+
+/**
  * Args for {@link claimReferralFriendship}. Same shape as the redeem call — code-only — but the
  * outcome is a friendship write, never a VXP payout. Used by existing users who use an invite
  * link past the signup-window grace period.

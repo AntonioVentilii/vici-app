@@ -17,6 +17,7 @@ import type { ReferralCodeDoc, ReferralDoc, ReferralListItem } from '$lib/types/
 import type { Relation } from '$lib/types/relation';
 import type { Activity } from '$lib/types/social';
 import type { VxpMilestoneState } from '$lib/types/vxp-onboarding';
+import { findOwnerByNickname } from '$satellite/services/profile.services';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
 import { transferWithBadFeeRetry } from '$satellite/utils/vxp-payout.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -240,6 +241,33 @@ export const lookupReferralCodeFn = ({
 	} catch {
 		return { owner: undefined };
 	}
+};
+
+/**
+ * Resolves a public handle to that user's referral code, or `undefined` if the handle is unknown
+ * (or the owner has no code yet). Backs the legacy `/join/{handle}` invite links — those predate
+ * the code-based slug, so the landing falls back to this when the slug isn't a valid code.
+ *
+ * Composes two scans: handle → owner ({@link findOwnerByNickname}) then owner → code
+ * ({@link findOwnedCode}). Both are O(n) over their collections (the same pattern
+ * `checkNicknameAvailability` / `getMyReferralCode` already use) — fine at the current user count.
+ * Both collections are `read: public`, so an anonymous (pre-auth) caller resolves the same as a
+ * signed-in one — the signed-out landing needs the code to stash before routing to signup.
+ */
+export const lookupReferralCodeByHandleFn = ({
+	handle
+}: {
+	handle: string;
+}): { code: string | undefined } => {
+	const owner = findOwnerByNickname(handle);
+
+	if (isNullish(owner)) {
+		return { code: undefined };
+	}
+
+	const code = findOwnedCode({ caller: msgCaller().toUint8Array(), ownerText: owner });
+
+	return { code };
 };
 
 /**

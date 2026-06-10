@@ -343,6 +343,45 @@ export const checkNicknameAvailabilityFn = ({
 };
 
 /**
+ * Resolves a public handle (nickname) to its owner principal, or `undefined` if no profile
+ * carries that handle. Matches on the case/accent-folded uniqueness key
+ * ({@link nicknameUniqueKey}) — the same fold the write-time uniqueness guard uses — so `av`,
+ * `AV` and `Av` all resolve to the same owner.
+ *
+ * Backs the legacy `/join/{handle}` invite-link path: those links predate the switch to
+ * code-based slugs, so the landing falls back to this when the slug isn't a valid referral code.
+ * O(n) scan over the profiles collection — the same shape as {@link checkNicknameAvailabilityFn};
+ * acceptable at the current user count. The collection is `read: public`, so an anonymous
+ * (pre-auth) caller resolves the same as a signed-in one.
+ */
+export const findOwnerByNickname = (handle: string): PrincipalText | undefined => {
+	const trimmed = handle.trim();
+
+	if (trimmed === '') {
+		return;
+	}
+
+	const targetKey = nicknameUniqueKey(trimmed);
+	const caller = msgCaller();
+
+	const { items } = listDocsStore({
+		collection: Collection.PROFILES,
+		caller,
+		params: {}
+	});
+
+	const match = items.find(([, item]) => {
+		try {
+			return nicknameUniqueKey(decodeDocData<UserProfile>(item.data).nickname ?? '') === targetKey;
+		} catch (_: unknown) {
+			return false;
+		}
+	});
+
+	return match?.[0];
+};
+
+/**
  * Tolerance (ms) for the "is `handleLastChangeMs` set to ~now?" check on an
  * allowed handle change. The FE stamps `Date.now()` before the update is
  * submitted, so by the time the assert runs the value is a few hundred ms in
