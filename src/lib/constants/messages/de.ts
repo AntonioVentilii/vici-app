@@ -1214,6 +1214,22 @@ export const deMessages = {
 	'leagues.create.privacy_invite': 'Nur mit Einladung',
 	'leagues.create.privacy_open': 'Offen',
 	'leagues.create.privacy_private': 'Privat',
+	'leagues.privacy.cancel': 'Abbrechen',
+	'leagues.privacy.confirm_open_body':
+		'Offene Ligen sind öffentlich auffindbar: Aktuelle Mitglieder erscheinen in öffentlichen Listen und Freundesempfehlungen. Du kannst später zurückwechseln, aber für alle, die sie bereits gesehen haben, lässt sich das nicht rückgängig machen.',
+	'leagues.privacy.confirm_open_confirm': 'Öffentlich machen',
+	'leagues.privacy.confirm_open_title': 'Diese Liga öffentlich machen?',
+	'leagues.privacy.desc_invite':
+		'Nicht öffentlich gelistet. Beitritt per Einladungscode und wird Freunden von Mitgliedern empfohlen.',
+	'leagues.privacy.desc_open':
+		'Öffentlich gelistet. Jeder kann sie finden und ihr beitreten, und sie wird Freunden von Mitgliedern empfohlen.',
+	'leagues.privacy.desc_private':
+		'Verborgen. Nur per Einladungscode erreichbar und nirgends sichtbar.',
+	'leagues.privacy.edit_label': 'Sichtbarkeit ändern',
+	'leagues.privacy.save': 'Speichern',
+	'leagues.privacy.saving': 'Wird gespeichert…',
+	'leagues.privacy.sub': 'Lege fest, wer diese Liga finden und ihr beitreten kann.',
+	'leagues.privacy.title': 'Liga-Sichtbarkeit',
 	'leagues.detail.hero_chip_invite': 'Nur mit Einladung',
 	'leagues.detail.hero_chip_kind': 'Liga',
 	'leagues.detail.hero_chip_open': 'Offen',

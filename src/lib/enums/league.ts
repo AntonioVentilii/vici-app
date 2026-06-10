@@ -1,7 +1,7 @@
 /**
- * League privacy — the three-way visibility model an owner picks once at
- * creation. Replaces the legacy `private?: boolean` flag on the league
- * doc (see {@link LeagueDoc}).
+ * League privacy — the three-way visibility model an owner picks at
+ * creation and can change later (see `updateLeague`). Replaces the legacy
+ * `private?: boolean` flag on the league doc (see {@link LeagueDoc}).
  *
  * - {@link LeaguePrivacy.OPEN} — publicly listed and joinable: surfaced in
  *   recommendations / challenge pools to anyone.

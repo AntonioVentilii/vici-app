@@ -15,6 +15,7 @@
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import ChallengeLeagueModal from '$lib/components/leagues/ChallengeLeagueModal.svelte';
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
+	import LeaguePrivacyModal from '$lib/components/leagues/LeaguePrivacyModal.svelte';
 	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
@@ -86,6 +87,7 @@
 	let leaving = $state(false);
 	let challengeOpen = $state(false);
 	let transferOpen = $state(false);
+	let privacyOpen = $state(false);
 	let leaderboardTab = $state<'week' | 'all'>('week');
 	// Member tapped in the leaderboard — drives the member detail
 	// bottom-sheet (avatar + accuracy / streak). `null` keeps it closed.
@@ -431,16 +433,24 @@
 	// league's `privacy` field through `leaguePrivacy` (absent → Open).
 	// The member count now lives on the identity card's overlap row, and
 	// the caller's role is surfaced in the battle section ("Admin · you").
-	const heroChips = $derived([
-		t({ locale: $localeStore, key: 'leagues.detail.hero_chip_kind' }),
-		t({
-			locale: $localeStore,
-			key:
-				league === undefined
-					? 'leagues.detail.hero_chip_open'
-					: PRIVACY_CHIP_KEY[leaguePrivacy(league)]
-		})
-	]);
+	const kindChipLabel = $derived(t({ locale: $localeStore, key: 'leagues.detail.hero_chip_kind' }));
+
+	// The league's effective privacy (absent → Open) + its chip label.
+	// Owners can tap the privacy chip to change the league's visibility;
+	// for everyone else it stays a read-only chip.
+	const currentPrivacy = $derived(league ? leaguePrivacy(league) : LeaguePrivacy.OPEN);
+	const canEditPrivacy = $derived(myRole === 'owner');
+	const privacyChipLabel = $derived(
+		t({ locale: $localeStore, key: PRIVACY_CHIP_KEY[currentPrivacy] })
+	);
+
+	const handlePrivacyChanged = () => {
+		privacyOpen = false;
+		// The privacy flip is read live everywhere it matters (public
+		// listing, friend recs), but refresh so this page's chip + cache
+		// reflect the new value immediately.
+		void refreshMyLeagues();
+	};
 
 	const handleTransferred = () => {
 		transferOpen = false;
@@ -930,9 +940,20 @@
 				</div>
 			{/if}
 			<div class="league-detail-hero-chips">
-				{#each heroChips as chip (chip)}
-					<span class="league-detail-hero-chip num">{chip}</span>
-				{/each}
+				<span class="league-detail-hero-chip num">{kindChipLabel}</span>
+				{#if canEditPrivacy}
+					<button
+						class="league-detail-hero-chip num is-editable"
+						aria-label={t({ locale: $localeStore, key: 'leagues.privacy.edit_label' })}
+						onclick={() => (privacyOpen = true)}
+						type="button"
+					>
+						{privacyChipLabel}
+						<Pencil aria-hidden="true" size={11} strokeWidth={2} />
+					</button>
+				{:else}
+					<span class="league-detail-hero-chip num">{privacyChipLabel}</span>
+				{/if}
 			</div>
 			{#if league.description}
 				<p class="league-detail-hero-desc serif-italic">{league.description}</p>
@@ -1399,6 +1420,16 @@
 	/>
 {/if}
 
+{#if league !== undefined && canEditPrivacy}
+	<LeaguePrivacyModal
+		{currentPrivacy}
+		isOpen={privacyOpen}
+		leagueId={league.id}
+		onClose={() => (privacyOpen = false)}
+		onSaved={handlePrivacyChanged}
+	/>
+{/if}
+
 <ResolveBattleModal
 	battle={resolveBattleTarget}
 	isOpen={resolveBattleTarget !== null}
@@ -1546,6 +1577,26 @@
 		border-radius: var(--r-pill);
 		color: var(--text-muted);
 		border: 1px solid var(--border-base);
+	}
+
+	/* The privacy chip is a tappable control for the owner — same pill
+	   shape, plus a trailing pencil + hover affordance so it reads as
+	   editable rather than a static status pill. */
+	button.league-detail-hero-chip.is-editable {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		appearance: none;
+		background: none;
+		cursor: pointer;
+		transition:
+			color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici);
+	}
+
+	button.league-detail-hero-chip.is-editable:hover {
+		color: var(--text-base);
+		border-color: var(--color-primary);
 	}
 
 	/* League title — serif-italic editorial treatment (the entity name
