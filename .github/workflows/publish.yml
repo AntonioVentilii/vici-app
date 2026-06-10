@@ -10,7 +10,7 @@ on:
 # canister so a publish never overlaps deploy.yml's `functions upgrade`
 # (which stops the canister) or its `hosting deploy`.
 concurrency:
-  group: juno-satellite
+  group: juno-satellite-publish
   cancel-in-progress: false
 
 jobs:

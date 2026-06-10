@@ -12,7 +12,7 @@ on:
 # A `v*` tag fires both workflows, so the shared group serializes them.
 # cancel-in-progress: false → queue, never cancel a running one.
 concurrency:
-  group: juno-satellite
+  group: juno-satellite-deploy
   cancel-in-progress: false
 
 jobs:
