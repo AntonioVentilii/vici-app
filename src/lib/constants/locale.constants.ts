@@ -2,6 +2,7 @@ export type AppLocale =
 	| 'en'
 	| 'es'
 	| 'es-419'
+	| 'es-ES'
 	| 'es-MX'
 	| 'es-AR'
 	| 'es-CO'
@@ -120,6 +121,16 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 		region: '419',
 		regionLabel: 'Latinoamérica',
 		worldFlag: true,
+		fallback: ['es', 'en'],
+		tier: 'soon'
+	},
+	{
+		id: 'es-ES',
+		label: 'Español',
+		name: 'Spanish (Spain)',
+		short: 'ES',
+		region: 'ES',
+		regionLabel: 'España',
 		fallback: ['es', 'en'],
 		tier: 'soon'
 	},
