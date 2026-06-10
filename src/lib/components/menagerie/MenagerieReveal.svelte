@@ -222,7 +222,7 @@
 		keeps the original near-black takeover; the light / peach overrides at the
 		bottom of the block re-point those tokens so the celebration reads as a
 		LIGHT takeover (otherwise the on-dark text / CTA looked blacked-out against
-		the warm canvas). The colour bloom / rays / sparkles use `mix-blend-mode:
+		the warm canvas). The colour bloom / rays use `mix-blend-mode:
 		screen`, which the per-theme blend overrides keep legible either way.
 	*/
 	.mr-root {
