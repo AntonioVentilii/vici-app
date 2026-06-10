@@ -334,7 +334,9 @@
 
 		return { market };
 	});
-	const firstCallTimer = $derived(firstCallEntry ? timerOf(firstCallEntry.market) : '');
+	const firstCallTimer = $derived(
+		firstCallEntry ? timerOf(firstCallEntry.market) : (openCalls[0]?.timer ?? '')
+	);
 
 	onMount(async () => {
 		if (profile === undefined) {
