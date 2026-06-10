@@ -25,10 +25,9 @@
 			console.error('Failed to finish Google sign-in:', err);
 
 			// Sign-in failed, so this device has no session. Clear the stale
-			// `signed-in` hint — otherwise the no-flash redirect in `app.html`
-			// keeps bouncing `/` → `/flow`, the (app) gate bounces `/flow` →
-			// `/signin`, the user retries Google, lands back here, fails, and
-			// we'd send them to `/` again: the "loop, can't enter" report (#546).
+			// `signed-in` hint — otherwise the root gate (`src/routes/+page.svelte`)
+			// would read it and hold its resume spinner on `/` waiting for a
+			// session that never arrives, the "loop, can't enter" report (#546).
 			// Route to the sign-in screen (not `/`) so they get the provider
 			// buttons back with the flag cleared, breaking the loop.
 			if (browser) {

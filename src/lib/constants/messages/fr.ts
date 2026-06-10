@@ -2515,7 +2515,9 @@ export const frMessages = {
 	'worlds.picker.school.status_verified': 'École vérifiée',
 	'worlds.picker.school.use': 'Utiliser →',
 	'worlds.picker.school.use_existing': 'Utiliser {name} →',
+	'worlds.picker.school.verified_body': 'Ton appartenance à {name} est confirmée.',
 	'worlds.picker.school.verified_by_email': 'Vérifiée par e-mail scolaire',
+	'worlds.picker.school.verified_title': "C'est vérifié",
 	'worlds.picker.school.verify_cta': 'Vérifier →',
 	'worlds.picker.school.verify_explainer':
 		'Nous envoyons un code à 6 chiffres à ton adresse scolaire. Saisis-le pour vérifier ton appartenance à {name}.',

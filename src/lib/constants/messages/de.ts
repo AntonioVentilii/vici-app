@@ -2520,7 +2520,9 @@ export const deMessages = {
 	'worlds.picker.school.status_verified': 'Verifizierte Schule',
 	'worlds.picker.school.use': 'Nutzen →',
 	'worlds.picker.school.use_existing': '{name} nutzen →',
+	'worlds.picker.school.verified_body': 'Deine Mitgliedschaft bei {name} ist bestätigt.',
 	'worlds.picker.school.verified_by_email': 'Per Hochschul-E-Mail verifiziert',
+	'worlds.picker.school.verified_title': 'Verifiziert',
 	'worlds.picker.school.verify_cta': 'Bestätigen →',
 	'worlds.picker.school.verify_explainer':
 		'Wir senden einen 6-stelligen Code an deine Hochschuladresse. Gib ihn ein, um deine Mitgliedschaft bei {name} zu bestätigen.',
