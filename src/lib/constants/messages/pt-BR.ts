@@ -2456,7 +2456,7 @@ export const ptBRMessages = {
 	'worlds.picker.school.continue': 'Continuar →',
 	'worlds.picker.school.detected_from_email': 'detetado do seu e-mail',
 	'worlds.picker.school.domain_belongs': 'Esse domínio pertence a {name} — vamos adicioná-lo lá.',
-	'worlds.picker.school.dupe_title': 'Já existe — escolher uma?',
+	'worlds.picker.school.dupe_title': 'Já existe — escolha uma?',
 	'worlds.picker.school.email_label': 'E-mail escolar',
 	'worlds.picker.school.email_placeholder': 'voce@{domain}',
 	'worlds.picker.school.empty_add_body': 'Seja o primeiro da sua escola.',
