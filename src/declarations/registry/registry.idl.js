@@ -158,6 +158,7 @@ export const idlFactory = ({ IDL }) => {
 		SeriesAlreadyExists: IDL.Null,
 		SourceSeriesNotFound: IDL.Null,
 		RewardTitleTooLong: IDL.Null,
+		SeriesNotFound: IDL.Null,
 		EngineRoleNotHeld: IDL.Null
 	});
 	const AddSeriesResult = IDL.Variant({ Ok: IDL.Text, Err: SeriesError });
@@ -310,6 +311,17 @@ export const idlFactory = ({ IDL }) => {
 		metadata: OracleMetadata,
 		oracle_id: IDL.Text
 	});
+	const UpdateSeriesMetadataParams = IDL.Record({
+		banner_url: IDL.Opt(IDL.Opt(IDL.Text)),
+		series_id: IDL.Text,
+		locale: IDL.Opt(IDL.Opt(IDL.Text)),
+		description: IDL.Opt(Description),
+		icon_url: IDL.Opt(IDL.Opt(IDL.Text))
+	});
+	const UpdateSeriesResult = IDL.Variant({
+		Ok: Series,
+		Err: SeriesError
+	});
 	const UpdateTradingAccessParams = IDL.Record({
 		series_id: IDL.Text,
 		trading_access: IDL.Vec(TradingAccess)
@@ -348,6 +360,7 @@ export const idlFactory = ({ IDL }) => {
 		update_engine_allowed_roles: IDL.Func([UpdateEngineAllowedRolesParams], [EngineResult], []),
 		update_group: IDL.Func([UpdateGroupParams], [GroupResult], []),
 		update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], []),
+		update_series_metadata: IDL.Func([UpdateSeriesMetadataParams], [UpdateSeriesResult], []),
 		update_trading_access: IDL.Func([UpdateTradingAccessParams], [GroupResult], [])
 	});
 };

@@ -1207,6 +1207,22 @@ export const itMessages = {
 	'leagues.create.privacy_invite': 'Solo su invito',
 	'leagues.create.privacy_open': 'Aperta',
 	'leagues.create.privacy_private': 'Privata',
+	'leagues.privacy.cancel': 'Annulla',
+	'leagues.privacy.confirm_open_body':
+		'Le leghe aperte sono visibili pubblicamente: i membri attuali compariranno negli elenchi pubblici e nei consigli per gli amici. Potrai tornare indietro in seguito, ma non è reversibile per chi l’ha già vista.',
+	'leagues.privacy.confirm_open_confirm': 'Rendi pubblica',
+	'leagues.privacy.confirm_open_title': 'Rendere pubblica questa lega?',
+	'leagues.privacy.desc_invite':
+		'Non elencata pubblicamente. Si entra con codice d’invito ed è consigliata agli amici dei membri.',
+	'leagues.privacy.desc_open':
+		'Elencata pubblicamente. Chiunque può trovarla e unirsi, ed è consigliata agli amici dei membri.',
+	'leagues.privacy.desc_private':
+		'Nascosta. Raggiungibile solo con codice d’invito e mai mostrata da nessuna parte.',
+	'leagues.privacy.edit_label': 'Modifica privacy',
+	'leagues.privacy.save': 'Salva',
+	'leagues.privacy.saving': 'Salvataggio…',
+	'leagues.privacy.sub': 'Scegli chi può trovare questa lega e unirsi.',
+	'leagues.privacy.title': 'Privacy della lega',
 	'leagues.detail.hero_chip_invite': 'Solo su invito',
 	'leagues.detail.hero_chip_kind': 'Lega',
 	'leagues.detail.hero_chip_open': 'Aperta',

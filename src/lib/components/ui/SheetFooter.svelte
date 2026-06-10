@@ -6,8 +6,8 @@
 	 *
 	 * A `flex-shrink: 0` strip that stays pinned at the bottom while the
 	 * body scrolls under it: a top hairline rule, comfortable top spacing,
-	 * and a bottom padding that clears the device safe area plus iOS
-	 * Chrome's native bottom toolbar via `--docked-footer-inset` (the
+	 * and a bottom padding that clears the device safe area plus the iOS
+	 * native bottom bar via `--docked-footer-inset` (the
 	 * single source for that inset). Hosts add their own base padding on
 	 * top of the inset via the `base` prop, so the CTA never hides behind
 	 * device chrome on a long body.
@@ -54,7 +54,7 @@
 <style lang="postcss">
 	/* Non-scrolling docked footer: a `flex-shrink: 0` strip kept after the
 	 * scrolling body so a primary CTA stays in view on a long body. Carries
-	 * the safe-area + iOS-Chrome-toolbar inset (`--docked-footer-inset`)
+	 * the safe-area + iOS bottom-bar inset (`--docked-footer-inset`)
 	 * itself, plus a hairline rule + top spacing separating it from the
 	 * content above. */
 	.sheet-footer {

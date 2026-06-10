@@ -3,21 +3,13 @@ name: Deploy to Juno
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
     tags:
       - v*
 
 # Shared `juno-satellite` group with publish.yml: both mutate the same
 # satellite canister and must not overlap (`functions upgrade` stops it
 # mid-run, so a concurrent mutation is rejected with "Canister is stopped").
-# `functions build` + `functions upgrade` run in THIS workflow (folded in from
-# the former upgrade.yml) and before `hosting deploy`, so the canister is
-# stopped and restarted within one job instead of racing a separate Upgrade
-# workflow — which is what let a 3rd queued run cancel a waiting deploy.
-# `config apply` is intentionally NOT here: it's run manually (it was its own
-# push-triggered workflow sharing this group, so every main push launched two
-# group members and GitHub's single pending slot silently cancelled one).
+# A `v*` tag fires both workflows, so the shared group serializes them.
 # cancel-in-progress: false → queue, never cancel a running one.
 concurrency:
   group: juno-satellite

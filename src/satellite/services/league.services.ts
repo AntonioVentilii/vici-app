@@ -7,7 +7,6 @@ import {
 	LEAGUE_INVITE_CODE_REGEX,
 	LEAGUE_NAME_MAX_LENGTH,
 	LEAGUE_NAME_MIN_LENGTH,
-	leaguePrivacy,
 	type LeagueDoc
 } from '$lib/types/league';
 import { leagueMemberKey, type LeagueMemberDoc } from '$lib/types/league-member';
@@ -98,11 +97,13 @@ const assertValidLeagueImageUrl = (imageUrl: string | undefined): void => {
  *     the league (enforced by the endpoint, not this assert, since
  *     the assert can't cheaply scan `league_members`).
  *
- *  3. **Identity fields are immutable.** `id`, `createdAtMs`, and
- *     `inviteCode` are write-once. Even the owner can't rotate the
- *     invite code after creation — the join-by-code flow relies on
- *     codes being stable for the league's lifetime. `owner` is the
- *     one exception (see §2 above).
+ *  3. **Identity fields are immutable.** `id`, `createdAtMs`,
+ *     `inviteCode`, and `emblem` are write-once. Even the owner can't
+ *     rotate the invite code after creation — the join-by-code flow
+ *     relies on codes being stable for the league's lifetime. `owner`,
+ *     `privacy`, and `imageUrl` are the editable exceptions: ownership
+ *     transfers (see §2), and the owner can change the league's
+ *     visibility and cover image after creation.
  *
  *  4. **Shape validation.** Name 3–40 chars, description ≤240 chars,
  *     invite code matches `[A-Z0-9]{6}`. Owner is a valid principal
@@ -157,6 +158,21 @@ export const assertSetLeague = ({
 		throw new Error('leagues owner must be a valid principal text.');
 	}
 
+	// Privacy drives every visibility decision, so any value that lands on
+	// the doc — on creation OR on a later owner edit — must be one of the
+	// three known variants (or absent for legacy-style rows, which resolve
+	// to `open`). Validated on both paths because privacy is owner-mutable
+	// after creation (an owner can tighten or loosen a league's visibility);
+	// the create surface and the privacy editor both write through here.
+	if (
+		nonNullish(proposedDoc.privacy) &&
+		!Object.values(LeaguePrivacy).includes(proposedDoc.privacy)
+	) {
+		throw new Error(
+			`leagues privacy must be one of ${Object.values(LeaguePrivacy).join(', ')} (got "${proposedDoc.privacy}").`
+		);
+	}
+
 	const callerText = Principal.fromUint8Array(caller).toText();
 
 	// Creation path — caller must equal proposed owner. No `current`
@@ -180,19 +196,6 @@ export const assertSetLeague = ({
 			);
 		}
 
-		// Privacy is frozen after creation and drives every visibility
-		// decision, so a value that locks in must be one of the three
-		// known variants (or absent for legacy-style rows, which resolve
-		// to `open`). Reject arbitrary strings up front.
-		if (
-			nonNullish(proposedDoc.privacy) &&
-			!Object.values(LeaguePrivacy).includes(proposedDoc.privacy)
-		) {
-			throw new Error(
-				`leagues privacy must be one of ${Object.values(LeaguePrivacy).join(', ')} (got "${proposedDoc.privacy}").`
-			);
-		}
-
 		// A cover image may be seeded at creation; same validation as the
 		// edit path — when present it must be one of our own league_images
 		// Storage URLs, else the field stays absent ("no image").
@@ -212,26 +215,23 @@ export const assertSetLeague = ({
 	}
 
 	// 3. Identity fields are immutable on edits — `owner` is now
-	// editable, the rest stay frozen. Privacy and the emblem are both
-	// chosen once at creation and frozen alongside the identity fields
-	// so the league's visible identity (privacy state, logo glyph) can't
-	// silently shift under existing members. Privacy is compared through
-	// `leaguePrivacy` so a legacy row with an absent field (resolved to
-	// `open`) compares equal to an explicit `open` proposed value.
+	// editable, the rest stay frozen. The emblem is chosen once at creation
+	// and frozen alongside the identity fields so the league's logo glyph
+	// can't silently shift under existing members.
 	//
-	// `imageUrl` is the deliberate exception among the visual-identity
-	// fields: the owner can set, change, or clear the league's cover
-	// image after creation (see §4 below), so it is NOT frozen here.
+	// `privacy` and `imageUrl` are the deliberate exceptions among the
+	// visual-identity fields: the owner can change a league's visibility
+	// (tighten or loosen it; the FE confirm-gates the loosen-to-Open
+	// direction) and set/change/clear its cover image after creation (see
+	// §4 below), so neither is frozen here. The proposed privacy value is
+	// still range-checked against the known variants up top.
 	if (
 		currentDoc.id !== proposedDoc.id ||
 		currentDoc.createdAtMs !== proposedDoc.createdAtMs ||
 		currentDoc.inviteCode !== proposedDoc.inviteCode ||
-		(currentDoc.emblem ?? '') !== (proposedDoc.emblem ?? '') ||
-		leaguePrivacy(currentDoc) !== leaguePrivacy(proposedDoc)
+		(currentDoc.emblem ?? '') !== (proposedDoc.emblem ?? '')
 	) {
-		throw new Error(
-			'leagues identity fields are immutable (id, createdAtMs, inviteCode, emblem, privacy).'
-		);
+		throw new Error('leagues identity fields are immutable (id, createdAtMs, inviteCode, emblem).');
 	}
 
 	// 4. Cover image — owner-mutable. The owner (the only principal that

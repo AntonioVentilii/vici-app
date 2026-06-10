@@ -1141,6 +1141,12 @@ export type SeriesError =
 	  }
 	| {
 			/**
+			 * Returned when the targeted series does not exist.
+			 */
+			SeriesNotFound: null;
+	  }
+	| {
+			/**
 			 * The specified Engine does not exist or the caller does not hold the required role on it.
 			 */
 			EngineRoleNotHeld: null;
@@ -1341,6 +1347,67 @@ export interface UpdateOracleMetadataParams {
 	 */
 	oracle_id: string;
 }
+/**
+ * Input parameters for [`update_series_metadata`](../../registry/index.html).
+ *
+ * Edits only **non-critical, non-identity** fields of an existing series.
+ * `title`, `resolution`, and every field that feeds the `series_id` hash
+ * (underlying, expiry, payoff, strike, precision, payout unit, outcomes,
+ * oracle source, balance domain) are intentionally **not** editable: changing
+ * them would either break the series' identity or rewrite the terms a market
+ * already trades on.
+ *
+ * Each field follows a tri-state convention so a single call can leave some
+ * fields untouched, set others, and clear nullable ones:
+ *
+ * - `None` → leave the current value unchanged.
+ * - `Some(value)` → replace with `value`.
+ * - For the `Option<Option<_>>` fields, `Some(None)` → clear the field to `null` (e.g. remove a
+ * banner).
+ */
+export interface UpdateSeriesMetadataParams {
+	/**
+	 * New banner URL. `None` leaves it unchanged; `Some(None)` clears it.
+	 */
+	banner_url: [] | [[] | [string]];
+	/**
+	 * The series to update.
+	 */
+	series_id: string;
+	/**
+	 * New [BCP 47](https://www.rfc-editor.org/info/bcp47) locale tag. `None`
+	 * leaves it unchanged; `Some(None)` clears it; `Some(Some(tag))` validates
+	 * and sets it.
+	 */
+	locale: [] | [[] | [string]];
+	/**
+	 * New plain/markdown/html description. `None` leaves it unchanged.
+	 */
+	description: [] | [Description];
+	/**
+	 * New icon URL. `None` leaves it unchanged; `Some(None)` clears it.
+	 */
+	icon_url: [] | [[] | [string]];
+}
+/**
+ * The result of an `update_series_metadata` operation.
+ *
+ * The success payload is boxed because [`Series`] is far larger than
+ * [`SeriesError`]; candid serializes `Box<Series>` identically to `Series`.
+ */
+export type UpdateSeriesResult =
+	| {
+			/**
+			 * Successfully updated; returns the series in its new state.
+			 */
+			Ok: Series;
+	  }
+	| {
+			/**
+			 * Failed to update the series.
+			 */
+			Err: SeriesError;
+	  };
 /**
  * Input parameters for replacing the trading access policies on a series.
  *
@@ -1656,6 +1723,19 @@ export interface _SERVICE {
 	 * Controllers, the oracle's manager, and Engine `OracleAdmin` role holders may update metadata.
 	 */
 	update_oracle_metadata: ActorMethod<[UpdateOracleMetadataParams], OracleResult>;
+	/**
+	 * Updates **non-critical** metadata on an existing series.
+	 *
+	 * Only `description`, `icon_url`, `banner_url`, and `locale` can be changed.
+	 * The series' identity-bearing economic fields, `title`, and `resolution` are
+	 * immutable here by design — see [`UpdateSeriesMetadataParams`].
+	 *
+	 * # Authorization
+	 *
+	 * Controllers, the series' `creator`, and admins of the series' Engine may
+	 * update metadata. All other callers receive [`SeriesError::Unauthorized`].
+	 */
+	update_series_metadata: ActorMethod<[UpdateSeriesMetadataParams], UpdateSeriesResult>;
 	/**
 	 * Atomically replaces the trading access policies on an existing series.
 	 *
