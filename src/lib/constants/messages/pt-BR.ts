@@ -1979,6 +1979,8 @@ export const ptBRMessages = {
 	'settings.language.no_match': 'Nenhum resultado',
 	'settings.language.search': 'Buscar idioma',
 	'settings.legal': 'Jurídico',
+	'settings.legal.aviso': 'Aviso de Privacidad (México)',
+	'settings.legal.aviso_br': 'Aviso de Privacidade (Brasil)',
 	'settings.legal.cookies': 'Política de cookies',
 	'settings.legal.imprint': 'Aviso legal',
 	'settings.legal.privacy': 'Política de privacidade',

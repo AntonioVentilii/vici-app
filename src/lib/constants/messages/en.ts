@@ -1979,6 +1979,8 @@ export const enMessages = {
 	'settings.language.no_match': 'No match',
 	'settings.language.search': 'Search language',
 	'settings.legal': 'Legal',
+	'settings.legal.aviso': 'Aviso de Privacidad (México)',
+	'settings.legal.aviso_br': 'Aviso de Privacidade (Brasil)',
 	'settings.legal.cookies': 'Cookie Policy',
 	'settings.legal.imprint': 'Legal notice',
 	'settings.legal.privacy': 'Privacy policy',
