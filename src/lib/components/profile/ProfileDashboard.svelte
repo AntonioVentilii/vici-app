@@ -497,7 +497,7 @@
 		})();
 
 		// Fetch the viewer's referral code so the hero's "Invite Friends" CTA can
-		// build the canonical `/i/{code}` share URL. The code is assigned by the
+		// build the canonical `/join/{code}` share URL. The code is assigned by the
 		// satellite profile hook on first profile create (backfilled on the next
 		// save for older accounts) — if it's missing the CTA simply hides.
 		void (async () => {

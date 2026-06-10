@@ -228,16 +228,17 @@
 	};
 </script>
 
-<div
-	class="flex min-h-screen w-full flex-col items-center justify-center p-6"
-	aria-live="polite"
-	role="status"
->
+<div class="flex min-h-screen w-full flex-col items-center justify-center p-6">
 	{#if mode === 'loading' || mode === 'redirecting'}
-		<LoadingSpinner size="md" />
-		<p class="text-muted-foreground mt-4 text-sm">
-			{t({ locale: $localeStore, key: 'invite.resolving' })}
-		</p>
+		<!-- Live-region semantics are scoped to this non-interactive resolving state.
+		     The `friendship` branch below renders interactive controls, where
+		     `role="status"` would mislead assistive tech. -->
+		<div class="flex flex-col items-center justify-center" aria-live="polite" role="status">
+			<LoadingSpinner size="md" />
+			<p class="text-muted-foreground mt-4 text-sm">
+				{t({ locale: $localeStore, key: 'invite.resolving' })}
+			</p>
+		</div>
 	{:else if mode === 'friendship' && referrerPrincipal !== undefined}
 		<InviteFriendshipSheet
 			busy={claiming}
