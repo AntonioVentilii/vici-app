@@ -1116,7 +1116,7 @@ export const itMessages = {
 		'La fonte cambia metodologia a finestra aperta → mercato annullato, salvo che la modifica sia irrilevante.',
 	'info.doc.resolution-rules.b11': 'Contestazioni',
 	'info.doc.resolution-rules.b12':
-		'Chiunque abbia fatto una previsione può presentare una contestazione entro settantadue ore scrivendo a {email} con il proprio nome utente, l’id del mercato e la base della contestazione. Le contestazioni sono esaminate dalla redazione e riceve risposta entro ventiquattr’ore.',
+		'Chiunque abbia fatto una previsione può presentare una contestazione entro settantadue ore scrivendo a {email} con il proprio nome utente, l’id del mercato e la base della contestazione. Le contestazioni sono esaminate dalla redazione e ricevono risposta entro ventiquattr’ore.',
 	'info.doc.resolution-rules.b2':
 		'Prima che un mercato apra alle previsioni, due fatti vengono fissati e pubblicati sul retro della scheda: il criterio di risoluzione (la condizione del SÌ in parole semplici) e la fonte (il feed di dati pubblico dichiarato che deciderà).',
 	'info.doc.resolution-rules.b3': 'Finestra di previsione',
