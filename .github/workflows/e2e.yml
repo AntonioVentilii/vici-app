@@ -51,7 +51,13 @@ jobs:
 
   e2e:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    # Bumped from 45 → 90: the full matrix (chromium + Galaxy S9+ + Galaxy
+    # A55, with 2 retries on CI) on a fresh runner can take ~50–60 min once
+    # the skylab image pull, dfx pulls, icdc-core init, and Playwright
+    # downloads are added on top of the test wall-clock. Cancelling mid-run
+    # at 45 also drops the playwright-report / test-results artifacts on
+    # the floor, which makes any real diagnostic impossible.
+    timeout-minutes: 90
     needs: check-e2e-changes
     # Skip the suite on PRs / merge-group when no E2E-relevant file changed,
     # unless the PR carries the `run-e2e-snapshots` opt-in label. Push / cron
