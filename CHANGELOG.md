@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/AntonioVentilii/vici-app/compare/v0.1.1...v0.1.2) (2026-06-10)
+
+
+### Continuous Integration
+
+* adjust concurrency ([dace200](https://github.com/AntonioVentilii/vici-app/commit/dace200c74772c81812f4d75ca513b3a1d88fc55))
+
 ## [0.1.1](https://github.com/AntonioVentilii/vici-app/compare/v0.1.0...v0.1.1) (2026-06-10)
 
 
