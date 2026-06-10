@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { browser } from '$app/environment';
 	import { pinToVisualViewport } from '$lib/actions/pin-to-visual-viewport';
+	import SheetFooter from '$lib/components/ui/SheetFooter.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -36,13 +37,14 @@
 		sidePadding?: string;
 		/**
 		 * Optional non-scrolling footer pinned to the bottom of the sheet.
-		 * Renders as a `flex-shrink: 0` sibling after the scrolling
-		 * `.sheet-body`, so a primary CTA stays in view no matter how long
-		 * the body grows — the body scrolls under it. The footer carries
-		 * the `env(safe-area-inset-bottom)` padding itself; the sheet's own
+		 * Rendered through {@link SheetFooter} as a `flex-shrink: 0` sibling
+		 * after the scrolling `.sheet-body`, so a primary CTA stays in view
+		 * no matter how long the body grows — the body scrolls under it. The
+		 * footer carries the docked-footer bottom inset itself (safe area +
+		 * iOS Chrome toolbar, via `--docked-footer-inset`); the sheet's own
 		 * bottom inset collapses to the side metric when a footer is present
 		 * so the inset isn't doubled. Leave unset for the legacy single-
-		 * scroller layout (body owns the safe-area inset).
+		 * scroller layout (body owns the bottom inset).
 		 */
 		footer?: Snippet;
 	}
@@ -111,9 +113,9 @@
 				{@render children()}
 			</div>
 			{#if footer}
-				<div class="sheet-footer">
+				<SheetFooter base="0px">
 					{@render footer()}
-				</div>
+				</SheetFooter>
 			{/if}
 		</div>
 	</div>
@@ -176,8 +178,7 @@
 		/* Side inset defaults to the shared 1.1rem; hosts can override just
 		 * the horizontal padding via `--sheet-side-padding` (the `sidePadding`
 		 * prop) without disturbing the top / safe-area-bottom metrics. */
-		padding: 0.5rem var(--sheet-side-padding, 1.1rem)
-			calc(1.1rem + env(safe-area-inset-bottom, 0px) + var(--ios-chrome-toolbar-inset, 0px));
+		padding: 0.5rem var(--sheet-side-padding, 1.1rem) calc(1.1rem + var(--docked-footer-inset));
 		background: var(--bg-popover);
 		border-top: 1px solid var(--border-base);
 		border-top-left-radius: 22px;
@@ -209,22 +210,10 @@
 	}
 
 	/* When a `footer` snippet is present the safe-area bottom inset moves
-	 * onto the footer (it's the element actually docked at the edge), so
+	 * onto the docked `SheetFooter` (the element actually at the edge), so
 	 * drop it from the sheet's own padding to avoid doubling the gap. The
-	 * footer below re-applies it. */
+	 * footer re-applies it via `--docked-footer-inset`. */
 	.sheet.has-footer {
 		padding-bottom: 1.1rem;
-	}
-
-	/* Non-scrolling docked footer: a `flex-shrink: 0` sibling after the
-	 * scrolling body so a primary CTA stays in view on a long body. Carries
-	 * the `env(safe-area-inset-bottom)` inset itself and a hairline rule +
-	 * top spacing to separate it from the scrolling content above. */
-	.sheet-footer {
-		flex-shrink: 0;
-		padding-top: 0.7rem;
-		padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--ios-chrome-toolbar-inset, 0px));
-		margin-top: 0.2rem;
-		border-top: 1px solid color-mix(in srgb, var(--border-base) 60%, transparent);
 	}
 </style>
