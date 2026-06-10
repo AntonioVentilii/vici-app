@@ -124,16 +124,15 @@
 						(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 					if (isIOS) {
 						document.documentElement.setAttribute('data-ios', '');
-						// Non-Safari iOS browsers (Chrome=CriOS, Firefox=FxiOS,
-						// Edge=EdgiOS, Google app=GSA) draw a NATIVE bottom toolbar
-						// over the web view. The page renders UNDER it and no web API
-						// (visualViewport / dvh / svh / safe-area-inset) reports its
-						// height, so a bottom-docked CTA gets clipped. Stamp a flag so
-						// CSS can add `--ios-chrome-toolbar-inset` to docked footers.
-						// Safari's bottom bar behaves differently and is left alone.
-						if (/CriOS|FxiOS|EdgiOS|GSA/.test(ua)) {
-							document.documentElement.setAttribute('data-ios-chrome', '');
-						}
+						// Every iOS browser draws a NATIVE bottom bar over the web
+						// view: the Chrome/Firefox/Edge/Google-app toolbars AND
+						// Safari's own bottom bar (confirmed on device — it overlays
+						// docked modal footers the same way). The page renders UNDER
+						// it and no web API (visualViewport / dvh / svh /
+						// safe-area-inset) reports its height, so a bottom-docked CTA
+						// gets clipped. Stamp the flag for ALL iOS so CSS can add
+						// `--ios-bottom-bar-inset` to docked footers.
+						document.documentElement.setAttribute('data-ios-bottom-bar', '');
 					}
 				} catch (e) {
 					/* non-iOS fallthrough is fine */

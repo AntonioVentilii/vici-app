@@ -621,8 +621,8 @@
 		gap: 10px;
 		/* Generous safe-area floor so the footer clears the home indicator on
 		 * notched devices while still reading as a comfortable inset elsewhere.
-		 * `--docked-footer-inset` carries the safe area + iOS Chrome's native
-		 * bottom-toolbar clearance (0 elsewhere). */
+		 * `--docked-footer-inset` carries the safe area + the iOS native
+		 * bottom-bar clearance (0 elsewhere). */
 		padding: 12px 18px max(28px, calc(12px + var(--docked-footer-inset)));
 		border-top: 1px solid var(--border-base);
 		background: var(--bg-base);
