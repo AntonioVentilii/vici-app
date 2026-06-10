@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/AntonioVentilii/vici-app/compare/vici-app-v0.1.0...vici-app-v0.1.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* **e2e:** bound networkidle wait + raise job timeout so artifacts upload ([#133](https://github.com/AntonioVentilii/vici-app/issues/133)) ([76883ea](https://github.com/AntonioVentilii/vici-app/commit/76883eaf838c404a09f290b6b74b8f61b4bf805e))
+
 ## [0.1.0](https://github.com/AntonioVentilii/vici-app/compare/vici-app-v0.0.10...vici-app-v0.1.0) (2026-06-10)
 
 
