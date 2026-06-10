@@ -180,3 +180,26 @@ export const VXP_WORLDS_PODIUM = Object.freeze({
 	silver: 200,
 	bronze: 100
 } as const);
+
+/**
+ * League-founder reward (100 VXP), in **base units**. Credited once per
+ * league a user founds, keyed by the league id so the payout is naturally
+ * idempotent across hook retries. This is the "Founder +100 VXP" promise
+ * the create-league CTA surfaces. Sized in base units via `parseToken` so
+ * it matches `icrc1Transfer` / award-doc amounts (same corrected pattern
+ * as the calibration / comeback awards — never a raw int, VXP has 4
+ * decimals). Tunable.
+ */
+export const VXP_LEAGUE_FOUNDER_REWARD_BASE_UNITS = parseToken({
+	value: '100',
+	unitName: VXP_TOKEN.decimals
+});
+
+/**
+ * Maximum number of league-founder rewards a single account can earn,
+ * ever. Founding a league is free (one datastore write), so an uncapped
+ * per-league payout would be an unbounded VXP mint; this server-enforced
+ * cap, counted off the caller's `league_founder` award docs, bounds the
+ * total. Tunable.
+ */
+export const VXP_LEAGUE_FOUNDER_MAX_AWARDS = 100;

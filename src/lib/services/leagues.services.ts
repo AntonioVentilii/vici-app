@@ -93,6 +93,28 @@ export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 };
 
 /**
+ * Retroactively back-pay the "Founder +100 VXP" reward for any league the
+ * caller owns that predates the founder-award hook. New leagues are paid
+ * by the satellite hook on creation; this self-heal endpoint covers the
+ * backlog and is idempotent (it shares the hook's dedupe key, so a league
+ * already paid is never double-credited).
+ *
+ * Returns how many rewards were newly settled this call, so the Leagues
+ * screen can surface a one-off beat. Best-effort: a transport error
+ * resolves to `0` rather than rejecting, so it can never break the page
+ * load it rides along with.
+ */
+export const settleFounderAwards = async (): Promise<number> => {
+	try {
+		const { settled } = await functions.settleFounderAwards();
+
+		return settled;
+	} catch {
+		return 0;
+	}
+};
+
+/**
  * List the leagues the caller can challenge to a battle — the opponent
  * pool for the create-battle picker. Publicly listed (Open) leagues plus
  * the caller's own memberships, minus leagues the caller owns. Sorted

@@ -138,6 +138,10 @@ import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimCalibrationRewardFn } from '$satellite/services/vxp-calibration.services';
 import { onProfileSetForComebackRestore } from '$satellite/services/vxp-comeback-awards.services';
 import {
+	onLeagueSetForFounderVxpPayout,
+	settleFounderAwardsFn
+} from '$satellite/services/vxp-league-founder-awards.services';
+import {
 	onProfileSetForVxpOnboarding,
 	onTradeActivityForVxpOnboarding
 } from '$satellite/services/vxp-onboarding.services';
@@ -521,6 +525,20 @@ export const listMyLeagues = defineQuery({
 	handler: () => ({
 		items: listMyLeaguesFn().map(toWireLeagueWithRole)
 	})
+});
+
+/**
+ * Retroactive self-heal for the "Founder +100 VXP" reward. The `leagues`
+ * `onSetDoc` hook pays this on creation going forward; this endpoint
+ * back-pays leagues founded before the hook shipped. Idempotent (shares
+ * the hook's dedupe key) and safe to call on every Leagues-page mount —
+ * returns how many rewards it newly settled this call.
+ */
+export const settleFounderAwards = defineUpdate({
+	result: j.strictObject({
+		settled: j.number()
+	}),
+	handler: async () => await settleFounderAwardsFn()
 });
 
 export const listLeagueMembers = defineQuery({
@@ -1151,7 +1169,8 @@ const setDocCollections = [
 	Collection.ACTIVITIES,
 	Collection.PROFILES,
 	Collection.ROLES,
-	Collection.REFERRALS
+	Collection.REFERRALS,
+	Collection.LEAGUES
 ] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
@@ -1187,7 +1206,8 @@ export const onSetDoc = defineHook<OnSetDoc>({
 			[Collection.PROFILES]: onProfileSetComposed,
 			[Collection.ACTIVITIES]: onActivitySetComposed,
 			[Collection.ROLES]: syncRoleToEngineOnSet,
-			[Collection.REFERRALS]: onReferralSetForVxpPayout
+			[Collection.REFERRALS]: onReferralSetForVxpPayout,
+			[Collection.LEAGUES]: onLeagueSetForFounderVxpPayout
 		};
 
 		await fn[context.data.collection]?.(context);
