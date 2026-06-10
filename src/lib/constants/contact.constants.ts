@@ -15,14 +15,31 @@ export const CONTACT_DOMAIN = 'vici.market';
 
 /**
  * Assembles a full address from its local-part and the apex domain,
- * joining them with an `@` produced at runtime (`String.fromCharCode(64)`
- * is the `@` character) rather than written as a literal. This is an
- * anti-harvest measure: the served source never carries a contiguous
- * `local@domain` string for naive scrapers to lift, while every consumer
- * still gets the exact same address at runtime.
+ * joining them with an `@` produced at runtime. This is an anti-harvest
+ * measure: the served source must never carry a contiguous `local@domain`
+ * string — nor an `@` glued directly to the domain literal — for naive
+ * scrapers to lift, while every consumer still gets the exact same address
+ * at runtime.
+ *
+ * The glue is stored REVERSED (the `@` plus the reversed domain) and
+ * un-reversed at runtime via `split/reverse/join`. The bundler's
+ * constant-folder evaluates pure expressions like `String.fromCharCode(64)`
+ * at build time — which would re-emit a literal `@` adjacent to the domain
+ * literal, defeating the measure — but it does NOT execute string-instance
+ * methods (`reverse()`) on literals, so the `@<domain>` tail never appears
+ * contiguously in the shipped bundle. Keep any change here verified against
+ * the built output, not just the source.
  */
-const at = String.fromCharCode(64);
-const buildEmail = (local: string): string => `${local}${at}${CONTACT_DOMAIN}`;
+const reverse = (value: string): string => value.split('').reverse().join('');
+/**
+ * `@vici.market`, stored REVERSED as a single literal. The reversed form
+ * carries neither a contiguous `@vici.market` tail nor a `vici.market`
+ * substring, so a scraper reading the served source finds no anchor; the
+ * runtime `reverse()` rebuilds the exact `@` + apex-domain suffix. (Must
+ * stay in sync with `CONTACT_DOMAIN` above.)
+ */
+const REVERSED_AT_DOMAIN = 'tekram.iciv@';
+const buildEmail = (local: string): string => `${local}${reverse(REVERSED_AT_DOMAIN)}`;
 
 /** General info / support / help inbox — the public-facing contact address. */
 export const INFO_EMAIL = buildEmail('info');
