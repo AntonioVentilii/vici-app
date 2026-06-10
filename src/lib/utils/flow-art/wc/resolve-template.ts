@@ -33,6 +33,8 @@ export type WcTemplateId =
 	| 'stadium-clock'
 	| 'striker-juggle'
 	| 'player-figure'
+	| 'player-card'
+	| 'player-assist'
 	| 'crest-ladder'
 	| 'host-flags'
 	| 'debutant-door'
