@@ -115,7 +115,14 @@
 		root.addEventListener('scroll', onScroll, { passive: true });
 
 		// Scroll spy — observe against the live scroll root so it still fires
-		// when `.lpc` (not the window) is the scroller.
+		// when `.lpc` (not the window) is the scroller. `rootMargin` collapses
+		// the root to a thin band in the upper-middle of the viewport; whichever
+		// observed section sits in that band is the active one. We gate on
+		// `isIntersecting` alone (not `intersectionRatio`): a tall section like
+		// `#faq` can only ever overlap a thin slice of the band, so its ratio
+		// never crosses a fixed threshold and the indicator would never advance
+		// to it. Sections between observed ones aren't tracked, so the last
+		// active section persists across them — which is the desired behaviour.
 		const els = sections
 			.map((s) => document.getElementById(s.id))
 			.filter((el): el is HTMLElement => Boolean(el));
@@ -125,7 +132,7 @@
 				: new IntersectionObserver(
 						(entries) => {
 							entries.forEach((e) => {
-								if (e.isIntersecting && e.intersectionRatio > 0.3) {
+								if (e.isIntersecting) {
 									active = e.target.id;
 								}
 							});
@@ -133,7 +140,7 @@
 						{
 							root: root === window ? null : (root as HTMLElement),
 							rootMargin: '-30% 0px -55% 0px',
-							threshold: [0, 0.3, 0.6]
+							threshold: 0
 						}
 					);
 
@@ -226,6 +233,9 @@
 			}
 
 			e.preventDefault();
+			// Move the indicator immediately on click rather than waiting for the
+			// scroll-spy observer to catch up mid-animation.
+			active = id;
 			const root = scrollRoot ?? window;
 
 			if (root === window) {
