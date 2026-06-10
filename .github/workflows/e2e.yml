@@ -40,6 +40,14 @@ jobs:
               - playwright.config.ts
               - .github/workflows/e2e.yml
               - e2e/**/*
+              # Deploy-chain inputs: `npm run deploy` (scripts/deploy.sh) brings
+              # up the icdc-core canisters before Playwright runs, so a change
+              # to the build/init args or dfx config can break the suite at the
+              # deploy step. Watch them so such regressions surface on the PR,
+              # not only on the post-merge push to main.
+              - dfx.json
+              - juno.config.ts
+              - scripts/**/*
 
   e2e:
     runs-on: ubuntu-24.04
