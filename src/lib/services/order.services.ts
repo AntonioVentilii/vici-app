@@ -6,7 +6,7 @@ import {
 	submitLimitOrder,
 	submitMarketOrder
 } from '$lib/api/clearing.api';
-import { PRICE_DECIMALS } from '$lib/constants/app.constants';
+import { PRICE_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import { logActivity } from '$lib/services/activity.services';
 import {
@@ -122,6 +122,13 @@ export const placeOrder = async ({
 	qty: bigint;
 	outcome: Outcome;
 }): Promise<void> => {
+	// Sizing rounds the stake down to whole contracts (`amountUsd / priceUsd`),
+	// so a stake smaller than one contract's price arrives here as zero —
+	// reject it before any state changes or activity logging.
+	if (qty <= ZERO) {
+		throw new Error('Stake is too small for this price — the order quantity rounds to zero');
+	}
+
 	const identity = await safeGetIdentityOnce();
 
 	const isBinary = outcome === 'YES' || outcome === 'NO';
@@ -134,6 +141,11 @@ export const placeOrder = async ({
 		: side;
 	const normalizedPrice = isBinary && outcome === 'NO' ? 1 - price : price;
 	const outcomeId: Nullable<string> = isBinary ? toNullable() : toNullable(outcome);
+
+	// What the activity log reports: the full size for a resting limit order,
+	// the actually executed size for a market order (the book may be smaller
+	// than the request).
+	let filledQty = qty;
 
 	if (type === 'LIMIT') {
 		const orderId = `ORD_${nanoid(8)}`;
@@ -157,42 +169,91 @@ export const placeOrder = async ({
 			}
 		});
 	} else {
-		const orders = await listOrdersApi({
-			identity,
-			params: { series_id: toNullable(marketId) }
-		});
-
 		const counterSide = normalizedSide === 'BUY' ? 'Sell' : 'Buy';
 
 		const targetOutcomeId = outcome === 'YES' || outcome === 'NO' ? undefined : outcome;
 
-		const matchingOrders = orders
-			.filter((o: ClearingDid.LimitOrder) => {
-				const isCorrectSide = counterSide in o.side;
-				const isCorrectOutcome = o.outcome_id[0] === targetOutcomeId;
+		const callerText = identity.getPrincipal().toText();
 
-				return isCorrectSide && isCorrectOutcome;
-			})
-			.sort((a: ClearingDid.LimitOrder, b: ClearingDid.LimitOrder) => {
-				const priceA = Number(a.price.decimal.value);
-				const priceB = Number(b.price.decimal.value);
-
-				return normalizedSide === 'BUY' ? priceA - priceB : priceB - priceA;
+		const fetchMatchingOrders = async (): Promise<ClearingDid.LimitOrder[]> => {
+			const orders = await listOrdersApi({
+				identity,
+				params: { series_id: toNullable(marketId) }
 			});
 
-		const [bestMatch] = matchingOrders;
+			return orders
+				.filter((o: ClearingDid.LimitOrder) => {
+					const isCorrectSide = counterSide in o.side;
+					const isCorrectOutcome = o.outcome_id[0] === targetOutcomeId;
+					// The engine rejects self-trades; the caller's own resting
+					// orders are not liquidity for this market order.
+					const isSelf = o.creator.toText() === callerText;
 
-		if (!bestMatch) {
+					return isCorrectSide && isCorrectOutcome && !isSelf;
+				})
+				.sort((a: ClearingDid.LimitOrder, b: ClearingDid.LimitOrder) => {
+					const priceA = Number(a.price.decimal.value);
+					const priceB = Number(b.price.decimal.value);
+
+					return normalizedSide === 'BUY' ? priceA - priceB : priceB - priceA;
+				});
+		};
+
+		let matchingOrders = await fetchMatchingOrders();
+
+		if (matchingOrders.length === 0) {
 			throw new Error('No matching liquidity found for market order');
 		}
 
-		await submitMarketOrder({
-			identity,
-			params: {
-				trade_id: `TRD_${nanoid(8)}`,
-				matching_order_id: bestMatch.order_id
+		// Walk the book best-price-first, taking `min(remaining, level)` per
+		// trade, so the execution honors the caller's stake-derived `qty`
+		// rather than whatever size the best resting order happens to carry.
+		// The book is re-read between takes: a level shrunk by a concurrent
+		// taker would otherwise overstate the fill (the engine executes
+		// `min(take, current level)`) and stop the walk early. A book smaller
+		// than the request fills what exists. The pass cap is a defensive
+		// bound — each pass either reduces `remaining` or exits, so a healthy
+		// walk never reaches it.
+		const MAX_BOOK_PASSES = 10;
+		let remaining = qty;
+
+		try {
+			for (let pass = 0; pass < MAX_BOOK_PASSES && remaining > ZERO; pass++) {
+				if (pass > 0) {
+					matchingOrders = await fetchMatchingOrders();
+				}
+
+				const [best] = matchingOrders;
+
+				if (isNullish(best)) {
+					break;
+				}
+
+				const take = remaining < best.qty ? remaining : best.qty;
+
+				await submitMarketOrder({
+					identity,
+					params: {
+						trade_id: `TRD_${nanoid(8)}`,
+						matching_order_id: best.order_id,
+						qty: toNullable(take)
+					}
+				});
+
+				remaining -= take;
 			}
-		});
+		} catch (e: unknown) {
+			// Nothing executed — surface the failure. After a partial fill the
+			// user holds a real position, so finish with what filled instead
+			// of reporting a failure that would read as "nothing happened".
+			if (remaining === qty) {
+				throw e;
+			}
+
+			console.warn('Market order partially filled before an error; keeping the filled amount', e);
+		}
+
+		filledQty = qty - remaining;
 	}
 
 	refreshPositions();
@@ -209,7 +270,7 @@ export const placeOrder = async ({
 			// "Sold" only when the trade executed on the spot; an open limit sell is merely placed.
 			// `normalizedPrice` is the price of the chosen outcome — the raw `price` arg arrives
 			// YES-framed for binary NO and would display the complement.
-			title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${qty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
+			title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${filledQty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
 			details: marketTitle
 		});
 		await recordActivity(userText);
