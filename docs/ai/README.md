@@ -21,6 +21,15 @@ pattern, naming convention, shared component, shared type, or workflow,
 update the relevant page in the **same PR** as the code change. See the
 [meta-update rule](./governance.md#meta-update-rule).
 
+## Product context & specs
+
+- [`PRODUCT.md`](./PRODUCT.md) — living description of shipped product
+  behaviour. Updated in the **same PR** as any behaviour change.
+- [`spec-driven-development/workflow.md`](./spec-driven-development/workflow.md)
+  — spec-first workflow for net-new features, improvements, and
+  non-trivial bugfixes. Specs carry a status; once `Implemented` they
+  are decision records, not current truth.
+
 ## Operational runbooks
 
 Step-by-step ops runbooks (deployment, engine reset, engine ops) live
