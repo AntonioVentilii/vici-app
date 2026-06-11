@@ -18,10 +18,12 @@
 	<div class="space-y-4">
 		{#each markets.slice(0, 5) as market (market.id)}
 			<div
-				class="border-border flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
+				class="border-border flex items-start justify-between gap-3 border-b pb-4 last:border-0 last:pb-0"
 			>
-				<span class="text-muted-foreground line-clamp-1 text-sm">{market.title}</span>
-				<OutcomeBadge outcome={market.outcome} />
+				<span class="text-muted-foreground min-w-0 text-sm break-words">{market.title}</span>
+				<div class="shrink-0">
+					<OutcomeBadge outcome={market.outcome} />
+				</div>
 			</div>
 		{/each}
 	</div>
