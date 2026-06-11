@@ -126,6 +126,22 @@ export const listSettledSeries = async ({
 	return await listSettledSeries({ params, ...queryParams });
 };
 
+/**
+ * Returns clearing's public settlement view for one series (or `undefined`
+ * when unresolved). See {@link ClearingCanister.getSettlementStatus}.
+ */
+export const getSettlementStatus = async ({
+	identity,
+	...rest
+}: {
+	identity: Identity;
+	seriesId: string;
+} & QueryParams): Promise<ClearingDid.SettlementStatusView | undefined> => {
+	const { getSettlementStatus } = await clearingCanister({ identity });
+
+	return await getSettlementStatus(rest);
+};
+
 export const settleSeries = async ({
 	identity,
 	...rest

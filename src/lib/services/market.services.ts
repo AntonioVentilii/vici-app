@@ -1,5 +1,5 @@
 import type { RegistryDid } from '$declarations';
-import { listOrders as listOrdersApi } from '$lib/api/clearing.api';
+import { getSettlementStatus, listOrders as listOrdersApi } from '$lib/api/clearing.api';
 import { addSeries, forkSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	DAY_IN_MS,
@@ -16,7 +16,7 @@ import type { AppLocale } from '$lib/constants/locale.constants';
 import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
-import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
+import { getSettlementActivities, logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import {
 	listMarketMetadataBySeries,
@@ -37,6 +37,7 @@ import {
 	mapMarketData,
 	parseSettlementOutcome
 } from '$lib/utils/market.utils';
+import { settlementInputOutcome } from '$lib/utils/payoff.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isEmptyString, isNullish, nonNullish, notEmptyString, toNullable } from '@dfinity/utils';
@@ -219,8 +220,8 @@ export const createMarket = async ({
  * {@link fetchMarketsLite} run uncertified, while {@link getMarketsLite} forces
  * certified for set reads that must match a certified counterpart.
  *
- * Note: Juno-backed calls (`getGlobalActivities`) honor the same flag but tap the
- * satellite datastore, not an ICDC canister.
+ * Note: Juno-backed calls (`getSettlementActivities`) honor the same flag but tap
+ * the satellite datastore, not an ICDC canister.
  */
 const fetchMarkets = async ({
 	identity,
@@ -238,9 +239,10 @@ const fetchMarkets = async ({
 	// order-book fan-out they'd immediately discard (see {@link getMarketsLite}).
 	includeOrderBook?: boolean;
 }): Promise<Market[]> => {
-	const [allSeries, activities] = await Promise.all([
+	const [allSeries, settledIds, settlementActivities] = await Promise.all([
 		listSeries({ identity, certified }),
-		getGlobalActivities({ certified })
+		getSettledSeriesIds({ identity, certified }),
+		getSettlementActivities({ certified })
 	]);
 
 	// TODO(temporary): until multiple-choice (categorical) markets are fully
@@ -249,23 +251,25 @@ const fetchMarkets = async ({
 	// Remove this filter to restore non-binary markets.
 	const seriesList = allSeries.filter((s) => 'Binary' in s.payoff_type);
 
-	const resolutionMap = buildResolutionMap(activities);
+	const resolutionMap = buildResolutionMap(settlementActivities);
 
 	const markets = await Promise.all(
 		seriesList.map(async (s) => {
 			const mid = parseMarketId(s.series_id);
 			const isCategorical = 'Categorical' in s.payoff_type;
-			const resolution = resolutionMap[s.series_id];
-			const isResolved = nonNullish(resolution);
+			const isResolved = settledIds.has(s.series_id);
 			const isExpired = s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now());
 
-			// A settled series can still live in the registry after clearing drops
-			// it from its `SERIES` cache (see icdc-core: series is removed from
-			// the clearing map on `Finalised`, but the registry keeps it). Overlay
-			// the `SETTLEMENT` activity so the markets list agrees with the market
-			// detail page on `Resolved` state.
+			// Clearing's `list_settled_series` is the authoritative resolved
+			// predicate (a series is settled the moment a settlement plan opens).
+			// The `SETTLEMENT` activity row only supplies the outcome label,
+			// best-effort: deriving `Resolved` from the bounded ACTIVITIES page
+			// made markets "un-resolve" once newer activity pushed the row out
+			// of the window.
 			const status: MarketStatus = isResolved ? 'Resolved' : isExpired ? 'Expired' : 'Open';
-			const outcome: Outcome | undefined = resolution?.outcome;
+			const outcome: Outcome | undefined = isResolved
+				? resolutionMap[s.series_id]?.outcome
+				: undefined;
 
 			// Lite mode: callers that only filter by the market set don't need
 			// book-derived prices. Seed the neutral 0.5 (matching
@@ -328,14 +332,13 @@ const fetchMarkets = async ({
 		})
 	);
 
-	const resolvedSeriesIds = Object.keys(resolutionMap);
 	// Derive from the unfiltered list: a resolved non-binary series still in
 	// `listSeries` is already accounted for, so skip a redundant `getSeries`
 	// fetch that the `Binary` guard below would only discard.
 	const activeSeriesIds = new Set(allSeries.map((s) => s.series_id));
 
 	const resolvedMarkets = await Promise.all(
-		resolvedSeriesIds
+		[...settledIds]
 			.filter((id) => !activeSeriesIds.has(id))
 			.map(async (id) => {
 				const series = await getSeries({ identity, certified, seriesId: id });
@@ -352,7 +355,7 @@ const fetchMarkets = async ({
 				return mapMarketData({
 					series,
 					status: 'Resolved',
-					outcome: resolutionMap[id].outcome
+					outcome: resolutionMap[id]?.outcome
 				});
 			})
 	);
@@ -500,9 +503,13 @@ const enrichMarketsWithOrderBook = ({
 	);
 
 /**
- * Extracts a `seriesId -> { outcome }` map from Juno settlement activities.
- * Details are expected to be stringified JSON (`{ outcome, price }`); malformed
- * entries are skipped so they do not block the rest of the market list.
+ * Extracts a `seriesId -> { outcome }` label map from Juno SETTLEMENT
+ * activities. Details are expected to be stringified JSON (`{ outcome, price }`).
+ *
+ * Only the outcome *label* comes from here — the resolved predicate itself is
+ * clearing's `list_settled_series` (see {@link fetchMarkets}) — so a missing
+ * or malformed row degrades to `Resolved` with no winner badge, never to an
+ * unresolved market.
  */
 const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: Outcome }> =>
 	activities
@@ -514,12 +521,6 @@ const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: 
 				return acc;
 			}
 
-			// The activity row itself is the source of truth for "this market is
-			// resolved" — do NOT drop the entry just because the JSON payload is
-			// malformed or missing, otherwise `fetchMarkets` (list) and
-			// `fetchMarket` (detail) disagree: detail already degrades gracefully
-			// to `status = 'Resolved'` with `outcome = undefined`, and the list
-			// must do the same.
 			acc[marketId] = { outcome: parseSettlementOutcome(details) };
 
 			return acc;
@@ -688,10 +689,10 @@ const fetchMarket = async ({
 	certified: boolean;
 	marketId: MarketId;
 }): Promise<Market | undefined> => {
-	const [s, rawOrders, activities] = await Promise.all([
+	const [s, rawOrders, settlementStatus] = await Promise.all([
 		getSeries({ identity, certified, seriesId: marketId }),
 		getOrderBook({ marketId, identity, certified }),
-		getGlobalActivities({ certified })
+		getSettlementStatus({ identity, certified, seriesId: marketId })
 	]);
 
 	const { midPrice, bids, asks } = calculateMarketStats({
@@ -724,17 +725,16 @@ const fetchMarket = async ({
 				})
 			: undefined;
 
-	const resolution = activities.find(
-		(a) => a.type === ActivityType.SETTLEMENT && a.marketId === marketId
-	);
-
-	const status: MarketStatus = nonNullish(resolution)
+	// Clearing's settlement view exists from the moment a settlement plan opens
+	// — same predicate as the list path's `list_settled_series` — and carries
+	// the authoritative settlement input the winning outcome derives from.
+	const status: MarketStatus = nonNullish(settlementStatus)
 		? 'Resolved'
 		: s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now())
 			? 'Expired'
 			: 'Open';
-	const outcome: Outcome | undefined = nonNullish(resolution)
-		? parseSettlementOutcome(resolution.details)
+	const outcome: Outcome | undefined = nonNullish(settlementStatus)
+		? settlementInputOutcome(settlementStatus.settlement)
 		: undefined;
 
 	return mapMarketData({
@@ -752,7 +752,8 @@ const fetchMarket = async ({
 };
 
 /**
- * Single-market detail with book, categorical probabilities if applicable, and resolution status from activity.
+ * Single-market detail with book, categorical probabilities if applicable, and
+ * resolution status from clearing's `get_settlement_status`.
  *
  * Performs a single certified update. Prefer {@link loadMarket} for UI flows
  * that should render fast then upgrade once verified.

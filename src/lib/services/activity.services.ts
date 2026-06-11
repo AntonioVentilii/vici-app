@@ -1,4 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { ActivityType } from '$lib/enums/social';
 import type { Activity } from '$lib/types/social';
 import { listDocs, setDoc, type ListParams } from '@junobuild/core';
 
@@ -57,4 +58,31 @@ export const getGlobalActivities = async ({
 	});
 
 	return items.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
+};
+
+/**
+ * Most-recent SETTLEMENT activities, matched server-side on the
+ * `${user}#${timestamp}#${type}` key suffix.
+ *
+ * Settlements are rare admin actions, so unlike {@link getGlobalActivities} —
+ * whose any-type window flushes a settlement row out as soon as `limit` newer
+ * trades / comments land — a single page here effectively covers the whole
+ * catalog's outcome labels.
+ */
+export const getSettlementActivities = async ({
+	limit = 200,
+	certified = false
+}: { limit?: number; certified?: boolean } = {}): Promise<Activity[]> => {
+	if (limit <= 0) {
+		return [];
+	}
+
+	return await listActivities({
+		certified,
+		filter: {
+			matcher: { key: `#${ActivityType.SETTLEMENT}$` },
+			order: { field: 'created_at', desc: true },
+			paginate: { limit }
+		}
+	});
 };
