@@ -40,12 +40,12 @@ export interface LeagueDoc {
 	 * (the owner can tighten or loosen a league's visibility; see the
 	 * assert and `updateLeague`):
 	 *
-	 * - {@link LeaguePrivacy.OPEN} — publicly listed + joinable; surfaced
-	 *   in challenge pools and friend recommendations to anyone.
-	 * - {@link LeaguePrivacy.INVITE} — joinable via invite code but NOT
-	 *   publicly listed; still recommendable to a member's friends.
 	 * - {@link LeaguePrivacy.PRIVATE} — hidden; reachable only by invite
 	 *   code, never surfaced in any public list or recommendation.
+	 * - {@link LeaguePrivacy.INVITE} — joinable via invite code but NOT
+	 *   publicly listed; still recommendable to a member's friends.
+	 * - {@link LeaguePrivacy.OPEN} — publicly listed + joinable; surfaced
+	 *   in challenge pools and friend recommendations to anyone.
 	 *
 	 * Absent on legacy rows written before this field shipped — callers
 	 * treat absent as {@link LeaguePrivacy.OPEN} (the legacy
