@@ -15,6 +15,11 @@ export class FlowTradeService {
 		this.pendingTrades = [];
 	}
 
+	/**
+	 * Rejections propagate to the caller in BOTH modes — inside a session the
+	 * refresh is deferred, never the failure, so callers can roll back their
+	 * optimistic accounting and surface the error.
+	 */
 	async executeTrade(params: TradeParams): Promise<void> {
 		const tradePromise = (async () => {
 			try {
@@ -30,7 +35,11 @@ export class FlowTradeService {
 		if (!this.isActive) {
 			await tradePromise;
 			this.refresh();
+
+			return;
 		}
+
+		await tradePromise;
 	}
 
 	async endSession() {

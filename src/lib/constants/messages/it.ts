@@ -994,6 +994,9 @@ export const itMessages = {
 	'flow.list_02': 'Il VXP arriva nell’istante dello swipe.',
 	'flow.list_03': 'Le serie ti chiamano indietro.',
 	'flow.list_04': 'Gli insight si vedono quando giri la carta.',
+	'flow.notification.insufficient_message':
+		'Il tuo saldo è già in gioco su previsioni aperte: si libera man mano che i mercati si risolvono.',
+	'flow.notification.insufficient_title': 'Saldo disponibile insufficiente',
 	'flow.notification.trade_failed_message': 'Ordine per "{title}..." fallito: {error}',
 	'flow.notification.trade_failed_title': 'Previsione fallita',
 	'flow.progress_aria': 'Avanzamento',

@@ -999,6 +999,9 @@ export const frMessages = {
 	'flow.list_02': 'Le VXP arrive au moment du swipe.',
 	'flow.list_03': 'Des séries qui vous rappellent à l’ordre.',
 	'flow.list_04': 'Les clés apparaissent quand vous retournez la carte.',
+	'flow.notification.insufficient_message':
+		'Votre solde est déjà en jeu sur des prédictions ouvertes — il se libère à mesure que les marchés se résolvent.',
+	'flow.notification.insufficient_title': 'Solde disponible insuffisant',
 	'flow.notification.trade_failed_message': 'Ordre pour «\u00a0{title}...\u00a0» échoué : {error}',
 	'flow.notification.trade_failed_title': 'Prédiction échouée',
 	'flow.progress_aria': 'Progression',
