@@ -5,6 +5,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import Authn from '$lib/components/authn/Authn.svelte';
 	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
 	import { initAnalytics } from '$lib/services/analytics.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -65,11 +66,13 @@
 </script>
 
 {#if !satelliteInitialized}
-	<div class="flex h-screen items-center justify-center">
-		<div class="text-center">
-			<div class="loader mb-4"></div>
-			<p class="text-lg">{t({ locale: $localeStore, key: 'ui.loading' })}</p>
-		</div>
+	<div
+		class="flex h-screen items-center justify-center"
+		aria-label={t({ locale: $localeStore, key: 'ui.loading' })}
+		aria-live="polite"
+		role="status"
+	>
+		<LoadingSpinner center={false} size="lg" />
 	</div>
 {:else}
 	<Authn>

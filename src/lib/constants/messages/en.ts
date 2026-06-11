@@ -2215,7 +2215,7 @@ export const enMessages = {
 	'trust.title_b': 'No edge. No secrets.',
 	'ui.banner.create_satellite_cta': 'Create one now!',
 	'ui.banner.satellite_needed': 'Your project needs a Satellite for local dev.',
-	'ui.loading': 'Loading...',
+	'ui.loading': 'Loading',
 	'ui.pagination.next': 'Next',
 	'ui.pagination.previous': 'Previous',
 	'ui.pagination.range': '{from}–{to} of {total}',

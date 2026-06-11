@@ -2222,7 +2222,7 @@ export const ptMessages = {
 	'trust.title_b': 'Sem vantagem. Sem segredos.',
 	'ui.banner.create_satellite_cta': 'Cria um agora!',
 	'ui.banner.satellite_needed': 'O teu projeto precisa de um Satellite para o dev local.',
-	'ui.loading': 'A carregar...',
+	'ui.loading': 'A carregar',
 	'ui.pagination.next': 'Próximo',
 	'ui.pagination.previous': 'Anterior',
 	'ui.pagination.range': '{from}–{to} de {total}',
