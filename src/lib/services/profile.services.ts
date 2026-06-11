@@ -663,19 +663,25 @@ export const calculateAndSyncStats = async ({
 
 	// Cold-streak recoveries (Honey Badger) — each settled win that snaps a
 	// run of at least `COMEBACK_COLD_STREAK_LOSSES` consecutive settled
-	// losses. Like `onFireStreak`, recomputed over the full chronological
-	// history and kept monotonic against the persisted value below.
+	// losses. Only a genuinely negative settlement counts as a loss: a
+	// neutral one (`qty === 0` — see `settledEventToResolvedPosition`) is
+	// neither a loss nor a recovery, so it breaks the run without scoring.
+	// Like `onFireStreak`, recomputed over the full chronological history
+	// and kept monotonic against the persisted value below.
 	const { comebacks: coldStreakComebacks } = chronoHistory.filter(isSettledEvent).reduce<{
 		comebacks: number;
 		losses: number;
 	}>(
-		({ comebacks, losses }, event) =>
-			event.qty > ZERO
-				? {
-						comebacks: losses >= COMEBACK_COLD_STREAK_LOSSES ? comebacks + 1 : comebacks,
-						losses: 0
-					}
-				: { comebacks, losses: losses + 1 },
+		({ comebacks, losses }, event) => {
+			if (event.qty > ZERO) {
+				return {
+					comebacks: losses >= COMEBACK_COLD_STREAK_LOSSES ? comebacks + 1 : comebacks,
+					losses: 0
+				};
+			}
+
+			return { comebacks, losses: event.qty < ZERO ? losses + 1 : 0 };
+		},
 		{ comebacks: 0, losses: 0 }
 	);
 
