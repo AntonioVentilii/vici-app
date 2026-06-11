@@ -450,6 +450,9 @@ export const frMessages = {
 	'admin.hub.resolutions.description':
 		"Résoudre les marchés expirés et consulter l'historique des résolutions.",
 	'admin.hub.resolutions.title': 'Résolutions',
+	'admin.hub.vxp.count': '{count} VXP disponibles',
+	'admin.hub.vxp.description': "Envoyer et recevoir des VXP, et consulter l'historique du ledger.",
+	'admin.hub.vxp.title': 'Trésorerie VXP',
 	'admin.markets.bulk.badge': 'Import JSON',
 	'admin.markets.bulk.busy':
 		'Patientez pendant la configuration de vos marchés de prédiction sur la blockchain...',

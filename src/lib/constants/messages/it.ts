@@ -449,6 +449,9 @@ export const itMessages = {
 	'admin.hub.resolutions.count': '{count} in attesa di risoluzione',
 	'admin.hub.resolutions.description': 'Risolvi i mercati scaduti e consulta la cronologia.',
 	'admin.hub.resolutions.title': 'Risoluzioni',
+	'admin.hub.vxp.count': '{count} VXP disponibili',
+	'admin.hub.vxp.description': 'Invia e ricevi VXP e consulta la cronologia del ledger.',
+	'admin.hub.vxp.title': 'Tesoreria VXP',
 	'admin.markets.bulk.badge': 'Upload JSON',
 	'admin.markets.bulk.busy':
 		'Attendi mentre prepariamo i tuoi mercati di previsione sulla blockchain...',
