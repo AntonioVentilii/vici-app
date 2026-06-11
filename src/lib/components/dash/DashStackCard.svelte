@@ -29,7 +29,9 @@
 	const todayPositive = $derived(todayDelta !== null && todayDelta >= 0);
 </script>
 
-<button class="db-wallet" onclick={onOpen} type="button">
+<!-- While loading, the breakdown sheet would expose the same misleading
+     zero/partial figures the placeholders hide — keep the card inert. -->
+<button class="db-wallet" disabled={loading} onclick={onOpen} type="button">
 	<div class="db-left">
 		<div class="db-k">{t({ locale: $localeStore, key: 'dash.holdings.eyebrow' })}</div>
 		<div class="db-v num" class:db-ph={loading}>

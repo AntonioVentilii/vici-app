@@ -5302,6 +5302,15 @@ a.title-action::after {
 	color: var(--text-muted);
 	animation: db-ph-pulse 1.6s ease-in-out infinite;
 }
+.db-wallet .db-ph .db-vu {
+	color: var(--text-muted);
+}
+.db-wallet:disabled {
+	cursor: default;
+}
+.db-wallet:disabled:hover {
+	border-color: var(--border-base);
+}
 @keyframes db-ph-pulse {
 	0%,
 	100% {
