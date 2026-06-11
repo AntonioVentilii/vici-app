@@ -112,7 +112,7 @@
 	};
 </script>
 
-<div class="border-border bg-card rounded-3xl border p-8">
+<div class="border-border bg-card rounded-3xl border p-4 sm:p-8">
 	<h2 class="text-foreground mb-6 text-2xl font-bold">
 		{t({ locale: $localeStore, key: 'admin.resolution.title' })}
 	</h2>
