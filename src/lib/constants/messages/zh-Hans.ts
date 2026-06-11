@@ -1720,6 +1720,7 @@ export const zhHansMessages = {
 	'profile.avatar.discard_sub': '你的头像更改尚未保存。点按"保存"以保留。',
 	'profile.avatar.save_changes': '保存更改',
 	'profile.avatar.done': '完成',
+	'profile.avatar.saving': '保存中…',
 	'profile.avatar.surprise': '随机生成',
 	'profile.avatar.caption': '{mood} · {trait}',
 	'profile.avatar.caption_plain': '{mood} · 无标志特征',
