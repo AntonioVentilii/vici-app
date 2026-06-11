@@ -13,7 +13,7 @@ import { derived, type Readable } from 'svelte/store';
  * if the user never edited their nickname. For the viewer's own row we
  * always have the freshest data in `userStore.profile`, so we splice
  * the live identity (nickname/avatar) and the live display-only
- * performance fields (streak/accuracy) in here — the row, podium tile,
+ * performance fields (daily streak/accuracy) in here — the row, podium tile,
  * and mini-profile sheet all read from this single merged source so the
  * viewer sees their own up-to-the-second numbers rather than a stale
  * snapshot.
@@ -29,7 +29,12 @@ interface SelfOverlay {
 	owner: string | undefined;
 	nickname: UserProfile['nickname'];
 	avatar: UserProfile['avatar'];
-	streak: UserProfile['streak'];
+	/**
+	 * Days-based activity streak (the Flame engine) — every surface that
+	 * renders a leaderboard row's streak shows "{n}d", so the days counter
+	 * is the one to keep fresh, not the consecutive-wins `streak`.
+	 */
+	dailyStreak: UserProfile['dailyStreak'];
 	accuracy: UserProfile['accuracy'];
 }
 
@@ -46,7 +51,7 @@ const selfOverlay: Readable<SelfOverlay | undefined> = derived(userStore, ({ use
 				owner: user.owner,
 				nickname: profile.nickname,
 				avatar: profile.avatar,
-				streak: profile.streak,
+				dailyStreak: profile.dailyStreak,
 				accuracy: profile.accuracy
 			}
 		: undefined
@@ -70,7 +75,7 @@ export const leaderboard: Readable<UserProfile[]> = derived(
 			...next[idx],
 			nickname: $self.nickname,
 			avatar: $self.avatar,
-			streak: $self.streak,
+			dailyStreak: $self.dailyStreak,
 			accuracy: $self.accuracy
 		};
 

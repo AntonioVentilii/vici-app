@@ -25,7 +25,8 @@
 		profile: UserProfile | undefined;
 		friendId: string;
 		accuracyValue: string;
-		streak: number;
+		/** Consecutive active days (the Flame engine) — rendered as `{n}d`. */
+		dailyStreak: number;
 		vxpValue: string;
 		h2hAhead: boolean;
 		h2hValue: string;
@@ -39,7 +40,7 @@
 		profile,
 		friendId,
 		accuracyValue,
-		streak,
+		dailyStreak,
 		vxpValue,
 		h2hAhead,
 		h2hValue,
@@ -80,7 +81,7 @@
 			<span class="friends-sheet-lbl">
 				{t({ locale: $localeStore, key: 'arena.friends.sheet.streak' })}
 			</span>
-			<span class="friends-sheet-val num">{streak}d</span>
+			<span class="friends-sheet-val num">{dailyStreak}d</span>
 		</div>
 		<div class="friends-sheet-stat">
 			<span class="friends-sheet-lbl">
