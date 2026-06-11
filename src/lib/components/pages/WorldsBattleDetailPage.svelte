@@ -11,7 +11,8 @@
 	import {
 		lookupWorldsAffiliation,
 		WORLDS_COUNTRIES,
-		WORLDS_UNIVERSITIES
+		WORLDS_UNIVERSITIES,
+		type WorldsAffiliationOption
 	} from '$lib/constants/worlds-affiliations.constants';
 	import { daysToFinal } from '$lib/derived/featured-event.derived';
 	import { listAffiliationStats } from '$lib/services/worlds.services';
@@ -152,15 +153,17 @@
 
 	const optionFor = (id: string) => lookupWorldsAffiliation({ kind, id });
 
-	// Locale-aware row label — country names localize via
-	// `Intl.DisplayNames`; falls back to the raw id off the roster.
-	const optionNameFor = (id: string): string => {
-		const opt = optionFor(id);
-
-		return opt !== undefined
-			? affiliationDisplayName({ option: opt, kind, locale: $localeStore })
-			: id;
-	};
+	// Locale-aware row label off an already-resolved option — country
+	// names localize via `Intl.DisplayNames`; falls back to the raw id
+	// when the option is off the roster.
+	const displayName = ({
+		option: opt,
+		id
+	}: {
+		option: WorldsAffiliationOption | undefined;
+		id: string;
+	}): string =>
+		opt !== undefined ? affiliationDisplayName({ option: opt, kind, locale: $localeStore }) : id;
 
 	const detailPath = (id: string): string => {
 		const segment = kind === 'university' ? 'school' : 'country';
@@ -310,7 +313,7 @@
 						</span>
 						<div class="worlds-battle-meta">
 							<div class="worlds-battle-name">
-								{optionNameFor(row.affiliationIdentifier)}
+								{displayName({ option, id: row.affiliationIdentifier })}
 								{#if isYou}
 									·
 									<span class="worlds-battle-you">
@@ -367,7 +370,7 @@
 					</span>
 					<div class="worlds-battle-meta">
 						<div class="worlds-battle-name worlds-battle-name-you">
-							{optionNameFor(myAffil.affiliationIdentifier)}
+							{displayName({ option: myOption, id: myAffil.affiliationIdentifier })}
 							·
 							<span class="worlds-battle-you">
 								{t({ locale: $localeStore, key: 'worlds.you.suffix' })}
