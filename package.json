@@ -9,7 +9,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev --force",
-		"build": "tsc --noEmit && vite build",
+		"build": "tsc --noEmit && vite build --mode ${JUNO_MODE:-production}",
 		"prepare": "svelte-kit sync",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
