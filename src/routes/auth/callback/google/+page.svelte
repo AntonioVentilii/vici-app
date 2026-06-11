@@ -4,6 +4,7 @@
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { SIGNED_IN_FLAG_KEY } from '$lib/constants/app.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -44,9 +45,7 @@
 </script>
 
 <div class="flex h-screen w-full flex-col items-center justify-center gap-4">
-	<div
-		class="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
-	></div>
+	<LoadingSpinner center={false} size="md" />
 	<p class="animate-pulse text-lg font-medium">
 		{t({ locale: $localeStore, key: 'auth.callback.google.completing' })}
 	</p>

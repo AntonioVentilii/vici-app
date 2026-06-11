@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 
 	interface Props {
 		loading: boolean;
@@ -37,9 +38,7 @@
 	<div class="flex h-10 w-full items-center justify-center">
 		<div bind:this={sentinel} class="h-1 w-full"></div>
 		{#if loading}
-			<div
-				class="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
-			></div>
+			<LoadingSpinner center={false} size="sm" />
 		{/if}
 	</div>
 {/if}
