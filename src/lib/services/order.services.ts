@@ -6,7 +6,7 @@ import {
 	submitLimitOrder,
 	submitMarketOrder
 } from '$lib/api/clearing.api';
-import { PRICE_DECIMALS } from '$lib/constants/app.constants';
+import { PRICE_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import { logActivity } from '$lib/services/activity.services';
 import {
@@ -135,6 +135,11 @@ export const placeOrder = async ({
 	const normalizedPrice = isBinary && outcome === 'NO' ? 1 - price : price;
 	const outcomeId: Nullable<string> = isBinary ? toNullable() : toNullable(outcome);
 
+	// What the activity log reports: the full size for a resting limit order,
+	// the actually executed size for a market order (the book may be smaller
+	// than the request).
+	let filledQty = qty;
+
 	if (type === 'LIMIT') {
 		const orderId = `ORD_${nanoid(8)}`;
 
@@ -166,12 +171,17 @@ export const placeOrder = async ({
 
 		const targetOutcomeId = outcome === 'YES' || outcome === 'NO' ? undefined : outcome;
 
+		const callerText = identity.getPrincipal().toText();
+
 		const matchingOrders = orders
 			.filter((o: ClearingDid.LimitOrder) => {
 				const isCorrectSide = counterSide in o.side;
 				const isCorrectOutcome = o.outcome_id[0] === targetOutcomeId;
+				// The engine rejects self-trades; the caller's own resting
+				// orders are not liquidity for this market order.
+				const isSelf = o.creator.toText() === callerText;
 
-				return isCorrectSide && isCorrectOutcome;
+				return isCorrectSide && isCorrectOutcome && !isSelf;
 			})
 			.sort((a: ClearingDid.LimitOrder, b: ClearingDid.LimitOrder) => {
 				const priceA = Number(a.price.decimal.value);
@@ -180,19 +190,47 @@ export const placeOrder = async ({
 				return normalizedSide === 'BUY' ? priceA - priceB : priceB - priceA;
 			});
 
-		const [bestMatch] = matchingOrders;
-
-		if (!bestMatch) {
+		if (matchingOrders.length === 0) {
 			throw new Error('No matching liquidity found for market order');
 		}
 
-		await submitMarketOrder({
-			identity,
-			params: {
-				trade_id: `TRD_${nanoid(8)}`,
-				matching_order_id: bestMatch.order_id
+		// Walk the book best-price-first, taking `min(remaining, level)` per
+		// trade, so the execution honors the caller's stake-derived `qty`
+		// rather than whatever size the best resting order happens to carry.
+		// A book smaller than the request fills what exists.
+		let remaining = qty;
+
+		try {
+			for (const order of matchingOrders) {
+				if (remaining <= ZERO) {
+					break;
+				}
+
+				const take = remaining < order.qty ? remaining : order.qty;
+
+				await submitMarketOrder({
+					identity,
+					params: {
+						trade_id: `TRD_${nanoid(8)}`,
+						matching_order_id: order.order_id,
+						qty: toNullable(take)
+					}
+				});
+
+				remaining -= take;
 			}
-		});
+		} catch (e: unknown) {
+			// Nothing executed — surface the failure. After a partial fill the
+			// user holds a real position, so finish with what filled instead
+			// of reporting a failure that would read as "nothing happened".
+			if (remaining === qty) {
+				throw e;
+			}
+
+			console.warn('Market order partially filled before an error; keeping the filled amount', e);
+		}
+
+		filledQty = qty - remaining;
 	}
 
 	refreshPositions();
@@ -209,7 +247,7 @@ export const placeOrder = async ({
 			// "Sold" only when the trade executed on the spot; an open limit sell is merely placed.
 			// `normalizedPrice` is the price of the chosen outcome — the raw `price` arg arrives
 			// YES-framed for binary NO and would display the complement.
-			title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${qty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
+			title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${filledQty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
 			details: marketTitle
 		});
 		await recordActivity(userText);
