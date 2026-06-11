@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/AntonioVentilii/vici-app/compare/v0.1.4...v0.1.5) (2026-06-11)
+
+
+### Bug Fixes
+
+* **arena:** stop the standing-hero cache effect from self-triggering and freezing /arena ([#807](https://github.com/AntonioVentilii/vici-app/issues/807)) ([2b7723e](https://github.com/AntonioVentilii/vici-app/commit/2b7723ea5d74c5bdad84a27f3a51689d437adc59))
+* **frontend:** localize country names via Intl.DisplayNames ([#805](https://github.com/AntonioVentilii/vici-app/issues/805)) ([4ff4818](https://github.com/AntonioVentilii/vici-app/commit/4ff4818f45c0747b22962075dc1f1071c3e82d39))
+
 ## [0.1.4](https://github.com/AntonioVentilii/vici-app/compare/v0.1.3...v0.1.4) (2026-06-11)
 
 
