@@ -66,8 +66,8 @@ never restate the numbers anywhere else (docs, specs, comments):
 - [`vxp-onboarding.constants.ts`](../../src/lib/constants/vxp-onboarding.constants.ts)
   — registration grant
 
-Implementation invariants for award code live in
-[`satellite/patterns.md`](./satellite/patterns.md#vxp-awards--economy-invariants).
+Implementation invariants and the new-award-type checklist live in
+[`satellite/economy.md`](./satellite/economy.md).
 
 ## Behaviour index
 

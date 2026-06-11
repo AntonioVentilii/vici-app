@@ -591,46 +591,6 @@ state). The pattern, as built for school-email verification
   with the attempt cap + TTL + per-principal/email rate limit as the real
   guessing defense.
 
-## VXP awards — economy invariants
-
-Every server-fired VXP grant (streaks, referrals, calibration,
-comeback, achievements, league founder, podium, tournament, …) follows
-one pattern. The behaviour-level map is in
-[`PRODUCT.md`](../PRODUCT.md#vxp-economy); these are the invariants a
-change must respect — each has bitten a PR before:
-
-- **Amounts are base units, always.** VXP has 4 decimals — derive
-  every reward / floor / threshold constant via `parseToken`, never a
-  raw int, and compare / transfer in base units (whole VXP is for
-  display only). A raw int silently miscalibrates by 10⁴.
-- **Parameters have one home.** All amounts, caps, and gates live in
-  the canonical constants files (master:
-  [`vxp-economy.constants.ts`](../../../src/lib/constants/vxp-economy.constants.ts));
-  services import them. Never restate a value in a second file, a
-  spec, or a comment.
-- **A new award type lands in TWO places:** the `VxpAwardType` union
-  in
-  [`vxp-award.ts`](../../../src/lib/types/vxp-award.ts)
-  **and** the `VxpAwardTypeSchema` Zod enum in
-  [`vxp-award.schema.ts`](../../../src/lib/schema/vxp-award.schema.ts).
-  `svelte-check` only catches the union — a missing enum entry fails
-  at runtime.
-- **Idempotency IS the doc key.** Award docs in `vxp_awards` are keyed
-  `${recipient}/${awardType}/${awardKey}` via `vxpAwardKey()` — a
-  retry collides with the existing doc and that collision is the
-  dedup. No separate "already paid?" check; pick an `awardKey` that
-  encodes the one-shot unit (league id, milestone, month).
-- **Lifecycle is `pending → paid | failed`, then frozen.** Paid docs
-  are immutable (`assertSetVxpAward`). A `failed` payout is re-driven
-  through a settle/retry endpoint — there is no hook replay (see
-  [hooks fire only for client writes](#hooks-fire-only-for-client-writes-never-for-serverless-setdocstore)),
-  so endpoint-triggered payouts run **inline** in the endpoint.
-- **Every award is a real ICRC transfer** through the shared payout
-  utils
-  ([`vxp-payout.utils.ts`](../../../src/satellite/utils/vxp-payout.utils.ts))
-  — no satellite award path increments a counter instead of moving
-  tokens.
-
 ## Logging
 
 - Use the helpers in
@@ -646,6 +606,8 @@ change must respect — each has bitten a PR before:
 - ✅ Reuse FE schemas from `$lib/schema/` so the FE and satellite agree.
 - ✅ Keep `index.ts` declarative — schemas + dispatch tables only.
 - ✅ Make every hook idempotent.
+- ✅ For any VXP award / economy change, follow the invariants in
+  [`economy.md`](./economy.md).
 - ✅ Validate principals via `PrincipalTextSchema`.
 - ✅ Use the snake_case **wire schemas** from
   [`src/satellite/utils/wire-format.utils.ts`](../../../src/satellite/utils/wire-format.utils.ts)

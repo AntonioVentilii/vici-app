@@ -117,6 +117,7 @@ on-chain risk engine — that lives in `../icdc-core/`.
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Touch any satellite file                                                   | [`docs/ai/satellite/README.md`](./docs/ai/satellite/README.md)                                 |
 | Add a hook / assertion / typed endpoint                                    | [`docs/ai/satellite/patterns.md`](./docs/ai/satellite/patterns.md)                             |
+| Touch VXP awards / economy parameters                                      | [`docs/ai/satellite/economy.md`](./docs/ai/satellite/economy.md)                               |
 | Add a hook (`onSetDoc` / `onDeleteDoc`)                                    | [`docs/ai/satellite/workflows/new-hook.md`](./docs/ai/satellite/workflows/new-hook.md)         |
 | Add a typed `defineQuery` / `defineUpdate`                                 | [`docs/ai/satellite/workflows/new-endpoint.md`](./docs/ai/satellite/workflows/new-endpoint.md) |
 | Sync something into the icdc-core registry / Vici engine                   | [`docs/ai/satellite/workflows/engine-sync.md`](./docs/ai/satellite/workflows/engine-sync.md)   |
