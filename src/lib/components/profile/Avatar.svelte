@@ -4,9 +4,16 @@
 	import ViciAvatar from '$lib/components/ui/ViciAvatar.svelte';
 	import { myAvatarParts } from '$lib/stores/avatar.store';
 	import { hasUploadedAvatar, resolveAvatarUrl } from '$lib/utils/avatar.utils';
+	import { parseParts } from '$lib/utils/vici-avatar.utils';
 
 	interface Props {
 		avatar?: string | null;
+		/** The owner's serialized faceted-avatar picks (`profile.avatarParts`).
+		 *  Pass it on every surface that shows someone ELSE so their saved face
+		 *  renders instead of the principal-seeded fallback. Empty / absent /
+		 *  malformed falls back to the seeded face. Ignored when `self` — "you"
+		 *  surfaces read the live picks from {@link myAvatarParts}. */
+		avatarParts?: string | null;
 		owner: PrincipalText;
 		nickname?: string | null;
 		/** When true, render the logged-in user's saved faceted avatar (the
@@ -26,6 +33,7 @@
 
 	const {
 		avatar,
+		avatarParts,
 		owner,
 		nickname,
 		self = false,
@@ -38,9 +46,10 @@
 	const isUploaded = $derived(hasUploadedAvatar(avatar));
 
 	// "You" surfaces render the user's saved picks (live, so a save in the
-	// editor re-renders here); everyone else gets a face seeded by their
+	// editor re-renders here); everyone else renders the owner's saved picks
+	// when the surface carries them, falling back to a face seeded by their
 	// immutable principal (`owner`) — never the nickname, which can change.
-	const parts = $derived(self ? ($myAvatarParts ?? null) : null);
+	const parts = $derived(self ? ($myAvatarParts ?? null) : (parseParts(avatarParts) ?? null));
 </script>
 
 <div class="avatar-frame overflow-hidden rounded-full {className}" class:is-editable={editable}>

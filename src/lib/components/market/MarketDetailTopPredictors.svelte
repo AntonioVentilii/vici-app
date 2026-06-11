@@ -60,6 +60,7 @@
 						<Avatar
 							class="market-top-predictors-avatar"
 							avatar={user.avatar}
+							avatarParts={user.avatarParts}
 							nickname={user.nickname}
 							owner={user.owner}
 						/>

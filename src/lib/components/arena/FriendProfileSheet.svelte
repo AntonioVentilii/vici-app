@@ -56,6 +56,7 @@
 			<Avatar
 				class="h-full w-full"
 				avatar={profile?.avatar}
+				avatarParts={profile?.avatarParts}
 				nickname={profile?.nickname}
 				owner={profile?.owner ?? friendId}
 			/>
