@@ -390,6 +390,7 @@
 			{inPlayDisplay}
 			loading={$vxpHoldingsNotInitialized}
 			{moreRows}
+			onOpen={() => (sheetOpen = true)}
 			{openCalls}
 			pendingCount={liveCallCount}
 			{starterRows}
