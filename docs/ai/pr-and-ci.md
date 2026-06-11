@@ -65,7 +65,7 @@ guidance embedded as comments in the template itself.
 
 Rules:
 
-- **All three sections are required.** Don't leave them empty. Even tiny PRs benefit from one bullet per section.
+- **All three sections are required.** Don't leave them empty. Even a tiny PR fills each section with at least one line.
 - **Use the exact section headings** (`# Motivation`, `# Changes`, `# Tests`) so downstream tooling (release notes, search, changelog grep) can find them.
 - **Concise but complete.** A reviewer should understand what changed and why without opening the diff. Motivation: 1–3 sentences. Changes: one bullet per logical change, outcome first. Cut anything that doesn't change what the reviewer does next.
 - **Write what the diff can't say.** Don't narrate the diff line by line — it's attached. Spend the words on the why, the trade-offs considered, and what was deliberately left out of scope.
