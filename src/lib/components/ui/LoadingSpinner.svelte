@@ -2,18 +2,10 @@
 	interface Props {
 		class?: string;
 		size?: 'xs' | 'sm' | 'md' | 'lg' | 'current';
-		border?: 1 | 2 | 4;
-		color?: string;
 		center?: boolean;
 	}
 
-	const {
-		class: className = '',
-		size = 'md',
-		border = 4,
-		color = 'border-primary',
-		center = true
-	}: Props = $props();
+	const { class: className = '', size = 'md', center = true }: Props = $props();
 
 	const sizeClasses = {
 		xs: 'h-4 w-4',
@@ -23,17 +15,77 @@
 		current: 'h-full w-full'
 	};
 
-	const borderClasses = {
-		1: 'border',
-		2: 'border-2',
-		4: 'border-4'
-	};
+	// Eight laurel leaves evenly spaced on the ring, each tangent to the
+	// circle so the mark reads as a rotating wreath. At small sizes the
+	// leaves degrade to dots and the mark still reads as a spinner.
+	const LEAF_COUNT = 8;
+	const LEAF_ANGLES = Array.from({ length: LEAF_COUNT }, (_, i) => (i * 360) / LEAF_COUNT);
+
+	// One shimmer wave travels the full ring per cycle: the per-leaf delay
+	// times the leaf count equals the shimmer duration, so the wave wraps
+	// seamlessly.
+	const SHIMMER_DELAY_S = 0.18;
 </script>
 
 <div class={center ? `flex justify-center py-24 ${className}` : className}>
-	<div
-		class="animate-spin rounded-full border-t-transparent {sizeClasses[size]} {borderClasses[
-			border
-		]} {color}"
-	></div>
+	<svg
+		class="laurel-ring {sizeClasses[size]}"
+		aria-hidden="true"
+		fill="currentColor"
+		viewBox="0 0 80 80"
+		xmlns="http://www.w3.org/2000/svg"
+	>
+		{#each LEAF_ANGLES as angle, i (angle)}
+			<ellipse
+				style:animation-delay={`${i * SHIMMER_DELAY_S}s`}
+				class="laurel-ring-leaf"
+				cx="40"
+				cy="10"
+				rx="6.5"
+				ry="2.6"
+				transform="rotate({angle} 40 40)"
+			/>
+		{/each}
+	</svg>
 </div>
+
+<style lang="postcss">
+	.laurel-ring {
+		color: var(--color-primary);
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: laurel-ring-rotate 2.8s linear infinite;
+	}
+
+	.laurel-ring-leaf {
+		opacity: 0.25;
+		animation: laurel-ring-shimmer 1.44s ease-in-out infinite;
+	}
+
+	@keyframes laurel-ring-rotate {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	@keyframes laurel-ring-shimmer {
+		0%,
+		100% {
+			opacity: 0.25;
+		}
+		50% {
+			opacity: 1;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.laurel-ring,
+		.laurel-ring-leaf {
+			animation: none;
+		}
+
+		.laurel-ring-leaf {
+			opacity: 0.8;
+		}
+	}
+</style>
