@@ -34,6 +34,7 @@
 </script>
 
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import type { PrincipalText } from '@junobuild/schema';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -130,10 +131,35 @@
 	// stale entry can't be mis-read.
 	const cacheKey = (owner: PrincipalText): string => `vici.arena-standings.v1:${owner}`;
 
-	const readCache = (owner: PrincipalText): Scope[] | undefined => {
-		const cached = getStorage<Scope[]>({ key: cacheKey(owner) });
+	const NAV_KINDS: ReadonlySet<string> = new Set(['leaderboard', 'tab', 'league', 'school']);
 
-		return Array.isArray(cached) ? cached : undefined;
+	// localStorage is untrusted input (parsed JSON, manually editable):
+	// keep only entries whose render- and tap-critical fields are shaped
+	// right so a malformed row can't throw mid-render or in `openScope`.
+	const isScope = (value: unknown): value is Scope => {
+		if (typeof value !== 'object' || value === null) {
+			return false;
+		}
+
+		const scope = value as Partial<Scope>;
+
+		return (
+			typeof scope.key === 'string' &&
+			typeof scope.label === 'string' &&
+			typeof scope.rank === 'number' &&
+			typeof scope.total === 'number' &&
+			typeof scope.up === 'number' &&
+			typeof scope.unit === 'string' &&
+			nonNullish(scope.nav) &&
+			typeof scope.nav === 'object' &&
+			NAV_KINDS.has((scope.nav as { kind?: string }).kind ?? '')
+		);
+	};
+
+	const readCache = (owner: PrincipalText): Scope[] | undefined => {
+		const cached = getStorage<unknown>({ key: cacheKey(owner) });
+
+		return Array.isArray(cached) ? cached.filter(isScope) : undefined;
 	};
 
 	const writeCache = ({ owner, value }: { owner: PrincipalText; value: Scope[] }): void => {
@@ -192,7 +218,11 @@
 			settled = true;
 		} else {
 			scopes = [];
-			settled = false;
+			// No principal means no hydrate can run — settle the signed-out /
+			// pre-auth state immediately so the skeleton only pulses while a
+			// load is actually possible. When auth resolves, the effect
+			// re-runs with the principal and the cold-load state kicks in.
+			settled = owner === undefined;
 		}
 
 		if (idx >= scopes.length) {
