@@ -944,6 +944,9 @@ export const zhHansMessages = {
 	'flow.list_02': '滑动瞬间获得 VXP。',
 	'flow.list_03': '连胜让你不愿停下。',
 	'flow.list_04': '翻转卡片即见洞察。',
+	'flow.notification.insufficient_message':
+		'你的余额已全部投入未结算的预测——待市场结算后才会释放。',
+	'flow.notification.insufficient_title': '可用余额不足',
 	'flow.notification.trade_failed_message': '“{title}……”的订单失败：{error}',
 	'flow.notification.trade_failed_title': '预测失败',
 	'flow.progress_aria': '进度',

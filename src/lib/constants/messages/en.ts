@@ -981,6 +981,9 @@ export const enMessages = {
 	'flow.list_02': 'VXP lands the moment you swipe.',
 	'flow.list_03': 'Streaks that pressure you back.',
 	'flow.list_04': 'Insights surface when you flip the card.',
+	'flow.notification.insufficient_message':
+		'Your balance is already in play on open predictions — it frees up as markets resolve.',
+	'flow.notification.insufficient_title': 'Not enough available balance',
 	'flow.notification.trade_failed_message': 'Order for "{title}..." failed: {error}',
 	'flow.notification.trade_failed_title': 'Prediction failed',
 	'flow.progress_aria': 'Progress',

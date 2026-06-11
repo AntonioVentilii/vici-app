@@ -994,6 +994,9 @@ export const esMessages = {
 	'flow.list_02': 'El VXP cae en el momento del gesto.',
 	'flow.list_03': 'Rachas que te traen de vuelta.',
 	'flow.list_04': 'Los datos clave aparecen al girar la tarjeta.',
+	'flow.notification.insufficient_message':
+		'Tu saldo ya está en juego en predicciones abiertas: se libera cuando los mercados se resuelven.',
+	'flow.notification.insufficient_title': 'Saldo disponible insuficiente',
 	'flow.notification.trade_failed_message': 'La orden para "{title}..." falló: {error}',
 	'flow.notification.trade_failed_title': 'Predicción fallida',
 	'flow.progress_aria': 'Progreso',
