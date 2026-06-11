@@ -32,11 +32,14 @@ Skip it for small changes (typo, one-liner): implement directly.
   spec is the unit of review: status flips, the `PRODUCT.md` update,
   and the divergence check all bind to exactly one PR, and a split
   breaks that binding (which PR flips the status? which one is "the"
-  implementation?). This deliberately overrides the general
-  prefer-atomic-splits instinct from
-  [`pr-and-ci.md`](../pr-and-ci.md). If the work genuinely cannot fit
-  one reviewable PR, the spec is too big — split the **spec** first,
-  each part with its own status and PR.
+  implementation?). Within spec-driven work this overrides the
+  prefer-atomic-splits instinct from [`pr-and-ci.md`](../pr-and-ci.md)
+  — the spec itself is the atomicity boundary. It applies **only**
+  here: when the human opts out of the spec workflow and the change is
+  implemented directly, the normal atomic-PR conventions stand
+  unchanged. If spec'd work genuinely cannot fit one reviewable PR,
+  the spec is too big — split the **spec** first, each part with its
+  own status and PR.
 
 ## Files
 
