@@ -312,6 +312,7 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppGetMyBattleStatsResult = IDL.Record({ bouts_won: IDL.Float64 });
 	const AppGetMyReferralCodeResult = IDL.Record({ code: IDL.Opt(IDL.Text) });
 	const AppGetMyRivalResult = IDL.Record({
 		rival_is_trailing: IDL.Bool,
@@ -1307,6 +1308,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppGetMonthlyLeaderboardResult],
 			['query']
 		),
+		app_get_my_battle_stats: IDL.Func([], [AppGetMyBattleStatsResult], ['query']),
 		app_get_my_referral_code: IDL.Func([], [AppGetMyReferralCodeResult], ['query']),
 		app_get_my_rival: IDL.Func([], [AppGetMyRivalResult], ['query']),
 		app_get_profile: IDL.Func([AppGetProfileArgs], [AppGetProfileResult], ['query']),

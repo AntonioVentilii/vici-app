@@ -308,6 +308,9 @@ export interface AppGetMonthlyLeaderboardResult {
 		accuracy: number;
 	}>;
 }
+export interface AppGetMyBattleStatsResult {
+	bouts_won: number;
+}
 export interface AppGetMyReferralCodeResult {
 	code: [] | [string];
 }
@@ -1117,6 +1120,7 @@ export interface _SERVICE {
 		[AppGetMonthlyLeaderboardArgs],
 		AppGetMonthlyLeaderboardResult
 	>;
+	app_get_my_battle_stats: ActorMethod<[], AppGetMyBattleStatsResult>;
 	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
 	app_get_my_rival: ActorMethod<[], AppGetMyRivalResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;

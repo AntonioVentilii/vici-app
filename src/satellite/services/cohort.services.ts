@@ -303,6 +303,93 @@ export const listMyBattlesFn = (): BattleDoc[] => {
 	return battles.sort((a, b) => a.kickoffMs - b.kickoffMs);
 };
 
+/** Scalar battle aggregates for the caller — see {@link getMyBattleStatsFn}. */
+export interface MyBattleStats {
+	/** Resolved battles the caller's side won (draws excluded). */
+	boutsWon: number;
+}
+
+/**
+ * Count the resolved battles the caller's side won — duels by principal
+ * match on the winning side, league bouts by the caller owning the
+ * winning league. The scalar behind the profile's `boutsWon` counter,
+ * served as one number so the recurring stats sync doesn't page the
+ * full battle list through {@link listMyBattlesFn}.
+ *
+ * Cost: one `BATTLES` scan, with league ownership resolved for the
+ * WINNING side of resolved non-draw league battles only — memoised to
+ * one `getDocStore` per distinct winning league. `listMyBattlesFn`'s
+ * N+1 (two lookups per league battle regardless of state) never enters
+ * this path.
+ */
+export const getMyBattleStatsFn = (): MyBattleStats => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+	const callerBytes = caller.toUint8Array();
+
+	const { items } = listDocsStore({
+		collection: Collection.BATTLES,
+		caller: callerBytes,
+		params: {}
+	});
+
+	const ownershipByLeague = new Map<string, boolean>();
+
+	const isLeagueOwnedByCaller = (leagueId: string): boolean => {
+		const memo = ownershipByLeague.get(leagueId);
+
+		if (nonNullish(memo)) {
+			return memo;
+		}
+
+		const leagueDoc = getDocStore({
+			collection: Collection.LEAGUES,
+			key: leagueId,
+			caller: callerBytes
+		});
+
+		let owned = false;
+
+		if (nonNullish(leagueDoc)) {
+			try {
+				owned = decodeDocData<LeagueDoc>(leagueDoc.data).owner === callerText;
+			} catch {
+				// Malformed league row — treat as not owned.
+			}
+		}
+
+		ownershipByLeague.set(leagueId, owned);
+
+		return owned;
+	};
+
+	let boutsWon = 0;
+
+	for (const [, item] of items) {
+		try {
+			const battle = decodeDocData<BattleDoc>(item.data);
+
+			const hasWinner =
+				battle.state === 'resolved' && nonNullish(battle.winner) && battle.winner !== 'draw';
+
+			if (hasWinner) {
+				const winningSide = battle.winner === 'A' ? battle.sideA : battle.sideB;
+
+				const callerWon =
+					battle.kind === 'duel' ? winningSide === callerText : isLeagueOwnedByCaller(winningSide);
+
+				if (callerWon) {
+					boutsWon += 1;
+				}
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	return { boutsWon };
+};
+
 /**
  * Look up a league by its 6-char invite code — the read backing
  * the join-by-code FE flow. Scans the LEAGUES collection (small —
