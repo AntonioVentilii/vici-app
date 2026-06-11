@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import MenagerieReveal from '$lib/components/menagerie/MenagerieReveal.svelte';
 	import MenagerieSprite from '$lib/components/menagerie/MenagerieSprite.svelte';
 	import { myMenagerieStats } from '$lib/derived/menagerie.derived';
@@ -37,7 +36,25 @@
 
 	const profile = $derived($userStore.profile);
 
-	onMount(() => {
+	// Hydrate the shared live signals once per distinct signed-in owner —
+	// keyed on the owner rather than fired once at mount, because the host
+	// is always mounted and can race auth: a pre-auth load has no principal
+	// for the self-rank query and skips that leg, so re-firing when the
+	// owner lands lets Goat's rank self-heal app-wide instead of reading
+	// baseline until some other surface happens to reload the signals. The
+	// initial `undefined` sentinel still fires the signed-out load (global
+	// standings need no principal); the service's in-flight dedup keeps
+	// concurrent surface mounts single-flight.
+	let signalsOwner = $state<string | null | undefined>(undefined);
+
+	$effect(() => {
+		const owner = profile?.owner ?? null;
+
+		if (owner === signalsOwner) {
+			return;
+		}
+
+		signalsOwner = owner;
 		void loadMyMenagerieSignals();
 	});
 

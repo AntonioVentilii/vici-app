@@ -7,7 +7,7 @@ import { MIN_NICKNAME_LENGTH, sanitizeNickname } from '$lib/constants/profile.co
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
-import { listMyBattles, listMyLeagues } from '$lib/services/leagues.services';
+import { getMyBattleStats, listMyLeagues } from '$lib/services/leagues.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import {
 	bestSharpestEyeTier,
@@ -752,7 +752,6 @@ export const calculateAndSyncStats = async ({
 	let ownsQualifyingLeague = false;
 	let leaguesJoined = 0;
 	let leaguesFounded = 0;
-	let ownedLeagueIds = new Set<string>();
 
 	try {
 		const myLeagues = await listMyLeagues();
@@ -763,31 +762,19 @@ export const calculateAndSyncStats = async ({
 		ownsQualifyingLeague = owned.some((entry) => entry.memberCount >= LEAGUE_FOUNDER_MIN_MEMBERS);
 		leaguesJoined = myLeagues.length;
 		leaguesFounded = owned.length;
-		ownedLeagueIds = new Set(owned.map((entry) => entry.league.id));
 	} catch (err: unknown) {
 		console.error('calculateAndSyncStats: failed to read leagues for league-founder', err);
 	}
 
-	// Resolved battles the caller's side won (Bee's "win a bout" rung).
-	// `listMyBattles` already scopes to battles the caller participates in —
-	// duels as a side principal, league bouts as the owning league's founder
-	// — so winning is a matter of matching the winner letter to the caller's
-	// side. Best-effort like the league read: a failed read computes 0 and
-	// the monotonic patch below keeps the persisted tally.
+	// Resolved battles the caller's side won (Bee's "win a bout" rung),
+	// tallied server-side by `getMyBattleStats` — duels by principal match
+	// on the winning side, league bouts by ownership of the winning league.
+	// Best-effort like the league read: a failed read computes 0 and the
+	// monotonic patch below keeps the persisted tally.
 	let boutsWon = 0;
 
 	try {
-		const myBattles = await listMyBattles();
-
-		boutsWon = myBattles.filter((battle) => {
-			if (battle.state !== 'resolved' || isNullish(battle.winner) || battle.winner === 'draw') {
-				return false;
-			}
-
-			const winningSide = battle.winner === 'A' ? battle.sideA : battle.sideB;
-
-			return battle.kind === 'duel' ? winningSide === principal : ownedLeagueIds.has(winningSide);
-		}).length;
+		({ boutsWon } = await getMyBattleStats());
 	} catch (err: unknown) {
 		console.error('calculateAndSyncStats: failed to read battles for bouts-won', err);
 	}
