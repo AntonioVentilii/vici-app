@@ -83,3 +83,14 @@ plays a brief tilt + laurel particle burst on commit; the motion is
 suppressed under reduced-motion. The reaction is local to the session —
 there is no persisted reaction model yet. See
 [`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md).
+
+### Friend request — the inbox notification lands on the Accept control
+
+Tapping a `friend_request` inbox notification deep-links to
+`/arena?request=<relationId>`: the Arena shell forces the Friends tab
+(overriding the last-opened-tab memory) and the incoming request row is
+scrolled into view with a brief highlight, so the recipient lands on
+the inline Accept/Reject pills instead of hunting through tabs.
+Accept/reject failures log the underlying satellite error for
+diagnosis. See
+[`specs/2026-06-11-fix-ios-friend-request-accept.md`](./spec-driven-development/specs/2026-06-11-fix-ios-friend-request-accept.md).
