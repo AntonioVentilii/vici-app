@@ -115,11 +115,14 @@ export const UserProfileSchema = j.strictObject({
 	// memberships / battles during `calculateAndSyncStats` and kept
 	// monotonic via `max(existing, recomputed)` — leaving a league or a
 	// failed read must not strip an earned rung.
-	// Leagues the user is currently a member of (any role).
+	// High-water count of league memberships (any role) — because of the
+	// monotonic guard, leaving a league never decrements it.
 	leaguesJoined: j.number().default(0),
-	// Resolved battles (league bouts or duels) the user's side won.
+	// High-water count of resolved battles (league bouts or duels) the
+	// user's side won.
 	boutsWon: j.number().default(0),
-	// Leagues the user owns.
+	// High-water count of leagues the user has owned — transferring or
+	// deleting a league never decrements it.
 	leaguesFounded: j.number().default(0),
 	// Consecutive calendar days the user has held a top-10% global
 	// leaderboard position (rank ≤ profileCount / 10). Drives the

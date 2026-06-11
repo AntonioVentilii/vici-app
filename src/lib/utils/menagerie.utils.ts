@@ -69,11 +69,14 @@ export interface MenagerieStats {
 	/** Distinct categories with a winning record (see
 	 * {@link countWinningCategories}). Drives Magpie. */
 	winningCategories: number;
-	/** Leagues the owner is a member of (any role). Bee's "join" milestone. */
+	/** Leagues the owner has ever joined (any role; high-water — leaving
+	 * never decrements). Bee's "join" milestone. */
 	leaguesJoined: number;
-	/** Resolved battles the owner's side won. Bee's "win a bout" milestone. */
+	/** Resolved battles the owner's side has ever won (high-water). Bee's
+	 * "win a bout" milestone. */
 	boutsWon: number;
-	/** Leagues the owner founded. Bee's "found" milestone. */
+	/** Leagues the owner has ever owned (high-water). Bee's "found"
+	 * milestone. */
 	leaguesFounded: number;
 	/** Distinct people the owner has brought to the app. Drives Parrot. */
 	referrals: number;
