@@ -2,6 +2,7 @@ import type { RegistryDid } from '$declarations';
 import { functions } from '$declarations/satellite/satellite.api';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
+import { COMEBACK_COLD_STREAK_LOSSES } from '$lib/constants/menagerie.constants';
 import { MIN_NICKNAME_LENGTH, sanitizeNickname } from '$lib/constants/profile.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
@@ -64,6 +65,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				dailyGoalDone: 0,
 				streak: 0,
 				onFireStreak: 0,
+				comebacks: 0,
 				accuracy: 0,
 				points: 0,
 				level: 1,
@@ -659,6 +661,24 @@ export const calculateAndSyncStats = async ({
 		{ longestRun: 0, run: 0 }
 	);
 
+	// Cold-streak recoveries (Honey Badger) — each settled win that snaps a
+	// run of at least `COMEBACK_COLD_STREAK_LOSSES` consecutive settled
+	// losses. Like `onFireStreak`, recomputed over the full chronological
+	// history and kept monotonic against the persisted value below.
+	const { comebacks: coldStreakComebacks } = chronoHistory.filter(isSettledEvent).reduce<{
+		comebacks: number;
+		losses: number;
+	}>(
+		({ comebacks, losses }, event) =>
+			event.qty > ZERO
+				? {
+						comebacks: losses >= COMEBACK_COLD_STREAK_LOSSES ? comebacks + 1 : comebacks,
+						losses: 0
+					}
+				: { comebacks, losses: losses + 1 },
+		{ comebacks: 0, losses: 0 }
+	);
+
 	const { totalPoints } = chronoHistory.reduce<{ totalPoints: number; runningStreak: number }>(
 		(acc, event) => {
 			if (isSettledEvent(event)) {
@@ -809,6 +829,7 @@ export const calculateAndSyncStats = async ({
 			contrarianWins,
 			bestUpsetConsensus,
 			onFireStreak: Math.max(longestRun, profileDoc.data.onFireStreak ?? 0),
+			comebacks: Math.max(coldStreakComebacks, profileDoc.data.comebacks ?? 0),
 			topDecileStreak,
 			lastTopDecileDay,
 			sharpestEyeBestTier,

@@ -187,6 +187,7 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	longestStreak: 0,
 	dailyGoalDone: 0,
 	onFireStreak: 0,
+	comebacks: 0,
 	streak: profile.streak,
 	accuracy: profile.accuracy,
 	points: profile.points,

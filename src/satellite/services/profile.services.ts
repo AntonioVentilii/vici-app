@@ -128,6 +128,9 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		// Longest consecutive-win run ever (drives Snake). Defaults to 0 for
 		// legacy rows; the next stats sync recomputes it from history.
 		onFireStreak: profile.onFireStreak ?? 0,
+		// Cold-streak recoveries (drives Honey Badger). Defaults to 0 for
+		// legacy rows; the next stats sync recomputes it from history.
+		comebacks: profile.comebacks ?? 0,
 		// Top-decile streak state (drives the `top-decile` achievement).
 		// `topDecileStreak` defaults to 0 for legacy rows; `lastTopDecileDay`
 		// is `optional()` so an absent value (never evaluated) round-trips
