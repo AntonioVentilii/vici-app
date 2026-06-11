@@ -70,7 +70,7 @@
 							<span class="num market-top-predictors-sub">
 								{Math.round(user.accuracy)}%
 								{t({ locale: $localeStore, key: 'market.detail.top_predictors.acc' })} ·
-								{user.streak}{t({
+								{user.dailyStreak}{t({
 									locale: $localeStore,
 									key: 'market.detail.top_predictors.streak'
 								})}
