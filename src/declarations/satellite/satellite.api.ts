@@ -347,6 +347,18 @@ const getMonthlyLeaderboard = async (
 	return AppGetMonthlyLeaderboardResultSchema.parse(result);
 };
 
+const AppGetMyBattleStatsResultSchema = j.strictObject({ boutsWon: j.number() });
+
+const getMyBattleStats = async (): Promise<j.infer<typeof AppGetMyBattleStatsResultSchema>> => {
+	const { app_get_my_battle_stats } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_my_battle_stats();
+
+	const result = schemaFromIdl({ schema: AppGetMyBattleStatsResultSchema, value: idlResult });
+	return AppGetMyBattleStatsResultSchema.parse(result);
+};
+
 const AppGetMyReferralCodeResultSchema = j.strictObject({ code: j.optional(j.string()) });
 
 const getMyReferralCode = async (): Promise<j.infer<typeof AppGetMyReferralCodeResultSchema>> => {
@@ -1939,6 +1951,7 @@ export const functions = {
 	getMarketMetadata,
 	getMarketTranslation,
 	getMonthlyLeaderboard,
+	getMyBattleStats,
 	getMyReferralCode,
 	getMyRival,
 	getProfile,

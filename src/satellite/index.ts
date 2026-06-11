@@ -45,6 +45,7 @@ import { getAnalyticsSummaryFn, trackEventsFn } from '$satellite/services/analyt
 import { assertDeleteBattle, assertSetBattle } from '$satellite/services/battle.services';
 import {
 	getAffiliationStatsFn,
+	getMyBattleStatsFn,
 	listAffiliationChampionshipsFn,
 	listAffiliationStatsFn,
 	listChallengeableLeaguesFn,
@@ -621,6 +622,13 @@ export const listMyBattles = defineQuery({
 	handler: () => ({
 		items: listMyBattlesFn().map(toWireBattle)
 	})
+});
+
+export const getMyBattleStats = defineQuery({
+	result: j.strictObject({
+		boutsWon: j.number()
+	}),
+	handler: () => getMyBattleStatsFn()
 });
 
 // ─── Worlds affiliations ────────────────────────────────────────
