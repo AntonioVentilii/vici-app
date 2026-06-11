@@ -4,6 +4,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
+	import { affiliationDisplayName } from '$lib/utils/affiliation-name.utils';
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
@@ -70,6 +71,16 @@
 
 	const option = (id: string) => lookupWorldsAffiliation({ kind, id });
 
+	// Locale-aware roster label — country names localize via
+	// `Intl.DisplayNames`; falls back to the raw id off the roster.
+	const optionName = (id: string): string => {
+		const opt = option(id);
+
+		return opt !== undefined
+			? affiliationDisplayName({ option: opt, kind, locale: $localeStore })
+			: id;
+	};
+
 	const accForScope = ({ row, scope: sc }: { row: AffiliationStatsDoc; scope: Scope }): number =>
 		sc === 'wc' ? affiliationLifetimeAccuracy(row) : affiliationMonthlyAccuracy(row);
 
@@ -103,7 +114,9 @@
 	const myOption = $derived(
 		myAffiliationIdentifier !== undefined ? option(myAffiliationIdentifier) : undefined
 	);
-	const myName = $derived(myOption?.name ?? myAffiliationIdentifier ?? '');
+	const myName = $derived(
+		myAffiliationIdentifier !== undefined ? optionName(myAffiliationIdentifier) : ''
+	);
 
 	const daysLeft = $derived(scope === 'wc' ? wcDaysLeft : monthDaysLeft);
 
@@ -229,7 +242,7 @@
 									class="battles-pod-flag"
 									countryCode={opt.id}
 								/>{/if}
-							{opt?.name ?? top3[1].affiliationIdentifier}
+							{optionName(top3[1].affiliationIdentifier)}
 						</div>
 						<div class="num battles-pod-pct">
 							{formatAccuracyPercent(accForScope({ row: top3[1], scope }))}
@@ -248,7 +261,7 @@
 									class="battles-pod-flag"
 									countryCode={opt.id}
 								/>{/if}
-							{opt?.name ?? top3[0].affiliationIdentifier}
+							{optionName(top3[0].affiliationIdentifier)}
 						</div>
 						<div class="num battles-pod-pct">
 							{formatAccuracyPercent(accForScope({ row: top3[0], scope }))}
@@ -264,7 +277,7 @@
 									class="battles-pod-flag"
 									countryCode={opt.id}
 								/>{/if}
-							{opt?.name ?? top3[2].affiliationIdentifier}
+							{optionName(top3[2].affiliationIdentifier)}
 						</div>
 						<div class="num battles-pod-pct">
 							{formatAccuracyPercent(accForScope({ row: top3[2], scope }))}

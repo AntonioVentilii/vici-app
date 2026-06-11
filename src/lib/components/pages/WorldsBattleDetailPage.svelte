@@ -19,6 +19,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+	import { affiliationDisplayName } from '$lib/utils/affiliation-name.utils';
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
@@ -150,6 +151,16 @@
 	});
 
 	const optionFor = (id: string) => lookupWorldsAffiliation({ kind, id });
+
+	// Locale-aware row label — country names localize via
+	// `Intl.DisplayNames`; falls back to the raw id off the roster.
+	const optionNameFor = (id: string): string => {
+		const opt = optionFor(id);
+
+		return opt !== undefined
+			? affiliationDisplayName({ option: opt, kind, locale: $localeStore })
+			: id;
+	};
 
 	const detailPath = (id: string): string => {
 		const segment = kind === 'university' ? 'school' : 'country';
@@ -299,7 +310,7 @@
 						</span>
 						<div class="worlds-battle-meta">
 							<div class="worlds-battle-name">
-								{option?.name ?? row.affiliationIdentifier}
+								{optionNameFor(row.affiliationIdentifier)}
 								{#if isYou}
 									·
 									<span class="worlds-battle-you">
@@ -356,7 +367,7 @@
 					</span>
 					<div class="worlds-battle-meta">
 						<div class="worlds-battle-name worlds-battle-name-you">
-							{myOption?.name ?? myAffil.affiliationIdentifier}
+							{optionNameFor(myAffil.affiliationIdentifier)}
 							·
 							<span class="worlds-battle-you">
 								{t({ locale: $localeStore, key: 'worlds.you.suffix' })}
