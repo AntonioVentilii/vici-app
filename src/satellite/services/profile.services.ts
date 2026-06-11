@@ -134,6 +134,11 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		// Winning-category breadth (drives Magpie). Defaults to 0 for legacy
 		// rows; the next stats sync recomputes it from history + market tags.
 		winningCategories: profile.winningCategories ?? 0,
+		// League-life milestones (drive Bee). Default to 0 for legacy rows;
+		// the next stats sync recomputes them from memberships / battles.
+		leaguesJoined: profile.leaguesJoined ?? 0,
+		boutsWon: profile.boutsWon ?? 0,
+		leaguesFounded: profile.leaguesFounded ?? 0,
 		// Top-decile streak state (drives the `top-decile` achievement).
 		// `topDecileStreak` defaults to 0 for legacy rows; `lastTopDecileDay`
 		// is `optional()` so an absent value (never evaluated) round-trips

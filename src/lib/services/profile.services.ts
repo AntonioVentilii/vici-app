@@ -7,7 +7,7 @@ import { MIN_NICKNAME_LENGTH, sanitizeNickname } from '$lib/constants/profile.co
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
-import { listMyLeagues } from '$lib/services/leagues.services';
+import { listMyBattles, listMyLeagues } from '$lib/services/leagues.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import {
 	bestSharpestEyeTier,
@@ -69,6 +69,9 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				onFireStreak: 0,
 				comebacks: 0,
 				winningCategories: 0,
+				leaguesJoined: 0,
+				boutsWon: 0,
+				leaguesFounded: 0,
 				accuracy: 0,
 				points: 0,
 				level: 1,
@@ -745,18 +748,48 @@ export const calculateAndSyncStats = async ({
 	// (carries `memberCount`). Best-effort: a failed read leaves the award
 	// un-flipped this pass, but it's sticky once earned, so a later sync
 	// recovers it. Default `false` rather than letting an error reset it.
+	// The same read backs the Bee trophy's membership counters.
 	let ownsQualifyingLeague = false;
+	let leaguesJoined = 0;
+	let leaguesFounded = 0;
+	let ownedLeagueIds = new Set<string>();
 
 	try {
 		const myLeagues = await listMyLeagues();
-		ownsQualifyingLeague = myLeagues.some(
-			(entry) =>
-				entry.role === 'owner' &&
-				entry.league.owner === principal &&
-				entry.memberCount >= LEAGUE_FOUNDER_MIN_MEMBERS
+		const owned = myLeagues.filter(
+			(entry) => entry.role === 'owner' && entry.league.owner === principal
 		);
+
+		ownsQualifyingLeague = owned.some((entry) => entry.memberCount >= LEAGUE_FOUNDER_MIN_MEMBERS);
+		leaguesJoined = myLeagues.length;
+		leaguesFounded = owned.length;
+		ownedLeagueIds = new Set(owned.map((entry) => entry.league.id));
 	} catch (err: unknown) {
 		console.error('calculateAndSyncStats: failed to read leagues for league-founder', err);
+	}
+
+	// Resolved battles the caller's side won (Bee's "win a bout" rung).
+	// `listMyBattles` already scopes to battles the caller participates in —
+	// duels as a side principal, league bouts as the owning league's founder
+	// — so winning is a matter of matching the winner letter to the caller's
+	// side. Best-effort like the league read: a failed read computes 0 and
+	// the monotonic patch below keeps the persisted tally.
+	let boutsWon = 0;
+
+	try {
+		const myBattles = await listMyBattles();
+
+		boutsWon = myBattles.filter((battle) => {
+			if (battle.state !== 'resolved' || isNullish(battle.winner) || battle.winner === 'draw') {
+				return false;
+			}
+
+			const winningSide = battle.winner === 'A' ? battle.sideA : battle.sideB;
+
+			return battle.kind === 'duel' ? winningSide === principal : ownedLeagueIds.has(winningSide);
+		}).length;
+	} catch (err: unknown) {
+		console.error('calculateAndSyncStats: failed to read battles for bouts-won', err);
 	}
 
 	// `top-decile` — bump the consecutive-day streak at most once per
@@ -866,6 +899,9 @@ export const calculateAndSyncStats = async ({
 			// hydrated the tag lookup degrades to "untagged" and the fresh count
 			// reads 0 — a thin sync must not strip an earned rung.
 			winningCategories: Math.max(winningCategories, profileDoc.data.winningCategories ?? 0),
+			leaguesJoined: Math.max(leaguesJoined, profileDoc.data.leaguesJoined ?? 0),
+			boutsWon: Math.max(boutsWon, profileDoc.data.boutsWon ?? 0),
+			leaguesFounded: Math.max(leaguesFounded, profileDoc.data.leaguesFounded ?? 0),
 			topDecileStreak,
 			lastTopDecileDay,
 			sharpestEyeBestTier,

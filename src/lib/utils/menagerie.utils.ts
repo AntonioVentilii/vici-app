@@ -48,9 +48,6 @@ export const countWinningCategories = (
  * (plus a couple of live signals the profile doc doesn't carry) by the surfaces
  * that render the trophy layer — see `menagerieStatsFromProfile`.
  *
- * The field backing the one engine-unbacked animal (Bee) is intentionally
- * absent: it always resolves to LOCKED until the backend populates the data
- * (see the per-hook TODO below).
  */
 export interface MenagerieStats {
 	/** Lifetime calls placed. Drives Hatchling + Beaver. */
@@ -72,6 +69,12 @@ export interface MenagerieStats {
 	/** Distinct categories with a winning record (see
 	 * {@link countWinningCategories}). Drives Magpie. */
 	winningCategories: number;
+	/** Leagues the owner is a member of (any role). Bee's "join" milestone. */
+	leaguesJoined: number;
+	/** Resolved battles the owner's side won. Bee's "win a bout" milestone. */
+	boutsWon: number;
+	/** Leagues the owner founded. Bee's "found" milestone. */
+	leaguesFounded: number;
 	/** Distinct people the owner has brought to the app. Drives Parrot. */
 	referrals: number;
 	/** Global leaderboard rank (1-based), or `undefined` when unranked. */
@@ -93,6 +96,9 @@ export interface MenagerieProfileFields {
 	bestUpsetConsensus?: number;
 	comebacks?: number;
 	winningCategories?: number;
+	leaguesJoined?: number;
+	boutsWon?: number;
+	leaguesFounded?: number;
 }
 
 /** Live signals the profile doc doesn't carry but the menagerie can use. */
@@ -126,6 +132,9 @@ export const menagerieStatsFromProfile = ({
 	accuracyRatio: (profile?.accuracy ?? 0) / 100,
 	comebacks: profile?.comebacks ?? 0,
 	winningCategories: profile?.winningCategories ?? 0,
+	leaguesJoined: profile?.leaguesJoined ?? 0,
+	boutsWon: profile?.boutsWon ?? 0,
+	leaguesFounded: profile?.leaguesFounded ?? 0,
 	referrals: signals.referrals ?? 0,
 	rank: signals.rank,
 	totalRanked: signals.totalRanked
@@ -134,9 +143,7 @@ export const menagerieStatsFromProfile = ({
 /**
  * Per-animal metric extractor — reads one number from {@link MenagerieStats}.
  * Centralised so `menagerieTierFor` and `menagerieProgress` always agree on the
- * source. Engine-unbacked animals return a baseline worst value — `0` for a
- * higher-is-better ladder, `1` for a reversed (lower-is-better) ladder like
- * `octopus` — so they resolve to LOCKED until the backend lights them up.
+ * source.
  */
 const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	hatchling: (stats) => stats.calls,
@@ -169,10 +176,14 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	// (recomputed from clearing history in `calculateAndSyncStats`).
 	badger: (stats) => stats.comebacks,
 	parrot: (stats) => stats.referrals,
-	// Bee: leagues joined + bouts won + leagues founded (1 point each).
-	// TODO(engine): needs `leaguesJoined` / `boutsWon` / `leaguesFounded`
-	// counters. None are exposed yet → LOCKED.
-	bee: () => 0,
+	// Bee: league-life milestones, one point per rung of the ladder — joined
+	// a league, won a bout, founded a league (the counters are persisted by
+	// `calculateAndSyncStats`). Matching the rule copy, each milestone counts
+	// once no matter how many times it's repeated.
+	bee: (stats) =>
+		(stats.leaguesJoined > 0 ? 1 : 0) +
+		(stats.boutsWon > 0 ? 1 : 0) +
+		(stats.leaguesFounded > 0 ? 1 : 0),
 	// Goat: global-rank percentile (rank / total) — lower is better. Returns 0
 	// as the #1 sentinel; an unranked owner reads as 1 (worst).
 	goat: (stats) => {
@@ -202,7 +213,6 @@ export const menagerieMetric = ({
 /**
  * Highest tier the animal currently qualifies for, or `null` (locked).
  *
- * Engine-unbacked animals always return `null` so they render as "soon" tiles.
  * For most animals the highest cleared threshold wins; for reversed (lower-is-
  * better) metrics the lowest threshold the metric is at-or-below wins. Goat's
  * iridescent rung is reached only by world rank #1 (the `-1` sentinel).
@@ -216,7 +226,7 @@ export const menagerieTierFor = ({
 }): MenagerieTier | null => {
 	const animal = MENAGERIE_BY_SLUG.get(slug);
 
-	if (!animal || animal.engineUnbacked) {
+	if (!animal) {
 		return null;
 	}
 
