@@ -6,7 +6,12 @@ import {
 } from '$lib/constants/locale.constants';
 import { initStorageStore } from '$lib/stores/storage.store';
 import { detectBrowserLocale } from '$lib/utils/locale.utils';
-import { del as delStorage, has as hasStorage, set as setStorage } from '$lib/utils/storage.utils';
+import {
+	del as delStorage,
+	get as getStorage,
+	has as hasStorage,
+	set as setStorage
+} from '$lib/utils/storage.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { readonly, writable } from 'svelte/store';
 
@@ -76,6 +81,22 @@ export const clearLocaleChoice = (): void => {
 	localeStore.reset({ key: LOCALE_STORAGE_KEY });
 };
 
+const isRegisteredLocale = (value: unknown): value is AppLocale =>
+	LOCALE_REGISTRY.some(({ id }) => id === value);
+
+// Startup guard. `initStorageStore` JSON-parses the stored value but cannot
+// know which locales are registered, so a corrupted / foreign payload would
+// otherwise seed the in-memory store — and a garbage BCP-47 tag can throw in
+// `Intl` consumers (`new Intl.DateTimeFormat($localeStore)`). Overwrite it
+// with the detected seed, in memory and in storage, via the persisting `set`.
+if (browser) {
+	const stored: unknown = getStorage({ key: LOCALE_STORAGE_KEY });
+
+	if (nonNullish(stored) && !isRegisteredLocale(stored)) {
+		localeStore.set({ key: LOCALE_STORAGE_KEY, value: detectedLocale });
+	}
+}
+
 // Storage values are JSON-encoded (see `storage.utils`), and a `storage` event
 // carries the raw string — parse and gate it against the registry so a
 // corrupted or foreign value can never put the app in an unknown locale.
@@ -87,8 +108,8 @@ const parseStoredLocale = (raw: string | null): AppLocale | undefined => {
 	try {
 		const value: unknown = JSON.parse(raw);
 
-		if (LOCALE_REGISTRY.some(({ id }) => id === value)) {
-			return value as AppLocale;
+		if (isRegisteredLocale(value)) {
+			return value;
 		}
 	} catch {
 		// Unparseable payload — treated as absent by falling through.
