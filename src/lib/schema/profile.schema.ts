@@ -96,6 +96,12 @@ export const UserProfileSchema = j.strictObject({
 	// history during `calculateAndSyncStats`, kept monotonic via
 	// `max(existing, recomputed)`.
 	onFireStreak: j.number().default(0),
+	// Lifetime cold-streak recoveries — settled wins that snapped a run of
+	// at least `COMEBACK_COLD_STREAK_LOSSES` consecutive settled losses.
+	// Drives the Honey Badger trophy. Recomputed from clearing history
+	// during `calculateAndSyncStats`, kept monotonic via `max(existing,
+	// recomputed)`.
+	comebacks: j.number().default(0),
 	// Consecutive calendar days the user has held a top-10% global
 	// leaderboard position (rank ≤ profileCount / 10). Drives the
 	// `top-decile` achievement. Bumped at most once per local day in

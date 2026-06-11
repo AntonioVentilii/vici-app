@@ -49,7 +49,8 @@ export interface MenagerieStats {
 	onFireStreak: number;
 	/** Settled-call accuracy as a 0..1 ratio. Drives Owl (gated). */
 	accuracyRatio: number;
-	/** Comeback count. Drives Honey Badger (proxy — see hook). */
+	/** Lifetime cold-streak recoveries (a win after ≥`COMEBACK_COLD_STREAK_LOSSES`
+	 * straight losses). Drives Honey Badger. */
 	comebacks: number;
 	/** Distinct people the owner has brought to the app. Drives Parrot. */
 	referrals: number;
@@ -70,12 +71,12 @@ export interface MenagerieProfileFields {
 	accuracy?: number;
 	contrarianWins?: number;
 	bestUpsetConsensus?: number;
+	comebacks?: number;
 }
 
 /** Live signals the profile doc doesn't carry but the menagerie can use. */
 export interface MenagerieLiveSignals {
 	referrals?: number;
-	comebacks?: number;
 	rank?: number;
 	totalRanked?: number;
 }
@@ -102,7 +103,7 @@ export const menagerieStatsFromProfile = ({
 	dailyStreak: profile?.dailyStreak ?? 0,
 	onFireStreak: profile?.onFireStreak ?? 0,
 	accuracyRatio: (profile?.accuracy ?? 0) / 100,
-	comebacks: signals.comebacks ?? 0,
+	comebacks: profile?.comebacks ?? 0,
 	referrals: signals.referrals ?? 0,
 	rank: signals.rank,
 	totalRanked: signals.totalRanked
@@ -142,11 +143,9 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	// ≥3 calls at ≥50% accuracy). No persisted per-user breakdown exists yet →
 	// LOCKED.
 	magpie: () => 0,
-	// Honey Badger reads the comeback count. Proxy: until a dedicated comeback
-	// tally lands, this is fed from the comeback-restore signal the FE already
-	// computes (0 when none recorded).
-	// TODO(engine): replace with an authoritative `comebacks` tally (recoveries
-	// from a cold streak or VXP depletion) once the engine records it.
+	// Honey Badger reads the persisted cold-streak recovery tally — wins that
+	// snapped a run of at least `COMEBACK_COLD_STREAK_LOSSES` straight losses
+	// (recomputed from clearing history in `calculateAndSyncStats`).
 	badger: (stats) => stats.comebacks,
 	parrot: (stats) => stats.referrals,
 	// Bee: leagues joined + bouts won + leagues founded (1 point each).
