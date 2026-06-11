@@ -1800,6 +1800,7 @@ export const esMessages = {
 		'Tus cambios de avatar no se han guardado. Toca Guardar para conservarlos.',
 	'profile.avatar.save_changes': 'Guardar cambios',
 	'profile.avatar.done': 'Listo',
+	'profile.avatar.saving': 'Guardando…',
 	'profile.avatar.surprise': 'Sorpréndeme',
 	'profile.avatar.caption': '{mood} · {trait}',
 	'profile.avatar.caption_plain': '{mood} · Sin rasgo distintivo',

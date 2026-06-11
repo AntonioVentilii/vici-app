@@ -1792,6 +1792,7 @@ export const enMessages = {
 	'profile.avatar.discard_sub': "Your avatar edits haven't been saved. Tap Save to keep them.",
 	'profile.avatar.save_changes': 'Save changes',
 	'profile.avatar.done': 'Done',
+	'profile.avatar.saving': 'Saving…',
 	'profile.avatar.surprise': 'Surprise me',
 	'profile.avatar.caption': '{mood} · {trait}',
 	'profile.avatar.caption_plain': '{mood} · No signature trait',

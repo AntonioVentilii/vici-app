@@ -1797,6 +1797,7 @@ export const itMessages = {
 		'Le modifiche al tuo avatar non sono state salvate. Tocca Salva per tenerle.',
 	'profile.avatar.save_changes': 'Salva modifiche',
 	'profile.avatar.done': 'Fatto',
+	'profile.avatar.saving': 'Salvataggio…',
 	'profile.avatar.surprise': 'Sorprendimi',
 	'profile.avatar.caption': '{mood} · {trait}',
 	'profile.avatar.caption_plain': '{mood} · Nessun tratto distintivo',

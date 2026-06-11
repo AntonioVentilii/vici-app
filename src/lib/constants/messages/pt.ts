@@ -1799,6 +1799,7 @@ export const ptMessages = {
 		'As alterações do teu avatar não foram guardadas. Toca em Guardar para mantê-las.',
 	'profile.avatar.save_changes': 'Guardar alterações',
 	'profile.avatar.done': 'Concluir',
+	'profile.avatar.saving': 'A guardar…',
 	'profile.avatar.surprise': 'Surpreende-me',
 	'profile.avatar.caption': '{mood} · {trait}',
 	'profile.avatar.caption_plain': '{mood} · Sem traço distintivo',
