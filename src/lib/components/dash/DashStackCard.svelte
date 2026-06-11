@@ -19,25 +19,33 @@
 		inPlayDisplay: string;
 		/** Signed net VXP delta over the recent window, or `null` when unknown. */
 		todayDelta: number | null;
+		/** Figures not loaded yet — render pulsing placeholders instead of 0. */
+		loading: boolean;
 		onOpen: () => void;
 	}
 
-	let { holdingsDisplay, inPlayDisplay, todayDelta, onOpen }: Props = $props();
+	let { holdingsDisplay, inPlayDisplay, todayDelta, loading, onOpen }: Props = $props();
 
 	const todayPositive = $derived(todayDelta !== null && todayDelta >= 0);
 </script>
 
-<button class="db-wallet" onclick={onOpen} type="button">
+<!-- While loading, the breakdown sheet would expose the same misleading
+     zero/partial figures the placeholders hide — keep the card inert. -->
+<button class="db-wallet" disabled={loading} onclick={onOpen} type="button">
 	<div class="db-left">
 		<div class="db-k">{t({ locale: $localeStore, key: 'dash.holdings.eyebrow' })}</div>
-		<div class="db-v num">
-			{holdingsDisplay}<span class="db-vu">VXP</span>
+		<div class="db-v num" class:db-ph={loading}>
+			{loading ? t({ locale: $localeStore, key: 'dash.rank.placeholder' }) : holdingsDisplay}<span
+				class="db-vu">VXP</span
+			>
 		</div>
 	</div>
 	<div class="db-wright">
 		<div class="db-stat">
 			<div class="db-kk">{t({ locale: $localeStore, key: 'dash.build.in_play' })}</div>
-			<div class="db-vv num">{inPlayDisplay}</div>
+			<div class="db-vv num" class:db-ph={loading}>
+				{loading ? t({ locale: $localeStore, key: 'dash.rank.placeholder' }) : inPlayDisplay}
+			</div>
 		</div>
 		<div class="db-stat">
 			<div class="db-kk">{t({ locale: $localeStore, key: 'dash.build.today' })}</div>
