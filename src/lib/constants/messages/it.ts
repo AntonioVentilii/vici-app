@@ -563,6 +563,7 @@ export const itMessages = {
 	'admin.resolution.expires': 'Scade: {date}',
 	'admin.resolution.history.title': 'Risoluzioni recenti',
 	'admin.resolution.id_label': 'ID: {marketId}',
+	'admin.resolution.search.label': 'Cerca mercati',
 	'admin.resolution.search.no_results': 'Nessun mercato corrisponde a "{query}".',
 	'admin.resolution.search.placeholder': 'Cerca mercati per titolo, ID o clausola di risoluzione…',
 	'admin.resolution.status.expired': 'SCADUTO',

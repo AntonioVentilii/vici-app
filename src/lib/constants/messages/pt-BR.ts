@@ -569,6 +569,7 @@ export const ptBRMessages = {
 	'admin.resolution.expires': 'Expira: {date}',
 	'admin.resolution.history.title': 'Resoluções recentes',
 	'admin.resolution.id_label': 'ID: {marketId}',
+	'admin.resolution.search.label': 'Buscar mercados',
 	'admin.resolution.search.no_results': 'Nenhum mercado corresponde a "{query}".',
 	'admin.resolution.search.placeholder': 'Buscar mercados por título, ID ou cláusula de resolução…',
 	'admin.resolution.status.expired': 'EXPIRADO',

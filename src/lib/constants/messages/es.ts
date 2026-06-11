@@ -564,6 +564,7 @@ export const esMessages = {
 	'admin.resolution.expires': 'Expira: {date}',
 	'admin.resolution.history.title': 'Resoluciones recientes',
 	'admin.resolution.id_label': 'ID: {marketId}',
+	'admin.resolution.search.label': 'Buscar mercados',
 	'admin.resolution.search.no_results': 'Ningún mercado coincide con "{query}".',
 	'admin.resolution.search.placeholder': 'Buscar mercados por título, ID o cláusula de resolución…',
 	'admin.resolution.status.expired': 'EXPIRADO',

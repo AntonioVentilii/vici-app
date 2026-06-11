@@ -128,6 +128,8 @@
 	{:else}
 		<input
 			class="bg-foreground/5 text-foreground ring-border focus:ring-primary placeholder:text-muted-foreground mb-6 w-full rounded-2xl border-none px-5 py-3 text-sm ring-1 ring-inset focus:ring-2"
+			aria-label={t({ locale: $localeStore, key: 'admin.resolution.search.label' })}
+			autocomplete="off"
 			placeholder={t({ locale: $localeStore, key: 'admin.resolution.search.placeholder' })}
 			type="search"
 			bind:value={searchQuery}

@@ -567,6 +567,7 @@ export const ptMessages = {
 	'admin.resolution.expires': 'Expira: {date}',
 	'admin.resolution.history.title': 'Resoluções recentes',
 	'admin.resolution.id_label': 'ID: {marketId}',
+	'admin.resolution.search.label': 'Pesquisar mercados',
 	'admin.resolution.search.no_results': 'Nenhum mercado corresponde a "{query}".',
 	'admin.resolution.search.placeholder':
 		'Pesquisar mercados por título, ID ou cláusula de resolução…',

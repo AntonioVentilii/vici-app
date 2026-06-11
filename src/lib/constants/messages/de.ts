@@ -565,6 +565,7 @@ export const deMessages = {
 	'admin.resolution.expires': 'Läuft ab: {date}',
 	'admin.resolution.history.title': 'Letzte Auflösungen',
 	'admin.resolution.id_label': 'ID: {marketId}',
+	'admin.resolution.search.label': 'Märkte suchen',
 	'admin.resolution.search.no_results': 'Keine Märkte entsprechen "{query}".',
 	'admin.resolution.search.placeholder': 'Märkte nach Titel, ID oder Auflösungsklausel suchen…',
 	'admin.resolution.status.expired': 'ABGELAUFEN',

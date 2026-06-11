@@ -567,6 +567,7 @@ export const frMessages = {
 	'admin.resolution.expires': 'Expire : {date}',
 	'admin.resolution.history.title': 'Résolutions récentes',
 	'admin.resolution.id_label': 'ID : {marketId}',
+	'admin.resolution.search.label': 'Rechercher des marchés',
 	'admin.resolution.search.no_results': 'Aucun marché ne correspond à "{query}".',
 	'admin.resolution.search.placeholder':
 		'Rechercher des marchés par titre, ID ou clause de résolution…',

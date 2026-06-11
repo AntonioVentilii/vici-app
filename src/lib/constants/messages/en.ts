@@ -558,6 +558,7 @@ export const enMessages = {
 	'admin.resolution.expires': 'Expires: {date}',
 	'admin.resolution.history.title': 'Recent Resolutions',
 	'admin.resolution.id_label': 'ID: {marketId}',
+	'admin.resolution.search.label': 'Search markets',
 	'admin.resolution.search.no_results': 'No markets match "{query}".',
 	'admin.resolution.search.placeholder': 'Search markets by title, ID, or resolution clause…',
 	'admin.resolution.status.expired': 'EXPIRED',

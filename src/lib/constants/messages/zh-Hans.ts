@@ -533,6 +533,7 @@ export const zhHansMessages = {
 	'admin.resolution.expires': '到期：{date}',
 	'admin.resolution.history.title': '最近裁定',
 	'admin.resolution.id_label': 'ID：{marketId}',
+	'admin.resolution.search.label': '搜索市场',
 	'admin.resolution.search.no_results': '没有匹配 "{query}" 的市场。',
 	'admin.resolution.search.placeholder': '按标题、ID 或裁定条款搜索市场…',
 	'admin.resolution.status.expired': '已过期',
