@@ -9,7 +9,7 @@
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import type { TokenId } from '$lib/types/token';
 	import { findSupportedTokenForClearingAssetId } from '$lib/utils/asset-ref.utils';
-	import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
+	import { compareBalanceDomains, isSettlement } from '$lib/utils/balance-domain.utils';
 
 	let prevDomain: ClearingDid.BalanceDomain | undefined = undefined;
 
@@ -77,7 +77,18 @@
 		await Promise.all([
 			loadAccountState({
 				domain: domainToken,
-				onLoad: ({ response }) => {
+				onLoad: ({ certified, response }) => {
+					// The clearing `get_account_state_query` computes its top-level
+					// `total_equity_usd` / `available_margin_usd` for the Settlement
+					// domain only (it takes no domain param). On any other domain those
+					// figures read as the Settlement account (typically zero), so
+					// letting the fast uncertified result through flashes "In play" and
+					// "Available" to 0 on every refresh until the certified update
+					// lands. Outside Settlement, only certified responses are trusted.
+					if (!certified && !isSettlement(domainToken)) {
+						return;
+					}
+
 					latestAccountState = response;
 					recompute();
 				}

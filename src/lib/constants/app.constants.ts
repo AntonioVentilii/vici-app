@@ -72,3 +72,10 @@ export const TOAST_DEFAULT_MS = 5_000;
  * spinner waiting for a session that never arrives.
  */
 export const SIGNED_IN_FLAG_KEY = 'vici.signed-in';
+
+/**
+ * Prefix for the per-principal, per-domain last-known holdings snapshot
+ * (see `vxp-holdings.derived.ts`). Full key:
+ * `vici.holdings.v1.<domain>.<principal>`.
+ */
+export const HOLDINGS_SNAPSHOT_STORAGE_KEY = 'vici.holdings.v1';
