@@ -999,6 +999,9 @@ export const ptBRMessages = {
 	'flow.list_02': 'O VXP cai no momento que você desliza.',
 	'flow.list_03': 'Sequências que te pressionam de volta.',
 	'flow.list_04': 'Insights aparecem quando você vira o cartão.',
+	'flow.notification.insufficient_message':
+		'Seu saldo já está em jogo em previsões abertas — ele é liberado conforme os mercados são resolvidos.',
+	'flow.notification.insufficient_title': 'Saldo disponível insuficiente',
 	'flow.notification.trade_failed_message': 'Ordem para "{title}..." falhou: {error}',
 	'flow.notification.trade_failed_title': 'Previsão falhou',
 	'flow.progress_aria': 'Progresso',

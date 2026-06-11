@@ -20,6 +20,7 @@
 	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
 	import XpToast from '$lib/components/market/XpToast.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
 	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
@@ -27,11 +28,13 @@
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { minuteTick_ms } from '$lib/derived/time.derived';
+	import { vxpSpendable } from '$lib/derived/vxp-holdings.derived';
 	import { track } from '$lib/services/analytics.services';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { persistDailyGoal, persistDailyStreak } from '$lib/services/profile.services';
 	import { loadMarketPriceCandles } from '$lib/services/trade.services';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { setFlowBeatActive } from '$lib/stores/flow-beat.store';
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
@@ -82,6 +85,7 @@
 		recordMotionSwipe,
 		type MotionBeatPayload
 	} from '$lib/utils/motion-engine.utils';
+	import { parseToken, tokenBaseUnitsToUsdBaseUnits } from '$lib/utils/parse.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { applyDailyStreakBump, stageForStreak, type FlameStage } from '$lib/utils/streak.utils';
 	import { assertViciXpHumanPremium } from '$lib/utils/trade.utils';
@@ -150,6 +154,11 @@
 	// VXP locked at risk across this session's calls — the FlowEnd "Called"
 	// stat. Accumulates each committed YES / NO stake; reset on continuation.
 	let sessionStaked = $state(0);
+	// Clearing-margin base units the session has already sent to the engine.
+	// The funds gate needs it because store refreshes are batched to session
+	// end (see FlowTradeService): `$vxpSpendable` alone goes stale after the
+	// first call. A failed call subtracts itself back out.
+	let sessionCommittedUsd = $state(ZERO);
 	let completed = $state(false);
 	// `nowMs` tracks the shared one-minute heartbeat while the session is in
 	// flight (minute precision is plenty for a day rollover), but freezes once
@@ -500,6 +509,24 @@
 		}
 	};
 
+	// The stake's clearing-margin cost in USD base units (1 token ≈ 1 USD),
+	// mirroring the order sizing in `executeOutcomeTrade`. Fails open to
+	// `ZERO` — an unparsable amount is the engine's call to reject, not the
+	// gate's.
+	const stakeMarginUsd = (market: Market): bigint => {
+		try {
+			return tokenBaseUnitsToUsdBaseUnits({
+				amount: parseToken({
+					value: String(tradeAmount).trim(),
+					unitName: market.token.decimals
+				}),
+				tokenDecimals: market.token.decimals
+			});
+		} catch {
+			return ZERO;
+		}
+	};
+
 	const handleAction = (action: FlowAction) => {
 		if (completed || flowPaused) {
 			return;
@@ -518,6 +545,27 @@
 
 		// Product analytics: the swipe is the core Layer Zero funnel step.
 		track({ name: 'flow_swipe', source: 'flow', marketId: currentMarket.id, label: action });
+
+		// Funds gate — a YES / NO stakes real collateral, and the engine
+		// rejects a call the spendable margin can't cover. Catch that here,
+		// BEFORE the card commits, so the deck never celebrates a prediction
+		// that can't be placed. Skipped while the collaterals store hasn't
+		// loaded (nothing to gate on) — the engine stays the authority.
+		if (
+			action !== 'SKIP' &&
+			nonNullish($userStore.user) &&
+			nonNullish($collateralsStore) &&
+			$vxpSpendable - sessionCommittedUsd < stakeMarginUsd(currentMarket)
+		) {
+			vibrate('low-thud');
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'flow.notification.insufficient_title' }),
+				message: t({ locale: $localeStore, key: 'flow.notification.insufficient_message' }),
+				type: 'error'
+			});
+
+			return;
+		}
 
 		if (action === 'YES') {
 			exitX = 500;
@@ -601,6 +649,10 @@
 			return;
 		}
 
+		const stakeHuman = Number(tradeAmount) || 0;
+		const stakeUsd = stakeMarginUsd(currentMarket);
+		sessionCommittedUsd += stakeUsd;
+
 		const executeTrade = async () => {
 			try {
 				if (isViciXp(currentMarket.balanceDomain)) {
@@ -613,6 +665,13 @@
 					amount: tradeAmount
 				});
 			} catch (e: unknown) {
+				// The call never reached the book — pull its stake back out of
+				// the session tallies so the FlowEnd "Called" stat and the funds
+				// gate only count predictions that actually hold collateral.
+				sessionStaked = Math.max(0, sessionStaked - stakeHuman);
+				sessionCommittedUsd =
+					sessionCommittedUsd > stakeUsd ? sessionCommittedUsd - stakeUsd : ZERO;
+
 				notificationsStore.add({
 					title: t({ locale: $localeStore, key: 'flow.notification.trade_failed_title' }),
 					message: t({
@@ -633,7 +692,7 @@
 		betsCount += 1;
 		streak += 1;
 		// Tally the stake now at risk for the FlowEnd "Called" stat.
-		sessionStaked += Number(tradeAmount) || 0;
+		sessionStaked += stakeHuman;
 
 		// Daily-goal bump — every committed YES / NO counts toward the
 		// day's goal (skips returned early above). Rolls over to a fresh
@@ -761,7 +820,7 @@
 		commitToastKeySeq += 1;
 		commitToast = {
 			side: action,
-			stake: Number(tradeAmount) || 0,
+			stake: stakeHuman,
 			bonus: motion.bonusXp,
 			key: commitToastKeySeq
 		};

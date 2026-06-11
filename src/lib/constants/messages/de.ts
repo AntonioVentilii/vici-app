@@ -998,6 +998,9 @@ export const deMessages = {
 	'flow.list_02': 'VXP landet im selben Moment.',
 	'flow.list_03': 'Streaks, die dich zurückholen.',
 	'flow.list_04': 'Erkenntnisse erscheinen, wenn du die Karte drehst.',
+	'flow.notification.insufficient_message':
+		'Dein Guthaben steckt bereits in offenen Vorhersagen – es wird frei, sobald Märkte aufgelöst werden.',
+	'flow.notification.insufficient_title': 'Nicht genug verfügbares Guthaben',
 	'flow.notification.trade_failed_message': 'Order für "{title}..." fehlgeschlagen: {error}',
 	'flow.notification.trade_failed_title': 'Vorhersage fehlgeschlagen',
 	'flow.progress_aria': 'Fortschritt',
