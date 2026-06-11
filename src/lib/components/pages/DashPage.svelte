@@ -42,7 +42,11 @@
 		resolvedPositions,
 		resolvedPositionsNotInitialized
 	} from '$lib/derived/resolved-positions.derived';
-	import { vxpBacked, vxpHoldingsTotal } from '$lib/derived/vxp-holdings.derived';
+	import {
+		vxpBacked,
+		vxpHoldingsNotInitialized,
+		vxpHoldingsTotal
+	} from '$lib/derived/vxp-holdings.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
 	import { listMyReferrals } from '$lib/services/referral.services';
@@ -384,6 +388,7 @@
 			{firstCallTimer}
 			{holdingsDisplay}
 			{inPlayDisplay}
+			loading={$vxpHoldingsNotInitialized}
 			{moreRows}
 			onOpen={() => (sheetOpen = true)}
 			{openCalls}
@@ -413,6 +418,7 @@
 			<DashStackCard
 				{holdingsDisplay}
 				{inPlayDisplay}
+				loading={$vxpHoldingsNotInitialized}
 				onOpen={() => (sheetOpen = true)}
 				{todayDelta}
 			/>
