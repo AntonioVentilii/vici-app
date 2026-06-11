@@ -12,6 +12,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
+	MAGPIE_MIN_CATEGORY_ACCURACY,
+	MAGPIE_MIN_CATEGORY_CALLS,
 	MENAGERIE,
 	MENAGERIE_BY_SLUG,
 	MENAGERIE_TIER_COLORS,
@@ -27,13 +29,28 @@ import {
 export const MENAGERIE_OWL_MIN_CALLS = 50;
 
 /**
+ * Number of categories the owner "owns": at least
+ * `MAGPIE_MIN_CATEGORY_CALLS` settled calls at a win ratio of at least
+ * `MAGPIE_MIN_CATEGORY_ACCURACY`. The Magpie metric, computed from the same
+ * per-category buckets the dashboard categories tile reads
+ * (`UserStatsDoc.categoryStats`).
+ */
+export const countWinningCategories = (
+	categoryStats: Record<string, { calls: number; wins: number }>
+): number =>
+	Object.values(categoryStats).filter(
+		({ calls, wins }) =>
+			calls >= MAGPIE_MIN_CATEGORY_CALLS && wins / calls >= MAGPIE_MIN_CATEGORY_ACCURACY
+	).length;
+
+/**
  * Real-stat snapshot the menagerie reads. Built from the owner's `UserProfile`
  * (plus a couple of live signals the profile doc doesn't carry) by the surfaces
  * that render the trophy layer — see `menagerieStatsFromProfile`.
  *
- * Fields backing the two engine-unbacked animals (Magpie / Bee) are
- * intentionally absent: those animals always resolve to LOCKED until the
- * backend populates the data (see the per-hook TODOs below).
+ * The field backing the one engine-unbacked animal (Bee) is intentionally
+ * absent: it always resolves to LOCKED until the backend populates the data
+ * (see the per-hook TODO below).
  */
 export interface MenagerieStats {
 	/** Lifetime calls placed. Drives Hatchling + Beaver. */
@@ -52,6 +69,9 @@ export interface MenagerieStats {
 	/** Lifetime cold-streak recoveries (a win after ≥`COMEBACK_COLD_STREAK_LOSSES`
 	 * straight losses). Drives Honey Badger. */
 	comebacks: number;
+	/** Distinct categories with a winning record (see
+	 * {@link countWinningCategories}). Drives Magpie. */
+	winningCategories: number;
 	/** Distinct people the owner has brought to the app. Drives Parrot. */
 	referrals: number;
 	/** Global leaderboard rank (1-based), or `undefined` when unranked. */
@@ -72,6 +92,7 @@ export interface MenagerieProfileFields {
 	contrarianWins?: number;
 	bestUpsetConsensus?: number;
 	comebacks?: number;
+	winningCategories?: number;
 }
 
 /** Live signals the profile doc doesn't carry but the menagerie can use. */
@@ -104,6 +125,7 @@ export const menagerieStatsFromProfile = ({
 	onFireStreak: profile?.onFireStreak ?? 0,
 	accuracyRatio: (profile?.accuracy ?? 0) / 100,
 	comebacks: profile?.comebacks ?? 0,
+	winningCategories: profile?.winningCategories ?? 0,
 	referrals: signals.referrals ?? 0,
 	rank: signals.rank,
 	totalRanked: signals.totalRanked
@@ -138,11 +160,10 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	// `calculateAndSyncStats`). Reversed ladder, so an owner with no settled
 	// win reads the worst value (1) and stays below every rung.
 	octopus: (stats) => stats.bestUpsetConsensus ?? 1,
-	// Magpie: breadth — distinct categories with a winning record.
-	// TODO(engine): needs per-category accuracy on the profile (categories with
-	// ≥3 calls at ≥50% accuracy). No persisted per-user breakdown exists yet →
-	// LOCKED.
-	magpie: () => 0,
+	// Magpie: breadth — distinct categories with a winning record, persisted
+	// on the profile from the per-category buckets in `calculateAndSyncStats`
+	// (see `countWinningCategories`).
+	magpie: (stats) => stats.winningCategories,
 	// Honey Badger reads the persisted cold-streak recovery tally — wins that
 	// snapped a run of at least `COMEBACK_COLD_STREAK_LOSSES` straight losses
 	// (recomputed from clearing history in `calculateAndSyncStats`).

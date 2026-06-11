@@ -102,6 +102,14 @@ export const UserProfileSchema = j.strictObject({
 	// during `calculateAndSyncStats`, kept monotonic via `max(existing,
 	// recomputed)`.
 	comebacks: j.number().default(0),
+	// Breadth — distinct market categories where the user has at least
+	// `MAGPIE_MIN_CATEGORY_CALLS` settled calls at a win ratio of at least
+	// `MAGPIE_MIN_CATEGORY_ACCURACY`. Drives the Magpie trophy. Recomputed
+	// from clearing history + market tags during `calculateAndSyncStats`,
+	// kept monotonic via `max(existing, recomputed)` (the tag lookup
+	// degrades to "untagged" when market metadata isn't hydrated, and a
+	// thin sync must not strip an earned rung).
+	winningCategories: j.number().default(0),
 	// Consecutive calendar days the user has held a top-10% global
 	// leaderboard position (rank ≤ profileCount / 10). Drives the
 	// `top-decile` achievement. Bumped at most once per local day in

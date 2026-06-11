@@ -131,6 +131,9 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		// Cold-streak recoveries (drives Honey Badger). Defaults to 0 for
 		// legacy rows; the next stats sync recomputes it from history.
 		comebacks: profile.comebacks ?? 0,
+		// Winning-category breadth (drives Magpie). Defaults to 0 for legacy
+		// rows; the next stats sync recomputes it from history + market tags.
+		winningCategories: profile.winningCategories ?? 0,
 		// Top-decile streak state (drives the `top-decile` achievement).
 		// `topDecileStreak` defaults to 0 for legacy rows; `lastTopDecileDay`
 		// is `optional()` so an absent value (never evaluated) round-trips
