@@ -24,8 +24,10 @@
 	 *
 	 * The markets and the calls are real (shaped by the host from the markets /
 	 * positions / orders stores); only the trend line is intentionally absent
-	 * until a call resolves.
+	 * until a call resolves. Tapping the balance card opens the same holdings
+	 * breakdown sheet as the standard build.
 	 */
+	import { ChevronRight } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DashCallRow from '$lib/components/dash/DashCallRow.svelte';
@@ -53,6 +55,8 @@
 		openCalls: OpenCallRow[];
 		/** Markets to add while waiting (Day 1). */
 		moreRows: ZeroMarketRow[];
+		/** Opens the holdings breakdown sheet. */
+		onOpen: () => void;
 	}
 
 	let {
@@ -64,7 +68,8 @@
 		firstCallTimer,
 		starterRows,
 		openCalls,
-		moreRows
+		moreRows,
+		onOpen
 	}: Props = $props();
 
 	const PREVIEW = 3;
@@ -117,7 +122,7 @@
 	</div>
 
 	<!-- ZONE 2 · STACK -->
-	<div style:cursor="default" class="db-wallet">
+	<button class="db-wallet" onclick={onOpen} type="button">
 		<div class="db-left">
 			<div class="db-k">
 				{t({
@@ -148,8 +153,11 @@
 					{t({ locale: $localeStore, key: 'dash.build.zero_starter_gift' })}
 				</span>
 			{/if}
+			<span class="db-wchev" aria-hidden="true">
+				<ChevronRight size={15} strokeWidth={2} />
+			</span>
 		</div>
-	</div>
+	</button>
 
 	<!-- ZONE 3 · CALLS -->
 	{#if day1}
