@@ -18,6 +18,22 @@ pages — they never override `docs/ai/` (see the
 
 ---
 
+## Spec-driven development
+
+For net-new features, improvements, and non-trivial bugfixes there is
+a spec-first workflow —
+[`docs/ai/spec-driven-development/workflow.md`](./docs/ai/spec-driven-development/workflow.md).
+
+**Always ask before using it.** When the user describes such a change
+without naming the workflow, mention it exists and ask whether to use
+it. If they decline, or the change is clearly too small for a spec,
+implement directly. When implementing a spec, read
+[`docs/ai/PRODUCT.md`](./docs/ai/PRODUCT.md) first and update it in
+the same PR as the behaviour change. Treat `Implemented` specs as
+history, never as current behaviour.
+
+---
+
 ## Before declaring done
 
 The full quality-gate matrix lives in
