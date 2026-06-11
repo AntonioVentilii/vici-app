@@ -577,11 +577,14 @@ export const renderAvatarContent = ({
 	// 2 · Figure group (gentle bob, gated)
 	s += `<g${animate ? ' class="va-bob"' : ''}>`;
 
-	// Shoulders / neck
+	// Neck first, running past the collar line so the shoulders overlap its
+	// base — otherwise a band of backdrop shows between chin and shirt.
+	s += `<rect x="44" y="62" width="12" height="24" fill="${skin.shadow}"/>`;
+	s += `<polygon points="44,62 56,62 54,70 46,70" fill="${skin.base}" opacity="0.6"/>`;
+
+	// Shoulders
 	s += `<polygon points="20,100 80,100 73,83 27,83" fill="${shirt}"/>`;
 	s += `<polygon points="50,83 80,100 50,100" fill="rgba(14,13,11,0.20)"/>`;
-	s += `<rect x="44" y="62" width="12" height="14" fill="${skin.shadow}"/>`;
-	s += `<polygon points="44,62 56,62 54,70 46,70" fill="${skin.base}" opacity="0.6"/>`;
 
 	// Back hair panels (long)
 	if (style === 'long') {
