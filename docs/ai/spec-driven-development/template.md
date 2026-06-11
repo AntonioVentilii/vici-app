@@ -32,7 +32,8 @@ Status: Draft
 - Memory & storage: collections / doc shapes, count, size, growth, cleanup.
 - Scalability: behaviour at 10× / 100×; bulk reads over N+1.
 - Upgrade & compatibility: schema, regenerated .did / bindings, breaking?
-- Security: collection rules, caller permissions. -->
+- Security: collection rules, caller permissions.
+- Parameters: cite the canonical constants file, don't restate values. -->
 
 ## Implementation outline
 

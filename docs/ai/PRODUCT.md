@@ -38,6 +38,37 @@ Terminology: always **"prediction"**, never "bet".
 VXP has 4 decimals: compare and transfer in base units
 (`parseToken`), display in whole VXP.
 
+## VXP economy
+
+Earn-only, by design: there are **no VXP sinks**. Nothing charges VXP
+— league creation is free (founding _awards_ VXP), and the only
+outflow is prediction stakes, which are clearing collateral, not a
+fee.
+
+Earn surfaces: onboarding grant, referrals (referee + referrer),
+daily-streak milestones, calibration recovery, comeback restore,
+achievement unlocks, league founding, worlds podium, tournament
+prizes.
+
+Every award is a **real ICRC ledger transfer**, recorded in the
+`vxp_awards` collection with lifecycle `pending → paid | failed` — not
+a cosmetic counter (the lifetime `points` score above is the separate
+number).
+
+All amounts, caps, and gates live in three canonical constants files —
+never restate the numbers anywhere else (docs, specs, comments):
+
+- [`vxp-economy.constants.ts`](../../src/lib/constants/vxp-economy.constants.ts)
+  — master parameter file (stake ladder, streaks, calibration,
+  comeback, podium, league founder, …)
+- [`referral.constants.ts`](../../src/lib/constants/referral.constants.ts)
+  — referral bonuses, tier curve, caps, signup window
+- [`vxp-onboarding.constants.ts`](../../src/lib/constants/vxp-onboarding.constants.ts)
+  — registration grant
+
+Implementation invariants for award code live in
+[`satellite/patterns.md`](./satellite/patterns.md#vxp-awards--economy-invariants).
+
 ## Behaviour index
 
 Grow this list one entry per behaviour-changing PR — a short

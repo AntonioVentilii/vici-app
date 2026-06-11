@@ -76,6 +76,9 @@ paths must state, with numbers where possible:
   bindings, breaking or not (`!` title + `BREAKING CHANGE:` block per
   [`pr-and-ci.md`](../pr-and-ci.md#1-pr-title)).
 - **Security** — collection rules and caller permissions touched.
+- **Parameters** — cite the canonical constants file (e.g. the economy
+  values under `src/lib/constants/`) instead of restating numbers; a
+  copied value goes stale silently.
 
 A backend spec without this section is a `Draft` that is not ready to
 build.
