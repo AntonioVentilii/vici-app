@@ -86,7 +86,12 @@ export interface StandingsRow {
 	displayRank: number;
 	nickname: string | undefined;
 	avatar: string | undefined;
-	streak: number;
+	/**
+	 * Consecutive active days (the Flame engine) — the leaderboard renders
+	 * this as "{n}d streak", so it must be the days-based counter, not the
+	 * consecutive-wins `streak` field.
+	 */
+	dailyStreak: number;
 	isSelf: boolean;
 }
 
@@ -111,7 +116,7 @@ const toRow = ({
 		displayRank,
 		nickname: source?.nickname,
 		avatar: source?.avatar,
-		streak: source?.streak ?? 0,
+		dailyStreak: source?.dailyStreak ?? 0,
 		isSelf: self
 	};
 };
