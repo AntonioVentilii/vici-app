@@ -82,12 +82,7 @@
 							</span>
 						</div>
 						<p class="text-muted-foreground mt-0.5 text-[10px] leading-tight">
-							{activity.details ??
-								t({
-									locale: $localeStore,
-									key: 'market.recent.predicted_on',
-									params: { title: activity.title }
-								})}
+							{activity.details ?? activity.title}
 						</p>
 					</div>
 				</div>

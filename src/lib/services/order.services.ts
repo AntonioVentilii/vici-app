@@ -204,8 +204,7 @@ export const placeOrder = async ({
 			type: ActivityType.TRADE,
 			user: userText,
 			marketId,
-			title: `Placed ${side} ${type} order`,
-			details: `${side} ${qty} on ${outcome} @ ${Number(price.toFixed(PRICE_DECIMALS))}`
+			title: `${side === 'BUY' ? 'Placed' : 'Sold'} ${qty} on ${outcome} @ ${Math.round(price * 100)}%`
 		});
 		await recordActivity(userText);
 	} catch (e: unknown) {

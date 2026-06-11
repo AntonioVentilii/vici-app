@@ -1498,7 +1498,6 @@ export const itMessages = {
 	'market.order_book.title': 'Order book ({outcome})',
 	'market.order_book.updating': 'Aggiornamento profondità...',
 	'market.recent.empty': 'Nessuna attività recente',
-	'market.recent.predicted_on': 'ha previsto su {title}',
 	'market.recent.title': 'Attività recente',
 	'market.resolution.binary_sub': 'Scegli SÌ o NO per liquidare questo mercato.',
 	'market.resolution.categorical_sub': 'Seleziona l’esito vincente per liquidare questo mercato.',

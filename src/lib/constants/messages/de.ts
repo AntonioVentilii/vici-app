@@ -1508,7 +1508,6 @@ export const deMessages = {
 	'market.order_book.title': 'Orderbuch ({outcome})',
 	'market.order_book.updating': 'Tiefe wird aktualisiert...',
 	'market.recent.empty': 'Keine aktuelle Aktivität',
-	'market.recent.predicted_on': 'hat auf {title} vorhergesagt',
 	'market.recent.title': 'Letzte Aktivität',
 	'market.resolution.binary_sub': 'Wähle JA oder NEIN, um diesen Markt abzurechnen.',
 	'market.resolution.categorical_sub':

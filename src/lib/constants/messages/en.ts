@@ -1478,7 +1478,6 @@ export const enMessages = {
 	'market.order_book.title': 'Order Book ({outcome})',
 	'market.order_book.updating': 'Updating Depth...',
 	'market.recent.empty': 'No recent activity',
-	'market.recent.predicted_on': 'predicted on {title}',
 	'market.recent.title': 'Recent Activity',
 	'market.resolution.binary_sub': 'Pick YES or NO to settle this market.',
 	'market.resolution.categorical_sub': 'Select the winning outcome to settle this market.',

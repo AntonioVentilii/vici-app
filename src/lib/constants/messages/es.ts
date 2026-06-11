@@ -1497,7 +1497,6 @@ export const esMessages = {
 	'market.order_book.title': 'Libro de órdenes ({outcome})',
 	'market.order_book.updating': 'Actualizando profundidad...',
 	'market.recent.empty': 'Sin actividad reciente',
-	'market.recent.predicted_on': 'predijo sobre {title}',
 	'market.recent.title': 'Actividad reciente',
 	'market.resolution.binary_sub': 'Elige YES o NO para liquidar este mercado.',
 	'market.resolution.categorical_sub':

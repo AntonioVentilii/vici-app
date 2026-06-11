@@ -1505,7 +1505,6 @@ export const frMessages = {
 	'market.order_book.title': 'Carnet d’ordres ({outcome})',
 	'market.order_book.updating': 'Mise à jour de la profondeur...',
 	'market.recent.empty': 'Aucune activité récente',
-	'market.recent.predicted_on': 'a prédit sur {title}',
 	'market.recent.title': 'Activité récente',
 	'market.resolution.binary_sub': 'Choisis YES ou NO pour régler ce marché.',
 	'market.resolution.categorical_sub': 'Sélectionnez le résultat gagnant pour régler ce marché.',

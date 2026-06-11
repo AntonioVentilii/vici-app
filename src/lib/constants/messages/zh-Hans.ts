@@ -1425,7 +1425,6 @@ export const zhHansMessages = {
 	'market.order_book.title': '订单簿（{outcome}）',
 	'market.order_book.updating': '正在更新深度……',
 	'market.recent.empty': '暂无近期动态',
-	'market.recent.predicted_on': '预测了 {title}',
 	'market.recent.title': '近期动态',
 	'market.resolution.binary_sub': '选择 YES 或 NO 以结算此市场。',
 	'market.resolution.categorical_sub': '选择获胜结果以结算此市场。',
