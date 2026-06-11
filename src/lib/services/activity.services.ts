@@ -69,11 +69,15 @@ export const getGlobalActivities = async ({
  * trades / comments land — a single page here effectively covers the whole
  * catalog's outcome labels.
  */
-export const getSettlementActivities = ({
+export const getSettlementActivities = async ({
 	limit = 200,
 	certified = false
-}: { limit?: number; certified?: boolean } = {}): Promise<Activity[]> =>
-	listActivities({
+}: { limit?: number; certified?: boolean } = {}): Promise<Activity[]> => {
+	if (limit <= 0) {
+		return [];
+	}
+
+	return await listActivities({
 		certified,
 		filter: {
 			matcher: { key: `#${ActivityType.SETTLEMENT}$` },
@@ -81,3 +85,4 @@ export const getSettlementActivities = ({
 			paginate: { limit }
 		}
 	});
+};
