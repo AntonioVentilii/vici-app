@@ -1811,6 +1811,7 @@ export const deMessages = {
 		'Deine Avatar-Änderungen wurden nicht gespeichert. Tippe auf Speichern, um sie zu behalten.',
 	'profile.avatar.save_changes': 'Änderungen speichern',
 	'profile.avatar.done': 'Fertig',
+	'profile.avatar.saving': 'Wird gespeichert…',
 	'profile.avatar.surprise': 'Überrasch mich',
 	'profile.avatar.caption': '{mood} · {trait}',
 	'profile.avatar.caption_plain': '{mood} · Kein Erkennungsmerkmal',
