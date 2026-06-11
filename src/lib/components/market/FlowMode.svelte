@@ -40,13 +40,14 @@
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
-	import type { ResolutionRevealData, XpPop } from '$lib/types/flow';
+	import type { FlowEntryMethod, ResolutionRevealData, XpPop } from '$lib/types/flow';
 	import type { CallSide, FlowAction, Market, MarketId } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type { UserMarketSignals } from '$lib/types/market-signals';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import {
 		applyDailyGoalBump,
+		DAILY_GOAL_TARGET,
 		reconcileDailyGoalOnEntry,
 		rolloverDailyGoal,
 		writeDailyGoalMirror
@@ -399,6 +400,20 @@
 	onDestroy(() => {
 		document.body.classList.remove('overflow-hidden');
 		void flowTradeService.endSession();
+
+		// Product analytics — the user opened the deck (`entered`) but left
+		// before reaching FlowEnd (`!completed`): a mid-deck abandon. `count`
+		// carries how many calls were placed before leaving (0 = a pure
+		// look-and-leave) and `step` the card index reached. A bounce at the
+		// entry beat (`entered === false`) is not an abandon and fires nothing.
+		if (entered && !completed) {
+			track({
+				name: 'flow_abandoned',
+				source: 'flow',
+				count: betsCount,
+				step: currentIndex
+			});
+		}
 
 		if (gatingBeatTimer !== null) {
 			clearTimeout(gatingBeatTimer);
@@ -826,6 +841,16 @@
 			currentIndex += 1;
 		} else {
 			completed = true;
+			// Product analytics — the session reached FlowEnd (the deck/sitting
+			// goal was spent rather than abandoned mid-deck). `count` carries the
+			// calls placed this sitting; `label` separates an overtime finish
+			// from a regular one.
+			track({
+				name: 'flow_completed',
+				source: 'flow',
+				count: betsCount,
+				label: overtimeSession ? 'overtime' : 'regular'
+			});
 			vibrate('celebration');
 			// Session-summary sound cue — the rising four-note chord that
 			// closes out a Flow session, played as FlowEnd takes over.
@@ -880,7 +905,20 @@
 	// empties `liveDigest`, but flipping `entered` removes the overlay in
 	// the same tick — Svelte freezes the last-rendered digest for the
 	// `out:fade`, so the recap never flips to deck-shuffle mid-transition.
-	const enterFlow = () => {
+	const enterFlow = (entry: FlowEntryMethod) => {
+		// Product analytics — the open of a Flow session, the funnel's top.
+		// `label` separates a deliberate tap from a timer-driven auto-enter;
+		// `ok` flags whether the user had already met today's daily goal before
+		// this session began (a "bonus"/overtime open vs. a first-of-the-day
+		// open). Snapshotted before `markResolutionsSeen` so the daily count is
+		// the pre-session value. Fire-and-forget; never blocks the reveal.
+		track({
+			name: 'flow_session_started',
+			source: 'flow',
+			label: entry,
+			ok: dailyGoalDone >= DAILY_GOAL_TARGET
+		});
+
 		markResolutionsSeen();
 		entered = true;
 	};

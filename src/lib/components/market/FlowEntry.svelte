@@ -28,7 +28,7 @@
 	 */
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { ResolutionRevealData } from '$lib/types/flow';
+	import type { FlowEntryMethod, ResolutionRevealData } from '$lib/types/flow';
 	import { flowBeat, flowSummary } from '$lib/utils/flow-sound.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -57,9 +57,11 @@
 		/**
 		 * Settles the matured calls and reveals the deck. Called once — by the
 		 * deck-mode dwell auto-enter, the digest safety-net auto-enter, a
-		 * tap-anywhere, or a tap on the CTA.
+		 * tap-anywhere, or a tap on the CTA. The `entry` arg carries how the
+		 * session was opened (`'tap'` = deliberate, `'auto'` = timer-driven) so
+		 * the caller can record it on the analytics `flow_session_started` event.
 		 */
-		onEnter: () => void;
+		onEnter: (entry: FlowEntryMethod) => void;
 	}
 
 	const { digest, ready, onEnter }: Props = $props();
@@ -223,14 +225,15 @@
 
 	// Reveal the deck. Idempotent (the `entered` latch) so the dwell / safety
 	// auto-enter, a tap-anywhere, and the CTA can't double-fire. Gated on
-	// `ready` so no path ever reveals a deck that hasn't arrived.
-	const enterFlow = () => {
+	// `ready` so no path ever reveals a deck that hasn't arrived. `entry`
+	// records whether this was a deliberate tap or a timer-driven auto-enter.
+	const enterFlow = (entry: FlowEntryMethod) => {
 		if (!ready || entered) {
 			return;
 		}
 
 		entered = true;
-		onEnter();
+		onEnter(entry);
 	};
 
 	// Auto-enter, ready-gated for both modes:
@@ -244,7 +247,7 @@
 		}
 
 		if (hasDigest ? safetyElapsed : dwellElapsed) {
-			enterFlow();
+			enterFlow('auto');
 		}
 	});
 
@@ -274,7 +277,7 @@
 				return;
 			}
 
-			enterFlow();
+			enterFlow('tap');
 		};
 
 		window.addEventListener('pointerdown', onPointerDown);
@@ -346,7 +349,7 @@
 			<button
 				class="enter-cta{ctaReady ? ' ready' : ''}"
 				disabled={!ctaReady}
-				onclick={enterFlow}
+				onclick={() => enterFlow('tap')}
 				type="button"
 			>
 				{#if !ctaReady}<span class="cta-fill" aria-hidden="true"></span>{/if}
@@ -373,7 +376,7 @@
 			<button
 				class="enter-cta{ctaReady ? ' ready' : ''}"
 				disabled={!ctaReady}
-				onclick={enterFlow}
+				onclick={() => enterFlow('tap')}
 				type="button"
 			>
 				{#if !ctaReady}<span class="cta-fill" aria-hidden="true"></span>{/if}
