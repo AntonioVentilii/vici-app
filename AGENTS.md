@@ -91,6 +91,8 @@ ask) are enforced via CI, eslint, the boundary table in
 | You're about to…                                   | Read first                                                                                       |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | Open any PR                                        | [`docs/ai/pr-and-ci.md`](./docs/ai/pr-and-ci.md)                                                 |
+| Spec or implement a feature spec-first             | [`docs/ai/spec-driven-development/workflow.md`](./docs/ai/spec-driven-development/workflow.md)   |
+| Understand shipped product behaviour               | [`docs/ai/PRODUCT.md`](./docs/ai/PRODUCT.md)                                                     |
 | Touch any frontend file                            | [`docs/ai/frontend/README.md`](./docs/ai/frontend/README.md)                                     |
 | Add or move a file                                 | [`docs/ai/frontend/structure.md`](./docs/ai/frontend/structure.md)                               |
 | Write Svelte 5 / runes / TS                        | [`docs/ai/frontend/stack-and-patterns.md`](./docs/ai/frontend/stack-and-patterns.md)             |
@@ -115,10 +117,12 @@ on-chain risk engine — that lives in `../icdc-core/`.
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Touch any satellite file                                                   | [`docs/ai/satellite/README.md`](./docs/ai/satellite/README.md)                                 |
 | Add a hook / assertion / typed endpoint                                    | [`docs/ai/satellite/patterns.md`](./docs/ai/satellite/patterns.md)                             |
+| Touch VXP awards / economy parameters                                      | [`docs/ai/satellite/economy.md`](./docs/ai/satellite/economy.md)                               |
 | Add a hook (`onSetDoc` / `onDeleteDoc`)                                    | [`docs/ai/satellite/workflows/new-hook.md`](./docs/ai/satellite/workflows/new-hook.md)         |
 | Add a typed `defineQuery` / `defineUpdate`                                 | [`docs/ai/satellite/workflows/new-endpoint.md`](./docs/ai/satellite/workflows/new-endpoint.md) |
 | Sync something into the icdc-core registry / Vici engine                   | [`docs/ai/satellite/workflows/engine-sync.md`](./docs/ai/satellite/workflows/engine-sync.md)   |
 | Reset / repair the registry + engine grants (local / staging / production) | [`.agents/workflows/icdc-engine-reset.md`](./.agents/workflows/icdc-engine-reset.md)           |
+| Spec a satellite change (perf / memory / scalability are mandatory)        | [`docs/ai/spec-driven-development/workflow.md`](./docs/ai/spec-driven-development/workflow.md) |
 
 ---
 

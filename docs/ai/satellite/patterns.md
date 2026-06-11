@@ -606,6 +606,8 @@ state). The pattern, as built for school-email verification
 - ✅ Reuse FE schemas from `$lib/schema/` so the FE and satellite agree.
 - ✅ Keep `index.ts` declarative — schemas + dispatch tables only.
 - ✅ Make every hook idempotent.
+- ✅ For any VXP award / economy change, follow the invariants in
+  [`economy.md`](./economy.md).
 - ✅ Validate principals via `PrincipalTextSchema`.
 - ✅ Use the snake_case **wire schemas** from
   [`src/satellite/utils/wire-format.utils.ts`](../../../src/satellite/utils/wire-format.utils.ts)

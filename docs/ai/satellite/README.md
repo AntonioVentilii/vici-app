@@ -84,6 +84,7 @@ Full taxonomy: [`structure.md`](./structure.md). Idioms: [`patterns.md`](./patte
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Add or move a satellite file                                | [`structure.md`](./structure.md)                                                                               |
 | Pick the right idiom (hook, assert, endpoint)               | [`patterns.md`](./patterns.md)                                                                                 |
+| Touch VXP awards / economy parameters                       | [`economy.md`](./economy.md)                                                                                   |
 | Add a hook (`onSetDoc` / `onDeleteDoc`)                     | [`workflows/new-hook.md`](./workflows/new-hook.md)                                                             |
 | Add a typed query / update                                  | [`workflows/new-endpoint.md`](./workflows/new-endpoint.md)                                                     |
 | Sync writes into the Vici engine on icdc-core               | [`workflows/engine-sync.md`](./workflows/engine-sync.md)                                                       |
