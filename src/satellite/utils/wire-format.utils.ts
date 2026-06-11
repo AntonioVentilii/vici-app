@@ -32,6 +32,10 @@ export const UserProfileWireSchema = j.strictObject({
 	owner: PrincipalTextSchema,
 	nickname: j.string().default(''),
 	avatar: j.string().default(''),
+	// Serialized faceted-avatar picks (compact JSON string) — carried so
+	// every surface renders the owner's saved face, not a principal-seeded
+	// fallback. Empty = never customised.
+	avatarParts: j.string().default(''),
 	email: j.string().default(''),
 	pnl: j.number().default(0),
 	visibility: j.enum(ProfileVisibility).default(ProfileVisibility.FRIENDS_ONLY),
@@ -69,6 +73,7 @@ interface AppProfileLike {
 	owner: string;
 	nickname?: string;
 	avatar?: string;
+	avatarParts?: string;
 	email?: string;
 	pnl?: number;
 	visibility: WireUserProfile['visibility'];
@@ -92,6 +97,7 @@ export const toWireProfile = (profile: AppProfileLike): WireUserProfile => ({
 	owner: profile.owner,
 	nickname: profile.nickname ?? '',
 	avatar: profile.avatar ?? '',
+	avatarParts: profile.avatarParts ?? '',
 	email: profile.email ?? '',
 	pnl: profile.pnl ?? 0,
 	visibility: profile.visibility,
@@ -132,6 +138,7 @@ export interface ApiWireProfile {
 	owner: string;
 	nickname: string;
 	avatar: string;
+	avatarParts: string;
 	email: string;
 	pnl: number;
 	visibility: `${ProfileVisibility}`;
@@ -165,11 +172,7 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	owner: profile.owner,
 	nickname: profile.nickname,
 	avatar: profile.avatar,
-	// Serialized avatar picks aren't carried on the leaderboard / search
-	// wire — those surfaces render every face deterministically by
-	// principal (the picks only drive the logged-in user's own surfaces),
-	// so default to '' to keep the rebuilt UserProfile fully shaped.
-	avatarParts: '',
+	avatarParts: profile.avatarParts,
 	email: profile.email,
 	pnl: profile.pnl,
 	visibility: profile.visibility as ProfileVisibility,

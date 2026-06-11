@@ -579,6 +579,7 @@ export interface AppListLeaderboardResult {
 		last_active_day: [] | [string];
 		total_trades: number;
 		win_rate: number;
+		avatar_parts: string;
 		visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
 		daily_streak: number;
 		unlocked_achievements: Array<string>;
@@ -833,6 +834,7 @@ export interface AppSearchProfilesResult {
 		last_active_day: [] | [string];
 		total_trades: number;
 		win_rate: number;
+		avatar_parts: string;
 		visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
 		daily_streak: number;
 		unlocked_achievements: Array<string>;

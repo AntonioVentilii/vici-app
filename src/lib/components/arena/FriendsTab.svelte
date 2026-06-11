@@ -727,6 +727,7 @@
 								<Avatar
 									class="h-full w-full"
 									avatar={profile?.avatar}
+									avatarParts={profile?.avatarParts}
 									nickname={profile?.nickname}
 									owner={profile?.owner ?? friendId ?? ''}
 								/>
@@ -778,6 +779,7 @@
 								<Avatar
 									class="h-full w-full"
 									avatar={profile?.avatar}
+									avatarParts={profile?.avatarParts}
 									nickname={profile?.nickname}
 									owner={profile?.owner ?? friendId ?? ''}
 								/>
@@ -857,6 +859,7 @@
 							<RankedRow
 								accuracyLabel={formatPct(row.accuracy)}
 								avatar={row.profile?.avatar}
+								avatarParts={row.profile?.avatarParts}
 								dailyStreak={row.dailyStreak}
 								displayName={row.profile?.nickname ??
 									t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
@@ -885,6 +888,7 @@
 						<RankedRow
 							accuracyLabel={formatPct(myAccuracy)}
 							avatar={myProfile?.avatar}
+							avatarParts={myProfile?.avatarParts}
 							dailyStreak={myProfile?.dailyStreak ?? 0}
 							displayName={myProfile?.nickname ??
 								t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
@@ -923,6 +927,7 @@
 									<Avatar
 										class="h-full w-full"
 										avatar={profile?.avatar}
+										avatarParts={profile?.avatarParts}
 										nickname={profile?.nickname}
 										owner={profile?.owner ?? activity.user}
 									/>

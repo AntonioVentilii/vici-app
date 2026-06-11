@@ -225,6 +225,7 @@
 								<Avatar
 									class="bg-muted h-6 w-6 shrink-0"
 									avatar={profile?.avatar}
+									avatarParts={profile?.avatarParts}
 									nickname={profile?.nickname}
 									owner={profile?.owner ?? comment.user}
 								/>
