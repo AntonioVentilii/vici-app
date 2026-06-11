@@ -1,8 +1,13 @@
 import { browser } from '$app/environment';
-import { LOCALE_STORAGE_KEY, type AppLocale } from '$lib/constants/locale.constants';
+import {
+	LOCALE_REGISTRY,
+	LOCALE_STORAGE_KEY,
+	type AppLocale
+} from '$lib/constants/locale.constants';
 import { initStorageStore } from '$lib/stores/storage.store';
 import { detectBrowserLocale } from '$lib/utils/locale.utils';
 import { del as delStorage, has as hasStorage, set as setStorage } from '$lib/utils/storage.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { readonly, writable } from 'svelte/store';
 
 // First visit: "catch" the device language and match it to a locale we ship.
@@ -70,3 +75,56 @@ export const clearLocaleChoice = (): void => {
 	// `detectedLocale` would instead leave a stored value that pins the locale.
 	localeStore.reset({ key: LOCALE_STORAGE_KEY });
 };
+
+// Storage values are JSON-encoded (see `storage.utils`), and a `storage` event
+// carries the raw string — parse and gate it against the registry so a
+// corrupted or foreign value can never put the app in an unknown locale.
+const parseStoredLocale = (raw: string | null): AppLocale | undefined => {
+	if (isNullish(raw)) {
+		return;
+	}
+
+	try {
+		const value: unknown = JSON.parse(raw);
+
+		if (LOCALE_REGISTRY.some(({ id }) => id === value)) {
+			return value as AppLocale;
+		}
+	} catch {
+		// Unparseable payload — treated as absent by falling through.
+	}
+};
+
+// Multi-tab sync (mirrors `theme.store`). The `storage` event fires only in
+// the *other* tabs of the origin — the writing tab already updated itself via
+// `setLocale` / `clearLocaleChoice` — so mirroring the new value into the
+// in-memory store keeps every open tab on the chosen locale without a reload.
+// `update` deliberately bypasses the store's persisting `set`: the value is
+// already in storage, and re-writing it from here would be redundant.
+if (browser) {
+	window.addEventListener('storage', (event) => {
+		if (event.key === LOCALE_STORAGE_KEY) {
+			// A removed key (`newValue === null`) is `clearLocaleChoice` in another
+			// tab — fall back to this tab's detected seed, like `reset` does. An
+			// unparseable / unregistered value is ignored rather than reset: no
+			// code path writes one, so treat it as noise instead of a choice.
+			if (isNullish(event.newValue)) {
+				localeStore.update(() => detectedLocale);
+
+				return;
+			}
+
+			const next = parseStoredLocale(event.newValue);
+
+			if (nonNullish(next)) {
+				localeStore.update(() => next);
+			}
+
+			return;
+		}
+
+		if (event.key === LOCALE_EXPLICIT_KEY) {
+			explicitChoice.set(nonNullish(event.newValue));
+		}
+	});
+}
