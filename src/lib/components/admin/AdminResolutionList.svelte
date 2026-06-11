@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId, Outcome } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
@@ -103,9 +104,7 @@
 
 	{#if loading}
 		<div class="flex justify-center py-12">
-			<div
-				class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
-			></div>
+			<LoadingSpinner center={false} size="sm" />
 		</div>
 	{:else if sortedMarkets.length === 0}
 		<p class="text-muted-foreground py-12 text-center text-sm italic">
