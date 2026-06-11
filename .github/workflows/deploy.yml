@@ -54,7 +54,7 @@ jobs:
 
       - name: Verify the deploy token is set
         env:
-          JUNO_TOKEN: ${{ steps.target.outputs.mode == 'production' && secrets.JUNO_TOKEN || secrets.JUNO_TOKEN_STAGING }}
+          JUNO_TOKEN: ${{ (steps.target.outputs.mode == 'production' && secrets.JUNO_TOKEN) || (steps.target.outputs.mode != 'production' && secrets.JUNO_TOKEN_STAGING) || '' }}
         run: |
           if [ -z "$JUNO_TOKEN" ]; then
             echo "::error::No Administrator access key is set for the '${{ steps.target.outputs.mode }}' environment. Generate one in the Juno Console for the target satellite and add it as the JUNO_TOKEN (production) or JUNO_TOKEN_STAGING (staging) repo secret (Settings → Secrets and variables → Actions)."
@@ -79,7 +79,7 @@ jobs:
         with:
           args: functions upgrade --mode ${{ steps.target.outputs.mode }}
         env:
-          JUNO_TOKEN: ${{ steps.target.outputs.mode == 'production' && secrets.JUNO_TOKEN || secrets.JUNO_TOKEN_STAGING }}
+          JUNO_TOKEN: ${{ (steps.target.outputs.mode == 'production' && secrets.JUNO_TOKEN) || (steps.target.outputs.mode != 'production' && secrets.JUNO_TOKEN_STAGING) || '' }}
 
       # `--prune` deletes superseded content-hashed assets. Without it `#dapp`
       # grows every deploy until asset certification exceeds the IC's
