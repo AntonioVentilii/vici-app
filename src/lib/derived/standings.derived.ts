@@ -86,6 +86,9 @@ export interface StandingsRow {
 	displayRank: number;
 	nickname: string | undefined;
 	avatar: string | undefined;
+	/** Serialized faceted-avatar picks — lets the row render the predictor's
+	 *  saved face instead of the principal-seeded fallback. */
+	avatarParts: string | undefined;
 	/**
 	 * Consecutive active days (the Flame engine) — the leaderboard renders
 	 * this as "{n}d streak", so it must be the days-based counter, not the
@@ -116,6 +119,7 @@ const toRow = ({
 		displayRank,
 		nickname: source?.nickname,
 		avatar: source?.avatar,
+		avatarParts: source?.avatarParts,
 		dailyStreak: source?.dailyStreak ?? 0,
 		isSelf: self
 	};

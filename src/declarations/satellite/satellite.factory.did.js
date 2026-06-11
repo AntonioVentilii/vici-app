@@ -692,6 +692,7 @@ export const idlFactory = ({ IDL }) => {
 				last_active_day: IDL.Opt(IDL.Text),
 				total_trades: IDL.Float64,
 				win_rate: IDL.Float64,
+				avatar_parts: IDL.Text,
 				visibility: IDL.Variant({
 					friends_and_followers: IDL.Null,
 					public: IDL.Null,
@@ -1012,6 +1013,7 @@ export const idlFactory = ({ IDL }) => {
 				last_active_day: IDL.Opt(IDL.Text),
 				total_trades: IDL.Float64,
 				win_rate: IDL.Float64,
+				avatar_parts: IDL.Text,
 				visibility: IDL.Variant({
 					friends_and_followers: IDL.Null,
 					public: IDL.Null,
