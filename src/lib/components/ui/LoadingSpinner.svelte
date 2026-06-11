@@ -37,7 +37,7 @@
 	>
 		{#each LEAF_ANGLES as angle, i (angle)}
 			<ellipse
-				style:animation-delay="{i * SHIMMER_DELAY_S}s"
+				style:animation-delay={`${i * SHIMMER_DELAY_S}s`}
 				class="laurel-ring-leaf"
 				cx="40"
 				cy="10"
@@ -52,6 +52,7 @@
 <style lang="postcss">
 	.laurel-ring {
 		color: var(--color-primary);
+		transform-box: fill-box;
 		transform-origin: center;
 		animation: laurel-ring-rotate 2.8s linear infinite;
 	}
