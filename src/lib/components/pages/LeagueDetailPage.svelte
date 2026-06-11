@@ -525,6 +525,9 @@
 	const memberAvatar = (principal: string): string | null =>
 		$profilesStore.get(principal)?.avatar ?? null;
 
+	const memberAvatarParts = (principal: string): string | null =>
+		$profilesStore.get(principal)?.avatarParts ?? null;
+
 	const memberNickname = (principal: string): string | null =>
 		$profilesStore.get(principal)?.nickname ?? null;
 
@@ -1074,6 +1077,7 @@
 									<Avatar
 										class="league-detail-overlap-img"
 										avatar={memberAvatar(member.member)}
+										avatarParts={memberAvatarParts(member.member)}
 										nickname={memberNickname(member.member)}
 										owner={member.member}
 										self={member.member === selfPrincipal}
@@ -1175,6 +1179,7 @@
 								<Avatar
 									class="league-detail-lb-avatar"
 									avatar={memberAvatar(member.member)}
+									avatarParts={memberAvatarParts(member.member)}
 									nickname={memberNickname(member.member)}
 									owner={member.member}
 									self={member.member === selfPrincipal}
@@ -1209,6 +1214,7 @@
 						<Avatar
 							class="league-detail-lb-avatar"
 							avatar={memberAvatar(youMember.member)}
+							avatarParts={memberAvatarParts(youMember.member)}
 							nickname={memberNickname(youMember.member)}
 							owner={youMember.member}
 							self={youMember.member === selfPrincipal}
@@ -1448,6 +1454,7 @@
 				<Avatar
 					class="league-detail-member-sheet-avatar"
 					avatar={memberAvatar(openMember.member)}
+					avatarParts={memberAvatarParts(openMember.member)}
 					nickname={memberNickname(openMember.member)}
 					owner={openMember.member}
 					self={openMember.member === selfPrincipal}
