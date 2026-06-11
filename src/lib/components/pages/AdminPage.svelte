@@ -1,16 +1,30 @@
 <script lang="ts">
-	import { ChevronRight, Gavel, TrendingUp, UsersRound, Vibrate } from '@lucide/svelte/icons';
+	import {
+		ChevronRight,
+		Coins,
+		Gavel,
+		TrendingUp,
+		UsersRound,
+		Vibrate
+	} from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { markets } from '$lib/derived/markets.derived';
+	import { vxpFree } from '$lib/derived/vxp-holdings.derived';
 	import { listRoles, type UserRoleEntry } from '$lib/services/roles.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
-	type HubPath = AppPath.AdminAccess | AppPath.AdminMarkets | AppPath.AdminResolutions;
-	type HubIcon = typeof UsersRound | typeof TrendingUp | typeof Gavel;
+	type HubPath =
+		| AppPath.AdminAccess
+		| AppPath.AdminMarkets
+		| AppPath.AdminResolutions
+		| AppPath.AdminVxp;
+	type HubIcon = typeof UsersRound | typeof TrendingUp | typeof Gavel | typeof Coins;
 
 	interface Tile {
 		path: HubPath;
@@ -18,7 +32,7 @@
 		titleKey: MessageKey;
 		descriptionKey: MessageKey;
 		countKey: MessageKey;
-		count: number;
+		count: number | string;
 	}
 
 	let roleEntries = $state<UserRoleEntry[]>([]);
@@ -34,6 +48,9 @@
 	const rolesCount = $derived(roleEntries.length);
 	const marketsCount = $derived($markets.length);
 	const unresolvedCount = $derived($markets.filter((m) => m.status !== 'Resolved').length);
+	const vxpBalanceDisplay = $derived(
+		formatVxpBalance({ value: $vxpFree, decimals: VXP_TOKEN.decimals })
+	);
 
 	const tiles: Tile[] = $derived([
 		{
@@ -59,6 +76,14 @@
 			descriptionKey: 'admin.hub.resolutions.description',
 			countKey: 'admin.hub.resolutions.count',
 			count: unresolvedCount
+		},
+		{
+			path: AppPath.AdminVxp,
+			icon: Coins,
+			titleKey: 'admin.hub.vxp.title',
+			descriptionKey: 'admin.hub.vxp.description',
+			countKey: 'admin.hub.vxp.count',
+			count: vxpBalanceDisplay
 		}
 	]);
 </script>

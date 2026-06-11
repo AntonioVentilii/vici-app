@@ -452,6 +452,9 @@ export const ptMessages = {
 	'admin.hub.resolutions.count': '{count} a aguardar resolução',
 	'admin.hub.resolutions.description': 'Resolve mercados expirados e revê o histórico.',
 	'admin.hub.resolutions.title': 'Resoluções',
+	'admin.hub.vxp.count': '{count} VXP disponíveis',
+	'admin.hub.vxp.description': 'Envia e recebe VXP, e revê o histórico do ledger.',
+	'admin.hub.vxp.title': 'Tesouraria VXP',
 	'admin.markets.bulk.badge': 'Upload JSON',
 	'admin.markets.bulk.busy':
 		'Aguarda enquanto configuramos os teus mercados de previsão na blockchain...',

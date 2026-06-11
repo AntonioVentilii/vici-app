@@ -447,6 +447,9 @@ export const enMessages = {
 	'admin.hub.resolutions.count': '{count} awaiting resolution',
 	'admin.hub.resolutions.description': 'Resolve expired markets and review resolution history.',
 	'admin.hub.resolutions.title': 'Resolutions',
+	'admin.hub.vxp.count': '{count} VXP available',
+	'admin.hub.vxp.description': 'Send and receive VXP, and review the ledger history.',
+	'admin.hub.vxp.title': 'VXP Treasury',
 	'admin.markets.bulk.badge': 'JSON Upload',
 	'admin.markets.bulk.busy':
 		'Please wait while we set up your prediction markets on the blockchain...',

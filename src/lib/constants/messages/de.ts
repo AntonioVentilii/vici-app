@@ -450,6 +450,9 @@ export const deMessages = {
 	'admin.hub.resolutions.count': '{count} ausstehende Auflösungen',
 	'admin.hub.resolutions.description': 'Abgelaufene Märkte auflösen und den Verlauf prüfen.',
 	'admin.hub.resolutions.title': 'Auflösungen',
+	'admin.hub.vxp.count': '{count} VXP verfügbar',
+	'admin.hub.vxp.description': 'VXP senden und empfangen sowie den Ledger-Verlauf einsehen.',
+	'admin.hub.vxp.title': 'VXP-Treasury',
 	'admin.markets.bulk.badge': 'JSON-Upload',
 	'admin.markets.bulk.busy':
 		'Bitte warten, während wir deine Vorhersagemärkte auf der Blockchain einrichten...',

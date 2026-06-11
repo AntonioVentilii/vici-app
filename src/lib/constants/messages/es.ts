@@ -448,6 +448,9 @@ export const esMessages = {
 	'admin.hub.resolutions.count': '{count} pendientes de resolución',
 	'admin.hub.resolutions.description': 'Resuelve mercados vencidos y revisa el historial.',
 	'admin.hub.resolutions.title': 'Resoluciones',
+	'admin.hub.vxp.count': '{count} VXP disponibles',
+	'admin.hub.vxp.description': 'Envía y recibe VXP, y revisa el historial del ledger.',
+	'admin.hub.vxp.title': 'Tesorería VXP',
 	'admin.markets.bulk.badge': 'Carga JSON',
 	'admin.markets.bulk.busy':
 		'Por favor espera mientras configuramos tus mercados de predicción en la blockchain...',
