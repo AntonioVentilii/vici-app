@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.1.3](https://github.com/AntonioVentilii/vici-app/compare/v0.1.2...v0.1.3) (2026-06-11)
+
+
+### Features
+
+* **analytics:** emit flow_session_started / flow_completed / flow_abandoned ([#775](https://github.com/AntonioVentilii/vici-app/issues/775)) ([db0937d](https://github.com/AntonioVentilii/vici-app/commit/db0937d5c685c19601ca1ed8d0155e6aa09fc51c))
+* **arena:** cache standing hero + cold-load skeleton ([#774](https://github.com/AntonioVentilii/vici-app/issues/774)) ([1ad6470](https://github.com/AntonioVentilii/vici-app/commit/1ad6470bb6e1d5de1d9072bba10bf27fd13e6d09))
+* **frontend:** raise the friend-recommended leagues row cap to 5 ([#790](https://github.com/AntonioVentilii/vici-app/issues/790)) ([40de289](https://github.com/AntonioVentilii/vici-app/commit/40de289606de15506153f80c1abdf0c2d824f6f6))
+* **frontend:** show a branded maintenance overlay while the satellite deploys ([#784](https://github.com/AntonioVentilii/vici-app/issues/784)) ([eb00fcf](https://github.com/AntonioVentilii/vici-app/commit/eb00fcf9e2b9e2fface7c7c0fc8683add2912494))
+* **frontend:** simplify trade lines in the activity feed ([#789](https://github.com/AntonioVentilii/vici-app/issues/789)) ([1e1b184](https://github.com/AntonioVentilii/vici-app/commit/1e1b184f821187fe3cda2afdda9c15f76f971a54))
+
+
+### Bug Fixes
+
+* **avatar:** surface the in-flight save instead of a mute disabled button ([#786](https://github.com/AntonioVentilii/vici-app/issues/786)) ([c198260](https://github.com/AntonioVentilii/vici-app/commit/c198260f422196028ed3972d72d9d3b4fa7dbc66))
+* **frontend:** derive market resolution from clearing instead of the bounded activity log ([#788](https://github.com/AntonioVentilii/vici-app/issues/788)) ([751859b](https://github.com/AntonioVentilii/vici-app/commit/751859b1f4ff91969e1c5e6deb72f63c680bca22))
+* **frontend:** drop the dead boot-loader CSS and text for the shared spinner ([#778](https://github.com/AntonioVentilii/vici-app/issues/778)) ([5b8b60c](https://github.com/AntonioVentilii/vici-app/commit/5b8b60c7cdedef3883cb082e826ee11f0f02479a))
+* **profile:** render users' saved avatars for everyone, not just themselves ([#787](https://github.com/AntonioVentilii/vici-app/issues/787)) ([8ce10a8](https://github.com/AntonioVentilii/vici-app/commit/8ce10a8f0425fb8c71a97cacede67c99ec965c47))
+* **social:** show the daily streak on leaderboard, friends, and league surfaces ([#782](https://github.com/AntonioVentilii/vici-app/issues/782)) ([08d8b14](https://github.com/AntonioVentilii/vici-app/commit/08d8b1461ead7b066a9967670b7f190bf57da978))
+
+
+### Documentation
+
+* **ai:** add spec-driven development workflow and living PRODUCT.md ([#780](https://github.com/AntonioVentilii/vici-app/issues/780)) ([cd999fa](https://github.com/AntonioVentilii/vici-app/commit/cd999fae3375d360e443e11f71b781f456b10722))
+* **ai:** tighten PR-body style rules and add code-comment policy ([#781](https://github.com/AntonioVentilii/vici-app/issues/781)) ([dd62a52](https://github.com/AntonioVentilii/vici-app/commit/dd62a52eaa7e6ac41014db4bed12e913ad585222))
+
+
+### Styles
+
+* **frontend:** redesign LoadingSpinner as the branded laurel ring ([#777](https://github.com/AntonioVentilii/vici-app/issues/777)) ([708e541](https://github.com/AntonioVentilii/vici-app/commit/708e541cfc92e94d62bd86b93d2fb7ce39474454))
+
+
+### Code Refactoring
+
+* **frontend:** move categoryLabel to a frontend-only market-tags util ([#785](https://github.com/AntonioVentilii/vici-app/issues/785)) ([5c1296a](https://github.com/AntonioVentilii/vici-app/commit/5c1296a205fbcd1412464163c197cd5b48efc0d4))
+* **frontend:** replace hand-rolled spinner rings with LoadingSpinner ([#779](https://github.com/AntonioVentilii/vici-app/issues/779)) ([b277a79](https://github.com/AntonioVentilii/vici-app/commit/b277a79855a81ac28a6761ef9b08a9bb758c3aae))
+
+
+### Continuous Integration
+
+* **deploy:** skip the satellite functions upgrade on frontend-only releases ([#783](https://github.com/AntonioVentilii/vici-app/issues/783)) ([c1c4fc7](https://github.com/AntonioVentilii/vici-app/commit/c1c4fc7704067fa1ba25965beadca631f2e48daa))
+
 ## [0.1.2](https://github.com/AntonioVentilii/vici-app/compare/v0.1.1...v0.1.2) (2026-06-10)
 
 
