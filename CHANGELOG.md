@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.7](https://github.com/AntonioVentilii/vici-app/compare/v0.1.6...v0.1.7) (2026-06-11)
+
+
+### Features
+
+* **admin:** admin-only VXP treasury page with send / receive / history ([#819](https://github.com/AntonioVentilii/vici-app/issues/819)) ([4e6e09c](https://github.com/AntonioVentilii/vici-app/commit/4e6e09ce729bc24044d4b00f38b4ba9f0021faa5))
+
+
+### Bug Fixes
+
+* **admin:** tighten resolution container padding on mobile ([#822](https://github.com/AntonioVentilii/vici-app/issues/822)) ([95a0095](https://github.com/AntonioVentilii/vici-app/commit/95a00952537ee3344e6b3853f2b5e902f788e43c))
+* **admin:** wrap overflowing resolution cards, surface the clause, add market search ([#820](https://github.com/AntonioVentilii/vici-app/issues/820)) ([a930156](https://github.com/AntonioVentilii/vici-app/commit/a93015683f202d226256f50e39ee42581d2f8c02))
+
 ## [0.1.6](https://github.com/AntonioVentilii/vici-app/compare/v0.1.5...v0.1.6) (2026-06-11)
 
 
