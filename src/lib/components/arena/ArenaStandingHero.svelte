@@ -34,6 +34,7 @@
 </script>
 
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import type { PrincipalText } from '@junobuild/schema';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -56,6 +57,7 @@
 	} from '$lib/utils/affiliation-stats.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
+	import { get as getStorage, set as setStorage } from '$lib/utils/storage.utils';
 
 	/**
 	 * Arena standing hero — one swipe-only standing that pages across the
@@ -77,6 +79,13 @@
 	 * the Battle scope ranks the viewer's university among the monthly
 	 * roster. A scope is only added once its rank is known, so the hero
 	 * never fabricates a position.
+	 *
+	 * Re-entry is instant: the computed scopes are persisted to
+	 * localStorage (keyed per-principal) and seeded synchronously on
+	 * mount, so a returning viewer sees their last standings immediately
+	 * while a fresh hydrate runs in the background and overwrites them
+	 * (stale-while-revalidate). On the very first cold load — no cache —
+	 * a pulsing skeleton stands in for the hero until the hydrate lands.
 	 */
 
 	interface Props {
@@ -86,6 +95,15 @@
 	}
 
 	const { onSelectTab }: Props = $props();
+
+	// Where a scope's tap lands. Kept as a serializable descriptor (not a
+	// closure) so the whole `Scope` round-trips through localStorage; the
+	// live handler is rebuilt from it at tap time by `openScope`.
+	type ScopeNav =
+		| { kind: 'leaderboard' }
+		| { kind: 'tab'; tab: 'friends' | 'leagues' | 'battles' }
+		| { kind: 'league'; id: string }
+		| { kind: 'school'; id: string };
 
 	interface Scope {
 		key: string;
@@ -104,14 +122,61 @@
 		upSuffix: '%' | '';
 		// Meta suffix line context (already localized).
 		unit: string;
-		onOpen: () => void;
+		// Serializable navigation target (resolved to a handler on tap).
+		nav: ScopeNav;
 	}
+
+	// Versioned, per-principal localStorage key for the cached scopes.
+	// Bump the version suffix if the persisted `Scope` shape changes so a
+	// stale entry can't be mis-read.
+	const cacheKey = (owner: PrincipalText): string => `vici.arena-standings.v1:${owner}`;
+
+	const NAV_KINDS: ReadonlySet<string> = new Set(['leaderboard', 'tab', 'league', 'school']);
+
+	// localStorage is untrusted input (parsed JSON, manually editable):
+	// keep only entries whose render- and tap-critical fields are shaped
+	// right so a malformed row can't throw mid-render or in `openScope`.
+	const isScope = (value: unknown): value is Scope => {
+		if (typeof value !== 'object' || value === null) {
+			return false;
+		}
+
+		const scope = value as Partial<Scope>;
+
+		return (
+			typeof scope.key === 'string' &&
+			typeof scope.label === 'string' &&
+			typeof scope.rank === 'number' &&
+			typeof scope.total === 'number' &&
+			typeof scope.up === 'number' &&
+			typeof scope.unit === 'string' &&
+			nonNullish(scope.nav) &&
+			typeof scope.nav === 'object' &&
+			NAV_KINDS.has((scope.nav as { kind?: string }).kind ?? '')
+		);
+	};
+
+	const readCache = (owner: PrincipalText): Scope[] | undefined => {
+		const cached = getStorage<unknown>({ key: cacheKey(owner) });
+
+		return Array.isArray(cached) ? cached.filter(isScope) : undefined;
+	};
+
+	const writeCache = ({ owner, value }: { owner: PrincipalText; value: Scope[] }): void => {
+		setStorage({ key: cacheKey(owner), value });
+	};
 
 	let scopes = $state<Scope[]>([]);
 	let idx = $state(0);
 	let pointerDownX: number | null = null;
+	// Stays false until the first hydrate settles for the active principal.
+	// Drives the cold-load skeleton: shown only while we have nothing cached
+	// to render AND no hydrate has landed yet.
+	let settled = $state(false);
 
 	const principal = $derived($authPrincipal);
+
+	const showSkeleton = $derived(scopes.length === 0 && !settled);
 
 	const goLeaderboard = () => {
 		void goto(resolve(`${AppPath.Arena}/leaderboard`));
@@ -127,14 +192,42 @@
 
 	const unitThisWeek = $derived(t({ locale: $localeStore, key: 'arena.hero.unit_this_week' }));
 
-	// Hydrate once the friend relations and affiliations have been
-	// refreshed: `hydrate()` reads `$friendsListStore` / `$myAffiliationsStore`
-	// synchronously, so kicking it off before those refreshes resolve can
-	// permanently omit the Friends and Battle scopes on a cold load. The
-	// `cancelled` flag drops a late resolution after the component is torn
-	// down so we never write `scopes` on an unmounted instance.
+	// Seed from cache, then hydrate. Re-runs whenever the signed-in
+	// `principal` changes so the cache key, seeded scopes, and fresh fetch
+	// all track the active viewer (no cross-account bleed).
+	//
+	// The seed is synchronous so a returning viewer sees their last
+	// standings on the same frame the page mounts. The fresh hydrate waits
+	// for the friend relations / affiliations refreshes first because
+	// `hydrate()` reads `$friendsListStore` / `$myAffiliationsStore`
+	// synchronously — kicking it off before those resolve can permanently
+	// omit the Friends and Battle scopes. The `cancelled` flag drops a late
+	// resolution after teardown so we never write `scopes` on an unmounted
+	// instance (or for a stale principal).
 	$effect(() => {
+		const owner = principal;
 		let cancelled = false;
+
+		// Stale-while-revalidate seed. A present cache entry (even an empty
+		// array — "loaded, no standings") suppresses the skeleton; a missing
+		// one leaves us in the cold-load state until the hydrate settles.
+		const cached = owner !== undefined ? readCache(owner) : undefined;
+
+		if (cached !== undefined) {
+			scopes = cached;
+			settled = true;
+		} else {
+			scopes = [];
+			// No principal means no hydrate can run — settle the signed-out /
+			// pre-auth state immediately so the skeleton only pulses while a
+			// load is actually possible. When auth resolves, the effect
+			// re-runs with the principal and the cold-load state kicks in.
+			settled = owner === undefined;
+		}
+
+		if (idx >= scopes.length) {
+			idx = 0;
+		}
 
 		void (async () => {
 			await Promise.allSettled([refreshFriendRelations(), refreshMyAffiliations()]);
@@ -143,7 +236,7 @@
 				return;
 			}
 
-			await hydrate(() => cancelled);
+			await hydrate({ owner, isCancelled: () => cancelled });
 		})();
 
 		return () => {
@@ -151,9 +244,13 @@
 		};
 	});
 
-	const hydrate = async (isCancelled: () => boolean): Promise<void> => {
-		const owner = principal;
-
+	const hydrate = async ({
+		owner,
+		isCancelled
+	}: {
+		owner: PrincipalText | undefined;
+		isCancelled: () => boolean;
+	}): Promise<void> => {
 		if (owner === undefined) {
 			return;
 		}
@@ -184,7 +281,7 @@
 					up,
 					upSuffix: '%',
 					unit: unitThisWeek,
-					onOpen: goLeaderboard
+					nav: { kind: 'leaderboard' }
 				});
 			}
 		} catch {
@@ -212,7 +309,7 @@
 						up: mine.rankDelta !== undefined ? Math.max(0, mine.rankDelta) : 0,
 						upSuffix: '',
 						unit: unitThisWeek,
-						onOpen: () => onSelectTab?.('friends')
+						nav: { kind: 'tab', tab: 'friends' }
 					});
 				}
 			}
@@ -242,7 +339,7 @@
 							up: mine.rankDelta !== undefined ? Math.max(0, mine.rankDelta) : 0,
 							upSuffix: '',
 							unit: unitThisWeek,
-							onOpen: () => goLeague(league.id)
+							nav: { kind: 'league', id: league.id }
 						});
 					}
 				} catch {
@@ -291,7 +388,7 @@
 						up: 0,
 						upSuffix: '',
 						unit: t({ locale: $localeStore, key: 'arena.hero.unit_in_wc' }),
-						onOpen: () => goSchool(uni.affiliationIdentifier)
+						nav: { kind: 'school', id: uni.affiliationIdentifier }
 					});
 				}
 			}
@@ -304,9 +401,31 @@
 		}
 
 		scopes = next;
+		settled = true;
+		writeCache({ owner, value: next });
 
 		if (idx >= scopes.length) {
 			idx = 0;
+		}
+	};
+
+	// Resolve a scope's serializable nav target to its live handler.
+	const openScope = (scope: Scope): void => {
+		switch (scope.nav.kind) {
+			case 'leaderboard':
+				goLeaderboard();
+
+				return;
+			case 'tab':
+				onSelectTab?.(scope.nav.tab);
+
+				return;
+			case 'league':
+				goLeague(scope.nav.id);
+
+				return;
+			case 'school':
+				goSchool(scope.nav.id);
 		}
 	};
 
@@ -345,7 +464,9 @@
 			return;
 		}
 
-		current?.onOpen();
+		if (current !== undefined) {
+			openScope(current);
+		}
 	};
 
 	const onKeydown = (event: KeyboardEvent) => {
@@ -364,7 +485,10 @@
 			}
 
 			event.preventDefault();
-			current?.onOpen();
+
+			if (current !== undefined) {
+				openScope(current);
+			}
 		}
 	};
 
@@ -374,7 +498,20 @@
 	const heroAriaKey: MessageKey = 'arena.hero.aria';
 </script>
 
-{#if current !== undefined}
+{#if showSkeleton}
+	<!-- Cold-load placeholder: mirrors the hero rhythm (eyebrow → big rank
+	     figure → meta line) so the layout doesn't reflow when the real
+	     standing lands. Decorative pulse only — no copy. -->
+	<div class="ar-standing" aria-hidden="true">
+		<div class="ar-skel">
+			<span class="ar-skel-block ar-skel-ctx"></span>
+			<div class="ar-skel-body">
+				<span class="ar-skel-block ar-skel-rank"></span>
+			</div>
+			<span class="ar-skel-block ar-skel-meta"></span>
+		</div>
+	</div>
+{:else if current !== undefined}
 	<div class="ar-standing">
 		<div
 			class="ar-live"
@@ -451,6 +588,60 @@
 <style lang="postcss">
 	.ar-standing {
 		padding: 1rem 0 0.85rem;
+	}
+
+	/* Cold-load skeleton — same vertical rhythm as `.ar-live` so the hero
+	   doesn't jump when the real standing replaces it. */
+	.ar-skel {
+		display: block;
+	}
+
+	.ar-skel-block {
+		display: block;
+		border-radius: var(--r-8, 0.5rem);
+		background: color-mix(in srgb, var(--text-muted) 16%, transparent);
+		animation: ar-skel-pulse 1.4s ease-in-out infinite;
+	}
+
+	@keyframes ar-skel-pulse {
+		0%,
+		100% {
+			opacity: 0.55;
+		}
+		50% {
+			opacity: 0.9;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.ar-skel-block {
+			animation: none;
+		}
+	}
+
+	.ar-skel-ctx {
+		width: 6.5rem;
+		height: var(--t-10, 0.65rem);
+		border-radius: var(--r-pill);
+	}
+
+	.ar-skel-body {
+		display: flex;
+		align-items: flex-end;
+		margin-top: 8px;
+		min-height: 64px;
+	}
+
+	.ar-skel-rank {
+		width: 8.5rem;
+		height: 58px;
+	}
+
+	.ar-skel-meta {
+		width: 11rem;
+		height: 11.5px;
+		margin-top: 9px;
+		border-radius: var(--r-pill);
 	}
 
 	.ar-live {
