@@ -1,13 +1,18 @@
 <script lang="ts">
 	import { initSatellite } from '@junobuild/core';
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
 	import { afterNavigate } from '$app/navigation';
 	import Authn from '$lib/components/authn/Authn.svelte';
 	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import MaintenanceOverlay from '$lib/components/ui/MaintenanceOverlay.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
 	import { initAnalytics } from '$lib/services/analytics.services';
+	import {
+		initMaintenanceWatch,
+		reportMaintenanceCandidate
+	} from '$lib/services/maintenance.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { previousPathStore } from '$lib/stores/previous-path.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -38,8 +43,22 @@
 	};
 
 	$effect(() => {
-		init();
+		// A boot from browser-cached assets can land mid-deploy while the
+		// satellite is stopped — route the failure into maintenance detection
+		// instead of hanging on the boot spinner.
+		void init().catch((err: unknown) => {
+			// Keep the failure diagnosable when it is NOT a deploy window (the
+			// app still hangs on the boot spinner in that case).
+			console.error('Satellite init failed', err);
+
+			return reportMaintenanceCandidate(err);
+		});
 	});
+
+	// Polling loaders let satellite rejections bubble (`void tick()` in
+	// `AtomicLoader`), so the global listeners pick up the "canister is
+	// stopped" errors a deploy causes and trigger the maintenance overlay.
+	onMount(initMaintenanceWatch);
 
 	// RTL scripts — kept in sync with the flash-free locale boot in
 	// `app.html` so the document direction stays correct after hydrate.
@@ -81,5 +100,7 @@
 {/if}
 
 <Notifications />
+
+<MaintenanceOverlay />
 
 <TweaksPanel />
