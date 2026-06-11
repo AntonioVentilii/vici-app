@@ -19,6 +19,7 @@ import { marketMetadataStore } from '$lib/stores/market-metadata.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { userStore } from '$lib/stores/user.store';
 import type { Nickname, UserProfile } from '$lib/types/profile';
+import type { UserStatsDoc } from '$lib/types/user-stats';
 import {
 	CONTRARIAN_PRICE_THRESHOLD,
 	evaluateAchievements,
@@ -717,14 +718,25 @@ export const calculateAndSyncStats = async ({
 	// The per-user dashboard snapshot doubles as the source of the Magpie
 	// breadth metric: its per-category buckets feed `countWinningCategories`
 	// for the profile patch below, and the snapshot itself is persisted to
-	// `USER_STATS` after the patch. Pure computation — IO happens later.
-	const snapshot = computeUserStatsSnapshot({
-		owner: principal,
-		history,
-		metadata: get(marketMetadataStore),
-		nowMs: Date.now()
-	});
-	const winningCategories = countWinningCategories(snapshot.categoryStats);
+	// `USER_STATS` after the patch. Best-effort like the other auxiliary
+	// reads: malformed market metadata must not abort the whole stats sync,
+	// so a failed computation degrades to no `USER_STATS` refresh and a 0
+	// breadth count — which the monotonic patch below keeps from regressing
+	// the persisted value.
+	let snapshot: UserStatsDoc | undefined;
+	let winningCategories = 0;
+
+	try {
+		snapshot = computeUserStatsSnapshot({
+			owner: principal,
+			history,
+			metadata: get(marketMetadataStore),
+			nowMs: Date.now()
+		});
+		winningCategories = countWinningCategories(snapshot.categoryStats);
+	} catch (err: unknown) {
+		console.error('calculateAndSyncStats: failed to compute user_stats snapshot', err);
+	}
 
 	const profileDoc = await getProfile(principal);
 
@@ -868,7 +880,9 @@ export const calculateAndSyncStats = async ({
 	// resolution event. Failures are logged but don't block the
 	// profile write — the cache will be rebuilt on the next sync.
 	try {
-		await persistMyUserStats(snapshot);
+		if (nonNullish(snapshot)) {
+			await persistMyUserStats(snapshot);
+		}
 	} catch (err) {
 		console.error('calculateAndSyncStats: failed to persist user_stats', err);
 	}
