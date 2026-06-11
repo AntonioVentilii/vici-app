@@ -13,7 +13,7 @@ Skip it for small changes (typo, one-liner): implement directly.
 ## Non-negotiables
 
 - **Read the guidance first.** Before authoring or implementing any
-  spec: [`AGENTS.md`](../../AGENTS.md), then the area README
+  spec: [`AGENTS.md`](../../../AGENTS.md), then the area README
   ([frontend](../frontend/README.md) /
   [satellite](../satellite/README.md) /
   [backend](../backend/README.md)). A spec never overrides
