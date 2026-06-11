@@ -195,7 +195,6 @@ export const MENAGERIE: MenagerieAnimal[] = [
 			'menagerie.raven.label.silver',
 			'menagerie.raven.label.gold'
 		],
-		engineUnbacked: true,
 		tiers: [
 			{ tier: 'wood', t: 3 },
 			{ tier: 'silver', t: 10 },
