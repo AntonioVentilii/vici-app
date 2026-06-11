@@ -327,6 +327,7 @@ export const idlFactory = ({ IDL }) => {
 				daily_goal_date: IDL.Opt(IDL.Text),
 				daily_goal_done: IDL.Float64,
 				contrarian_wins: IDL.Float64,
+				leagues_joined: IDL.Float64,
 				owner: IDL.Text,
 				interests: IDL.Vec(IDL.Text),
 				role: IDL.Opt(
@@ -337,6 +338,7 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
+				bouts_won: IDL.Float64,
 				handle_last_change_ms: IDL.Opt(IDL.Float64),
 				email: IDL.Text,
 				level: IDL.Float64,
@@ -381,6 +383,7 @@ export const idlFactory = ({ IDL }) => {
 					public: IDL.Null,
 					friends_only: IDL.Null
 				}),
+				leagues_founded: IDL.Float64,
 				daily_streak: IDL.Float64,
 				unlocked_achievements: IDL.Vec(IDL.Text),
 				earned_menagerie: IDL.Opt(IDL.Vec(IDL.Text)),
@@ -407,6 +410,7 @@ export const idlFactory = ({ IDL }) => {
 				daily_goal_date: IDL.Opt(IDL.Text),
 				daily_goal_done: IDL.Float64,
 				contrarian_wins: IDL.Float64,
+				leagues_joined: IDL.Float64,
 				owner: IDL.Text,
 				interests: IDL.Vec(IDL.Text),
 				role: IDL.Opt(
@@ -417,6 +421,7 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
+				bouts_won: IDL.Float64,
 				handle_last_change_ms: IDL.Opt(IDL.Float64),
 				email: IDL.Text,
 				level: IDL.Float64,
@@ -461,6 +466,7 @@ export const idlFactory = ({ IDL }) => {
 					public: IDL.Null,
 					friends_only: IDL.Null
 				}),
+				leagues_founded: IDL.Float64,
 				daily_streak: IDL.Float64,
 				unlocked_achievements: IDL.Vec(IDL.Text),
 				earned_menagerie: IDL.Opt(IDL.Vec(IDL.Text)),

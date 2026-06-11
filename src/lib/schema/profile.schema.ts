@@ -110,6 +110,20 @@ export const UserProfileSchema = j.strictObject({
 	// degrades to "untagged" when market metadata isn't hydrated, and a
 	// thin sync must not strip an earned rung).
 	winningCategories: j.number().default(0),
+	// League-life milestones (drive the Bee trophy's join → win-a-bout →
+	// found ladder). All three are recomputed from the caller's league
+	// memberships / battles during `calculateAndSyncStats` and kept
+	// monotonic via `max(existing, recomputed)` — leaving a league or a
+	// failed read must not strip an earned rung.
+	// High-water count of league memberships (any role) — because of the
+	// monotonic guard, leaving a league never decrements it.
+	leaguesJoined: j.number().default(0),
+	// High-water count of resolved battles (league bouts or duels) the
+	// user's side won.
+	boutsWon: j.number().default(0),
+	// High-water count of leagues the user has owned — transferring or
+	// deleting a league never decrements it.
+	leaguesFounded: j.number().default(0),
 	// Consecutive calendar days the user has held a top-10% global
 	// leaderboard position (rank ≤ profileCount / 10). Drives the
 	// `top-decile` achievement. Bumped at most once per local day in

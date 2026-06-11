@@ -75,13 +75,6 @@ export interface MenagerieAnimal {
 	labelKeys: MessageKey[];
 	/** Hero animals get the "LEGENDARY" eyebrow + extra frame glow at top tiers. */
 	hero?: boolean;
-	/**
-	 * `true` when this animal's metric reads a stat the backend does not yet
-	 * populate. Such animals always resolve to LOCKED and render as "soon"
-	 * tiles. The missing field is named at the metric hook in
-	 * `$lib/utils/menagerie.utils`. See the lit-up tracking issue.
-	 */
-	engineUnbacked?: boolean;
 	/** Lower-is-better metric (consensus magnitude, rank percentile). */
 	reversed?: boolean;
 	/** The tier ladder for this animal, lowest threshold first. */
@@ -303,7 +296,6 @@ export const MENAGERIE: MenagerieAnimal[] = [
 			'menagerie.bee.label.silver',
 			'menagerie.bee.label.gold'
 		],
-		engineUnbacked: true,
 		tiers: [
 			{ tier: 'wood', t: 1 },
 			{ tier: 'silver', t: 2 },

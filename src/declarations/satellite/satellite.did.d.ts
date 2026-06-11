@@ -327,11 +327,13 @@ export interface AppGetMyRivalResult {
 					daily_goal_date: [] | [string];
 					daily_goal_done: number;
 					contrarian_wins: number;
+					leagues_joined: number;
 					owner: string;
 					interests: Array<string>;
 					role:
 						| []
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+					bouts_won: number;
 					handle_last_change_ms: [] | [number];
 					email: string;
 					level: number;
@@ -369,6 +371,7 @@ export interface AppGetMyRivalResult {
 					best_upset_consensus: [] | [number];
 					avatar_parts: string;
 					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
+					leagues_founded: number;
 					daily_streak: number;
 					unlocked_achievements: Array<string>;
 					earned_menagerie: [] | [Array<string>];
@@ -399,11 +402,13 @@ export interface AppGetProfileResult {
 					daily_goal_date: [] | [string];
 					daily_goal_done: number;
 					contrarian_wins: number;
+					leagues_joined: number;
 					owner: string;
 					interests: Array<string>;
 					role:
 						| []
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+					bouts_won: number;
 					handle_last_change_ms: [] | [number];
 					email: string;
 					level: number;
@@ -441,6 +446,7 @@ export interface AppGetProfileResult {
 					best_upset_consensus: [] | [number];
 					avatar_parts: string;
 					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
+					leagues_founded: number;
 					daily_streak: number;
 					unlocked_achievements: Array<string>;
 					earned_menagerie: [] | [Array<string>];
