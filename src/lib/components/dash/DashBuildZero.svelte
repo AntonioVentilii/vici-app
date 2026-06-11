@@ -41,6 +41,8 @@
 		holdingsDisplay: string;
 		/** In-play (backed) VXP, formatted — Day 1 only. */
 		inPlayDisplay: string;
+		/** Figures not loaded yet — render pulsing placeholders instead of 0. */
+		loading: boolean;
 		/** Number of live (unresolved) calls — Day 1 stack sub-stat. */
 		pendingCount: number;
 		/** When the first call settles (year-stripped), for the calibrating copy. */
@@ -57,6 +59,7 @@
 		day1,
 		holdingsDisplay,
 		inPlayDisplay,
+		loading,
 		pendingCount,
 		firstCallTimer,
 		starterRows,
@@ -122,13 +125,19 @@
 					key: day1 ? 'dash.holdings.eyebrow' : 'dash.build.zero_starter_balance'
 				})}
 			</div>
-			<div class="db-v num">{holdingsDisplay}<span class="db-vu">VXP</span></div>
+			<div class="db-v num" class:db-ph={loading}>
+				{loading ? t({ locale: $localeStore, key: 'dash.rank.placeholder' }) : holdingsDisplay}<span
+					class="db-vu">VXP</span
+				>
+			</div>
 		</div>
 		<div class="db-wright">
 			{#if day1}
 				<div class="db-stat">
 					<div class="db-kk">{t({ locale: $localeStore, key: 'dash.build.in_play' })}</div>
-					<div class="db-vv num">{inPlayDisplay}</div>
+					<div class="db-vv num" class:db-ph={loading}>
+						{loading ? t({ locale: $localeStore, key: 'dash.rank.placeholder' }) : inPlayDisplay}
+					</div>
 				</div>
 				<div class="db-stat">
 					<div class="db-kk">{t({ locale: $localeStore, key: 'dash.build.zero_calls' })}</div>

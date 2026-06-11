@@ -24,6 +24,15 @@ import { derived, type Readable } from 'svelte/store';
  * whole-VXP.
  */
 
+// True until both source stores have loaded once (they reset to `undefined`
+// on balance-domain switches too). While set, every figure below reads as a
+// misleading 0 / wallet-only partial — surfaces should render a placeholder
+// instead of a real-looking number.
+export const vxpHoldingsNotInitialized: Readable<boolean> = derived(
+	[collateralsStore, balancesStore],
+	([$collateralsStore, $balancesStore]) => isNullish($collateralsStore) || isNullish($balancesStore)
+);
+
 // Raw VXP balance sitting in the user's ICRC ledger wallet (un-deposited).
 // Trends toward ~0 as VXP is swept into the clearing canister as collateral.
 // Kept as its own concept for the Wallet surface (ledger balance + the

@@ -5295,6 +5295,27 @@ a.title-action::after {
 .db-stat .db-vv.down {
 	color: var(--no);
 }
+/* Pre-first-load placeholder: the holdings figures pulse as a muted em dash
+   until balances + clearing state have loaded once, instead of flashing a
+   real-looking 0. */
+.db-wallet .db-ph {
+	color: var(--text-muted);
+	animation: db-ph-pulse 1.6s ease-in-out infinite;
+}
+@keyframes db-ph-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.35;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.db-wallet .db-ph {
+		animation: none;
+	}
+}
 .db-wchev {
 	display: inline-flex;
 	align-items: center;
