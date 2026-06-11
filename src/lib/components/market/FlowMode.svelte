@@ -406,7 +406,10 @@
 		// carries how many calls were placed before leaving (0 = a pure
 		// look-and-leave) and `step` the card index reached. A bounce at the
 		// entry beat (`entered === false`) is not an abandon and fires nothing.
-		if (entered && !completed) {
+		// Neither is leaving mid-overtime: Push-to-15 (`pushedToOvertime`)
+		// flips `completed` back to false to continue the deck, but that
+		// session already reached FlowEnd (and emitted `flow_completed`) once.
+		if (entered && !completed && !pushedToOvertime) {
 			track({
 				name: 'flow_abandoned',
 				source: 'flow',
