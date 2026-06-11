@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { notEmptyString } from '@dfinity/utils';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -25,7 +26,21 @@
 		}
 	};
 
+	let searchQuery = $state('');
+
 	const sortedMarkets = $derived([...markets].sort((a, b) => Number(a.expiryDate - b.expiryDate)));
+
+	const filteredMarkets = $derived.by(() => {
+		const query = searchQuery.trim().toLowerCase();
+
+		if (query === '') {
+			return sortedMarkets;
+		}
+
+		return sortedMarkets.filter(({ id, title, resolution }) =>
+			[id, title, resolution].some((field) => field.toLowerCase().includes(query))
+		);
+	});
 
 	const getExpirationStatus = (expiryDate: bigint) => {
 		const now = BigInt(Date.now());
@@ -111,66 +126,95 @@
 			{t({ locale: $localeStore, key: 'admin.resolution.empty' })}
 		</p>
 	{:else}
-		<div class="space-y-6">
-			{#each sortedMarkets as market (market.id)}
-				{@const { id: marketId, title, expiryDate } = market}
-				{@const status = getExpirationStatus(expiryDate)}
+		<input
+			class="bg-foreground/5 text-foreground ring-border focus:ring-primary placeholder:text-muted-foreground mb-6 w-full rounded-2xl border-none px-5 py-3 text-sm ring-1 ring-inset focus:ring-2"
+			aria-label={t({ locale: $localeStore, key: 'admin.resolution.search.label' })}
+			autocomplete="off"
+			placeholder={t({ locale: $localeStore, key: 'admin.resolution.search.placeholder' })}
+			type="search"
+			bind:value={searchQuery}
+		/>
 
-				<div
-					class="space-y-4 rounded-2xl border p-6 {getStatusStyles(status.color)} transition-all"
-				>
-					<div class="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-						<div class="space-y-1">
-							<div class="flex items-center gap-3">
-								<h3 class="text-lg font-bold">{title}</h3>
-								<span
-									class="rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wider uppercase {getBadgeStyles(
-										status.color
-									)}"
-								>
-									{status.label}
-								</span>
+		{#if filteredMarkets.length === 0}
+			<p class="text-muted-foreground py-12 text-center text-sm italic">
+				{t({
+					locale: $localeStore,
+					key: 'admin.resolution.search.no_results',
+					params: { query: searchQuery.trim() }
+				})}
+			</p>
+		{:else}
+			<div class="space-y-6">
+				{#each filteredMarkets as market (market.id)}
+					{@const { id: marketId, title, resolution, expiryDate } = market}
+					{@const status = getExpirationStatus(expiryDate)}
+					{@const clause = resolution.trim()}
+
+					<div
+						class="space-y-4 rounded-2xl border p-6 {getStatusStyles(status.color)} transition-all"
+					>
+						<div class="flex flex-col items-start justify-between gap-2 sm:flex-row">
+							<div class="min-w-0 space-y-1">
+								<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+									<h3 class="min-w-0 text-lg font-bold break-words">{title}</h3>
+									<span
+										class="shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wider whitespace-nowrap uppercase {getBadgeStyles(
+											status.color
+										)}"
+									>
+										{status.label}
+									</span>
+								</div>
+								<p class="font-mono text-[10px] break-all opacity-60">
+									{t({
+										locale: $localeStore,
+										key: 'admin.resolution.id_label',
+										params: { marketId }
+									})}
+								</p>
 							</div>
-							<p class="font-mono text-[10px] opacity-60">
+
+							<div class="shrink-0 text-[11px] font-semibold opacity-80">
 								{t({
 									locale: $localeStore,
-									key: 'admin.resolution.id_label',
-									params: { marketId }
+									key: 'admin.resolution.expires',
+									params: { date: new Date(Number(expiryDate)).toLocaleString() }
 								})}
-							</p>
+							</div>
 						</div>
 
-						<div class="text-[11px] font-semibold opacity-80">
-							{t({
-								locale: $localeStore,
-								key: 'admin.resolution.expires',
-								params: { date: new Date(Number(expiryDate)).toLocaleString() }
-							})}
+						{#if notEmptyString(clause)}
+							<div class="space-y-1">
+								<p class="text-[10px] font-black tracking-wider uppercase opacity-60">
+									{t({ locale: $localeStore, key: 'admin.resolution.clause_label' })}
+								</p>
+								<p class="text-sm break-words opacity-80">{clause}</p>
+							</div>
+						{/if}
+
+						<div class="flex gap-2">
+							<Button
+								class="border-success/20 bg-success/10 text-success hover:bg-success/15 flex-1 rounded-xl border py-2 text-xs font-bold"
+								onclick={() => handleResolve({ marketId, outcome: 'YES' })}
+								size="sm"
+								status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
+								variant="ghost"
+							>
+								{t({ locale: $localeStore, key: 'admin.resolution.action.resolve_yes' })}
+							</Button>
+							<Button
+								class="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15 flex-1 rounded-xl border py-2 text-xs font-bold"
+								onclick={() => handleResolve({ marketId, outcome: 'NO' })}
+								size="sm"
+								status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
+								variant="ghost"
+							>
+								{t({ locale: $localeStore, key: 'admin.resolution.action.resolve_no' })}
+							</Button>
 						</div>
 					</div>
-
-					<div class="flex gap-2">
-						<Button
-							class="border-success/20 bg-success/10 text-success hover:bg-success/15 flex-1 rounded-xl border py-2 text-xs font-bold"
-							onclick={() => handleResolve({ marketId, outcome: 'YES' })}
-							size="sm"
-							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
-							variant="ghost"
-						>
-							{t({ locale: $localeStore, key: 'admin.resolution.action.resolve_yes' })}
-						</Button>
-						<Button
-							class="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15 flex-1 rounded-xl border py-2 text-xs font-bold"
-							onclick={() => handleResolve({ marketId, outcome: 'NO' })}
-							size="sm"
-							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
-							variant="ghost"
-						>
-							{t({ locale: $localeStore, key: 'admin.resolution.action.resolve_no' })}
-						</Button>
-					</div>
-				</div>
-			{/each}
-		</div>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 </div>

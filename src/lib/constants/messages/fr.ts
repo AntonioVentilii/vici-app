@@ -450,6 +450,9 @@ export const frMessages = {
 	'admin.hub.resolutions.description':
 		"Résoudre les marchés expirés et consulter l'historique des résolutions.",
 	'admin.hub.resolutions.title': 'Résolutions',
+	'admin.hub.vxp.count': '{count} VXP disponibles',
+	'admin.hub.vxp.description': "Envoyer et recevoir des VXP, et consulter l'historique du ledger.",
+	'admin.hub.vxp.title': 'Trésorerie VXP',
 	'admin.markets.bulk.badge': 'Import JSON',
 	'admin.markets.bulk.busy':
 		'Patientez pendant la configuration de vos marchés de prédiction sur la blockchain...',
@@ -562,10 +565,15 @@ export const frMessages = {
 	'admin.oracle.title': 'Régleurs d’oracle',
 	'admin.resolution.action.resolve_no': 'Résoudre NO',
 	'admin.resolution.action.resolve_yes': 'Résoudre YES',
+	'admin.resolution.clause_label': 'Clause de résolution',
 	'admin.resolution.empty': 'Aucun marché actif nécessitant une résolution.',
 	'admin.resolution.expires': 'Expire : {date}',
 	'admin.resolution.history.title': 'Résolutions récentes',
 	'admin.resolution.id_label': 'ID : {marketId}',
+	'admin.resolution.search.label': 'Rechercher des marchés',
+	'admin.resolution.search.no_results': 'Aucun marché ne correspond à "{query}".',
+	'admin.resolution.search.placeholder':
+		'Rechercher des marchés par titre, ID ou clause de résolution…',
 	'admin.resolution.status.expired': 'EXPIRÉ',
 	'admin.resolution.status.pending': 'EN ATTENTE',
 	'admin.resolution.status.this_week': 'CETTE SEMAINE',
