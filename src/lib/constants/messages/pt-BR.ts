@@ -1799,6 +1799,7 @@ export const ptBRMessages = {
 		'As alterações do seu avatar não foram salvas. Toque em Salvar para mantê-las.',
 	'profile.avatar.save_changes': 'Salvar alterações',
 	'profile.avatar.done': 'Concluir',
+	'profile.avatar.saving': 'Salvando…',
 	'profile.avatar.surprise': 'Surpreenda-me',
 	'profile.avatar.caption': '{mood} · {trait}',
 	'profile.avatar.caption_plain': '{mood} · Sem traço distintivo',
