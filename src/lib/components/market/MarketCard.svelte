@@ -11,7 +11,7 @@
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
-	import { categoryLabel, type MarketTag } from '$lib/constants/market-tags.constants';
+	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -20,6 +20,7 @@
 	import { isSocial } from '$lib/utils/balance-domain.utils';
 	import { isMarketSuggested } from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { categoryLabel } from '$lib/utils/market-tags.utils';
 	import { getOutcomeVariant, getTimeRemaining } from '$lib/utils/market.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';

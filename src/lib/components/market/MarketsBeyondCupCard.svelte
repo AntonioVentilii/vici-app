@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { Check, ChevronDown, ChevronRight, Lock } from '@lucide/svelte';
 	import { slide } from 'svelte/transition';
-	import { categoryLabel, MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { decisiveSettledCount } from '$lib/derived/resolved-positions.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
+	import { categoryLabel } from '$lib/utils/market-tags.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**

@@ -3,12 +3,13 @@
 	import { resolve } from '$app/paths';
 	import ProbBar from '$lib/components/ui/ProbBar.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { categoryLabel, type MarketTag } from '$lib/constants/market-tags.constants';
+	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import { formatVolume } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { categoryLabel } from '$lib/utils/market-tags.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	/**
