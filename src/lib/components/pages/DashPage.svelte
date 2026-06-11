@@ -385,6 +385,7 @@
 			{holdingsDisplay}
 			{inPlayDisplay}
 			{moreRows}
+			onOpen={() => (sheetOpen = true)}
 			{openCalls}
 			pendingCount={liveCallCount}
 			{starterRows}
