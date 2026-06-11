@@ -1,6 +1,10 @@
-import { ZERO } from '$lib/constants/app.constants';
+import { browser } from '$app/environment';
+import type { ClearingDid } from '$declarations';
+import { HOLDINGS_SNAPSHOT_STORAGE_KEY, ZERO } from '$lib/constants/app.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { walletUiTokens } from '$lib/derived/tokens.derived';
+import { authPrincipal } from '$lib/derived/user.derived';
 import { balancesStore } from '$lib/stores/balances.store';
 import { collateralsStore } from '$lib/stores/collaterals.store';
 import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
@@ -8,7 +12,8 @@ import {
 	intuitiveAvailableMarginUsd,
 	nativeToClearingMarginUnits
 } from '$lib/utils/playground-display.utils';
-import { isNullish } from '@dfinity/utils';
+import { get as getStorage, set as setStorage } from '$lib/utils/storage.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { derived, type Readable } from 'svelte/store';
 
 /**
@@ -23,15 +28,6 @@ import { derived, type Readable } from 'svelte/store';
  * unit, not real dollars.) Values are base units; never compare or sum in
  * whole-VXP.
  */
-
-// True until both source stores have loaded once (they reset to `undefined`
-// on balance-domain switches too). While set, every figure below reads as a
-// misleading 0 / wallet-only partial — surfaces should render a placeholder
-// instead of a real-looking number.
-export const vxpHoldingsNotInitialized: Readable<boolean> = derived(
-	[collateralsStore, balancesStore],
-	([$collateralsStore, $balancesStore]) => isNullish($collateralsStore) || isNullish($balancesStore)
-);
 
 // Raw VXP balance sitting in the user's ICRC ledger wallet (un-deposited).
 // Trends toward ~0 as VXP is swept into the clearing canister as collateral.
@@ -54,9 +50,58 @@ interface Holdings {
 	backed: bigint;
 }
 
-const holdings: Readable<Holdings> = derived(
-	[collateralsStore, balancesStore, walletUiTokens],
-	([$collateralsStore, $balancesStore, $walletUiTokens]): Holdings => {
+/** Wire shape of the localStorage snapshot — bigints travel as strings. */
+interface HoldingsSnapshot {
+	spendable: string;
+	backed: string;
+}
+
+const holdingsSnapshotKey = ({
+	principal,
+	domain
+}: {
+	principal: string;
+	domain: ClearingDid.BalanceDomain;
+}): string => `${HOLDINGS_SNAPSHOT_STORAGE_KEY}.${Object.keys(domain)[0]}.${principal}`;
+
+const readHoldingsSnapshot = (params: {
+	principal: string;
+	domain: ClearingDid.BalanceDomain;
+}): Holdings | undefined => {
+	const snapshot = getStorage<HoldingsSnapshot>({ key: holdingsSnapshotKey(params) });
+
+	if (isNullish(snapshot)) {
+		return;
+	}
+
+	try {
+		return { spendable: BigInt(snapshot.spendable), backed: BigInt(snapshot.backed) };
+	} catch (_err: unknown) {
+		// Corrupt payload — fall back to the unloaded defaults.
+	}
+};
+
+interface HoldingsState {
+	holdings: Holdings;
+	/**
+	 * False until the figures are displayable: either live data from both
+	 * source stores (they reset to `undefined` on balance-domain switches too)
+	 * or a persisted last-known snapshot. While false, every figure reads as a
+	 * misleading 0 / wallet-only partial — surfaces should render a placeholder
+	 * instead of a real-looking number.
+	 */
+	initialized: boolean;
+}
+
+const holdingsState: Readable<HoldingsState> = derived(
+	[collateralsStore, balancesStore, walletUiTokens, authPrincipal, balanceDomain],
+	([
+		$collateralsStore,
+		$balancesStore,
+		$walletUiTokens,
+		$authPrincipal,
+		$balanceDomain
+	]): HoldingsState => {
 		// Un-deposited wallet VXP — spendable too, since it is swept into
 		// clearing when the user places a call.
 		let walletMargin = ZERO;
@@ -73,11 +118,25 @@ const holdings: Readable<Holdings> = derived(
 		}
 
 		const account = $collateralsStore?.accountState;
+		const bothLoaded = nonNullish($collateralsStore) && nonNullish($balancesStore);
 
-		// No clearing account yet (e.g. a fresh user who hasn't deposited): all
-		// they can stake is whatever sits in the wallet.
+		// Clearing state not loaded yet. Before falling back to "wallet only"
+		// (which pulses a placeholder over Holdings/In play for the whole first
+		// fetch), show the signed-in user's last persisted snapshot —
+		// stale-while-revalidate. Without it, every app open hides the figures
+		// until the certified update lands.
 		if (isNullish($collateralsStore) || isNullish(account)) {
-			return { spendable: walletMargin, backed: ZERO };
+			const snapshot = nonNullish($authPrincipal)
+				? readHoldingsSnapshot({ principal: $authPrincipal, domain: $balanceDomain })
+				: undefined;
+
+			if (nonNullish(snapshot)) {
+				return { holdings: snapshot, initialized: true };
+			}
+
+			// No clearing account yet (e.g. a fresh user who hasn't deposited):
+			// all they can stake is whatever sits in the wallet.
+			return { holdings: { spendable: walletMargin, backed: ZERO }, initialized: bothLoaded };
 		}
 
 		// Clearing collateral raw balances — the mark-value fallback used when
@@ -113,8 +172,23 @@ const holdings: Readable<Holdings> = derived(
 				? account.total_equity_usd - account.available_margin_usd
 				: ZERO;
 
-		return { spendable: walletMargin + clearingFree, backed };
+		return {
+			holdings: { spendable: walletMargin + clearingFree, backed },
+			initialized: bothLoaded
+		};
 	}
+);
+
+const holdings: Readable<Holdings> = derived(
+	holdingsState,
+	($holdingsState) => $holdingsState.holdings
+);
+
+// True while the holdings figures are not displayable yet — see
+// `HoldingsState.initialized`. Surfaces gate their placeholder pulse on this.
+export const vxpHoldingsNotInitialized: Readable<boolean> = derived(
+	holdingsState,
+	($holdingsState) => !$holdingsState.initialized
 );
 
 // "Available to bet": wallet VXP + deposited clearing collateral, minus
@@ -130,3 +204,27 @@ export const vxpHoldingsTotal: Readable<bigint> = derived(
 	holdings,
 	($holdings) => $holdings.spendable + $holdings.backed
 );
+
+// Write-through for the stale-while-revalidate snapshot consumed above: once
+// both clearing state and ledger balances are loaded, persist the computed
+// holdings per principal + domain. Module-level app-lifetime subscription, the
+// same pattern as `preferencesStore`'s userStore mirror. The store-loaded guard
+// also keeps a snapshot-fallback value from being written back to storage.
+if (browser) {
+	derived(
+		[holdings, collateralsStore, balancesStore, authPrincipal, balanceDomain],
+		(values) => values
+	).subscribe(([$holdings, $collateralsStore, $balancesStore, $authPrincipal, $balanceDomain]) => {
+		if (isNullish($collateralsStore) || isNullish($balancesStore) || isNullish($authPrincipal)) {
+			return;
+		}
+
+		setStorage<HoldingsSnapshot>({
+			key: holdingsSnapshotKey({ principal: $authPrincipal, domain: $balanceDomain }),
+			value: {
+				spendable: $holdings.spendable.toString(),
+				backed: $holdings.backed.toString()
+			}
+		});
+	});
+}
