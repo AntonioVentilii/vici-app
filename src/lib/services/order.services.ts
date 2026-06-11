@@ -190,7 +190,10 @@ export const placeOrder = async ({
 			identity,
 			params: {
 				trade_id: `TRD_${nanoid(8)}`,
-				matching_order_id: bestMatch.order_id
+				matching_order_id: bestMatch.order_id,
+				// None = fill the entire resting order, the engine's behavior
+				// before the optional taker-qty cap existed.
+				qty: toNullable()
 			}
 		});
 	}
