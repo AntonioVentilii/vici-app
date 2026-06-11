@@ -289,6 +289,8 @@ export const zhHansMessages = {
 	'album.progress_eyebrow': '进度',
 	'album.progress_of': '已获得 {total} 个',
 	'album.title': '我的相册',
+	'maintenance.title': '我们正在更新 Vici',
+	'maintenance.body': '平台正在进行短暂升级，应用稍后会自动刷新。',
 	'menagerie.back': '返回个人主页',
 	'menagerie.badge.aria_earned': '{name} — {tier}级',
 	'menagerie.badge.aria_locked': '{name}（已锁定）',
