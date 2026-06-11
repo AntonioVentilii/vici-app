@@ -61,6 +61,21 @@ relatively from the spec. They exist to tweak against during the
 build, not to live forever — post-merge cleanup deletes them; git
 history retains them.
 
+Interactive HTML mocks must additionally:
+
+- **Show theme swaps.** When the change touches anything that varies
+  by theme — layout, styles, colors, sizing, icons, animations — the
+  mock includes a theme switcher and renders each variant the way the
+  app does (`data-theme` on the root, light and dark at minimum). A
+  single-theme mock leaves the other theme to the implementer's
+  imagination, which is where regressions start.
+- **Close the loop back to the agent.** The mock gives the reviewer an
+  easy way to hand their decisions back to the chat — e.g. a "copy
+  instructions" button that copies the **complete** final
+  instructions: every chosen variant and tweaked value, restated in
+  full, not just the deltas the reviewer happens to remember. The
+  copied text alone must be enough for the agent to act on.
+
 **Satellite / backend — technical requirements are mandatory.** Any
 spec touching `src/satellite/**`, collections, or icdc-core-facing
 paths must state, with numbers where possible:
