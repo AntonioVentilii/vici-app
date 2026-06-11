@@ -632,12 +632,14 @@ export const calculateAndSyncStats = async ({
 	// since clamping would fabricate a value for a MIN metric. `undefined`
 	// when there's no winning settlement yet, so the trophy stays at its
 	// locked baseline instead of reading a fabricated value.
-	const upsetConsensuses = history
+	const bestUpsetConsensus = history
 		.filter(isWinningSettledEvent)
 		.map(eventExecutionPrice)
-		.filter((price) => Number.isFinite(price) && price > 0 && price <= 1);
-	const bestUpsetConsensus =
-		upsetConsensuses.length > 0 ? Math.min(...upsetConsensuses) : undefined;
+		.filter((price) => Number.isFinite(price) && price > 0 && price <= 1)
+		.reduce<number | undefined>(
+			(min, price) => (isNullish(min) || price < min ? price : min),
+			undefined
+		);
 
 	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
 
