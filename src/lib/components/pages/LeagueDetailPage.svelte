@@ -529,12 +529,14 @@
 		$profilesStore.get(principal)?.nickname ?? null;
 
 	// Per-member stats for the leaderboard row + member sheet. The
-	// shared profile cache carries `accuracy` (0–100) and `streak`;
-	// both default to 0 until the profile hydrates.
+	// shared profile cache carries `accuracy` (0–100) and `dailyStreak`
+	// (consecutive active days); both default to 0 until the profile
+	// hydrates.
 	const memberAccuracy = (principal: string): number =>
 		$profilesStore.get(principal)?.accuracy ?? 0;
 
-	const memberStreak = (principal: string): number => $profilesStore.get(principal)?.streak ?? 0;
+	const memberStreak = (principal: string): number =>
+		$profilesStore.get(principal)?.dailyStreak ?? 0;
 
 	const formatAccuracy = (principal: string): string =>
 		formatLocalePercent({ value: memberAccuracy(principal) / 100, locale: $localeStore });
