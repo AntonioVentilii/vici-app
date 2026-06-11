@@ -48,3 +48,12 @@ export interface XpPop {
 	// Paired copy ("First call.", "Ten deep.") shown above the number.
 	copy?: string;
 }
+
+/**
+ * How a Flow session was entered, for product analytics: `'tap'` is a
+ * deliberate user action (the "Enter Flow →" CTA or a tap-anywhere on the
+ * entry beat), `'auto'` is a timer-driven auto-enter (the deck-mode dwell or
+ * the digest safety net). Carried on the `flow_session_started` event so the
+ * funnel can separate intentional opens from passive auto-entries.
+ */
+export type FlowEntryMethod = 'tap' | 'auto';
