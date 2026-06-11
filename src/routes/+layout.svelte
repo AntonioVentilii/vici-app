@@ -46,7 +46,13 @@
 		// A boot from browser-cached assets can land mid-deploy while the
 		// satellite is stopped — route the failure into maintenance detection
 		// instead of hanging on the boot spinner.
-		void init().catch((err: unknown) => reportMaintenanceCandidate(err));
+		void init().catch((err: unknown) => {
+			// Keep the failure diagnosable when it is NOT a deploy window (the
+			// app still hangs on the boot spinner in that case).
+			console.error('Satellite init failed', err);
+
+			return reportMaintenanceCandidate(err);
+		});
 	});
 
 	// Polling loaders let satellite rejections bubble (`void tick()` in

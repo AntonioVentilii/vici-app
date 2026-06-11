@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pinToVisualViewport } from '$lib/actions/pin-to-visual-viewport';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { maintenanceStore } from '$lib/stores/maintenance.store';
@@ -6,12 +7,17 @@
 </script>
 
 {#if $maintenanceStore}
-	<!-- Above the toasts (z-50): while the satellite is stopped for a deploy
-	     nothing behind this is actionable anyway. -->
+	<!-- Above every other layer, incl. BottomSheet's z-80 scrim: while the
+	     satellite is stopped for a deploy nothing behind this is actionable.
+	     `use:pinToVisualViewport` drives top/left/width/height off the
+	     visual viewport (iOS Chrome resolves fixed insets against the large
+	     layout viewport); `h-dvh w-screen` from the top-left corner is the
+	     no-visualViewport fallback — deliberately not `inset-0`, which would
+	     fight the action's inline sizing. -->
 	<div
-		class="bg-background fixed inset-0 z-[60] flex items-center justify-center"
-		aria-live="assertive"
+		class="bg-background fixed top-0 left-0 z-[90] flex h-dvh w-screen items-center justify-center"
 		role="status"
+		use:pinToVisualViewport
 	>
 		<div class="flex max-w-sm flex-col items-center gap-2 px-6 text-center">
 			<LoadingSpinner center={false} size="lg" />

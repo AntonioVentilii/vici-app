@@ -24,7 +24,10 @@ const satelliteReachable = async (): Promise<boolean> => {
 	try {
 		const response = await fetch('/', { cache: 'no-store', method: 'HEAD' });
 
-		return response.ok;
+		// The gateway answers 503 precisely while the canister is stopped; any
+		// other status (2xx, but also 3xx/304) means the satellite is serving
+		// again — don't let an unrelated non-2xx trap users in the overlay.
+		return response.status !== 503;
 	} catch {
 		return false;
 	}
