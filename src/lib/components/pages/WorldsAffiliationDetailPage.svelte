@@ -26,6 +26,7 @@
 		type AffiliationStatsDoc
 	} from '$lib/types/affiliation-stats';
 	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
+	import { affiliationDisplayName } from '$lib/utils/affiliation-name.utils';
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
@@ -154,7 +155,11 @@
 	const monthRankLabel = $derived(monthRank > 0 ? `#${monthRank}` : '—');
 	const wcRankLabel = $derived(wcRank > 0 ? `#${wcRank}` : '—');
 
-	const headerName = $derived(option?.name ?? affiliationIdentifier);
+	const headerName = $derived(
+		option !== undefined
+			? affiliationDisplayName({ option, kind, locale: $localeStore })
+			: affiliationIdentifier
+	);
 
 	// Compact-header title. Countries lead with their flag glyph so the
 	// bar still carries the nation marker the identity card repeats below.

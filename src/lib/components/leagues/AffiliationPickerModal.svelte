@@ -20,6 +20,7 @@
 	import { joinAffiliation, switchAffiliation } from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
+	import { affiliationDisplayName } from '$lib/utils/affiliation-name.utils';
 	import { affiliationDaysLeft } from '$lib/utils/affiliation-stats.utils';
 	import { sleep } from '$lib/utils/async.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
@@ -100,6 +101,11 @@
 
 	const isUniversity = $derived(kind === 'university');
 	const pass2 = $derived(isUniversity && SCHOOL_PASS2_ENABLED);
+
+	// Locale-aware row label — country names localize via
+	// `Intl.DisplayNames`, university names render as-is.
+	const optionName = (option: WorldsAffiliationOption): string =>
+		affiliationDisplayName({ option, kind, locale: $localeStore });
 
 	// How long the "you're verified" confirmation stays on screen before
 	// the sheet auto-dismisses — long enough to register, short enough not
@@ -213,7 +219,7 @@
 			return t({
 				locale: $localeStore,
 				key: 'worlds.picker.cta_switch',
-				params: { name: option?.name ?? '' }
+				params: { name: option !== undefined ? optionName(option) : '' }
 			});
 		}
 
@@ -254,10 +260,14 @@
 
 			const lowered = trimmed.toLowerCase();
 
+			// Countries match on the localized name first, with the English
+			// roster name kept as a query alias.
 			return roster
 				.filter(
 					(opt) =>
-						opt.name.toLowerCase().includes(lowered) || opt.glyph.toLowerCase().includes(lowered)
+						optionName(opt).toLowerCase().includes(lowered) ||
+						opt.name.toLowerCase().includes(lowered) ||
+						opt.glyph.toLowerCase().includes(lowered)
 				)
 				.slice(0, 40);
 		}
@@ -871,7 +881,7 @@
 								</span>
 								<span class="affil-picker-body">
 									<span class="affil-picker-name">
-										<span class="affil-picker-name-text">{option.name}</span>
+										<span class="affil-picker-name-text">{optionName(option)}</span>
 										{#if stats !== undefined}
 											<span class="affil-picker-badge affil-picker-badge-verified">
 												<Check aria-hidden="true" size={9} strokeWidth={3.5} />
