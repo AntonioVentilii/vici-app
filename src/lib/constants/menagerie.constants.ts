@@ -214,7 +214,6 @@ export const MENAGERIE: MenagerieAnimal[] = [
 			'menagerie.octopus.label.irid'
 		],
 		hero: true,
-		engineUnbacked: true,
 		// Smallest consensus the user has won against — lower is rarer.
 		reversed: true,
 		tiers: [

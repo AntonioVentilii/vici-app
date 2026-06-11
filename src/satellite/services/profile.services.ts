@@ -121,6 +121,10 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		hibernatedAtMs: profile.hibernatedAtMs,
 		unlockedAchievements: profile.unlockedAchievements ?? [],
 		contrarianWins: profile.contrarianWins ?? 0,
+		// Rarest single upset (smallest winning execution consensus, drives
+		// Octopus). `optional()` so an absent value (no settled win yet)
+		// round-trips unchanged.
+		bestUpsetConsensus: profile.bestUpsetConsensus,
 		// Top-decile streak state (drives the `top-decile` achievement).
 		// `topDecileStreak` defaults to 0 for legacy rows; `lastTopDecileDay`
 		// is `optional()` so an absent value (never evaluated) round-trips

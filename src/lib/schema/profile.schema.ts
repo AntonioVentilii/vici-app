@@ -81,6 +81,14 @@ export const UserProfileSchema = j.strictObject({
 	// achievement progress; recomputed from clearing history during
 	// `calculateAndSyncStats`.
 	contrarianWins: j.number().default(0),
+	// Rarest single upset — the smallest execution consensus (0..1) among
+	// the user's settled wins; lower = rarer. Drives the Octopus trophy's
+	// reversed ladder. `optional()` with NO default: absence means "no
+	// settled win yet", and a numeric default would either fake a
+	// world-class upset (0) or a never-matched worst case that still reads
+	// as data (1). Recomputed from clearing history during
+	// `calculateAndSyncStats`.
+	bestUpsetConsensus: j.number().optional(),
 	// Consecutive calendar days the user has held a top-10% global
 	// leaderboard position (rank ≤ profileCount / 10). Drives the
 	// `top-decile` achievement. Bumped at most once per local day in
