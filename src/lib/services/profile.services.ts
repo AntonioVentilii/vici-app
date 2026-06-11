@@ -63,6 +63,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				longestStreak: 0,
 				dailyGoalDone: 0,
 				streak: 0,
+				onFireStreak: 0,
 				accuracy: 0,
 				points: 0,
 				level: 1,
@@ -640,6 +641,22 @@ export const calculateAndSyncStats = async ({
 
 	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
 
+	// Longest consecutive-win run ever (Snake) — the high-water sibling of
+	// the current `streak`. Recomputed over the full chronological history;
+	// kept monotonic against the persisted value below so the trophy never
+	// regresses even if the readable history window ever shrinks.
+	const { longestRun } = chronoHistory.filter(isSettledEvent).reduce<{
+		longestRun: number;
+		run: number;
+	}>(
+		({ longestRun, run }, event) => {
+			const nextRun = event.qty > ZERO ? run + 1 : 0;
+
+			return { longestRun: Math.max(longestRun, nextRun), run: nextRun };
+		},
+		{ longestRun: 0, run: 0 }
+	);
+
 	const { totalPoints } = chronoHistory.reduce<{ totalPoints: number; runningStreak: number }>(
 		(acc, event) => {
 			if (isSettledEvent(event)) {
@@ -789,6 +806,7 @@ export const calculateAndSyncStats = async ({
 			level,
 			contrarianWins,
 			bestUpsetConsensus,
+			onFireStreak: Math.max(longestRun, profileDoc.data.onFireStreak ?? 0),
 			topDecileStreak,
 			lastTopDecileDay,
 			sharpestEyeBestTier,

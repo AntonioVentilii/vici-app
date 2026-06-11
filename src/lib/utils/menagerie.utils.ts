@@ -45,8 +45,8 @@ export interface MenagerieStats {
 	bestUpsetConsensus?: number;
 	/** Current daily-activity streak (days). Drives Rooster. */
 	dailyStreak: number;
-	/** Current consecutive-win streak. Drives Snake (proxy — see hook). */
-	winStreak: number;
+	/** Longest consecutive-win run ever recorded (high-water). Drives Snake. */
+	onFireStreak: number;
 	/** Settled-call accuracy as a 0..1 ratio. Drives Owl (gated). */
 	accuracyRatio: number;
 	/** Comeback count. Drives Honey Badger (proxy — see hook). */
@@ -66,7 +66,7 @@ export interface MenagerieStats {
 export interface MenagerieProfileFields {
 	totalTrades?: number;
 	dailyStreak?: number;
-	streak?: number;
+	onFireStreak?: number;
 	accuracy?: number;
 	contrarianWins?: number;
 	bestUpsetConsensus?: number;
@@ -100,7 +100,7 @@ export const menagerieStatsFromProfile = ({
 	contrarianWins: profile?.contrarianWins ?? 0,
 	bestUpsetConsensus: profile?.bestUpsetConsensus,
 	dailyStreak: profile?.dailyStreak ?? 0,
-	winStreak: profile?.streak ?? 0,
+	onFireStreak: profile?.onFireStreak ?? 0,
 	accuracyRatio: (profile?.accuracy ?? 0) / 100,
 	comebacks: signals.comebacks ?? 0,
 	referrals: signals.referrals ?? 0,
@@ -119,12 +119,11 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	hatchling: (stats) => stats.calls,
 	beaver: (stats) => stats.calls,
 	rooster: (stats) => stats.dailyStreak,
-	// Snake reads the live consecutive-win streak. This is a proxy: the backend
-	// does not yet expose a dedicated "on-fire" streak, so we reuse the
-	// settled-win streak. Close enough for the wood/silver/gold rungs.
-	// TODO(engine): replace with a dedicated `onFireStreak` field once the
-	// clearing canister tracks the longest live winning run separately.
-	snake: (stats) => stats.winStreak,
+	// Snake reads the longest consecutive-win run ever recorded (recomputed
+	// from clearing history in `calculateAndSyncStats`) — a high-water mark,
+	// so a rung once earned doesn't read as regressed when the current run
+	// ends.
+	snake: (stats) => stats.onFireStreak,
 	// Owl is gated: accuracy only counts once the owner has enough settled calls
 	// for it to be a real calibration signal.
 	owl: (stats) => (stats.calls >= MENAGERIE_OWL_MIN_CALLS ? stats.accuracyRatio : 0),
