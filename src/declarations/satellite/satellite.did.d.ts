@@ -374,6 +374,7 @@ export interface AppGetMyRivalResult {
 					deleted_at_ms: [] | [number];
 					points: number;
 					avatar: string;
+					on_fire_streak: number;
 					accuracy: number;
 				}
 		  ];
@@ -443,6 +444,7 @@ export interface AppGetProfileResult {
 					deleted_at_ms: [] | [number];
 					points: number;
 					avatar: string;
+					on_fire_streak: number;
 					accuracy: number;
 				}
 		  ];

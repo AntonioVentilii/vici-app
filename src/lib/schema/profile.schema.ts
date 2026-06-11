@@ -89,6 +89,13 @@ export const UserProfileSchema = j.strictObject({
 	// as data (1). Recomputed from clearing history during
 	// `calculateAndSyncStats`.
 	bestUpsetConsensus: j.number().optional(),
+	// Longest consecutive-win run the user has ever recorded across settled
+	// history — the high-water sibling of `streak` (which tracks only the
+	// CURRENT run and resets on every loss). Drives the Snake trophy, whose
+	// rungs must not regress when a run ends. Recomputed from clearing
+	// history during `calculateAndSyncStats`, kept monotonic via
+	// `max(existing, recomputed)`.
+	onFireStreak: j.number().default(0),
 	// Consecutive calendar days the user has held a top-10% global
 	// leaderboard position (rank ≤ profileCount / 10). Drives the
 	// `top-decile` achievement. Bumped at most once per local day in

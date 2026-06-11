@@ -125,6 +125,9 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		// Octopus). `optional()` so an absent value (no settled win yet)
 		// round-trips unchanged.
 		bestUpsetConsensus: profile.bestUpsetConsensus,
+		// Longest consecutive-win run ever (drives Snake). Defaults to 0 for
+		// legacy rows; the next stats sync recomputes it from history.
+		onFireStreak: profile.onFireStreak ?? 0,
 		// Top-decile streak state (drives the `top-decile` achievement).
 		// `topDecileStreak` defaults to 0 for legacy rows; `lastTopDecileDay`
 		// is `optional()` so an absent value (never evaluated) round-trips

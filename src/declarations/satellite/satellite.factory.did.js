@@ -386,6 +386,7 @@ export const idlFactory = ({ IDL }) => {
 				deleted_at_ms: IDL.Opt(IDL.Float64),
 				points: IDL.Float64,
 				avatar: IDL.Text,
+				on_fire_streak: IDL.Float64,
 				accuracy: IDL.Float64
 			})
 		)
@@ -463,6 +464,7 @@ export const idlFactory = ({ IDL }) => {
 				deleted_at_ms: IDL.Opt(IDL.Float64),
 				points: IDL.Float64,
 				avatar: IDL.Text,
+				on_fire_streak: IDL.Float64,
 				accuracy: IDL.Float64
 			})
 		)
