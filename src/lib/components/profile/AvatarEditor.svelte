@@ -87,6 +87,15 @@
 	// (the ✕ is the natural "I'm done" tap, so it must never silently drop
 	// work); an untouched draft closes straight through.
 	const requestClose = () => {
+		// Mid-save, a close gesture is ignored rather than routed to the confirm
+		// sheet: the sheet's Save would be disabled next to a live Discard, so
+		// the only actionable button would drop the work being saved. The save
+		// settles in seconds — closing on success, error toast (editor stays
+		// open) on failure.
+		if (saving) {
+			return;
+		}
+
 		if (dirty) {
 			haptic('soft-tick');
 			confirmClose = true;
@@ -236,6 +245,7 @@
 			<button
 				class="avatar-editor-close"
 				aria-label={t({ locale: $localeStore, key: 'profile.avatar.discard' })}
+				disabled={saving}
 				onclick={requestClose}
 				type="button"
 			>
@@ -306,7 +316,7 @@
 				{t({ locale: $localeStore, key: 'profile.avatar.surprise' })}
 			</button>
 			<button class="avatar-editor-done" disabled={saving} onclick={done} type="button">
-				{t({ locale: $localeStore, key: 'profile.avatar.done' })}
+				{t({ locale: $localeStore, key: saving ? 'profile.avatar.saving' : 'profile.avatar.done' })}
 			</button>
 		</div>
 
@@ -342,7 +352,10 @@
 						{t({ locale: $localeStore, key: 'profile.avatar.discard' })}
 					</button>
 					<button class="avatar-editor-confirm-save" disabled={saving} onclick={done} type="button">
-						{t({ locale: $localeStore, key: 'profile.avatar.save_changes' })}
+						{t({
+							locale: $localeStore,
+							key: saving ? 'profile.avatar.saving' : 'profile.avatar.save_changes'
+						})}
 					</button>
 				</div>
 			</div>
@@ -458,6 +471,11 @@
 		background: transparent;
 		color: var(--text-base);
 		cursor: pointer;
+	}
+
+	.avatar-editor-close:disabled {
+		opacity: 0.4;
+		cursor: default;
 	}
 
 	.avatar-editor-hero {
