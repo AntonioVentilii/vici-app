@@ -31,6 +31,7 @@ import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { Activity } from '$lib/types/social';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
 import { participantMarketIds } from '$lib/utils/featured-event.utils';
+import { cacheMarketPrices, readCachedYesProbabilities } from '$lib/utils/market-price-cache.utils';
 import {
 	calculateCategoricalProbabilities,
 	calculateMarketStats,
@@ -457,7 +458,7 @@ const fetchOpenBinaryMarketsLite = async ({
  * {@link loadMarketsProgressive} batch — so we never fan out one request per
  * open series at once.
  */
-const enrichMarketsWithOrderBook = ({
+const enrichMarketsWithOrderBook = async ({
 	markets,
 	identity,
 	certified
@@ -465,8 +466,10 @@ const enrichMarketsWithOrderBook = ({
 	markets: Market[];
 	identity: Identity;
 	certified: boolean;
-}): Promise<Market[]> =>
-	Promise.all(
+}): Promise<Market[]> => {
+	const priced: { id: MarketId; yesProbability: number }[] = [];
+
+	const enriched = await Promise.all(
 		markets.map(async (market) => {
 			const orders = await getOrderBook({
 				marketId: market.id,
@@ -490,6 +493,15 @@ const enrichMarketsWithOrderBook = ({
 
 			const yesProb = midPrice ?? 0.5;
 
+			// Only a liquidity-backed mid goes to the persisted seed cache. The
+			// nullish check on `midPrice` can't express that: `calculateProbability`
+			// returns the neutral 0.5 (never nullish) for an empty book, and a
+			// failed fetch degrades to an empty book above — caching either would
+			// clobber a real last-known price with the placeholder.
+			if (bids.length > 0 || asks.length > 0) {
+				priced.push({ id: market.id, yesProbability: yesProb });
+			}
+
 			return {
 				...market,
 				yesProbability: yesProb,
@@ -501,6 +513,11 @@ const enrichMarketsWithOrderBook = ({
 			};
 		})
 	);
+
+	cacheMarketPrices(priced);
+
+	return enriched;
+};
 
 /**
  * Extracts a `seriesId -> { outcome }` label map from Juno SETTLEMENT
@@ -588,7 +605,11 @@ const MARKETS_ENRICH_BATCH_SIZE = 8;
  * `previous` (the caller's last-known set) carries prices forward so a refresh
  * doesn't flash every row back to the neutral 0.5 before re-enriching; pass it
  * omitted/empty for a cold load (or a balance-domain switch, where the prior
- * domain's prices must not leak).
+ * domain's prices must not leak). Markets without an in-memory prior seed from
+ * the persisted last-session prices instead (see `market-price-cache.utils`),
+ * so a page refresh paints last-known consensus rather than a wall of 50% —
+ * keyed by globally-unique market id, so a domain switch can't surface another
+ * domain's price.
  *
  * `isStale` lets the caller abort a run superseded by a balance-domain switch
  * before it writes a stale slice.
@@ -618,9 +639,13 @@ export const loadMarketsProgressive = async ({
 	//    that outcome (YES won → 100/0, NO won → 0/100) — no order-book read,
 	//    and never the misleading neutral 0.5 the lite mapper would leave;
 	//  - everything else overlays last-known prices from `previous` so a refresh
-	//    doesn't flash rows back to 0.5 while re-enrichment runs, falling back to
-	//    the lite neutral seed for genuinely new markets.
+	//    doesn't flash rows back to 0.5 while re-enrichment runs;
+	//  - with no in-memory prior (cold load, page refresh), the persisted
+	//    last-session price takes over — probability only, since stale bid/ask
+	//    depth must not masquerade as live liquidity — falling back to the lite
+	//    neutral seed for genuinely new markets.
 	const priceById = new Map((previous ?? []).map((market) => [market.id, market]));
+	const cachedYesById = readCachedYesProbabilities();
 	const seeded = lite.map((market) => {
 		if (market.status === 'Resolved' && market.outcome !== undefined) {
 			const yesWon = market.outcome === 'YES';
@@ -630,17 +655,23 @@ export const loadMarketsProgressive = async ({
 
 		const prior = priceById.get(market.id);
 
-		return prior === undefined
+		if (prior !== undefined) {
+			return {
+				...market,
+				yesProbability: prior.yesProbability,
+				noProbability: prior.noProbability,
+				bestBid: prior.bestBid,
+				bestAsk: prior.bestAsk,
+				bestBidQty: prior.bestBidQty,
+				bestAskQty: prior.bestAskQty
+			};
+		}
+
+		const cachedYes = cachedYesById.get(market.id);
+
+		return cachedYes === undefined
 			? market
-			: {
-					...market,
-					yesProbability: prior.yesProbability,
-					noProbability: prior.noProbability,
-					bestBid: prior.bestBid,
-					bestAsk: prior.bestAsk,
-					bestBidQty: prior.bestBidQty,
-					bestAskQty: prior.bestAskQty
-				};
+			: { ...market, yesProbability: cachedYes, noProbability: 1 - cachedYes };
 	});
 
 	onUpdate(seeded);
