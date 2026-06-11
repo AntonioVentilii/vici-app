@@ -122,6 +122,13 @@ export const placeOrder = async ({
 	qty: bigint;
 	outcome: Outcome;
 }): Promise<void> => {
+	// Sizing rounds the stake down to whole contracts (`amountUsd / priceUsd`),
+	// so a stake smaller than one contract's price arrives here as zero —
+	// reject it before any state changes or activity logging.
+	if (qty <= ZERO) {
+		throw new Error('Stake is too small for this price — the order quantity rounds to zero');
+	}
+
 	const identity = await safeGetIdentityOnce();
 
 	const isBinary = outcome === 'YES' || outcome === 'NO';
@@ -162,33 +169,37 @@ export const placeOrder = async ({
 			}
 		});
 	} else {
-		const orders = await listOrdersApi({
-			identity,
-			params: { series_id: toNullable(marketId) }
-		});
-
 		const counterSide = normalizedSide === 'BUY' ? 'Sell' : 'Buy';
 
 		const targetOutcomeId = outcome === 'YES' || outcome === 'NO' ? undefined : outcome;
 
 		const callerText = identity.getPrincipal().toText();
 
-		const matchingOrders = orders
-			.filter((o: ClearingDid.LimitOrder) => {
-				const isCorrectSide = counterSide in o.side;
-				const isCorrectOutcome = o.outcome_id[0] === targetOutcomeId;
-				// The engine rejects self-trades; the caller's own resting
-				// orders are not liquidity for this market order.
-				const isSelf = o.creator.toText() === callerText;
-
-				return isCorrectSide && isCorrectOutcome && !isSelf;
-			})
-			.sort((a: ClearingDid.LimitOrder, b: ClearingDid.LimitOrder) => {
-				const priceA = Number(a.price.decimal.value);
-				const priceB = Number(b.price.decimal.value);
-
-				return normalizedSide === 'BUY' ? priceA - priceB : priceB - priceA;
+		const fetchMatchingOrders = async (): Promise<ClearingDid.LimitOrder[]> => {
+			const orders = await listOrdersApi({
+				identity,
+				params: { series_id: toNullable(marketId) }
 			});
+
+			return orders
+				.filter((o: ClearingDid.LimitOrder) => {
+					const isCorrectSide = counterSide in o.side;
+					const isCorrectOutcome = o.outcome_id[0] === targetOutcomeId;
+					// The engine rejects self-trades; the caller's own resting
+					// orders are not liquidity for this market order.
+					const isSelf = o.creator.toText() === callerText;
+
+					return isCorrectSide && isCorrectOutcome && !isSelf;
+				})
+				.sort((a: ClearingDid.LimitOrder, b: ClearingDid.LimitOrder) => {
+					const priceA = Number(a.price.decimal.value);
+					const priceB = Number(b.price.decimal.value);
+
+					return normalizedSide === 'BUY' ? priceA - priceB : priceB - priceA;
+				});
+		};
+
+		let matchingOrders = await fetchMatchingOrders();
 
 		if (matchingOrders.length === 0) {
 			throw new Error('No matching liquidity found for market order');
@@ -197,22 +208,34 @@ export const placeOrder = async ({
 		// Walk the book best-price-first, taking `min(remaining, level)` per
 		// trade, so the execution honors the caller's stake-derived `qty`
 		// rather than whatever size the best resting order happens to carry.
-		// A book smaller than the request fills what exists.
+		// The book is re-read between takes: a level shrunk by a concurrent
+		// taker would otherwise overstate the fill (the engine executes
+		// `min(take, current level)`) and stop the walk early. A book smaller
+		// than the request fills what exists. The pass cap is a defensive
+		// bound — each pass either reduces `remaining` or exits, so a healthy
+		// walk never reaches it.
+		const MAX_BOOK_PASSES = 10;
 		let remaining = qty;
 
 		try {
-			for (const order of matchingOrders) {
-				if (remaining <= ZERO) {
+			for (let pass = 0; pass < MAX_BOOK_PASSES && remaining > ZERO; pass++) {
+				if (pass > 0) {
+					matchingOrders = await fetchMatchingOrders();
+				}
+
+				const [best] = matchingOrders;
+
+				if (isNullish(best)) {
 					break;
 				}
 
-				const take = remaining < order.qty ? remaining : order.qty;
+				const take = remaining < best.qty ? remaining : best.qty;
 
 				await submitMarketOrder({
 					identity,
 					params: {
 						trade_id: `TRD_${nanoid(8)}`,
-						matching_order_id: order.order_id,
+						matching_order_id: best.order_id,
 						qty: toNullable(take)
 					}
 				});
