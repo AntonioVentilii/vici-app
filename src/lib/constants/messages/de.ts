@@ -2233,7 +2233,7 @@ export const deMessages = {
 	'trust.title_b': 'Kein Vorteil. Keine Geheimnisse.',
 	'ui.banner.create_satellite_cta': 'Jetzt einen erstellen!',
 	'ui.banner.satellite_needed': 'Dein Projekt benötigt einen Satellite für die lokale Entwicklung.',
-	'ui.loading': 'Wird geladen...',
+	'ui.loading': 'Wird geladen',
 	'ui.pagination.next': 'Weiter',
 	'ui.pagination.previous': 'Zurück',
 	'ui.pagination.range': '{from}–{to} von {total}',
