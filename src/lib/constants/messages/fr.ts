@@ -1808,6 +1808,7 @@ export const frMessages = {
 		'Tes modifications d’avatar ne sont pas enregistrées. Touche Enregistrer pour les garder.',
 	'profile.avatar.save_changes': 'Enregistrer',
 	'profile.avatar.done': 'Terminé',
+	'profile.avatar.saving': 'Enregistrement…',
 	'profile.avatar.surprise': 'Surprends-moi',
 	'profile.avatar.caption': '{mood} · {trait}',
 	'profile.avatar.caption_plain': '{mood} · Aucun trait distinctif',
