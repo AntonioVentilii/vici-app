@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: In progress (PR pending)
+Status: In progress (#826)
 
 ## Goal
 
