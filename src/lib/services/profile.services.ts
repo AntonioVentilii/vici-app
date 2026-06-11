@@ -2,11 +2,12 @@ import type { RegistryDid } from '$declarations';
 import { functions } from '$declarations/satellite/satellite.api';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
+import { COMEBACK_COLD_STREAK_LOSSES } from '$lib/constants/menagerie.constants';
 import { MIN_NICKNAME_LENGTH, sanitizeNickname } from '$lib/constants/profile.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
-import { listMyLeagues } from '$lib/services/leagues.services';
+import { getMyBattleStats, listMyLeagues } from '$lib/services/leagues.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import {
 	bestSharpestEyeTier,
@@ -18,6 +19,7 @@ import { marketMetadataStore } from '$lib/stores/market-metadata.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { userStore } from '$lib/stores/user.store';
 import type { Nickname, UserProfile } from '$lib/types/profile';
+import type { UserStatsDoc } from '$lib/types/user-stats';
 import {
 	CONTRARIAN_PRICE_THRESHOLD,
 	evaluateAchievements,
@@ -25,6 +27,7 @@ import {
 	mergeUnlockedAchievements
 } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+import { countWinningCategories } from '$lib/utils/menagerie.utils';
 import {
 	eventExecutionPrice,
 	isExecutedEvent,
@@ -63,6 +66,12 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				longestStreak: 0,
 				dailyGoalDone: 0,
 				streak: 0,
+				onFireStreak: 0,
+				comebacks: 0,
+				winningCategories: 0,
+				leaguesJoined: 0,
+				boutsWon: 0,
+				leaguesFounded: 0,
 				accuracy: 0,
 				points: 0,
 				level: 1,
@@ -631,14 +640,56 @@ export const calculateAndSyncStats = async ({
 	// since clamping would fabricate a value for a MIN metric. `undefined`
 	// when there's no winning settlement yet, so the trophy stays at its
 	// locked baseline instead of reading a fabricated value.
-	const upsetConsensuses = history
+	const bestUpsetConsensus = history
 		.filter(isWinningSettledEvent)
 		.map(eventExecutionPrice)
-		.filter((price) => Number.isFinite(price) && price > 0 && price <= 1);
-	const bestUpsetConsensus =
-		upsetConsensuses.length > 0 ? Math.min(...upsetConsensuses) : undefined;
+		.filter((price) => Number.isFinite(price) && price > 0 && price <= 1)
+		.reduce<number | undefined>(
+			(min, price) => (isNullish(min) || price < min ? price : min),
+			undefined
+		);
 
 	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+
+	// Longest consecutive-win run ever (Snake) — the high-water sibling of
+	// the current `streak`. Recomputed over the full chronological history;
+	// kept monotonic against the persisted value below so the trophy never
+	// regresses even if the readable history window ever shrinks.
+	const { longestRun } = chronoHistory.filter(isSettledEvent).reduce<{
+		longestRun: number;
+		run: number;
+	}>(
+		({ longestRun, run }, event) => {
+			const nextRun = event.qty > ZERO ? run + 1 : 0;
+
+			return { longestRun: Math.max(longestRun, nextRun), run: nextRun };
+		},
+		{ longestRun: 0, run: 0 }
+	);
+
+	// Cold-streak recoveries (Honey Badger) — each settled win that snaps a
+	// run of at least `COMEBACK_COLD_STREAK_LOSSES` consecutive settled
+	// losses. Only a genuinely negative settlement counts as a loss: a
+	// neutral one (`qty === 0` — see `settledEventToResolvedPosition`) is
+	// neither a loss nor a recovery, so it breaks the run without scoring.
+	// Like `onFireStreak`, recomputed over the full chronological history
+	// and kept monotonic against the persisted value below.
+	const { comebacks: coldStreakComebacks } = chronoHistory.filter(isSettledEvent).reduce<{
+		comebacks: number;
+		losses: number;
+	}>(
+		({ comebacks, losses }, event) => {
+			if (event.qty > ZERO) {
+				return {
+					comebacks: losses >= COMEBACK_COLD_STREAK_LOSSES ? comebacks + 1 : comebacks,
+					losses: 0
+				};
+			}
+
+			return { comebacks, losses: event.qty < ZERO ? losses + 1 : 0 };
+		},
+		{ comebacks: 0, losses: 0 }
+	);
 
 	const { totalPoints } = chronoHistory.reduce<{ totalPoints: number; runningStreak: number }>(
 		(acc, event) => {
@@ -667,6 +718,29 @@ export const calculateAndSyncStats = async ({
 		{ totalPoints: 0, runningStreak: 0 }
 	);
 
+	// The per-user dashboard snapshot doubles as the source of the Magpie
+	// breadth metric: its per-category buckets feed `countWinningCategories`
+	// for the profile patch below, and the snapshot itself is persisted to
+	// `USER_STATS` after the patch. Best-effort like the other auxiliary
+	// reads: malformed market metadata must not abort the whole stats sync,
+	// so a failed computation degrades to no `USER_STATS` refresh and a 0
+	// breadth count — which the monotonic patch below keeps from regressing
+	// the persisted value.
+	let snapshot: UserStatsDoc | undefined;
+	let winningCategories = 0;
+
+	try {
+		snapshot = computeUserStatsSnapshot({
+			owner: principal,
+			history,
+			metadata: get(marketMetadataStore),
+			nowMs: Date.now()
+		});
+		winningCategories = countWinningCategories(snapshot.categoryStats);
+	} catch (err: unknown) {
+		console.error('calculateAndSyncStats: failed to compute user_stats snapshot', err);
+	}
+
 	const profileDoc = await getProfile(principal);
 
 	// `league-founder` — does the caller own a league with at least
@@ -674,18 +748,35 @@ export const calculateAndSyncStats = async ({
 	// (carries `memberCount`). Best-effort: a failed read leaves the award
 	// un-flipped this pass, but it's sticky once earned, so a later sync
 	// recovers it. Default `false` rather than letting an error reset it.
+	// The same read backs the Bee trophy's membership counters.
 	let ownsQualifyingLeague = false;
+	let leaguesJoined = 0;
+	let leaguesFounded = 0;
 
 	try {
 		const myLeagues = await listMyLeagues();
-		ownsQualifyingLeague = myLeagues.some(
-			(entry) =>
-				entry.role === 'owner' &&
-				entry.league.owner === principal &&
-				entry.memberCount >= LEAGUE_FOUNDER_MIN_MEMBERS
+		const owned = myLeagues.filter(
+			(entry) => entry.role === 'owner' && entry.league.owner === principal
 		);
+
+		ownsQualifyingLeague = owned.some((entry) => entry.memberCount >= LEAGUE_FOUNDER_MIN_MEMBERS);
+		leaguesJoined = myLeagues.length;
+		leaguesFounded = owned.length;
 	} catch (err: unknown) {
 		console.error('calculateAndSyncStats: failed to read leagues for league-founder', err);
+	}
+
+	// Resolved battles the caller's side won (Bee's "win a bout" rung),
+	// tallied server-side by `getMyBattleStats` — duels by principal match
+	// on the winning side, league bouts by ownership of the winning league.
+	// Best-effort like the league read: a failed read computes 0 and the
+	// monotonic patch below keeps the persisted tally.
+	let boutsWon = 0;
+
+	try {
+		({ boutsWon } = await getMyBattleStats());
+	} catch (err: unknown) {
+		console.error('calculateAndSyncStats: failed to read battles for bouts-won', err);
 	}
 
 	// `top-decile` — bump the consecutive-day streak at most once per
@@ -789,6 +880,15 @@ export const calculateAndSyncStats = async ({
 			level,
 			contrarianWins,
 			bestUpsetConsensus,
+			onFireStreak: Math.max(longestRun, profileDoc.data.onFireStreak ?? 0),
+			comebacks: Math.max(coldStreakComebacks, profileDoc.data.comebacks ?? 0),
+			// Monotonic like the other trophy stats: when market metadata isn't
+			// hydrated the tag lookup degrades to "untagged" and the fresh count
+			// reads 0 — a thin sync must not strip an earned rung.
+			winningCategories: Math.max(winningCategories, profileDoc.data.winningCategories ?? 0),
+			leaguesJoined: Math.max(leaguesJoined, profileDoc.data.leaguesJoined ?? 0),
+			boutsWon: Math.max(boutsWon, profileDoc.data.boutsWon ?? 0),
+			leaguesFounded: Math.max(leaguesFounded, profileDoc.data.leaguesFounded ?? 0),
 			topDecileStreak,
 			lastTopDecileDay,
 			sharpestEyeBestTier,
@@ -803,13 +903,9 @@ export const calculateAndSyncStats = async ({
 	// resolution event. Failures are logged but don't block the
 	// profile write — the cache will be rebuilt on the next sync.
 	try {
-		const snapshot = computeUserStatsSnapshot({
-			owner: principal,
-			history,
-			metadata: get(marketMetadataStore),
-			nowMs: Date.now()
-		});
-		await persistMyUserStats(snapshot);
+		if (nonNullish(snapshot)) {
+			await persistMyUserStats(snapshot);
+		}
 	} catch (err) {
 		console.error('calculateAndSyncStats: failed to persist user_stats', err);
 	}

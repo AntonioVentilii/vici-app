@@ -686,6 +686,16 @@ export const listMyBattles = async (): Promise<BattleDoc[]> => {
 };
 
 /**
+ * Count of resolved battles the caller's side won, tallied
+ * server-side — duels by principal match on the winning side, league
+ * bouts by ownership of the winning league. Backs the profile's
+ * `boutsWon` counter in the stats sync without paging the full battle
+ * list.
+ */
+export const getMyBattleStats = async (): Promise<{ boutsWon: number }> =>
+	await functions.getMyBattleStats();
+
+/**
  * Propose a new battle (kind='league'). Caller must own the `sideA`
  * league; the satellite assert hard-rejects otherwise. The opponent
  * (sideB) league doesn't need to exist on the satellite for the

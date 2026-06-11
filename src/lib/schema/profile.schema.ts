@@ -89,6 +89,41 @@ export const UserProfileSchema = j.strictObject({
 	// as data (1). Recomputed from clearing history during
 	// `calculateAndSyncStats`.
 	bestUpsetConsensus: j.number().optional(),
+	// Longest consecutive-win run the user has ever recorded across settled
+	// history — the high-water sibling of `streak` (which tracks only the
+	// CURRENT run and resets on every loss). Drives the Snake trophy, whose
+	// rungs must not regress when a run ends. Recomputed from clearing
+	// history during `calculateAndSyncStats`, kept monotonic via
+	// `max(existing, recomputed)`.
+	onFireStreak: j.number().default(0),
+	// Lifetime cold-streak recoveries — settled wins that snapped a run of
+	// at least `COMEBACK_COLD_STREAK_LOSSES` consecutive settled losses.
+	// Drives the Honey Badger trophy. Recomputed from clearing history
+	// during `calculateAndSyncStats`, kept monotonic via `max(existing,
+	// recomputed)`.
+	comebacks: j.number().default(0),
+	// Breadth — distinct market categories where the user has at least
+	// `MAGPIE_MIN_CATEGORY_CALLS` settled calls at a win ratio of at least
+	// `MAGPIE_MIN_CATEGORY_ACCURACY`. Drives the Magpie trophy. Recomputed
+	// from clearing history + market tags during `calculateAndSyncStats`,
+	// kept monotonic via `max(existing, recomputed)` (the tag lookup
+	// degrades to "untagged" when market metadata isn't hydrated, and a
+	// thin sync must not strip an earned rung).
+	winningCategories: j.number().default(0),
+	// League-life milestones (drive the Bee trophy's join → win-a-bout →
+	// found ladder). All three are recomputed from the caller's league
+	// memberships / battles during `calculateAndSyncStats` and kept
+	// monotonic via `max(existing, recomputed)` — leaving a league or a
+	// failed read must not strip an earned rung.
+	// High-water count of league memberships (any role) — because of the
+	// monotonic guard, leaving a league never decrements it.
+	leaguesJoined: j.number().default(0),
+	// High-water count of resolved battles (league bouts or duels) the
+	// user's side won.
+	boutsWon: j.number().default(0),
+	// High-water count of leagues the user has owned — transferring or
+	// deleting a league never decrements it.
+	leaguesFounded: j.number().default(0),
 	// Consecutive calendar days the user has held a top-10% global
 	// leaderboard position (rank ≤ profileCount / 10). Drives the
 	// `top-decile` achievement. Bumped at most once per local day in

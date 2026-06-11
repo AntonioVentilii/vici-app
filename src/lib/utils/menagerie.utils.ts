@@ -12,6 +12,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
+	MAGPIE_MIN_CATEGORY_ACCURACY,
+	MAGPIE_MIN_CATEGORY_CALLS,
 	MENAGERIE,
 	MENAGERIE_BY_SLUG,
 	MENAGERIE_TIER_COLORS,
@@ -27,13 +29,25 @@ import {
 export const MENAGERIE_OWL_MIN_CALLS = 50;
 
 /**
+ * Number of categories the owner "owns": at least
+ * `MAGPIE_MIN_CATEGORY_CALLS` settled calls at a win ratio of at least
+ * `MAGPIE_MIN_CATEGORY_ACCURACY`. The Magpie metric, computed from the same
+ * per-category buckets the dashboard categories tile reads
+ * (`UserStatsDoc.categoryStats`).
+ */
+export const countWinningCategories = (
+	categoryStats: Record<string, { calls: number; wins: number }>
+): number =>
+	Object.values(categoryStats).filter(
+		({ calls, wins }) =>
+			calls >= MAGPIE_MIN_CATEGORY_CALLS && wins / calls >= MAGPIE_MIN_CATEGORY_ACCURACY
+	).length;
+
+/**
  * Real-stat snapshot the menagerie reads. Built from the owner's `UserProfile`
  * (plus a couple of live signals the profile doc doesn't carry) by the surfaces
  * that render the trophy layer — see `menagerieStatsFromProfile`.
  *
- * Fields backing the two engine-unbacked animals (Magpie / Bee) are
- * intentionally absent: those animals always resolve to LOCKED until the
- * backend populates the data (see the per-hook TODOs below).
  */
 export interface MenagerieStats {
 	/** Lifetime calls placed. Drives Hatchling + Beaver. */
@@ -45,12 +59,25 @@ export interface MenagerieStats {
 	bestUpsetConsensus?: number;
 	/** Current daily-activity streak (days). Drives Rooster. */
 	dailyStreak: number;
-	/** Current consecutive-win streak. Drives Snake (proxy — see hook). */
-	winStreak: number;
+	/** Longest consecutive-win run ever recorded (high-water). Drives Snake. */
+	onFireStreak: number;
 	/** Settled-call accuracy as a 0..1 ratio. Drives Owl (gated). */
 	accuracyRatio: number;
-	/** Comeback count. Drives Honey Badger (proxy — see hook). */
+	/** Lifetime cold-streak recoveries (a win after ≥`COMEBACK_COLD_STREAK_LOSSES`
+	 * straight losses). Drives Honey Badger. */
 	comebacks: number;
+	/** Distinct categories with a winning record (see
+	 * {@link countWinningCategories}). Drives Magpie. */
+	winningCategories: number;
+	/** Leagues the owner has ever joined (any role; high-water — leaving
+	 * never decrements). Bee's "join" milestone. */
+	leaguesJoined: number;
+	/** Resolved battles the owner's side has ever won (high-water). Bee's
+	 * "win a bout" milestone. */
+	boutsWon: number;
+	/** Leagues the owner has ever owned (high-water). Bee's "found"
+	 * milestone. */
+	leaguesFounded: number;
 	/** Distinct people the owner has brought to the app. Drives Parrot. */
 	referrals: number;
 	/** Global leaderboard rank (1-based), or `undefined` when unranked. */
@@ -66,16 +93,20 @@ export interface MenagerieStats {
 export interface MenagerieProfileFields {
 	totalTrades?: number;
 	dailyStreak?: number;
-	streak?: number;
+	onFireStreak?: number;
 	accuracy?: number;
 	contrarianWins?: number;
 	bestUpsetConsensus?: number;
+	comebacks?: number;
+	winningCategories?: number;
+	leaguesJoined?: number;
+	boutsWon?: number;
+	leaguesFounded?: number;
 }
 
 /** Live signals the profile doc doesn't carry but the menagerie can use. */
 export interface MenagerieLiveSignals {
 	referrals?: number;
-	comebacks?: number;
 	rank?: number;
 	totalRanked?: number;
 }
@@ -100,9 +131,13 @@ export const menagerieStatsFromProfile = ({
 	contrarianWins: profile?.contrarianWins ?? 0,
 	bestUpsetConsensus: profile?.bestUpsetConsensus,
 	dailyStreak: profile?.dailyStreak ?? 0,
-	winStreak: profile?.streak ?? 0,
+	onFireStreak: profile?.onFireStreak ?? 0,
 	accuracyRatio: (profile?.accuracy ?? 0) / 100,
-	comebacks: signals.comebacks ?? 0,
+	comebacks: profile?.comebacks ?? 0,
+	winningCategories: profile?.winningCategories ?? 0,
+	leaguesJoined: profile?.leaguesJoined ?? 0,
+	boutsWon: profile?.boutsWon ?? 0,
+	leaguesFounded: profile?.leaguesFounded ?? 0,
 	referrals: signals.referrals ?? 0,
 	rank: signals.rank,
 	totalRanked: signals.totalRanked
@@ -111,20 +146,17 @@ export const menagerieStatsFromProfile = ({
 /**
  * Per-animal metric extractor — reads one number from {@link MenagerieStats}.
  * Centralised so `menagerieTierFor` and `menagerieProgress` always agree on the
- * source. Engine-unbacked animals return a baseline worst value — `0` for a
- * higher-is-better ladder, `1` for a reversed (lower-is-better) ladder like
- * `octopus` — so they resolve to LOCKED until the backend lights them up.
+ * source.
  */
 const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	hatchling: (stats) => stats.calls,
 	beaver: (stats) => stats.calls,
 	rooster: (stats) => stats.dailyStreak,
-	// Snake reads the live consecutive-win streak. This is a proxy: the backend
-	// does not yet expose a dedicated "on-fire" streak, so we reuse the
-	// settled-win streak. Close enough for the wood/silver/gold rungs.
-	// TODO(engine): replace with a dedicated `onFireStreak` field once the
-	// clearing canister tracks the longest live winning run separately.
-	snake: (stats) => stats.winStreak,
+	// Snake reads the longest consecutive-win run ever recorded (recomputed
+	// from clearing history in `calculateAndSyncStats`) — a high-water mark,
+	// so a rung once earned doesn't read as regressed when the current run
+	// ends.
+	snake: (stats) => stats.onFireStreak,
 	// Owl is gated: accuracy only counts once the owner has enough settled calls
 	// for it to be a real calibration signal.
 	owl: (stats) => (stats.calls >= MENAGERIE_OWL_MIN_CALLS ? stats.accuracyRatio : 0),
@@ -138,22 +170,23 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	// `calculateAndSyncStats`). Reversed ladder, so an owner with no settled
 	// win reads the worst value (1) and stays below every rung.
 	octopus: (stats) => stats.bestUpsetConsensus ?? 1,
-	// Magpie: breadth — distinct categories with a winning record.
-	// TODO(engine): needs per-category accuracy on the profile (categories with
-	// ≥3 calls at ≥50% accuracy). No persisted per-user breakdown exists yet →
-	// LOCKED.
-	magpie: () => 0,
-	// Honey Badger reads the comeback count. Proxy: until a dedicated comeback
-	// tally lands, this is fed from the comeback-restore signal the FE already
-	// computes (0 when none recorded).
-	// TODO(engine): replace with an authoritative `comebacks` tally (recoveries
-	// from a cold streak or VXP depletion) once the engine records it.
+	// Magpie: breadth — distinct categories with a winning record, persisted
+	// on the profile from the per-category buckets in `calculateAndSyncStats`
+	// (see `countWinningCategories`).
+	magpie: (stats) => stats.winningCategories,
+	// Honey Badger reads the persisted cold-streak recovery tally — wins that
+	// snapped a run of at least `COMEBACK_COLD_STREAK_LOSSES` straight losses
+	// (recomputed from clearing history in `calculateAndSyncStats`).
 	badger: (stats) => stats.comebacks,
 	parrot: (stats) => stats.referrals,
-	// Bee: leagues joined + bouts won + leagues founded (1 point each).
-	// TODO(engine): needs `leaguesJoined` / `boutsWon` / `leaguesFounded`
-	// counters. None are exposed yet → LOCKED.
-	bee: () => 0,
+	// Bee: league-life milestones, one point per rung of the ladder — joined
+	// a league, won a bout, founded a league (the counters are persisted by
+	// `calculateAndSyncStats`). Matching the rule copy, each milestone counts
+	// once no matter how many times it's repeated.
+	bee: (stats) =>
+		(stats.leaguesJoined > 0 ? 1 : 0) +
+		(stats.boutsWon > 0 ? 1 : 0) +
+		(stats.leaguesFounded > 0 ? 1 : 0),
 	// Goat: global-rank percentile (rank / total) — lower is better. Returns 0
 	// as the #1 sentinel; an unranked owner reads as 1 (worst).
 	goat: (stats) => {
@@ -183,7 +216,6 @@ export const menagerieMetric = ({
 /**
  * Highest tier the animal currently qualifies for, or `null` (locked).
  *
- * Engine-unbacked animals always return `null` so they render as "soon" tiles.
  * For most animals the highest cleared threshold wins; for reversed (lower-is-
  * better) metrics the lowest threshold the metric is at-or-below wins. Goat's
  * iridescent rung is reached only by world rank #1 (the `-1` sentinel).
@@ -197,7 +229,7 @@ export const menagerieTierFor = ({
 }): MenagerieTier | null => {
 	const animal = MENAGERIE_BY_SLUG.get(slug);
 
-	if (!animal || animal.engineUnbacked) {
+	if (!animal) {
 		return null;
 	}
 

@@ -312,6 +312,7 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppGetMyBattleStatsResult = IDL.Record({ bouts_won: IDL.Float64 });
 	const AppGetMyReferralCodeResult = IDL.Record({ code: IDL.Opt(IDL.Text) });
 	const AppGetMyRivalResult = IDL.Record({
 		rival_is_trailing: IDL.Bool,
@@ -323,9 +324,11 @@ export const idlFactory = ({ IDL }) => {
 				top_decile_streak: IDL.Float64,
 				nickname: IDL.Text,
 				hibernated_at_ms: IDL.Opt(IDL.Float64),
+				comebacks: IDL.Float64,
 				daily_goal_date: IDL.Opt(IDL.Text),
 				daily_goal_done: IDL.Float64,
 				contrarian_wins: IDL.Float64,
+				leagues_joined: IDL.Float64,
 				owner: IDL.Text,
 				interests: IDL.Vec(IDL.Text),
 				role: IDL.Opt(
@@ -336,6 +339,7 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
+				bouts_won: IDL.Float64,
 				handle_last_change_ms: IDL.Opt(IDL.Float64),
 				email: IDL.Text,
 				level: IDL.Float64,
@@ -380,12 +384,15 @@ export const idlFactory = ({ IDL }) => {
 					public: IDL.Null,
 					friends_only: IDL.Null
 				}),
+				leagues_founded: IDL.Float64,
 				daily_streak: IDL.Float64,
 				unlocked_achievements: IDL.Vec(IDL.Text),
 				earned_menagerie: IDL.Opt(IDL.Vec(IDL.Text)),
 				deleted_at_ms: IDL.Opt(IDL.Float64),
+				winning_categories: IDL.Float64,
 				points: IDL.Float64,
 				avatar: IDL.Text,
+				on_fire_streak: IDL.Float64,
 				accuracy: IDL.Float64
 			})
 		)
@@ -400,9 +407,11 @@ export const idlFactory = ({ IDL }) => {
 				top_decile_streak: IDL.Float64,
 				nickname: IDL.Text,
 				hibernated_at_ms: IDL.Opt(IDL.Float64),
+				comebacks: IDL.Float64,
 				daily_goal_date: IDL.Opt(IDL.Text),
 				daily_goal_done: IDL.Float64,
 				contrarian_wins: IDL.Float64,
+				leagues_joined: IDL.Float64,
 				owner: IDL.Text,
 				interests: IDL.Vec(IDL.Text),
 				role: IDL.Opt(
@@ -413,6 +422,7 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
+				bouts_won: IDL.Float64,
 				handle_last_change_ms: IDL.Opt(IDL.Float64),
 				email: IDL.Text,
 				level: IDL.Float64,
@@ -457,12 +467,15 @@ export const idlFactory = ({ IDL }) => {
 					public: IDL.Null,
 					friends_only: IDL.Null
 				}),
+				leagues_founded: IDL.Float64,
 				daily_streak: IDL.Float64,
 				unlocked_achievements: IDL.Vec(IDL.Text),
 				earned_menagerie: IDL.Opt(IDL.Vec(IDL.Text)),
 				deleted_at_ms: IDL.Opt(IDL.Float64),
+				winning_categories: IDL.Float64,
 				points: IDL.Float64,
 				avatar: IDL.Text,
+				on_fire_streak: IDL.Float64,
 				accuracy: IDL.Float64
 			})
 		)
@@ -1295,6 +1308,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppGetMonthlyLeaderboardResult],
 			['query']
 		),
+		app_get_my_battle_stats: IDL.Func([], [AppGetMyBattleStatsResult], ['query']),
 		app_get_my_referral_code: IDL.Func([], [AppGetMyReferralCodeResult], ['query']),
 		app_get_my_rival: IDL.Func([], [AppGetMyRivalResult], ['query']),
 		app_get_profile: IDL.Func([AppGetProfileArgs], [AppGetProfileResult], ['query']),

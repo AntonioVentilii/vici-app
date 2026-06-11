@@ -536,6 +536,7 @@ export const idlFactory = ({ IDL }) => {
 		price: Price
 	});
 	const SubmitMarketOrderParams = IDL.Record({
+		qty: IDL.Opt(IDL.Int),
 		trade_id: IDL.Text,
 		matching_order_id: IDL.Text
 	});

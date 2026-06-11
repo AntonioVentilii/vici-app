@@ -347,6 +347,18 @@ const getMonthlyLeaderboard = async (
 	return AppGetMonthlyLeaderboardResultSchema.parse(result);
 };
 
+const AppGetMyBattleStatsResultSchema = j.strictObject({ boutsWon: j.number() });
+
+const getMyBattleStats = async (): Promise<j.infer<typeof AppGetMyBattleStatsResultSchema>> => {
+	const { app_get_my_battle_stats } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_my_battle_stats();
+
+	const result = schemaFromIdl({ schema: AppGetMyBattleStatsResultSchema, value: idlResult });
+	return AppGetMyBattleStatsResultSchema.parse(result);
+};
+
 const AppGetMyReferralCodeResultSchema = j.strictObject({ code: j.optional(j.string()) });
 
 const getMyReferralCode = async (): Promise<j.infer<typeof AppGetMyReferralCodeResultSchema>> => {
@@ -388,6 +400,12 @@ const AppGetMyRivalResultSchema = j.strictObject({
 			unlockedAchievements: j.array(j.string()),
 			contrarianWins: j.number(),
 			bestUpsetConsensus: j.optional(j.number()),
+			onFireStreak: j.number(),
+			comebacks: j.number(),
+			winningCategories: j.number(),
+			leaguesJoined: j.number(),
+			boutsWon: j.number(),
+			leaguesFounded: j.number(),
 			topDecileStreak: j.number(),
 			lastTopDecileDay: j.optional(j.string()),
 			sharpestEyeBestTier: j.optional(j.string()),
@@ -461,6 +479,12 @@ const AppGetProfileResultSchema = j.strictObject({
 			unlockedAchievements: j.array(j.string()),
 			contrarianWins: j.number(),
 			bestUpsetConsensus: j.optional(j.number()),
+			onFireStreak: j.number(),
+			comebacks: j.number(),
+			winningCategories: j.number(),
+			leaguesJoined: j.number(),
+			boutsWon: j.number(),
+			leaguesFounded: j.number(),
 			topDecileStreak: j.number(),
 			lastTopDecileDay: j.optional(j.string()),
 			sharpestEyeBestTier: j.optional(j.string()),
@@ -1927,6 +1951,7 @@ export const functions = {
 	getMarketMetadata,
 	getMarketTranslation,
 	getMonthlyLeaderboard,
+	getMyBattleStats,
 	getMyReferralCode,
 	getMyRival,
 	getProfile,

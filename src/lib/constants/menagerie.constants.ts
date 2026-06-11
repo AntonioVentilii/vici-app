@@ -14,6 +14,21 @@ import type { MessageKey } from '$lib/utils/i18n.utils';
 // block so both the sprite and the badge frames can reference them.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Minimum run of consecutive settled losses that makes the next settled win
+ * count as a comeback (the Honey Badger metric, recomputed from clearing
+ * history in `calculateAndSyncStats`). One or two losses is everyday
+ * variance; three straight is a genuine cold streak worth celebrating the
+ * recovery from. */
+export const COMEBACK_COLD_STREAK_LOSSES = 3;
+
+/** A category counts toward the Magpie (all-rounder) metric once the owner
+ * has at least this many settled calls in it — accuracy on fewer calls isn't
+ * yet a signal of breadth. */
+export const MAGPIE_MIN_CATEGORY_CALLS = 3;
+
+/** …and at least this win ratio (0..1) across those calls. */
+export const MAGPIE_MIN_CATEGORY_ACCURACY = 0.5;
+
 /** Tier rungs, lowest → highest. `irid` = iridescent (the rarest). */
 export type MenagerieTier = 'wood' | 'silver' | 'gold' | 'irid';
 
@@ -60,13 +75,6 @@ export interface MenagerieAnimal {
 	labelKeys: MessageKey[];
 	/** Hero animals get the "LEGENDARY" eyebrow + extra frame glow at top tiers. */
 	hero?: boolean;
-	/**
-	 * `true` when this animal's metric reads a stat the backend does not yet
-	 * populate. Such animals always resolve to LOCKED and render as "soon"
-	 * tiles. The missing field is named at the metric hook in
-	 * `$lib/utils/menagerie.utils`. See the lit-up tracking issue.
-	 */
-	engineUnbacked?: boolean;
 	/** Lower-is-better metric (consensus magnitude, rank percentile). */
 	reversed?: boolean;
 	/** The tier ladder for this animal, lowest threshold first. */
@@ -234,7 +242,6 @@ export const MENAGERIE: MenagerieAnimal[] = [
 			'menagerie.magpie.label.silver',
 			'menagerie.magpie.label.gold'
 		],
-		engineUnbacked: true,
 		tiers: [
 			{ tier: 'wood', t: 3 },
 			{ tier: 'silver', t: 5 },
@@ -242,6 +249,9 @@ export const MENAGERIE: MenagerieAnimal[] = [
 		]
 	},
 	{
+		// A "comeback" is a settled win that snaps a cold streak of at least
+		// `COMEBACK_COLD_STREAK_LOSSES` consecutive settled losses (see
+		// `calculateAndSyncStats`).
 		slug: 'badger',
 		nameKey: 'menagerie.badger.name',
 		oracleKey: 'menagerie.badger.oracle',
@@ -286,7 +296,6 @@ export const MENAGERIE: MenagerieAnimal[] = [
 			'menagerie.bee.label.silver',
 			'menagerie.bee.label.gold'
 		],
-		engineUnbacked: true,
 		tiers: [
 			{ tier: 'wood', t: 1 },
 			{ tier: 'silver', t: 2 },

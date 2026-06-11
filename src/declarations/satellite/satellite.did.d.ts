@@ -308,6 +308,9 @@ export interface AppGetMonthlyLeaderboardResult {
 		accuracy: number;
 	}>;
 }
+export interface AppGetMyBattleStatsResult {
+	bouts_won: number;
+}
 export interface AppGetMyReferralCodeResult {
 	code: [] | [string];
 }
@@ -323,14 +326,17 @@ export interface AppGetMyRivalResult {
 					top_decile_streak: number;
 					nickname: string;
 					hibernated_at_ms: [] | [number];
+					comebacks: number;
 					daily_goal_date: [] | [string];
 					daily_goal_done: number;
 					contrarian_wins: number;
+					leagues_joined: number;
 					owner: string;
 					interests: Array<string>;
 					role:
 						| []
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+					bouts_won: number;
 					handle_last_change_ms: [] | [number];
 					email: string;
 					level: number;
@@ -368,12 +374,15 @@ export interface AppGetMyRivalResult {
 					best_upset_consensus: [] | [number];
 					avatar_parts: string;
 					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
+					leagues_founded: number;
 					daily_streak: number;
 					unlocked_achievements: Array<string>;
 					earned_menagerie: [] | [Array<string>];
 					deleted_at_ms: [] | [number];
+					winning_categories: number;
 					points: number;
 					avatar: string;
+					on_fire_streak: number;
 					accuracy: number;
 				}
 		  ];
@@ -392,14 +401,17 @@ export interface AppGetProfileResult {
 					top_decile_streak: number;
 					nickname: string;
 					hibernated_at_ms: [] | [number];
+					comebacks: number;
 					daily_goal_date: [] | [string];
 					daily_goal_done: number;
 					contrarian_wins: number;
+					leagues_joined: number;
 					owner: string;
 					interests: Array<string>;
 					role:
 						| []
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+					bouts_won: number;
 					handle_last_change_ms: [] | [number];
 					email: string;
 					level: number;
@@ -437,12 +449,15 @@ export interface AppGetProfileResult {
 					best_upset_consensus: [] | [number];
 					avatar_parts: string;
 					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
+					leagues_founded: number;
 					daily_streak: number;
 					unlocked_achievements: Array<string>;
 					earned_menagerie: [] | [Array<string>];
 					deleted_at_ms: [] | [number];
+					winning_categories: number;
 					points: number;
 					avatar: string;
+					on_fire_streak: number;
 					accuracy: number;
 				}
 		  ];
@@ -1105,6 +1120,7 @@ export interface _SERVICE {
 		[AppGetMonthlyLeaderboardArgs],
 		AppGetMonthlyLeaderboardResult
 	>;
+	app_get_my_battle_stats: ActorMethod<[], AppGetMyBattleStatsResult>;
 	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
 	app_get_my_rival: ActorMethod<[], AppGetMyRivalResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
