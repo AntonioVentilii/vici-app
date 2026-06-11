@@ -66,6 +66,13 @@ jobs:
             echo "satellite-upgrade-needed.mjs failed — defaulting to upgrade."
             upgrade=true
           fi
+          # Only an explicit `false` skips the upgrade — any other output
+          # (empty, garbled) is treated as "upgrade" so a script bug can
+          # never silently skip a required wasm swap.
+          if [ "${upgrade}" != "true" ] && [ "${upgrade}" != "false" ]; then
+            echo "Unexpected script output '${upgrade}' — defaulting to upgrade."
+            upgrade=true
+          fi
           echo "base=${base:-<none>} upgrade=${upgrade}"
           echo "upgrade=${upgrade}" >> "$GITHUB_OUTPUT"
 

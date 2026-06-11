@@ -68,7 +68,9 @@ const readAliases = () => {
 	const { config, error } = ts.readConfigFile(tsconfigPath, (p) => fs.readFileSync(p, 'utf8'));
 
 	if (error !== undefined) {
-		throw new Error(`Cannot parse ${SATELLITE_TSCONFIG}: ${error.messageText}`);
+		throw new Error(
+			`Cannot parse ${SATELLITE_TSCONFIG}: ${ts.flattenDiagnosticMessageText(error.messageText, ' ')}`
+		);
 	}
 
 	const paths = config?.compilerOptions?.paths ?? {};
@@ -121,28 +123,30 @@ const resolveSpecifier = ({ specifier, importerDir, aliases }) => {
 
 /**
  * Probe a resolved candidate the way a bundler would (`moduleResolution:
- * "bundler"` in the satellite tsconfig).
+ * "bundler"` in the satellite tsconfig) and return EVERY existing artifact,
+ * not just the first hit: an extensionless specifier can resolve to a
+ * declaration/runtime pair (e.g. `clearing.idl` → `clearing.idl.d.ts` for
+ * types AND `clearing.idl.js` for the emitted code that actually lands in
+ * the wasm). Over-collecting only errs toward upgrading.
  *
  * @param {string} candidate
- * @returns {string | null}
+ * @returns {string[]}
  */
-const probeFile = (candidate) => {
+const probeFiles = (candidate) => {
 	const probes = [
 		candidate,
 		`${candidate}.ts`,
 		`${candidate}.d.ts`,
+		`${candidate}.js`,
 		`${candidate}.json`,
 		candidate.replace(/\.js$/, '.ts'),
-		path.join(candidate, 'index.ts')
+		path.join(candidate, 'index.ts'),
+		path.join(candidate, 'index.js')
 	];
 
-	for (const probe of probes) {
-		if (fs.existsSync(probe) && fs.statSync(probe).isFile()) {
-			return probe;
-		}
-	}
-
-	return null;
+	return [...new Set(probes)].filter(
+		(probe) => fs.existsSync(probe) && fs.statSync(probe).isFile()
+	);
 };
 
 /**
@@ -234,8 +238,11 @@ const collectClosure = () => {
 		const file = queue.pop();
 		const relative = toRepoRelative(file);
 
-		// Only TypeScript sources declare imports; `.json` / `.d.ts` leaves don't.
-		const scannable = file.endsWith('.ts') && !file.endsWith('.d.ts');
+		// `.json` / `.d.ts` are leaves; TS sources and emitted JS (e.g. the
+		// generated `$declarations/**/*.idl.js` factories) declare imports.
+		const scannable =
+			(file.endsWith('.ts') || file.endsWith('.js') || file.endsWith('.mjs')) &&
+			!file.endsWith('.d.ts');
 
 		if (!closure.has(relative) && scannable) {
 			const source = fs.readFileSync(file, 'utf8');
@@ -248,12 +255,12 @@ const collectClosure = () => {
 				});
 
 				if (candidate !== null) {
-					const resolved = probeFile(candidate);
+					const resolved = probeFiles(candidate);
 
-					if (resolved === null) {
+					if (resolved.length === 0) {
 						unresolved.push(`${specifier} (from ${relative})`);
 					} else {
-						queue.push(resolved);
+						queue.push(...resolved);
 					}
 				}
 			}
