@@ -3,6 +3,7 @@
 	import MarketCardSkeleton from '$lib/components/market/MarketCardSkeleton.svelte';
 	import StackedMarketCard from '$lib/components/market/StackedMarketCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -86,9 +87,7 @@
 
 		{#if hasMore}
 			<div class="flex h-20 items-center justify-center" {@attach loadMoreSentinel}>
-				<div
-					class="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
-				></div>
+				<LoadingSpinner center={false} size="sm" />
 			</div>
 		{/if}
 	{:else if loading}

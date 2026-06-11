@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { orders } from '$lib/derived/orders.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -158,9 +159,7 @@
 
 	{#if loading}
 		<div class="flex flex-col items-center justify-center py-20">
-			<div
-				class="border-primary/20 border-t-primary h-12 w-12 animate-spin rounded-full border-4"
-			></div>
+			<LoadingSpinner center={false} size="md" />
 			<span class="text-primary eyebrow-xs mt-4">
 				{t({ locale: $localeStore, key: 'market.order_book.updating' })}
 			</span>
