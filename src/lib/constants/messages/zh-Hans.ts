@@ -2110,7 +2110,7 @@ export const zhHansMessages = {
 	'trust.title_b': '没有优势。没有秘密。',
 	'ui.banner.create_satellite_cta': '立即创建！',
 	'ui.banner.satellite_needed': '你的项目需要一个用于本地开发的卫星。',
-	'ui.loading': '加载中……',
+	'ui.loading': '加载中',
 	'ui.pagination.next': '下一页',
 	'ui.pagination.previous': '上一页',
 	'ui.pagination.range': '{total} 项中的 {from}–{to}',

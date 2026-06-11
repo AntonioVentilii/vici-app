@@ -2229,7 +2229,7 @@ export const frMessages = {
 	'trust.title_b': 'Pas d’avantage. Pas de secrets.',
 	'ui.banner.create_satellite_cta': 'Créez-en un maintenant !',
 	'ui.banner.satellite_needed': 'Votre projet a besoin d’un Satellite pour le dev local.',
-	'ui.loading': 'Chargement...',
+	'ui.loading': 'Chargement',
 	'ui.pagination.next': 'Suivant',
 	'ui.pagination.previous': 'Précédent',
 	'ui.pagination.range': '{from}–{to} sur {total}',

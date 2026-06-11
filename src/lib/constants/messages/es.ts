@@ -2222,7 +2222,7 @@ export const esMessages = {
 	'trust.title_b': 'Sin ventaja. Sin secretos.',
 	'ui.banner.create_satellite_cta': '¡Crea uno ahora!',
 	'ui.banner.satellite_needed': 'Tu proyecto necesita un Satellite para desarrollo local.',
-	'ui.loading': 'Cargando...',
+	'ui.loading': 'Cargando',
 	'ui.pagination.next': 'Siguiente',
 	'ui.pagination.previous': 'Anterior',
 	'ui.pagination.range': '{from}–{to} de {total}',
