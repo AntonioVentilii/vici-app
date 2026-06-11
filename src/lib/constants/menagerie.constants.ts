@@ -21,6 +21,14 @@ import type { MessageKey } from '$lib/utils/i18n.utils';
  * recovery from. */
 export const COMEBACK_COLD_STREAK_LOSSES = 3;
 
+/** A category counts toward the Magpie (all-rounder) metric once the owner
+ * has at least this many settled calls in it — accuracy on fewer calls isn't
+ * yet a signal of breadth. */
+export const MAGPIE_MIN_CATEGORY_CALLS = 3;
+
+/** …and at least this win ratio (0..1) across those calls. */
+export const MAGPIE_MIN_CATEGORY_ACCURACY = 0.5;
+
 /** Tier rungs, lowest → highest. `irid` = iridescent (the rarest). */
 export type MenagerieTier = 'wood' | 'silver' | 'gold' | 'irid';
 
@@ -241,7 +249,6 @@ export const MENAGERIE: MenagerieAnimal[] = [
 			'menagerie.magpie.label.silver',
 			'menagerie.magpie.label.gold'
 		],
-		engineUnbacked: true,
 		tiers: [
 			{ tier: 'wood', t: 3 },
 			{ tier: 'silver', t: 5 },

@@ -373,6 +373,7 @@ export interface AppGetMyRivalResult {
 					unlocked_achievements: Array<string>;
 					earned_menagerie: [] | [Array<string>];
 					deleted_at_ms: [] | [number];
+					winning_categories: number;
 					points: number;
 					avatar: string;
 					on_fire_streak: number;
@@ -444,6 +445,7 @@ export interface AppGetProfileResult {
 					unlocked_achievements: Array<string>;
 					earned_menagerie: [] | [Array<string>];
 					deleted_at_ms: [] | [number];
+					winning_categories: number;
 					points: number;
 					avatar: string;
 					on_fire_streak: number;

@@ -19,6 +19,7 @@ import { marketMetadataStore } from '$lib/stores/market-metadata.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { userStore } from '$lib/stores/user.store';
 import type { Nickname, UserProfile } from '$lib/types/profile';
+import type { UserStatsDoc } from '$lib/types/user-stats';
 import {
 	CONTRARIAN_PRICE_THRESHOLD,
 	evaluateAchievements,
@@ -26,6 +27,7 @@ import {
 	mergeUnlockedAchievements
 } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+import { countWinningCategories } from '$lib/utils/menagerie.utils';
 import {
 	eventExecutionPrice,
 	isExecutedEvent,
@@ -66,6 +68,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				streak: 0,
 				onFireStreak: 0,
 				comebacks: 0,
+				winningCategories: 0,
 				accuracy: 0,
 				points: 0,
 				level: 1,
@@ -712,6 +715,29 @@ export const calculateAndSyncStats = async ({
 		{ totalPoints: 0, runningStreak: 0 }
 	);
 
+	// The per-user dashboard snapshot doubles as the source of the Magpie
+	// breadth metric: its per-category buckets feed `countWinningCategories`
+	// for the profile patch below, and the snapshot itself is persisted to
+	// `USER_STATS` after the patch. Best-effort like the other auxiliary
+	// reads: malformed market metadata must not abort the whole stats sync,
+	// so a failed computation degrades to no `USER_STATS` refresh and a 0
+	// breadth count — which the monotonic patch below keeps from regressing
+	// the persisted value.
+	let snapshot: UserStatsDoc | undefined;
+	let winningCategories = 0;
+
+	try {
+		snapshot = computeUserStatsSnapshot({
+			owner: principal,
+			history,
+			metadata: get(marketMetadataStore),
+			nowMs: Date.now()
+		});
+		winningCategories = countWinningCategories(snapshot.categoryStats);
+	} catch (err: unknown) {
+		console.error('calculateAndSyncStats: failed to compute user_stats snapshot', err);
+	}
+
 	const profileDoc = await getProfile(principal);
 
 	// `league-founder` — does the caller own a league with at least
@@ -836,6 +862,10 @@ export const calculateAndSyncStats = async ({
 			bestUpsetConsensus,
 			onFireStreak: Math.max(longestRun, profileDoc.data.onFireStreak ?? 0),
 			comebacks: Math.max(coldStreakComebacks, profileDoc.data.comebacks ?? 0),
+			// Monotonic like the other trophy stats: when market metadata isn't
+			// hydrated the tag lookup degrades to "untagged" and the fresh count
+			// reads 0 — a thin sync must not strip an earned rung.
+			winningCategories: Math.max(winningCategories, profileDoc.data.winningCategories ?? 0),
 			topDecileStreak,
 			lastTopDecileDay,
 			sharpestEyeBestTier,
@@ -850,13 +880,9 @@ export const calculateAndSyncStats = async ({
 	// resolution event. Failures are logged but don't block the
 	// profile write — the cache will be rebuilt on the next sync.
 	try {
-		const snapshot = computeUserStatsSnapshot({
-			owner: principal,
-			history,
-			metadata: get(marketMetadataStore),
-			nowMs: Date.now()
-		});
-		await persistMyUserStats(snapshot);
+		if (nonNullish(snapshot)) {
+			await persistMyUserStats(snapshot);
+		}
 	} catch (err) {
 		console.error('calculateAndSyncStats: failed to persist user_stats', err);
 	}
