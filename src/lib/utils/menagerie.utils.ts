@@ -31,8 +31,8 @@ export const MENAGERIE_OWL_MIN_CALLS = 50;
  * (plus a couple of live signals the profile doc doesn't carry) by the surfaces
  * that render the trophy layer — see `menagerieStatsFromProfile`.
  *
- * Fields backing the three engine-unbacked animals (Octopus / Magpie / Bee)
- * are intentionally absent: those animals always resolve to LOCKED until the
+ * Fields backing the two engine-unbacked animals (Magpie / Bee) are
+ * intentionally absent: those animals always resolve to LOCKED until the
  * backend populates the data (see the per-hook TODOs below).
  */
 export interface MenagerieStats {
@@ -40,6 +40,9 @@ export interface MenagerieStats {
 	calls: number;
 	/** Lifetime long-shot wins (execution consensus ≤ 30%). Drives Raven. */
 	contrarianWins: number;
+	/** Smallest winning execution consensus (0..1), or `undefined` when the
+	 * owner has no settled win yet. Drives Octopus (reversed ladder). */
+	bestUpsetConsensus?: number;
 	/** Current daily-activity streak (days). Drives Rooster. */
 	dailyStreak: number;
 	/** Current consecutive-win streak. Drives Snake (proxy — see hook). */
@@ -66,6 +69,7 @@ export interface MenagerieProfileFields {
 	streak?: number;
 	accuracy?: number;
 	contrarianWins?: number;
+	bestUpsetConsensus?: number;
 }
 
 /** Live signals the profile doc doesn't carry but the menagerie can use. */
@@ -94,6 +98,7 @@ export const menagerieStatsFromProfile = ({
 }): MenagerieStats => ({
 	calls: profile?.totalTrades ?? 0,
 	contrarianWins: profile?.contrarianWins ?? 0,
+	bestUpsetConsensus: profile?.bestUpsetConsensus,
 	dailyStreak: profile?.dailyStreak ?? 0,
 	winStreak: profile?.streak ?? 0,
 	accuracyRatio: (profile?.accuracy ?? 0) / 100,
@@ -128,10 +133,11 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	// `contrarian` achievement reads (derived from clearing history in
 	// `calculateAndSyncStats`).
 	raven: (stats) => stats.contrarianWins,
-	// Octopus: rarest single upset (smallest consensus the owner has beaten).
-	// TODO(engine): needs `bestUpsetConsensus` (the minimum consensus a winning
-	// call was made against). No backend field exists yet → LOCKED.
-	octopus: () => 1,
+	// Octopus: rarest single upset — the smallest execution consensus among
+	// settled wins (recomputed from clearing history in
+	// `calculateAndSyncStats`). Reversed ladder, so an owner with no settled
+	// win reads the worst value (1) and stays below every rung.
+	octopus: (stats) => stats.bestUpsetConsensus ?? 1,
 	// Magpie: breadth — distinct categories with a winning record.
 	// TODO(engine): needs per-category accuracy on the profile (categories with
 	// ≥3 calls at ≥50% accuracy). No persisted per-user breakdown exists yet →

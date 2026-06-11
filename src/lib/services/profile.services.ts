@@ -623,6 +623,21 @@ export const calculateAndSyncStats = async ({
 		return eventExecutionPrice(event) <= CONTRARIAN_PRICE_THRESHOLD;
 	}).length;
 
+	// Rarest single upset (Octopus) — the smallest execution consensus among
+	// settled wins; lower = rarer. A consensus price is a probability, so only
+	// finite values in (0, 1] count: NaN / ±Infinity (malformed event) and
+	// out-of-range values are no data, not a best-ever upset — same defence as
+	// the monthly consensus aggregation, but excluding rather than clamping,
+	// since clamping would fabricate a value for a MIN metric. `undefined`
+	// when there's no winning settlement yet, so the trophy stays at its
+	// locked baseline instead of reading a fabricated value.
+	const upsetConsensuses = history
+		.filter(isWinningSettledEvent)
+		.map(eventExecutionPrice)
+		.filter((price) => Number.isFinite(price) && price > 0 && price <= 1);
+	const bestUpsetConsensus =
+		upsetConsensuses.length > 0 ? Math.min(...upsetConsensuses) : undefined;
+
 	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
 
 	const { totalPoints } = chronoHistory.reduce<{ totalPoints: number; runningStreak: number }>(
@@ -773,6 +788,7 @@ export const calculateAndSyncStats = async ({
 			points: adjustedPoints,
 			level,
 			contrarianWins,
+			bestUpsetConsensus,
 			topDecileStreak,
 			lastTopDecileDay,
 			sharpestEyeBestTier,
