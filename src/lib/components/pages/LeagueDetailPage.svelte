@@ -423,13 +423,13 @@
 	// Maps the three-way privacy onto its chip label key. A league with an
 	// absent field resolves to `open` via `leaguePrivacy`.
 	const PRIVACY_CHIP_KEY: Record<LeaguePrivacy, MessageKey> = {
-		[LeaguePrivacy.OPEN]: 'leagues.detail.hero_chip_open',
+		[LeaguePrivacy.PRIVATE]: 'leagues.detail.hero_chip_private',
 		[LeaguePrivacy.INVITE]: 'leagues.detail.hero_chip_invite',
-		[LeaguePrivacy.PRIVATE]: 'leagues.detail.hero_chip_private'
+		[LeaguePrivacy.OPEN]: 'leagues.detail.hero_chip_open'
 	};
 
 	// Editorial-hero eyebrow chips — the kind ("League") and the privacy
-	// state (Open / Invite-only / Private). The privacy chip reads the
+	// state (Private / Invite-only / Open). The privacy chip reads the
 	// league's `privacy` field through `leaguePrivacy` (absent → Open).
 	// The member count now lives on the identity card's overlap row, and
 	// the caller's role is surfaced in the battle section ("Admin · you").
