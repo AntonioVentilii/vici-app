@@ -2216,7 +2216,7 @@ export const itMessages = {
 	'ui.banner.create_satellite_cta': 'Creane uno ora!',
 	'ui.banner.satellite_needed':
 		'Il tuo progetto ha bisogno di un Satellite per lo sviluppo locale.',
-	'ui.loading': 'Caricamento...',
+	'ui.loading': 'Caricamento',
 	'ui.pagination.next': 'Successivo',
 	'ui.pagination.previous': 'Precedente',
 	'ui.pagination.range': '{from}–{to} di {total}',
