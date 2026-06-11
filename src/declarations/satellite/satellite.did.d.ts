@@ -323,6 +323,7 @@ export interface AppGetMyRivalResult {
 					top_decile_streak: number;
 					nickname: string;
 					hibernated_at_ms: [] | [number];
+					comebacks: number;
 					daily_goal_date: [] | [string];
 					daily_goal_done: number;
 					contrarian_wins: number;
@@ -374,6 +375,7 @@ export interface AppGetMyRivalResult {
 					deleted_at_ms: [] | [number];
 					points: number;
 					avatar: string;
+					on_fire_streak: number;
 					accuracy: number;
 				}
 		  ];
@@ -392,6 +394,7 @@ export interface AppGetProfileResult {
 					top_decile_streak: number;
 					nickname: string;
 					hibernated_at_ms: [] | [number];
+					comebacks: number;
 					daily_goal_date: [] | [string];
 					daily_goal_done: number;
 					contrarian_wins: number;
@@ -443,6 +446,7 @@ export interface AppGetProfileResult {
 					deleted_at_ms: [] | [number];
 					points: number;
 					avatar: string;
+					on_fire_streak: number;
 					accuracy: number;
 				}
 		  ];

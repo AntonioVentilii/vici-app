@@ -2,6 +2,7 @@ import type { RegistryDid } from '$declarations';
 import { functions } from '$declarations/satellite/satellite.api';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
+import { COMEBACK_COLD_STREAK_LOSSES } from '$lib/constants/menagerie.constants';
 import { MIN_NICKNAME_LENGTH, sanitizeNickname } from '$lib/constants/profile.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
@@ -63,6 +64,8 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				longestStreak: 0,
 				dailyGoalDone: 0,
 				streak: 0,
+				onFireStreak: 0,
+				comebacks: 0,
 				accuracy: 0,
 				points: 0,
 				level: 1,
@@ -631,14 +634,56 @@ export const calculateAndSyncStats = async ({
 	// since clamping would fabricate a value for a MIN metric. `undefined`
 	// when there's no winning settlement yet, so the trophy stays at its
 	// locked baseline instead of reading a fabricated value.
-	const upsetConsensuses = history
+	const bestUpsetConsensus = history
 		.filter(isWinningSettledEvent)
 		.map(eventExecutionPrice)
-		.filter((price) => Number.isFinite(price) && price > 0 && price <= 1);
-	const bestUpsetConsensus =
-		upsetConsensuses.length > 0 ? Math.min(...upsetConsensuses) : undefined;
+		.filter((price) => Number.isFinite(price) && price > 0 && price <= 1)
+		.reduce<number | undefined>(
+			(min, price) => (isNullish(min) || price < min ? price : min),
+			undefined
+		);
 
 	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+
+	// Longest consecutive-win run ever (Snake) — the high-water sibling of
+	// the current `streak`. Recomputed over the full chronological history;
+	// kept monotonic against the persisted value below so the trophy never
+	// regresses even if the readable history window ever shrinks.
+	const { longestRun } = chronoHistory.filter(isSettledEvent).reduce<{
+		longestRun: number;
+		run: number;
+	}>(
+		({ longestRun, run }, event) => {
+			const nextRun = event.qty > ZERO ? run + 1 : 0;
+
+			return { longestRun: Math.max(longestRun, nextRun), run: nextRun };
+		},
+		{ longestRun: 0, run: 0 }
+	);
+
+	// Cold-streak recoveries (Honey Badger) — each settled win that snaps a
+	// run of at least `COMEBACK_COLD_STREAK_LOSSES` consecutive settled
+	// losses. Only a genuinely negative settlement counts as a loss: a
+	// neutral one (`qty === 0` — see `settledEventToResolvedPosition`) is
+	// neither a loss nor a recovery, so it breaks the run without scoring.
+	// Like `onFireStreak`, recomputed over the full chronological history
+	// and kept monotonic against the persisted value below.
+	const { comebacks: coldStreakComebacks } = chronoHistory.filter(isSettledEvent).reduce<{
+		comebacks: number;
+		losses: number;
+	}>(
+		({ comebacks, losses }, event) => {
+			if (event.qty > ZERO) {
+				return {
+					comebacks: losses >= COMEBACK_COLD_STREAK_LOSSES ? comebacks + 1 : comebacks,
+					losses: 0
+				};
+			}
+
+			return { comebacks, losses: event.qty < ZERO ? losses + 1 : 0 };
+		},
+		{ comebacks: 0, losses: 0 }
+	);
 
 	const { totalPoints } = chronoHistory.reduce<{ totalPoints: number; runningStreak: number }>(
 		(acc, event) => {
@@ -789,6 +834,8 @@ export const calculateAndSyncStats = async ({
 			level,
 			contrarianWins,
 			bestUpsetConsensus,
+			onFireStreak: Math.max(longestRun, profileDoc.data.onFireStreak ?? 0),
+			comebacks: Math.max(coldStreakComebacks, profileDoc.data.comebacks ?? 0),
 			topDecileStreak,
 			lastTopDecileDay,
 			sharpestEyeBestTier,

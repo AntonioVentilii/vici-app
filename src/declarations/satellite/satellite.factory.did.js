@@ -323,6 +323,7 @@ export const idlFactory = ({ IDL }) => {
 				top_decile_streak: IDL.Float64,
 				nickname: IDL.Text,
 				hibernated_at_ms: IDL.Opt(IDL.Float64),
+				comebacks: IDL.Float64,
 				daily_goal_date: IDL.Opt(IDL.Text),
 				daily_goal_done: IDL.Float64,
 				contrarian_wins: IDL.Float64,
@@ -386,6 +387,7 @@ export const idlFactory = ({ IDL }) => {
 				deleted_at_ms: IDL.Opt(IDL.Float64),
 				points: IDL.Float64,
 				avatar: IDL.Text,
+				on_fire_streak: IDL.Float64,
 				accuracy: IDL.Float64
 			})
 		)
@@ -400,6 +402,7 @@ export const idlFactory = ({ IDL }) => {
 				top_decile_streak: IDL.Float64,
 				nickname: IDL.Text,
 				hibernated_at_ms: IDL.Opt(IDL.Float64),
+				comebacks: IDL.Float64,
 				daily_goal_date: IDL.Opt(IDL.Text),
 				daily_goal_done: IDL.Float64,
 				contrarian_wins: IDL.Float64,
@@ -463,6 +466,7 @@ export const idlFactory = ({ IDL }) => {
 				deleted_at_ms: IDL.Opt(IDL.Float64),
 				points: IDL.Float64,
 				avatar: IDL.Text,
+				on_fire_streak: IDL.Float64,
 				accuracy: IDL.Float64
 			})
 		)

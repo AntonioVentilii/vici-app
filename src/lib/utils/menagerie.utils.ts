@@ -45,11 +45,12 @@ export interface MenagerieStats {
 	bestUpsetConsensus?: number;
 	/** Current daily-activity streak (days). Drives Rooster. */
 	dailyStreak: number;
-	/** Current consecutive-win streak. Drives Snake (proxy — see hook). */
-	winStreak: number;
+	/** Longest consecutive-win run ever recorded (high-water). Drives Snake. */
+	onFireStreak: number;
 	/** Settled-call accuracy as a 0..1 ratio. Drives Owl (gated). */
 	accuracyRatio: number;
-	/** Comeback count. Drives Honey Badger (proxy — see hook). */
+	/** Lifetime cold-streak recoveries (a win after ≥`COMEBACK_COLD_STREAK_LOSSES`
+	 * straight losses). Drives Honey Badger. */
 	comebacks: number;
 	/** Distinct people the owner has brought to the app. Drives Parrot. */
 	referrals: number;
@@ -66,16 +67,16 @@ export interface MenagerieStats {
 export interface MenagerieProfileFields {
 	totalTrades?: number;
 	dailyStreak?: number;
-	streak?: number;
+	onFireStreak?: number;
 	accuracy?: number;
 	contrarianWins?: number;
 	bestUpsetConsensus?: number;
+	comebacks?: number;
 }
 
 /** Live signals the profile doc doesn't carry but the menagerie can use. */
 export interface MenagerieLiveSignals {
 	referrals?: number;
-	comebacks?: number;
 	rank?: number;
 	totalRanked?: number;
 }
@@ -100,9 +101,9 @@ export const menagerieStatsFromProfile = ({
 	contrarianWins: profile?.contrarianWins ?? 0,
 	bestUpsetConsensus: profile?.bestUpsetConsensus,
 	dailyStreak: profile?.dailyStreak ?? 0,
-	winStreak: profile?.streak ?? 0,
+	onFireStreak: profile?.onFireStreak ?? 0,
 	accuracyRatio: (profile?.accuracy ?? 0) / 100,
-	comebacks: signals.comebacks ?? 0,
+	comebacks: profile?.comebacks ?? 0,
 	referrals: signals.referrals ?? 0,
 	rank: signals.rank,
 	totalRanked: signals.totalRanked
@@ -119,12 +120,11 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	hatchling: (stats) => stats.calls,
 	beaver: (stats) => stats.calls,
 	rooster: (stats) => stats.dailyStreak,
-	// Snake reads the live consecutive-win streak. This is a proxy: the backend
-	// does not yet expose a dedicated "on-fire" streak, so we reuse the
-	// settled-win streak. Close enough for the wood/silver/gold rungs.
-	// TODO(engine): replace with a dedicated `onFireStreak` field once the
-	// clearing canister tracks the longest live winning run separately.
-	snake: (stats) => stats.winStreak,
+	// Snake reads the longest consecutive-win run ever recorded (recomputed
+	// from clearing history in `calculateAndSyncStats`) — a high-water mark,
+	// so a rung once earned doesn't read as regressed when the current run
+	// ends.
+	snake: (stats) => stats.onFireStreak,
 	// Owl is gated: accuracy only counts once the owner has enough settled calls
 	// for it to be a real calibration signal.
 	owl: (stats) => (stats.calls >= MENAGERIE_OWL_MIN_CALLS ? stats.accuracyRatio : 0),
@@ -143,11 +143,9 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	// ≥3 calls at ≥50% accuracy). No persisted per-user breakdown exists yet →
 	// LOCKED.
 	magpie: () => 0,
-	// Honey Badger reads the comeback count. Proxy: until a dedicated comeback
-	// tally lands, this is fed from the comeback-restore signal the FE already
-	// computes (0 when none recorded).
-	// TODO(engine): replace with an authoritative `comebacks` tally (recoveries
-	// from a cold streak or VXP depletion) once the engine records it.
+	// Honey Badger reads the persisted cold-streak recovery tally — wins that
+	// snapped a run of at least `COMEBACK_COLD_STREAK_LOSSES` straight losses
+	// (recomputed from clearing history in `calculateAndSyncStats`).
 	badger: (stats) => stats.comebacks,
 	parrot: (stats) => stats.referrals,
 	// Bee: leagues joined + bouts won + leagues founded (1 point each).
