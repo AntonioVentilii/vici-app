@@ -107,6 +107,7 @@ export const loadOrderBook = ({
  */
 export const placeOrder = async ({
 	marketId,
+	marketTitle,
 	side,
 	type,
 	price,
@@ -114,6 +115,7 @@ export const placeOrder = async ({
 	outcome
 }: {
 	marketId: MarketId;
+	marketTitle: string;
 	side: OrderSide;
 	type: OrderType;
 	price: number;
@@ -204,8 +206,11 @@ export const placeOrder = async ({
 			type: ActivityType.TRADE,
 			user: userText,
 			marketId,
-			title: `Placed ${side} ${type} order`,
-			details: `${side} ${qty} on ${outcome} @ ${Number(price.toFixed(PRICE_DECIMALS))}`
+			// "Sold" only when the trade executed on the spot; an open limit sell is merely placed.
+			// `normalizedPrice` is the price of the chosen outcome — the raw `price` arg arrives
+			// YES-framed for binary NO and would display the complement.
+			title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${qty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
+			details: marketTitle
 		});
 		await recordActivity(userText);
 	} catch (e: unknown) {

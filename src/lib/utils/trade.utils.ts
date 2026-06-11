@@ -102,6 +102,7 @@ export const executeOutcomeTrade = async ({
 
 	await placeOrder({
 		marketId: market.id,
+		marketTitle: market.title,
 		side: 'BUY',
 		type,
 		price: isBinary && action === 'NO' ? 1 - finalPrice : finalPrice,
