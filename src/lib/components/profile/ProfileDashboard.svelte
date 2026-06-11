@@ -38,7 +38,11 @@
 	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
-	import { avatarBackdropPlanes, deterministicParts } from '$lib/utils/vici-avatar.utils';
+	import {
+		avatarBackdropPlanes,
+		deterministicParts,
+		parseParts
+	} from '$lib/utils/vici-avatar.utils';
 
 	interface Props {
 		profile: UserProfile;
@@ -235,12 +239,13 @@
 	// built from the same two backdrop planes the avatar would otherwise draw.
 	// Re-syncs the instant the editor saves (`saveMyAvatarParts` dispatches
 	// `avatarchange`) so the gradient tracks a backdrop change without waiting
-	// for an incidental re-render. Falls back to the principal-seeded face's
+	// for an incidental re-render. Another user's profile renders their saved
+	// picks from the fetched doc; falls back to the principal-seeded face's
 	// palette for a user who has never picked.
 	const heroParts = $derived(
 		isOwnProfile
 			? ($myAvatarParts ?? deterministicParts(profile.owner))
-			: deterministicParts(profile.owner)
+			: (parseParts(profile.avatarParts) ?? deterministicParts(profile.owner))
 	);
 	const heroPalette = $derived(avatarBackdropPlanes(heroParts));
 

@@ -25,6 +25,8 @@
 		/** Rank index (`01`, `02`, …) for friends; the localized YOU label. */
 		numLabel: string;
 		avatar: string | null | undefined;
+		/** Serialized faceted-avatar picks of `owner` (see `Avatar`). */
+		avatarParts?: string | null;
 		nickname: string | null | undefined;
 		owner: PrincipalText;
 		/** Resolved `@`-less display name (nickname with fallback applied). */
@@ -47,6 +49,7 @@
 		variant,
 		numLabel,
 		avatar,
+		avatarParts,
 		nickname,
 		owner,
 		displayName,
@@ -62,7 +65,7 @@
 {#snippet lead()}
 	<span class="num ranked-num" class:is-you={variant === 'you'}>{numLabel}</span>
 	<span class="ranked-avatar">
-		<Avatar class="h-full w-full" {avatar} {nickname} {owner} />
+		<Avatar class="h-full w-full" {avatar} {avatarParts} {nickname} {owner} />
 	</span>
 	<span class="ranked-copy">
 		<span class="ranked-name" class:ranked-name-you={variant === 'you'}>
