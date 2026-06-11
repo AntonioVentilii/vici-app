@@ -64,8 +64,8 @@ Rules:
   `effect_update_depth_exceeded` — which freezes **every** component on the
   page, not just the offender. Read the just-computed local instead, or wrap
   the read in `untrack(...)`. (Bit the Arena standing hero: its cache-seed
-  effect assigned `scopes` a fresh array and then clamped `idx >=
-scopes.length`, hard-freezing `/arena`.)
+  effect assigned `scopes` a fresh array and then read it in the
+  `idx >= scopes.length` clamp, hard-freezing `/arena`.)
 - Prefer `$derived` over `$effect`. An `$effect` is for I/O (DOM, network,
   storage). Computation belongs in `$derived` / `$derived.by`.
 
