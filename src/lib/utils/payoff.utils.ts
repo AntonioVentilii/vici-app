@@ -1,3 +1,4 @@
+import type { ClearingDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
 import type { Outcome } from '$lib/types/market';
 
@@ -20,3 +21,13 @@ export const binaryPayoff = (outcome: Outcome): bigint | undefined =>
  */
 export const binaryPayoffLabel = (price: bigint): Outcome | undefined =>
 	price === 100n ? 'YES' : price === ZERO ? 'NO' : undefined;
+
+/**
+ * Winning-outcome label from clearing's on-chain `SettlementInput`:
+ * categorical settlements carry the outcome id verbatim; price settlements
+ * round-trip only the canonical binary payoffs (see {@link binaryPayoffLabel}).
+ */
+export const settlementInputOutcome = (
+	settlement: ClearingDid.SettlementInput
+): Outcome | undefined =>
+	'Outcome' in settlement ? settlement.Outcome : binaryPayoffLabel(settlement.Price.decimal.value);
