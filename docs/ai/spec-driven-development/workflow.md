@@ -27,6 +27,16 @@ Skip it for small changes (typo, one-liner): implement directly.
   An `Implemented` spec is a historical record, **not** current truth
   — for shipped behaviour, the code and [`PRODUCT.md`](../PRODUCT.md)
   win.
+- **One spec, one PR.** A spec's implementation lands as a single PR —
+  do **not** split it into a stack or a series of partial PRs. The
+  spec is the unit of review: status flips, the `PRODUCT.md` update,
+  and the divergence check all bind to exactly one PR, and a split
+  breaks that binding (which PR flips the status? which one is "the"
+  implementation?). This deliberately overrides the general
+  prefer-atomic-splits instinct from
+  [`pr-and-ci.md`](../pr-and-ci.md). If the work genuinely cannot fit
+  one reviewable PR, the spec is too big — split the **spec** first,
+  each part with its own status and PR.
 
 ## Files
 
