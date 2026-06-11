@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.1.4](https://github.com/AntonioVentilii/vici-app/compare/v0.1.3...v0.1.4) (2026-06-11)
+
+
+### Features
+
+* **menagerie:** light up Octopus from a persisted best-upset consensus ([#794](https://github.com/AntonioVentilii/vici-app/issues/794)) ([0fb53ae](https://github.com/AntonioVentilii/vici-app/commit/0fb53ae52ae574a200985e1ffd6797175ee47650))
+* **menagerie:** light up Raven from the persisted contrarian-wins counter ([#793](https://github.com/AntonioVentilii/vici-app/issues/793)) ([549a0fb](https://github.com/AntonioVentilii/vici-app/commit/549a0fb29d10201e633a6f0f8671e7a675983f3b))
+* **menagerie:** persist a cold-streak comeback tally for Honey Badger ([#796](https://github.com/AntonioVentilii/vici-app/issues/796)) ([9e97282](https://github.com/AntonioVentilii/vici-app/commit/9e9728256c69d5b4466d510a1116aa1c3cc13154))
+* **menagerie:** persist league-life milestones and light up Bee ([#799](https://github.com/AntonioVentilii/vici-app/issues/799)) ([f5a848f](https://github.com/AntonioVentilii/vici-app/commit/f5a848fbd648aede4fc386fcdd3634feb969a47e))
+* **menagerie:** persist winning-category breadth for Magpie ([#797](https://github.com/AntonioVentilii/vici-app/issues/797)) ([d3c7f42](https://github.com/AntonioVentilii/vici-app/commit/d3c7f42724fafde9aa8456ffe28da038d188375e))
+* **menagerie:** resolve Goat from the full-ranking self-rank query ([#800](https://github.com/AntonioVentilii/vici-app/issues/800)) ([4f1b060](https://github.com/AntonioVentilii/vici-app/commit/4f1b0607a480c0573494907c0a34d5ac6e8957ce))
+* **menagerie:** track the longest win run and feed Snake its true signal ([#795](https://github.com/AntonioVentilii/vici-app/issues/795)) ([73cd882](https://github.com/AntonioVentilii/vici-app/commit/73cd8824b8f969fa07ab3005e066afb0234c46ba))
+* **satellite:** add getMyBattleStats and count bouts won server-side ([#804](https://github.com/AntonioVentilii/vici-app/issues/804)) ([ad429ab](https://github.com/AntonioVentilii/vici-app/commit/ad429abbc2ddd74fa855cef8a1f0ce846a4ecfe8))
+
+
+### Bug Fixes
+
+* **avatar:** connect the neck to the shoulders ([#791](https://github.com/AntonioVentilii/vici-app/issues/791)) ([5dc7a97](https://github.com/AntonioVentilii/vici-app/commit/5dc7a9712d95a90ca58e9720d2ae75befa352588))
+* **frontend:** execute market orders at the stake-derived quantity ([#801](https://github.com/AntonioVentilii/vici-app/issues/801)) ([6e16153](https://github.com/AntonioVentilii/vici-app/commit/6e16153b151f96756d3a4ef9985c786c2f290b00))
+* **frontend:** gate Flow swipes on spendable balance and roll back failed calls ([#798](https://github.com/AntonioVentilii/vici-app/issues/798)) ([a8ede63](https://github.com/AntonioVentilii/vici-app/commit/a8ede63fe7587cadd6e2435c2efedb65b82b7ef5))
+
+
+### Miscellaneous Chores
+
+* Update ICDC declarations ([aaaee08](https://github.com/AntonioVentilii/vici-app/commit/aaaee0850daac8b8680ef698bbfe8d67d269d772))
+
 ## [0.1.3](https://github.com/AntonioVentilii/vici-app/compare/v0.1.2...v0.1.3) (2026-06-11)
 
 

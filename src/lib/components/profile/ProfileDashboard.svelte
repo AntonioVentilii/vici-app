@@ -36,6 +36,7 @@
 	import type { UserProfile } from '$lib/types/profile';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
 	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
+	import { countryDisplayName } from '$lib/utils/affiliation-name.utils';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import {
@@ -356,7 +357,14 @@
 				kind: 'country',
 				labelKey: 'profile.dashboard.affiliations.country',
 				filled: countryOption !== undefined,
-				value: countryOption?.name ?? null,
+				value:
+					countryOption !== undefined
+						? countryDisplayName({
+								code: countryOption.id,
+								locale: $localeStore,
+								fallback: countryOption.name
+							})
+						: null,
 				affiliationIdentifier: countryOption?.id ?? null,
 				glyph: countryOption?.glyph ?? '+',
 				color: countryOption?.color ?? null,

@@ -56,6 +56,16 @@ Rules:
 
 - Never read state inside an `$effect` and write it back without a guard —
   it loops. Restructure to `$derived` whenever possible.
+- The write-then-read order does **not** save you: an effect that assigns
+  `foo` and reads `foo` anywhere in the same body still registers `foo` as
+  its own dependency. If the assigned value is a fresh identity each run
+  (array/object literal, `JSON.parse`, `.map(...)`), the effect re-triggers
+  itself until Svelte aborts the whole flush with
+  `effect_update_depth_exceeded` — which freezes **every** component on the
+  page, not just the offender. Read the just-computed local instead, or wrap
+  the read in `untrack(...)`. (Bit the Arena standing hero: its cache-seed
+  effect assigned `scopes` a fresh array and then read it in the
+  `idx >= scopes.length` clamp, hard-freezing `/arena`.)
 - Prefer `$derived` over `$effect`. An `$effect` is for I/O (DOM, network,
   storage). Computation belongs in `$derived` / `$derived.by`.
 
