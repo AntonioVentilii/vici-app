@@ -294,6 +294,7 @@
 						<Avatar
 							class={i === 0 ? 'leaderboard-podium-avatar-lg' : 'leaderboard-podium-avatar-md'}
 							avatar={row.avatar ?? null}
+							avatarParts={row.avatarParts ?? null}
 							nickname={row.nickname ?? null}
 							owner={row.owner}
 							self={row.isSelf}
@@ -332,6 +333,7 @@
 							<Avatar
 								class="leaderboard-row-avatar"
 								avatar={row.avatar ?? null}
+								avatarParts={row.avatarParts ?? null}
 								nickname={row.nickname ?? null}
 								owner={row.owner}
 								self={row.isSelf}
@@ -377,6 +379,7 @@
 				<Avatar
 					class="h-full w-full"
 					avatar={row.avatar ?? null}
+					avatarParts={row.avatarParts ?? null}
 					nickname={row.nickname ?? null}
 					owner={row.owner}
 				/>

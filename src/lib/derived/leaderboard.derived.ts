@@ -29,6 +29,7 @@ interface SelfOverlay {
 	owner: string | undefined;
 	nickname: UserProfile['nickname'];
 	avatar: UserProfile['avatar'];
+	avatarParts: UserProfile['avatarParts'];
 	/**
 	 * Days-based activity streak (the Flame engine) — every surface that
 	 * renders a leaderboard row's streak shows "{n}d", so the days counter
@@ -51,6 +52,7 @@ const selfOverlay: Readable<SelfOverlay | undefined> = derived(userStore, ({ use
 				owner: user.owner,
 				nickname: profile.nickname,
 				avatar: profile.avatar,
+				avatarParts: profile.avatarParts,
 				dailyStreak: profile.dailyStreak,
 				accuracy: profile.accuracy
 			}
@@ -75,6 +77,7 @@ export const leaderboard: Readable<UserProfile[]> = derived(
 			...next[idx],
 			nickname: $self.nickname,
 			avatar: $self.avatar,
+			avatarParts: $self.avatarParts,
 			dailyStreak: $self.dailyStreak,
 			accuracy: $self.accuracy
 		};

@@ -63,7 +63,7 @@ type AppListFriendRequestsResult = record { items : vec record { category : vari
 
 type AppListFriendsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
-type AppListLeaderboardResult = record { items : vec record { owner : text; nickname : text; avatar : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; unlocked_achievements : vec text; contrarian_wins : float64; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
+type AppListLeaderboardResult = record { items : vec record { owner : text; nickname : text; avatar : text; avatar_parts : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; unlocked_achievements : vec text; contrarian_wins : float64; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
 
 type AppListLeagueBattlesArgs = record { league_id : text };
 
@@ -107,7 +107,7 @@ type AppLookupReferralCodeResult = record { owner : opt text };
 
 type AppSearchProfilesArgs = record { query_str : text };
 
-type AppSearchProfilesResult = record { items : vec record { owner : text; nickname : text; avatar : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; unlocked_achievements : vec text; contrarian_wins : float64; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
+type AppSearchProfilesResult = record { items : vec record { owner : text; nickname : text; avatar : text; avatar_parts : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; unlocked_achievements : vec text; contrarian_wins : float64; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
 
 type AppAcceptFriendRequestArgs = record { relation_id : text };
 

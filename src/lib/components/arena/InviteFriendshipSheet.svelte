@@ -64,6 +64,7 @@
 			<Avatar
 				class="h-14 w-14"
 				avatar={referrerProfile?.avatar}
+				avatarParts={referrerProfile?.avatarParts}
 				nickname={referrerProfile?.nickname}
 				owner={referrerPrincipal}
 			/>

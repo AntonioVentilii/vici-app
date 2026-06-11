@@ -76,6 +76,7 @@
 			return {
 				principal,
 				avatar: profile?.avatar ?? null,
+				avatarParts: profile?.avatarParts ?? null,
 				nickname: profile?.nickname ?? null
 			};
 		})
@@ -211,6 +212,7 @@
 							<Avatar
 								class="friend-avatar-img"
 								avatar={friend.avatar}
+								avatarParts={friend.avatarParts}
 								nickname={friend.nickname}
 								owner={friend.principal}
 							/>
