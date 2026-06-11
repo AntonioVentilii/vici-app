@@ -207,7 +207,9 @@ export const placeOrder = async ({
 			user: userText,
 			marketId,
 			// "Sold" only when the trade executed on the spot; an open limit sell is merely placed.
-			title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${qty} on ${outcome} @ ${Math.round(price * 100)}%`,
+			// `normalizedPrice` is the price of the chosen outcome — the raw `price` arg arrives
+			// YES-framed for binary NO and would display the complement.
+			title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${qty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
 			details: marketTitle
 		});
 		await recordActivity(userText);

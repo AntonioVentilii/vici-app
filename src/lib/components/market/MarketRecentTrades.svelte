@@ -83,7 +83,7 @@
 							</span>
 						</div>
 						<p class="text-muted-foreground mt-0.5 text-[10px] leading-tight">
-							<!-- A trade's details is the market question — redundant on the market's own page. -->
+							<!-- A trade's `details` field carries the market question — redundant on the market's own page. -->
 							{activity.type === ActivityType.TRADE
 								? activity.title
 								: (activity.details ?? activity.title)}
