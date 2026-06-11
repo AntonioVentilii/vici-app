@@ -1806,6 +1806,12 @@ export interface SubmitLimitOrderParams {
  */
 export interface SubmitMarketOrderParams {
 	/**
+	 * Optional taker quantity. Must be positive when provided. The trade executes for
+	 * `min(qty, resting order qty)` and the unfilled remainder stays on the book with
+	 * proportionally reduced blocked margin. `None` fills the entire resting order.
+	 */
+	qty: [] | [bigint];
+	/**
 	 * Unique identifier for the trade resulting from this match.
 	 */
 	trade_id: string;
@@ -2464,7 +2470,10 @@ export interface _SERVICE {
 	/**
 	 * Submits a market order to match an existing limit order.
 	 *
-	 * The caller is the taker.
+	 * The caller is the taker. An optional `qty` caps the fill: the trade executes for
+	 * `min(qty, resting order qty)` at the order's price and the unfilled remainder stays
+	 * on the book with proportionally reduced blocked margin. `None` fills the entire
+	 * resting order.
 	 */
 	submit_market_order: ActorMethod<[SubmitMarketOrderParams], SubmitMatchedTradeResult>;
 	/**
