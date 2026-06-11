@@ -31,13 +31,15 @@ export const MENAGERIE_OWL_MIN_CALLS = 50;
  * (plus a couple of live signals the profile doc doesn't carry) by the surfaces
  * that render the trophy layer — see `menagerieStatsFromProfile`.
  *
- * Fields backing the four engine-unbacked animals (Raven / Octopus / Magpie /
- * Bee) are intentionally absent: those animals always resolve to LOCKED until
- * the backend populates the data (see the per-hook TODOs below).
+ * Fields backing the three engine-unbacked animals (Octopus / Magpie / Bee)
+ * are intentionally absent: those animals always resolve to LOCKED until the
+ * backend populates the data (see the per-hook TODOs below).
  */
 export interface MenagerieStats {
 	/** Lifetime calls placed. Drives Hatchling + Beaver. */
 	calls: number;
+	/** Lifetime long-shot wins (execution consensus ≤ 30%). Drives Raven. */
+	contrarianWins: number;
 	/** Current daily-activity streak (days). Drives Rooster. */
 	dailyStreak: number;
 	/** Current consecutive-win streak. Drives Snake (proxy — see hook). */
@@ -63,6 +65,7 @@ export interface MenagerieProfileFields {
 	dailyStreak?: number;
 	streak?: number;
 	accuracy?: number;
+	contrarianWins?: number;
 }
 
 /** Live signals the profile doc doesn't carry but the menagerie can use. */
@@ -90,6 +93,7 @@ export const menagerieStatsFromProfile = ({
 	signals?: MenagerieLiveSignals;
 }): MenagerieStats => ({
 	calls: profile?.totalTrades ?? 0,
+	contrarianWins: profile?.contrarianWins ?? 0,
 	dailyStreak: profile?.dailyStreak ?? 0,
 	winStreak: profile?.streak ?? 0,
 	accuracyRatio: (profile?.accuracy ?? 0) / 100,
@@ -119,11 +123,11 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	// Owl is gated: accuracy only counts once the owner has enough settled calls
 	// for it to be a real calibration signal.
 	owl: (stats) => (stats.calls >= MENAGERIE_OWL_MIN_CALLS ? stats.accuracyRatio : 0),
-	// Raven: lifetime wins on long-shot calls (consensus < 30%).
-	// TODO(engine): needs a populated `contrarianWins` (wins where execution
-	// consensus was under 30%). The field exists on the profile but is not yet
-	// produced by the engine, so this animal stays LOCKED.
-	raven: () => 0,
+	// Raven: lifetime wins on long-shot calls — settled wins whose execution
+	// price sat at or under `CONTRARIAN_PRICE_THRESHOLD`, the same counter the
+	// `contrarian` achievement reads (derived from clearing history in
+	// `calculateAndSyncStats`).
+	raven: (stats) => stats.contrarianWins,
 	// Octopus: rarest single upset (smallest consensus the owner has beaten).
 	// TODO(engine): needs `bestUpsetConsensus` (the minimum consensus a winning
 	// call was made against). No backend field exists yet → LOCKED.
