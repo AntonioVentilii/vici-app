@@ -136,8 +136,8 @@
 	});
 
 	// "Friends are in" — public leagues the caller's confirmed friends are
-	// in but the caller is not. Capped at five so the row stays a discovery
-	// nudge at the foot of the list, not a directory.
+	// in but the caller is not. Capped so the row stays a discovery nudge
+	// at the foot of the list, not a directory.
 	const FRIEND_RECS_LIMIT = 5;
 	const recommendations = $derived($friendRecommendedLeaguesStore.slice(0, FRIEND_RECS_LIMIT));
 
