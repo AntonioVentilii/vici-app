@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.6](https://github.com/AntonioVentilii/vici-app/compare/v0.1.5...v0.1.6) (2026-06-11)
+
+
+### Features
+
+* **dash:** open the holdings breakdown sheet from the day-0/day-1 balance card ([#813](https://github.com/AntonioVentilii/vici-app/issues/813)) ([2813ff8](https://github.com/AntonioVentilii/vici-app/commit/2813ff8ce51f3db58632cdb0219eeedbea7a2172))
+* **frontend:** seed market cards from persisted last-known prices ([#808](https://github.com/AntonioVentilii/vici-app/issues/808)) ([42cad82](https://github.com/AntonioVentilii/vici-app/commit/42cad821d2984655bc5c24b568886156bc9470ac))
+
+
+### Bug Fixes
+
+* **dash:** pulse a placeholder dash over holdings figures until first load ([#811](https://github.com/AntonioVentilii/vici-app/issues/811)) ([707ac65](https://github.com/AntonioVentilii/vici-app/commit/707ac65e2da01226fa750c61c019920ec5dd02aa))
+* **dash:** stop In-play flicker from wrong-domain query and persist last-known holdings ([#816](https://github.com/AntonioVentilii/vici-app/issues/816)) ([ccda15c](https://github.com/AntonioVentilii/vici-app/commit/ccda15c0a15b4e3b3c0c44a4b954acdd4f7c10b8))
+* **frontend:** show friend-request accept/reject inline and confirm acceptance ([#809](https://github.com/AntonioVentilii/vici-app/issues/809)) ([1d0425d](https://github.com/AntonioVentilii/vici-app/commit/1d0425d55ddd52b37a71d1934ff3d5047c0cdda1))
+* **i18n:** sync the active locale across open tabs via storage events ([#814](https://github.com/AntonioVentilii/vici-app/issues/814)) ([4ca2079](https://github.com/AntonioVentilii/vici-app/commit/4ca2079deeb167a6180206ca39c4429b29e2fc9a))
+
+
+### Code Refactoring
+
+* **leagues:** order privacy tiers most to least restrictive ([#815](https://github.com/AntonioVentilii/vici-app/issues/815)) ([1d664fc](https://github.com/AntonioVentilii/vici-app/commit/1d664fc935833197e50596ba59ac0088fc61025c))
+
 ## [0.1.5](https://github.com/AntonioVentilii/vici-app/compare/v0.1.4...v0.1.5) (2026-06-11)
 
 
