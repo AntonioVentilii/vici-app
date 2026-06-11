@@ -24,7 +24,7 @@ Status: Draft
 ## Design artifacts (frontend — optional)
 
 <!-- Relative links into ./<this-spec-filename>/ — wireframes, HTML mocks, screenshots. Deleted post-merge. Remove this section if unused.
-Interactive HTML mocks must (see workflow.md § Required content by area):
+Interactive HTML mocks must (see docs/ai/spec-driven-development/workflow.md § Required content by area):
 - include a theme switcher (data-theme on the root, light + dark) when the change touches theme-varying layout / styles / colors / sizing / icons / animations;
 - include a "copy instructions" button that copies the COMPLETE final instructions (every chosen variant and value) back to the agent chat. -->
 
