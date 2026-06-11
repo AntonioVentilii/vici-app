@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { VICI_ORACLE_V1 } from '$lib/constants/app.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
@@ -146,9 +147,7 @@
 
 	{#if status === 'loading'}
 		<div class="flex justify-center py-8">
-			<div
-				class="border-primary h-6 w-6 animate-spin rounded-full border-4 border-t-transparent"
-			></div>
+			<LoadingSpinner center={false} size="sm" />
 		</div>
 	{:else if status === 'error'}
 		<div
