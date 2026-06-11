@@ -549,11 +549,12 @@
 		// Funds gate — a YES / NO stakes real collateral, and the engine
 		// rejects a call the spendable margin can't cover. Catch that here,
 		// BEFORE the card commits, so the deck never celebrates a prediction
-		// that can't be placed. Skipped while the collaterals store hasn't
-		// loaded (nothing to gate on) — the engine stays the authority.
+		// that can't be placed. `collateralsStore` only populates for an
+		// authenticated identity (see LoaderCollaterals), so its presence is
+		// both the signed-in check and the loaded check; while it's absent
+		// there is nothing to gate on and the engine stays the authority.
 		if (
 			action !== 'SKIP' &&
-			nonNullish($userStore.user) &&
 			nonNullish($collateralsStore) &&
 			$vxpSpendable - sessionCommittedUsd < stakeMarginUsd(currentMarket)
 		) {
