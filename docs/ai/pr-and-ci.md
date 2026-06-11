@@ -59,26 +59,18 @@ feat(satellite)!: change profile schema field name
 
 ## 2. PR body — template
 
-Honor [`.github/pull_request_template.md`](../../.github/pull_request_template.md):
-
-```markdown
-# Motivation
-
-<!-- Describe the motivation that lead to the PR -->
-
-# Changes
-
-<!-- List the changes that have been developed -->
-
-# Tests
-
-<!-- Please provide any information or screenshots about the tests that have been done -->
-```
+Honor [`.github/pull_request_template.md`](../../.github/pull_request_template.md)
+— three sections, `# Motivation` / `# Changes` / `# Tests`, with per-section
+guidance embedded as comments in the template itself.
 
 Rules:
 
-- **All three sections are required.** Don't leave them empty. Even tiny PRs benefit from one bullet per section.
+- **All three sections are required.** Don't leave them empty. Even a tiny PR fills each section with at least one line.
 - **Use the exact section headings** (`# Motivation`, `# Changes`, `# Tests`) so downstream tooling (release notes, search, changelog grep) can find them.
+- **Concise but complete.** A reviewer should understand what changed and why without opening the diff. Motivation: 1–3 sentences. Changes: one bullet per logical change, outcome first. Cut anything that doesn't change what the reviewer does next.
+- **Write what the diff can't say.** Don't narrate the diff line by line — it's attached. Spend the words on the why, the trade-offs considered, and what was deliberately left out of scope.
+- **No filler.** Drop openers like "This PR…" / "In this change…" — start with the substance.
+- **Tests are concrete.** Name the commands run and their outcome, the tests added, the manual steps taken. "Tests pass" alone says nothing.
 - **Do not hard-wrap lines.** Write one line per paragraph or list item and let the GitHub renderer wrap. Hard-wrapping at ~80 columns (a default many models fall back to) breaks rendering inside lists, blockquotes, and tables, and makes later edits in the GitHub UI ugly. This applies to the PR body only — source files still follow `.prettierrc`.
 - **Atomicity statement** if the PR touches more than one logical thing — add a one-liner explaining why they belong together. If you can't, split.
 - **Mention `docs/ai/` updates** under `# Changes` whenever the [meta-update rule](./governance.md#meta-update-rule) fired.
@@ -294,3 +286,38 @@ See [`docs/engine-integration.md`](../../docs/engine-integration.md) for
 the architecture and
 [`.agents/workflows/icdc-engine-reset.md`](../../.agents/workflows/icdc-engine-reset.md)
 for resetting an environment after a breaking change.
+
+## 10. Code comments
+
+Comments carry what the code **cannot** say. Any reader — human or
+agent — can read the code itself; a comment earns its line only with
+the **why**, never the **what**.
+
+Write a comment only for:
+
+- **Intent / why** — the reason this approach won over the obvious
+  alternative.
+- **Invariants & constraints** — what must hold but isn't visible in
+  the code (ordering requirements, idempotency-key shape, instruction
+  caps, units).
+- **Deliberate weirdness** — code that looks wrong but is right. Point
+  at the governing `docs/ai/**` page instead of re-explaining it.
+- **Warnings** — landmines for the next editor.
+
+Never write:
+
+- **Narration** — `// fetch the profile` above `getProfile()`.
+  Restating names, types, or control flow the next line already
+  declares.
+- **Diff commentary** — `// changed to use X`, `// new helper`,
+  `// fixed per review`, `// removed the old check`. That's
+  PR-conversation addressed to the reviewer; it is noise the moment
+  the PR merges. Put it in the PR body instead.
+- **Source references** — where behaviour was ported or copied from
+  (see [commandment 5](../../AGENTS.md#2-project-specific-commandments)).
+
+If the code needs narration to be understandable, fix the code — a
+better name, a smaller function, an extracted constant — instead of
+captioning it. Match the comment density of the file you're editing;
+a diff whose comments mostly describe the diff itself is a
+review-blocking smell.
