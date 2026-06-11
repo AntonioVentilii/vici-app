@@ -307,6 +307,9 @@ export const ptBRMessages = {
 	'album.progress_eyebrow': 'Progresso',
 	'album.progress_of': 'de {total} obtidos',
 	'album.title': 'Meu álbum',
+	'maintenance.title': 'Estamos atualizando o Vici',
+	'maintenance.body':
+		'Uma rápida atualização da plataforma está em andamento. O app vai recarregar sozinho em instantes.',
 	'menagerie.back': 'Voltar ao perfil',
 	'menagerie.badge.aria_earned': '{name} — nível {tier}',
 	'menagerie.badge.aria_locked': '{name} (bloqueado)',
