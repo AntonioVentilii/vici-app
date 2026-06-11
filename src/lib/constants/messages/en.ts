@@ -300,6 +300,9 @@ export const enMessages = {
 	'album.progress_eyebrow': 'Progress',
 	'album.progress_of': 'of {total} earned',
 	'album.title': 'My album',
+	'maintenance.title': "We're updating Vici",
+	'maintenance.body':
+		'A quick platform upgrade is rolling out. The app will refresh by itself in a moment.',
 	'menagerie.back': 'Back to profile',
 	'menagerie.badge.aria_earned': '{name} — {tier} tier',
 	'menagerie.badge.aria_locked': '{name} (locked)',

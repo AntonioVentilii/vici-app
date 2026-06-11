@@ -302,6 +302,9 @@ export const deMessages = {
 	'album.progress_eyebrow': 'Fortschritt',
 	'album.progress_of': 'von {total} erreicht',
 	'album.title': 'Mein Album',
+	'maintenance.title': 'Wir aktualisieren Vici',
+	'maintenance.body':
+		'Gerade läuft ein kurzes Plattform-Update. Die App lädt sich gleich automatisch neu.',
 	'menagerie.back': 'Zurück zum Profil',
 	'menagerie.badge.aria_earned': '{name} — Stufe {tier}',
 	'menagerie.badge.aria_locked': '{name} (gesperrt)',
