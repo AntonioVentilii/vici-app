@@ -2,6 +2,7 @@
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { globalActivities } from '$lib/derived/activities.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { ActivityType } from '$lib/enums/social';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
@@ -82,12 +83,10 @@
 							</span>
 						</div>
 						<p class="text-muted-foreground mt-0.5 text-[10px] leading-tight">
-							{activity.details ??
-								t({
-									locale: $localeStore,
-									key: 'market.recent.predicted_on',
-									params: { title: activity.title }
-								})}
+							<!-- A trade's `details` field carries the market question — redundant on the market's own page. -->
+							{activity.type === ActivityType.TRADE
+								? activity.title
+								: (activity.details ?? activity.title)}
 						</p>
 					</div>
 				</div>

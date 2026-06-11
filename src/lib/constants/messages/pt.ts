@@ -1498,7 +1498,6 @@ export const ptMessages = {
 	'market.order_book.title': 'Livro de ordens ({outcome})',
 	'market.order_book.updating': 'A atualizar profundidade...',
 	'market.recent.empty': 'Sem atividade recente',
-	'market.recent.predicted_on': 'previu em {title}',
 	'market.recent.title': 'Atividade recente',
 	'market.resolution.binary_sub': 'Escolhe YES ou NO para liquidar este mercado.',
 	'market.resolution.categorical_sub': 'Seleciona o resultado vencedor para liquidar este mercado.',
