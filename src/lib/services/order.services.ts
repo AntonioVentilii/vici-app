@@ -204,7 +204,8 @@ export const placeOrder = async ({
 			type: ActivityType.TRADE,
 			user: userText,
 			marketId,
-			title: `${side === 'BUY' ? 'Placed' : 'Sold'} ${qty} on ${outcome} @ ${Math.round(price * 100)}%`
+			// "Sold" only when the trade executed on the spot; an open limit sell is merely placed.
+			title: `${side === 'SELL' && type === 'MARKET' ? 'Sold' : 'Placed'} ${qty} on ${outcome} @ ${Math.round(price * 100)}%`
 		});
 		await recordActivity(userText);
 	} catch (e: unknown) {
