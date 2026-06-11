@@ -2219,7 +2219,7 @@ export const ptBRMessages = {
 	'trust.title_b': 'Sem vantagem. Sem segredos.',
 	'ui.banner.create_satellite_cta': 'Crie um agora!',
 	'ui.banner.satellite_needed': 'Seu projeto precisa de um Satellite para o dev local.',
-	'ui.loading': 'Carregando...',
+	'ui.loading': 'Carregando',
 	'ui.pagination.next': 'Próximo',
 	'ui.pagination.previous': 'Anterior',
 	'ui.pagination.range': '{from}–{to} de {total}',
