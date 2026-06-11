@@ -36,6 +36,7 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
 	import type { PrincipalText } from '@junobuild/schema';
+	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -225,9 +226,17 @@
 			settled = owner === undefined;
 		}
 
-		if (idx >= scopes.length) {
-			idx = 0;
-		}
+		// Clamp the scope cursor WITHOUT registering `idx` / `scopes` as
+		// dependencies. This effect assigns `scopes` a fresh array identity
+		// on every run, so a tracked read of it here makes the effect its
+		// own trigger: each run marks itself dirty again and Svelte aborts
+		// the flush with `effect_update_depth_exceeded`, freezing the page.
+		// Only `principal` may re-run this effect.
+		untrack(() => {
+			if (idx >= scopes.length) {
+				idx = 0;
+			}
+		});
 
 		void (async () => {
 			await Promise.allSettled([refreshFriendRelations(), refreshMyAffiliations()]);
