@@ -284,7 +284,8 @@
 		friendId: string;
 		profile: UserProfile | undefined;
 		accuracy: number;
-		streak: number;
+		/** Consecutive active days (the Flame engine) — rendered as `{n}d`. */
+		dailyStreak: number;
 		points: number;
 	}
 
@@ -301,7 +302,7 @@
 					friendId,
 					profile,
 					accuracy: profile?.accuracy ?? 0,
-					streak: profile?.streak ?? 0,
+					dailyStreak: profile?.dailyStreak ?? 0,
 					points: profile?.points ?? 0
 				});
 			}
@@ -856,6 +857,7 @@
 							<RankedRow
 								accuracyLabel={formatPct(row.accuracy)}
 								avatar={row.profile?.avatar}
+								dailyStreak={row.dailyStreak}
 								displayName={row.profile?.nickname ??
 									t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
 								h2hAhead={h2h.ahead}
@@ -864,7 +866,6 @@
 								numLabel={String(idx + 1).padStart(2, '0')}
 								onOpen={() => openFriendSheet(row)}
 								owner={row.profile?.owner ?? row.friendId}
-								streak={row.streak}
 								variant="friend"
 							/>
 						</li>
@@ -884,12 +885,12 @@
 						<RankedRow
 							accuracyLabel={formatPct(myAccuracy)}
 							avatar={myProfile?.avatar}
+							dailyStreak={myProfile?.dailyStreak ?? 0}
 							displayName={myProfile?.nickname ??
 								t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
 							nickname={myProfile?.nickname}
 							numLabel={t({ locale: $localeStore, key: 'arena.friends.ranked.you' })}
 							owner={userPrincipal}
-							streak={myProfile?.streak ?? 0}
 							variant="you"
 							vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
 						/>
@@ -997,6 +998,7 @@
 	{@const h2h = formatH2h(row.accuracy)}
 	<FriendProfileSheet
 		accuracyValue={formatPct(row.accuracy)}
+		dailyStreak={row.dailyStreak}
 		friendId={row.friendId}
 		h2hAhead={h2h.ahead}
 		h2hValue={h2h.value}
@@ -1005,7 +1007,6 @@
 		onRemove={handleRemoveFriend}
 		profile={row.profile}
 		removing={removingFriendId === row.friendId}
-		streak={row.streak}
 		vxpValue={formatVxpBalance({ value: vxpBaseUnitsFromPoints(row.points) })}
 	/>
 {/if}
