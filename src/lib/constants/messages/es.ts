@@ -300,6 +300,9 @@ export const esMessages = {
 	'album.progress_eyebrow': 'Progreso',
 	'album.progress_of': 'de {total} obtenidos',
 	'album.title': 'Mi álbum',
+	'maintenance.title': 'Estamos actualizando Vici',
+	'maintenance.body':
+		'Estamos implementando una breve actualización de la plataforma. La app se recargará sola en un momento.',
 	'menagerie.back': 'Volver al perfil',
 	'menagerie.badge.aria_earned': '{name} — nivel {tier}',
 	'menagerie.badge.aria_locked': '{name} (bloqueado)',

@@ -300,6 +300,9 @@ export const frMessages = {
 	'album.progress_eyebrow': 'Progression',
 	'album.progress_of': 'sur {total} obtenus',
 	'album.title': 'Mon album',
+	'maintenance.title': 'Nous mettons à jour Vici',
+	'maintenance.body':
+		"Une courte mise à jour de la plateforme est en cours. L'application se rechargera automatiquement dans un instant.",
 	'menagerie.back': 'Retour au profil',
 	'menagerie.badge.aria_earned': '{name} — palier {tier}',
 	'menagerie.badge.aria_locked': '{name} (verrouillé)',
