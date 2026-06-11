@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import type { Doc } from '@junobuild/core';
 	import { Check, ChevronRight, Link2, Plus, Share2, Sparkles } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
@@ -373,11 +374,6 @@
 
 	// ── Pending invites ─────────────────────────────────────────────
 	let processingKey = $state<string | undefined>(undefined);
-	let expandedPendingKey = $state<string | undefined>(undefined);
-
-	const togglePending = (key: string) => {
-		expandedPendingKey = expandedPendingKey === key ? undefined : key;
-	};
 
 	const handleAccept = async (doc: Doc<Relation>) => {
 		processingKey = doc.key;
@@ -385,12 +381,26 @@
 		try {
 			await acceptFriendRequest({ currentRelation: doc });
 			await refreshFriendRelations();
-			expandedPendingKey = undefined;
+
+			const friendId = otherParticipant(doc.data);
+			const nickname =
+				(nonNullish(friendId) ? friendProfiles.get(friendId)?.nickname : undefined) ??
+				t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' });
+
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
+				message: t({
+					locale: $localeStore,
+					key: 'arena.friends.accept.success',
+					params: { nickname }
+				}),
+				type: 'success'
+			});
 		} catch (err: unknown) {
 			console.error(err);
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
-				message: t({ locale: $localeStore, key: 'arena.friends.error.send_failed' }),
+				message: t({ locale: $localeStore, key: 'arena.friends.error.accept_failed' }),
 				type: 'error'
 			});
 		} finally {
@@ -404,12 +414,11 @@
 		try {
 			await rejectFriendRequest({ currentRelation: doc });
 			await refreshFriendRelations();
-			expandedPendingKey = undefined;
 		} catch (err: unknown) {
 			console.error(err);
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
-				message: t({ locale: $localeStore, key: 'arena.friends.error.send_failed' }),
+				message: t({ locale: $localeStore, key: 'arena.friends.error.reject_failed' }),
 				type: 'error'
 			});
 		} finally {
@@ -722,7 +731,7 @@
 					{@const profile = friendId ? friendProfiles.get(friendId) : undefined}
 					{@const isProcessing = processingKey === doc.key}
 					<li>
-						<div class="pending-row pending-row-sent">
+						<div class="pending-row">
 							<span class="pending-avatar">
 								<Avatar
 									class="h-full w-full"
@@ -767,14 +776,8 @@
 					{@const friendId = otherParticipant(doc.data)}
 					{@const profile = friendId ? friendProfiles.get(friendId) : undefined}
 					{@const isProcessing = processingKey === doc.key}
-					{@const isOpen = expandedPendingKey === doc.key}
 					<li>
-						<button
-							class="pending-row"
-							class:is-open={isOpen}
-							onclick={() => togglePending(doc.key)}
-							type="button"
-						>
+						<div class="pending-row">
 							<span class="pending-avatar">
 								<Avatar
 									class="h-full w-full"
@@ -793,14 +796,7 @@
 									{friendId ? shortenWithMiddleEllipsis({ text: friendId, splitLength: 5 }) : ''}
 								</span>
 							</span>
-							<span class="num pending-state">
-								{isOpen
-									? t({ locale: $localeStore, key: 'arena.friends.pending.close' })
-									: t({ locale: $localeStore, key: 'arena.friends.pending.waiting' })}
-							</span>
-						</button>
-						{#if isOpen}
-							<div class="pending-actions">
+							<span class="pending-actions">
 								<BaseButton
 									class="pending-action pending-accept"
 									onclick={() => handleAccept(doc)}
@@ -815,8 +811,8 @@
 								>
 									{t({ locale: $localeStore, key: 'arena.friends.action.reject' })}
 								</BaseButton>
-							</div>
-						{/if}
+							</span>
+						</div>
 					</li>
 				{/each}
 			</ul>
@@ -1399,27 +1395,6 @@
 		gap: 0.65rem;
 		width: 100%;
 		padding: 0.7rem 0.85rem;
-		border: 0;
-		background: transparent;
-		text-align: left;
-		cursor: pointer;
-		transition: background 140ms ease;
-	}
-
-	.pending-row:hover {
-		background: color-mix(in srgb, var(--text-base) 3%, transparent);
-	}
-
-	.pending-row.is-open {
-		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-	}
-
-	.pending-row-sent {
-		cursor: default;
-	}
-
-	.pending-row-sent:hover {
-		background: transparent;
 	}
 
 	.pending-avatar {
@@ -1453,20 +1428,10 @@
 		font-size: var(--t-12);
 	}
 
-	.pending-state {
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-10);
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
 	.pending-actions {
-		display: flex;
+		display: inline-flex;
+		flex-shrink: 0;
 		gap: 0.4rem;
-		padding: 0.5rem 0.85rem 0.7rem;
-		background: color-mix(in srgb, var(--color-primary) 3%, transparent);
 	}
 
 	:global(.pending-action) {
