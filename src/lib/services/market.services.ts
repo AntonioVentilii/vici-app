@@ -493,10 +493,12 @@ const enrichMarketsWithOrderBook = async ({
 
 			const yesProb = midPrice ?? 0.5;
 
-			// Only a real book mid goes to the persisted seed cache — an empty or
-			// failed book degrades to 0.5 here, and caching that would clobber a
-			// real last-known price with the placeholder.
-			if (nonNullish(midPrice)) {
+			// Only a liquidity-backed mid goes to the persisted seed cache. The
+			// nullish check on `midPrice` can't express that: `calculateProbability`
+			// returns the neutral 0.5 (never nullish) for an empty book, and a
+			// failed fetch degrades to an empty book above — caching either would
+			// clobber a real last-known price with the placeholder.
+			if (bids.length > 0 || asks.length > 0) {
 				priced.push({ id: market.id, yesProbability: yesProb });
 			}
 
