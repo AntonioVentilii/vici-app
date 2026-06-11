@@ -41,11 +41,11 @@
 		{ id: 'violet', value: '#b49cff' },
 		{ id: 'parch', value: '#f2ecdc' }
 	] as const;
-	// Three-way privacy selector — Invite-only / Private / Open, in that
-	// order, defaulting to Invite-only (the design default). The chosen
-	// value persists onto the league doc's `privacy` field and reads back
-	// as the detail header's privacy chip.
-	const PRIVACIES = [LeaguePrivacy.INVITE, LeaguePrivacy.PRIVATE, LeaguePrivacy.OPEN] as const;
+	// Three-way privacy selector — Private / Invite-only / Open, ordered
+	// most → least restrictive, defaulting to Invite-only (the design
+	// default). The chosen value persists onto the league doc's `privacy`
+	// field and reads back as the detail header's privacy chip.
+	const PRIVACIES = [LeaguePrivacy.PRIVATE, LeaguePrivacy.INVITE, LeaguePrivacy.OPEN] as const;
 
 	const [DEFAULT_COLOR] = COLORS;
 
