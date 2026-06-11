@@ -31,7 +31,8 @@
 		displayName: string;
 		/** Pre-formatted accuracy, e.g. `48.4%`. */
 		accuracyLabel: string;
-		streak: number;
+		/** Consecutive active days (the Flame engine) — rendered as `{n}d`. */
+		dailyStreak: number;
 		/** friend only — opens the mini-profile sheet. */
 		onOpen?: () => void;
 		/** friend only — head-to-head accuracy delta, e.g. `+12.3`. */
@@ -50,7 +51,7 @@
 		owner,
 		displayName,
 		accuracyLabel,
-		streak,
+		dailyStreak,
 		onOpen,
 		h2hValue,
 		h2hAhead = false,
@@ -68,7 +69,7 @@
 			@{displayName}
 		</span>
 		<span class="num ranked-meta">
-			{accuracyLabel} · {streak}d
+			{accuracyLabel} · {dailyStreak}d
 		</span>
 	</span>
 {/snippet}

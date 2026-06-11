@@ -348,7 +348,7 @@
 									})} · {t({
 										locale: $localeStore,
 										key: 'leaderboard.row.streak',
-										params: { count: row.streak }
+										params: { count: row.dailyStreak }
 									})}
 								</span>
 							</span>
@@ -387,7 +387,7 @@
 					{t({
 						locale: $localeStore,
 						key: 'leaderboard.sheet.rank_streak',
-						params: { rank: rankOf(row.owner), count: row.streak }
+						params: { rank: rankOf(row.owner), count: row.dailyStreak }
 					})}
 				</span>
 			</div>
@@ -410,7 +410,7 @@
 				<span class="lb-sheet-lbl">
 					{t({ locale: $localeStore, key: 'arena.friends.sheet.streak' })}
 				</span>
-				<span class="lb-sheet-val num">{row.streak}d</span>
+				<span class="lb-sheet-val num">{row.dailyStreak}d</span>
 			</div>
 		</div>
 
