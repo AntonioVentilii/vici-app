@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { getDoc, signOut } from '@junobuild/core';
 	import {
 		Bell,
@@ -105,7 +106,7 @@
 	};
 
 	const joinedLabel = $derived.by(() => {
-		if (joinedAtNs === undefined) {
+		if (isNullish(joinedAtNs)) {
 			return null;
 		}
 
@@ -563,7 +564,7 @@
 		}}
 	/>
 
-	{#if toastMessage !== null}
+	{#if nonNullish(toastMessage)}
 		<!--
 			Pill-shaped transient toast pinned to the bottom of the page.
 			Local to this surface — used for low-stakes confirmations

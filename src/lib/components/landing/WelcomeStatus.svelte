@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	/**
 	 * Accuracy-as-status section: an anchored headline beside a board
 	 * that cycles three labelled tabs — Friends / Universities /
@@ -103,7 +104,7 @@
 	let timer: ReturnType<typeof setInterval> | null = null;
 
 	const clear = (): void => {
-		if (timer !== null) {
+		if (nonNullish(timer)) {
 			clearInterval(timer);
 			timer = null;
 		}

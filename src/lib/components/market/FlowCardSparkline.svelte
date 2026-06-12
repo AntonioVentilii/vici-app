@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { MarketEvent } from '$lib/types/market-metadata';
@@ -101,7 +102,7 @@
 		events.forEach((e, i) => {
 			const existing = byDay[e.day];
 
-			if (existing === undefined) {
+			if (isNullish(existing)) {
 				byDay[e.day] = {
 					day: e.day,
 					label: e.label,
@@ -129,7 +130,7 @@
 	//  - `undefined` (no per-market fetch on this surface) falls back to
 	//    the seed-based shape.
 	const points = $derived.by<number[]>(() => {
-		if (pointsProp === undefined) {
+		if (isNullish(pointsProp)) {
 			return sparklinePoints({ yesPercent, seed });
 		}
 
@@ -144,9 +145,9 @@
 	// x-fractions. The seed fallback and the true cold-start (empty real
 	// series) keep uniform index spacing.
 	const timeAxis = $derived(
-		pointsProp !== undefined &&
+		nonNullish(pointsProp) &&
 			pointsProp.length > 0 &&
-			pointXsProp !== undefined &&
+			nonNullish(pointXsProp) &&
 			pointXsProp.length === pointsProp.length
 	);
 
@@ -156,7 +157,7 @@
 	// its fraction of the window; the live `yesPercent` appended as the last
 	// point is "now" (the right edge). Otherwise points are evenly spaced.
 	const xCoord = (i: number): number => {
-		if (timeAxis && pointXsProp !== undefined) {
+		if (timeAxis && nonNullish(pointXsProp)) {
 			return (i < pointXsProp.length ? pointXsProp[i] : 1) * w;
 		}
 
@@ -274,8 +275,8 @@
 		};
 	};
 
-	const activeEv = $derived(activeEvent !== null ? events[activeEvent] : undefined);
-	const activeDate = $derived(activeEv !== undefined ? dateForEvent(activeEv.day) : undefined);
+	const activeEv = $derived(nonNullish(activeEvent) ? events[activeEvent] : undefined);
+	const activeDate = $derived(nonNullish(activeEv) ? dateForEvent(activeEv.day) : undefined);
 </script>
 
 <div class="flow-spark-wrap" data-no-card-gesture="true">
@@ -307,7 +308,7 @@
 			{@const x = eventX(marker.day)}
 			{@const y = eventY(marker.day)}
 			{@const isActive = activeEvent === marker.primaryIndex}
-			{@const isPulse = activeEvent === null}
+			{@const isPulse = isNullish(activeEvent)}
 			<g
 				class="flow-spark-event-dot"
 				class:is-active={isActive}
@@ -396,7 +397,7 @@
 	</svg>
 
 	<!-- Active event label, OR hint when events present but none active -->
-	{#if activeEv !== undefined && activeDate !== undefined}
+	{#if nonNullish(activeEv) && nonNullish(activeDate)}
 		<div class="flow-spark-event-row num">
 			<span class="flow-spark-event-day">
 				{activeDate.dayName}

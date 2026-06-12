@@ -17,7 +17,7 @@ import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.service
 import { getProfile } from '$lib/services/profile.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import { getFollowers, getFriends } from '$lib/services/relation-queries.services';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
 import type { PrincipalText } from '@junobuild/schema';
@@ -27,7 +27,7 @@ const assertPermission = async (permission: Permission): Promise<void> => {
 	const profile = await getProfile(identity.getPrincipal().toText());
 	const { role } = profile.data;
 
-	if (role === undefined) {
+	if (isNullish(role)) {
 		throw new Error(`Unauthorized: missing ${permission} permission`);
 	}
 
@@ -59,6 +59,19 @@ export const createGroup = async ({
 	});
 };
 
+// Encodes a clearable update field (`opt opt text`): `undefined` leaves the
+// field unchanged (`[]`), an explicit `null` clears it (`[[]]`). The two
+// nullish values carry different meanings here, which `isNullish` cannot
+// express — hence the direct comparison.
+const toClearableUpdate = (value: string | null | undefined): [] | [[] | [string]] => {
+	// eslint-disable-next-line no-restricted-syntax
+	if (value === undefined) {
+		return [];
+	}
+
+	return isNullish(value) ? [[]] : [[value]];
+};
+
 export const updateGroup = async ({
 	groupId,
 	name,
@@ -76,9 +89,9 @@ export const updateGroup = async ({
 		identity,
 		params: {
 			group_id: groupId,
-			name: name !== undefined ? [name] : [],
-			description: description === undefined ? [] : description === null ? [[]] : [[description]],
-			icon_url: iconUrl === undefined ? [] : iconUrl === null ? [[]] : [[iconUrl]]
+			name: nonNullish(name) ? [name] : [],
+			description: toClearableUpdate(description),
+			icon_url: toClearableUpdate(iconUrl)
 		}
 	});
 };
@@ -305,7 +318,7 @@ export const getOrCreateFriendsGroup = async (): Promise<string> => {
 	const activeFriends = await getFriends();
 	const friendPrincipals = activeFriends
 		.map((f) => f.participants.find((p) => p !== principal))
-		.filter((p): p is PrincipalText => p !== undefined);
+		.filter((p): p is PrincipalText => nonNullish(p));
 
 	const currentMembers = friendsGroup.members.map((m) => m.toText());
 	const missingMembers = friendPrincipals.filter((p) => !currentMembers.includes(p));

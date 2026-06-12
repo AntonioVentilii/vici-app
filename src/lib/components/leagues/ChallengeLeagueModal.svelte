@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
@@ -67,7 +68,7 @@
 	const trashTalkRemaining = $derived(BATTLE_TRASH_TALK_MAX_LENGTH - trashTalk.length);
 
 	const canSubmit = $derived(
-		!submitting && !resolving && resolved !== undefined && resolved.id !== fromLeague.id
+		!submitting && !resolving && nonNullish(resolved) && resolved.id !== fromLeague.id
 	);
 
 	const reset = () => {
@@ -303,7 +304,7 @@
 			</div>
 		</fieldset>
 
-		{#if submitError !== null}
+		{#if nonNullish(submitError)}
 			<p class="challenge-form-error" role="alert">
 				{t({ locale: $localeStore, key: submitError })}
 			</p>

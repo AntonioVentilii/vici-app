@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { ArrowRight, Check } from '@lucide/svelte/icons';
 	import { onMount, tick } from 'svelte';
 	import { get } from 'svelte/store';
@@ -103,7 +104,7 @@
 		}
 
 		if (r.action === 'transfer') {
-			return r.transferTo !== null && r.transferTo.length > 0;
+			return nonNullish(r.transferTo) && r.transferTo.length > 0;
 		}
 
 		if (r.action === 'delete') {
@@ -119,7 +120,7 @@
 		ownedLeagues.map((l) => {
 			const r = resolutions[l.id];
 
-			if (r?.action === 'transfer' && r.transferTo !== null) {
+			if (r?.action === 'transfer' && nonNullish(r.transferTo)) {
 				return { leagueId: l.id, action: 'transfer', transferTo: r.transferTo };
 			}
 
@@ -272,7 +273,7 @@
 	};
 
 	const goToDisclosure = async () => {
-		if (reason === null) {
+		if (isNullish(reason)) {
 			return;
 		}
 
@@ -490,7 +491,7 @@
 				{/each}
 			</div>
 
-			{#if reason !== null}
+			{#if nonNullish(reason)}
 				<textarea
 					class="del-note"
 					maxlength={EXIT_SIGNAL_NOTE_MAX_LENGTH}
@@ -517,7 +518,7 @@
 				</div>
 			</div>
 
-			{#if errorKey !== null}
+			{#if nonNullish(errorKey)}
 				<p class="del-error" role="alert">
 					{t({ locale: $localeStore, key: errorKey, params: errorParams })}
 				</p>
@@ -530,7 +531,7 @@
 				<Button
 					class="del-danger-btn"
 					onclick={goToDisclosure}
-					status={reason === null ? 'disabled' : 'enabled'}
+					status={isNullish(reason) ? 'disabled' : 'enabled'}
 					variant="danger"
 				>
 					{t({ locale: $localeStore, key: 'settings.delete.continue' })}
@@ -849,7 +850,7 @@
 				</p>
 			{/if}
 
-			{#if errorKey !== null}
+			{#if nonNullish(errorKey)}
 				<p class="del-error" role="alert">
 					{t({ locale: $localeStore, key: errorKey, params: errorParams })}
 				</p>
@@ -872,7 +873,7 @@
 					{#snippet busyLabel()}
 						{t({ locale: $localeStore, key: 'settings.delete.deleting' })}
 					{/snippet}
-					{#if errorKey !== null}
+					{#if nonNullish(errorKey)}
 						{t({ locale: $localeStore, key: 'settings.delete.try_again' })}
 					{:else}
 						{t({ locale: $localeStore, key: 'settings.delete.forever' })}

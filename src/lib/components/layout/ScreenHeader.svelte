@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { ChevronLeft } from '@lucide/svelte/icons';
 	import type { Snippet } from 'svelte';
 
@@ -48,7 +49,7 @@
 	// entirely so the chip row reads as content rather than a hollow 50px
 	// strip — used by surfaces whose only context is a chip (e.g. the
 	// featured-event chip on Markets).
-	const showBar = $derived(title !== undefined || back !== undefined || right !== undefined);
+	const showBar = $derived(nonNullish(title) || nonNullish(back) || nonNullish(right));
 
 	const handleBack = () => {
 		back?.onBack();
@@ -73,13 +74,13 @@
 				<span class="screen-header-edge" aria-hidden="true"></span>
 			{/if}
 
-			{#if title !== undefined && variant === 'editorial'}
+			{#if nonNullish(title) && variant === 'editorial'}
 				<h1 class="screen-header-title is-editorial">
 					<span class="serif-italic">{title}</span>{#if accent}<span class="screen-header-accent"
 							>{accent}</span
 						>{/if}
 				</h1>
-			{:else if title !== undefined}
+			{:else if nonNullish(title)}
 				<h1 class="screen-header-title is-section">{title}</h1>
 			{:else}
 				<span class="screen-header-spacer" aria-hidden="true"></span>

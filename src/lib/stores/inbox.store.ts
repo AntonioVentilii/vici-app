@@ -30,6 +30,7 @@ import {
 import { t } from '$lib/utils/i18n.utils';
 import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 import { get, set as setStorage } from '$lib/utils/storage.utils';
+import { isNullish } from '@dfinity/utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
 
@@ -152,7 +153,7 @@ const friendRequestInboxStore: Readable<InboxNotification[]> = derived(
 const loadSettledReadSet = (): Set<bigint> => {
 	const raw = get<string[]>({ key: INBOX_SETTLED_READ_STORAGE_KEY });
 
-	if (raw === undefined) {
+	if (isNullish(raw)) {
 		return new Set();
 	}
 
@@ -488,7 +489,7 @@ export const initInboxToasts = (): (() => void) => {
 			return;
 		}
 
-		if (seenInboxIds === undefined) {
+		if (isNullish(seenInboxIds)) {
 			// Hydration just completed but no baseline recorded yet (edge case:
 			// subscribe fired with hydrated=true before any non-hydrated tick).
 			seenInboxIds = new Set(items.map((item) => item.id));
@@ -500,7 +501,7 @@ export const initInboxToasts = (): (() => void) => {
 
 		seenInboxIds = new Set(items.map((item) => item.id));
 
-		if (next === undefined) {
+		if (isNullish(next)) {
 			return;
 		}
 

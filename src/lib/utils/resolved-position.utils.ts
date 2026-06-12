@@ -3,6 +3,7 @@ import { ZERO } from '$lib/constants/app.constants';
 import type { Market, MarketId, OutcomeId } from '$lib/types/market';
 import type { ResolvedPosition } from '$lib/types/position';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+import { nonNullish } from '@dfinity/utils';
 
 /**
  * `EventType` shape from `@dfinity/candid` is a tagged union. These guards
@@ -98,7 +99,7 @@ export const inferResolvedOutcomeId = ({
 	resolved: Pick<ResolvedPosition, 'outcomeId'>;
 	market?: Pick<Market, 'payoffType' | 'outcome'>;
 }): OutcomeId | undefined => {
-	if (resolved.outcomeId !== undefined) {
+	if (nonNullish(resolved.outcomeId)) {
 		return resolved.outcomeId;
 	}
 

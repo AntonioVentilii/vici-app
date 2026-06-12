@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { Check, ChevronRight, X } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { joinLeagueByInvite, lookupLeagueByInvite } from '$lib/services/leagues.services';
@@ -40,7 +41,7 @@
 
 	const normalisedCode = $derived(code.trim().toUpperCase());
 	const codeIsValid = $derived(LEAGUE_INVITE_CODE_REGEX.test(normalisedCode));
-	const canSubmit = $derived(!submitting && matched !== undefined);
+	const canSubmit = $derived(!submitting && nonNullish(matched));
 
 	// Resolve the league as the user finishes typing a valid code. Each
 	// keystroke that yields a complete code kicks off a lookup; stale
@@ -196,8 +197,8 @@
 			</span>
 			<input
 				class="league-field-input is-code num"
-				class:is-matched={matched !== undefined}
-				aria-invalid={codeIsValid && !resolving && matched === undefined}
+				class:is-matched={nonNullish(matched)}
+				aria-invalid={codeIsValid && !resolving && isNullish(matched)}
 				autocapitalize="characters"
 				autocomplete="off"
 				maxlength="6"
@@ -231,7 +232,7 @@
 			</div>
 		{/if}
 
-		{#if submitError !== null}
+		{#if nonNullish(submitError)}
 			<p class="league-form-error" role="alert">
 				{typeof submitError === 'string' && !submitError.includes('.')
 					? submitError

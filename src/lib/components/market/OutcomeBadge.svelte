@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Outcome } from '$lib/types/market';
@@ -36,7 +37,7 @@
 	});
 
 	const displayLabel = $derived(
-		labelKey === undefined ? label : t({ locale: $localeStore, key: labelKey })
+		isNullish(labelKey) ? label : t({ locale: $localeStore, key: labelKey })
 	);
 </script>
 

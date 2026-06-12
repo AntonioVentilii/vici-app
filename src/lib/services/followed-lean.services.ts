@@ -5,7 +5,7 @@ import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId } from '$lib/types/market';
 import type { FollowedLeanSignal } from '$lib/types/market-signals';
 import { parseMarketId } from '$lib/validation/market.validation';
-import { fromNullable } from '@dfinity/utils';
+import { fromNullable, isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
 import type { PrincipalText } from '@junobuild/schema';
@@ -26,9 +26,9 @@ const toFollowedLean = ({
 	marketId: MarketId;
 	lean: ClearingDid.AggregateLean;
 }): FollowedLeanSignal | undefined => {
-	const binary = lean.outcomes.find((o) => fromNullable(o.outcome_id) === undefined);
+	const binary = lean.outcomes.find((o) => isNullish(fromNullable(o.outcome_id)));
 
-	if (binary === undefined) {
+	if (isNullish(binary)) {
 		return;
 	}
 
@@ -106,7 +106,7 @@ const aggregateFollowedLean = async ({
 	const followedLean: Partial<Record<MarketId, FollowedLeanSignal>> = {};
 
 	for (const entry of entries) {
-		if (entry !== undefined) {
+		if (nonNullish(entry)) {
 			followedLean[entry.marketId] = entry;
 		}
 	}

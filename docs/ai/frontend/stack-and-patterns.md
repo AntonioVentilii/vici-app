@@ -168,6 +168,10 @@ the service layer and let the service own caching.
 - **No non-null assertion (`!`)** on values that can actually be null —
   use `isNullish` / `nonNullish` from `@dfinity/utils`, optional chaining,
   or an explicit guard with an early return.
+- **No direct nullish comparisons** (eslint): `x === null`,
+  `x !== undefined`, loose `x == null`, … are all banned — write
+  `isNullish(x)` / `nonNullish(x)` from `@dfinity/utils` instead. The
+  helpers are type guards, so narrowing works the same.
 - **Generated types are the source of truth at canister boundaries.**
   Always import types from `$declarations/<canister>/<canister>.did` for
   request / response shapes — never re-declare them.

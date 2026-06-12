@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { Check, Pencil, Settings, Shield, Users } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -168,7 +169,7 @@
 		// paged slice), so the credibility line agrees with Goat's percentile.
 		const total = $globalStandingsStore.get('all')?.total;
 
-		if (globalRank === undefined || total === undefined || total <= 0) {
+		if (isNullish(globalRank) || isNullish(total) || total <= 0) {
 			return;
 		}
 
@@ -196,7 +197,7 @@
 	// same as the Arena Friends hero's `/i/{code}` link. The handle-based `/join/{handle}`
 	// link this used to build had no matching route and 404'd.
 	const inviteUrl = $derived(
-		inviteCode !== undefined && typeof window !== 'undefined'
+		nonNullish(inviteCode) && typeof window !== 'undefined'
 			? `${window.location.origin}/join/${inviteCode}`
 			: undefined
 	);
@@ -207,7 +208,7 @@
 	const handleInviteFriends = async () => {
 		const url = inviteUrl;
 
-		if (url === undefined) {
+		if (isNullish(url)) {
 			return;
 		}
 
@@ -326,7 +327,7 @@
 	// status is only surfaced on the slot when a university affiliation
 	// exists (see the `status:` assignment on the university slot below).
 	const schoolStatus = $derived<SchoolStatus>(
-		profile.schoolStatus !== undefined && SCHOOL_STATUSES.has(profile.schoolStatus)
+		nonNullish(profile.schoolStatus) && SCHOOL_STATUSES.has(profile.schoolStatus)
 			? (profile.schoolStatus as SchoolStatus)
 			: 'unverified'
 	);
@@ -344,27 +345,26 @@
 				key: 'university',
 				kind: 'university',
 				labelKey: 'profile.dashboard.affiliations.university',
-				filled: uniOption !== undefined,
+				filled: nonNullish(uniOption),
 				value: uniOption?.name ?? null,
 				affiliationIdentifier: uniOption?.id ?? null,
 				glyph: uniOption?.glyph ?? '+',
 				color: uniOption?.color ?? null,
 				text: uniOption?.text ?? null,
-				status: uniOption !== undefined ? schoolStatus : null
+				status: nonNullish(uniOption) ? schoolStatus : null
 			},
 			{
 				key: 'country',
 				kind: 'country',
 				labelKey: 'profile.dashboard.affiliations.country',
-				filled: countryOption !== undefined,
-				value:
-					countryOption !== undefined
-						? countryDisplayName({
-								code: countryOption.id,
-								locale: $localeStore,
-								fallback: countryOption.name
-							})
-						: null,
+				filled: nonNullish(countryOption),
+				value: nonNullish(countryOption)
+					? countryDisplayName({
+							code: countryOption.id,
+							locale: $localeStore,
+							fallback: countryOption.name
+						})
+					: null,
 				affiliationIdentifier: countryOption?.id ?? null,
 				glyph: countryOption?.glyph ?? '+',
 				color: countryOption?.color ?? null,
@@ -412,7 +412,7 @@
 	}
 
 	const oracleRecord = $derived.by<OracleRecord | undefined>(() => {
-		if (!isOwnProfile || latestSettlement === undefined) {
+		if (!isOwnProfile || isNullish(latestSettlement)) {
 			return;
 		}
 
@@ -601,11 +601,11 @@
 				<h1 class="profile-hero-handle">@{profile.nickname}</h1>
 			{/if}
 
-			{#if topPercentLabel !== undefined}
+			{#if nonNullish(topPercentLabel)}
 				<span class="num profile-hero-credibility">{topPercentLabel}</span>
 			{/if}
 
-			{#if isOwnProfile && inviteUrl !== undefined}
+			{#if isOwnProfile && nonNullish(inviteUrl)}
 				<button
 					class="profile-hero-invite"
 					onclick={() => void handleInviteFriends()}
@@ -651,10 +651,10 @@
 							text: slot.text ?? undefined
 						})}
 						class="affil-slot-icon"
-						class:has-brand={slot.filled && slot.kind !== 'country' && slot.color !== null}
+						class:has-brand={slot.filled && slot.kind !== 'country' && nonNullish(slot.color)}
 						aria-hidden="true"
 					>
-						{#if slot.kind === 'country' && slot.affiliationIdentifier !== null}
+						{#if slot.kind === 'country' && nonNullish(slot.affiliationIdentifier)}
 							<CountryFlag class="affil-slot-flag" countryCode={slot.affiliationIdentifier} />
 						{:else}
 							{slot.glyph}
@@ -736,7 +736,7 @@
 				{/each}
 			{:else}
 				{#each menagerieRailRows as row (row.animal.slug)}
-					{@const earned = row.tier !== null}
+					{@const earned = nonNullish(row.tier)}
 					<button
 						class="profile-menagerie-tile"
 						onclick={() => goto(resolve(AppPath.Album))}
@@ -765,7 +765,7 @@
 	<ProfileOracleInsight {oracleInsight} record={oracleRecord} />
 </div>
 
-{#if pickerKind !== null}
+{#if nonNullish(pickerKind)}
 	<AffiliationPickerModal
 		current={{ university: myUni, country: myCountry }}
 		initialVerifyId={pickerVerifyId ?? undefined}
@@ -793,7 +793,7 @@
 	/>
 {/if}
 
-{#if profileToast !== null}
+{#if nonNullish(profileToast)}
 	<div class="profile-toast num" aria-live="polite" role="status">
 		{profileToast}
 	</div>

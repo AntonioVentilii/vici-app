@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { Share2 } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -25,7 +26,7 @@
 				return;
 			}
 
-			if (navigator.clipboard !== undefined) {
+			if (nonNullish(navigator.clipboard)) {
 				await navigator.clipboard.writeText(url);
 				notificationsStore.add({
 					title: t({ locale: $localeStore, key: 'market.detail.share.copied_title' }),

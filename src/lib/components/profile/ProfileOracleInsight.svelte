@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -31,7 +32,7 @@
 			{t({ locale: $localeStore, key: 'profile.dashboard.oracle_label' })}
 			<span>{t({ locale: $localeStore, key: 'profile.dashboard.oracle_weekly' })}</span>
 		</p>
-		{#if record !== undefined}
+		{#if nonNullish(record)}
 			<!-- Record line — a win reads "You called it — '{q}?'", a loss reads
 			     "The market went the other way — '{q}?'". The question carries the
 			     accent so the call stays the focal point. -->

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -18,9 +19,7 @@
 
 	const { market, followedLean }: Props = $props();
 
-	const followedNo = $derived(
-		followedLean !== undefined ? followedLean.total - followedLean.yes : 0
-	);
+	const followedNo = $derived(nonNullish(followedLean) ? followedLean.total - followedLean.yes : 0);
 
 	// We don't yet have a "top predictors *on this market*" satellite
 	// query — slice the global leaderboard to approximate it. Top 4
@@ -88,7 +87,7 @@
 		</ul>
 	{/if}
 
-	{#if followedLean !== undefined && followedLean.total > 0}
+	{#if nonNullish(followedLean) && followedLean.total > 0}
 		<div class="market-followed-lean">
 			<div class="market-followed-lean-head">
 				<span class="market-followed-lean-label">

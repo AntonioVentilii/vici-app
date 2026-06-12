@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
@@ -46,12 +47,12 @@
 	const baseFavourites: FeaturedEventParticipant[] = $derived(
 		favouriteIds
 			.map((id) => participants.find((p) => p.id === id))
-			.filter((p): p is FeaturedEventParticipant => p !== undefined)
+			.filter((p): p is FeaturedEventParticipant => nonNullish(p))
 			.sort((a, b) => (b.odds ?? -Infinity) - (a.odds ?? -Infinity))
 	);
 
 	const favourites: FeaturedEventParticipant[] = $derived.by(() => {
-		if (localCountryCode === null) {
+		if (isNullish(localCountryCode)) {
 			return baseFavourites;
 		}
 

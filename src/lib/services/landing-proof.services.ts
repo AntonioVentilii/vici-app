@@ -1,5 +1,6 @@
 import { Collection } from '$lib/constants/collections.constants';
 import type { UserProfile } from '$lib/types/profile';
+import { nonNullish } from '@dfinity/utils';
 import { listDocs } from '@junobuild/core';
 
 /**
@@ -32,7 +33,7 @@ let cached: number | undefined;
  * Cached for the session: repeated mounts reuse the first resolved value.
  */
 export const getViciUserCount = async (): Promise<number | undefined> => {
-	if (cached !== undefined) {
+	if (nonNullish(cached)) {
 		return cached;
 	}
 

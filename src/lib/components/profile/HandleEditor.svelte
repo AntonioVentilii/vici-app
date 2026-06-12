@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { X } from '@lucide/svelte/icons';
 	import { untrack } from 'svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
@@ -148,7 +149,7 @@
 	const showAvailable = $derived(localValid && availability === 'available');
 
 	const hintKey = $derived.by<MessageKey>(() => {
-		if (errorKey !== null) {
+		if (nonNullish(errorKey)) {
 			return errorKey;
 		}
 
@@ -164,7 +165,7 @@
 	});
 
 	const hintIsError = $derived(
-		errorKey !== null || availability === 'taken' || availability === 'failed'
+		nonNullish(errorKey) || availability === 'taken' || availability === 'failed'
 	);
 
 	const canSave = $derived(!locked && localValid && availability === 'available' && !pending);

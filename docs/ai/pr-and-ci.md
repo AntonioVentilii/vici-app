@@ -220,6 +220,9 @@ so doc-only changes typically pass it trivially.
   catches:
   - `0n` literal → use the shared `ZERO` constant.
   - `return undefined;` → bare `return;` (or comment-explain in `catch`).
+  - `x === null` / `x !== undefined` (any direct `==`/`===`/`!=`/`!==`
+    against `null`/`undefined`) → `isNullish(x)` / `nonNullish(x)` from
+    `@dfinity/utils`.
   - Relative imports under `src/**` → use the path aliases (see
     [`frontend/structure.md`](./frontend/structure.md#imports)).
 - **`check` failed** → fix `svelte-check` errors. No `// @ts-ignore`,

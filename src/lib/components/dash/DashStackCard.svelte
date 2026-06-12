@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	/**
 	 * Zone 2 · Stack — the holdings card. Shows total holdings as the headline
 	 * with in-play (backed) and today's net delta as compact sub-stats. Tapping
@@ -26,7 +27,7 @@
 
 	let { holdingsDisplay, inPlayDisplay, todayDelta, loading, onOpen }: Props = $props();
 
-	const todayPositive = $derived(todayDelta !== null && todayDelta >= 0);
+	const todayPositive = $derived(nonNullish(todayDelta) && todayDelta >= 0);
 </script>
 
 <!-- While loading, the breakdown sheet would expose the same misleading
@@ -51,10 +52,10 @@
 			<div class="db-kk">{t({ locale: $localeStore, key: 'dash.build.today' })}</div>
 			<div
 				class="db-vv num"
-				class:down={todayDelta !== null && !todayPositive}
+				class:down={nonNullish(todayDelta) && !todayPositive}
 				class:up={todayPositive}
 			>
-				{#if todayDelta === null}
+				{#if isNullish(todayDelta)}
 					{t({ locale: $localeStore, key: 'dash.rank.placeholder' })}
 				{:else}
 					{t({

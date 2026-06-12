@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import FlowCardFooter from '$lib/components/market/FlowCardFooter.svelte';
@@ -89,7 +90,7 @@
 		guided = false
 	}: Props = $props();
 
-	const isCommitted = $derived(committedAction !== null);
+	const isCommitted = $derived(nonNullish(committedAction));
 
 	// Swipe physics — rotation damping of 18 (drag.x / 18), commit
 	// threshold of 100 px, settle delay of 220 ms after pointer-up
@@ -189,7 +190,7 @@
 
 		const dtk = $daysToKickoff;
 
-		if (dtk == null) {
+		if (isNullish(dtk)) {
 			return 'wc.matchday';
 		}
 
@@ -208,10 +209,10 @@
 	const followedYes = $derived(followedLean?.yes);
 	const followedTotal = $derived(followedLean?.total ?? 10);
 	const followedNo = $derived(
-		followedYes !== undefined ? Math.max(0, followedTotal - followedYes) : undefined
+		nonNullish(followedYes) ? Math.max(0, followedTotal - followedYes) : undefined
 	);
 	const followedLeanText = $derived.by(() => {
-		if (followedYes === undefined || followedNo === undefined) {
+		if (isNullish(followedYes) || isNullish(followedNo)) {
 			return '';
 		}
 
@@ -316,7 +317,7 @@
 	const isInteractiveTarget = (target: EventTarget | null): boolean => {
 		const el = target as HTMLElement | null;
 
-		if (el === null) {
+		if (isNullish(el)) {
 			return false;
 		}
 
@@ -612,7 +613,7 @@
 				       (c) empty                          — neither available -->
 					<div class="flow-social num">
 						<SeededAvatarStack borderColor="var(--bg-popover)" size={18} />
-						{#if followedYes !== undefined && followedYes > 0}
+						{#if nonNullish(followedYes) && followedYes > 0}
 							<span class="flow-followed-lean">{followedLeanText}</span>
 						{:else if predictorsCount > 0}
 							<span>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	/**
 	 * Swipeable accuracy-trend chart for the performance hero. Renders the
 	 * synthesised trail for the active window (7 / 30 / 90 days) as a filled
@@ -46,7 +47,7 @@
 	};
 
 	const onPointerUp = (event: PointerEvent): void => {
-		if (pointerDownX === null) {
+		if (isNullish(pointerDownX)) {
 			return;
 		}
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { Search, X } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -103,10 +104,7 @@
 	const trashTalkRemaining = $derived(BATTLE_TRASH_TALK_MAX_LENGTH - trashTalk.length);
 
 	const canSend = $derived(
-		!submitting &&
-			fromLeague !== undefined &&
-			opponent !== undefined &&
-			opponent.id !== fromLeague.id
+		!submitting && nonNullish(fromLeague) && nonNullish(opponent) && opponent.id !== fromLeague.id
 	);
 
 	// The wizard's actions dock in the sheet's non-scrolling footer (so the
@@ -184,7 +182,7 @@
 	const handleSubmit = async (event?: Event) => {
 		event?.preventDefault();
 
-		if (!canSend || fromLeague === undefined || opponent === undefined) {
+		if (!canSend || isNullish(fromLeague) || isNullish(opponent)) {
 			return;
 		}
 
@@ -218,7 +216,7 @@
 
 {#snippet boutFooter()}
 	<div class="create-bout-foot">
-		{#if submitError !== null}
+		{#if nonNullish(submitError)}
 			<p class="create-bout-error" role="alert">
 				{t({ locale: $localeStore, key: submitError })}
 			</p>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isEmptyString } from '@dfinity/utils';
+	import { isEmptyString, isNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import type { RegistryDid } from '$declarations';
 	import SocialPremiumPicker from '$lib/components/arena/SocialPremiumPicker.svelte';
@@ -114,7 +114,7 @@
 					})
 				: undefined;
 
-		if (selectedDomain === 'Social' && socialReward === undefined) {
+		if (selectedDomain === 'Social' && isNullish(socialReward)) {
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'challenge.create.error.missing_premium' }),
 				message: t({

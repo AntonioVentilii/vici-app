@@ -140,7 +140,7 @@ const resolveSchool = ({
 }): ResolvedSchool => {
 	const matched = spMatchEmail({ email, directory: WORLDS_UNIVERSITIES });
 
-	if (matched === null) {
+	if (isNullish(matched)) {
 		throw new Error('Enter a valid school email address.');
 	}
 

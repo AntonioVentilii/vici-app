@@ -7,7 +7,7 @@ import {
 	myReferralCountStore
 } from '$lib/stores/menagerie.store';
 import { userStore } from '$lib/stores/user.store';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { get } from 'svelte/store';
 
 /**
@@ -31,7 +31,7 @@ import { get } from 'svelte/store';
 let inFlight: Promise<void> | null = null;
 
 export const loadMyMenagerieSignals = async (): Promise<void> => {
-	if (inFlight !== null) {
+	if (nonNullish(inFlight)) {
 		return inFlight;
 	}
 

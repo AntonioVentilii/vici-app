@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	/**
 	 * Interactive swipe hero — the centerpiece of the landing.
 	 *
@@ -60,7 +61,7 @@
 	let commitTimer: ReturnType<typeof setTimeout> | null = null;
 
 	const clearCommitTimer = (): void => {
-		if (commitTimer !== null) {
+		if (nonNullish(commitTimer)) {
 			clearTimeout(commitTimer);
 			commitTimer = null;
 		}
@@ -303,7 +304,7 @@
 										<span style="color:{accent}; background:rgba(242,236,220,0.06);" class="tag">
 											{catLabel}
 										</span>
-										{#if $daysToKickoff !== null && $daysToKickoff > 0}
+										{#if nonNullish($daysToKickoff) && $daysToKickoff > 0}
 											<span class="flow-days num soon">{$daysToKickoff}d</span>
 										{/if}
 									</div>

@@ -647,7 +647,7 @@ export const loadMarketsProgressive = async ({
 	const priceById = new Map((previous ?? []).map((market) => [market.id, market]));
 	const cachedYesById = readCachedYesProbabilities();
 	const seeded = lite.map((market) => {
-		if (market.status === 'Resolved' && market.outcome !== undefined) {
+		if (market.status === 'Resolved' && nonNullish(market.outcome)) {
 			const yesWon = market.outcome === 'YES';
 
 			return { ...market, yesProbability: yesWon ? 1 : 0, noProbability: yesWon ? 0 : 1 };
@@ -655,7 +655,7 @@ export const loadMarketsProgressive = async ({
 
 		const prior = priceById.get(market.id);
 
-		if (prior !== undefined) {
+		if (nonNullish(prior)) {
 			return {
 				...market,
 				yesProbability: prior.yesProbability,
@@ -669,7 +669,7 @@ export const loadMarketsProgressive = async ({
 
 		const cachedYes = cachedYesById.get(market.id);
 
-		return cachedYes === undefined
+		return isNullish(cachedYes)
 			? market
 			: { ...market, yesProbability: cachedYes, noProbability: 1 - cachedYes };
 	});
@@ -698,7 +698,7 @@ export const loadMarketsProgressive = async ({
 		for (const market of batch) {
 			const index = indexById.get(market.id);
 
-			if (index !== undefined) {
+			if (nonNullish(index)) {
 				enriched[index] = market;
 			}
 		}

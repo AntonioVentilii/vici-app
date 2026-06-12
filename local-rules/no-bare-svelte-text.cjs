@@ -42,6 +42,9 @@
  */
 'use strict';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { isNullish, nonNullish } = require('@dfinity/utils');
+
 const I18N_UTILS_PATH = '$lib/utils/i18n.utils';
 const LETTER_RUN = /[A-Za-zÀ-ÖØ-öø-ÿ]{4,}/;
 const SKIP_PARENT_TYPES = new Set(['SvelteScriptElement', 'SvelteStyleElement']);
@@ -82,7 +85,7 @@ const stripExemptTokens = (text) => text.replace(BRAND_TOKENS_RE, '').replace(VE
 
 const walkSvelteText = ({ ast, onMatch }) => {
 	const visit = ({ node, ancestors }) => {
-		if (node === null || typeof node !== 'object' || typeof node.type !== 'string') {
+		if (isNullish(node) || typeof node !== 'object' || typeof node.type !== 'string') {
 			return;
 		}
 
@@ -113,7 +116,7 @@ const walkSvelteText = ({ ast, onMatch }) => {
 				for (const item of child) {
 					visit({ node: item, ancestors: nextAncestors });
 				}
-			} else if (child !== null && typeof child === 'object' && typeof child.type === 'string') {
+			} else if (nonNullish(child) && typeof child === 'object' && typeof child.type === 'string') {
 				visit({ node: child, ancestors: nextAncestors });
 			}
 		}
@@ -168,7 +171,7 @@ module.exports = {
 					context.sourceCode ??
 					(typeof context.getSourceCode === 'function' ? context.getSourceCode() : null);
 
-				if (sourceCode === null || sourceCode === undefined) {
+				if (isNullish(sourceCode)) {
 					return;
 				}
 

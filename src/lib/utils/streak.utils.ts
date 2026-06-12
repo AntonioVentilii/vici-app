@@ -1,4 +1,5 @@
 import type { MessageKey } from '$lib/utils/i18n.utils';
+import { isNullish } from '@dfinity/utils';
 
 export type FlameStage = 'spark' | 'ember' | 'flame' | 'blaze' | 'inferno';
 
@@ -93,7 +94,7 @@ export const dayDelta = ({ from, to }: { from: string; to: string }): number => 
 	const a = parse(from);
 	const b = parse(to);
 
-	if (a === null || b === null) {
+	if (isNullish(a) || isNullish(b)) {
 		return Infinity;
 	}
 
@@ -138,7 +139,7 @@ export const applyDailyStreakBump = ({
 }): DailyStreakBump => {
 	const today = todayKey(now);
 
-	if (lastActiveDay === undefined || lastActiveDay === '') {
+	if (isNullish(lastActiveDay) || lastActiveDay === '') {
 		return { streak: 1, transition: 'continue', bumped: true, lastActiveDay: today };
 	}
 

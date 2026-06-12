@@ -25,6 +25,7 @@
  *
  * See `docs/ai/pr-and-ci.md` (deploy workflow) for how CI consumes this.
  */
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -67,7 +68,7 @@ const readAliases = () => {
 	const tsconfigPath = path.join(repoRoot, SATELLITE_TSCONFIG);
 	const { config, error } = ts.readConfigFile(tsconfigPath, (p) => fs.readFileSync(p, 'utf8'));
 
-	if (error !== undefined) {
+	if (nonNullish(error)) {
 		throw new Error(
 			`Cannot parse ${SATELLITE_TSCONFIG}: ${ts.flattenDiagnosticMessageText(error.messageText, ' ')}`
 		);
@@ -107,7 +108,7 @@ const resolveSpecifier = ({ specifier, importerDir, aliases }) => {
 
 	const exact = aliases.exact.get(specifier);
 
-	if (exact !== undefined) {
+	if (nonNullish(exact)) {
 		return exact;
 	}
 
@@ -174,11 +175,11 @@ const valueImports = ({ fileName, source }) => {
 			const clause = node.importClause;
 			const namedBindings = clause?.namedBindings;
 			const allNamedAreTypes =
-				namedBindings !== undefined &&
+				nonNullish(namedBindings) &&
 				ts.isNamedImports(namedBindings) &&
 				namedBindings.elements.length > 0 &&
 				namedBindings.elements.every((element) => element.isTypeOnly) &&
-				clause.name === undefined;
+				isNullish(clause.name);
 
 			if (clause?.isTypeOnly !== true && !allNamedAreTypes) {
 				specifiers.push(node.moduleSpecifier.text);
@@ -189,7 +190,7 @@ const valueImports = ({ fileName, source }) => {
 
 		if (
 			ts.isExportDeclaration(node) &&
-			node.moduleSpecifier !== undefined &&
+			nonNullish(node.moduleSpecifier) &&
 			ts.isStringLiteral(node.moduleSpecifier)
 		) {
 			if (!node.isTypeOnly) {
@@ -254,7 +255,7 @@ const collectClosure = () => {
 					aliases
 				});
 
-				if (candidate !== null) {
+				if (nonNullish(candidate)) {
 					const resolved = probeFiles(candidate);
 
 					if (resolved.length === 0) {
@@ -288,7 +289,7 @@ const main = () => {
 	const baseIndex = process.argv.indexOf('--base');
 	const base = baseIndex >= 0 ? process.argv[baseIndex + 1] : undefined;
 
-	if (base === undefined || base.length === 0) {
+	if (isNullish(base) || base.length === 0) {
 		throw new Error('Missing --base <git-ref>');
 	}
 

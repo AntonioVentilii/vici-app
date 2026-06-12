@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { resolveBattle } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -42,7 +43,7 @@
 			parsedA >= 0 &&
 			parsedB >= 0
 	);
-	const canSubmit = $derived(!submitting && battle !== null && inputsValid);
+	const canSubmit = $derived(!submitting && nonNullish(battle) && inputsValid);
 
 	// Winner preview. Returns one of three i18n keys for the live
 	// outcome banner. `null` when inputs aren't both numbers yet.

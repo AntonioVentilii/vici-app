@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { isWebAuthnAvailable, signIn, signUp } from '@junobuild/core';
 	import { ChevronRight, Mail } from '@lucide/svelte';
 	import { onMount } from 'svelte';
@@ -71,9 +71,9 @@
 
 	const productionAvailable = $derived(isProd() && isNotSkylab());
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
-	const isBusy = $derived(signingIn !== null);
+	const isBusy = $derived(nonNullish(signingIn));
 	// When the email row is expanded the other providers dim to 0.4.
-	const isFaded = $derived(emailOpen && signingIn === null);
+	const isFaded = $derived(emailOpen && isNullish(signingIn));
 
 	const startSignIn = async ({
 		id,
@@ -82,7 +82,7 @@
 		id: ProviderId;
 		run: () => Promise<void>;
 	}): Promise<void> => {
-		if (signingIn !== null) {
+		if (nonNullish(signingIn)) {
 			return;
 		}
 
@@ -111,7 +111,7 @@
 	// the (app) layout) drains any pending onboarding. The signed-out bounce
 	// waits for the auth handshake, so there's no signin flash.
 	const onApple = async () => {
-		if (signingIn !== null) {
+		if (nonNullish(signingIn)) {
 			return;
 		}
 
@@ -217,20 +217,19 @@
 	const stashPendingEmail = (address: string): void => {
 		try {
 			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
-			const parsed: Record<string, unknown> =
-				raw !== null
-					? ((): Record<string, unknown> => {
-							try {
-								const value: unknown = JSON.parse(raw);
+			const parsed: Record<string, unknown> = nonNullish(raw)
+				? ((): Record<string, unknown> => {
+						try {
+							const value: unknown = JSON.parse(raw);
 
-								return typeof value === 'object' && value !== null
-									? (value as Record<string, unknown>)
-									: {};
-							} catch {
-								return {};
-							}
-						})()
-					: {};
+							return typeof value === 'object' && nonNullish(value)
+								? (value as Record<string, unknown>)
+								: {};
+						} catch {
+							return {};
+						}
+					})()
+				: {};
 			parsed.email = address;
 			localStorage.setItem(PENDING_ONBOARDING_STORAGE_KEY, JSON.stringify(parsed));
 		} catch {

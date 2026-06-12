@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -163,7 +164,7 @@
 		option: WorldsAffiliationOption | undefined;
 		id: string;
 	}): string =>
-		opt !== undefined ? affiliationDisplayName({ option: opt, kind, locale: $localeStore }) : id;
+		nonNullish(opt) ? affiliationDisplayName({ option: opt, kind, locale: $localeStore }) : id;
 
 	const detailPath = (id: string): string => {
 		const segment = kind === 'university' ? 'school' : 'country';
@@ -234,7 +235,7 @@
 				{t({ locale: $localeStore, key: 'worlds.event.title_tail' })}
 			</h3>
 			<p class="worlds-battle-hero-meta num">
-				{#if scope === 'wc' && eventDaysLeft !== null}
+				{#if scope === 'wc' && nonNullish(eventDaysLeft)}
 					{t({
 						locale: $localeStore,
 						key: 'worlds.event.meta',

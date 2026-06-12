@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import type { PrincipalText } from '@junobuild/schema';
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -30,7 +31,7 @@
 		try {
 			const oracle = await getViciOracle();
 
-			if (oracle === undefined) {
+			if (isNullish(oracle)) {
 				status = 'missing';
 				authorizedPrincipals = [];
 

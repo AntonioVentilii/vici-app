@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import OnboardingBeat1 from '$lib/components/onboarding/OnboardingBeat1.svelte';
 	import OnboardingBeat1Card from '$lib/components/onboarding/OnboardingBeat1Card.svelte';
 	import OnboardingBeat2 from '$lib/components/onboarding/OnboardingBeat2.svelte';
@@ -44,7 +45,7 @@
 	// `beat`/`participantId` as local state from here on, so a later prop
 	// change must not yank the user back to Beat 1b.
 	const presetParticipantId: string | null = (() => {
-		if (initialParticipantId === undefined) {
+		if (isNullish(initialParticipantId)) {
 			return null;
 		}
 
@@ -53,7 +54,7 @@
 		return exists ? initialParticipantId : null;
 	})();
 
-	let beat: Beat = $state(presetParticipantId === null ? '1a' : '1b');
+	let beat: Beat = $state(isNullish(presetParticipantId) ? '1a' : '1b');
 	let participantId: string | null = $state(presetParticipantId);
 	let side: 'YES' | 'NO' | null = $state(null);
 	let handle: string | null = $state(null);
