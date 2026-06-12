@@ -95,6 +95,14 @@
 					</ul>
 				{:else if block.kind === 'mail'}
 					<a class="info-mail num" href={mailtoHref(block.text)}>{block.text}</a>
+				{:else if block.kind === 'link'}
+					<a class="info-mail num" href={block.href} rel="noopener noreferrer" target="_blank">
+						{block.text}
+					</a>
+				{:else if block.kind === 'badge'}
+					<a class="info-badge" href={block.href} rel="noopener noreferrer" target="_blank">
+						<img alt={block.alt} src={block.src} />
+					</a>
 				{/if}
 			{/each}
 		</article>
@@ -243,6 +251,20 @@
 
 	.info-mail:hover {
 		text-decoration-color: var(--color-primary);
+	}
+
+	/* Linked certification badge — the artwork carries its own card
+	   framing, so the block only sizes and spaces it. */
+	.info-badge {
+		display: block;
+		margin: 0.5rem 0 1rem;
+		width: min(11rem, 60%);
+	}
+
+	.info-badge img {
+		display: block;
+		width: 100%;
+		height: auto;
 	}
 
 	.info-foot {
