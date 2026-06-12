@@ -74,3 +74,12 @@ Implementation invariants and the new-award-type checklist live in
 Grow this list one entry per behaviour-changing PR — a short
 subsection or a link to the governing spec / doc. Do not bulk-generate
 it from the code.
+
+### Friend activity — tap to "like" a friend's call
+
+Each row of the Arena → Friends activity feed carries a single
+tap-to-react "like" (a `Zap` glyph). Tapping toggles it on/off and
+plays a brief tilt + laurel particle burst on commit; the motion is
+suppressed under reduced-motion. The reaction is local to the session —
+there is no persisted reaction model yet. See
+[`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md).
