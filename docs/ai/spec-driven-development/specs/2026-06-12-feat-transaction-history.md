@@ -87,16 +87,16 @@ wallet ledger balance + free clearing margin. This matches the user's
 mental model: placing a prediction visibly moves VXP out, a win brings
 back stake + profit, a loss returns nothing.
 
-| Event                          | Row label              | Available-VXP delta                      |
-| ------------------------------ | ---------------------- | ---------------------------------------- |
-| Ledger receive with `vxp:` memo | Bonus · `<award type>` | + amount                                 |
-| Clearing `OrderPlaced`         | Prediction · `<market>`| − locked margin (stake)                  |
-| Clearing order cancelled       | Cancelled · `<market>` | + released margin                        |
-| Clearing `Settled`, return > 0 | Won · `<market>`       | + returned amount (stake + profit)       |
-| Clearing `Settled`, return = 0 | Lost · `<market>`      | 0 (subtitle: "stake of `<n>` not returned") |
-| Clearing `Liquidated`          | Liquidated · `<market>`| signed event amount                      |
-| Other ledger send/receive/mint | Sent / Received        | ± amount                                 |
-| Wallet↔clearing sweeps         | **hidden row**         | − transfer fee only (silently applied)   |
+| Event                           | Row label               | Available-VXP delta                         |
+| ------------------------------- | ----------------------- | ------------------------------------------- |
+| Ledger receive with `vxp:` memo | Bonus · `<award type>`  | + amount                                    |
+| Clearing `OrderPlaced`          | Prediction · `<market>` | − locked margin (stake)                     |
+| Clearing order cancelled        | Cancelled · `<market>`  | + released margin                           |
+| Clearing `Settled`, return > 0  | Won · `<market>`        | + returned amount (stake + profit)          |
+| Clearing `Settled`, return = 0  | Lost · `<market>`       | 0 (subtitle: "stake of `<n>` not returned") |
+| Clearing `Liquidated`           | Liquidated · `<market>` | signed event amount                         |
+| Other ledger send/receive/mint  | Sent / Received         | ± amount                                    |
+| Wallet↔clearing sweeps          | **hidden row**          | − transfer fee only (silently applied)      |
 
 - Losses render **0**, not −stake: the stake already left available
   balance at placement; showing −stake again would double-count.
@@ -228,7 +228,7 @@ record:
 5. Add the `DashStackSheet` link row.
 6. Add `transactions.*` i18n keys to every locale catalog.
 7. Wire `transactions_viewed` / `transactions_filtered` (union + Zod
-   + `track`).
+   - `track`).
 8. Update `PRODUCT.md`; run `npm run quality` and `npm run check`.
 
 ## Acceptance criteria
