@@ -23,6 +23,7 @@ import {
 	type LeagueMemberDoc,
 	type LeagueMemberRole
 } from '$lib/types/league-member';
+import { nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 import { get } from 'svelte/store';
 
@@ -280,7 +281,7 @@ export const validateLeagueDraft = ({
 		return { ok: false, reason: 'name_too_long' };
 	}
 
-	if (description !== undefined && description.length > LEAGUE_DESCRIPTION_MAX_LENGTH) {
+	if (nonNullish(description) && description.length > LEAGUE_DESCRIPTION_MAX_LENGTH) {
 		return { ok: false, reason: 'description_too_long' };
 	}
 
@@ -467,7 +468,7 @@ export const updateLeague = async ({
 
 	const next: LeagueDoc = { ...existing.data };
 
-	if (name !== undefined) {
+	if (nonNullish(name)) {
 		const trimmedName = name.trim();
 
 		const validation = validateLeagueDraft({ name: trimmedName });
@@ -479,11 +480,11 @@ export const updateLeague = async ({
 		next.name = trimmedName;
 	}
 
-	if (privacy !== undefined) {
+	if (nonNullish(privacy)) {
 		next.privacy = privacy;
 	}
 
-	if (imageUrl !== undefined) {
+	if (nonNullish(imageUrl)) {
 		const trimmedImageUrl = imageUrl?.trim() ?? '';
 
 		if (trimmedImageUrl.length === 0) {
@@ -651,7 +652,7 @@ const projectBattleWire = (b: {
 	settleMs: b.settleMs,
 	// Re-narrow the loose wire string back to the typed union; drop
 	// anything outside the closed scope set (legacy / unknown).
-	scope: b.scope !== undefined && isBattleScope(b.scope) ? b.scope : undefined,
+	scope: nonNullish(b.scope) && isBattleScope(b.scope) ? b.scope : undefined,
 	wager: b.wager,
 	trashTalk: b.trashTalk,
 	scoreA: b.scoreA,
@@ -723,12 +724,12 @@ export const proposeBattle = async ({
 		throw new Error('Kickoff must be strictly before settle.');
 	}
 
-	if (scope !== undefined && !isBattleScope(scope)) {
+	if (nonNullish(scope) && !isBattleScope(scope)) {
 		throw new Error(`Invalid battle scope "${scope}".`);
 	}
 
 	if (
-		wager !== undefined &&
+		nonNullish(wager) &&
 		(!Number.isFinite(wager) || wager < BATTLE_WAGER_MIN || wager > BATTLE_WAGER_MAX)
 	) {
 		throw new Error(`Wager must be within [${BATTLE_WAGER_MIN}, ${BATTLE_WAGER_MAX}].`);
@@ -738,7 +739,7 @@ export const proposeBattle = async ({
 	// string for an absent message.
 	const trimmedTrashTalk = trashTalk?.trim();
 
-	if (trimmedTrashTalk !== undefined && trimmedTrashTalk.length > BATTLE_TRASH_TALK_MAX_LENGTH) {
+	if (nonNullish(trimmedTrashTalk) && trimmedTrashTalk.length > BATTLE_TRASH_TALK_MAX_LENGTH) {
 		throw new Error(`Trash talk must be at most ${BATTLE_TRASH_TALK_MAX_LENGTH} characters.`);
 	}
 
@@ -757,11 +758,11 @@ export const proposeBattle = async ({
 		settleMs,
 		// Persist scope only when narrowed (omit the 'all' default so legacy
 		// reads and the default render path stay identical).
-		...(scope !== undefined && scope !== 'all' ? { scope } : {}),
+		...(nonNullish(scope) && scope !== 'all' ? { scope } : {}),
 		// Persist wager only when staked (omit a 0 wager).
-		...(wager !== undefined && wager > BATTLE_WAGER_MIN ? { wager } : {}),
+		...(nonNullish(wager) && wager > BATTLE_WAGER_MIN ? { wager } : {}),
 		// Persist trash-talk only when non-empty after trimming.
-		...(trimmedTrashTalk !== undefined && trimmedTrashTalk.length > 0
+		...(nonNullish(trimmedTrashTalk) && trimmedTrashTalk.length > 0
 			? { trashTalk: trimmedTrashTalk }
 			: {})
 	};

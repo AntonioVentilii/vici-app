@@ -1,4 +1,5 @@
 import type { Market, MarketId } from '$lib/types/market';
+import { nonNullish } from '@dfinity/utils';
 
 /**
  * A lineage group: the "root" public market plus every visible fork sharing
@@ -108,7 +109,7 @@ export const groupMarketsByLineage = ({
 		const bucket = buckets.get(rootId) ?? [];
 		const actualRoot = byId.get(rootId) ?? null;
 
-		if (actualRoot !== null && bucket.some((m) => m.id === rootId)) {
+		if (nonNullish(actualRoot) && bucket.some((m) => m.id === rootId)) {
 			const forks = bucket.filter((m) => m.id !== rootId);
 
 			return {

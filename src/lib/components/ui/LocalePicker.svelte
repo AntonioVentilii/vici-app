@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { Check, ChevronDown, Globe, Search } from '@lucide/svelte/icons';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import {
@@ -77,7 +78,7 @@
 	let openLangSeeded = $state(false);
 
 	$effect(() => {
-		if (!openLangSeeded && currentLang !== null) {
+		if (!openLangSeeded && nonNullish(currentLang)) {
 			openLang = currentLang;
 			openLangSeeded = true;
 		}

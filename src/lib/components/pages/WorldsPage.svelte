@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -297,7 +298,7 @@
 				{t({ locale: $localeStore, key: 'worlds.event.title_tail' })}
 			</h3>
 			<div class="worlds-event-meta num">
-				{#if eventDaysLeft !== null}
+				{#if nonNullish(eventDaysLeft)}
 					{t({
 						locale: $localeStore,
 						key: 'worlds.event.meta',
@@ -386,7 +387,7 @@
 			>
 				{t({ locale: $localeStore, key: 'worlds.scope.wc' })}
 				<span class="worlds-scope-dim">
-					{#if eventDaysLeft !== null}
+					{#if nonNullish(eventDaysLeft)}
 						· {t({
 							locale: $localeStore,
 							key: 'worlds.scope.wc_sub_days',
@@ -492,7 +493,7 @@
 	{/if}
 </div>
 
-{#if pickerKind !== null}
+{#if nonNullish(pickerKind)}
 	<AffiliationPickerModal
 		current={{ university: myUni, country: myCountry }}
 		isOpen={true}

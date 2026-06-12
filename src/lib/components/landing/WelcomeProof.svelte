@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	/**
 	 * Proof band: a 3-step "How it works" micro-strip, a real count of
 	 * registered VICI users, and a marquee ticker of @handles making calls.
@@ -34,7 +35,7 @@
 
 	onMount(() => {
 		void getViciUserCount().then((real) => {
-			if (real !== undefined && real > 0) {
+			if (nonNullish(real) && real > 0) {
 				count = real;
 			}
 		});
@@ -58,8 +59,8 @@
 	</div>
 
 	<div class="lpc-wrap lpc-proof-inner">
-		<div class="lpc-proof-num" class:is-loading={countLabel === undefined}>
-			{#if countLabel === undefined}
+		<div class="lpc-proof-num" class:is-loading={isNullish(countLabel)}>
+			{#if isNullish(countLabel)}
 				<span class="acc" aria-hidden="true">—</span>
 			{:else}
 				<span class="acc">{countLabel}</span>

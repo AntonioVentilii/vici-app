@@ -163,6 +163,9 @@ import type { _SERVICE as ClearingService } from '$declarations/clearing/clearin
 - `0n` literal — use `ZERO` from `$lib/constants/app.constants` (eslint).
 - `return undefined;` — bare `return;` for early exits, or comment-explain
   in `catch` blocks (eslint).
+- Direct comparisons against `null`/`undefined` (`x === null`,
+  `x !== undefined`, loose `== null`, …) — use `isNullish` / `nonNullish`
+  from `@dfinity/utils` (eslint).
 - Hardcoded user-visible strings in `.svelte` templates — route through
   `t({ locale: $localeStore, key })` from `$lib/utils/i18n.utils`. The
   ESLint rule `local-rules/no-bare-svelte-text` flags this in components

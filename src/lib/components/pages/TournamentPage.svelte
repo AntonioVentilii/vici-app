@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
@@ -73,7 +74,7 @@
 			const ms = matches.filter((m) => m.round === round);
 
 			if (ms.length > 0) {
-				const allDone = ms.every((m) => m.winnerLeagueId !== null);
+				const allDone = ms.every((m) => nonNullish(m.winnerLeagueId));
 				const someOpen = ms.some((m) => m.endMs > nowMs);
 
 				if (!allDone && someOpen) {
@@ -86,13 +87,13 @@
 	});
 
 	const daysLeft = $derived.by((): number | null => {
-		if (currentRound === null) {
+		if (isNullish(currentRound)) {
 			return null;
 		}
 
 		const liveMatch = matchesByRound[currentRound]?.[0];
 
-		if (liveMatch === undefined) {
+		if (isNullish(liveMatch)) {
 			return null;
 		}
 
@@ -124,7 +125,7 @@
 		`tournament.round.${round.replace('r1', 'round1')}` as MessageKey;
 
 	const fmtAccuracy = (value: number | null): string =>
-		value === null ? '—' : `${Math.round(value * 100)}%`;
+		isNullish(value) ? '—' : `${Math.round(value * 100)}%`;
 
 	/**
 	 * Rank glyph for a prize-tier place. Brand: no emoji medals —
@@ -176,7 +177,7 @@
 	 * used by the caller to decide if a refresh is needed.
 	 */
 	const tryResolveRounds = async (): Promise<boolean> => {
-		if (tournament === null) {
+		if (isNullish(tournament)) {
 			return false;
 		}
 
@@ -196,7 +197,7 @@
 
 			const roundMatches = matchesByRound[round];
 			const closed = roundMatches.length > 0 && roundMatches[0].endMs <= nowMs;
-			const hasOpen = roundMatches.some((m) => m.winnerLeagueId === null);
+			const hasOpen = roundMatches.some((m) => isNullish(m.winnerLeagueId));
 
 			if (closed && hasOpen) {
 				try {
@@ -237,7 +238,7 @@
 	 * VXP credited.
 	 */
 	const tryClaimPrize = async () => {
-		if (tournament === null || tournament.state !== 'concluded') {
+		if (isNullish(tournament) || tournament.state !== 'concluded') {
 			return;
 		}
 
@@ -289,11 +290,11 @@
 			"MONTHLY TOURNAMENT" label when nothing is in flight.
 		-->
 		<div class="tournament-hero-head">
-			{#if currentRound !== null}
+			{#if nonNullish(currentRound)}
 				<span class="tournament-round-tag allcaps">
 					{t({ locale: $localeStore, key: roundLabelKey(currentRound) })}
 				</span>
-				{#if daysLeft !== null}
+				{#if nonNullish(daysLeft)}
 					<span class="tournament-days-left num allcaps">
 						{t({
 							locale: $localeStore,
@@ -320,7 +321,7 @@
 		</p>
 	</section>
 
-	{#if prizeClaim !== null}
+	{#if nonNullish(prizeClaim)}
 		<aside class="tournament-prize-claim">
 			<p class="tournament-prize-claim-eyebrow allcaps">
 				{t({ locale: $localeStore, key: 'tournament.prize_claim_eyebrow' })}
@@ -351,7 +352,7 @@
 			<div class="tournament-pending">
 				<p>{t({ locale: $localeStore, key: 'tournament.loading' })}</p>
 			</div>
-		{:else if tournament === null}
+		{:else if isNullish(tournament)}
 			<div class="tournament-pending">
 				<p>
 					{#if drawHint === 'available_leagues'}
@@ -375,7 +376,7 @@
 						</div>
 						<div class="tournament-round-matches">
 							{#each roundMatches as match, matchIdx (match.index)}
-								{@const concluded = match.winnerLeagueId !== null}
+								{@const concluded = nonNullish(match.winnerLeagueId)}
 								{@const isLive = !concluded && matchIdx === 0 && round === currentRound}
 								<div class="tournament-match" class:is-concluded={concluded} class:is-live={isLive}>
 									<div

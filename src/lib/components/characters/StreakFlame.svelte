@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { stageForStreak, type FlameStage } from '$lib/utils/streak.utils';
 
 	/**
@@ -20,7 +21,7 @@
 	const { count, stage: stageProp, size = 16 }: Props = $props();
 
 	const stage = $derived<FlameStage>(
-		stageProp ?? (count !== undefined ? stageForStreak(count) : 'spark')
+		stageProp ?? (nonNullish(count) ? stageForStreak(count) : 'spark')
 	);
 
 	// Stage palettes — `[top, bottom]`. Top stop is the cooler hue, bottom

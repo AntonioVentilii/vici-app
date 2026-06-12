@@ -1,4 +1,5 @@
 <script generics="T" lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import AtomicLoader from '$lib/components/loaders/AtomicLoader.svelte';
@@ -42,7 +43,7 @@
 	const alwaysSlow = async (): Promise<boolean> => true;
 
 	onMount(() => {
-		if (refreshEvent === undefined) {
+		if (isNullish(refreshEvent)) {
 			return;
 		}
 

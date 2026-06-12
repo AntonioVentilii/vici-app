@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CallSide, Market } from '$lib/types/market';
@@ -36,15 +37,15 @@
 	// close − first close of the window); otherwise the prior heuristic, so an
 	// unloaded / untraded card reads exactly as before.
 	const weekChange = $derived.by(() => {
-		if (points === undefined || points.length < 2) {
+		if (isNullish(points) || points.length < 2) {
 			return;
 		}
 
 		return points[points.length - 1] - points[0];
 	});
-	const weekUp = $derived(weekChange === undefined ? yesPct >= 50 : weekChange >= 0);
+	const weekUp = $derived(isNullish(weekChange) ? yesPct >= 50 : weekChange >= 0);
 	const weekDeltaPct = $derived(
-		weekChange === undefined
+		isNullish(weekChange)
 			? Math.abs(yesPct - Math.max(5, yesPct - 12))
 			: Math.abs(Math.round(weekChange))
 	);
@@ -72,7 +73,7 @@
 	     so the sparkline anchors them on its time axis); the true cold-start
 	     (real but empty) suppresses them. -->
 	<FlowCardSparkline
-		events={points === undefined || points.length > 0 ? metadata?.events : []}
+		events={isNullish(points) || points.length > 0 ? metadata?.events : []}
 		{pointXs}
 		{points}
 		seed={market.id}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { DAY_IN_MS, USD_DECIMALS } from '$lib/constants/app.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -52,7 +53,7 @@
 
 		resolvedPositions.forEach((resolved) => {
 			const market = getMarketById(resolved.marketId);
-			const isVxpMarket = market !== undefined && market.token.symbol === VXP_TOKEN.symbol;
+			const isVxpMarket = nonNullish(market) && market.token.symbol === VXP_TOKEN.symbol;
 
 			if (!isVxpMarket) {
 				return;

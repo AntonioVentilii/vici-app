@@ -1,3 +1,5 @@
+import { isNullish } from '@dfinity/utils';
+
 /**
  * Client-side image helpers. Kept framework-free so any surface can
  * downscale a user-picked file before handing the bytes to Juno Storage
@@ -32,7 +34,7 @@ export const downscaleImageToSquareJpeg = async ({
 
 	const bitmap = await loadBitmap(file);
 
-	if (bitmap === null) {
+	if (isNullish(bitmap)) {
 		return null;
 	}
 
@@ -43,7 +45,7 @@ export const downscaleImageToSquareJpeg = async ({
 
 		const ctx = canvas.getContext('2d');
 
-		if (ctx === null || typeof canvas.toBlob !== 'function') {
+		if (isNullish(ctx) || typeof canvas.toBlob !== 'function') {
 			return null;
 		}
 

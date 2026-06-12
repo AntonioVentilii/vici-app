@@ -463,12 +463,12 @@ export class ClearingCanister extends Canister<ClearingService> {
 		let total = ZERO;
 		let pages = 0;
 
-		while (maxPages === undefined || pages < maxPages) {
+		while (isNullish(maxPages) || pages < maxPages) {
 			const page = await list_leaderboard({
 				window,
-				members: members === undefined ? toNullable() : toNullable(members),
+				members: isNullish(members) ? toNullable() : toNullable(members),
 				start_after: startAfter,
-				limit: pageLimit === undefined ? toNullable() : toNullable(pageLimit)
+				limit: isNullish(pageLimit) ? toNullable() : toNullable(pageLimit)
 			});
 
 			const { items: pageItems, total: pageTotal } = page;

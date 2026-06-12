@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { EM_DASH } from '$lib/constants/app.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
@@ -49,7 +50,7 @@
 
 		userStats = undefined;
 
-		if (owner === undefined) {
+		if (isNullish(owner)) {
 			return;
 		}
 
@@ -101,7 +102,7 @@
 	<div class="recap-stats">
 		<div class="recap-stat">
 			<span class="recap-stat-v num acc t-h4">
-				{#if accuracyPct !== undefined}{accuracyPct}%{:else}{EM_DASH}{/if}
+				{#if nonNullish(accuracyPct)}{accuracyPct}%{:else}{EM_DASH}{/if}
 			</span>
 			<span class="recap-stat-l mute eyebrow-xs">
 				{t({ locale: $localeStore, key: 'markets.wc_recap.accuracy' })}

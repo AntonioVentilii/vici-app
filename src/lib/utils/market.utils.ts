@@ -99,7 +99,7 @@ export const mapMarketData = ({
 		pricePrecision: Number(series.price_precision),
 		balanceDomain,
 		engineId: engineIdOpt?.[0],
-		forkedFrom: forkedFromOpt?.[0] !== undefined ? parseMarketId(forkedFromOpt[0]) : undefined
+		forkedFrom: nonNullish(forkedFromOpt?.[0]) ? parseMarketId(forkedFromOpt[0]) : undefined
 	};
 };
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	/**
 	 * Two nav variants on the landing surface: `.dnav` (≥1024px,
 	 * horizontal pattern with scroll-spy + smooth scroll) and
@@ -38,7 +39,7 @@
 	// "FAQ" is a universal literal (same in every supported locale); other
 	// sections resolve through the i18n catalog.
 	const navLabel = (section: NavSection): string =>
-		section.labelKey === null ? 'FAQ' : t({ locale: $localeStore, key: section.labelKey });
+		isNullish(section.labelKey) ? 'FAQ' : t({ locale: $localeStore, key: section.labelKey });
 	// Theme labels resolve from the canonical `ui.theme.*` catalog — the
 	// same source AppearancePicker uses — so the appearance tooltips/aria
 	// stay localized and in sync rather than hardcoded English.

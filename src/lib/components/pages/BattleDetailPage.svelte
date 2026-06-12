@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
@@ -176,17 +177,17 @@
 
 	const canAccept = $derived(battle?.state === 'proposed' && ownedSide === battle.sideB);
 	const canKickoff = $derived(
-		battle?.state === 'accepted' && ownedSide !== undefined && Date.now() >= battle.kickoffMs
+		battle?.state === 'accepted' && nonNullish(ownedSide) && Date.now() >= battle.kickoffMs
 	);
 	const canResolve = $derived(
-		battle?.state === 'in_flight' && ownedSide !== undefined && Date.now() >= battle.settleMs
+		battle?.state === 'in_flight' && nonNullish(ownedSide) && Date.now() >= battle.settleMs
 	);
 	const canRetract = $derived(
-		battle?.state === 'proposed' && selfPrincipal !== undefined && battle.proposer === selfPrincipal
+		battle?.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal
 	);
 
 	const handleAccept = async () => {
-		if (!battle || actingBattleId !== null) {
+		if (!battle || nonNullish(actingBattleId)) {
 			return;
 		}
 
@@ -204,7 +205,7 @@
 	};
 
 	const handleKickoff = async () => {
-		if (!battle || actingBattleId !== null) {
+		if (!battle || nonNullish(actingBattleId)) {
 			return;
 		}
 
@@ -222,7 +223,7 @@
 	};
 
 	const handleRetract = async () => {
-		if (!battle || actingBattleId !== null) {
+		if (!battle || nonNullish(actingBattleId)) {
 			return;
 		}
 
@@ -240,7 +241,7 @@
 	};
 
 	const openResolve = () => {
-		if (!battle || ownedSide === undefined) {
+		if (!battle || isNullish(ownedSide)) {
 			return;
 		}
 
@@ -358,7 +359,7 @@
 				<span class="eyebrow">{t({ locale: $localeStore, key: 'battle.detail.scope_label' })}</span>
 				<span class="num allcaps">{scopeLabel(battle.scope)}</span>
 			</div>
-			{#if battle.wager !== undefined && battle.wager > 0}
+			{#if nonNullish(battle.wager) && battle.wager > 0}
 				<div class="battle-detail-meta-row">
 					<span class="eyebrow"
 						>{t({ locale: $localeStore, key: 'battle.detail.wager_label' })}</span
@@ -380,7 +381,7 @@
 			</div>
 		</section>
 
-		{#if battle.trashTalk !== undefined && battle.trashTalk.length > 0}
+		{#if nonNullish(battle.trashTalk) && battle.trashTalk.length > 0}
 			<section class="battle-detail-trash-talk">
 				<span class="eyebrow">
 					{t({ locale: $localeStore, key: 'battle.detail.trash_talk_label' })}
@@ -433,7 +434,7 @@
 	{/if}
 </div>
 
-{#if resolveTarget !== null && resolveOurSide !== null}
+{#if nonNullish(resolveTarget) && nonNullish(resolveOurSide)}
 	<ResolveBattleModal
 		battle={resolveTarget}
 		isOpen={true}

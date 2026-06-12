@@ -1,6 +1,7 @@
 import type { AppLocale } from '$lib/constants/locale.constants';
 import type { WorldsAffiliationOption } from '$lib/constants/worlds-affiliations.constants';
 import type { AffiliationKind } from '$lib/types/affiliation';
+import { nonNullish } from '@dfinity/utils';
 
 /**
  * Locale-aware display names for Worlds affiliations.
@@ -24,7 +25,7 @@ const regionNamesCache = new Map<AppLocale, Intl.DisplayNames | null>();
 const regionNamesFor = (locale: AppLocale): Intl.DisplayNames | null => {
 	const cached = regionNamesCache.get(locale);
 
-	if (cached !== undefined) {
+	if (nonNullish(cached)) {
 		return cached;
 	}
 

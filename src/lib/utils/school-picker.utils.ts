@@ -1,4 +1,5 @@
 import type { WorldsAffiliationOption } from '$lib/constants/worlds-affiliations.constants';
+import { isNullish } from '@dfinity/utils';
 
 /**
  * School-picker matching helpers — pure functions backing the
@@ -153,7 +154,7 @@ export const spMatchEmail = ({
 		.trim()
 		.match(/^[^@\s]+@([^\s@]+)$/);
 
-	if (parsed === null) {
+	if (isNullish(parsed)) {
 		return null;
 	}
 
@@ -252,7 +253,7 @@ export const spInferCountry = ({
 		.trim()
 		.match(/^[^@\s]+@([^\s@]+)$/);
 
-	if (parsed === null) {
+	if (isNullish(parsed)) {
 		return fallback;
 	}
 

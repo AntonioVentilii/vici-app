@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { Check, ChevronRight } from '@lucide/svelte/icons';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -230,7 +231,7 @@
 	</span>
 
 	<span class="trailing">
-		{#if yourRank != null}
+		{#if nonNullish(yourRank)}
 			<span class="rank-badge">
 				<span class="rank-v num">#{yourRank}</span>
 				<span class="rank-of num">

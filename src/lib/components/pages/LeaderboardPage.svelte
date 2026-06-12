@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import type { Doc } from '@junobuild/core';
 	import { UserMinus, UserPlus } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
@@ -83,7 +84,7 @@
 	const rowsStore = $derived(globalStandingsRows(activeWindow));
 	const rows = $derived<StandingsRow[] | undefined>($rowsStore);
 
-	const loading = $derived(rows === undefined);
+	const loading = $derived(isNullish(rows));
 	const rankedRows = $derived(rows ?? []);
 
 	const podium = $derived(rankedRows.slice(0, 3));
@@ -94,7 +95,7 @@
 	$effect(() => {
 		const window = activeWindow;
 
-		if (rows === undefined) {
+		if (isNullish(rows)) {
 			void loadGlobalStandings({ window }).catch((err: unknown) => {
 				console.error(err);
 			});
@@ -195,7 +196,7 @@
 		// Determine which of the three states we are in at call time.
 		const friendDoc = pendingSentDoc(target);
 		const accepted = isFriend(target);
-		const isPending = !accepted && friendDoc !== undefined;
+		const isPending = !accepted && nonNullish(friendDoc);
 
 		let errorKey: MessageKey = 'arena.friends.error.send_failed';
 
@@ -368,12 +369,12 @@
 <!-- Mini-profile bottom sheet — opens on row / podium tap. Shows the tapped
      predictor's window accuracy, settled count and streak with an add- or
      remove-friend action that routes through the shared relation services. -->
-<BottomSheet isOpen={openRow !== undefined} onClose={closeSheet}>
+<BottomSheet isOpen={nonNullish(openRow)} onClose={closeSheet}>
 	{#if openRow}
 		{@const row = openRow}
 		{@const friend = isFriend(row.owner)}
 		{@const sentDoc = pendingSentDoc(row.owner)}
-		{@const pending = !friend && sentDoc !== undefined}
+		{@const pending = !friend && nonNullish(sentDoc)}
 		<div class="lb-sheet-head">
 			<span class="lb-sheet-avatar">
 				<Avatar

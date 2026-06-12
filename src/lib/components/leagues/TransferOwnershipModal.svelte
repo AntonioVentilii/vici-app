@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { transferLeagueOwnership } from '$lib/services/leagues.services';
@@ -40,7 +41,7 @@
 			.sort((a, b) => a.joinedAtMs - b.joinedAtMs)
 	);
 
-	const canSubmit = $derived(!submitting && selected !== null);
+	const canSubmit = $derived(!submitting && nonNullish(selected));
 
 	const reset = () => {
 		selected = null;
@@ -56,7 +57,7 @@
 	const handleSubmit = async (event: Event) => {
 		event.preventDefault();
 
-		if (!canSubmit || selected === null) {
+		if (!canSubmit || isNullish(selected)) {
 			return;
 		}
 
@@ -154,7 +155,7 @@
 			</ul>
 		{/if}
 
-		{#if submitError !== null}
+		{#if nonNullish(submitError)}
 			<p class="league-transfer-error">
 				{typeof submitError === 'string' && submitError.startsWith('leagues.')
 					? t({ locale: $localeStore, key: submitError as MessageKey })

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import type { PrincipalText } from '@junobuild/schema';
 	import { onMount } from 'svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
@@ -47,7 +48,7 @@
 	const handleLabel = $derived.by(() => {
 		const nickname = referrerProfile?.nickname?.trim();
 
-		if (nickname !== undefined && nickname.length > 0) {
+		if (nonNullish(nickname) && nickname.length > 0) {
 			return `@${nickname}`;
 		}
 

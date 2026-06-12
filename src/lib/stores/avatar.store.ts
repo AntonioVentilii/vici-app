@@ -1,6 +1,7 @@
 import { upsertProfile } from '$lib/services/profile.services';
 import { userStore } from '$lib/stores/user.store';
 import { parseParts, serializeParts, type ViciAvatarParts } from '$lib/utils/vici-avatar.utils';
+import { nonNullish } from '@dfinity/utils';
 import { derived, get, writable, type Readable } from 'svelte/store';
 
 /**
@@ -49,14 +50,14 @@ export const myAvatarParts: Readable<ViciAvatarParts | undefined> = derived(
 	([{ owner, raw }, session]) => {
 		const saved = parseParts(raw);
 
-		if (saved !== undefined) {
+		if (nonNullish(saved)) {
 			return saved;
 		}
 
 		// Fall back to the session cache only when it belongs to the active
 		// account — never let one account see another's cached picks. Otherwise
 		// resolve to nothing so the surface uses the principal-seeded default.
-		return session !== undefined && session.owner === owner
+		return nonNullish(session) && session.owner === owner
 			? parseParts(session.serialized)
 			: undefined;
 	}

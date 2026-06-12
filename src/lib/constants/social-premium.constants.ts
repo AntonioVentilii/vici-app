@@ -1,5 +1,6 @@
 import type { AppLocale } from '$lib/constants/locale.constants';
 import { type MessageKey, t } from '$lib/utils/i18n.utils';
+import { isNullish } from '@dfinity/utils';
 
 /**
  * Curated list of "Fun Dare" premiums (what the loser owes the winner). The
@@ -89,7 +90,7 @@ export const formatSocialPremium = ({
 
 	const preset = findPreset(optionId);
 
-	if (preset === undefined) {
+	if (isNullish(preset)) {
 		return;
 	}
 

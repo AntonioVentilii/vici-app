@@ -1,6 +1,7 @@
 import { CONTACT_DOMAIN } from '$lib/constants/contact.constants';
 import type { CallSide } from '$lib/types/market';
 import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
  * Client-side renderer for the shareable prediction card — a 1080×1920
@@ -151,7 +152,7 @@ export const renderPredictionCard = async ({
 	}
 
 	try {
-		if (document.fonts?.ready !== undefined) {
+		if (nonNullish(document.fonts?.ready)) {
 			await document.fonts.ready;
 		}
 	} catch {
@@ -168,7 +169,7 @@ export const renderPredictionCard = async ({
 
 	const ctx = canvas.getContext('2d');
 
-	if (ctx === null) {
+	if (isNullish(ctx)) {
 		return null;
 	}
 
@@ -267,8 +268,9 @@ export const renderPredictionCard = async ({
 
 	// Identity + footer.
 	const handle = `@${identity.handle || 'predictor'}`;
-	const acc =
-		identity.accuracy !== undefined ? `${Math.round(identity.accuracy * 100)}% accuracy` : '';
+	const acc = nonNullish(identity.accuracy)
+		? `${Math.round(identity.accuracy * 100)}% accuracy`
+		: '';
 	ctx.fillStyle = CARD_FG;
 	ctx.font = '600 38px "Hanken Grotesk", system-ui, sans-serif';
 	ctx.fillText(handle, PAD, H - 250);
@@ -303,7 +305,7 @@ export const renderPredictionCard = async ({
 		canvas.toBlob((b) => resolve(b), 'image/png', 0.92);
 	});
 
-	if (blob === null) {
+	if (isNullish(blob)) {
 		return null;
 	}
 

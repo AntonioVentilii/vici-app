@@ -117,7 +117,7 @@
 	});
 
 	const clearPacing = () => {
-		if (pacingTimer !== null) {
+		if (nonNullish(pacingTimer)) {
 			clearInterval(pacingTimer);
 			pacingTimer = null;
 		}

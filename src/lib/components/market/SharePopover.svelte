@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { Copy, Image as ImageIcon } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
@@ -81,7 +82,7 @@
 	const url = $derived(`${origin}/m/${market.id}?ref=${refToken}`);
 
 	const text = $derived(
-		priorCall !== null && priorCall !== undefined
+		nonNullish(priorCall) && nonNullish(priorCall)
 			? t({
 					locale: $localeStore,
 					key: 'flow.share.text_post'
@@ -132,10 +133,10 @@
 						category: cardCategory
 					},
 					priorCall,
-					identity: { handle, accuracy: accuracy !== undefined ? accuracy / 100 : undefined }
+					identity: { handle, accuracy: nonNullish(accuracy) ? accuracy / 100 : undefined }
 				});
 
-				if (alive && result !== null) {
+				if (alive && nonNullish(result)) {
 					preview = result.dataUrl;
 				}
 			} catch {
@@ -282,10 +283,10 @@
 					category: cardCategory
 				},
 				priorCall,
-				identity: { handle, accuracy: accuracy !== undefined ? accuracy / 100 : undefined }
+				identity: { handle, accuracy: nonNullish(accuracy) ? accuracy / 100 : undefined }
 			});
 
-			if (result === null) {
+			if (isNullish(result)) {
 				// No canvas — degrade to a plain link share / copy.
 				await fallbackShareLink();
 
@@ -306,7 +307,7 @@
 				setTimeout(() => URL.revokeObjectURL(href), 3000);
 				onCopied?.(t({ locale: $localeStore, key: 'flow.share.card_saved' }));
 
-				if (app?.web !== undefined) {
+				if (nonNullish(app?.web)) {
 					window.open(app.web, '_blank', 'noopener');
 				}
 			}
@@ -371,7 +372,7 @@
 	<!-- Header: small card preview + slim primary action -->
 	<div class="share-card-head">
 		<div class="share-card-thumb">
-			{#if preview !== undefined}
+			{#if nonNullish(preview)}
 				<img alt={t({ locale: $localeStore, key: 'flow.share.preview_alt' })} src={preview} />
 			{:else}
 				<span class="share-card-thumb-placeholder" aria-hidden="true">…</span>
@@ -405,7 +406,7 @@
 					style:color={app.tint}
 					style:background={app.bg ?? 'var(--bg-popover)'}
 					class="share-tile-icon"
-					class:branded={app.bg !== undefined}
+					class:branded={nonNullish(app.bg)}
 				>
 					{#if app.key === 'instagram'}
 						<IconInstagram />
@@ -428,7 +429,7 @@
 	</span>
 	<div class="share-tile-row">
 		{#each linkApps as app (app.key)}
-			{#if app.href !== undefined}
+			{#if nonNullish(app.href)}
 				<a
 					class="share-tile"
 					href={app.href}

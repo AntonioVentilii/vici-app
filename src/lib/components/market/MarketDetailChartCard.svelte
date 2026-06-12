@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -33,7 +34,7 @@
 	// True cold-start: no real trade history for this market yet, so the
 	// line reads flat and the eyebrow note says so rather than implying
 	// movement that never happened.
-	const isColdStart = $derived(points !== undefined && points.length === 0);
+	const isColdStart = $derived(nonNullish(points) && points.length === 0);
 
 	// Each chip re-scopes the chart: selecting one re-fetches that window of
 	// market-wide history (hourly candles for short windows, daily for long).
@@ -49,7 +50,7 @@
 	// fallback (no real `points`) and for real history on the 7d period (the
 	// sparkline anchors them on its time axis there). Other periods — and the
 	// true cold-start (real but empty) — suppress them.
-	const showEvents = $derived(points === undefined || (period === '7d' && points.length > 0));
+	const showEvents = $derived(isNullish(points) || (period === '7d' && points.length > 0));
 	const events = $derived(showEvents ? ($marketMetadata[marketId]?.events ?? []) : []);
 </script>
 

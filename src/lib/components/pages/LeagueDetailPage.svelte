@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import {
 		ChevronLeft,
 		ChevronRight,
@@ -142,7 +143,7 @@
 	const emblem = $derived(league ? leagueEmblem(league) : '◆');
 
 	const canSeeInvite = $derived(myRole === 'owner' || myRole === 'admin');
-	const canLeave = $derived(myRole !== 'owner' && myRole !== undefined);
+	const canLeave = $derived(myRole !== 'owner' && nonNullish(myRole));
 	const canChallenge = $derived(myRole === 'owner');
 	const canTransfer = $derived(
 		myRole === 'owner' && members.filter((m) => m.role !== 'owner').length > 0
@@ -158,7 +159,7 @@
 	// (cover-fit) when set, else the emblem glyph. Owners get Add/Change
 	// + Remove affordances over the tile; non-owners see it read-only.
 	const canEditImage = $derived(myRole === 'owner');
-	const hasImage = $derived(league?.imageUrl !== undefined && league.imageUrl.length > 0);
+	const hasImage = $derived(nonNullish(league?.imageUrl) && league.imageUrl.length > 0);
 	let imageInput = $state<HTMLInputElement | null>(null);
 	let imageBusy = $state(false);
 
@@ -195,7 +196,7 @@
 			uploadedUrl = undefined;
 
 			// Drop the superseded asset once the doc points at the new one.
-			if (previousUrl !== undefined && previousUrl !== imageUrl) {
+			if (nonNullish(previousUrl) && previousUrl !== imageUrl) {
 				await deleteLeagueImageByUrl(previousUrl);
 			}
 
@@ -206,7 +207,7 @@
 
 			// The asset uploaded but the doc write failed: best-effort cleanup so
 			// the orphaned image doesn't linger in Storage. Swallow cleanup errors.
-			if (uploadedUrl !== undefined) {
+			if (nonNullish(uploadedUrl)) {
 				await deleteLeagueImageByUrl(uploadedUrl);
 			}
 		} finally {
@@ -225,7 +226,7 @@
 			const previousUrl = league.imageUrl;
 			await updateLeague({ id: league.id, imageUrl: null });
 
-			if (previousUrl !== undefined) {
+			if (nonNullish(previousUrl)) {
 				await deleteLeagueImageByUrl(previousUrl);
 			}
 
@@ -281,7 +282,7 @@
 	};
 
 	const handleRename = async () => {
-		if (!league || renameSaving || renameError !== undefined) {
+		if (!league || renameSaving || nonNullish(renameError)) {
 			return;
 		}
 
@@ -343,7 +344,7 @@
 		const window: StandingsWindow = leaderboardTab === 'week' ? 'week' : 'all';
 		const roster = members.map((m) => m.member);
 
-		if (owner === undefined || roster.length === 0) {
+		if (isNullish(owner) || roster.length === 0) {
 			standingRank = undefined;
 
 			return;
@@ -363,7 +364,7 @@
 		const owner = selfPrincipal;
 		const roster = members.map((m) => m.member);
 
-		if (owner === undefined || roster.length === 0) {
+		if (isNullish(owner) || roster.length === 0) {
 			standingTrend = 0;
 
 			return;
@@ -386,7 +387,7 @@
 				// `rankDelta` is `priorRank - rank` (positive = climbed); the
 				// card convention inverts that (negative = climbed). Leave 0
 				// (shown "even") when there is no comparable prior week.
-				standingTrend = delta === undefined ? 0 : -delta;
+				standingTrend = isNullish(delta) ? 0 : -delta;
 			})
 			.catch((err: unknown) => {
 				if (cancelled) {
@@ -407,11 +408,11 @@
 	// order (the leaderboard render order) while standings load or when the
 	// caller has no settled position yet, so the badge is never blank.
 	const yourRank = $derived.by(() => {
-		if (standingRank !== undefined) {
+		if (nonNullish(standingRank)) {
 			return standingRank;
 		}
 
-		if (selfPrincipal === undefined) {
+		if (isNullish(selfPrincipal)) {
 			return 1;
 		}
 
@@ -556,7 +557,7 @@
 		};
 
 		return [...members].sort((a, b) => {
-			if (selfPrincipal !== undefined) {
+			if (nonNullish(selfPrincipal)) {
 				if (a.member === selfPrincipal && b.member !== selfPrincipal) {
 					return -1;
 				}
@@ -686,10 +687,10 @@
 		Date.now() >= battle.settleMs;
 
 	const canRetractBattle = (battle: BattleDoc): boolean =>
-		battle.state === 'proposed' && selfPrincipal !== undefined && battle.proposer === selfPrincipal;
+		battle.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal;
 
 	const handleRetractBattle = async (battle: BattleDoc) => {
-		if (actingBattleId !== null) {
+		if (nonNullish(actingBattleId)) {
 			return;
 		}
 
@@ -707,7 +708,7 @@
 	};
 
 	const handleAcceptBattle = async (battle: BattleDoc) => {
-		if (actingBattleId !== null) {
+		if (nonNullish(actingBattleId)) {
 			return;
 		}
 
@@ -725,7 +726,7 @@
 	};
 
 	const handleKickoffBattle = async (battle: BattleDoc) => {
-		if (actingBattleId !== null) {
+		if (nonNullish(actingBattleId)) {
 			return;
 		}
 
@@ -801,7 +802,7 @@
 	const leaderboardTop = $derived(sortedMembers.slice(0, 6));
 
 	const youMember = $derived.by((): LeagueMemberDoc | undefined => {
-		if (selfPrincipal === undefined) {
+		if (isNullish(selfPrincipal)) {
 			return;
 		}
 
@@ -813,7 +814,7 @@
 	// appears in `leaderboardTop` it would just duplicate their own row, so
 	// we suppress it.
 	const showYouRow = $derived(
-		youMember !== undefined && !leaderboardTop.some((m) => m.member === selfPrincipal)
+		nonNullish(youMember) && !leaderboardTop.some((m) => m.member === selfPrincipal)
 	);
 
 	// Small-league recruit state — under four members there isn't
@@ -884,7 +885,7 @@
 							<!-- svelte-ignore a11y_autofocus -->
 							<input
 								class="league-detail-rename-input"
-								aria-invalid={renameError !== undefined}
+								aria-invalid={nonNullish(renameError)}
 								aria-label={t({ locale: $localeStore, key: 'leagues.detail.rename_label' })}
 								autofocus
 								disabled={renameSaving}
@@ -896,7 +897,7 @@
 							/>
 							<button
 								class="league-detail-rename-btn is-primary"
-								disabled={renameSaving || renameError !== undefined}
+								disabled={renameSaving || nonNullish(renameError)}
 								onclick={handleRename}
 								type="button"
 							>
@@ -1408,7 +1409,7 @@
 	{/if}
 </div>
 
-{#if league !== undefined && canChallenge}
+{#if nonNullish(league) && canChallenge}
 	<ChallengeLeagueModal
 		fromLeague={league}
 		isOpen={challengeOpen}
@@ -1417,7 +1418,7 @@
 	/>
 {/if}
 
-{#if league !== undefined && myRole === 'owner'}
+{#if nonNullish(league) && myRole === 'owner'}
 	<TransferOwnershipModal
 		currentOwnerPrincipal={league.owner}
 		isOpen={transferOpen}
@@ -1428,7 +1429,7 @@
 	/>
 {/if}
 
-{#if league !== undefined && canEditPrivacy}
+{#if nonNullish(league) && canEditPrivacy}
 	<LeaguePrivacyModal
 		{currentPrivacy}
 		isOpen={privacyOpen}
@@ -1440,14 +1441,14 @@
 
 <ResolveBattleModal
 	battle={resolveBattleTarget}
-	isOpen={resolveBattleTarget !== null}
+	isOpen={nonNullish(resolveBattleTarget)}
 	onClose={() => (resolveBattleTarget = null)}
 	onResolved={handleResolveBattleDone}
 	ourLeagueId={leagueId}
 />
 
 <!-- ─── Member detail sheet · avatar + accuracy / streak stats ─── -->
-<BottomSheet isOpen={openMember !== null} onClose={() => (openMember = null)}>
+<BottomSheet isOpen={nonNullish(openMember)} onClose={() => (openMember = null)}>
 	{#if openMember}
 		<div class="league-detail-member-sheet">
 			<div class="league-detail-member-sheet-head">

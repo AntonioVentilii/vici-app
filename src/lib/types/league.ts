@@ -1,4 +1,5 @@
 import { LeaguePrivacy } from '$lib/enums/league';
+import { nonNullish } from '@dfinity/utils';
 
 /**
  * Social cohorts — leagues.
@@ -101,13 +102,13 @@ export const [LEAGUE_EMBLEM_DEFAULT] = LEAGUE_EMBLEMS;
  * emoji-leading names.
  */
 export const leagueEmblem = (league: Pick<LeagueDoc, 'emblem' | 'name'>): string => {
-	if (league.emblem !== undefined && league.emblem.length > 0) {
+	if (nonNullish(league.emblem) && league.emblem.length > 0) {
 		return league.emblem;
 	}
 
 	const [first] = Array.from(league.name.trim());
 
-	return first !== undefined && /\p{Letter}/u.test(first)
+	return nonNullish(first) && /\p{Letter}/u.test(first)
 		? first.toUpperCase()
 		: LEAGUE_EMBLEM_DEFAULT;
 };
@@ -166,7 +167,7 @@ type LeaguePrivacyReadable = Pick<LeagueDoc, 'privacy'> & { private?: boolean };
  * {@link LEAGUE_PRIVACY_LEGACY_FALLBACK} (Open, the old public default).
  */
 export const leaguePrivacy = (league: LeaguePrivacyReadable): LeaguePrivacy => {
-	if (league.privacy !== undefined) {
+	if (nonNullish(league.privacy)) {
 		return league.privacy;
 	}
 

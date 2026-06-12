@@ -1,5 +1,6 @@
 import { goto } from '$app/navigation';
 import { previousPathStore } from '$lib/stores/previous-path.store';
+import { nonNullish } from '@dfinity/utils';
 import { get } from 'svelte/store';
 
 /**
@@ -12,7 +13,7 @@ import { get } from 'svelte/store';
  * Relies on the root layout populating `previousPathStore` via `afterNavigate`.
  */
 export const goBack = (fallback: string): void => {
-	if (get(previousPathStore) !== null) {
+	if (nonNullish(get(previousPathStore))) {
 		history.back();
 
 		return;

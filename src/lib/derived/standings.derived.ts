@@ -3,6 +3,7 @@ import { globalStandingsStore } from '$lib/stores/standings.store';
 import { userStore } from '$lib/stores/user.store';
 import type { UserProfile } from '$lib/types/profile';
 import type { StandingEntry, StandingsWindow } from '$lib/types/standings';
+import { isNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@junobuild/schema';
 import { derived, type Readable } from 'svelte/store';
 
@@ -145,7 +146,7 @@ export const globalStandingsRows = (
 		([$standings, $profiles, { user, profile }]) => {
 			const result = $standings.get(window);
 
-			if (result === undefined) {
+			if (isNullish(result)) {
 				return;
 			}
 

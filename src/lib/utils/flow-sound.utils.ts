@@ -1,4 +1,5 @@
 import { preferencesStore } from '$lib/stores/preferences.store';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { get } from 'svelte/store';
 
 // Flow sound — a tiny Web Audio oscillator synth that gives Flow its
@@ -42,7 +43,7 @@ const ensureContext = (): AudioContext | null => {
 	const Ctor =
 		(window as WebAudioWindow).AudioContext ?? (window as WebAudioWindow).webkitAudioContext;
 
-	if (Ctor === undefined) {
+	if (isNullish(Ctor)) {
 		return null;
 	}
 
@@ -50,11 +51,11 @@ const ensureContext = (): AudioContext | null => {
 	// lifecycle, e.g. the page is backgrounded and the route is reclaimed).
 	// A closed context never plays again, so drop the reference and let the
 	// next gesture/cue construct a fresh one.
-	if (audioContext !== null && audioContext.state === 'closed') {
+	if (nonNullish(audioContext) && audioContext.state === 'closed') {
 		audioContext = null;
 	}
 
-	if (audioContext === null) {
+	if (isNullish(audioContext)) {
 		try {
 			audioContext = new Ctor();
 		} catch {
@@ -80,7 +81,7 @@ const audio = (): AudioContext | null => {
 
 	const context = ensureContext();
 
-	if (context === null) {
+	if (isNullish(context)) {
 		return null;
 	}
 
@@ -119,7 +120,7 @@ interface ToneSpec {
 const tone = ({ freq, dur, type, vol, when = 0 }: ToneSpec): void => {
 	const context = audio();
 
-	if (context === null) {
+	if (isNullish(context)) {
 		return;
 	}
 
@@ -197,7 +198,7 @@ export const flowSummary = (): void => {
  * another interaction. No-op when no context has been created yet.
  */
 export const resumeFlowSound = (): void => {
-	if (audioContext !== null && audioContext.state === 'suspended') {
+	if (nonNullish(audioContext) && audioContext.state === 'suspended') {
 		void audioContext.resume().catch(() => undefined);
 	}
 };
@@ -235,7 +236,7 @@ export const unlockFlowSound = (): (() => void) => {
 		// even when muted so a later un-mute works without a fresh gesture.
 		const context = ensureContext();
 
-		if (context === null) {
+		if (isNullish(context)) {
 			teardown();
 
 			return;

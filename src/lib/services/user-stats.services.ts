@@ -12,6 +12,7 @@ import {
 import { CONTRARIAN_PRICE_THRESHOLD } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { eventExecutionPrice, isSettledEvent } from '$lib/utils/resolved-position.utils';
+import { isNullish } from '@dfinity/utils';
 import { getDoc, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
@@ -59,7 +60,7 @@ const tagForSeries = ({
 }): MarketTag | '' => {
 	const meta = metadata?.[seriesId];
 
-	if (meta === undefined) {
+	if (isNullish(meta)) {
 		return '';
 	}
 
