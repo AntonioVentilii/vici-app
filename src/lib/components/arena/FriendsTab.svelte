@@ -131,11 +131,16 @@
 
 		// Hydrate the all-time standings slice so the ranked list reads live
 		// clearing accuracy (see `accuracyOf`). Shares the per-window cache
-		// with the Leaderboard / Dash. Fail-open: on error the rows fall back
-		// to the cached profile snapshot instead of blocking the tab.
-		void loadGlobalStandings({ window: 'all' }).catch((err: unknown) => {
-			console.error('FriendsTab: failed to load all-time standings', err);
-		});
+		// with the Leaderboard / Dash, and only fetches on a cache miss:
+		// Arena re-mounts this tab on every tab switch, so an unconditional
+		// refresh would re-run the multi-page `list_leaderboard` drain each
+		// time. Fail-open: on error the rows fall back to the cached profile
+		// snapshot instead of blocking the tab.
+		if (isNullish($globalStandingsStore.get('all'))) {
+			void loadGlobalStandings({ window: 'all' }).catch((err: unknown) => {
+				console.error('FriendsTab: failed to load all-time standings', err);
+			});
+		}
 
 		// Fetch the viewer's referral code so the hero can render the canonical
 		// `vici.market/i/{code}` URL. The code is assigned by the satellite profile hook
