@@ -94,9 +94,13 @@ export const referrerRewardBaseUnits = (priorPaidCount: number): bigint => {
  * remains authoritative on payout.
  */
 export const cumulativeReferrerRewardBaseUnits = (creditedCount: number): bigint => {
+	// Rewards are zero past the hard cap, so clamping (and flooring at 0) only bounds the loop —
+	// it cannot change the sum.
+	const cappedCount = Math.min(Math.max(creditedCount, 0), REFERRAL_MAX_PAID);
+
 	let total = ZERO;
 
-	for (let priorPaidCount = 0; priorPaidCount < creditedCount; priorPaidCount++) {
+	for (let priorPaidCount = 0; priorPaidCount < cappedCount; priorPaidCount++) {
 		total += referrerRewardBaseUnits(priorPaidCount);
 	}
 
