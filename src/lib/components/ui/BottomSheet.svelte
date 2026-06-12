@@ -267,6 +267,15 @@
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow-y: auto;
+		/* A scroll container clips on BOTH axes (`overflow-x` can't stay
+		 * `visible` once `overflow-y` is `auto`), which shears off any glow /
+		 * shadow a child paints past the body's left or right edge — e.g. the
+		 * menagerie badge aura in the achievement detail sheet. Reclaim the
+		 * sheet's side inset as bleed room: pull the scroll container out to
+		 * the sheet edge and re-apply the same metric as padding, so content
+		 * lands exactly where it did but the clip boundary moves outward. */
+		margin-inline: calc(-1 * var(--sheet-side-padding, 1.1rem));
+		padding-inline: var(--sheet-side-padding, 1.1rem);
 	}
 
 	/* When a `footer` snippet is present the safe-area bottom inset moves
