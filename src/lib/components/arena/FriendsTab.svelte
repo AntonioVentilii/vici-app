@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
 	import type { Doc } from '@junobuild/core';
-	import { Check, ChevronRight, Link2, Plus, Share2, Sparkles } from '@lucide/svelte/icons';
-	import { onMount } from 'svelte';
+	import { Check, ChevronRight, Link2, Plus, Share2, Zap } from '@lucide/svelte/icons';
+	import { onMount, tick } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
@@ -53,6 +53,7 @@
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { formatVxpBalance, vxpBaseUnitsFromPoints } from '$lib/utils/playground-display.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
 	 * Friends — the Arena tab. Lives only inside Arena; there is no
@@ -84,6 +85,18 @@
 	 * `friendRequestsStore` infrastructure rather than re-fetching, so the
 	 * inbox bell + Arena tab badge stay in lockstep.
 	 */
+
+	interface Props {
+		/**
+		 * Relation id of an incoming request to focus, set when the user
+		 * arrives from a `friend_request` inbox deep-link (see `ArenaPage` /
+		 * `inbox.store.ts`). The matching row is scrolled into view and
+		 * briefly highlighted so the recipient lands on the Accept affordance.
+		 */
+		focusRequestKey?: string;
+	}
+
+	let { focusRequestKey }: Props = $props();
 
 	const VXP_DECIMALS = VXP_TOKEN.decimals;
 	const REFERRAL_BONUS_VXP = 500n * 10n ** BigInt(VXP_DECIMALS);
@@ -375,6 +388,47 @@
 	// ── Pending invites ─────────────────────────────────────────────
 	let processingKey = $state<string | undefined>(undefined);
 
+	// Transient highlight for a request reached via inbox deep-link.
+	const HIGHLIGHT_DURATION_MS = 2400;
+	let highlightedKey = $state<string | undefined>(undefined);
+	let lastFocusedKey: string | undefined;
+
+	const focusPendingRow = (key: string) => {
+		// Dedupe: scroll/highlight once per deep-link key, not on every
+		// `pendingReceived` refresh that re-satisfies the effect.
+		if (key === lastFocusedKey) {
+			return;
+		}
+
+		lastFocusedKey = key;
+		highlightedKey = key;
+
+		void tick().then(() => {
+			document
+				.querySelector<HTMLElement>(`[data-request-key="${CSS.escape(key)}"]`)
+				?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		});
+
+		setTimeout(() => {
+			if (highlightedKey === key) {
+				highlightedKey = undefined;
+			}
+		}, HIGHLIGHT_DURATION_MS);
+	};
+
+	// Scroll an incoming request into view once it is both requested (via the
+	// `?request=` deep-link) and present in the loaded list. Owns its own
+	// fade timer in `focusPendingRow`, decoupled from this effect's lifecycle.
+	$effect(() => {
+		if (focusRequestKey === undefined) {
+			return;
+		}
+
+		if (pendingReceived.some((doc) => doc.key === focusRequestKey)) {
+			focusPendingRow(focusRequestKey);
+		}
+	});
+
 	const handleAccept = async (doc: Doc<Relation>) => {
 		processingKey = doc.key;
 
@@ -397,7 +451,10 @@
 				type: 'success'
 			});
 		} catch (err: unknown) {
-			console.error(err);
+			// Keep the satellite trap message (e.g. "Only the recipient can
+			// accept") and the relation id so a future iOS report is
+			// diagnosable from the console, not just the generic toast.
+			console.error('Friend-request accept failed', { relationId: doc.key, error: err });
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
 				message: t({ locale: $localeStore, key: 'arena.friends.error.accept_failed' }),
@@ -415,7 +472,7 @@
 			await rejectFriendRequest({ currentRelation: doc });
 			await refreshFriendRelations();
 		} catch (err: unknown) {
-			console.error(err);
+			console.error('Friend-request reject failed', { relationId: doc.key, error: err });
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
 				message: t({ locale: $localeStore, key: 'arena.friends.error.reject_failed' }),
@@ -532,22 +589,40 @@
 		$globalActivities.filter((activity) => friendIdSet.has(activity.user)).slice(0, 20)
 	);
 
-	// Clap is a local-only acknowledgement today — the satellite has no
+	// Like is a local-only acknowledgement today — the satellite has no
 	// reaction model, so we track tapped rows in a reactive Set keyed by
 	// the row's stable `timestamp#user` id. Surfaced as a data gap.
-	const clappedKeys = new SvelteSet<string>();
+	const likedKeys = new SvelteSet<string>();
+
+	// Rows currently playing the commit motion. A second Set lets the
+	// tilt + burst run for one beat without coupling to the persistent
+	// liked state (so un-liking and re-liking re-fires the motion).
+	const firingKeys = new SvelteSet<string>();
+
+	const REACTION_MOTION_MS = 600;
 
 	const activityKey = (activity: Activity): string => `${activity.timestamp}#${activity.user}`;
 
-	const toggleClap = (activity: Activity) => {
+	const isFiring = (activity: Activity): boolean => firingKeys.has(activityKey(activity));
+
+	const toggleLike = (activity: Activity) => {
 		const key = activityKey(activity);
 
-		if (clappedKeys.has(key)) {
-			clappedKeys.delete(key);
-		} else {
-			clappedKeys.add(key);
-			haptic('light-tap');
+		if (likedKeys.has(key)) {
+			likedKeys.delete(key);
+
+			return;
 		}
+
+		likedKeys.add(key);
+		haptic('light-tap');
+
+		if (prefersReducedMotion()) {
+			return;
+		}
+
+		firingKeys.add(key);
+		setTimeout(() => firingKeys.delete(key), REACTION_MOTION_MS);
 	};
 
 	const goToMarket = (marketId: string | undefined) => {
@@ -776,8 +851,8 @@
 					{@const friendId = otherParticipant(doc.data)}
 					{@const profile = friendId ? friendProfiles.get(friendId) : undefined}
 					{@const isProcessing = processingKey === doc.key}
-					<li>
-						<div class="pending-row">
+					<li data-request-key={doc.key}>
+						<div class="pending-row" class:is-focused={doc.key === highlightedKey}>
 							<span class="pending-avatar">
 								<Avatar
 									class="h-full w-full"
@@ -915,7 +990,7 @@
 			<ul class="feed-list">
 				{#each friendActivities as activity (activityKey(activity))}
 					{@const profile = friendProfiles.get(activity.user)}
-					{@const isClapped = clappedKeys.has(activityKey(activity))}
+					{@const isLiked = likedKeys.has(activityKey(activity))}
 					<li>
 						<div class="feed-row">
 							<button class="feed-main" onclick={() => goToMarket(activity.marketId)} type="button">
@@ -944,13 +1019,24 @@
 							</button>
 							<button
 								class="feed-react"
-								class:is-clapped={isClapped}
-								aria-label={t({ locale: $localeStore, key: 'arena.friends.feed.clap' })}
-								aria-pressed={isClapped}
-								onclick={() => toggleClap(activity)}
+								class:is-firing={isFiring(activity)}
+								class:is-liked={isLiked}
+								aria-label={t({ locale: $localeStore, key: 'arena.friends.feed.like' })}
+								aria-pressed={isLiked}
+								onclick={() => toggleLike(activity)}
 								type="button"
 							>
-								<Sparkles aria-hidden="true" size={15} strokeWidth={1.8} />
+								<Zap aria-hidden="true" size={16} strokeWidth={1.6} />
+								<span class="react-burst" aria-hidden="true">
+									<span></span>
+									<span></span>
+									<span></span>
+									<span></span>
+									<span></span>
+									<span></span>
+									<span></span>
+									<span></span>
+								</span>
 							</button>
 						</div>
 					</li>
@@ -1395,6 +1481,15 @@
 		gap: 0.65rem;
 		width: 100%;
 		padding: 0.7rem 0.85rem;
+		border-radius: var(--r-12);
+		transition: background var(--d-state) ease;
+	}
+
+	/* Transient highlight when reached via an inbox deep-link, so the
+	   recipient's eye lands on the right request. Fades after
+	   HIGHLIGHT_DURATION_MS. */
+	.pending-row.is-focused {
+		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 	}
 
 	.pending-avatar {
@@ -1622,10 +1717,14 @@
 		text-transform: uppercase;
 	}
 
-	/* Clap react — appreciation acknowledgement. Brand forbids emoji, so
-	   the applause cue is the `Sparkles` glyph rather than 👏. Resting
-	   state is dimmed; tapping commits to full opacity + an accent wash. */
+	/* Like react — acknowledge a friend's call. Brand forbids emoji
+	   (design.md), so the cue is the `Zap` glyph. Resting state is
+	   dimmed; tapping commits to full opacity + an accent wash, plus a
+	   one-beat tilt and particle burst (both reduced-motion gated). The
+	   accent uses `--color-primary` (laurel in dark, the contrast-safe
+	   laurel-deep in light / peach) rather than raw `--laurel`. */
 	.feed-react {
+		position: relative;
 		display: inline-flex;
 		flex-shrink: 0;
 		align-items: center;
@@ -1652,10 +1751,101 @@
 		transform: scale(0.92);
 	}
 
-	.feed-react.is-clapped {
+	.feed-react.is-liked {
 		opacity: 1;
 		background: color-mix(in srgb, var(--color-primary) 14%, transparent);
 		color: var(--color-primary);
+	}
+
+	.feed-react.is-firing :global(svg) {
+		animation: react-tilt 420ms var(--ease-vici);
+	}
+
+	.react-burst {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.react-burst span {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 3px;
+		height: 3px;
+		border-radius: 50%;
+		background: var(--color-primary);
+		opacity: 0;
+	}
+
+	.feed-react.is-firing .react-burst span {
+		animation: react-burst 540ms ease-out forwards;
+	}
+
+	.react-burst span:nth-child(1) {
+		--tx: 18px;
+		--ty: 0;
+	}
+	.react-burst span:nth-child(2) {
+		--tx: 13px;
+		--ty: 13px;
+	}
+	.react-burst span:nth-child(3) {
+		--tx: 0;
+		--ty: 18px;
+	}
+	.react-burst span:nth-child(4) {
+		--tx: -13px;
+		--ty: 13px;
+	}
+	.react-burst span:nth-child(5) {
+		--tx: -18px;
+		--ty: 0;
+	}
+	.react-burst span:nth-child(6) {
+		--tx: -13px;
+		--ty: -13px;
+	}
+	.react-burst span:nth-child(7) {
+		--tx: 0;
+		--ty: -18px;
+	}
+	.react-burst span:nth-child(8) {
+		--tx: 13px;
+		--ty: -13px;
+	}
+
+	@keyframes react-tilt {
+		0% {
+			transform: rotate(0) scale(0.9);
+		}
+		35% {
+			transform: rotate(-14deg) scale(1.15);
+		}
+		70% {
+			transform: rotate(10deg) scale(1.02);
+		}
+		100% {
+			transform: rotate(0) scale(1);
+		}
+	}
+
+	@keyframes react-burst {
+		0% {
+			transform: translate(-50%, -50%) scale(1);
+			opacity: 1;
+		}
+		100% {
+			transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.2);
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.feed-react.is-firing :global(svg),
+		.feed-react.is-firing .react-burst span {
+			animation: none;
+		}
 	}
 
 	/* ── Feed (empty) ──────────────────────────────────────── */
