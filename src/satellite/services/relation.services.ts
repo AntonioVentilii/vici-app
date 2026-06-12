@@ -3,7 +3,7 @@ import { FRIEND_REQUEST_REJECTED_COOLDOWN_MS } from '$lib/constants/relation.con
 import { RelationCategory, RelationState } from '$lib/enums/relation';
 import type { FriendRequestOutcome, Relation } from '$lib/types/relation';
 import { isNullish, nonNullish } from '@dfinity/utils';
-import { msgCaller } from '@junobuild/functions/ic-cdk';
+import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
 	deleteDocStore,
@@ -235,7 +235,9 @@ export const sendFriendRequest = ({ target }: { target: PrincipalText }): Friend
 			? rejectedAtMs + FRIEND_REQUEST_REJECTED_COOLDOWN_MS
 			: undefined;
 
-		if (!isRejecter && nonNullish(retryAtMs) && Date.now() < retryAtMs) {
+		const nowMs = Number(time() / 1_000_000n);
+
+		if (!isRejecter && nonNullish(retryAtMs) && nowMs < retryAtMs) {
 			return { status: 'rejected_cooldown', retryAtMs };
 		}
 
