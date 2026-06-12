@@ -107,14 +107,16 @@ back stake + profit, a loss returns nothing.
   available balance and are pure noise — hidden, **but** their ledger
   fee still debits the running balance, so the hidden rows participate
   in the balance computation.
-- The balance column is computed **newest-first**: anchor on the
-  current available balance from `vxp-holdings.derived.ts`, then walk
-  backwards subtracting each row's delta. Integer math in base units
-  only (`formatToken` at render time); cite `VXP_TOKEN` decimals and
-  `USD_DECIMALS` from their canonical constants — clearing event
-  amounts are in USD-decimal fixed units and must go through the
-  existing decode helpers (see `mapClearingEventToTransaction`), never
-  ad-hoc `/ 1e8` math.
+- The balance column is computed **newest-first**: anchor on
+  `vxpSpendable` from `vxp-holdings.derived.ts`, then walk backwards
+  subtracting each row's delta. Integer math in clearing-margin base
+  units only, formatted at render time with the `USD_DECIMALS`-scaled
+  VXP helpers. Unit handling reuses the existing decoders rather than
+  assuming a scale: event prices decode via `eventExecutionPrice`
+  (decimals carried by the event itself), ledger amounts convert
+  native → margin scale via `nativeToClearingMarginUnits`, and a
+  `Settled` event's signed `qty` is already the margin-scale cashflow
+  — never ad-hoc `/ 1e8` math.
 - Win/loss colours: `--yes` / `--no` signals; bonuses use the accent;
   neutral rows muted.
 
