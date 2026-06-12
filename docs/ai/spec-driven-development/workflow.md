@@ -96,6 +96,29 @@ closes completely; if it isn't, do **not** use a closing keyword:
 reference the issue as `Part of #123` and state what remains under
 "Out of scope".
 
+**Open questions vs. pending decisions.** Unresolved items live in two
+distinct end-of-spec sections, split by whether the relevant facts are
+known — never one mixed "open items" list:
+
+- **Open questions** — facts to confirm: the answer is not yet known
+  and must be found out or verified (confirm an SDK method's contract,
+  check whether a field exists, verify current behaviour). These need
+  research, a docs lookup, or a question to someone who knows, and may
+  still reshape the spec.
+- **Pending decisions** — facts are clear, a call remains: all the
+  relevant information is understood and what's left is a product or
+  architecture choice (two valid approaches, ship in v1 vs.
+  fast-follow). These need an owner to decide, not more information.
+
+The two route differently: open questions go to whoever can find the
+answer; pending decisions go to whoever owns the call — they are the
+"deeper ambiguity" that step 4 says to stop for. The split also keeps
+the spec honest: it's easy to disguise an undecided choice as an "open
+question" and stall. When an open question gets answered it usually
+becomes a pending decision — move it across rather than leaving it
+ambiguous. A spec should not flip to `In progress` while pending
+decisions remain; once decided, record the outcome under "Decisions".
+
 ## Required content by area
 
 **Frontend — artifacts welcome (optional).** Put HTML mocks,
