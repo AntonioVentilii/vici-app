@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import { X } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -58,7 +59,7 @@
 		clearTimers();
 		leaving = false;
 
-		if (toast === undefined) {
+		if (isNullish(toast)) {
 			return;
 		}
 
@@ -84,7 +85,7 @@
 		const toast = $latestInboxToast;
 		clearInboxToast();
 
-		if (toast === undefined) {
+		if (isNullish(toast)) {
 			void goto(AppPath.Notifications);
 
 			return;

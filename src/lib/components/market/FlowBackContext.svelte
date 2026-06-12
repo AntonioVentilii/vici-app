@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CategoryAccuracySignal, PriorCallSignal } from '$lib/types/market-signals';
 	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
@@ -17,7 +18,7 @@
 	// Friends-followed accuracy line — shown when the user has any
 	// followed predictors who've called this market.
 	const categoryAccLine = $derived(
-		categoryAcc !== undefined
+		nonNullish(categoryAcc)
 			? {
 					pct: probabilityToPercent(categoryAcc.accuracy),
 					calls: categoryAcc.calls,
@@ -29,7 +30,7 @@
 	// Prior-call drift: how far consensus has moved since the user
 	// committed. Used by the prior-call section at the bottom.
 	const priorDrift = $derived.by<number | undefined>(() => {
-		if (priorCall === undefined || priorCall.consensusThen === undefined) {
+		if (isNullish(priorCall) || isNullish(priorCall.consensusThen)) {
 			return;
 		}
 
@@ -64,7 +65,7 @@
 			<span class={priorCall.side === 'YES' ? 'text-yes' : 'text-no'}>
 				{priorCall.side}
 			</span>
-			{#if priorDrift !== undefined}
+			{#if nonNullish(priorDrift)}
 				<span class="flow-back-prior-dim">
 					{t({
 						locale: $localeStore,

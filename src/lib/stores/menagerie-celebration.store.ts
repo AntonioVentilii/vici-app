@@ -1,4 +1,5 @@
 import type { MenagerieCrossing } from '$lib/utils/menagerie.utils';
+import { isNullish } from '@dfinity/utils';
 import { writable } from 'svelte/store';
 
 /**
@@ -27,7 +28,7 @@ export const enqueueMenagerieCelebrations = (crossings: MenagerieCrossing[]): vo
 	}
 
 	update((state) => {
-		if (state.current === null) {
+		if (isNullish(state.current)) {
 			const [first, ...rest] = crossings;
 
 			return { current: first, queue: [...state.queue, ...rest] };

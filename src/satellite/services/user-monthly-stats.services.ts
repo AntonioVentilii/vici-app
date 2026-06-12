@@ -7,6 +7,7 @@ import {
 	userMonthlyStatsKey,
 	type UserMonthlyStatsDoc
 } from '$lib/types/user-monthly-stats';
+import { nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
@@ -222,7 +223,7 @@ export const getMonthlyLeaderboardFn = ({
 	const docs: UserMonthlyStatsDoc[] = items
 		.filter(([key]) => key.endsWith(suffix))
 		.map(([, item]) => decodeMonthlyStats(item.data))
-		.filter((doc): doc is UserMonthlyStatsDoc => doc !== undefined)
+		.filter((doc): doc is UserMonthlyStatsDoc => nonNullish(doc))
 		// Guard against a stale month doc whose embedded anchor disagrees with
 		// the key suffix (e.g. a malformed write that slipped the assert).
 		.filter((doc) => doc.monthAnchor === monthAnchor);

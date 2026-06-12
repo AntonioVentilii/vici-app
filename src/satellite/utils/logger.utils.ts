@@ -1,3 +1,5 @@
+import { isNullish } from '@dfinity/utils';
+
 const LOG_PREFIX = '[satellite]';
 
 export const logInfo = ({
@@ -7,12 +9,11 @@ export const logInfo = ({
 	message: string;
 	detail?: Record<string, string | number | bigint | boolean>;
 }): void => {
-	const suffix =
-		detail === undefined
-			? ''
-			: ` ${Object.entries(detail)
-					.map(([k, v]) => `${k}=${typeof v === 'bigint' ? v.toString() : v}`)
-					.join(' ')}`;
+	const suffix = isNullish(detail)
+		? ''
+		: ` ${Object.entries(detail)
+				.map(([k, v]) => `${k}=${typeof v === 'bigint' ? v.toString() : v}`)
+				.join(' ')}`;
 
 	// eslint-disable-next-line no-console
 	console.log(`${LOG_PREFIX} ${message}${suffix}`);
@@ -25,12 +26,11 @@ export const logError = ({
 	message: string;
 	detail?: Record<string, string | number | bigint | boolean>;
 }): void => {
-	const suffix =
-		detail === undefined
-			? ''
-			: ` ${Object.entries(detail)
-					.map(([k, v]) => `${k}=${typeof v === 'bigint' ? v.toString() : v}`)
-					.join(' ')}`;
+	const suffix = isNullish(detail)
+		? ''
+		: ` ${Object.entries(detail)
+				.map(([k, v]) => `${k}=${typeof v === 'bigint' ? v.toString() : v}`)
+				.join(' ')}`;
 
 	console.error(`${LOG_PREFIX} ${message}${suffix}`);
 };

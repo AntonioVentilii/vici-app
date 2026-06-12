@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
@@ -52,7 +53,7 @@
 	);
 
 	const picked: FeaturedEventParticipant | undefined = $derived(
-		participantId === null ? undefined : event.participants.find((p) => p.id === participantId)
+		isNullish(participantId) ? undefined : event.participants.find((p) => p.id === participantId)
 	);
 
 	const fallbackFavourite: FeaturedEventParticipant | undefined = $derived(
@@ -246,7 +247,7 @@
 				style:transition={cardTransition}
 				style:opacity={committed ? 0 : 1}
 				class="ob-card"
-				class:committed={committed !== null}
+				class:committed={nonNullish(committed)}
 				onmousedown={onPointerDown}
 				onmouseleave={onPointerUp}
 				onmousemove={onPointerMove}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import type { Snippet } from 'svelte';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 
@@ -26,7 +27,7 @@
 
 	const { title, eyebrow, right, children }: Props = $props();
 
-	const chips = $derived(eyebrow !== undefined ? [{ label: eyebrow }] : undefined);
+	const chips = $derived(nonNullish(eyebrow) ? [{ label: eyebrow }] : undefined);
 </script>
 
 <ScreenHeader {chips} {right} {title} variant="section" />

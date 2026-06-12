@@ -26,7 +26,9 @@ substantive, read the canonical docs.
   declaring done. `npm run check` for svelte-check.
 - **ESLint landmines:** no `0n` (use `ZERO` from
   `$lib/constants/app.constants`); no `return undefined;` (bare
-  `return;`); no relative imports across folders under `src/**`.
+  `return;`); no relative imports across folders under `src/**`; no
+  direct `null`/`undefined` comparisons (use `isNullish` / `nonNullish`
+  from `@dfinity/utils`).
 - **Time variables:** `_ms` (milliseconds, default) / `_ns`
   (nanoseconds, protocol-level).
 - **Terminology:** always **"prediction"**, never "bet".

@@ -4,6 +4,7 @@ import {
 	LEAGUE_IMAGES_COLLECTION
 } from '$lib/types/league';
 import { downscaleImageToSquareJpeg } from '$lib/utils/image.utils';
+import { isNullish } from '@dfinity/utils';
 import { deleteAsset, uploadFile } from '@junobuild/core';
 
 /**
@@ -39,7 +40,7 @@ export const uploadLeagueImage = async ({
 		quality: LEAGUE_IMAGE_JPEG_QUALITY
 	});
 
-	if (downscaled === null) {
+	if (isNullish(downscaled)) {
 		throw new Error('Could not process the selected image.');
 	}
 

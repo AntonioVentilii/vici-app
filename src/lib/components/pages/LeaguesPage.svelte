@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { Plus } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
@@ -184,7 +185,7 @@
 	 * found in the (still-hydrating) roster.
 	 */
 	const yourRankFor = (row: LeagueRow): number | undefined => {
-		if (selfPrincipal === undefined) {
+		if (isNullish(selfPrincipal)) {
 			return;
 		}
 
@@ -214,7 +215,7 @@
 	$effect(() => {
 		const owner = selfPrincipal;
 
-		if (owner === undefined) {
+		if (isNullish(owner)) {
 			return;
 		}
 
@@ -248,7 +249,7 @@
 					// `rankDelta` is `priorRank - rank` (positive = climbed); the
 					// card's `trend` inverts that (negative = climbed). Leave the
 					// 0 (no arrow) when there is no comparable prior week.
-					if (delta !== undefined) {
+					if (nonNullish(delta)) {
 						leagueTrends.set(id, -delta);
 					}
 				})

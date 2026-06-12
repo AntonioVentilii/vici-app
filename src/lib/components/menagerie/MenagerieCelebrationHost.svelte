@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import MenagerieReveal from '$lib/components/menagerie/MenagerieReveal.svelte';
 	import MenagerieSprite from '$lib/components/menagerie/MenagerieSprite.svelte';
 	import { myMenagerieStats } from '$lib/derived/menagerie.derived';
@@ -79,7 +80,7 @@
 		// only when one of these changes avoids reacting to unrelated profile
 		// writes (avatar, settings, …); the earned-set already folds in the live
 		// signals, so a referral/rank change that crosses a tier re-triggers here.
-		const signature = `${current.earnedMenagerie == null ? 'seed' : 'set'}:${diff.all.join(',')}`;
+		const signature = `${isNullish(current.earnedMenagerie) ? 'seed' : 'set'}:${diff.all.join(',')}`;
 
 		if (signature === lastSignature) {
 			return;

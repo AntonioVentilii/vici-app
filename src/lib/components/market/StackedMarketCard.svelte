@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { Layers, UsersRound } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -121,7 +122,7 @@
 
 						<ul class="max-h-64 space-y-1 overflow-y-auto">
 							{#each forks as fork (fork.id)}
-								{@const isMine = userPrincipal !== undefined && fork.creator === userPrincipal}
+								{@const isMine = nonNullish(userPrincipal) && fork.creator === userPrincipal}
 								<li>
 									<button
 										class="group hover:bg-primary/10 flex w-full items-start gap-3 rounded-xl px-2 py-2 text-left transition-colors"

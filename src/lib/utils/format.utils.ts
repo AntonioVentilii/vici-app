@@ -1,6 +1,6 @@
 import type { ClearingDid } from '$declarations';
 import { MILLISECOND_IN_NANOSECONDS, USD_DECIMALS } from '$lib/constants/app.constants';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import Decimal from 'decimal.js';
 import { type BigNumberish, formatUnits } from 'ethers/utils';
 
@@ -36,7 +36,7 @@ export const safeBigInt = ({ value, min }: { value: number; min?: bigint }): big
 	const truncated = Number.isFinite(numeric) ? Math.trunc(numeric) : 0;
 	const result = BigInt(truncated);
 
-	return min !== undefined && result < min ? min : result;
+	return nonNullish(min) && result < min ? min : result;
 };
 
 /**
@@ -56,7 +56,7 @@ export const groupIntegerPart = ({
 	const body = negative ? formatted.slice(1) : formatted;
 	const [intPart, fracPart] = body.split('.');
 	const groupedInt = new Intl.NumberFormat(locale, { useGrouping: true }).format(BigInt(intPart));
-	const grouped = fracPart === undefined ? groupedInt : `${groupedInt}.${fracPart}`;
+	const grouped = isNullish(fracPart) ? groupedInt : `${groupedInt}.${fracPart}`;
 
 	return negative ? `-${grouped}` : grouped;
 };

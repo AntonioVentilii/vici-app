@@ -34,7 +34,7 @@
 </script>
 
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import type { PrincipalText } from '@junobuild/schema';
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -138,7 +138,7 @@
 	// keep only entries whose render- and tap-critical fields are shaped
 	// right so a malformed row can't throw mid-render or in `openScope`.
 	const isScope = (value: unknown): value is Scope => {
-		if (typeof value !== 'object' || value === null) {
+		if (typeof value !== 'object' || isNullish(value)) {
 			return false;
 		}
 
@@ -212,9 +212,9 @@
 		// Stale-while-revalidate seed. A present cache entry (even an empty
 		// array — "loaded, no standings") suppresses the skeleton; a missing
 		// one leaves us in the cold-load state until the hydrate settles.
-		const cached = owner !== undefined ? readCache(owner) : undefined;
+		const cached = nonNullish(owner) ? readCache(owner) : undefined;
 
-		if (cached !== undefined) {
+		if (nonNullish(cached)) {
 			scopes = cached;
 			settled = true;
 		} else {
@@ -223,7 +223,7 @@
 			// pre-auth state immediately so the skeleton only pulses while a
 			// load is actually possible. When auth resolves, the effect
 			// re-runs with the principal and the cold-load state kicks in.
-			settled = owner === undefined;
+			settled = isNullish(owner);
 		}
 
 		// Clamp the scope cursor WITHOUT registering `idx` / `scopes` as
@@ -260,7 +260,7 @@
 		owner: PrincipalText | undefined;
 		isCancelled: () => boolean;
 	}): Promise<void> => {
-		if (owner === undefined) {
+		if (isNullish(owner)) {
 			return;
 		}
 
@@ -271,15 +271,16 @@
 			const global = await getStandings({ window: 'week' });
 			const mine = findOwnStanding({ result: global, owner });
 
-			if (mine !== undefined && global.total > 0) {
+			if (nonNullish(mine) && global.total > 0) {
 				const bracket = pctBracket({ rank: mine.rank, total: global.total });
 				// Movement on the Global scope reads as a percentile-point
 				// climb so it stays meaningful at any pool size: the prior
 				// rank's percentile minus the current one (positive climbs).
-				const priorPct =
-					mine.priorRank !== undefined ? (mine.priorRank / global.total) * 100 : undefined;
+				const priorPct = nonNullish(mine.priorRank)
+					? (mine.priorRank / global.total) * 100
+					: undefined;
 				const nowPct = (mine.rank / global.total) * 100;
-				const up = priorPct !== undefined ? Math.max(0, Math.round(priorPct - nowPct)) : 0;
+				const up = nonNullish(priorPct) ? Math.max(0, Math.round(priorPct - nowPct)) : 0;
 
 				next.push({
 					key: 'global',
@@ -301,21 +302,21 @@
 		try {
 			const friendOwners = $friendsListStore
 				.map((relation) => relation.participants.find((p) => p !== owner))
-				.filter((p): p is PrincipalText => p !== undefined);
+				.filter((p): p is PrincipalText => nonNullish(p));
 
 			if (friendOwners.length > 0) {
 				const members = [...new Set([owner, ...friendOwners])];
 				const friends = await getLeagueStandings({ window: 'week', members });
 				const mine = findOwnStanding({ result: friends, owner });
 
-				if (mine !== undefined && friends.total > 0) {
+				if (nonNullish(mine) && friends.total > 0) {
 					next.push({
 						key: 'friends',
 						label: t({ locale: $localeStore, key: 'arena.hero.friends' }),
 						rank: mine.rank,
 						total: friends.total,
 						bracket: undefined,
-						up: mine.rankDelta !== undefined ? Math.max(0, mine.rankDelta) : 0,
+						up: nonNullish(mine.rankDelta) ? Math.max(0, mine.rankDelta) : 0,
 						upSuffix: '',
 						unit: unitThisWeek,
 						nav: { kind: 'tab', tab: 'friends' }
@@ -338,14 +339,14 @@
 					const standings = await getLeagueStandings({ window: 'week', members });
 					const mine = findOwnStanding({ result: standings, owner });
 
-					if (mine !== undefined && standings.total > 0) {
+					if (nonNullish(mine) && standings.total > 0) {
 						leagueScopes.push({
 							key: `league-${league.id}`,
 							label: league.name,
 							rank: mine.rank,
 							total: standings.total,
 							bracket: undefined,
-							up: mine.rankDelta !== undefined ? Math.max(0, mine.rankDelta) : 0,
+							up: nonNullish(mine.rankDelta) ? Math.max(0, mine.rankDelta) : 0,
 							upSuffix: '',
 							unit: unitThisWeek,
 							nav: { kind: 'league', id: league.id }
@@ -366,7 +367,7 @@
 		try {
 			const uni = $myAffiliationsStore.university;
 
-			if (uni !== undefined) {
+			if (nonNullish(uni)) {
 				const stats = await listAffiliationStats({ kind: 'university' });
 				const ranked = [...stats].sort(
 					affiliationRankComparator({
@@ -458,7 +459,7 @@
 	};
 
 	const onPointerUp = (event: PointerEvent) => {
-		if (pointerDownX === null) {
+		if (isNullish(pointerDownX)) {
 			return;
 		}
 
@@ -473,7 +474,7 @@
 			return;
 		}
 
-		if (current !== undefined) {
+		if (nonNullish(current)) {
 			openScope(current);
 		}
 	};
@@ -495,7 +496,7 @@
 
 			event.preventDefault();
 
-			if (current !== undefined) {
+			if (nonNullish(current)) {
 				openScope(current);
 			}
 		}
@@ -520,7 +521,7 @@
 			<span class="ar-skel-block ar-skel-meta"></span>
 		</div>
 	</div>
-{:else if current !== undefined}
+{:else if nonNullish(current)}
 	<div class="ar-standing">
 		<div
 			class="ar-live"
@@ -559,7 +560,7 @@
 			</div>
 
 			<div class="ar-live-body">
-				{#if current.bracket !== undefined}
+				{#if nonNullish(current.bracket)}
 					<span class="num ar-live-rank is-bracket">
 						<span class="ar-live-rank-pre">{bracketPrefix}</span>{current.bracket}%
 					</span>
@@ -575,7 +576,7 @@
 			</div>
 
 			<div class="num ar-live-meta">
-				{#if current.bracket !== undefined}
+				{#if nonNullish(current.bracket)}
 					{t({
 						locale: $localeStore,
 						key: 'arena.hero.meta_ranked',

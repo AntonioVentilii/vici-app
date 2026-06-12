@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
@@ -112,7 +113,7 @@
 		openPositions.reduce<number>((acc, pos) => {
 			const market = getMarketById(pos.marketId);
 
-			if (market === undefined || market.token.symbol !== VXP_TOKEN.symbol) {
+			if (isNullish(market) || market.token.symbol !== VXP_TOKEN.symbol) {
 				return acc;
 			}
 
@@ -210,7 +211,7 @@
 	const positionMoveDisplay = (pos: Position): string | undefined => {
 		const entry = positionEntryProb(pos);
 
-		if (entry === undefined) {
+		if (isNullish(entry)) {
 			return;
 		}
 
@@ -247,7 +248,7 @@
 		const market = getMarketById(resolved.marketId);
 		const outcomeId = inferResolvedOutcomeId({ resolved, market });
 
-		if (outcomeId === undefined) {
+		if (isNullish(outcomeId)) {
 			return EM_DASH;
 		}
 
@@ -380,7 +381,7 @@
 								</div>
 								<div class="portfolio-row-meta">
 									<span class="num portfolio-row-prob">
-										{#if entry !== undefined}
+										{#if nonNullish(entry)}
 											{t({
 												locale: $localeStore,
 												key: 'portfolio.row.entry_to_current',
@@ -399,7 +400,7 @@
 										class:is-negative={pnl < 0}
 										class:is-positive={pnl >= 0}
 									>
-										{formatRowPnl(pos)}{#if move !== undefined}<span class="portfolio-row-move">
+										{formatRowPnl(pos)}{#if nonNullish(move)}<span class="portfolio-row-move">
 												· {move}</span
 											>{/if}
 									</span>

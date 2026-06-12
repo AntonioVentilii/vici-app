@@ -2,6 +2,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
 import { isPubliclyHidden, withProfileDefaults } from '$satellite/services/profile.services';
+import { isNullish } from '@dfinity/utils';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
 import type { PrincipalText } from '@junobuild/schema';
@@ -134,7 +135,7 @@ export const getMyRivalFn = (): {
 	const rivalIsTrailing = myIndex === 0;
 	const rival = profiles[rivalIsTrailing ? 1 : myIndex - 1];
 
-	if (rival === undefined) {
+	if (isNullish(rival)) {
 		// Rank 1 with no runner-up (lone ranked profile) — no rival.
 		return { rival: undefined, rivalIsTrailing: false };
 	}

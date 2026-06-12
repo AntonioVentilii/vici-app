@@ -184,6 +184,7 @@ import {
 	toWireTournamentMatch,
 	UserProfileWireSchema
 } from '$satellite/utils/wire-format.utils';
+import { isNullish } from '@dfinity/utils';
 import {
 	defineAssert,
 	defineHook,
@@ -1008,7 +1009,7 @@ export const getCurrentTournament = defineQuery({
 		const { tournament, matches } = getCurrentTournamentFn();
 
 		return {
-			tournament: tournament === null ? undefined : toWireTournament(tournament),
+			tournament: isNullish(tournament) ? undefined : toWireTournament(tournament),
 			matches: matches.map(toWireTournamentMatch)
 		};
 	}

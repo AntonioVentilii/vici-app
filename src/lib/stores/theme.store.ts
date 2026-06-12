@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { isNullish } from '@dfinity/utils';
 import { writable } from 'svelte/store';
 
 export type Theme = 'dark' | 'light' | 'peach';
@@ -58,7 +59,7 @@ if (browser) {
 	// the change into the local writable so all open tabs render the
 	// same theme without a reload.
 	window.addEventListener('storage', (event) => {
-		if (event.key !== THEME_KEY || event.newValue === null) {
+		if (event.key !== THEME_KEY || isNullish(event.newValue)) {
 			return;
 		}
 

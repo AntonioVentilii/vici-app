@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -91,7 +92,7 @@
 		timers.forEach(clearTimeout);
 		timers = [];
 
-		if (raf !== null) {
+		if (nonNullish(raf)) {
 			cancelAnimationFrame(raf);
 			raf = null;
 		}
@@ -101,7 +102,7 @@
 			c.classList.remove('is-flipped');
 		});
 
-		if (pointerHandler !== null && browser) {
+		if (nonNullish(pointerHandler) && browser) {
 			window.removeEventListener('pointerdown', pointerHandler);
 			pointerHandler = null;
 		}

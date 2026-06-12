@@ -568,7 +568,7 @@ export const getCurrentTournamentFn = (): {
 		try {
 			const doc = decodeDocData<TournamentDoc>(item.data);
 
-			if (latest === null || doc.id > latest.id) {
+			if (isNullish(latest) || doc.id > latest.id) {
 				latest = doc;
 			}
 		} catch {
@@ -576,7 +576,7 @@ export const getCurrentTournamentFn = (): {
 		}
 	}
 
-	if (latest === null) {
+	if (isNullish(latest)) {
 		return { tournament: null, matches: [] };
 	}
 
@@ -702,7 +702,7 @@ const pickMatchWinner = ({
 	fromAccuracy: number;
 	toAccuracy: number;
 }): string | null => {
-	if (fromLeagueId === null || toLeagueId === null) {
+	if (isNullish(fromLeagueId) || isNullish(toLeagueId)) {
 		return null;
 	}
 
@@ -885,7 +885,7 @@ export const resolveTournamentRoundFn = ({
 
 	for (let i = 0; i < roundIndex; i += 1) {
 		const earlier = matchesByRound[TOURNAMENT_ROUNDS[i]];
-		const unresolved = earlier.find((m) => m.doc.winnerLeagueId === null);
+		const unresolved = earlier.find((m) => isNullish(m.doc.winnerLeagueId));
 
 		if (nonNullish(unresolved)) {
 			return { ok: false, reason: 'previous_round_not_resolved' };
@@ -899,7 +899,7 @@ export const resolveTournamentRoundFn = ({
 		// Already-settled matches are skipped (idempotent re-run); a
 		// match with no league ids is also a no-op (malformed bracket).
 		// Both branches fall through cleanly without `continue`.
-		if (entry.doc.winnerLeagueId === null) {
+		if (isNullish(entry.doc.winnerLeagueId)) {
 			const fromEval = leagueWindowAccuracy({
 				leagueId: entry.doc.fromLeagueId ?? '',
 				startCalls: entry.doc.fromStartCalls ?? 0,
@@ -942,7 +942,7 @@ export const resolveTournamentRoundFn = ({
 	if (round_ === 'final') {
 		const [finalMatch] = matchesByRound.final;
 
-		if (nonNullish(finalMatch) && finalMatch.doc.winnerLeagueId !== null) {
+		if (nonNullish(finalMatch) && nonNullish(finalMatch.doc.winnerLeagueId)) {
 			setDocStore({
 				collection: Collection.TOURNAMENTS,
 				key: tournamentId,
@@ -1010,11 +1010,11 @@ const propagateWinnerToNextRound = ({
 	}
 
 	// Skip if the slot is already filled (idempotent re-run).
-	if (isFromSlot && nextMatchEntry.doc.fromLeagueId !== null) {
+	if (isFromSlot && nonNullish(nextMatchEntry.doc.fromLeagueId)) {
 		return;
 	}
 
-	if (!isFromSlot && nextMatchEntry.doc.toLeagueId !== null) {
+	if (!isFromSlot && nonNullish(nextMatchEntry.doc.toLeagueId)) {
 		return;
 	}
 
@@ -1168,7 +1168,7 @@ export const claimTournamentPrizeFn = async ({
 		myPlace = 3;
 	}
 
-	if (myPlace === null) {
+	if (isNullish(myPlace)) {
 		return { ok: false, reason: 'not_member_of_top_league' };
 	}
 

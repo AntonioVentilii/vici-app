@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
@@ -97,7 +98,7 @@
 						? t({ locale: $localeStore, key: 'outcome.no' })
 						: (myCall ?? '—'),
 			suffix: '',
-			mute: myCall === null
+			mute: isNullish(myCall)
 		}
 	]);
 </script>

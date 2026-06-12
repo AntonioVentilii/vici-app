@@ -26,6 +26,7 @@
 
 import type { FlowAction } from '$lib/types/market';
 import type { MessageKey } from '$lib/utils/i18n.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 const STORAGE_KEY = 'vici.motion.state.v3';
 
@@ -482,7 +483,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 
 	// Prefer the app's REAL lifetime count (`me.calls`) when supplied, so
 	// volume milestones fire at the true number — not the local tally.
-	const calls = lifetimeCalls != null ? lifetimeCalls + 1 : state.lifetime.calls;
+	const calls = nonNullish(lifetimeCalls) ? lifetimeCalls + 1 : state.lifetime.calls;
 	const target = dailyTarget > 0 ? dailyTarget : 10;
 	const overtime = target >= DAILY_HARD_CAP;
 
@@ -552,14 +553,15 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 	// ── 2. Lifetime volume milestone — VXP credited even if it coincides ──
 	const milestone = VOLUME[calls];
 
-	if (milestone !== undefined) {
+	if (nonNullish(milestone)) {
 		bonusXp += milestone.bonus;
 
 		beat ??= withBonus({
 			kind: `volume-${calls}`,
 			character: milestone.character,
-			copyKey:
-				milestone.pool !== undefined ? pick(state, milestone.pool) : (milestone.copyKey ?? null),
+			copyKey: nonNullish(milestone.pool)
+				? pick(state, milestone.pool)
+				: (milestone.copyKey ?? null),
 			subKey: milestone.subKey,
 			badgeKey: milestone.badgeKey,
 			titleCharacter: milestone.titleCharacter,
@@ -570,10 +572,10 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 	}
 
 	// ── 3. Overtime rhythm (calls 11 & 13) ──
-	if (beat === null && overtime) {
+	if (isNullish(beat) && overtime) {
 		const ot = OT_RHYTHM[dailyDone];
 
-		if (ot !== undefined) {
+		if (nonNullish(ot)) {
 			beat = {
 				kind: `ot-${dailyDone}`,
 				character: ot.character,
@@ -588,7 +590,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 
 	// ── 4. First-position events — a stance taken, not an outcome ──
 	// Deferred past call #1 so "first-call" owns the very first swipe.
-	if (beat === null && calls > 1) {
+	if (isNullish(beat) && calls > 1) {
 		if (side === 'YES' && !state.flags.firstYes) {
 			state.flags.firstYes = true;
 			beat = {
@@ -635,10 +637,10 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 	}
 
 	// ── 5. Within-day rhythm (jittered) ──
-	if (beat === null && !overtime && dailyDone < target) {
+	if (isNullish(beat) && !overtime && dailyDone < target) {
 		const key = state.day.sched[dailyDone];
 
-		if (key !== undefined) {
+		if (nonNullish(key)) {
 			const m = RHYTHM[key];
 			beat = {
 				kind: `daily-${dailyDone}`,
@@ -652,7 +654,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 	}
 
 	// ── 6. Wildcard — rare variable-ratio surprise, non-currency TREAT ──
-	if (beat === null && wildcards && calls > 1 && Math.random() < 1 / 6) {
+	if (isNullish(beat) && wildcards && calls > 1 && Math.random() < 1 / 6) {
 		const treatKey = TREAT_KEYS[Math.floor(Math.random() * TREAT_KEYS.length)];
 		beat = {
 			kind: 'wildcard',
@@ -667,7 +669,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 	}
 
 	// ── 7. Every-10th lifetime ambient (no copy, just a pop) ──
-	if (beat === null && calls > 10 && calls % 10 === 0) {
+	if (isNullish(beat) && calls > 10 && calls % 10 === 0) {
 		beat = {
 			kind: 'ambient-10',
 			character: 'vici',
@@ -685,7 +687,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 	// created before all bonus sources are tallied (e.g. overtime-complete
 	// fires at step 1 with bonusXp 25, then a volume milestone stacks more
 	// at step 2), leaving `beat.bonusXp` stale unless we reconcile here.
-	if (beat !== null) {
+	if (nonNullish(beat)) {
 		beat = { ...beat, bonusXp };
 	}
 

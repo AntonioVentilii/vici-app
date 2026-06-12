@@ -1,5 +1,6 @@
 import { AppPath } from '$lib/constants/routes.constants';
 import type { InboxNotificationKind } from '$lib/types/inbox';
+import { nonNullish } from '@dfinity/utils';
 import type { Icon as LucideIcon } from '@lucide/svelte';
 import {
 	Bell,
@@ -71,11 +72,11 @@ export const notificationDestination = ({
 	mid?: string;
 	href?: string;
 }): string => {
-	if (href !== undefined) {
+	if (nonNullish(href)) {
 		return href;
 	}
 
-	if (mid !== undefined && mid !== '') {
+	if (nonNullish(mid) && mid !== '') {
 		return `${AppPath.Markets}/${mid}`;
 	}
 

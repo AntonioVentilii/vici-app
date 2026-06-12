@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import { X } from '@lucide/svelte/icons';
 	import { notificationKindConfig } from '$lib/constants/notification-kind.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -60,7 +61,7 @@
 	};
 
 	const onPointerMove = (event: PointerEvent) => {
-		if (startX === undefined) {
+		if (isNullish(startX)) {
 			return;
 		}
 
@@ -76,7 +77,7 @@
 	const onPointerUp = (event: PointerEvent) => {
 		(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId);
 
-		if (startX === undefined) {
+		if (isNullish(startX)) {
 			return;
 		}
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	/**
 	 * Dash screen — a glanceable, three-zone surface over the user's real
 	 * performance, stack, and calls:
@@ -112,7 +113,7 @@
 	const categoryOf = (market: Market): string => {
 		const [tag]: (MarketTag | undefined)[] = $marketTags[market.id] ?? [];
 
-		return tag !== undefined && MARKET_TAG_LABEL_KEYS[tag] !== undefined
+		return nonNullish(tag) && nonNullish(MARKET_TAG_LABEL_KEYS[tag])
 			? t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })
 			: t({ locale: $localeStore, key: 'dash.build.category_fallback' });
 	};
@@ -142,9 +143,8 @@
 	const openCalls = $derived.by<OpenCallRow[]>(() => {
 		const positionRows = activePositionsAll
 			.map((position) => ({ position, market: marketById.get(position.marketId) }))
-			.filter(
-				(entry): entry is { position: (typeof activePositionsAll)[number]; market: Market } =>
-					entry.market !== undefined
+			.filter((entry): entry is { position: (typeof activePositionsAll)[number]; market: Market } =>
+				nonNullish(entry.market)
 			)
 			.map(({ position, market }) => ({
 				market,
@@ -160,9 +160,8 @@
 
 		const orderRows = openOrdersAll
 			.map((order) => ({ order, market: marketById.get(order.series_id) }))
-			.filter(
-				(entry): entry is { order: ClearingDid.LimitOrder; market: Market } =>
-					entry.market !== undefined
+			.filter((entry): entry is { order: ClearingDid.LimitOrder; market: Market } =>
+				nonNullish(entry.market)
 			)
 			.map(({ order, market }) => ({
 				market,
@@ -226,9 +225,9 @@
 
 		return $friendsListStore
 			.map((relation) => relation.participants.find((p) => p !== me))
-			.filter((owner): owner is string => owner !== undefined)
+			.filter((owner): owner is string => nonNullish(owner))
 			.map((owner) => cache.get(owner)?.accuracy)
-			.filter((acc): acc is number => acc !== undefined);
+			.filter((acc): acc is number => nonNullish(acc));
 	});
 	const friendsTotal = $derived(friendAccuracies.length);
 	const friendsAhead = $derived(friendAccuracies.filter((acc) => accuracyValue >= acc).length);
@@ -332,7 +331,7 @@
 		});
 		const market = position ? marketById.get(position.marketId) : undefined;
 
-		if (position === undefined || market === undefined) {
+		if (isNullish(position) || isNullish(market)) {
 			return;
 		}
 
@@ -343,7 +342,7 @@
 	);
 
 	onMount(async () => {
-		if (profile === undefined) {
+		if (isNullish(profile)) {
 			return;
 		}
 

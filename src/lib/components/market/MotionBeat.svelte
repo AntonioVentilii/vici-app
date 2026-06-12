@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
@@ -68,16 +69,16 @@
 	});
 
 	const copy = $derived(
-		beat.copyKey === null ? null : t({ locale: $localeStore, key: beat.copyKey })
+		isNullish(beat.copyKey) ? null : t({ locale: $localeStore, key: beat.copyKey })
 	);
 	const sub = $derived(
-		beat.subKey === undefined ? null : t({ locale: $localeStore, key: beat.subKey })
+		isNullish(beat.subKey) ? null : t({ locale: $localeStore, key: beat.subKey })
 	);
 	const treat = $derived(
-		beat.treatKey === undefined ? null : t({ locale: $localeStore, key: beat.treatKey })
+		isNullish(beat.treatKey) ? null : t({ locale: $localeStore, key: beat.treatKey })
 	);
 	const badge = $derived(
-		beat.badgeKey === undefined
+		isNullish(beat.badgeKey)
 			? null
 			: t({
 					locale: $localeStore,
@@ -86,7 +87,7 @@
 				})
 	);
 	const titleUnlocked = $derived(
-		beat.titleCharacter === undefined
+		isNullish(beat.titleCharacter)
 			? null
 			: t({ locale: $localeStore, key: 'motion.title_unlocked' })
 	);
@@ -155,26 +156,26 @@
 		{#if !isAmbient}
 			<div class="motion-beat-text">
 				<span class="motion-beat-name allcaps">{t({ locale: $localeStore, key: nameKey })}</span>
-				{#if copy !== null}
+				{#if nonNullish(copy)}
 					<p class="motion-beat-copy serif-italic">{copy}</p>
 				{/if}
-				{#if coinValue > 0 || treat !== null}
+				{#if coinValue > 0 || nonNullish(treat)}
 					<p class="motion-beat-meta">
 						{#if coinValue > 0}
 							<span class="motion-beat-coin num">
 								<span class="coin" aria-hidden="true"></span>+{coinValue} VXP
 							</span>
 						{/if}
-						{#if treat !== null}
+						{#if nonNullish(treat)}
 							<span class="motion-beat-treat">{treat}</span>
 						{/if}
 					</p>
 				{/if}
-				{#if badge !== null}
+				{#if nonNullish(badge)}
 					<span class="motion-beat-badge allcaps">{badge}</span>
-				{:else if titleUnlocked !== null}
+				{:else if nonNullish(titleUnlocked)}
 					<span class="motion-beat-badge allcaps">{titleUnlocked}</span>
-				{:else if sub !== null}
+				{:else if nonNullish(sub)}
 					<span class="motion-beat-sub allcaps">{sub}</span>
 				{/if}
 			</div>

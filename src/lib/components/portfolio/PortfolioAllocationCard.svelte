@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { USD_DECIMALS } from '$lib/constants/app.constants';
 	import {
 		isMarketTag,
@@ -49,7 +50,7 @@
 		for (const pos of positions) {
 			const market = getMarketById(pos.marketId);
 
-			if (market !== undefined && market.token.symbol === VXP_TOKEN.symbol) {
+			if (nonNullish(market) && market.token.symbol === VXP_TOKEN.symbol) {
 				const cost = decimalFixedValueToNumber({
 					value: pos.lockedCollateral,
 					decimals: USD_DECIMALS

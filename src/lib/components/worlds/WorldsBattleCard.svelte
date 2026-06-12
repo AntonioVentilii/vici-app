@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import {
 		lookupWorldsAffiliation,
@@ -84,7 +85,7 @@
 		option: WorldsAffiliationOption | undefined;
 		id: string;
 	}): string =>
-		opt !== undefined ? affiliationDisplayName({ option: opt, kind, locale: $localeStore }) : id;
+		nonNullish(opt) ? affiliationDisplayName({ option: opt, kind, locale: $localeStore }) : id;
 
 	const accForScope = ({ row, scope: sc }: { row: AffiliationStatsDoc; scope: Scope }): number =>
 		sc === 'wc' ? affiliationLifetimeAccuracy(row) : affiliationMonthlyAccuracy(row);
@@ -105,22 +106,22 @@
 	const top3 = $derived(sortedForScope.slice(0, 3));
 
 	const myRank = $derived(
-		myAffiliationIdentifier !== undefined
+		nonNullish(myAffiliationIdentifier)
 			? sortedForScope.findIndex((s) => s.affiliationIdentifier === myAffiliationIdentifier) + 1
 			: 0
 	);
 
 	const myStats = $derived(
-		myAffiliationIdentifier !== undefined
+		nonNullish(myAffiliationIdentifier)
 			? sortedForScope.find((s) => s.affiliationIdentifier === myAffiliationIdentifier)
 			: undefined
 	);
 
 	const myOption = $derived(
-		myAffiliationIdentifier !== undefined ? option(myAffiliationIdentifier) : undefined
+		nonNullish(myAffiliationIdentifier) ? option(myAffiliationIdentifier) : undefined
 	);
 	const myName = $derived(
-		myAffiliationIdentifier !== undefined
+		nonNullish(myAffiliationIdentifier)
 			? displayName({ option: myOption, id: myAffiliationIdentifier })
 			: ''
 	);
@@ -164,7 +165,7 @@
 		<span class="battles-eyebrow allcaps">
 			{t({ locale: $localeStore, key: eyebrowKey })}
 		</span>
-		{#if myAffiliationIdentifier !== undefined}
+		{#if nonNullish(myAffiliationIdentifier)}
 			{#if isCountry}
 				<span class="battles-section-head-meta num allcaps">
 					{#if myOption}<CountryFlag class="battles-section-flag" countryCode={myOption.id} />{/if}
@@ -233,7 +234,7 @@
 						key: 'battles.card.count_schools',
 						params: { count: total }
 					})}
-			{#if daysLeft !== null}
+			{#if nonNullish(daysLeft)}
 				· {t({ locale: $localeStore, key: 'battles.card.days_left', params: { days: daysLeft } })}
 			{/if}
 		</p>
@@ -294,7 +295,7 @@
 			</div>
 		{/if}
 
-		{#if myAffiliationIdentifier !== undefined && myStats}
+		{#if nonNullish(myAffiliationIdentifier) && myStats}
 			<div class="battles-your-row">
 				<span
 					style={isCountry

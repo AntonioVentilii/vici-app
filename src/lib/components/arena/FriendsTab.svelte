@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import type { Doc } from '@junobuild/core';
 	import { Check, ChevronRight, Link2, Plus, Share2, Zap } from '@lucide/svelte/icons';
 	import { onMount, tick } from 'svelte';
@@ -171,12 +171,12 @@
 	// Single canonical URL — `https://{origin}/i/{code}`. Same string for preview, copy,
 	// and native-share so what the user sees is exactly what gets pasted.
 	const inviteUrl = $derived(
-		inviteCode !== undefined && typeof window !== 'undefined'
+		nonNullish(inviteCode) && typeof window !== 'undefined'
 			? `${window.location.origin}/i/${inviteCode}`
 			: undefined
 	);
 	const inviteUrlDisplay = $derived(
-		inviteUrl !== undefined ? inviteUrl.replace(/^https?:\/\//, '') : undefined
+		nonNullish(inviteUrl) ? inviteUrl.replace(/^https?:\/\//, '') : undefined
 	);
 	const bonusLabel = $derived(formatVxpBalance({ value: REFERRAL_BONUS_VXP }));
 
@@ -420,7 +420,7 @@
 	// `?request=` deep-link) and present in the loaded list. Owns its own
 	// fade timer in `focusPendingRow`, decoupled from this effect's lifecycle.
 	$effect(() => {
-		if (focusRequestKey === undefined) {
+		if (isNullish(focusRequestKey)) {
 			return;
 		}
 
@@ -626,7 +626,7 @@
 	};
 
 	const goToMarket = (marketId: string | undefined) => {
-		if (marketId === undefined || marketId.length === 0) {
+		if (isNullish(marketId) || marketId.length === 0) {
 			return;
 		}
 
@@ -918,7 +918,7 @@
 			</header>
 			{#if rankedFriends.length === 0}
 				<FriendsEmptyState
-					canInvite={inviteUrl !== undefined && referralsRemaining > 0}
+					canInvite={nonNullish(inviteUrl) && referralsRemaining > 0}
 					onAdd={openAddSheet}
 					onInvite={() => void handleShare()}
 				/>
@@ -1067,7 +1067,7 @@
 			</span>
 			<span class="global-link-value num">
 				<span class="global-link-rank">
-					{myRank !== undefined
+					{nonNullish(myRank)
 						? `#${myRank}`
 						: t({ locale: $localeStore, key: 'arena.friends.global.unranked' })}
 				</span>
@@ -1089,7 +1089,7 @@
 		friendId={row.friendId}
 		h2hAhead={h2h.ahead}
 		h2hValue={h2h.value}
-		isOpen={openProfile !== undefined}
+		isOpen={nonNullish(openProfile)}
 		onClose={closeFriendSheet}
 		onRemove={handleRemoveFriend}
 		profile={row.profile}

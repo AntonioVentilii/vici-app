@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { onMount, untrack } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -81,12 +82,12 @@
 		try {
 			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
 			const parsed: Record<string, unknown> =
-				raw !== null && typeof raw === 'string'
+				nonNullish(raw) && typeof raw === 'string'
 					? ((): Record<string, unknown> => {
 							try {
 								const v = JSON.parse(raw);
 
-								return typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
+								return typeof v === 'object' && nonNullish(v) ? (v as Record<string, unknown>) : {};
 							} catch {
 								return {};
 							}

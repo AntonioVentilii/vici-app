@@ -1,3 +1,4 @@
+import { isNullish } from '@dfinity/utils';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { TestId } from '../src/lib/constants/test-ids.constants';
 import { HomePage } from './pages/home.page';
@@ -17,7 +18,7 @@ const drag = async ({
 
 	expect(box).not.toBeNull();
 
-	if (box === null) {
+	if (isNullish(box)) {
 		throw new Error('Cannot drag onboarding target: missing bounding box.');
 	}
 

@@ -170,13 +170,13 @@ const readLegacyLocalStorage = (): Partial<UserPreferences> | undefined => {
 	try {
 		const raw = localStorage.getItem(PREFERENCES_STORAGE_KEY);
 
-		if (raw === null || raw.length === 0) {
+		if (isNullish(raw) || raw.length === 0) {
 			return;
 		}
 
 		const parsed: unknown = JSON.parse(raw);
 
-		if (typeof parsed === 'object' && parsed !== null) {
+		if (typeof parsed === 'object' && nonNullish(parsed)) {
 			return parsed;
 		}
 	} catch {

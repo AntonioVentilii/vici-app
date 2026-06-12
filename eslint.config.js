@@ -63,6 +63,18 @@ export default ts.config(
 					selector: "ReturnStatement[argument.type='Identifier'][argument.name='undefined']",
 					message:
 						'Do not `return undefined;`. Use a bare `return;` for early exits, or in `catch` blocks let the function fall through with a comment explaining why the error is swallowed.'
+				},
+				{
+					selector:
+						"BinaryExpression[operator=/^===?$/]:matches([left.type='Identifier'][left.name='undefined'], [left.type='Literal'][left.raw='null'], [right.type='Identifier'][right.name='undefined'], [right.type='Literal'][right.raw='null'])",
+					message:
+						'Use `isNullish()` from `@dfinity/utils` instead of comparing against `null`/`undefined`.'
+				},
+				{
+					selector:
+						"BinaryExpression[operator=/^!==?$/]:matches([left.type='Identifier'][left.name='undefined'], [left.type='Literal'][left.raw='null'], [right.type='Identifier'][right.name='undefined'], [right.type='Literal'][right.raw='null'])",
+					message:
+						'Use `nonNullish()` from `@dfinity/utils` instead of comparing against `null`/`undefined`.'
 				}
 			]
 		}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import type { ClearingDid } from '$declarations';
 	import IdentityAwareLoader from '$lib/components/loaders/IdentityAwareLoader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
@@ -32,7 +32,7 @@
 			const accountState = latestAccountState;
 			const assets = latestAssets;
 
-			if (accountState === undefined || assets === undefined) {
+			if (isNullish(accountState) || isNullish(assets)) {
 				return;
 			}
 

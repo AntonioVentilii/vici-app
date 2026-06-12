@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
@@ -60,7 +61,7 @@
 				}
 			})}
 		</span>
-		{#if joinedLabel !== null}
+		{#if nonNullish(joinedLabel)}
 			<span class="set-identity-joined">
 				{t({
 					locale: $localeStore,

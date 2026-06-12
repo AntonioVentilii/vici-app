@@ -34,7 +34,7 @@ import {
 } from '$lib/types/analytics-event';
 import { isAdmin } from '$satellite/services/_authz';
 import { logError } from '$satellite/utils/logger.utils';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
@@ -66,7 +66,7 @@ const propsFromInput = (event: TrackEventInput): AnalyticsEventProps | undefined
 	const copy = <K extends keyof AnalyticsEventProps>(key: K): void => {
 		const value = event[key];
 
-		if (value !== undefined) {
+		if (nonNullish(value)) {
 			props[key] = value;
 			present = true;
 		}
@@ -175,8 +175,8 @@ export const trackEventsFn = ({ events }: { events: TrackEventInput[] }): { acce
 			tsMs,
 			sessionId: event.sessionId,
 			...(isAnonymous ? {} : { principal: principalText }),
-			...(event.path === undefined ? {} : { path: event.path }),
-			...(props === undefined ? {} : { props })
+			...(isNullish(event.path) ? {} : { path: event.path }),
+			...(isNullish(props) ? {} : { props })
 		};
 
 		// Key is unique within the batch (index) and across callers/calls

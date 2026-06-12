@@ -1,3 +1,5 @@
+import { isNullish } from '@dfinity/utils';
+
 /**
  * Temporary hardcoded World-Cup release schedule.
  *
@@ -825,7 +827,7 @@ const buildRevealMap = (): ReadonlyMap<string, number> => {
 			const key = normalizeWcQuestion(question);
 			const existing = map.get(key);
 
-			if (existing === undefined || revealMs < existing) {
+			if (isNullish(existing) || revealMs < existing) {
 				map.set(key, revealMs);
 			}
 		}

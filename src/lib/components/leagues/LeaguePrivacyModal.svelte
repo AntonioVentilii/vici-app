@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { LeaguePrivacy } from '$lib/enums/league';
 	import { updateLeague } from '$lib/services/leagues.services';
@@ -110,7 +111,7 @@
 				<p>{t({ locale: $localeStore, key: 'leagues.privacy.confirm_open_body' })}</p>
 			</header>
 
-			{#if submitError !== null}
+			{#if nonNullish(submitError)}
 				<p class="league-privacy-error">{submitError}</p>
 			{/if}
 
@@ -154,7 +155,7 @@
 				{/each}
 			</ul>
 
-			{#if submitError !== null}
+			{#if nonNullish(submitError)}
 				<p class="league-privacy-error">{submitError}</p>
 			{/if}
 

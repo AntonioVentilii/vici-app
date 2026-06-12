@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import FlowStakeSlider from '$lib/components/market/FlowStakeSlider.svelte';
 	import {
 		VXP_DEFAULT_STAKE,
@@ -30,7 +31,7 @@
 	// FlowMode stepper with fractional ICP / ckUSDC stakes, not the
 	// ladder).
 	const showStakeSlider = $derived(
-		tradeAmount !== undefined && onStakeChange !== undefined && isViciXp($balanceDomain)
+		nonNullish(tradeAmount) && nonNullish(onStakeChange) && isViciXp($balanceDomain)
 	);
 	const currentStake: VxpStake = $derived(
 		showStakeSlider
@@ -53,7 +54,7 @@
 	);
 
 	const selectStake = (rung: VxpStake) => {
-		if (onStakeChange === undefined) {
+		if (isNullish(onStakeChange)) {
 			return;
 		}
 
@@ -65,7 +66,7 @@
 		const idx = parseInt(target.value, 10);
 		const rung = VXP_STAKE_LADDER[idx];
 
-		if (rung !== undefined) {
+		if (nonNullish(rung)) {
 			selectStake(rung);
 		}
 	};

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import MetadataEventsTab from '$lib/components/market/metadata/MetadataEventsTab.svelte';
 	import MetadataShowcaseTab from '$lib/components/market/metadata/MetadataShowcaseTab.svelte';
@@ -81,7 +82,7 @@
 		const trimmed = row.label.trim();
 		const parsedDay = parseDay(row.day);
 
-		if (trimmed.length === 0 || parsedDay === undefined) {
+		if (trimmed.length === 0 || isNullish(parsedDay)) {
 			return;
 		}
 
@@ -96,7 +97,7 @@
 		const why = whyText.trim();
 		const trimmedSubtitle = subtitle.trim();
 		const events = [eventFromFields(eventOne), eventFromFields(eventTwo)].filter(
-			(event): event is MarketEvent => event !== undefined
+			(event): event is MarketEvent => nonNullish(event)
 		);
 
 		return {

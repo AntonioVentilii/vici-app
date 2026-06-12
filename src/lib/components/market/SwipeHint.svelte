@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { ChevronDown } from '@lucide/svelte/icons';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
@@ -30,7 +31,7 @@
 	});
 
 	onDestroy(() => {
-		if (raf !== null && browser) {
+		if (nonNullish(raf) && browser) {
 			cancelAnimationFrame(raf);
 		}
 	});

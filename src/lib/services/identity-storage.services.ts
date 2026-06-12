@@ -8,6 +8,7 @@ import { clearDailyGoalMirror } from '$lib/utils/daily-goal.utils';
 import { resetMotionState } from '$lib/utils/motion-engine.utils';
 import { clearOnboardingSeenFlags } from '$lib/utils/onboarding-flags.utils';
 import { del, get, set } from '$lib/utils/storage.utils';
+import { isNullish } from '@dfinity/utils';
 
 // Principal the identity-scoped caches currently belong to. Persisted so a
 // same-user reload is distinguishable from a real identity change.
@@ -46,7 +47,7 @@ export const reconcileIdentityScopedStorage = ({
 }): void => {
 	// Ignore the signed-out / bootstrap `null` transition — keep the remembered
 	// owner so a same-user re-auth is recognised and not treated as a switch.
-	if (ownerKey === undefined) {
+	if (isNullish(ownerKey)) {
 		return;
 	}
 
