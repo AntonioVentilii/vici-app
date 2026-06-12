@@ -1,0 +1,301 @@
+# Spec: VXP transaction history page
+
+This spec follows the workflow defined in
+`docs/ai/spec-driven-development/workflow.md`.
+
+Status: Draft
+
+## Goal
+
+From the holdings bottom sheet on `/dash`, the user can open a
+dedicated **transaction history** page: a paginated, filterable,
+chronological list of every event that changed their VXP — bonuses
+received, predictions placed, wins, losses, cancellations, and
+external transfers — each row showing the signed amount and, as the
+last column, the **running available-VXP balance** after that event.
+
+## Context
+
+### Entry point
+
+- `src/lib/components/dash/DashStackCard.svelte` — holdings card on
+  `/dash`; opens the sheet.
+- `src/lib/components/dash/DashStackSheet.svelte` — the bottom sheet
+  (built on `src/lib/components/ui/BottomSheet.svelte`). Gains a new
+  link row at the bottom navigating to the history page.
+
+### Why this is not "just read the ledger"
+
+Predictions do **not** produce per-stake ledger transfers:
+
+- `src/lib/components/wallet/PlaygroundVxpAutoDeposit.svelte` sweeps
+  free wallet VXP into the clearing canister's collateral account on a
+  poller — ledger transfers are batched sweeps, not stakes.
+- Orders lock margin from already-deposited collateral
+  (`src/lib/api/clearing.api.ts` — `submitLimitOrder` /
+  `submitMarketOrder`); settlements credit clearing equity. Neither
+  touches the ledger.
+- Bonuses **are** ledger transfers: every satellite payout goes
+  through `transferWithBadFeeRetry`
+  (`src/satellite/utils/vxp-payout.utils.ts`) with a
+  `vxp:<awardType>:<key>` memo. Confirmed memo tags:
+  `achievement`, `calibration`, `comeback`, `league_founder`,
+  `new-user`, `referral`, `streak`, `tournament_prize`,
+  `worlds_podium`.
+
+So the page merges **two streams** into one feed:
+
+1. **Clearing events** — `getTradeHistory`
+   (`src/lib/api/clearing.api.ts`) returns all of the caller's
+   `OrderPlaced` / `Executed` / `Settled` / `Liquidated` events in one
+   unpaginated query call.
+2. **VXP ledger transactions** — `getTransactions`
+   (`src/lib/api/icrc-index-ng.api.ts`) pages through the ICRC index
+   (`VXP_INDEX_CANISTER_ID_DEFAULT` in
+   `src/lib/constants/canisters.constants.ts`).
+
+### Existing plumbing to reuse
+
+- `src/lib/types/wallet.ts` — the unified `Transaction` type already
+  models both sources (`source: 'ledger' | 'clearing'`), including
+  `CollateralDeposit`/`CollateralWithdraw` (sweeps, derived from
+  counterparty = clearing canister) and a **reserved `Reward` type
+  explicitly waiting for satellite payouts to be relabelled** — this
+  spec cashes that in.
+- `src/lib/utils/transactions.utils.ts` —
+  `mapClearingEventToTransaction` and the ledger mappers; extend with
+  memo parsing (`vxp:<type>:<key>` → `Reward` + award type).
+- `src/lib/services/wallet.service.ts` — `getTransactionsPage`
+  (multi-ledger merge for the wallet page; the new page needs a
+  VXP-only variant that walks pages to exhaustion).
+- UI: `src/lib/components/ui/Pagination.svelte` (numbered pages with
+  ellipsis, used by the portfolio table),
+  `src/lib/components/ui/EmptyState.svelte`,
+  `src/lib/components/layout/ScreenHeader.svelte` (back affordance),
+  `src/lib/components/wallet/WalletHistory.svelte` (reference table,
+  stays untouched).
+- Formatting: `formatToken`, `formatNanosecondsToDate` /
+  `formatRelativeAgoFromNs` (`src/lib/utils/format.utils.ts`);
+  VXP display helpers in `src/lib/utils/playground-display.utils.ts`.
+- Current available balance anchor:
+  `src/lib/derived/vxp-holdings.derived.ts`.
+
+## Ledger model — row semantics and the running balance
+
+The running balance column tracks **available (spendable) VXP** =
+wallet ledger balance + free clearing margin. This matches the user's
+mental model: placing a prediction visibly moves VXP out, a win brings
+back stake + profit, a loss returns nothing.
+
+| Event                          | Row label              | Available-VXP delta                      |
+| ------------------------------ | ---------------------- | ---------------------------------------- |
+| Ledger receive with `vxp:` memo | Bonus · `<award type>` | + amount                                 |
+| Clearing `OrderPlaced`         | Prediction · `<market>`| − locked margin (stake)                  |
+| Clearing order cancelled       | Cancelled · `<market>` | + released margin                        |
+| Clearing `Settled`, return > 0 | Won · `<market>`       | + returned amount (stake + profit)       |
+| Clearing `Settled`, return = 0 | Lost · `<market>`      | 0 (subtitle: "stake of `<n>` not returned") |
+| Clearing `Liquidated`          | Liquidated · `<market>`| signed event amount                      |
+| Other ledger send/receive/mint | Sent / Received        | ± amount                                 |
+| Wallet↔clearing sweeps         | **hidden row**         | − transfer fee only (silently applied)   |
+
+- Losses render **0**, not −stake: the stake already left available
+  balance at placement; showing −stake again would double-count.
+- Sweeps (`CollateralDeposit`/`CollateralWithdraw`) don't change
+  available balance and are pure noise — hidden, **but** their ledger
+  fee still debits the running balance, so the hidden rows participate
+  in the balance computation.
+- The balance column is computed **newest-first**: anchor on the
+  current available balance from `vxp-holdings.derived.ts`, then walk
+  backwards subtracting each row's delta. Integer math in base units
+  only (`formatToken` at render time); cite `VXP_TOKEN` decimals and
+  `USD_DECIMALS` from their canonical constants — clearing event
+  amounts are in USD-decimal fixed units and must go through the
+  existing decode helpers (see `mapClearingEventToTransaction`), never
+  ad-hoc `/ 1e8` math.
+- Win/loss colours: `--yes` / `--no` signals; bonuses use the accent;
+  neutral rows muted.
+
+## Scope
+
+1. **Route** — new page under `src/routes/(app)/` (`+page.svelte`
+   importing a page shell per `docs/ai/frontend/structure.md`), a new
+   `AppPath` entry in `src/lib/constants/routes.constants.ts`, page
+   shell `src/lib/components/pages/TransactionHistoryPage.svelte`
+   (final name per pending route decision). `ScreenHeader` with back
+   to `/dash`; header shows current available VXP and an "in play"
+   chip.
+2. **Sheet link** — a real `<a>`/`<button>` row in
+   `DashStackSheet.svelte` ("Transaction history" + chevron, accent
+   tint), a11y-labelled per `docs/ai/frontend/a11y.md`.
+3. **Data service** — a new service (per
+   `docs/ai/frontend/workflows/new-service.md`) that fetches the full
+   clearing history + walks the VXP index to exhaustion (capped),
+   normalizes both streams into `Transaction[]`, labels `Reward` rows
+   from memos, sorts newest-first, and computes running balances.
+4. **Memo parsing** — extend `transactions.utils.ts` to decode the
+   `vxp:<type>:<key>` memo bytes into an award type; unknown/absent
+   memos from the satellite/minter principal fall back to a generic
+   "Bonus" label.
+5. **UI** — table/list with columns: activity (icon + label + market
+   title), date/time, signed amount, running balance. Filter chips:
+   All / Predictions / Results / Bonuses (client-side). Numbered
+   pagination via `Pagination.svelte` (page size constant, e.g. 10).
+   `EmptyState` for zero transactions; a quiet footer line when the
+   ledger walk hit the page cap ("older history not shown").
+6. **i18n** — new `transactions.*` keys in **every** catalog under
+   `src/lib/constants/messages/` (all supported locales in
+   `SUPPORTED_LOCALES`).
+7. **PRODUCT.md** — updated in the same PR.
+
+### Out of scope
+
+- No satellite / collection / icdc-core changes — the `vxp_awards`
+  collection stays `read: 'controllers'`; bonus labeling comes from
+  ledger memos, so no new endpoint is needed.
+- Flow-session grants (`flow_milestone`, `flow_overtime`) have **no
+  real VXP credit path yet** (deferred — issue #350); they cannot and
+  will not appear. When #350 lands with the established memo format,
+  they appear automatically.
+- CSV export, per-row drill-down sheets, ICP/ckUSDC tokens (the wallet
+  page already covers multi-token history).
+- Changing `WalletHistory.svelte` or the wallet page.
+
+## Linked issues
+
+- Part of nothing / closes nothing — searched open issues (#810,
+  #759, #543, #350): none is fixed by this spec. #350 is referenced
+  above as a data-coverage caveat only.
+
+## Analytics
+
+Instrument (default yes):
+
+- `transactions_viewed` — fired on page open. Props: `source`
+  (`'dash_sheet' | 'direct'`), `count` (rows loaded).
+- `transactions_filtered` — fired on filter-chip change. Props:
+  `label` (`'all' | 'predictions' | 'results' | 'bonuses'`).
+
+Both names land in **both** halves of the dual-source pair:
+`src/lib/types/analytics-event.ts` (TS union) and
+`src/lib/schema/analytics-event.schema.ts` (Zod mirror); capture via
+`track` in `src/lib/services/analytics.services.ts`. Bounded
+vocabularies only; no market ids beyond the existing `marketId` prop,
+no amounts (economic values stay out of analytics).
+
+Pagination clicks are not instrumented — page depth adds no decision
+value beyond `count`.
+
+## Design artifacts (frontend — optional)
+
+- [`./2026-06-12-feat-transaction-history/mock.html`](./2026-06-12-feat-transaction-history/mock.html)
+  — interactive mock of the sheet link row and the history page, with
+  the mandatory theme switcher (`data-theme`: dark / light / peach)
+  and a "copy instructions" button that serializes every chosen
+  variant. Deleted post-merge.
+
+## Technical requirements
+
+Pure-frontend spec — no `src/satellite/**`, collection, or
+icdc-core-facing changes. Client-side load characteristics, for the
+record:
+
+- **Calls per page open**: 1 × `getTradeHistory` (query, unpaginated
+  by design of the clearing canister) + ⌈N/page⌉ × ICRC index
+  `get_account_transactions` (query), N = user's lifetime VXP ledger
+  txs. Cap the index walk with a constant (e.g.
+  `TRANSACTION_HISTORY_MAX_LEDGER_PAGES`) so a pathological account
+  cannot fan out unbounded; surface the truncation footer when hit.
+- **Scalability**: at 10×–100× event volume the fetch-all approach
+  degrades; the cap bounds it. Server-side pagination of
+  `getTradeHistory` would be an icdc-core change — explicitly
+  deferred until real users approach the cap.
+- **No new storage**; everything is derived at view time.
+
+## Implementation outline
+
+1. Add the `AppPath` entry + route folder + page shell
+   (`+page.svelte` → `TransactionHistoryPage.svelte`).
+2. Add memo decoding + `Reward` labeling to
+   `src/lib/utils/transactions.utils.ts` (unit-test the memo parser:
+   all nine tags, unknown tag, absent memo, non-UTF8 bytes).
+3. New `transaction-history.services.ts`: fetch both streams, merge,
+   sort by timestamp desc, hide sweep rows (keep fee deltas), compute
+   running balances anchored on current available VXP.
+4. Build the page UI: `ScreenHeader`, filter chips, list rows, signed
+   amounts (`--yes`/`--no`/accent), `Pagination.svelte`,
+   `EmptyState`, truncation footer.
+5. Add the `DashStackSheet` link row.
+6. Add `transactions.*` i18n keys to every locale catalog.
+7. Wire `transactions_viewed` / `transactions_filtered` (union + Zod
+   + `track`).
+8. Update `PRODUCT.md`; run `npm run quality` and `npm run check`.
+
+## Acceptance criteria
+
+- [ ] Tapping the new row in the holdings sheet on `/dash` opens the
+      history page; back returns to `/dash`.
+- [ ] The page lists bonuses (labelled by award type from the ledger
+      memo), predictions placed, wins, losses, cancellations, and
+      external transfers, newest first.
+- [ ] Wallet↔clearing collateral sweeps do not appear as rows.
+- [ ] The last column shows the running available-VXP balance; the
+      top row's balance equals the currently displayed available VXP,
+      and consecutive rows differ exactly by the row delta (fees of
+      hidden sweeps accounted).
+- [ ] Lost predictions show amount 0 with the stake noted in the
+      subtitle — never a second −stake.
+- [ ] Filter chips restrict the list client-side without refetching.
+- [ ] Numbered pagination via `Pagination.svelte`; empty state when
+      no transactions; truncation footer when the ledger-walk cap is
+      hit.
+- [ ] All user-visible strings go through `t(...)` with keys present
+      in every locale catalog (`npm run check:i18n` clean).
+- [ ] Both analytics events fire and exist in the TS union **and**
+      the Zod schema.
+- [ ] Works in all three themes (dark / light / peach); win/loss use
+      `--yes`/`--no` tokens, no hardcoded colours.
+- [ ] `npm run quality` and `npm run check` pass.
+
+## Open questions
+
+- **Memo coverage on mainnet** — do all historical bonus transfers
+  carry the `vxp:` memo (early payouts may predate the format)?
+  Verify against a real account; absent memos fall back to the
+  generic "Bonus" label, so this only affects label quality.
+- **ICRC index memo availability** — confirm the index canister's
+  transaction records expose memo bytes through the `@icp-sdk` types
+  used by `icrc-index-ng.api.ts`.
+- **Clearing event amount semantics** — verify per event type which
+  field carries the locked/released/returned amount, against
+  `mapClearingEventToTransaction` and the documented trap that a
+  `Settled` event's signed qty **is** the cashflow (decode with the
+  existing fixed-decimal helper).
+- **Available-balance anchor reliability** — the clearing
+  account-state query is Settlement-domain-scoped; confirm
+  `vxp-holdings.derived.ts` exposes a stable available-VXP value to
+  anchor the newest-first walk, including while markets are open.
+
+## Pending decisions
+
+- **Route placement** — `/dash/transactions` (nested under its entry
+  point; recommended) vs. top-level `/transactions`. Affects the
+  `AppPath` name and page-shell filename only.
+- **Page size** — 10 (matches portfolio tables) vs. 20 rows per page.
+
+## Decisions
+
+- **Running balance = available (spendable) VXP**, not total
+  holdings: stakes visibly debit, wins credit stake + profit, losses
+  are 0-rows. Total-holdings semantics would render stake rows as
+  zero-delta, which contradicts the approved mockup and user
+  intuition.
+- **Bonus labels from ledger memos, not a new satellite endpoint** —
+  `vxp_awards` stays controllers-only; every payout already writes a
+  parseable `vxp:<type>:<key>` memo, so the FE can label rewards with
+  zero backend surface. A satellite query would add an endpoint, an
+  instruction budget, and a second source of truth for no extra data.
+- **Fetch-all + client-side numbered pagination** over lazy
+  load-more: the user explicitly asked for a numbered, paginated
+  table with a running balance; numbered pages need a total count,
+  and the clearing call is all-or-nothing anyway. The ledger-walk cap
+  bounds the cost.
