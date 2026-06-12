@@ -127,8 +127,16 @@
 		});
 
 	// ─── Positions / orders ────────────────────────────────────────────
-	const activePositionsAll = $derived($positions);
-	const openOrdersAll = $derived($orders);
+	// The clearing canister deletes positions on settlement, so anything in
+	// `$positions` is normally unresolved — but a market can flip to
+	// `Resolved` before its settlement lands (and before the stores catch
+	// up). Filter that window out so a decided call never shows as an open
+	// "Closing" row; it surfaces in the Resolved tab once its settlement
+	// event arrives. Mirrors the Active-section filter in `PortfolioPage`.
+	const isUnresolved = (marketId: string): boolean =>
+		marketById.get(marketId)?.status !== 'Resolved';
+	const activePositionsAll = $derived($positions.filter(({ marketId }) => isUnresolved(marketId)));
+	const openOrdersAll = $derived($orders.filter(({ series_id }) => isUnresolved(series_id)));
 	const liveCallCount = $derived(activePositionsAll.length + openOrdersAll.length);
 
 	// A resting limit order reads as YES exposure when buying, NO when selling —
