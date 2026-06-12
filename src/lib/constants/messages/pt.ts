@@ -1462,9 +1462,7 @@ export const ptMessages = {
 	'market.detail.stats.new_market': 'Mercado novo',
 	'market.detail.stats.volume': 'Volume',
 	'market.detail.top_predictors.acc': 'precisão',
-	'market.detail.top_predictors.all': 'Todos',
-	'market.detail.top_predictors.empty':
-		'Ainda sem previsores — sê o primeiro a chamar este mercado.',
+	'market.detail.top_predictors.empty': 'Nenhum dos melhores previsores chamou ainda este mercado.',
 	'market.detail.top_predictors.streak': 'd sequência',
 	'market.detail.top_predictors.title': 'Melhores previsores aqui',
 	'market.detail.you_called': 'Chamaste',

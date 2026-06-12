@@ -24,6 +24,7 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import { MARKET_DETAIL_DIRECT_TRADE_ENABLED } from '$lib/constants/feature-flags.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
@@ -38,11 +39,16 @@
 	import { getUserMarketSignals } from '$lib/services/market-signals.services';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
+	import { getMarketTopPredictors } from '$lib/services/top-predictors.services';
 	import { loadMarketPriceCandles } from '$lib/services/trade.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CallSide, Market, MarketId } from '$lib/types/market';
-	import type { FollowedLeanSignal, PriorCallSignal } from '$lib/types/market-signals';
+	import type {
+		FollowedLeanSignal,
+		PriorCallSignal,
+		TopPredictorSignal
+	} from '$lib/types/market-signals';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
 	import type {
@@ -65,6 +71,14 @@
 	// invented data.
 	let followedLean = $state<FollowedLeanSignal | undefined>();
 	let priorCall = $state<PriorCallSignal | undefined>();
+
+	// Leaderboard-ranked predictors holding a live position on this market,
+	// with the side they took. Public data (same list for every visitor),
+	// resolved against the cached global leaderboard once it and the market
+	// are both known. `undefined` while unresolved so the section can tell
+	// "still loading" apart from "nobody's here".
+	let topPredictors = $state<TopPredictorSignal[] | undefined>();
+	let topPredictorsMarketId = $state<MarketId | undefined>();
 
 	// Chart period chip selection. Drives which window of market-wide price
 	// history the chart fetches and plots (see priceHistoryByPeriod).
@@ -95,6 +109,11 @@
 			// resolves, rather than briefly plotting stale prices. The
 			// per-period fetch effect repopulates the active period.
 			priceHistoryByPeriod = {};
+
+			// Same for the top-predictors list — clearing the resolved
+			// market id re-arms the fetch effect for the new market.
+			topPredictors = undefined;
+			topPredictorsMarketId = undefined;
 		}
 
 		const [marketRes, positionsRes] = await Promise.all([getMarket(id), getPositionsForMarket(id)]);
@@ -160,6 +179,41 @@
 			});
 		} catch {
 			// Leave the period uncached → chart falls back to its seed shape.
+		}
+	};
+
+	// Resolve the top-predictors list once the market and the cached global
+	// leaderboard are both known. Like the price history this is
+	// viewer-independent (works signed-out) and rides behind the first paint;
+	// the resolved-market guard keeps the 30s poll and unrelated leaderboard
+	// ticks from re-probing every run.
+	$effect(() => {
+		const id = market?.id;
+		const candidates = $leaderboard;
+
+		if (isNullish(id) || candidates.length === 0 || topPredictorsMarketId === id) {
+			return;
+		}
+
+		topPredictorsMarketId = id;
+		void fetchTopPredictors({ id, candidates: candidates.map(({ owner }) => owner) });
+	});
+
+	// Fails open: an error leaves the list empty rather than blocking the
+	// page, and a late response from a previously-viewed market is dropped.
+	const fetchTopPredictors = async ({ id, candidates }: { id: MarketId; candidates: string[] }) => {
+		try {
+			const signals = await getMarketTopPredictors({ marketId: id, candidates });
+
+			if (market?.id !== id) {
+				return;
+			}
+
+			topPredictors = signals;
+		} catch {
+			if (market?.id === id) {
+				topPredictors = [];
+			}
 		}
 	};
 
@@ -241,6 +295,11 @@
 			// period (other periods refetch lazily when reselected).
 			void fetchSignals(market);
 			priceHistoryByPeriod = {};
+
+			// The viewer may themselves rank on the leaderboard, in which
+			// case their fresh call belongs in the top-predictors list —
+			// re-arm the fetch effect rather than waiting for a navigation.
+			topPredictorsMarketId = undefined;
 		}
 	};
 
@@ -539,7 +598,12 @@
 
 		<MarketDetailResolutionCard {market} />
 
-		<MarketDetailTopPredictors {followedLean} {market} />
+		{#if !isColdStart}
+			<!-- Hidden while the cold-start banner is up — a market with no
+			     volume has no predictors, so an empty section under the
+			     banner would only echo it. -->
+			<MarketDetailTopPredictors {followedLean} {topPredictors} />
+		{/if}
 
 		{#if showAdminActions}
 			<section
