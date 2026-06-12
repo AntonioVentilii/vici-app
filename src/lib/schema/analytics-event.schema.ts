@@ -53,6 +53,7 @@ export const AnalyticsEventNameSchema = j.enum([
 	'streak_milestone',
 	'faucet_claimed',
 	// Social & leagues
+	'friend_request_sent',
 	'league_created',
 	'league_joined',
 	'league_invite_sent',

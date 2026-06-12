@@ -2153,6 +2153,8 @@ export const frMessages = {
 	'arena.friends.action.accept': 'Accepter',
 	'arena.friends.action.cancel': 'Annuler',
 	'arena.friends.action.reject': 'Rejeter',
+	'arena.friends.add.auto_accepted':
+		'Il t’avait déjà envoyé une demande — vous êtes maintenant amis !',
 	'arena.friends.add.cta': 'Ajouter un ami',
 	'arena.friends.add.invite_hint':
 		'Aucune correspondance. Le lien d’invitation vous donne {amount} VXP à tous les deux.',
@@ -2166,12 +2168,17 @@ export const frMessages = {
 	'arena.friends.empty.add_first': 'Ajoute ton premier ami',
 	'arena.friends.empty.invite_now': 'Inviter',
 	'arena.friends.error.accept_failed': 'Échec de l’acceptation de la demande',
+	'arena.friends.error.already_friends': 'Vous êtes déjà amis.',
+	'arena.friends.error.already_pending': 'Demande déjà envoyée — en attente de sa réponse.',
 	'arena.friends.error.cancel_failed': 'Échec de l’annulation de la demande',
 	'arena.friends.error.not_found':
 		'Aucun utilisateur avec ce handle. Vérifie l’orthographe ou envoie-lui un lien d’invitation.',
 	'arena.friends.error.reject_failed': 'Échec du rejet de la demande',
+	'arena.friends.error.rejected_cooldown':
+		'Il a refusé ta dernière demande. Tu pourras réessayer {when}.',
 	'arena.friends.error.self': 'C’est toi — choisis un autre handle.',
-	'arena.friends.error.send_failed': 'Échec de l’envoi de la demande',
+	'arena.friends.error.send_failed_detail':
+		'Impossible d’envoyer la demande. Fais une capture d’écran et dis-le-nous : {detail}',
 	'arena.friends.error.unfriend_failed': 'Échec du retrait de l’ami',
 	'arena.friends.feed.empty_a': 'Quand tes amis prédiront, ça apparaîtra ici.',
 	'arena.friends.feed.empty_b': 'Le palmarès se construit en silence.',

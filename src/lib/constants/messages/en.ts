@@ -2141,6 +2141,7 @@ export const enMessages = {
 	'arena.friends.action.accept': 'Accept',
 	'arena.friends.action.cancel': 'Cancel',
 	'arena.friends.action.reject': 'Reject',
+	'arena.friends.add.auto_accepted': "They'd already sent you a request — you're friends now!",
 	'arena.friends.add.cta': 'Add friend',
 	'arena.friends.add.invite_hint': 'No matches yet. Invite by link gets both of you {amount} VXP.',
 	'arena.friends.add.placeholder': 'handle',
@@ -2153,12 +2154,17 @@ export const enMessages = {
 	'arena.friends.empty.add_first': 'Add your first friend',
 	'arena.friends.empty.invite_now': 'Invite now',
 	'arena.friends.error.accept_failed': 'Failed to accept request',
+	'arena.friends.error.already_friends': "You're already friends.",
+	'arena.friends.error.already_pending': 'Request already sent — waiting for them to accept.',
 	'arena.friends.error.cancel_failed': 'Failed to cancel request',
 	'arena.friends.error.not_found':
 		'No user found with that handle. Double-check the spelling, or send them an invite link.',
 	'arena.friends.error.reject_failed': 'Failed to reject request',
+	'arena.friends.error.rejected_cooldown':
+		'They declined your last request. You can try again {when}.',
 	'arena.friends.error.self': "That's you — pick another handle.",
-	'arena.friends.error.send_failed': 'Failed to send request',
+	'arena.friends.error.send_failed_detail':
+		"Couldn't send the request. Screenshot this and tell us: {detail}",
 	'arena.friends.error.unfriend_failed': 'Failed to unfriend',
 	'arena.friends.feed.empty_a': "When your friends make a call, it'll show here.",
 	'arena.friends.feed.empty_b': 'Quietly building the record.',
