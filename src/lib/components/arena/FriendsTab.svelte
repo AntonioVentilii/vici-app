@@ -3,7 +3,7 @@
 	import type { Doc } from '@junobuild/core';
 	import { Check, ChevronRight, Link2, Plus, Share2, Zap } from '@lucide/svelte/icons';
 	import { onMount, tick } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -29,6 +29,7 @@
 		sendFriendRequest,
 		unfriendUser
 	} from '$lib/services/relation.services';
+	import { loadGlobalStandings } from '$lib/services/standings.services';
 	import {
 		friendRequestsStore,
 		friendsListStore,
@@ -39,6 +40,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
+	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { ReferralListItem } from '$lib/types/referral';
@@ -126,6 +128,14 @@
 		let alive = true;
 
 		void refreshFriendRelations();
+
+		// Hydrate the all-time standings slice so the ranked list reads live
+		// clearing accuracy (see `accuracyOf`). Shares the per-window cache
+		// with the Leaderboard / Dash. Fail-open: on error the rows fall back
+		// to the cached profile snapshot instead of blocking the tab.
+		void loadGlobalStandings({ window: 'all' }).catch((err: unknown) => {
+			console.error('FriendsTab: failed to load all-time standings', err);
+		});
 
 		// Fetch the viewer's referral code so the hero can render the canonical
 		// `vici.market/i/{code}` URL. The code is assigned by the satellite profile hook
@@ -291,7 +301,34 @@
 	};
 
 	// ── Friends ranked list ─────────────────────────────────────────
-	const myAccuracy = $derived(myProfile?.accuracy ?? 0);
+	// Accuracy is sourced live from the clearing canister's all-time
+	// standings (`win_count / settled_count`), NOT from the profile doc:
+	// `profile.accuracy` is recomputed only when its owner signs in
+	// (`calculateAndSyncStats`), so a friend's cached figure goes stale the
+	// moment one of their predictions settles while they're away — the
+	// Leaderboard (live) and this tab (cached) would then disagree about
+	// the same predictor. The profile snapshot stays as the fallback while
+	// the slice loads, on load failure, or for a friend beyond the fetched
+	// pages.
+	const allTimeAccuracyByOwner = $derived.by(() => {
+		const byOwner = new SvelteMap<string, number>();
+
+		for (const { owner, accuracy } of $globalStandingsStore.get('all')?.entries ?? []) {
+			byOwner.set(owner, accuracy);
+		}
+
+		return byOwner;
+	});
+
+	const accuracyOf = ({
+		owner,
+		profile
+	}: {
+		owner: string;
+		profile: UserProfile | undefined;
+	}): number => allTimeAccuracyByOwner.get(owner) ?? profile?.accuracy ?? 0;
+
+	const myAccuracy = $derived(accuracyOf({ owner: userPrincipal, profile: myProfile }));
 
 	interface RankedFriend {
 		relation: Relation;
@@ -315,7 +352,7 @@
 					relation,
 					friendId,
 					profile,
-					accuracy: profile?.accuracy ?? 0,
+					accuracy: accuracyOf({ owner: friendId, profile }),
 					dailyStreak: profile?.dailyStreak ?? 0,
 					points: profile?.points ?? 0
 				});
@@ -330,10 +367,9 @@
 	const hiddenRankedCount = $derived(Math.max(0, rankedFriends.length - visibleRanked.length));
 
 	const formatPct = (value: number): string => {
-		// `value` is a 0..100 accuracy percentage — see
-		// `profile.services.ts` `calculateAndSyncStats`, which writes
-		// `(wins / settledCount) * 100`. Render with one decimal —
-		// `48.4%`.
+		// `value` is a 0..100 accuracy percentage — a live standings entry
+		// or the profile-doc fallback (see `accuracyOf`). Render with one
+		// decimal — `48.4%`.
 		const pct = Math.round(value * 10) / 10;
 
 		return `${pct}%`;
