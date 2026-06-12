@@ -87,8 +87,9 @@ silence reads as "not considered".
 **Issue linkage.** Before finalizing a spec, search the repository's
 open issues. If the change fixes one, record it in the spec and have
 the implementation PR close it via a closing keyword — plain
-`Closes #123` (no em-dash after the number, GitHub won't parse it;
-the link only resolves when the PR targets `main`). If the spec only
+`Closes #123` (no em-dash after the number, GitHub won't parse the
+keyword; the reference always links, but the issue auto-closes only
+when the PR merges into the default branch). If the spec only
 **partially** fixes an issue, check whether closing the remaining gap
 is trivial — if it is, fold it into the spec's scope so the issue
 closes completely; if it isn't, do **not** use a closing keyword:

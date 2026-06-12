@@ -24,7 +24,7 @@ Status: Draft
 ## Linked issues
 
 <!-- Search open issues before finalizing (see workflow.md § Required content for every spec).
-- Fully fixed → "Closes #N" here and in the implementation PR body (no em-dash after the number; only closes when the PR targets main).
+- Fully fixed → "Closes #N" here and in the implementation PR body (no em-dash after the number; the reference always links, but the issue auto-closes only when the PR merges into the default branch).
 - Partially fixed → check whether completing the fix is trivial; fold it into scope if so, otherwise "Part of #N" and the remaining gap under Out of scope.
 - No related issue → say so. -->
 
