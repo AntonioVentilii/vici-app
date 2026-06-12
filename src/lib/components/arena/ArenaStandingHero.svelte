@@ -462,6 +462,10 @@
 	const onPointerDown = (event: PointerEvent) => {
 		pointerDownX = event.clientX;
 		dragging = true;
+		// Capture so move/up are still delivered if the pointer leaves the
+		// hero mid-swipe; without this a release outside the element strands
+		// the drag offset. The dots opt out via their own pointerdown.
+		(event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
 	};
 
 	const onPointerMove = (event: PointerEvent) => {
@@ -490,6 +494,8 @@
 	};
 
 	const onPointerUp = (event: PointerEvent) => {
+		(event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId);
+
 		if (isNullish(pointerDownX)) {
 			return;
 		}
@@ -502,12 +508,6 @@
 		if (Math.abs(dx) > 28) {
 			select(idx + (dx < 0 ? 1 : -1));
 
-			return;
-		}
-
-		// A tap on a dot is the dot's own activation (its click handler
-		// pages to that scope) — don't also open the active scope.
-		if (event.target instanceof Element && nonNullish(event.target.closest('.ar-live-dot'))) {
 			return;
 		}
 
@@ -571,7 +571,6 @@
 			onkeydown={onKeydown}
 			onpointercancel={endDrag}
 			onpointerdown={onPointerDown}
-			onpointerleave={endDrag}
 			onpointermove={onPointerMove}
 			onpointerup={onPointerUp}
 			role="button"
@@ -589,6 +588,7 @@
 								event.stopPropagation();
 								select(i);
 							}}
+							onpointerdown={(event) => event.stopPropagation()}
 							role="tab"
 							type="button"
 						></button>
@@ -598,7 +598,7 @@
 
 			<div class="ar-live-viewport">
 				<div
-					style:transform={`translateX(calc(${idx} * -100% + ${dragX}px))`}
+					style:transform={`translateX(calc(${idx * -100}% + ${dragX}px))`}
 					class="ar-live-track"
 					class:is-dragging={dragging}
 				>
