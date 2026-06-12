@@ -21,6 +21,7 @@
 	import { globalActivities } from '$lib/derived/activities.derived';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { track } from '$lib/services/analytics.services';
 	import { getMyReferralCode, listMyReferrals } from '$lib/services/referral.services';
 	import {
 		acceptFriendRequest,
@@ -38,7 +39,7 @@
 		sentFriendRequestsStore
 	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { notificationsStore } from '$lib/stores/notification.store';
+	import { notificationsStore, type NotificationType } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -56,6 +57,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 	import { formatVxpBalance, vxpBaseUnitsFromPoints } from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
+	import { friendRequestOutcomeNotice } from '$lib/utils/relation.utils';
 
 	/**
 	 * Friends — the Arena tab. Lives only inside Arena; there is no
@@ -572,32 +574,63 @@
 
 		adding = true;
 
+		const notify = ({ message, type }: { message: string; type: NotificationType }) => {
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
+				message,
+				type
+			});
+		};
+
 		try {
 			// The Friends UI accepts either `@handle` (nickname) or a raw
 			// principal text; the service resolves a handle to a principal
-			// via `searchProfiles` before calling the satellite, which only
-			// accepts principal text. Typed errors (`not_found` / `self`)
-			// are mapped to i18n strings below.
-			await sendFriendRequest({ target: trimmed, sender: userPrincipal });
-			await refreshFriendRelations();
-			addSheetOpen = false;
-			addInput = '';
+			// via `searchProfiles` before calling the satellite. Known
+			// non-success outcomes come back as typed statuses; resolution
+			// failures throw `not_found` / `self`, mapped in the catch.
+			const outcome = await sendFriendRequest({ target: trimmed, sender: userPrincipal });
+
+			track({ name: 'friend_request_sent', source: 'arena', label: outcome.status });
+
+			if (outcome.status === 'sent' || outcome.status === 'auto_accepted') {
+				await refreshFriendRelations();
+				addSheetOpen = false;
+				addInput = '';
+			}
+
+			const notice = friendRequestOutcomeNotice({ outcome, locale: $localeStore });
+
+			if (nonNullish(notice)) {
+				notify(notice);
+			}
 		} catch (err: unknown) {
 			console.error(err);
 
 			const code = err instanceof Error ? err.message : '';
-			const messageKey =
-				code === 'not_found'
-					? 'arena.friends.error.not_found'
-					: code === 'self'
-						? 'arena.friends.error.self'
-						: 'arena.friends.error.send_failed';
+			const known = code === 'not_found' || code === 'self';
 
-			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
-				message: t({ locale: $localeStore, key: messageKey }),
-				type: 'error'
-			});
+			track({ name: 'friend_request_sent', source: 'arena', label: known ? code : 'error' });
+
+			if (known) {
+				notify({
+					message: t({
+						locale: $localeStore,
+						key: code === 'not_found' ? 'arena.friends.error.not_found' : 'arena.friends.error.self'
+					}),
+					type: 'error'
+				});
+			} else {
+				// Unexpected failure: keep the copy friendly but carry a short
+				// technical detail so a user screenshot is enough to diagnose.
+				notify({
+					message: t({
+						locale: $localeStore,
+						key: 'arena.friends.error.send_failed_detail',
+						params: { detail: code.trim().slice(0, 140) || 'unknown' }
+					}),
+					type: 'error'
+				});
+			}
 		} finally {
 			adding = false;
 		}

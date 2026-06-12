@@ -2139,6 +2139,7 @@ export const itMessages = {
 	'arena.friends.action.accept': 'Accetta',
 	'arena.friends.action.cancel': 'Annulla',
 	'arena.friends.action.reject': 'Rifiuta',
+	'arena.friends.add.auto_accepted': 'Ti aveva già inviato una richiesta — ora siete amici!',
 	'arena.friends.add.cta': 'Aggiungi amico',
 	'arena.friends.add.invite_hint':
 		'Nessun risultato. Il link di invito dà {amount} VXP a entrambi.',
@@ -2152,12 +2153,17 @@ export const itMessages = {
 	'arena.friends.empty.add_first': 'Aggiungi il tuo primo amico',
 	'arena.friends.empty.invite_now': 'Invita ora',
 	'arena.friends.error.accept_failed': 'Accettazione della richiesta fallita',
+	'arena.friends.error.already_friends': 'Siete già amici.',
+	'arena.friends.error.already_pending': 'Richiesta già inviata — in attesa che accetti.',
 	'arena.friends.error.cancel_failed': 'Annullamento della richiesta fallito',
 	'arena.friends.error.not_found':
 		'Nessun utente trovato con quell’handle. Controlla lo spelling o mandagli un link di invito.',
 	'arena.friends.error.reject_failed': 'Rifiuto della richiesta fallito',
+	'arena.friends.error.rejected_cooldown':
+		'Ha rifiutato la tua ultima richiesta. Puoi riprovare {when}.',
 	'arena.friends.error.self': 'Sei tu — scegli un altro handle.',
-	'arena.friends.error.send_failed': 'Invio della richiesta fallito',
+	'arena.friends.error.send_failed_detail':
+		'Invio della richiesta non riuscito. Fai uno screenshot e scrivici: {detail}',
 	'arena.friends.error.unfriend_failed': 'Rimozione dell’amico fallita',
 	'arena.friends.feed.empty_a': 'Quando i tuoi amici predicono, comparirà qui.',
 	'arena.friends.feed.empty_b': 'Lo storico cresce in silenzio.',

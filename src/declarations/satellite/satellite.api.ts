@@ -141,6 +141,7 @@ const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 				'vxp_awarded',
 				'streak_milestone',
 				'faucet_claimed',
+				'friend_request_sent',
 				'league_created',
 				'league_joined',
 				'league_invite_sent',
@@ -1569,10 +1570,20 @@ const resumeMyAccount = async (): Promise<j.infer<typeof AppResumeMyAccountResul
 };
 
 const AppSendFriendRequestArgsSchema = j.strictObject({ target: j.string() });
+const AppSendFriendRequestResultSchema = j.strictObject({
+	status: j.enum([
+		'sent',
+		'auto_accepted',
+		'already_friends',
+		'already_pending',
+		'rejected_cooldown'
+	]),
+	retryAtMs: j.optional(j.number())
+});
 
 const sendFriendRequest = async (
 	args: j.infer<typeof AppSendFriendRequestArgsSchema>
-): Promise<void> => {
+): Promise<j.infer<typeof AppSendFriendRequestResultSchema>> => {
 	const parsedArgs = AppSendFriendRequestArgsSchema.parse(args);
 	const idlArgs = schemaToIdl({
 		schema: AppSendFriendRequestArgsSchema,
@@ -1582,7 +1593,10 @@ const sendFriendRequest = async (
 	const { app_send_friend_request } = await getSatelliteExtendedActor<SatelliteActor>({
 		idlFactory
 	});
-	await app_send_friend_request(idlArgs);
+	const idlResult = await app_send_friend_request(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppSendFriendRequestResultSchema, value: idlResult });
+	return AppSendFriendRequestResultSchema.parse(result);
 };
 
 const AppSettleFounderAwardsResultSchema = j.strictObject({ settled: j.number() });
@@ -1692,6 +1706,7 @@ const AppTrackEventsArgsSchema = j.strictObject({
 				'vxp_awarded',
 				'streak_milestone',
 				'faucet_claimed',
+				'friend_request_sent',
 				'league_created',
 				'league_joined',
 				'league_invite_sent',
