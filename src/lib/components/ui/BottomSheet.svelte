@@ -47,9 +47,23 @@
 		 * scroller layout (body owns the bottom inset).
 		 */
 		footer?: Snippet;
+		/**
+		 * Re-anchor the sheet as a centred modal card on ≥768px viewports —
+		 * full rounded border, zoom-in entrance instead of a slide-up, grip
+		 * hidden. Phone widths keep the standard bottom-docked treatment.
+		 * One set of content, switched purely in CSS, for confirm-style
+		 * surfaces that read better centred on desktop.
+		 */
+		desktopCentered?: boolean;
+		/**
+		 * `id` of a heading inside the sheet, wired to `aria-labelledby` on
+		 * the dialog. Leave unset when the children carry no single title.
+		 */
+		labelledBy?: string;
 	}
 
-	const { isOpen, children, onClose, sidePadding, footer }: Props = $props();
+	const { isOpen, children, onClose, sidePadding, footer, desktopCentered, labelledBy }: Props =
+		$props();
 
 	let sheetEl = $state<HTMLDivElement | undefined>();
 	let trap: FocusTrap | null = null;
@@ -91,6 +105,7 @@
 {#if isOpen}
 	<div
 		class="sheet-scrim"
+		class:desktop-centered={desktopCentered}
 		aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
 		onclick={close}
 		onkeydown={(e) => e.key === 'Escape' && close()}
@@ -101,7 +116,9 @@
 			bind:this={sheetEl}
 			style:--sheet-side-padding={sidePadding}
 			class="sheet"
+			class:desktop-centered={desktopCentered}
 			class:has-footer={Boolean(footer)}
+			aria-labelledby={labelledBy}
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
@@ -187,10 +204,43 @@
 		animation: friend-sheet-slide-up 280ms var(--ease-vici) both;
 	}
 
+	/* Desktop-centred variant: re-anchor the same panel to the viewport
+	 * centre with a full rounded card and a zoom-in entrance rather than
+	 * a slide-up. The grip handle is a bottom-sheet affordance only. */
+	@media (min-width: 768px) {
+		.sheet-scrim.desktop-centered {
+			justify-content: center;
+			padding: 1rem;
+		}
+
+		.sheet.desktop-centered {
+			max-width: 28rem;
+			max-height: 90vh; /* fallback for engines without `dvh` */
+			max-height: 90dvh;
+			padding: 1.5rem;
+			border: 1px solid var(--border-base);
+			border-radius: 12px;
+			box-shadow: var(--shadow-modal);
+			animation: sheet-zoom-in 200ms var(--ease-vici) both;
+		}
+
+		.sheet.desktop-centered .sheet-grip {
+			display: none;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.sheet-scrim,
-		.sheet {
+		.sheet,
+		.sheet.desktop-centered {
 			animation: none;
+		}
+	}
+
+	@keyframes sheet-zoom-in {
+		from {
+			opacity: 0;
+			transform: scale(0.96);
 		}
 	}
 
