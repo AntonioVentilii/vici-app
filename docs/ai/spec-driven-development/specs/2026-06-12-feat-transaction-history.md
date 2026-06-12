@@ -117,13 +117,13 @@ back stake + profit, a loss returns nothing.
 
 ## Scope
 
-1. **Route** — new page under `src/routes/(app)/` (`+page.svelte`
-   importing a page shell per `docs/ai/frontend/structure.md`), a new
-   `AppPath` entry in `src/lib/constants/routes.constants.ts`, page
-   shell `src/lib/components/pages/TransactionHistoryPage.svelte`
-   (final name per pending route decision). `ScreenHeader` with back
-   to `/dash`; header shows current available VXP and an "in play"
-   chip.
+1. **Route** — `/dash/transactions`:
+   `src/routes/(app)/dash/transactions/+page.svelte` importing a page
+   shell per `docs/ai/frontend/structure.md`, a new `AppPath` entry
+   in `src/lib/constants/routes.constants.ts`, page shell
+   `src/lib/components/pages/DashTransactionsPage.svelte`.
+   `ScreenHeader` with back to `/dash`; header shows current
+   available VXP and an "in play" chip.
 2. **Sheet link** — a real `<a>`/`<button>` row in
    `DashStackSheet.svelte` ("Transaction history" + chevron, accent
    tint), a11y-labelled per `docs/ai/frontend/a11y.md`.
@@ -139,7 +139,8 @@ back stake + profit, a loss returns nothing.
 5. **UI** — table/list with columns: activity (icon + label + market
    title), date/time, signed amount, running balance. Filter chips:
    All / Predictions / Results / Bonuses (client-side). Numbered
-   pagination via `Pagination.svelte` (page size constant, e.g. 10).
+   pagination via `Pagination.svelte` (page size 10, via a named
+   constant).
    `EmptyState` for zero transactions; a quiet footer line when the
    ledger walk hit the page cap ("older history not shown").
 6. **i18n** — new `transactions.*` keys in **every** catalog under
@@ -214,7 +215,7 @@ record:
 ## Implementation outline
 
 1. Add the `AppPath` entry + route folder + page shell
-   (`+page.svelte` → `TransactionHistoryPage.svelte`).
+   (`+page.svelte` → `DashTransactionsPage.svelte`).
 2. Add memo decoding + `Reward` labeling to
    `src/lib/utils/transactions.utils.ts` (unit-test the memo parser:
    all nine tags, unknown tag, absent memo, non-UTF8 bytes).
@@ -275,14 +276,14 @@ record:
   `vxp-holdings.derived.ts` exposes a stable available-VXP value to
   anchor the newest-first walk, including while markets are open.
 
-## Pending decisions
-
-- **Route placement** — `/dash/transactions` (nested under its entry
-  point; recommended) vs. top-level `/transactions`. Affects the
-  `AppPath` name and page-shell filename only.
-- **Page size** — 10 (matches portfolio tables) vs. 20 rows per page.
-
 ## Decisions
+
+- **Route: `/dash/transactions`** (owner decision, 2026-06-12) —
+  nested under its entry point, back returns to `/dash`; page shell
+  `DashTransactionsPage.svelte`. Top-level `/transactions` rejected:
+  its only entry point is the dash sheet.
+- **Page size: 10** (owner decision, 2026-06-12) — matches the
+  portfolio tables and the wallet history default batch.
 
 - **Running balance = available (spendable) VXP**, not total
   holdings: stakes visibly debit, wins credit stake + profit, losses
