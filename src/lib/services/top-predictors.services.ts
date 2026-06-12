@@ -73,16 +73,23 @@ export const getMarketTopPredictors = async ({
 	const identity = await getIdentityOrAnonymous();
 
 	const probed = await Promise.all(
-		candidates.slice(0, TOP_PREDICTORS_SCAN_CAP).map(
-			(owner): Promise<TopPredictorSignal | undefined> =>
-				aggregateLeanApi({
-					identity,
-					params: { series_id: marketId, principals: [Principal.fromText(owner)] },
-					certified: false
-				})
-					.then((lean) => toTopPredictor({ owner, lean }))
-					.catch(() => undefined)
-		)
+		candidates
+			.slice(0, TOP_PREDICTORS_SCAN_CAP)
+			.map(async (owner): Promise<TopPredictorSignal | undefined> => {
+				try {
+					const lean = await aggregateLeanApi({
+						identity,
+						params: { series_id: marketId, principals: [Principal.fromText(owner)] },
+						certified: false
+					});
+
+					return toTopPredictor({ owner, lean });
+				} catch {
+					// The try also covers `Principal.fromText` — a malformed
+					// owner string in the cached leaderboard drops just this
+					// candidate instead of rejecting the whole `Promise.all`.
+				}
+			})
 	);
 
 	return probed.filter(nonNullish).slice(0, TOP_PREDICTORS_LIMIT);
