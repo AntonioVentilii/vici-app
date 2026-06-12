@@ -4,7 +4,7 @@
 	 * into lifetime earned, currently in-play, and referral earnings, then
 	 * offers an invite CTA into Arena. Pure presentation: all figures arrive
 	 * pre-formatted from the host; referral totals come from the real referral
-	 * list (count of settled referrals × the per-referral reward).
+	 * list (credited redemptions summed over the tiered reward curve).
 	 */
 	import { Gift } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
@@ -25,7 +25,7 @@
 		inPlayDisplay: string;
 		/** VXP earned from referrals, formatted. */
 		referralVxpDisplay: string;
-		/** Number of settled referrals behind that VXP. */
+		/** Number of credited referrals behind that VXP. */
 		referralCount: number;
 	}
 

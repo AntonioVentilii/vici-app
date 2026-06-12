@@ -14,8 +14,11 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { MILLISECOND_IN_NANOSECONDS, ZERO } from '$lib/constants/app.constants';
-	import { REFERRAL_MAX_PAID, referrerRewardBaseUnits } from '$lib/constants/referral.constants';
+	import { MILLISECOND_IN_NANOSECONDS } from '$lib/constants/app.constants';
+	import {
+		cumulativeReferrerRewardBaseUnits,
+		REFERRAL_MAX_PAID
+	} from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { globalActivities } from '$lib/derived/activities.derived';
@@ -205,36 +208,29 @@
 	// regardless of payout. The "joined" headline is a factual count, so it must not shrink to
 	// the paid subset once a cap is hit.
 	//
-	// `referralPaidCount` is the CREDITED subset, derived the same way the satellite's
-	// `countReferrerCredits` tally does it: a row counts as paid when its `referrerPayout.status`
+	// `referralCreditedCount` is the CREDITED subset, derived the same way the satellite's
+	// `countReferrerCredits` tally does it: a row counts as credited when its `referrerPayout.status`
 	// is anything other than `none` (`owed | processing | paid` — anything in flight still
 	// consumes a slot). This is the authoritative rule the server uses to feed the diminishing
 	// reward curve and enforce both caps, so the hero stays in lockstep with it rather than
 	// re-reading the stored `withinReferrerCap` flag.
 	//
-	// The earned total sums each paid redemption's tier reward by its 1-based order — the i-th
-	// paid redemption pays `referrerRewardBaseUnits(i - 1)`, so the diminishing tier table (and
-	// its hard cap) is honoured rather than assuming a flat 500 VXP per friend.
+	// The earned total honours the diminishing tier table (and its hard cap) rather than
+	// assuming a flat 500 VXP per friend — see `cumulativeReferrerRewardBaseUnits`.
 	const joinedCount = $derived(myReferrals.length);
-	const referralPaidCount = $derived(
+	const referralCreditedCount = $derived(
 		myReferrals.filter(({ referrerPayout }) => referrerPayout.status !== 'none').length
 	);
-	const referralVxpEarnedBaseUnits = $derived.by(() => {
-		let total = ZERO;
-
-		for (let priorPaidCount = 0; priorPaidCount < referralPaidCount; priorPaidCount++) {
-			total += referrerRewardBaseUnits(priorPaidCount);
-		}
-
-		return total;
-	});
+	const referralVxpEarnedBaseUnits = $derived(
+		cumulativeReferrerRewardBaseUnits(referralCreditedCount)
+	);
 	const referralVxpEarnedLabel = $derived(formatVxpBalance({ value: referralVxpEarnedBaseUnits }));
 
 	// Rewarded-invites-left line mirrors the satellite's single cap: the lifetime hard cap
 	// (`REFERRAL_MAX_PAID`). A row counts as credited once its `referrerPayout.status` is anything
 	// other than `none` (anything in flight still consumes a slot), matching `countReferrerCredits`.
 	// The diminishing curve + this lifetime cap self-limit, so there is no separate monthly cap.
-	const referralsRemaining = $derived(Math.max(0, REFERRAL_MAX_PAID - referralPaidCount));
+	const referralsRemaining = $derived(Math.max(0, REFERRAL_MAX_PAID - referralCreditedCount));
 	let copied = $state(false);
 	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -766,7 +762,7 @@
 									: 'arena.friends.invite.proof_many'
 						})}
 					</span>
-					{#if referralPaidCount > 0}
+					{#if referralCreditedCount > 0}
 						<span class="invite-proof-dot" aria-hidden="true">·</span>
 						<span class="invite-proof-earned">
 							<b>+{referralVxpEarnedLabel}</b>

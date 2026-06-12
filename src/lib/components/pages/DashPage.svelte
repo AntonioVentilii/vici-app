@@ -33,7 +33,7 @@
 	import ResolutionReveal from '$lib/components/market/ResolutionReveal.svelte';
 	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
-	import { REFERRAL_VXP_BONUS_VALUE } from '$lib/constants/referral.constants';
+	import { cumulativeReferrerRewardBaseUnits } from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -89,8 +89,11 @@
 	// Lifetime earned = `profile.points`, the running VXP accumulator.
 	const lifetimeDisplay = $derived((profile?.points ?? 0).toLocaleString());
 
-	// Referral earnings — settled referrals × the per-referral bonus.
-	const referralVxpDisplay = $derived((referralCount * REFERRAL_VXP_BONUS_VALUE).toLocaleString());
+	// Referral earnings — cumulative tiered reward over the credited redemptions, mirroring the
+	// Arena invite hero so the two surfaces can never disagree.
+	const referralVxpDisplay = $derived(
+		formatVxpBalance({ value: cumulativeReferrerRewardBaseUnits(referralCount) })
+	);
 
 	// ─── Markets ───────────────────────────────────────────────────────
 	const marketById = $derived(new Map<string, Market>(($marketsStore ?? []).map((m) => [m.id, m])));
@@ -370,9 +373,16 @@
 		}
 
 		try {
-			// Settled referrals back the stack-sheet referral figure.
+			// Credited referrals back the stack-sheet referral figure. A row counts once its
+			// `referrerPayout.status` has left `none` (owed / processing / paid — anything in
+			// flight still consumes a slot), matching the satellite's `countReferrerCredits`
+			// rule and the Arena invite hero. Filtering on `paid` alone hid redemptions whose
+			// payout was still in flight (or stuck retrying), reading as "0 friends" while
+			// Arena already showed the credit.
 			const referrals = await listMyReferrals();
-			referralCount = referrals.filter((r) => r.referrerPayout.status === 'paid').length;
+			referralCount = referrals.filter(
+				({ referrerPayout }) => referrerPayout.status !== 'none'
+			).length;
 		} catch (err) {
 			console.error('DashPage: failed to load referrals', err);
 		}
