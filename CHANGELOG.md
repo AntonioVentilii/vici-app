@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.1.9](https://github.com/AntonioVentilii/vici-app/compare/v0.1.8...v0.1.9) (2026-06-12)
+
+
+### Features
+
+* **arena:** tap-to-like reaction on the friend activity feed ([#825](https://github.com/AntonioVentilii/vici-app/issues/825)) ([f9ef39c](https://github.com/AntonioVentilii/vici-app/commit/f9ef39cd2e5dc713e3f8ea06b2416807884b1e66))
+
+
+### Bug Fixes
+
+* **admin:** require confirmation before resolving a market ([#840](https://github.com/AntonioVentilii/vici-app/issues/840)) ([25ba493](https://github.com/AntonioVentilii/vici-app/commit/25ba493c856714a55bb0f5d5e1af19ab1abc1645))
+* **arena:** slide the standing hero between scopes like a carousel ([#837](https://github.com/AntonioVentilii/vici-app/issues/837)) ([373835a](https://github.com/AntonioVentilii/vici-app/commit/373835a11de7b136efdb881719f8c072d7bfc2ec))
+* **arena:** source friends-tab accuracy from live clearing standings ([#833](https://github.com/AntonioVentilii/vici-app/issues/833)) ([ce808c3](https://github.com/AntonioVentilii/vici-app/commit/ce808c3c34a10b0b6301ba330c4faa050e70b536))
+* **arena:** typed add-friend outcomes with friendly errors and reject cooldown ([#838](https://github.com/AntonioVentilii/vici-app/issues/838)) ([2dc7f76](https://github.com/AntonioVentilii/vici-app/commit/2dc7f7681dd105a57d70e3432e9eaf4fa593fbe2))
+* **dash:** align the stack-sheet referral figure with the credited-referrals rule ([#841](https://github.com/AntonioVentilii/vici-app/issues/841)) ([beb9dab](https://github.com/AntonioVentilii/vici-app/commit/beb9dab1990923aeeb369697d6bcc2c23a201717))
+* **dash:** exclude resolved markets from the open calls list ([#836](https://github.com/AntonioVentilii/vici-app/issues/836)) ([79fab79](https://github.com/AntonioVentilii/vici-app/commit/79fab7956fd15d19728de9a5bde137920def33e4))
+* **menagerie:** dock the achievement detail sheet to the viewport ([#834](https://github.com/AntonioVentilii/vici-app/issues/834)) ([f102590](https://github.com/AntonioVentilii/vici-app/commit/f10259003b2e97f80a2f765a916cc48c90339734))
+
+
+### Documentation
+
+* **ai:** require analytics analysis and issue linkage in every spec ([#830](https://github.com/AntonioVentilii/vici-app/issues/830)) ([790b5a7](https://github.com/AntonioVentilii/vici-app/commit/790b5a7d4129fd7d17b73818e2b6bea4632489d8))
+* **ai:** separate open questions from pending decisions in specs ([#831](https://github.com/AntonioVentilii/vici-app/issues/831)) ([dad8aa9](https://github.com/AntonioVentilii/vici-app/commit/dad8aa9568c4092baaa0eed052f302cc5e8effaf))
+
+
+### Miscellaneous Chores
+
+* **lint:** ban direct null/undefined comparisons in favor of isNullish/nonNullish ([#828](https://github.com/AntonioVentilii/vici-app/issues/828)) ([a6eabe9](https://github.com/AntonioVentilii/vici-app/commit/a6eabe96feb0a3f4d5a4bd840532e77b93dcea5c))
+
+
+### Code Refactoring
+
+* **ui:** consolidate LocaleSheet and TradeModal onto the shared BottomSheet primitive ([#835](https://github.com/AntonioVentilii/vici-app/issues/835)) ([df12199](https://github.com/AntonioVentilii/vici-app/commit/df1219924eb507df4010afb79a109cedcb6ffd78))
+
 ## [0.1.8](https://github.com/AntonioVentilii/vici-app/compare/v0.1.7...v0.1.8) (2026-06-11)
 
 
