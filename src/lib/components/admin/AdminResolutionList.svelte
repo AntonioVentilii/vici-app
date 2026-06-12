@@ -21,9 +21,17 @@
 	let showConfirm = $state(false);
 
 	const openConfirm = (params: { marketId: MarketId; title: string; outcome: Outcome }) => {
+		if (nonNullish(resolvingMarketId)) {
+			return;
+		}
+
 		confirmTarget = params;
 		showConfirm = true;
 	};
+
+	const confirmBusy = $derived(
+		nonNullish(confirmTarget) && resolvingMarketId === confirmTarget.marketId
+	);
 
 	const handleResolve = async () => {
 		if (isNullish(confirmTarget)) {
@@ -275,7 +283,7 @@
 					class="flex-1"
 					onclick={() => (showConfirm = false)}
 					size="md"
-					status={nonNullish(resolvingMarketId) ? 'disabled' : 'enabled'}
+					status={confirmBusy ? 'disabled' : 'enabled'}
 					variant="outline"
 				>
 					{t({ locale: $localeStore, key: 'market.resolution.confirm.cancel' })}
@@ -284,7 +292,7 @@
 					class="flex-1"
 					onclick={handleResolve}
 					size="md"
-					status={nonNullish(resolvingMarketId) ? 'pending' : 'enabled'}
+					status={confirmBusy ? 'pending' : 'enabled'}
 					variant={confirmTarget.outcome === 'YES' ? 'primary' : 'danger'}
 				>
 					{t({ locale: $localeStore, key: 'market.resolution.confirm.cta' })}
