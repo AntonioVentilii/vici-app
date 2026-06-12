@@ -170,6 +170,11 @@
 	let scopes = $state<Scope[]>([]);
 	let idx = $state(0);
 	let pointerDownX: number | null = null;
+	// Live finger offset (px) while a horizontal drag is in flight; the
+	// track follows it 1:1 so the hero pages like a real carousel instead
+	// of flipping content on release.
+	let dragX = $state(0);
+	let dragging = $state(false);
 	// Stays false until the first hydrate settles for the active principal.
 	// Drives the cold-load skeleton: shown only while we have nothing cached
 	// to render AND no hydrate has landed yet.
@@ -456,6 +461,32 @@
 
 	const onPointerDown = (event: PointerEvent) => {
 		pointerDownX = event.clientX;
+		dragging = true;
+	};
+
+	const onPointerMove = (event: PointerEvent) => {
+		if (isNullish(pointerDownX)) {
+			return;
+		}
+
+		let dx = event.clientX - pointerDownX;
+
+		// Rubber-band past the first/last scope: the track still follows
+		// the finger (damped) so the edge reads as an edge, not a freeze.
+		if ((idx === 0 && dx > 0) || (idx === scopes.length - 1 && dx < 0)) {
+			dx *= 0.35;
+		}
+
+		dragX = dx;
+	};
+
+	// Snap the track back onto the active scope. With the drag offset
+	// cleared the CSS transition re-engages and animates the remainder of
+	// the travel (or the rubber-band return).
+	const endDrag = () => {
+		pointerDownX = null;
+		dragging = false;
+		dragX = 0;
 	};
 
 	const onPointerUp = (event: PointerEvent) => {
@@ -464,13 +495,19 @@
 		}
 
 		const dx = event.clientX - pointerDownX;
-		pointerDownX = null;
+		endDrag();
 
 		// Treat a horizontal drag past the threshold as a scope page; a
 		// small drag is a tap and opens the active scope's surface.
 		if (Math.abs(dx) > 28) {
 			select(idx + (dx < 0 ? 1 : -1));
 
+			return;
+		}
+
+		// A tap on a dot is the dot's own activation (its click handler
+		// pages to that scope) — don't also open the active scope.
+		if (event.target instanceof Element && nonNullish(event.target.closest('.ar-live-dot'))) {
 			return;
 		}
 
@@ -532,64 +569,78 @@
 				params: { scope: current.label }
 			})}
 			onkeydown={onKeydown}
+			onpointercancel={endDrag}
 			onpointerdown={onPointerDown}
+			onpointerleave={endDrag}
+			onpointermove={onPointerMove}
 			onpointerup={onPointerUp}
 			role="button"
 			tabindex="0"
 		>
-			<div class="ar-live-top">
-				<span class="ar-live-ctx">{current.label}</span>
-				{#if scopes.length > 1}
-					<span class="ar-live-dots" role="tablist">
-						{#each scopes as scope, i (scope.key)}
-							<button
-								class="ar-live-dot"
-								class:is-on={i === idx}
-								aria-label={dotLabel(scope)}
-								aria-selected={i === idx}
-								onclick={(event) => {
-									event.stopPropagation();
-									select(i);
-								}}
-								role="tab"
-								type="button"
-							></button>
-						{/each}
-					</span>
-				{/if}
-			</div>
+			{#if scopes.length > 1}
+				<span class="ar-live-dots" role="tablist">
+					{#each scopes as scope, i (scope.key)}
+						<button
+							class="ar-live-dot"
+							class:is-on={i === idx}
+							aria-label={dotLabel(scope)}
+							aria-selected={i === idx}
+							onclick={(event) => {
+								event.stopPropagation();
+								select(i);
+							}}
+							role="tab"
+							type="button"
+						></button>
+					{/each}
+				</span>
+			{/if}
 
-			<div class="ar-live-body">
-				{#if nonNullish(current.bracket)}
-					<span class="num ar-live-rank is-bracket">
-						<span class="ar-live-rank-pre">{bracketPrefix}</span>{current.bracket}%
-					</span>
-				{:else}
-					<span class="num ar-live-rank">#{current.rank}</span>
-				{/if}
+			<div class="ar-live-viewport">
+				<div
+					style:transform={`translateX(calc(${idx} * -100% + ${dragX}px))`}
+					class="ar-live-track"
+					class:is-dragging={dragging}
+				>
+					{#each scopes as scope, i (scope.key)}
+						<div class="ar-live-slide" aria-hidden={i !== idx}>
+							<span class="ar-live-ctx" class:has-dots={scopes.length > 1}>{scope.label}</span>
 
-				{#if current.up > 0}
-					<span class="num ar-live-mv">▲ {current.up}{current.upSuffix}</span>
-				{/if}
+							<div class="ar-live-body">
+								{#if nonNullish(scope.bracket)}
+									<span class="num ar-live-rank is-bracket">
+										<span class="ar-live-rank-pre">{bracketPrefix}</span>{scope.bracket}%
+									</span>
+								{:else}
+									<span class="num ar-live-rank">#{scope.rank}</span>
+								{/if}
 
-				<span class="ar-live-go" aria-hidden="true">→</span>
-			</div>
+								{#if scope.up > 0}
+									<span class="num ar-live-mv">▲ {scope.up}{scope.upSuffix}</span>
+								{/if}
 
-			<div class="num ar-live-meta">
-				{#if nonNullish(current.bracket)}
-					{t({
-						locale: $localeStore,
-						key: 'arena.hero.meta_ranked',
-						params: { rank: current.rank, total: current.total }
-					})}
-				{:else}
-					{t({
-						locale: $localeStore,
-						key: 'arena.hero.meta_of',
-						params: { total: current.total }
-					})}
-				{/if}
-				· {current.unit}
+								<span class="ar-live-go" aria-hidden="true">→</span>
+							</div>
+
+							<div class="num ar-live-meta">
+								{#if nonNullish(scope.bracket)}
+									{t({
+										locale: $localeStore,
+										key: 'arena.hero.meta_ranked',
+										params: { rank: scope.rank, total: scope.total }
+									})}
+								{:else}
+									{t({
+										locale: $localeStore,
+										key: 'arena.hero.meta_of',
+										params: { total: scope.total }
+									})}
+								{/if}
+								· {scope.unit}
+							</div>
+						</div>
+					{/each}
+				</div>
 			</div>
 		</div>
 	</div>
@@ -655,6 +706,7 @@
 	}
 
 	.ar-live {
+		position: relative;
 		display: block;
 		width: 100%;
 		text-align: left;
@@ -665,19 +717,36 @@
 		-webkit-user-select: none;
 	}
 
+	/* Paging carousel: every scope is laid out side by side on a flex
+	   track that translates by whole slides. While a finger is down the
+	   transition is suspended so the track follows the drag 1:1; on
+	   release it eases onto the snapped scope. */
+	.ar-live-viewport {
+		overflow: hidden;
+	}
+
+	.ar-live-track {
+		display: flex;
+		transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.ar-live-track.is-dragging {
+		transition: none;
+	}
+
+	.ar-live-slide {
+		flex: 0 0 100%;
+		min-width: 0;
+	}
+
 	.ar-live:focus-visible {
 		outline: 2px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
 		outline-offset: 4px;
 		border-radius: var(--r-8, 0.5rem);
 	}
 
-	.ar-live-top {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
 	.ar-live-ctx {
+		display: block;
 		font-family: var(--font-mono);
 		font-size: var(--t-10);
 		letter-spacing: 0.16em;
@@ -688,12 +757,20 @@
 		text-overflow: ellipsis;
 	}
 
+	/* The dots overlay the track (they don't ride along with a slide), so
+	   the label reserves their corner to keep its ellipsis clear of them. */
+	.ar-live-ctx.has-dots {
+		padding-right: 4.5rem;
+	}
+
 	.ar-live-dots {
+		position: absolute;
+		top: 3px;
+		right: 0;
+		z-index: 1;
 		display: inline-flex;
 		gap: 5px;
 		align-items: center;
-		flex: none;
-		margin-left: 10px;
 	}
 
 	.ar-live-dot {
@@ -720,12 +797,14 @@
 		outline-offset: 2px;
 	}
 
-	.reduced-motion .ar-live-dot {
+	.reduced-motion .ar-live-dot,
+	.reduced-motion .ar-live-track {
 		transition: none;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.ar-live-dot {
+		.ar-live-dot,
+		.ar-live-track {
 			transition: none;
 		}
 	}
