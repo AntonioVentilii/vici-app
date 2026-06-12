@@ -2157,6 +2157,8 @@ export const deMessages = {
 	'arena.friends.action.accept': 'Annehmen',
 	'arena.friends.action.cancel': 'Abbrechen',
 	'arena.friends.action.reject': 'Ablehnen',
+	'arena.friends.add.auto_accepted':
+		'Dir lag schon eine Anfrage von dieser Person vor — ihr seid jetzt befreundet!',
 	'arena.friends.add.cta': 'Freund hinzufügen',
 	'arena.friends.add.invite_hint':
 		'Noch keine Treffer. Mit dem Einladungslink bekommt ihr beide {amount} VXP.',
@@ -2170,12 +2172,17 @@ export const deMessages = {
 	'arena.friends.empty.add_first': 'Ersten Freund hinzufügen',
 	'arena.friends.empty.invite_now': 'Jetzt einladen',
 	'arena.friends.error.accept_failed': 'Anfrage konnte nicht angenommen werden',
+	'arena.friends.error.already_friends': 'Ihr seid bereits befreundet.',
+	'arena.friends.error.already_pending': 'Anfrage bereits gesendet — wartet auf Annahme.',
 	'arena.friends.error.cancel_failed': 'Anfrage konnte nicht abgebrochen werden',
 	'arena.friends.error.not_found':
 		'Kein Nutzer mit diesem Handle gefunden. Überprüfe die Schreibweise oder lade ihn per Link ein.',
 	'arena.friends.error.reject_failed': 'Anfrage konnte nicht abgelehnt werden',
+	'arena.friends.error.rejected_cooldown':
+		'Deine letzte Anfrage wurde abgelehnt. Du kannst es {when} erneut versuchen.',
 	'arena.friends.error.self': 'Das bist du selbst — wähle ein anderes Handle.',
-	'arena.friends.error.send_failed': 'Anfrage konnte nicht gesendet werden',
+	'arena.friends.error.send_failed_detail':
+		'Anfrage konnte nicht gesendet werden. Mach einen Screenshot und sag uns Bescheid: {detail}',
 	'arena.friends.error.unfriend_failed': 'Freundschaft konnte nicht beendet werden',
 	'arena.friends.feed.empty_a': 'Wenn deine Freunde tippen, taucht es hier auf.',
 	'arena.friends.feed.empty_b': 'Bau still und leise die Bilanz auf.',

@@ -2147,6 +2147,7 @@ export const ptMessages = {
 	'arena.friends.action.accept': 'Aceitar',
 	'arena.friends.action.cancel': 'Cancelar',
 	'arena.friends.action.reject': 'Rejeitar',
+	'arena.friends.add.auto_accepted': 'Já te tinha enviado um pedido — agora são amigos!',
 	'arena.friends.add.cta': 'Adicionar amigo',
 	'arena.friends.add.invite_hint':
 		'Sem resultados. O link de convite dá {amount} VXP a vocês os dois.',
@@ -2160,12 +2161,17 @@ export const ptMessages = {
 	'arena.friends.empty.add_first': 'Adiciona o teu primeiro amigo',
 	'arena.friends.empty.invite_now': 'Convidar agora',
 	'arena.friends.error.accept_failed': 'Falha ao aceitar o pedido',
+	'arena.friends.error.already_friends': 'Já são amigos.',
+	'arena.friends.error.already_pending': 'Pedido já enviado — à espera que aceite.',
 	'arena.friends.error.cancel_failed': 'Falha ao cancelar o pedido',
 	'arena.friends.error.not_found':
 		'Nenhum utilizador encontrado com esse handle. Confirma a ortografia ou envia um link de convite.',
 	'arena.friends.error.reject_failed': 'Falha ao rejeitar o pedido',
+	'arena.friends.error.rejected_cooldown':
+		'Recusou o teu último pedido. Podes tentar de novo {when}.',
 	'arena.friends.error.self': 'Esse és tu — escolhe outro handle.',
-	'arena.friends.error.send_failed': 'Falha ao enviar o pedido',
+	'arena.friends.error.send_failed_detail':
+		'Não foi possível enviar o pedido. Faz uma captura de ecrã e diz-nos: {detail}',
 	'arena.friends.error.unfriend_failed': 'Falha ao desfazer a amizade',
 	'arena.friends.feed.empty_a': 'Quando os teus amigos previrem, aparecerá aqui.',
 	'arena.friends.feed.empty_b': 'A construir o histórico em silêncio.',

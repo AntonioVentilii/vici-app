@@ -165,6 +165,7 @@ export const idlFactory = ({ IDL }) => {
 					battle_proposed: IDL.Null,
 					perf_metric: IDL.Null,
 					provider_linked: IDL.Null,
+					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
 					vxp_awarded: IDL.Null,
 					league_joined: IDL.Null,
@@ -1043,6 +1044,16 @@ export const idlFactory = ({ IDL }) => {
 		)
 	});
 	const AppSendFriendRequestArgs = IDL.Record({ target: IDL.Text });
+	const AppSendFriendRequestResult = IDL.Record({
+		status: IDL.Variant({
+			sent: IDL.Null,
+			auto_accepted: IDL.Null,
+			already_friends: IDL.Null,
+			rejected_cooldown: IDL.Null,
+			already_pending: IDL.Null
+		}),
+		retry_at_ms: IDL.Opt(IDL.Float64)
+	});
 	const AppSettleFounderAwardsResult = IDL.Record({ settled: IDL.Float64 });
 	const AppSettleReferralArgs = IDL.Record({ referee: IDL.Text });
 	const AppSubmitSchoolArgs = IDL.Record({
@@ -1095,6 +1106,7 @@ export const idlFactory = ({ IDL }) => {
 					battle_proposed: IDL.Null,
 					perf_metric: IDL.Null,
 					provider_linked: IDL.Null,
+					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
 					vxp_awarded: IDL.Null,
 					league_joined: IDL.Null,
@@ -1390,7 +1402,7 @@ export const idlFactory = ({ IDL }) => {
 		),
 		app_resume_my_account: IDL.Func([], [AppResumeMyAccountResult], []),
 		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
-		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [], []),
+		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [AppSendFriendRequestResult], []),
 		app_settle_founder_awards: IDL.Func([], [AppSettleFounderAwardsResult], []),
 		app_settle_referral: IDL.Func([AppSettleReferralArgs], [], []),
 		app_submit_school: IDL.Func([AppSubmitSchoolArgs], [AppSubmitSchoolResult], []),

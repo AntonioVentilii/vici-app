@@ -83,3 +83,47 @@ plays a brief tilt + laurel particle burst on commit; the motion is
 suppressed under reduced-motion. The reaction is local to the session —
 there is no persisted reaction model yet. See
 [`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md).
+
+### Friendship rules
+
+The product rules for the friend graph. Surfaces: Arena → Friends
+(add-friend sheet, incoming/outgoing request lists) and the
+leaderboard mini-profile sheet; both route through the same relation
+service.
+
+- **Adding.** A friend is added by `@handle` or raw principal. A
+  handle resolves by exact, case-insensitive nickname match — no match
+  → a "not found" notice suggesting an invite link; resolving to
+  yourself is blocked.
+- **One relation per pair.** A friendship between two users is a
+  single record in one of three states: pending, active, or rejected.
+- **Duplicate sends.** Sending while your own request is still pending
+  → "request already sent" notice, no duplicate. Sending to an
+  existing friend → "you're already friends" notice.
+- **Mutual requests auto-friend.** If the other user already sent you
+  a pending request, your "add" counts as accepting it — you become
+  friends immediately (no second accept step).
+- **Reject and retry.** The recipient of a request may reject it. The
+  **rejecter** may re-initiate a friendship at any time. The
+  **rejected sender** must wait out a cooldown
+  (`FRIEND_REQUEST_REJECTED_COOLDOWN_MS` in
+  [`relation.constants.ts`](../../src/lib/constants/relation.constants.ts))
+  before retrying, and is told the remaining wait ("you can try again
+  in …", scaled days → hours → minutes → seconds, rounded up).
+- **Cancel.** The sender may cancel a pending request. The cancel is
+  version-locked: if the recipient accepts/rejects first, the cancel
+  fails instead of racing.
+- **Unfriend.** Either side may unfriend at any time; the relation is
+  deleted (and league-group admin pairs rebalanced), and re-adding is
+  allowed immediately.
+- **Follow is separate.** Following someone is a one-way relation that
+  never interacts with friendship state.
+- **Invites.** Inviting by link rewards both sides via the referral
+  bonuses in
+  [`referral.constants.ts`](../../src/lib/constants/referral.constants.ts).
+- **Errors.** Known outcomes surface as the specific messages above;
+  an unexpected failure shows friendly copy carrying a short technical
+  detail so a user screenshot is enough to diagnose.
+
+Decision record:
+[`specs/2026-06-12-fix-friend-request-errors-and-reject-policy.md`](./spec-driven-development/specs/2026-06-12-fix-friend-request-errors-and-reject-policy.md).

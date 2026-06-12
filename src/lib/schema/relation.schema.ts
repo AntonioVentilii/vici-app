@@ -19,3 +19,20 @@ export const CheckFriendshipArgsSchema = j.strictObject({
 	userA: PrincipalTextSchema,
 	userB: PrincipalTextSchema
 });
+
+/**
+ * Typed outcome of `sendFriendRequest` — known non-success cases are
+ * statuses, not traps, so the FE can surface a specific message (and,
+ * for `rejected_cooldown`, the `retryAtMs` the wait is counted from).
+ * Unexpected failures still trap and reach the FE as thrown errors.
+ */
+export const FriendRequestOutcomeSchema = j.strictObject({
+	status: j.enum([
+		'sent',
+		'auto_accepted',
+		'already_friends',
+		'already_pending',
+		'rejected_cooldown'
+	]),
+	retryAtMs: j.number().optional()
+});

@@ -13,6 +13,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { globalStandingsRows, type StandingsRow } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { track } from '$lib/services/analytics.services';
 	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 	import {
 		cancelFriendRequest,
@@ -34,6 +35,7 @@
 	import { goBack } from '$lib/utils/nav.utils';
 	import { formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
+	import { friendRequestOutcomeNotice } from '$lib/utils/relation.utils';
 
 	/**
 	 * Global standings.
@@ -198,7 +200,7 @@
 		const accepted = isFriend(target);
 		const isPending = !accepted && nonNullish(friendDoc);
 
-		let errorKey: MessageKey = 'arena.friends.error.send_failed';
+		let errorKey: MessageKey = 'arena.friends.error.send_failed_detail';
 
 		try {
 			if (accepted) {
@@ -208,16 +210,36 @@
 				errorKey = 'arena.friends.error.cancel_failed';
 				await cancelFriendRequest({ currentRelation: friendDoc });
 			} else {
-				await sendFriendRequest({ target, sender: currentUser });
+				const outcome = await sendFriendRequest({ target, sender: currentUser });
+
+				track({ name: 'friend_request_sent', source: 'leaderboard', label: outcome.status });
+
+				const notice = friendRequestOutcomeNotice({ outcome, locale: $localeStore });
+
+				if (nonNullish(notice)) {
+					notificationsStore.add({
+						title: t({ locale: $localeStore, key: 'leaderboard.title' }),
+						...notice
+					});
+				}
 			}
 
 			await refreshFriendRelations();
 			openRow = undefined;
 		} catch (err: unknown) {
 			console.error(err);
+
+			// `{detail}` only exists in the send key — unfriend/cancel copies
+			// ignore the param. It keeps an unexpected failure screenshotable.
+			const detail = err instanceof Error ? err.message.trim().slice(0, 140) : '';
+
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'leaderboard.title' }),
-				message: t({ locale: $localeStore, key: errorKey }),
+				message: t({
+					locale: $localeStore,
+					key: errorKey,
+					params: { detail: detail || 'unknown' }
+				}),
 				type: 'error'
 			});
 		} finally {
