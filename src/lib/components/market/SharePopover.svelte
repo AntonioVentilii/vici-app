@@ -82,7 +82,7 @@
 	const url = $derived(`${origin}/m/${market.id}?ref=${refToken}`);
 
 	const text = $derived(
-		nonNullish(priorCall) && nonNullish(priorCall)
+		nonNullish(priorCall)
 			? t({
 					locale: $localeStore,
 					key: 'flow.share.text_post'

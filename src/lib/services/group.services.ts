@@ -59,6 +59,19 @@ export const createGroup = async ({
 	});
 };
 
+// Encodes a clearable update field (`opt opt text`): `undefined` leaves the
+// field unchanged (`[]`), an explicit `null` clears it (`[[]]`). The two
+// nullish values carry different meanings here, which `isNullish` cannot
+// express — hence the direct comparison.
+const toClearableUpdate = (value: string | null | undefined): [] | [[] | [string]] => {
+	// eslint-disable-next-line no-restricted-syntax
+	if (value === undefined) {
+		return [];
+	}
+
+	return isNullish(value) ? [[]] : [[value]];
+};
+
 export const updateGroup = async ({
 	groupId,
 	name,
@@ -77,8 +90,8 @@ export const updateGroup = async ({
 		params: {
 			group_id: groupId,
 			name: nonNullish(name) ? [name] : [],
-			description: isNullish(description) ? [] : isNullish(description) ? [[]] : [[description]],
-			icon_url: isNullish(iconUrl) ? [] : isNullish(iconUrl) ? [[]] : [[iconUrl]]
+			description: toClearableUpdate(description),
+			icon_url: toClearableUpdate(iconUrl)
 		}
 	});
 };

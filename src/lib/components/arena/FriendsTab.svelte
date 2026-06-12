@@ -420,7 +420,7 @@
 	// `?request=` deep-link) and present in the loaded list. Owns its own
 	// fade timer in `focusPendingRow`, decoupled from this effect's lifecycle.
 	$effect(() => {
-		if (focusRequestKey === undefined) {
+		if (isNullish(focusRequestKey)) {
 			return;
 		}
 

@@ -122,7 +122,7 @@ export const handleCooldownDaysLeft = ({
 	lastChangeMs: number | undefined | null;
 	nowMs: number;
 }): number => {
-	if (isNullish(lastChangeMs) || isNullish(lastChangeMs) || lastChangeMs <= 0) {
+	if (isNullish(lastChangeMs) || lastChangeMs <= 0) {
 		return 0;
 	}
 

@@ -1,7 +1,6 @@
 import type { AppLocale } from '$lib/constants/locale.constants';
 import type { WorldsAffiliationOption } from '$lib/constants/worlds-affiliations.constants';
 import type { AffiliationKind } from '$lib/types/affiliation';
-import { nonNullish } from '@dfinity/utils';
 
 /**
  * Locale-aware display names for Worlds affiliations.
@@ -23,10 +22,10 @@ import { nonNullish } from '@dfinity/utils';
 const regionNamesCache = new Map<AppLocale, Intl.DisplayNames | null>();
 
 const regionNamesFor = (locale: AppLocale): Intl.DisplayNames | null => {
-	const cached = regionNamesCache.get(locale);
-
-	if (nonNullish(cached)) {
-		return cached;
+	// `has` (not a nullish check on `get`): a cached `null` is a valid entry —
+	// it marks a locale whose construction already failed and must not retry.
+	if (regionNamesCache.has(locale)) {
+		return regionNamesCache.get(locale) ?? null;
 	}
 
 	let names: Intl.DisplayNames | null;
