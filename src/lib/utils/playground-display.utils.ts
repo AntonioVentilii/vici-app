@@ -12,6 +12,7 @@ import {
 	groupIntegerPart,
 	safeBigInt
 } from '$lib/utils/format.utils';
+import { nonNullish } from '@dfinity/utils';
 
 /**
  * Plain VXP balance — whole-number "points" feel with thousands separators
@@ -136,7 +137,7 @@ export const intuitiveAvailableMarginUsd = ({
 }): bigint => {
 	const locked = totalEquityUsd - availableMarginUsd;
 	const atMark =
-		assets !== undefined && assets.length > 0
+		nonNullish(assets) && assets.length > 0
 			? sumAssetWorthValueUsd(assets)
 			: fallbackCollateralMarginUnits;
 

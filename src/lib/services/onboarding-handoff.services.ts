@@ -18,6 +18,7 @@ import { LEAGUE_INVITE_CODE_REGEX } from '$lib/types/league';
 import type { UserProfile } from '$lib/types/profile';
 import { t } from '$lib/utils/i18n.utils';
 import { formatVxpBalance } from '$lib/utils/playground-display.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
  * Pre-auth onboarding payload stashed under {@link PENDING_ONBOARDING_STORAGE_KEY} while the
@@ -56,7 +57,7 @@ const parsePendingOnboarding = (raw: string): PendingOnboarding | undefined => {
 		parsed = null;
 	}
 
-	if (typeof parsed !== 'object' || parsed === null) {
+	if (typeof parsed !== 'object' || isNullish(parsed)) {
 		return;
 	}
 
@@ -103,12 +104,12 @@ const parsePendingOnboarding = (raw: string): PendingOnboarding | undefined => {
 	// by the passkey-backed email sign-up) is persisted onto the new profile. A bare payload
 	// with none of those is dropped so the caller can clear the slot.
 	if (
-		handle === null &&
-		participantId === null &&
-		side === null &&
-		referralCode === undefined &&
-		leagueInvite === undefined &&
-		email === undefined
+		isNullish(handle) &&
+		isNullish(participantId) &&
+		isNullish(side) &&
+		isNullish(referralCode) &&
+		isNullish(leagueInvite) &&
+		isNullish(email)
 	) {
 		return;
 	}
@@ -250,7 +251,7 @@ const joinPendingLeagueIfAny = async ({
  * isn't held off on the common empty path). Browser-guarded — `false` in any non-browser context.
  */
 export const hasPendingOnboarding = (): boolean =>
-	browser && localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY) !== null;
+	browser && nonNullish(localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY));
 
 /**
  * Drains the pre-auth onboarding payload for a freshly signed-in session: parses the stash,
@@ -306,7 +307,7 @@ export const drainPendingOnboarding = async ({
 	// before clearing the payload — fire-and-forget so a transient
 	// failure never blocks the account-exists message.
 	if (profileExisted) {
-		if (pending.referralCode !== undefined) {
+		if (nonNullish(pending.referralCode)) {
 			const friendshipCode = pending.referralCode;
 
 			void (async () => {
@@ -364,7 +365,7 @@ export const drainPendingOnboarding = async ({
 	try {
 		let nextProfile = baseUpdated;
 
-		if (pending.handle !== null) {
+		if (nonNullish(pending.handle)) {
 			// Pre-flight: a brand-new user can still collide if
 			// the handle was claimed in the window between
 			// onboarding step 4 and sign-in landing. Probe first

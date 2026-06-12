@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -37,7 +38,7 @@
 			return;
 		}
 
-		hasPendingOnboarding = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY) !== null;
+		hasPendingOnboarding = nonNullish(localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY));
 	});
 
 	const onboardingComplete = $derived(

@@ -22,6 +22,7 @@ import {
 	type MenagerieSlug,
 	type MenagerieTier
 } from '$lib/constants/menagerie.constants';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 /** Minimum settled calls before the Owl's accuracy ladder is eligible. A
  * stricter, animal-specific gate than the general accuracy-display threshold:
@@ -190,7 +191,7 @@ const METRICS: Record<MenagerieSlug, (stats: MenagerieStats) => number> = {
 	// Goat: global-rank percentile (rank / total) — lower is better. Returns 0
 	// as the #1 sentinel; an unranked owner reads as 1 (worst).
 	goat: (stats) => {
-		if (stats.rank === undefined) {
+		if (isNullish(stats.rank)) {
 			return 1;
 		}
 
@@ -391,7 +392,7 @@ export type MenagerieDiff =
 /**
  * Compares the live earned set against the already-celebrated ledger.
  *
- * - **First run** (`celebrated == null` — the field was never seeded): returns
+ * - **First run** (`isNullish(celebrated)` — the field was never seeded): returns
  *   `{ firstRun: true, all }` so the host seeds the ledger SILENTLY. A
  *   fully-stocked profile must not fire a dozen celebrations on its first load.
  * - **Otherwise**: returns the HIGHEST newly-crossed tier per animal, in
@@ -406,7 +407,7 @@ export const detectNewMenagerieTiers = ({
 }): MenagerieDiff => {
 	const all = earnedMenagerieKeys(stats);
 
-	if (celebrated == null) {
+	if (isNullish(celebrated)) {
 		return { firstRun: true, all, celebrate: [] };
 	}
 
@@ -422,7 +423,7 @@ export const detectNewMenagerieTiers = ({
 		const [rawSlug, rawTier] = key.split(':');
 		const slug = rawSlug as MenagerieSlug;
 		const tier = rawTier as MenagerieTier;
-		const known = MENAGERIE_BY_SLUG.has(slug) && MENAGERIE_TIER_RANK[tier] !== undefined;
+		const known = MENAGERIE_BY_SLUG.has(slug) && nonNullish(MENAGERIE_TIER_RANK[tier]);
 
 		if (known) {
 			const existing = bySlug.get(slug);

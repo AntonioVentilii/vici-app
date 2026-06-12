@@ -1,4 +1,5 @@
 <script generics="T" lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { ClearingDid } from '$declarations';
@@ -65,7 +66,7 @@
 	});
 
 	onMount(() => {
-		if (refreshEvent === undefined) {
+		if (isNullish(refreshEvent)) {
 			return;
 		}
 

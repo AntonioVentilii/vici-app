@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { signOut } from '@junobuild/core';
 	import { ArrowLeftRight, Check, ChevronRight, Mail } from '@lucide/svelte/icons';
 	import { onDestroy } from 'svelte';
@@ -104,7 +105,7 @@
 	};
 
 	const clearSentTimer = () => {
-		if (sentResetTimer !== undefined) {
+		if (nonNullish(sentResetTimer)) {
 			clearTimeout(sentResetTimer);
 			sentResetTimer = undefined;
 		}

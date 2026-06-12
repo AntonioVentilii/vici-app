@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	/**
 	 * Zone 1 · Performance — the Dashboard masthead. A large mono accuracy
 	 * number anchors the screen; beneath it sit the session delta + streak
@@ -76,7 +77,7 @@
 		{accuracyPct}<span class="db-u">%</span>
 	</div>
 	<div class="db-anchorline num">
-		{#if sessionDelta !== null}
+		{#if nonNullish(sessionDelta)}
 			{@const positive = sessionDelta >= 0}
 			<span class="db-delta" class:db-delta-neg={!positive} class:db-delta-pos={positive}>
 				{t({

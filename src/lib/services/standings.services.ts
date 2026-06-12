@@ -3,7 +3,7 @@ import { listLeaderboard } from '$lib/api/clearing.api';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { setGlobalStandings } from '$lib/stores/standings.store';
 import type { StandingEntry, StandingsResult, StandingsWindow } from '$lib/types/standings';
-import { fromNullable } from '@dfinity/utils';
+import { fromNullable, isNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { PrincipalText } from '@junobuild/schema';
 
@@ -41,11 +41,11 @@ const toWindow = (window: StandingsWindow): ClearingDid.LeaderboardWindow => {
 const toEntry = (entry: ClearingDid.LeaderboardEntry): StandingEntry => {
 	const rank = Number(entry.rank);
 	const priorRankRaw = fromNullable(entry.prior_rank);
-	const priorRank = priorRankRaw === undefined ? undefined : Number(priorRankRaw);
+	const priorRank = isNullish(priorRankRaw) ? undefined : Number(priorRankRaw);
 
 	// `priorRank - rank` so a smaller (better) current rank reads as a
 	// positive climb; `undefined` when there is no comparable prior window.
-	const rankDelta = priorRank === undefined ? undefined : priorRank - rank;
+	const rankDelta = isNullish(priorRank) ? undefined : priorRank - rank;
 
 	const settledCount = Number(entry.settled_count);
 	const winCount = Number(entry.win_count);
@@ -185,7 +185,7 @@ export const findOwnStanding = ({
 	result: StandingsResult;
 	owner: PrincipalText | undefined;
 }): StandingEntry | undefined => {
-	if (owner === undefined) {
+	if (isNullish(owner)) {
 		return;
 	}
 

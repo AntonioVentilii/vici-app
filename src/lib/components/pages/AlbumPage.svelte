@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { X } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
@@ -52,12 +53,12 @@
 	const stats = $derived($myMenagerieStats);
 	const rows = $derived($myMenagerieRows);
 	const loading = $derived($myMenagerieLoading);
-	const earned = $derived(rows.filter((row) => row.tier !== null).length);
+	const earned = $derived(rows.filter((row) => nonNullish(row.tier)).length);
 	const total = $derived(rows.length);
 
 	let openSlug = $state<MenagerieSlug | null>(null);
 	const openRow = $derived.by((): MenagerieRow | null =>
-		openSlug === null ? null : (rows.find((row) => row.animal.slug === openSlug) ?? null)
+		isNullish(openSlug) ? null : (rows.find((row) => row.animal.slug === openSlug) ?? null)
 	);
 </script>
 
@@ -107,7 +108,7 @@
 		{:else}
 			{#each rows as row, i (row.animal.slug)}
 				{@const { tier } = row}
-				{@const earnedOne = tier !== null}
+				{@const earnedOne = nonNullish(tier)}
 				{@const conceptKey = menagerieConceptKey({ slug: row.animal.slug, tier })}
 				<button
 					style:--ti={i}
@@ -136,7 +137,7 @@
 	{#if openRow}
 		{@const row = openRow}
 		{@const { tier } = row}
-		{@const earnedOne = tier !== null}
+		{@const earnedOne = nonNullish(tier)}
 		{@const { progress } = row}
 		<div
 			class="men-sheet-backdrop"
@@ -233,7 +234,7 @@
 					{/each}
 				</div>
 
-				{#if progress && progress.next !== null}
+				{#if progress && nonNullish(progress.next)}
 					<div class="men-sheet-progress">
 						<div class="men-sheet-progress-head">
 							<span class="eyebrow">

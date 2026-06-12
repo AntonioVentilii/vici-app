@@ -22,10 +22,10 @@ import type { AffiliationKind } from '$lib/types/affiliation';
 const regionNamesCache = new Map<AppLocale, Intl.DisplayNames | null>();
 
 const regionNamesFor = (locale: AppLocale): Intl.DisplayNames | null => {
-	const cached = regionNamesCache.get(locale);
-
-	if (cached !== undefined) {
-		return cached;
+	// `has` (not a nullish check on `get`): a cached `null` is a valid entry —
+	// it marks a locale whose construction already failed and must not retry.
+	if (regionNamesCache.has(locale)) {
+		return regionNamesCache.get(locale) ?? null;
 	}
 
 	let names: Intl.DisplayNames | null;

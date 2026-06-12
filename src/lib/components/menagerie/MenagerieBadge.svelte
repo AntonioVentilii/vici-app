@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import {
 		MENAGERIE_BY_SLUG,
 		MENAGERIE_PALETTES,
@@ -43,7 +44,7 @@
 
 	// Resolve tier: explicit prop > derived from stats > null (locked).
 	const resolvedTier = $derived.by((): MenagerieTier | null => {
-		if (tier !== undefined) {
+		if (nonNullish(tier)) {
 			return tier;
 		}
 
@@ -54,7 +55,7 @@
 		return null;
 	});
 
-	const isLocked = $derived(locked || resolvedTier === null);
+	const isLocked = $derived(locked || isNullish(resolvedTier));
 	const isHero = $derived(animal?.hero === true);
 	// Warm-bodied animals lose edge on the peach theme — flag them so the badge
 	// frame deepens to keep them legible.
@@ -64,7 +65,7 @@
 	const ariaLabel = $derived.by((): string => {
 		const name = animal ? t({ locale: $localeStore, key: animal.nameKey }) : slug;
 
-		if (isLocked || resolvedTier === null) {
+		if (isLocked || isNullish(resolvedTier)) {
 			return t({ locale: $localeStore, key: 'menagerie.badge.aria_locked', params: { name } });
 		}
 

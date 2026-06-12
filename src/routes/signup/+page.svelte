@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -41,7 +42,7 @@
 	const initialParticipantId = $derived.by((): string | undefined => {
 		const team = page.url.searchParams.get('team');
 
-		if (team === null) {
+		if (isNullish(team)) {
 			return;
 		}
 
@@ -84,13 +85,13 @@
 		try {
 			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
 
-			if (raw === null) {
+			if (isNullish(raw)) {
 				return {};
 			}
 
 			const parsed: unknown = JSON.parse(raw);
 
-			return typeof parsed === 'object' && parsed !== null
+			return typeof parsed === 'object' && nonNullish(parsed)
 				? (parsed as Record<string, unknown>)
 				: {};
 		} catch {
@@ -118,11 +119,11 @@
 		// Skip the write if the user bailed before making any pick **and** there's no
 		// stashed referral code or email to carry forward — nothing to hand off.
 		if (
-			result.handle === null &&
-			result.participantId === null &&
-			result.side === null &&
-			existingReferralCode === undefined &&
-			existingEmail === undefined
+			isNullish(result.handle) &&
+			isNullish(result.participantId) &&
+			isNullish(result.side) &&
+			isNullish(existingReferralCode) &&
+			isNullish(existingEmail)
 		) {
 			return;
 		}
@@ -136,8 +137,8 @@
 					side: result.side,
 					interests: [],
 					completedAt: new Date().toISOString(),
-					...(existingReferralCode !== undefined && { referralCode: existingReferralCode }),
-					...(existingEmail !== undefined && { email: existingEmail })
+					...(nonNullish(existingReferralCode) && { referralCode: existingReferralCode }),
+					...(nonNullish(existingEmail) && { email: existingEmail })
 				})
 			);
 		} catch (err: unknown) {
@@ -186,7 +187,7 @@
 		try {
 			let nextProfile = baseUpdated;
 
-			if (result.handle !== null) {
+			if (nonNullish(result.handle)) {
 				const probe = await checkNicknameAvailability({
 					nickname: result.handle,
 					principal: currentProfile.owner

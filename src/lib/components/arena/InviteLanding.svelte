@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount, untrack } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -89,12 +90,12 @@
 		try {
 			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
 			const parsed: Record<string, unknown> =
-				raw !== null && typeof raw === 'string'
+				nonNullish(raw) && typeof raw === 'string'
 					? ((): Record<string, unknown> => {
 							try {
 								const v = JSON.parse(raw);
 
-								return typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
+								return typeof v === 'object' && nonNullish(v) ? (v as Record<string, unknown>) : {};
 							} catch {
 								return {};
 							}
@@ -145,7 +146,7 @@
 		try {
 			const owner = await lookupReferralCode({ code: normalizedCode });
 
-			if (owner === undefined) {
+			if (isNullish(owner)) {
 				notificationsStore.add({
 					title: t({ locale: $localeStore, key: 'invite.unknown_title' }),
 					message: t({ locale: $localeStore, key: 'invite.unknown_body' }),
@@ -193,7 +194,7 @@
 	let claiming = $state(false);
 
 	const handleAddAsFriend = async () => {
-		if (claiming || referrerPrincipal === undefined) {
+		if (claiming || isNullish(referrerPrincipal)) {
 			return;
 		}
 
@@ -239,7 +240,7 @@
 				{t({ locale: $localeStore, key: 'invite.resolving' })}
 			</p>
 		</div>
-	{:else if mode === 'friendship' && referrerPrincipal !== undefined}
+	{:else if mode === 'friendship' && nonNullish(referrerPrincipal)}
 		<InviteFriendshipSheet
 			busy={claiming}
 			onAddFriend={handleAddAsFriend}

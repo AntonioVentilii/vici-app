@@ -1,4 +1,5 @@
 import { DAY_IN_MS } from '$lib/constants/app.constants';
+import { isNullish } from '@dfinity/utils';
 
 /**
  * Nickname (= handle) rules. The STORED value keeps the owner's form — case
@@ -121,7 +122,7 @@ export const handleCooldownDaysLeft = ({
 	lastChangeMs: number | undefined | null;
 	nowMs: number;
 }): number => {
-	if (lastChangeMs === undefined || lastChangeMs === null || lastChangeMs <= 0) {
+	if (isNullish(lastChangeMs) || lastChangeMs <= 0) {
 		return 0;
 	}
 

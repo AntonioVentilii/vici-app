@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { ArrowLeft, Check, Search, X } from '@lucide/svelte/icons';
 	import { untrack } from 'svelte';
 	import SchoolAddConfirmStep from '$lib/components/leagues/SchoolAddConfirmStep.svelte';
@@ -119,7 +120,7 @@
 	// remounted per open), not reactive — it seeds the initial `mode` /
 	// `verifyTarget` below.
 	const initialVerifyTarget: WorldsAffiliationOption | null = untrack(() =>
-		initialVerifyId !== undefined && kind === 'university' && SCHOOL_PASS2_ENABLED
+		nonNullish(initialVerifyId) && kind === 'university' && SCHOOL_PASS2_ENABLED
 			? (WORLDS_UNIVERSITIES.find(
 					(o) => o.id === initialVerifyId && (o.domains?.length ?? 0) > 0
 				) ?? null)
@@ -143,7 +144,7 @@
 		| 'add-form'
 		| 'add-verifying'
 		| 'verified';
-	let mode = $state<Mode>(initialVerifyTarget !== null ? 'verify-existing' : 'browse');
+	let mode = $state<Mode>(nonNullish(initialVerifyTarget) ? 'verify-existing' : 'browse');
 
 	let query = $state('');
 	let selected = $state<string | null>(null);
@@ -192,7 +193,7 @@
 	);
 	const isLocked = $derived(lockDaysLeft > 0);
 	const isSwitching = $derived(
-		currentForKind !== undefined && selected !== null && selected !== currentForKind
+		nonNullish(currentForKind) && nonNullish(selected) && selected !== currentForKind
 	);
 
 	const isSearching = $derived(query.trim().length > 0);
@@ -213,13 +214,13 @@
 			});
 		}
 
-		if (isSwitching && selected !== null) {
+		if (isSwitching && nonNullish(selected)) {
 			const option = roster.find((o) => o.id === selected);
 
 			return t({
 				locale: $localeStore,
 				key: 'worlds.picker.cta_switch',
-				params: { name: option !== undefined ? optionName(option) : '' }
+				params: { name: nonNullish(option) ? optionName(option) : '' }
 			});
 		}
 
@@ -229,10 +230,10 @@
 		});
 	});
 
-	const ctaDisabled = $derived(selected === null || saving || (isSwitching && isLocked));
+	const ctaDisabled = $derived(isNullish(selected) || saving || (isSwitching && isLocked));
 
 	const selectedOption = $derived<WorldsAffiliationOption | undefined>(
-		selected === null ? undefined : roster.find((o) => o.id === selected)
+		isNullish(selected) ? undefined : roster.find((o) => o.id === selected)
 	);
 	// The selected school can be verified when Pass 2 is on and the
 	// directory entry carries an email domain to match against.
@@ -294,7 +295,7 @@
 	// "Near you · N schools" divider. Zero when there's no home country,
 	// while searching, or for the country kind.
 	const nearYouCount = $derived(
-		!isUniversity || isSearching || homeCountry === null
+		!isUniversity || isSearching || isNullish(homeCountry)
 			? 0
 			: filtered.filter((opt) => opt.country === homeCountry).length
 	);
@@ -320,7 +321,7 @@
 				break;
 			}
 
-			if (schoolStats[option.id] === undefined && currentForKind !== option.id) {
+			if (isNullish(schoolStats[option.id]) && currentForKind !== option.id) {
 				ids.push(option.id);
 			}
 		}
@@ -335,7 +336,7 @@
 		// (there's nothing to commit). Surface the friendly hint and
 		// clear any prior selection so the CTA returns to its idle
 		// state.
-		if (currentForKind !== undefined && currentForKind === option.id) {
+		if (nonNullish(currentForKind) && currentForKind === option.id) {
 			selected = null;
 			errorMessage = t({
 				locale: $localeStore,
@@ -349,7 +350,7 @@
 	};
 
 	const handleCommit = async () => {
-		if (selected === null || saving) {
+		if (isNullish(selected) || saving) {
 			return;
 		}
 
@@ -357,7 +358,7 @@
 		errorMessage = null;
 
 		try {
-			if (isSwitching && currentDoc !== undefined) {
+			if (isSwitching && nonNullish(currentDoc)) {
 				await switchAffiliation({
 					kind,
 					currentAffiliationIdentifier: currentDoc.affiliationIdentifier,
@@ -442,14 +443,14 @@
 	const addConsumerBlock = $derived(addEmailMatch?.kind === 'consumer');
 	const addDomainMatch = $derived(addEmailMatch?.kind === 'match' ? addEmailMatch.option : null);
 	const addCanSubmit = $derived(
-		spIsValidEmail(addEmail) && !addConsumerBlock && addDomainMatch === null && !submitting
+		spIsValidEmail(addEmail) && !addConsumerBlock && isNullish(addDomainMatch) && !submitting
 	);
 
 	// verify-existing email validation against the school's own domains.
 	const verifyDomainOk = $derived.by(() => {
 		const target = verifyTarget;
 
-		if (target === null || !spIsValidEmail(verifyEmail)) {
+		if (isNullish(target) || !spIsValidEmail(verifyEmail)) {
 			return false;
 		}
 
@@ -490,7 +491,7 @@
 		}
 
 		try {
-			if (currentDoc !== undefined) {
+			if (nonNullish(currentDoc)) {
 				await switchAffiliation({
 					kind,
 					currentAffiliationIdentifier: currentDoc.affiliationIdentifier,
@@ -535,7 +536,7 @@
 	const requestExistingCode = async () => {
 		const target = verifyTarget;
 
-		if (target === null) {
+		if (isNullish(target)) {
 			return;
 		}
 
@@ -565,7 +566,7 @@
 
 	// Verify the entered code, then commit the affiliation.
 	const submitCode = async () => {
-		if (submissionId === null) {
+		if (isNullish(submissionId)) {
 			return;
 		}
 
@@ -584,7 +585,7 @@
 			// (backend B.1) that has no directory entry yet.
 			const affiliationIdentifier = verifyTarget?.id ?? result.schoolId;
 
-			if (affiliationIdentifier === undefined) {
+			if (isNullish(affiliationIdentifier)) {
 				// No target and no schoolId in the response — unexpected.
 				verifyError = t({ locale: $localeStore, key: 'worlds.picker.school.error_verify' });
 
@@ -853,7 +854,7 @@
 						{@const isJoined = currentForKind === option.id}
 						{@const isSelected = selected === option.id}
 						{@const stats = schoolStats[option.id]}
-						{@const isOwnPending = pass2 && isJoined && stats === undefined}
+						{@const isOwnPending = pass2 && isJoined && isNullish(stats)}
 						{@const isNearYouLead =
 							nearYouCount > 0 && index === 0 && option.country === homeCountry}
 						{@const founderEligible = founderIds.includes(option.id)}
@@ -882,7 +883,7 @@
 								<span class="affil-picker-body">
 									<span class="affil-picker-name">
 										<span class="affil-picker-name-text">{optionName(option)}</span>
-										{#if stats !== undefined}
+										{#if nonNullish(stats)}
 											<span class="affil-picker-badge affil-picker-badge-verified">
 												<Check aria-hidden="true" size={9} strokeWidth={3.5} />
 												<span class="sr-only">{tr('worlds.picker.school.status_verified')}</span>
@@ -899,12 +900,12 @@
 									</span>
 									{#if isUniversity}
 										<span class="affil-picker-meta num">
-											{#if stats !== undefined && stats.monthRank !== undefined}
+											{#if nonNullish(stats) && nonNullish(stats.monthRank)}
 												{tr('worlds.picker.school.meta_members', {
 													members: stats.members,
 													rank: stats.monthRank
 												})}
-											{:else if stats !== undefined}
+											{:else if nonNullish(stats)}
 												{tr('worlds.picker.school.meta_members_no_rank', {
 													members: stats.members
 												})}

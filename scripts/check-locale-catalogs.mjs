@@ -16,6 +16,7 @@
  *
  * See `docs/ai/frontend/i18n.md`.
  */
+import { isNullish, nonNullish } from '@dfinity/utils';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -39,7 +40,7 @@ const extractKeys = (filePath) => {
 	const re = /^[\s]*'((?:\\'|[^'])+)'\s*:/gm;
 	let match;
 
-	while ((match = re.exec(source)) !== null) {
+	while (nonNullish((match = re.exec(source)))) {
 		keys.add(match[1]);
 	}
 
@@ -58,7 +59,7 @@ const readRegistry = () => {
 	const source = fs.readFileSync(localeConstantsPath, 'utf8');
 	const block = source.match(/LOCALE_REGISTRY[\s\S]*?\[([\s\S]*?)\]\s*as const/);
 
-	if (block === null) {
+	if (isNullish(block)) {
 		throw new Error(
 			`Could not parse LOCALE_REGISTRY in ${path.relative(process.cwd(), localeConstantsPath)}`
 		);
@@ -71,7 +72,7 @@ const readRegistry = () => {
 	const re = /id:\s*'([^']+)'[\s\S]*?tier:\s*'([^']+)'/g;
 	let match;
 
-	while ((match = re.exec(block[1])) !== null) {
+	while (nonNullish((match = re.exec(block[1])))) {
 		locales.push({ id: match[1], tier: match[2] });
 	}
 

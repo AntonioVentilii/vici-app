@@ -246,7 +246,7 @@
 	// beat or the session-end takeover both count as a beat. Cleared on unmount
 	// so a reveal never stays gated after leaving Flow.
 	$effect(() => {
-		const beatOnScreen = activeMotionBeat !== null || completed;
+		const beatOnScreen = nonNullish(activeMotionBeat) || completed;
 		setFlowBeatActive(beatOnScreen);
 	});
 
@@ -427,7 +427,7 @@
 			});
 		}
 
-		if (gatingBeatTimer !== null) {
+		if (nonNullish(gatingBeatTimer)) {
 			clearTimeout(gatingBeatTimer);
 		}
 
@@ -788,7 +788,7 @@
 		// Whether this swipe also lands on a gating beat. When it does, the
 		// centered MotionBeat already owns the slot — suppress the centered
 		// bonus pop so the two don't stack in the same area.
-		const hasGatingBeat = motion.beat != null && motion.beat.kind !== 'ambient-10';
+		const hasGatingBeat = nonNullish(motion.beat) && motion.beat.kind !== 'ambient-10';
 
 		// A swipe mints no VXP — the economy is deflation-safe (see
 		// `docs/ai/frontend/design.md` §7.3). Real VXP is credited only by
@@ -798,10 +798,9 @@
 		if (motion.bonusXp > 0) {
 			xp += motion.bonusXp;
 
-			const popCopy =
-				motion.beat?.copyKey != null
-					? t({ locale: $localeStore, key: motion.beat.copyKey })
-					: undefined;
+			const popCopy = nonNullish(motion.beat?.copyKey)
+				? t({ locale: $localeStore, key: motion.beat.copyKey })
+				: undefined;
 
 			// Suppress centered bonus pop too when a gating beat will fill
 			// the center; the XpToast bonus chip already carries the amount.
@@ -867,7 +866,7 @@
 			const gatingBeat = motion.beat;
 			flowPaused = true;
 
-			if (gatingBeatTimer !== null) {
+			if (nonNullish(gatingBeatTimer)) {
 				clearTimeout(gatingBeatTimer);
 			}
 
@@ -1056,7 +1055,7 @@
 		const yes = m.yesProbability ?? 0.5;
 		const consensusSide = yes >= 0.75 ? 'YES' : yes <= 0.25 ? 'NO' : null;
 
-		if (consensusSide === null) {
+		if (isNullish(consensusSide)) {
 			return;
 		}
 

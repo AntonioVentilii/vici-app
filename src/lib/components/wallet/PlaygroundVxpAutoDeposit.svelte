@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { get } from 'svelte/store';
 	import { balance as getLedgerBalance, transactionFee } from '$lib/api/icrc-ledger.api';
 	import { ZERO } from '$lib/constants/app.constants';
@@ -32,7 +32,7 @@
 		let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
 		const clearTimer = () => {
-			if (timeoutId !== undefined) {
+			if (nonNullish(timeoutId)) {
 				clearTimeout(timeoutId);
 				timeoutId = undefined;
 			}

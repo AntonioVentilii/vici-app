@@ -352,7 +352,7 @@
 		const beatKey = `${RESOLUTION_BEAT_KEY_PREFIX}${m.id}`;
 
 		try {
-			if (sessionStorage.getItem(beatKey) !== null) {
+			if (nonNullish(sessionStorage.getItem(beatKey))) {
 				resolutionBeatScheduledFor = m.id;
 
 				return;
@@ -378,7 +378,7 @@
 	});
 
 	onDestroy(() => {
-		if (resolutionBeatTimeoutId !== undefined) {
+		if (nonNullish(resolutionBeatTimeoutId)) {
 			clearTimeout(resolutionBeatTimeoutId);
 		}
 	});

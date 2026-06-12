@@ -13,6 +13,7 @@
 
 import { ACHIEVEMENTS, type AchievementDef } from '$lib/constants/achievements.constants';
 import { ACCURACY_GATE_CALLS } from '$lib/constants/flow-rewards.constants';
+import { nonNullish } from '@dfinity/utils';
 
 // "Long shot" cutoff for the `contrarian` achievement: a settled trade
 // counts as a contrarian win when the user paid this price or less for
@@ -173,7 +174,7 @@ const evaluateOne = ({
 			// tier is the unlock signal (the tier picks the album wash). No
 			// partial bar: the placement is a monthly cohort ranking the caller
 			// doesn't directly control. Sticky via `mergeUnlockedAchievements`.
-			const unlocked = input.sharpestEyeBestTier !== undefined;
+			const unlocked = nonNullish(input.sharpestEyeBestTier);
 
 			return { id: def.id, def, unlocked, progress: unlocked ? 1 : 0 };
 		}

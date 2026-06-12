@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { ChevronRight } from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -121,7 +122,7 @@
 			: '—'
 	);
 
-	const hasActivity = $derived(stats !== undefined && stats.totalCalls > 0);
+	const hasActivity = $derived(nonNullish(stats) && stats.totalCalls > 0);
 	const isLowActivity = $derived(!stats || stats.totalCalls < MIN_CALLS_FOR_RANK);
 	const callsToQualify = $derived(
 		stats ? Math.max(0, MIN_CALLS_FOR_RANK - stats.totalCalls) : MIN_CALLS_FOR_RANK
@@ -156,7 +157,7 @@
 	const wcRankLabel = $derived(wcRank > 0 ? `#${wcRank}` : '—');
 
 	const headerName = $derived(
-		option !== undefined
+		nonNullish(option)
 			? affiliationDisplayName({ option, kind, locale: $localeStore })
 			: affiliationIdentifier
 	);
@@ -186,7 +187,7 @@
 			}
 		];
 
-		if (memberCount !== undefined) {
+		if (nonNullish(memberCount)) {
 			out.push({
 				label: t({
 					locale: $localeStore,

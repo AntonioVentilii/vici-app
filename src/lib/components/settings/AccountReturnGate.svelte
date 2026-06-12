@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { signOut } from '@junobuild/core';
 	import { Loader2 } from '@lucide/svelte/icons';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -46,13 +47,13 @@
 	// soft-delete wins if both ever appear so the terminal-state copy is
 	// never masked by the softer paused-state copy.
 	const mode = $derived<Mode>(
-		deletedAtMs !== undefined ? 'deleted' : hibernatedAtMs !== undefined ? 'hibernated' : null
+		nonNullish(deletedAtMs) ? 'deleted' : nonNullish(hibernatedAtMs) ? 'hibernated' : null
 	);
 
 	// Whole days left in the recovery window, floored at zero. Ceil so the
 	// final partial day still reads as "1 day left" rather than "0".
 	const daysLeft = $derived.by(() => {
-		if (deletedAtMs === undefined) {
+		if (isNullish(deletedAtMs)) {
 			return 0;
 		}
 
@@ -105,7 +106,7 @@
 
 			// Clear the marker so the gate dismisses and the app is usable.
 			userStore.update((s) =>
-				s.profile === undefined ? s : { ...s, profile: { ...s.profile, deletedAtMs: undefined } }
+				isNullish(s.profile) ? s : { ...s, profile: { ...s.profile, deletedAtMs: undefined } }
 			);
 			inFlight = false;
 		} catch (_err: unknown) {
@@ -139,7 +140,7 @@
 			});
 
 			userStore.update((s) =>
-				s.profile === undefined ? s : { ...s, profile: { ...s.profile, hibernatedAtMs: undefined } }
+				isNullish(s.profile) ? s : { ...s, profile: { ...s.profile, hibernatedAtMs: undefined } }
 			);
 			inFlight = false;
 		} catch (_err: unknown) {
@@ -149,7 +150,7 @@
 	};
 </script>
 
-{#if mode !== null}
+{#if nonNullish(mode)}
 	<div class="gate-scrim" role="presentation">
 		<div class="gate" aria-modal="true" role="dialog" tabindex="-1">
 			{#if expired}
@@ -178,7 +179,7 @@
 					})}
 				</p>
 
-				{#if errorKey !== null}
+				{#if nonNullish(errorKey)}
 					<p class="gate-error" role="alert">
 						{t({ locale: $localeStore, key: errorKey })}
 					</p>
@@ -205,7 +206,7 @@
 					{t({ locale: $localeStore, key: 'account.return.hibernated_body' })}
 				</p>
 
-				{#if errorKey !== null}
+				{#if nonNullish(errorKey)}
 					<p class="gate-error" role="alert">
 						{t({ locale: $localeStore, key: errorKey })}
 					</p>

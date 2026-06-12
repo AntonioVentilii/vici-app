@@ -1,3 +1,4 @@
+import { isNullish } from '@dfinity/utils';
 import { derived, type Readable } from 'svelte/store';
 
 /**
@@ -19,4 +20,4 @@ export const cachedListOrEmpty = <T>(store: Readable<T[] | undefined>): Readable
  * navigation back to the page (the cached value sticks around in the store).
  */
 export const cachedNotInitialized = <T>(store: Readable<T | undefined>): Readable<boolean> =>
-	derived(store, ($store) => $store === undefined);
+	derived(store, ($store) => isNullish($store));

@@ -19,6 +19,7 @@ import {
 	isWinningSettledEvent
 } from '$lib/utils/resolved-position.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 const eventSide = (event: ClearingDid.Event): CallSide => (event.qty >= ZERO ? 'YES' : 'NO');
 
@@ -32,7 +33,7 @@ const eventCategory = ({
 	const marketId = parseMarketId(event.series_id);
 	const primary = primaryMarketTag(tagsBySeries[marketId]);
 
-	if (primary !== undefined && FLOW_ART_CATEGORY_SET.has(primary)) {
+	if (nonNullish(primary) && FLOW_ART_CATEGORY_SET.has(primary)) {
 		return primary;
 	}
 
@@ -101,7 +102,7 @@ export const derivePriorCallSignals = (
 			const marketId = parseMarketId(event.series_id);
 			const previous = latestTimestampByMarket.get(marketId);
 
-			if (previous === undefined || event.timestamp > previous) {
+			if (isNullish(previous) || event.timestamp > previous) {
 				latestTimestampByMarket.set(marketId, event.timestamp);
 				priorCalls[marketId] = {
 					marketId,

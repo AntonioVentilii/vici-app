@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -205,7 +206,7 @@
 	 * rather than a mocked status flag.
 	 */
 	const tournamentLiveRound = $derived.by((): TournamentRound | null => {
-		if (tournament === null) {
+		if (isNullish(tournament)) {
 			return null;
 		}
 
@@ -213,7 +214,7 @@
 			const ms = matches.filter((m) => m.round === round);
 
 			if (ms.length > 0) {
-				const allDone = ms.every((m) => m.winnerLeagueId !== null);
+				const allDone = ms.every((m) => nonNullish(m.winnerLeagueId));
 				const someOpen = ms.some((m) => m.endMs > Date.now());
 
 				if (!allDone && someOpen) {
@@ -226,7 +227,7 @@
 	});
 
 	const tournamentDaysLeft = $derived.by((): number | null => {
-		if (tournamentLiveRound === null) {
+		if (isNullish(tournamentLiveRound)) {
 			return null;
 		}
 
@@ -258,11 +259,11 @@
 	};
 
 	const tournamentRemainingLeagues = $derived(
-		matches.filter((m) => m.round === tournamentLiveRound && m.winnerLeagueId === null).length * 2
+		matches.filter((m) => m.round === tournamentLiveRound && isNullish(m.winnerLeagueId)).length * 2
 	);
 
 	const myLeagueInTournament = $derived.by((): { rank: number } | null => {
-		if (tournament === null) {
+		if (isNullish(tournament)) {
 			return null;
 		}
 
@@ -277,7 +278,8 @@
 		const myLeagueId = tournament.seededLeagueIds[myInSeeded];
 		const isStillIn = matches.some(
 			(m) =>
-				(m.fromLeagueId === myLeagueId || m.toLeagueId === myLeagueId) && m.winnerLeagueId === null
+				(m.fromLeagueId === myLeagueId || m.toLeagueId === myLeagueId) &&
+				isNullish(m.winnerLeagueId)
 		);
 
 		if (!isStillIn) {
@@ -348,7 +350,7 @@
 		/>
 
 		<!-- ─── Monthly Tournament (curated, when active) ─────── -->
-		{#if tournament !== null && tournamentLiveRound !== null}
+		{#if nonNullish(tournament) && nonNullish(tournamentLiveRound)}
 			<section class="battles-section" aria-label="Tournament">
 				<header class="battles-section-head">
 					<span class="battles-eyebrow allcaps">
@@ -369,7 +371,7 @@
 								{t({ locale: $localeStore, key: 'worlds.event.tag_live' })}
 							</span>
 						</div>
-						{#if tournamentDaysLeft !== null}
+						{#if nonNullish(tournamentDaysLeft)}
 							<span class="battles-card-timer num">
 								{t({
 									locale: $localeStore,
@@ -398,7 +400,7 @@
 						})}
 					</p>
 
-					{#if myLeagueInTournament !== null}
+					{#if nonNullish(myLeagueInTournament)}
 						<div class="battles-your-row is-tournament">
 							<span class="battles-your-em is-tournament" aria-hidden="true">★</span>
 							<span class="battles-your-text">

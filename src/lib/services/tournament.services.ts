@@ -5,6 +5,7 @@ import {
 	type TournamentMatchDoc,
 	type TournamentRound
 } from '$lib/types/tournament';
+import { isNullish } from '@dfinity/utils';
 
 /**
  * Monthly tournament — Proposal 3 FE wrappers.
@@ -87,7 +88,7 @@ export const getCurrentTournament = async (): Promise<{
 	const { tournament, matches } = await functions.getCurrentTournament();
 
 	return {
-		tournament: tournament === undefined ? null : projectTournamentWire(tournament),
+		tournament: isNullish(tournament) ? null : projectTournamentWire(tournament),
 		matches: matches.map(projectMatchWire)
 	};
 };

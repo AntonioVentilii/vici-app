@@ -5,6 +5,7 @@ import type {
 	AnalyticsEventProps,
 	TrackEventInput
 } from '$lib/types/analytics-event';
+import { nonNullish } from '@dfinity/utils';
 
 /**
  * Client-side product-analytics buffer (cockpit DQ-1).
@@ -38,7 +39,7 @@ let initialized = false;
 const sessionId = (): string => {
 	const existing = sessionStorage.getItem(SESSION_STORAGE_KEY);
 
-	if (existing !== null) {
+	if (nonNullish(existing)) {
 		return existing;
 	}
 
@@ -52,7 +53,7 @@ const sessionId = (): string => {
 };
 
 const scheduleFlush = (): void => {
-	if (flushTimer !== undefined) {
+	if (nonNullish(flushTimer)) {
 		return;
 	}
 
@@ -74,7 +75,7 @@ export const flushEvents = async (): Promise<void> => {
 	const events = buffer;
 	buffer = [];
 
-	if (flushTimer !== undefined) {
+	if (nonNullish(flushTimer)) {
 		clearTimeout(flushTimer);
 		flushTimer = undefined;
 	}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount, type Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
@@ -121,18 +122,17 @@
 	const captureSharedReferral = (code: string): void => {
 		try {
 			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
-			const parsed: Record<string, unknown> =
-				raw !== null
-					? ((): Record<string, unknown> => {
-							try {
-								const v: unknown = JSON.parse(raw);
+			const parsed: Record<string, unknown> = nonNullish(raw)
+				? ((): Record<string, unknown> => {
+						try {
+							const v: unknown = JSON.parse(raw);
 
-								return typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
-							} catch {
-								return {};
-							}
-						})()
-					: {};
+							return typeof v === 'object' && nonNullish(v) ? (v as Record<string, unknown>) : {};
+						} catch {
+							return {};
+						}
+					})()
+				: {};
 
 			// Never overwrite an existing attribution — first referrer wins.
 			if (typeof parsed.referralCode === 'string' && parsed.referralCode.length > 0) {
@@ -164,7 +164,7 @@
 
 		const rawRef = page.url.searchParams.get('ref');
 
-		if (rawRef === null) {
+		if (isNullish(rawRef)) {
 			return;
 		}
 
@@ -312,7 +312,7 @@
 		// let that path finish — it will set `onboardingCompleted: true`.
 		const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
 
-		if (raw !== null) {
+		if (nonNullish(raw)) {
 			return;
 		}
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import { RefreshCw } from '@lucide/svelte/icons';
 	import { onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -324,7 +325,7 @@
 
 	const event = $derived($featuredEvent);
 	const team = $derived(
-		participantId === null ? undefined : event.participants.find((p) => p.id === participantId)
+		isNullish(participantId) ? undefined : event.participants.find((p) => p.id === participantId)
 	);
 
 	/**

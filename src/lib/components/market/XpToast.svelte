@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { onDestroy, onMount } from 'svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CallSide } from '$lib/types/market';
@@ -33,7 +34,7 @@
 	});
 
 	onDestroy(() => {
-		if (timer !== null) {
+		if (nonNullish(timer)) {
 			clearTimeout(timer);
 		}
 	});

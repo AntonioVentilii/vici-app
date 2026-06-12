@@ -20,7 +20,9 @@ What is specific to Vici:
 - [ ] **A11y:** no bare clickable `<div>`s; labelled inputs; `aria-hidden`
       on decorative icons. See [`a11y.md`](./a11y.md).
 - [ ] **Eslint landmines:** no `0n` literals (use `ZERO`); no relative
-      imports across folders under `src/`; no `return undefined;`.
+      imports across folders under `src/`; no `return undefined;`; no
+      direct `null`/`undefined` comparisons (use `isNullish` /
+      `nonNullish` from `@dfinity/utils`).
 - [ ] **Design rule:** I did **not** reference any temporary or external
       design source material (folder name, file name, section number) in
       code, comments, commit message, or PR body.
