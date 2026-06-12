@@ -233,6 +233,10 @@
 			<p class="text-foreground text-sm break-words">{officialSource.trim()}</p>
 		</div>
 
+		<p class="text-muted-foreground text-xs">
+			{t({ locale: $localeStore, key: 'admin.resolution.confirm.warning' })}
+		</p>
+
 		{#if error}
 			<div class="text-destructive text-xs font-medium">
 				{error}
