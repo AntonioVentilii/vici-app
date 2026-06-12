@@ -6,6 +6,7 @@
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import MenagerieBadge from '$lib/components/menagerie/MenagerieBadge.svelte';
 	import MenagerieBadgeSkeleton from '$lib/components/menagerie/MenagerieBadgeSkeleton.svelte';
+	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import {
 		MENAGERIE,
 		MENAGERIE_TIER_RANK,
@@ -134,134 +135,104 @@
 		{/if}
 	</div>
 
-	{#if openRow}
-		{@const row = openRow}
-		{@const { tier } = row}
-		{@const earnedOne = nonNullish(tier)}
-		{@const { progress } = row}
-		<div
-			class="men-sheet-backdrop"
-			aria-label={t({ locale: $localeStore, key: 'menagerie.close' })}
-			onclick={() => (openSlug = null)}
-			onkeydown={(e) => {
-				if (e.key === 'Escape' || e.key === 'Enter') {
-					openSlug = null;
-				}
-			}}
-			role="button"
-			tabindex="0"
-		>
-			<div
-				class="men-sheet"
-				aria-modal="true"
-				onclick={(e) => e.stopPropagation()}
-				onkeydown={(e) => {
-					// Handle Escape-to-close even when focus is inside the sheet; other
-					// keys stay scoped so they don't reach the backdrop button.
-					if (e.key === 'Escape') {
-						openSlug = null;
+	<BottomSheet isOpen={nonNullish(openRow)} onClose={() => (openSlug = null)} sidePadding="1.4rem">
+		{#if nonNullish(openRow)}
+			{@const row = openRow}
+			{@const { tier } = row}
+			{@const earnedOne = nonNullish(tier)}
+			{@const { progress } = row}
+			<div class="men-sheet-head">
+				<span
+					style:color={earnedOne ? menagerieTierColor(tier) : 'var(--text-muted)'}
+					class="eyebrow"
+					class:men-sheet-earned={earnedOne}
+					class:men-sheet-locked={!earnedOne}
+				>
+					{#if earnedOne}
+						{t({ locale: $localeStore, key: `menagerie.tier.${tier}` as const })}
+						·
+						{t({
+							locale: $localeStore,
+							key: menagerieConceptKey({ slug: row.animal.slug, tier }) ?? row.animal.conceptKey
+						})}
+					{:else}
+						{t({ locale: $localeStore, key: 'menagerie.locked' })}
+					{/if}
+				</span>
+				<button
+					class="men-sheet-close"
+					aria-label={t({ locale: $localeStore, key: 'menagerie.close' })}
+					onclick={() => (openSlug = null)}
+					type="button"
+				>
+					<X size={14} strokeWidth={1.8} />
+				</button>
+			</div>
 
-						return;
-					}
+			<div class="men-sheet-body">
+				<MenagerieBadge size={92} slug={row.animal.slug} {stats} {tier} />
+				<div>
+					<div class="men-sheet-title">
+						{t({ locale: $localeStore, key: row.animal.nameKey })}
+					</div>
+					<div class="men-sheet-oracle">
+						“{t({ locale: $localeStore, key: row.animal.oracleKey })}”
+					</div>
+				</div>
+			</div>
 
-					e.stopPropagation();
-				}}
-				role="dialog"
-				tabindex="-1"
-			>
-				<div class="men-sheet-head">
-					<span
-						style:color={earnedOne ? menagerieTierColor(tier) : 'var(--text-muted)'}
-						class="eyebrow"
-						class:men-sheet-earned={earnedOne}
-						class:men-sheet-locked={!earnedOne}
-					>
-						{#if earnedOne}
-							{t({ locale: $localeStore, key: `menagerie.tier.${tier}` as const })}
-							·
+			<p class="men-sheet-rule">
+				{t({ locale: $localeStore, key: row.animal.ruleKey })}
+			</p>
+
+			<!-- Tier ladder -->
+			<div class="men-ladder">
+				{#each row.animal.tiers as step, idx (step.tier)}
+					{@const reached = tier ? MENAGERIE_TIER_RANK[tier] : 0}
+					{@const on = MENAGERIE_TIER_RANK[step.tier] <= reached}
+					{@const isCurrent = step.tier === tier}
+					<div class="men-step" class:is-current={isCurrent} class:is-reached={on}>
+						<span
+							style:background={on ? menagerieTierColor(step.tier) : undefined}
+							class="men-step-dot"
+						></span>
+						<span class="men-step-tier">
+							{t({ locale: $localeStore, key: `menagerie.tier.${step.tier}` as const })}
+						</span>
+						<span class="men-step-goal">
+							{t({ locale: $localeStore, key: row.animal.labelKeys[idx] })}
+						</span>
+					</div>
+				{/each}
+			</div>
+
+			{#if progress && nonNullish(progress.next)}
+				<div class="men-sheet-progress">
+					<div class="men-sheet-progress-head">
+						<span class="eyebrow">
 							{t({
 								locale: $localeStore,
-								key: menagerieConceptKey({ slug: row.animal.slug, tier }) ?? row.animal.conceptKey
+								key: earnedOne ? 'menagerie.next_tier' : 'menagerie.progress'
 							})}
-						{:else}
-							{t({ locale: $localeStore, key: 'menagerie.locked' })}
-						{/if}
-					</span>
-					<button
-						class="men-sheet-close"
-						aria-label={t({ locale: $localeStore, key: 'menagerie.close' })}
-						onclick={() => (openSlug = null)}
-						type="button"
-					>
-						<X size={14} strokeWidth={1.8} />
-					</button>
-				</div>
-
-				<div class="men-sheet-body">
-					<MenagerieBadge size={92} slug={row.animal.slug} {stats} {tier} />
-					<div>
-						<div class="men-sheet-title">
-							{t({ locale: $localeStore, key: row.animal.nameKey })}
-						</div>
-						<div class="men-sheet-oracle">
-							“{t({ locale: $localeStore, key: row.animal.oracleKey })}”
-						</div>
+						</span>
+						<span class="num men-sheet-progress-value">
+							{Math.round(progress.ratio * 100)}%
+						</span>
+					</div>
+					<div class="men-sheet-progress-bar">
+						<span
+							style:width={`${Math.round(progress.ratio * 100)}%`}
+							style:background={earnedOne ? menagerieTierColor(tier) : 'var(--color-primary)'}
+						></span>
 					</div>
 				</div>
-
-				<p class="men-sheet-rule">
-					{t({ locale: $localeStore, key: row.animal.ruleKey })}
-				</p>
-
-				<!-- Tier ladder -->
-				<div class="men-ladder">
-					{#each row.animal.tiers as step, idx (step.tier)}
-						{@const reached = tier ? MENAGERIE_TIER_RANK[tier] : 0}
-						{@const on = MENAGERIE_TIER_RANK[step.tier] <= reached}
-						{@const isCurrent = step.tier === tier}
-						<div class="men-step" class:is-current={isCurrent} class:is-reached={on}>
-							<span
-								style:background={on ? menagerieTierColor(step.tier) : undefined}
-								class="men-step-dot"
-							></span>
-							<span class="men-step-tier">
-								{t({ locale: $localeStore, key: `menagerie.tier.${step.tier}` as const })}
-							</span>
-							<span class="men-step-goal">
-								{t({ locale: $localeStore, key: row.animal.labelKeys[idx] })}
-							</span>
-						</div>
-					{/each}
+			{:else if earnedOne}
+				<div class="men-maxed">
+					{t({ locale: $localeStore, key: 'menagerie.fully_evolved' })}
 				</div>
-
-				{#if progress && nonNullish(progress.next)}
-					<div class="men-sheet-progress">
-						<div class="men-sheet-progress-head">
-							<span class="eyebrow">
-								{t({
-									locale: $localeStore,
-									key: earnedOne ? 'menagerie.next_tier' : 'menagerie.progress'
-								})}
-							</span>
-							<span class="num men-sheet-progress-value">
-								{Math.round(progress.ratio * 100)}%
-							</span>
-						</div>
-						<div class="men-sheet-progress-bar">
-							<span
-								style:width={`${Math.round(progress.ratio * 100)}%`}
-								style:background={earnedOne ? menagerieTierColor(tier) : 'var(--color-primary)'}
-							></span>
-						</div>
-					</div>
-				{:else if earnedOne}
-					<div class="men-maxed">
-						{t({ locale: $localeStore, key: 'menagerie.fully_evolved' })}
-					</div>
-				{/if}
-			</div>
-		</div>
-	{/if}
+			{/if}
+		{/if}
+	</BottomSheet>
 </div>
 
 <style lang="postcss">
@@ -412,29 +383,7 @@
 		background: color-mix(in srgb, var(--text-base) 12%, transparent);
 	}
 
-	/* ── Detail sheet ── */
-	.men-sheet-backdrop {
-		position: absolute;
-		inset: 0;
-		background: rgba(14, 13, 11, 0.78);
-		backdrop-filter: blur(10px);
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
-		z-index: 80;
-	}
-
-	.men-sheet {
-		background: var(--bg-surface);
-		border-top-left-radius: 22px;
-		border-top-right-radius: 22px;
-		border-top: 1px solid var(--border-base);
-		padding: 1.4rem 1.4rem calc(1.4rem + env(safe-area-inset-bottom, 0px));
-		box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.5);
-		max-height: 86vh;
-		overflow-y: auto;
-	}
-
+	/* ── Detail sheet (chrome comes from the shared BottomSheet) ── */
 	.men-sheet-head {
 		display: flex;
 		align-items: center;
@@ -517,12 +466,12 @@
 		height: 12px;
 		border-radius: 50%;
 		background: color-mix(in srgb, var(--text-base) 16%, transparent);
-		box-shadow: 0 0 0 3px var(--bg-surface);
+		box-shadow: 0 0 0 3px var(--bg-popover);
 	}
 
 	.men-step.is-current .men-step-dot {
 		box-shadow:
-			0 0 0 3px var(--bg-surface),
+			0 0 0 3px var(--bg-popover),
 			0 0 0 5px color-mix(in srgb, var(--text-base) 20%, transparent);
 	}
 

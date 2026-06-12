@@ -96,6 +96,30 @@ closes completely; if it isn't, do **not** use a closing keyword:
 reference the issue as `Part of #123` and state what remains under
 "Out of scope".
 
+**Open questions vs. pending decisions.** Unresolved items live in two
+distinct end-of-spec sections, split by whether the relevant facts are
+known — never one mixed "open items" list:
+
+- **Open questions** — facts to confirm: the answer is not yet known
+  and must be found out or verified (confirm an SDK method's contract,
+  check whether a field exists, verify current behaviour). These need
+  research, a docs lookup, or a question to someone who knows, and may
+  still reshape the spec.
+- **Pending decisions** — facts are clear, a call remains: all the
+  relevant information is understood and what's left is a product or
+  architecture choice (two valid approaches, ship in v1 vs.
+  fast-follow). These need an owner to decide, not more information.
+
+The two kinds route differently: open questions go to whoever can
+find the answer; pending decisions go to whoever owns the call — they
+are the "deeper ambiguity" that step 4 says to stop for. The split
+also keeps the spec honest: it's easy to disguise an undecided choice
+as an "open question" and stall. When an open question gets answered
+it usually becomes a pending decision — move it across rather than
+leaving it ambiguous. Pending decisions gate step 3's status flip:
+resolve them before moving the spec to `In progress (#PR)`; once
+decided, record the outcome under "Decisions".
+
 ## Required content by area
 
 **Frontend — artifacts welcome (optional).** Put HTML mocks,
@@ -148,7 +172,9 @@ build.
 2. **Spec** — copy [`template.md`](./template.md) into `specs/`, fill
    it in, status `Draft`.
 3. **Build** — read `AGENTS.md` + area README + `PRODUCT.md`, then the
-   spec. Flip status to `In progress (#PR)`. Update `PRODUCT.md` in
+   spec. Resolve any remaining pending decisions (see
+   [required content](#required-content-for-every-spec)), then flip
+   status to `In progress (#PR)`. Update `PRODUCT.md` in
    the same PR as the behaviour change — the implementer writes it
    while the context is fresh, and `main` never carries code whose
    product description disagrees.

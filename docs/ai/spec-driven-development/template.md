@@ -63,6 +63,14 @@ Interactive HTML mocks must (see docs/ai/spec-driven-development/workflow.md § 
 
 - [ ] …
 
+## Open questions
+
+<!-- Facts not yet known — to research, look up, or ask someone who can answer (see workflow.md § Required content for every spec). Once answered, an item usually becomes a pending decision — move it across; only the decided outcome lands under Decisions. Remove this section when empty. -->
+
+## Pending decisions
+
+<!-- Facts are clear; a product or architecture call remains — needs an owner to decide, not more information. Don't disguise these as open questions. Resolve before flipping the status to In progress; record outcomes under Decisions. Remove this section when empty. -->
+
 ## Decisions
 
 <!-- Options considered and why the chosen one won. Append here when the build reveals gaps (workflow step 4). -->
