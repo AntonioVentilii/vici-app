@@ -2,8 +2,8 @@
 	import { X } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
-	import { pinToVisualViewport } from '$lib/actions/pin-to-visual-viewport';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
+	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_STAKE_LADDER } from '$lib/constants/vxp-economy.constants';
@@ -15,7 +15,6 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { CallSide, Market } from '$lib/types/market';
-	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { resolveOutcomeExecutionPrice } from '$lib/utils/market.utils';
 	import { formatAvailableMarginForUi } from '$lib/utils/playground-display.utils';
@@ -26,12 +25,11 @@
 	 * already chosen a side (YES / NO) on the market detail CTA; this
 	 * panel commits a single market-order call at the current price.
 	 *
-	 * Presentation is responsive: a bottom-docked sheet (grip handle,
-	 * slide-up) on phone widths and a centred modal on wider viewports —
-	 * one set of content, switched purely in CSS so there is no forked
-	 * markup. Chrome is custom (not a native `<dialog>`), so focus is
-	 * trapped manually via {@link createFocusTrap}, matching the other
-	 * bottom-sheet surfaces.
+	 * Chrome (scrim, grip, safe-area inset, Escape, focus trap, viewport
+	 * pinning, pill-nav hide) comes from the shared {@link BottomSheet}
+	 * primitive in its `desktopCentered` variant: a bottom-docked sheet on
+	 * phone widths and a centred modal on wider viewports — one set of
+	 * content, switched purely in CSS so there is no forked markup.
 	 *
 	 * Sizing is a slider that steps through the fixed stake ladder
 	 * (`VXP_STAKE_LADDER`) rather than a free continuous range, because
@@ -60,9 +58,6 @@
 	// amount, derived from the slider index.
 	let sizeIndex = $state(0);
 	const size = $derived(VXP_STAKE_LADDER[sizeIndex]);
-
-	let sheetEl = $state<HTMLDivElement | undefined>();
-	let trap: FocusTrap | null = null;
 
 	let loading = $state(false);
 	let error = $state('');
@@ -143,12 +138,6 @@
 		}
 	};
 
-	const handleKeyDown = (event: KeyboardEvent) => {
-		if (event.key === 'Escape') {
-			onClose();
-		}
-	};
-
 	$effect(() => {
 		if (!browser) {
 			return;
@@ -158,222 +147,87 @@
 			void fetchBalance();
 		}
 	});
-
-	$effect(() => {
-		if (!browser) {
-			return;
-		}
-
-		if (sheetEl) {
-			trap = createFocusTrap(sheetEl);
-			trap.activate();
-		}
-
-		return () => {
-			if (trap) {
-				trap.deactivate();
-				trap = null;
-			}
-		};
-	});
 </script>
 
-<svelte:window onkeydown={handleKeyDown} />
+<BottomSheet desktopCentered isOpen={true} labelledBy="confirm-title" {onClose}>
+	<div class="confirm-head">
+		<h3 id="confirm-title" class="confirm-title">
+			{tr({ key: 'prediction.back_side', params: { side: sideLabel } })}
+		</h3>
+		<button
+			class="confirm-close"
+			aria-label={tr({ key: 'a11y.close' })}
+			onclick={onClose}
+			type="button"
+		>
+			<X aria-hidden="true" size={16} strokeWidth={1.8} />
+		</button>
+	</div>
 
-<div
-	class="confirm-scrim"
-	onclick={onClose}
-	onkeydown={(e) => e.key === 'Escape' && onClose()}
-	role="presentation"
-	use:pinToVisualViewport
->
-	<div
-		bind:this={sheetEl}
-		class="confirm-panel"
-		aria-labelledby="confirm-title"
-		aria-modal="true"
-		onclick={(e) => e.stopPropagation()}
-		onkeydown={(e) => e.stopPropagation()}
-		role="dialog"
-		tabindex="-1"
-	>
-		<div class="confirm-grip" aria-hidden="true"></div>
+	<p class="confirm-question">{market.title}</p>
 
-		<div class="confirm-head">
-			<h3 id="confirm-title" class="confirm-title">
-				{tr({ key: 'prediction.back_side', params: { side: sideLabel } })}
-			</h3>
-			<button
-				class="confirm-close"
-				aria-label={tr({ key: 'a11y.close' })}
-				onclick={onClose}
-				type="button"
-			>
-				<X aria-hidden="true" size={16} strokeWidth={1.8} />
-			</button>
+	{#if $userSignedIn}
+		<div class="confirm-card">
+			<div class="confirm-card-head">
+				<span class="confirm-eyebrow">{tr({ key: 'prediction.how_much' })}</span>
+				<span class="confirm-balance num">
+					{tr({ key: 'prediction.balance', params: { amount: balanceLabel } })}
+				</span>
+			</div>
+
+			<div class="confirm-amount">
+				<span class="confirm-amount-value num">{size}</span>
+				<span class="confirm-eyebrow">{market.token.symbol}</span>
+			</div>
+
+			<input
+				class="confirm-range"
+				aria-label={tr({ key: 'prediction.how_much' })}
+				max={VXP_STAKE_LADDER.length - 1}
+				min={0}
+				step={1}
+				type="range"
+				bind:value={sizeIndex}
+			/>
+
+			<div class="confirm-payout">
+				<span class="confirm-payout-label">{tr({ key: 'prediction.if_right' })}</span>
+				<span class="confirm-payout-value num">
+					{tr({
+						key: 'prediction.payout',
+						params: { amount: payout, symbol: market.token.symbol }
+					})}
+				</span>
+			</div>
 		</div>
 
-		<p class="confirm-question">{market.title}</p>
-
-		{#if $userSignedIn}
-			<div class="confirm-card">
-				<div class="confirm-card-head">
-					<span class="confirm-eyebrow">{tr({ key: 'prediction.how_much' })}</span>
-					<span class="confirm-balance num">
-						{tr({ key: 'prediction.balance', params: { amount: balanceLabel } })}
-					</span>
-				</div>
-
-				<div class="confirm-amount">
-					<span class="confirm-amount-value num">{size}</span>
-					<span class="confirm-eyebrow">{market.token.symbol}</span>
-				</div>
-
-				<input
-					class="confirm-range"
-					aria-label={tr({ key: 'prediction.how_much' })}
-					max={VXP_STAKE_LADDER.length - 1}
-					min={0}
-					step={1}
-					type="range"
-					bind:value={sizeIndex}
-				/>
-
-				<div class="confirm-payout">
-					<span class="confirm-payout-label">{tr({ key: 'prediction.if_right' })}</span>
-					<span class="confirm-payout-value num">
-						{tr({
-							key: 'prediction.payout',
-							params: { amount: payout, symbol: market.token.symbol }
-						})}
-					</span>
-				</div>
-			</div>
-
-			{#if error}
-				<div class="confirm-error">{error}</div>
-			{/if}
-
-			<Button
-				class="confirm-submit"
-				onclick={handleLockIn}
-				size="lg"
-				status={loading ? 'pending' : 'enabled'}
-			>
-				{#snippet busyLabel()}
-					{tr({ key: 'prediction.confirming' })}
-				{/snippet}
-				{tr({ key: 'prediction.lock_in', params: { side: sideLabel } })}
-			</Button>
-		{:else}
-			<div class="confirm-signin">
-				<p class="confirm-signin-copy">{tr({ key: 'prediction.sign_in' })}</p>
-				<SignInActions />
-				<a class="confirm-deposit" href={resolve(AppPath.Wallet)}>
-					{tr({ key: 'prediction.deposit_wallet' })}
-				</a>
-			</div>
+		{#if error}
+			<div class="confirm-error">{error}</div>
 		{/if}
-	</div>
-</div>
+
+		<Button
+			class="confirm-submit"
+			onclick={handleLockIn}
+			size="lg"
+			status={loading ? 'pending' : 'enabled'}
+		>
+			{#snippet busyLabel()}
+				{tr({ key: 'prediction.confirming' })}
+			{/snippet}
+			{tr({ key: 'prediction.lock_in', params: { side: sideLabel } })}
+		</Button>
+	{:else}
+		<div class="confirm-signin">
+			<p class="confirm-signin-copy">{tr({ key: 'prediction.sign_in' })}</p>
+			<SignInActions />
+			<a class="confirm-deposit" href={resolve(AppPath.Wallet)}>
+				{tr({ key: 'prediction.deposit_wallet' })}
+			</a>
+		</div>
+	{/if}
+</BottomSheet>
 
 <style lang="postcss">
-	:global(body:has(.confirm-panel)) {
-		overflow: hidden;
-	}
-
-	/* Hide the floating mobile pill-nav while the sheet is open — it sits
-	   at the same bottom edge and would clip the lock-in action, and it
-	   isn't usable from inside a modal flow. */
-	:global(body:has(.confirm-panel) .pillnav-wrap) {
-		display: none;
-	}
-
-	.confirm-scrim {
-		position: fixed;
-		/* `use:pinToVisualViewport` sizes this to the *actually-visible* region
-		 * (inline `top`/`height` from `window.visualViewport`): on iOS a fixed
-		 * overlay resolves against the large layout viewport and iOS Chrome
-		 * doesn't honour `100dvh`, so the bottom-docked panel lands behind the
-		 * dynamic bottom toolbar and its CTA gets clipped (#670). The
-		 * `100dvh`/`100vh` below is the desktop / no-`visualViewport` fallback. */
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 100vh; /* fallback for engines without `dvh` / visualViewport */
-		height: 100dvh;
-		z-index: 80;
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
-		align-items: center;
-		background: rgba(14, 13, 11, 0.62);
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-		animation: confirm-scrim-in var(--d-state) ease-out both;
-	}
-
-	.confirm-panel {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		max-width: 32rem;
-		/* 92% of the pinned scrim (its `visualViewport`-true visible height). `%`
-		 * resolves against the scrim's definite height, so no `dvh`/`vh` cap is
-		 * needed — and a `dvh` cap would be wrong on iOS Chrome. The ≥768px media
-		 * query overrides this with a centred-modal `dvh` cap. */
-		max-height: 92%;
-		padding: 0.5rem 1.25rem calc(1.25rem + var(--docked-footer-inset));
-		overflow-y: auto;
-		background: var(--bg-popover);
-		border-top: 1px solid var(--border-base);
-		border-top-left-radius: 22px;
-		border-top-right-radius: 22px;
-		box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
-		animation: confirm-panel-up 280ms var(--ease-vici) both;
-	}
-
-	/* Desktop: re-anchor the same panel to the viewport centre with a
-	   full rounded card and a zoom-in entrance rather than a slide-up. */
-	@media (min-width: 768px) {
-		.confirm-scrim {
-			justify-content: center;
-			padding: 1rem;
-		}
-
-		.confirm-panel {
-			max-width: 28rem;
-			max-height: 90vh; /* fallback for engines without `dvh` */
-			max-height: 90dvh;
-			padding: 1.5rem;
-			border: 1px solid var(--border-base);
-			border-radius: 12px;
-			box-shadow: var(--shadow-modal);
-			animation: confirm-panel-zoom 200ms var(--ease-vici) both;
-		}
-
-		/* The grip handle is a bottom-sheet affordance only. */
-		.confirm-grip {
-			display: none;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.confirm-scrim,
-		.confirm-panel {
-			animation: none;
-		}
-	}
-
-	.confirm-grip {
-		align-self: center;
-		width: 36px;
-		height: 4px;
-		margin: 0.25rem 0 0.7rem;
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--text-muted) 50%, transparent);
-	}
-
 	.confirm-head {
 		display: flex;
 		align-items: center;
@@ -527,24 +381,5 @@
 
 	.confirm-deposit:hover {
 		text-decoration: none;
-	}
-
-	@keyframes confirm-scrim-in {
-		from {
-			opacity: 0;
-		}
-	}
-
-	@keyframes confirm-panel-up {
-		from {
-			transform: translateY(100%);
-		}
-	}
-
-	@keyframes confirm-panel-zoom {
-		from {
-			opacity: 0;
-			transform: scale(0.96);
-		}
 	}
 </style>
