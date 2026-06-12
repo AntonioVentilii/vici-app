@@ -14,8 +14,11 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { MILLISECOND_IN_NANOSECONDS, ZERO } from '$lib/constants/app.constants';
-	import { REFERRAL_MAX_PAID, referrerRewardBaseUnits } from '$lib/constants/referral.constants';
+	import { MILLISECOND_IN_NANOSECONDS } from '$lib/constants/app.constants';
+	import {
+		cumulativeReferrerRewardBaseUnits,
+		REFERRAL_MAX_PAID
+	} from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { globalActivities } from '$lib/derived/activities.derived';
@@ -212,22 +215,13 @@
 	// reward curve and enforce both caps, so the hero stays in lockstep with it rather than
 	// re-reading the stored `withinReferrerCap` flag.
 	//
-	// The earned total sums each paid redemption's tier reward by its 1-based order — the i-th
-	// paid redemption pays `referrerRewardBaseUnits(i - 1)`, so the diminishing tier table (and
-	// its hard cap) is honoured rather than assuming a flat 500 VXP per friend.
+	// The earned total honours the diminishing tier table (and its hard cap) rather than
+	// assuming a flat 500 VXP per friend — see `cumulativeReferrerRewardBaseUnits`.
 	const joinedCount = $derived(myReferrals.length);
 	const referralPaidCount = $derived(
 		myReferrals.filter(({ referrerPayout }) => referrerPayout.status !== 'none').length
 	);
-	const referralVxpEarnedBaseUnits = $derived.by(() => {
-		let total = ZERO;
-
-		for (let priorPaidCount = 0; priorPaidCount < referralPaidCount; priorPaidCount++) {
-			total += referrerRewardBaseUnits(priorPaidCount);
-		}
-
-		return total;
-	});
+	const referralVxpEarnedBaseUnits = $derived(cumulativeReferrerRewardBaseUnits(referralPaidCount));
 	const referralVxpEarnedLabel = $derived(formatVxpBalance({ value: referralVxpEarnedBaseUnits }));
 
 	// Rewarded-invites-left line mirrors the satellite's single cap: the lifetime hard cap
