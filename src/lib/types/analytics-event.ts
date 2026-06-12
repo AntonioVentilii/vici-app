@@ -103,6 +103,12 @@ export type AnalyticsEventName =
 	/** The recovery faucet was claimed. */
 	| 'faucet_claimed'
 	// ── Social & leagues ──────────────────────────────────────────────
+	/**
+	 * An add-friend attempt ran; `label` carries the outcome
+	 * (`sent | auto_accepted | already_friends | already_pending |
+	 * rejected_cooldown | not_found | self | error`), `source` the surface.
+	 */
+	| 'friend_request_sent'
 	/** A league was created. */
 	| 'league_created'
 	/** A user joined a league. */

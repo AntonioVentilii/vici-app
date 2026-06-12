@@ -2146,6 +2146,7 @@ export const esMessages = {
 	'arena.friends.action.accept': 'Aceptar',
 	'arena.friends.action.cancel': 'Cancelar',
 	'arena.friends.action.reject': 'Rechazar',
+	'arena.friends.add.auto_accepted': 'Ya te había enviado una solicitud — ¡ahora sois amigos!',
 	'arena.friends.add.cta': 'Añadir amigo',
 	'arena.friends.add.invite_hint':
 		'Sin coincidencias. El enlace de invitación os da {amount} VXP a ambos.',
@@ -2159,12 +2160,17 @@ export const esMessages = {
 	'arena.friends.empty.add_first': 'Añade tu primer amigo',
 	'arena.friends.empty.invite_now': 'Invitar ahora',
 	'arena.friends.error.accept_failed': 'Error al aceptar la solicitud',
+	'arena.friends.error.already_friends': 'Ya sois amigos.',
+	'arena.friends.error.already_pending': 'Solicitud ya enviada — esperando a que acepte.',
 	'arena.friends.error.cancel_failed': 'Error al cancelar la solicitud',
 	'arena.friends.error.not_found':
 		'No se encontró ningún usuario con ese handle. Revisa la ortografía o envíale un enlace de invitación.',
 	'arena.friends.error.reject_failed': 'Error al rechazar la solicitud',
+	'arena.friends.error.rejected_cooldown':
+		'Rechazó tu última solicitud. Puedes volver a intentarlo {when}.',
 	'arena.friends.error.self': 'Eres tú — elige otro handle.',
-	'arena.friends.error.send_failed': 'Error al enviar la solicitud',
+	'arena.friends.error.send_failed_detail':
+		'No se pudo enviar la solicitud. Haz una captura y cuéntanoslo: {detail}',
 	'arena.friends.error.unfriend_failed': 'Error al eliminar amistad',
 	'arena.friends.feed.empty_a': 'Cuando tus amigos hagan una predicción, aparecerá aquí.',
 	'arena.friends.feed.empty_b': 'Construyendo el historial en silencio.',

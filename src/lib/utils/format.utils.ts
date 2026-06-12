@@ -199,6 +199,35 @@ export const formatRelativeAgoFromNs = ({
 };
 
 /**
+ * Locale-aware future counterpart of {@link formatRelativeAgoFromNs}:
+ * "in 3 days" / "in 5 hours" / "in 12 minutes" / "in 40 seconds".
+ * Picks the largest unit with a whole count ≥ 1, then **rounds up**
+ * within that unit so the displayed wait is never shorter than the
+ * real one (telling a user to retry too early would just fail again).
+ * Never renders a zero phrase — sub-second deltas read "in 1 second".
+ */
+export const formatRelativeUntilFromMs = ({
+	targetMs,
+	locale,
+	nowMs = Date.now()
+}: {
+	targetMs: number;
+	locale: string;
+	nowMs?: number;
+}): string => {
+	const diffMs = Math.max(0, targetMs - nowMs);
+	const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
+
+	for (const { unit, ms } of RELATIVE_TIME_UNITS) {
+		if (Math.floor(diffMs / ms) >= 1) {
+			return rtf.format(Math.ceil(diffMs / ms), unit);
+		}
+	}
+
+	return rtf.format(Math.max(1, Math.ceil(diffMs / 1_000)), 'second');
+};
+
+/**
  * Compact, locale-independent "time ago" for dense data rows that show a
  * bare unit suffix (e.g. `5m`, `3h`, `2d`) rather than a full localized
  * phrase — the Dash past-prediction list. Floors to the largest whole

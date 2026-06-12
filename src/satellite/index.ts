@@ -23,7 +23,7 @@ import {
 	RedeemReferralCodeArgsSchema,
 	SettleReferralArgsSchema
 } from '$lib/schema/referral.schema';
-import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
+import { CheckFriendshipArgsSchema, FriendRequestOutcomeSchema } from '$lib/schema/relation.schema';
 import {
 	deleteMyAccountFn,
 	hibernateMyAccountFn,
@@ -409,6 +409,7 @@ export const sendFriendRequest = defineUpdate({
 	args: j.strictObject({
 		target: PrincipalTextSchema
 	}),
+	result: FriendRequestOutcomeSchema,
 	handler: sendFriendRequestFn
 });
 
