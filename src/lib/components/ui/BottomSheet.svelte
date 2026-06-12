@@ -121,7 +121,17 @@
 			aria-labelledby={labelledBy}
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
+			onkeydown={(e) => {
+				// Keys are swallowed so outer surfaces stay inert while the sheet
+				// is open — which also keeps Escape from the `svelte:window`
+				// listener (focus lives inside the sheet via the trap), so close
+				// on it here.
+				e.stopPropagation();
+
+				if (e.key === 'Escape') {
+					close();
+				}
+			}}
 			role="dialog"
 			tabindex="-1"
 		>
