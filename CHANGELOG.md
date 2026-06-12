@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/AntonioVentilii/vici-app/compare/v0.1.7...v0.1.8) (2026-06-11)
+
+
+### Documentation
+
+* **ai:** require theme swaps and a copy-back channel in spec HTML mocks ([#823](https://github.com/AntonioVentilii/vici-app/issues/823)) ([7231f4c](https://github.com/AntonioVentilii/vici-app/commit/7231f4c593fd759fb6be41296d70b92f29375afb))
+
 ## [0.1.7](https://github.com/AntonioVentilii/vici-app/compare/v0.1.6...v0.1.7) (2026-06-11)
 
 
