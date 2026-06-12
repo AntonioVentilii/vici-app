@@ -566,6 +566,9 @@ export const frMessages = {
 	'admin.resolution.action.resolve_no': 'Résoudre NO',
 	'admin.resolution.action.resolve_yes': 'Résoudre YES',
 	'admin.resolution.clause_label': 'Clause de résolution',
+	'admin.resolution.confirm.market_label': 'Marché',
+	'admin.resolution.confirm.warning':
+		'Cette action résout le marché pour tous les participants et est irréversible.',
 	'admin.resolution.empty': 'Aucun marché actif nécessitant une résolution.',
 	'admin.resolution.expires': 'Expire : {date}',
 	'admin.resolution.history.title': 'Résolutions récentes',

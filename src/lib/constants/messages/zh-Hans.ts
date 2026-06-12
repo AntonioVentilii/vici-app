@@ -532,6 +532,8 @@ export const zhHansMessages = {
 	'admin.resolution.action.resolve_no': '裁定为 NO',
 	'admin.resolution.action.resolve_yes': '裁定为 YES',
 	'admin.resolution.clause_label': '裁定条款',
+	'admin.resolution.confirm.market_label': '市场',
+	'admin.resolution.confirm.warning': '此操作将为所有参与者裁定该市场，且无法撤销。',
 	'admin.resolution.empty': '没有需要裁定的活跃市场。',
 	'admin.resolution.expires': '到期：{date}',
 	'admin.resolution.history.title': '最近裁定',

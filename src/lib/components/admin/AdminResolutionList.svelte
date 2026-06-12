@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { notEmptyString } from '@dfinity/utils';
+	import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId, Outcome } from '$lib/types/market';
@@ -16,13 +17,27 @@
 
 	let resolvingMarketId = $state<MarketId | null>(null);
 
-	const handleResolve = async (params: { marketId: MarketId; outcome: Outcome }) => {
-		resolvingMarketId = params.marketId;
+	let confirmTarget = $state<{ marketId: MarketId; title: string; outcome: Outcome } | null>(null);
+	let showConfirm = $state(false);
+
+	const openConfirm = (params: { marketId: MarketId; title: string; outcome: Outcome }) => {
+		confirmTarget = params;
+		showConfirm = true;
+	};
+
+	const handleResolve = async () => {
+		if (isNullish(confirmTarget)) {
+			return;
+		}
+
+		const { marketId, outcome } = confirmTarget;
+		resolvingMarketId = marketId;
 
 		try {
-			await onResolve(params);
+			await onResolve({ marketId, outcome });
 		} finally {
 			resolvingMarketId = null;
+			showConfirm = false;
 		}
 	};
 
@@ -195,7 +210,7 @@
 						<div class="flex gap-2">
 							<Button
 								class="border-success/20 bg-success/10 text-success hover:bg-success/15 flex-1 rounded-xl border py-2 text-xs font-bold"
-								onclick={() => handleResolve({ marketId, outcome: 'YES' })}
+								onclick={() => openConfirm({ marketId, title, outcome: 'YES' })}
 								size="sm"
 								status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
 								variant="ghost"
@@ -204,7 +219,7 @@
 							</Button>
 							<Button
 								class="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15 flex-1 rounded-xl border py-2 text-xs font-bold"
-								onclick={() => handleResolve({ marketId, outcome: 'NO' })}
+								onclick={() => openConfirm({ marketId, title, outcome: 'NO' })}
 								size="sm"
 								status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
 								variant="ghost"
@@ -218,3 +233,63 @@
 		{/if}
 	{/if}
 </div>
+
+<Dialog
+	title={t({ locale: $localeStore, key: 'market.resolution.confirm.title' })}
+	bind:show={showConfirm}
+>
+	{#if nonNullish(confirmTarget)}
+		<div class="space-y-4">
+			<div class="space-y-1">
+				<p class="text-muted-foreground eyebrow-xs">
+					{t({ locale: $localeStore, key: 'admin.resolution.confirm.market_label' })}
+				</p>
+				<p class="text-foreground text-base font-bold break-words">{confirmTarget.title}</p>
+			</div>
+
+			<div class="space-y-1">
+				<p class="text-muted-foreground eyebrow-xs">
+					{t({ locale: $localeStore, key: 'market.resolution.confirm.summary_outcome' })}
+				</p>
+				<p
+					class="text-base font-black {confirmTarget.outcome === 'YES'
+						? 'text-success'
+						: 'text-destructive'}"
+				>
+					{t({
+						locale: $localeStore,
+						key:
+							confirmTarget.outcome === 'YES'
+								? 'market.resolution.settle_yes'
+								: 'market.resolution.settle_no'
+					})}
+				</p>
+			</div>
+
+			<p class="text-muted-foreground text-xs">
+				{t({ locale: $localeStore, key: 'admin.resolution.confirm.warning' })}
+			</p>
+
+			<div class="flex gap-2 pt-2">
+				<Button
+					class="flex-1"
+					onclick={() => (showConfirm = false)}
+					size="md"
+					status={nonNullish(resolvingMarketId) ? 'disabled' : 'enabled'}
+					variant="outline"
+				>
+					{t({ locale: $localeStore, key: 'market.resolution.confirm.cancel' })}
+				</Button>
+				<Button
+					class="flex-1"
+					onclick={handleResolve}
+					size="md"
+					status={nonNullish(resolvingMarketId) ? 'pending' : 'enabled'}
+					variant={confirmTarget.outcome === 'YES' ? 'primary' : 'danger'}
+				>
+					{t({ locale: $localeStore, key: 'market.resolution.confirm.cta' })}
+				</Button>
+			</div>
+		</div>
+	{/if}
+</Dialog>
