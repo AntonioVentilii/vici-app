@@ -1460,7 +1460,7 @@ export const esMessages = {
 	'market.detail.stats.volume': 'Volumen',
 	'market.detail.top_predictors.acc': 'aciertos',
 	'market.detail.top_predictors.empty':
-		'Aún no hay predictores — sé el primero en llamar este mercado.',
+		'Ninguno de los mejores predictores ha llamado aún este mercado.',
 	'market.detail.top_predictors.streak': 'd racha',
 	'market.detail.top_predictors.title': 'Mejores predictores aquí',
 	'market.detail.you_called': 'Llamaste',

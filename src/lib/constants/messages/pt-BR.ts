@@ -1457,7 +1457,7 @@ export const ptBRMessages = {
 	'market.detail.stats.volume': 'Volume',
 	'market.detail.top_predictors.acc': 'precisão',
 	'market.detail.top_predictors.empty':
-		'Ainda sem predictores — seja o primeiro a chamar este mercado.',
+		'Nenhum dos melhores predictores chamou este mercado ainda.',
 	'market.detail.top_predictors.streak': 'd sequência',
 	'market.detail.top_predictors.title': 'Melhores predictores aqui',
 	'market.detail.you_called': 'Você chamou',

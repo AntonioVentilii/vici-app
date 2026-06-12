@@ -1470,7 +1470,8 @@ export const frMessages = {
 	'market.detail.stats.new_market': 'Nouveau marché',
 	'market.detail.stats.volume': 'Volume',
 	'market.detail.top_predictors.acc': 'préc.',
-	'market.detail.top_predictors.empty': 'Aucun prédicteur — soyez le premier à appeler ce marché.',
+	'market.detail.top_predictors.empty':
+		'Aucun des meilleurs prédicteurs n’a encore appelé ce marché.',
 	'market.detail.top_predictors.streak': 'j série',
 	'market.detail.top_predictors.title': 'Meilleurs prédicteurs ici',
 	'market.detail.you_called': 'Vous avez appelé',
