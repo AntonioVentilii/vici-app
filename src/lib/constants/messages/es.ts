@@ -1459,7 +1459,6 @@ export const esMessages = {
 	'market.detail.stats.new_market': 'Mercado nuevo',
 	'market.detail.stats.volume': 'Volumen',
 	'market.detail.top_predictors.acc': 'aciertos',
-	'market.detail.top_predictors.all': 'Todo',
 	'market.detail.top_predictors.empty':
 		'Aún no hay predictores — sé el primero en llamar este mercado.',
 	'market.detail.top_predictors.streak': 'd racha',

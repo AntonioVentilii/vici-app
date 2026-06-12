@@ -1470,7 +1470,6 @@ export const deMessages = {
 	'market.detail.stats.new_market': 'Neuer Markt',
 	'market.detail.stats.volume': 'Volumen',
 	'market.detail.top_predictors.acc': 'Treffer',
-	'market.detail.top_predictors.all': 'Alle',
 	'market.detail.top_predictors.empty':
 		'Noch keine Vorhersagen — sei die Erste, die diesen Markt aufruft.',
 	'market.detail.top_predictors.streak': 'T Serie',

@@ -1389,7 +1389,6 @@ export const zhHansMessages = {
 	'market.detail.stats.new_market': '新市场',
 	'market.detail.stats.volume': '成交量',
 	'market.detail.top_predictors.acc': '准确率',
-	'market.detail.top_predictors.all': '全部',
 	'market.detail.top_predictors.empty': '尚无预测者 — 成为第一个对此市场作出判断的人。',
 	'market.detail.top_predictors.streak': '日连胜',
 	'market.detail.top_predictors.title': '此市场的顶级预测者',

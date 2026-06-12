@@ -539,7 +539,12 @@
 
 		<MarketDetailResolutionCard {market} />
 
-		<MarketDetailTopPredictors {followedLean} {market} />
+		{#if !isColdStart}
+			<!-- Hidden while the market has no volume — the rows come from
+			     the global leaderboard, so showing them under the cold-start
+			     banner would contradict "no one has called this yet". -->
+			<MarketDetailTopPredictors {followedLean} {market} />
+		{/if}
 
 		{#if showAdminActions}
 			<section

@@ -1456,7 +1456,6 @@ export const ptBRMessages = {
 	'market.detail.stats.new_market': 'Mercado novo',
 	'market.detail.stats.volume': 'Volume',
 	'market.detail.top_predictors.acc': 'precisão',
-	'market.detail.top_predictors.all': 'Todos',
 	'market.detail.top_predictors.empty':
 		'Ainda sem predictores — seja o primeiro a chamar este mercado.',
 	'market.detail.top_predictors.streak': 'd sequência',

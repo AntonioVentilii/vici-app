@@ -42,9 +42,6 @@
 		<h3 id="market-top-predictors-h" class="market-top-predictors-title">
 			{t({ locale: $localeStore, key: 'market.detail.top_predictors.title' })}
 		</h3>
-		<span class="market-top-predictors-more">
-			{t({ locale: $localeStore, key: 'market.detail.top_predictors.all' })}
-		</span>
 	</header>
 
 	{#if top.length === 0}
@@ -137,13 +134,6 @@
 		font-size: var(--t-16);
 		font-weight: 600;
 		letter-spacing: var(--tracking-snug);
-	}
-
-	.market-top-predictors-more {
-		color: var(--laurel);
-		font-size: var(--t-12);
-		font-weight: 600;
-		letter-spacing: 0.02em;
 	}
 
 	.market-top-predictors-empty {

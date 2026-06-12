@@ -1461,7 +1461,6 @@ export const itMessages = {
 	'market.detail.stats.new_market': 'Nuovo mercato',
 	'market.detail.stats.volume': 'Volume',
 	'market.detail.top_predictors.acc': 'precisione',
-	'market.detail.top_predictors.all': 'Tutti',
 	'market.detail.top_predictors.empty':
 		'Ancora nessun predittore — sii il primo a chiamare questo mercato.',
 	'market.detail.top_predictors.streak': 'g serie',

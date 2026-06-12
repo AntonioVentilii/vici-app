@@ -1442,7 +1442,6 @@ export const enMessages = {
 	'market.detail.stats.new_market': 'New market',
 	'market.detail.stats.volume': 'Volume',
 	'market.detail.top_predictors.acc': 'acc',
-	'market.detail.top_predictors.all': 'All',
 	'market.detail.top_predictors.empty': 'No predictors yet — be the first to call this market.',
 	'market.detail.top_predictors.streak': 'd streak',
 	'market.detail.top_predictors.title': 'Top predictors here',
