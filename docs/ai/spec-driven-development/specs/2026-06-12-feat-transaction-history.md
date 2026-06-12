@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: Implemented (#847)
 
 ## Goal
 
@@ -87,19 +87,22 @@ wallet ledger balance + free clearing margin. This matches the user's
 mental model: placing a prediction visibly moves VXP out, a win brings
 back stake + profit, a loss returns nothing.
 
-| Event                           | Row label               | Available-VXP delta                         |
-| ------------------------------- | ----------------------- | ------------------------------------------- |
-| Ledger receive with `vxp:` memo | Bonus · `<award type>`  | + amount                                    |
-| Clearing `OrderPlaced`          | Prediction · `<market>` | − locked margin (stake)                     |
-| Clearing order cancelled        | Cancelled · `<market>`  | + released margin                           |
-| Clearing `Settled`, return > 0  | Won · `<market>`        | + returned amount (stake + profit)          |
-| Clearing `Settled`, return = 0  | Lost · `<market>`       | 0 (subtitle: "stake of `<n>` not returned") |
-| Clearing `Liquidated`           | Liquidated · `<market>` | signed event amount                         |
-| Other ledger send/receive/mint  | Sent / Received         | ± amount                                    |
-| Wallet↔clearing sweeps          | **hidden row**          | − transfer fee only (silently applied)      |
+| Event                            | Row label               | Available-VXP delta                          |
+| -------------------------------- | ----------------------- | -------------------------------------------- |
+| Ledger receive with `vxp:` memo  | Bonus · `<award type>`  | + amount                                     |
+| Clearing `Executed` (fill)       | Prediction · `<market>` | − fill cost (`qty × price`)                  |
+| Clearing `OrderPlaced`           | **no row**              | 0 (see decision: deltas bind to fills)       |
+| Clearing `Settled`, cashflow > 0 | Won · `<market>`        | + released stake + cashflow                  |
+| Clearing `Settled`, cashflow < 0 | Lost · `<market>`       | ~0 (subtitle: "stake of `<n>` not returned") |
+| Clearing `Settled`, cashflow = 0 | Break-even · `<market>` | + released stake                             |
+| Clearing `Liquidated`            | Liquidated · `<market>` | + released stake + signed cashflow           |
+| Other ledger send/receive/mint   | Sent / Received / …     | ± amount (sends also debit the fee)          |
+| Wallet↔clearing sweeps           | **hidden row**          | − transfer fee only (silently applied)       |
 
 - Losses render **0**, not −stake: the stake already left available
-  balance at placement; showing −stake again would double-count.
+  balance at the fill; showing −stake again would double-count. The
+  released stake for a settlement is reconstructed by accumulating the
+  per-series fill costs (`Executed` events) between settlements.
 - Sweeps (`CollateralDeposit`/`CollateralWithdraw`) don't change
   available balance and are pure noise — hidden, **but** their ledger
   fee still debits the running balance, so the hidden rows participate
@@ -150,9 +153,13 @@ back stake + profit, a loss returns nothing.
 
 ### Out of scope
 
-- No satellite / collection / icdc-core changes — the `vxp_awards`
-  collection stays `read: 'controllers'`; bonus labeling comes from
-  ledger memos, so no new endpoint is needed.
+- No satellite endpoints, hooks, or collection changes — the
+  `vxp_awards` collection stays `read: 'controllers'`; bonus labeling
+  comes from ledger memos. (The new analytics event names do flow into
+  the satellite's `track` validation enum via the shared Zod schema,
+  so `npm run juno:functions:build` regenerates
+  `satellite_extension.did` + declarations — committed with this PR,
+  no behavioural satellite change.)
 - Flow-session grants (`flow_milestone`, `flow_overtime`) have **no
   real VXP credit path yet** (deferred — issue #350); they cannot and
   will not appear. When #350 lands with the established memo format,
@@ -216,12 +223,14 @@ record:
 
 1. Add the `AppPath` entry + route folder + page shell
    (`+page.svelte` → `DashTransactionsPage.svelte`).
-2. Add memo decoding + `Reward` labeling to
-   `src/lib/utils/transactions.utils.ts` (unit-test the memo parser:
-   all nine tags, unknown tag, absent memo, non-UTF8 bytes).
-3. New `transaction-history.services.ts`: fetch both streams, merge,
-   sort by timestamp desc, hide sweep rows (keep fee deltas), compute
-   running balances anchored on current available VXP.
+2. Add memo decoding + delta/balance assembly in a dedicated
+   `src/lib/utils/transaction-history.utils.ts` (the parser tolerates
+   all nine tags, unknown tags, absent memos, and non-UTF8 bytes; the
+   repo has no unit-test harness — only Playwright e2e — so the
+   guarantees are typed exhaustively and verified via `svelte-check`).
+3. New `transaction-history.services.ts`: walk the VXP index, merge
+   with the already-loaded `tradeHistory` store, hide sweep rows (keep
+   fee deltas), compute running balances anchored on `vxpSpendable`.
 4. Build the page UI: `ScreenHeader`, filter chips, list rows, signed
    amounts (`--yes`/`--no`/accent), `Pagination.svelte`,
    `EmptyState`, truncation footer.
@@ -236,8 +245,8 @@ record:
 - [ ] Tapping the new row in the holdings sheet on `/dash` opens the
       history page; back returns to `/dash`.
 - [ ] The page lists bonuses (labelled by award type from the ledger
-      memo), predictions placed, wins, losses, cancellations, and
-      external transfers, newest first.
+      memo), prediction fills, wins, losses, break-evens, and external
+      transfers, newest first.
 - [ ] Wallet↔clearing collateral sweeps do not appear as rows.
 - [ ] The last column shows the running available-VXP balance; the
       top row's balance equals the currently displayed available VXP,
@@ -263,18 +272,14 @@ record:
   carry the `vxp:` memo (early payouts may predate the format)?
   Verify against a real account; absent memos fall back to the
   generic "Bonus" label, so this only affects label quality.
-- **ICRC index memo availability** — confirm the index canister's
-  transaction records expose memo bytes through the `@icp-sdk` types
-  used by `icrc-index-ng.api.ts`.
-- **Clearing event amount semantics** — verify per event type which
-  field carries the locked/released/returned amount, against
-  `mapClearingEventToTransaction` and the documented trap that a
-  `Settled` event's signed qty **is** the cashflow (decode with the
-  existing fixed-decimal helper).
-- **Available-balance anchor reliability** — the clearing
-  account-state query is Settlement-domain-scoped; confirm
-  `vxp-holdings.derived.ts` exposes a stable available-VXP value to
-  anchor the newest-first walk, including while markets are open.
+- ~~ICRC index memo availability~~ — answered during the build: the
+  raw `IcrcIndexDid.Transaction` ops expose `memo` (and `fee`); the
+  service extracts them before the shared mapper drops them.
+- ~~Clearing event amount semantics~~ — answered during the build: a
+  `Settled` event's signed `qty` is the realized cashflow
+  (`settledEventToResolvedPosition`), an `Executed` fill's cost is
+  `qty × price` (same notional as the wallet table); led to the
+  fills-not-placements decision below.
 
 ## Decisions
 
@@ -300,3 +305,17 @@ record:
   table with a running balance; numbered pages need a total count,
   and the clearing call is all-or-nothing anyway. The ledger-walk cap
   bounds the cost.
+- **Stake deltas bind to `Executed` fills, not `OrderPlaced`** (build
+  discovery, 2026-06-12) — the clearing canister emits **no
+  cancellation event**, so debiting at placement could never be
+  credited back for a cancelled resting order and would permanently
+  skew every older balance. A resting order's locked margin is already
+  reflected in the live spendable anchor; fills are the honest commit
+  point. `OrderPlaced` therefore renders no row, and a settlement's
+  released stake is reconstructed from the accumulated per-series fill
+  costs.
+- **Available-balance anchor** (build discovery, 2026-06-12) —
+  `vxpSpendable` in `vxp-holdings.derived.ts` (wallet VXP + free
+  clearing margin, with a stale-while-revalidate snapshot) is the
+  anchor; the walk recomputes whenever it refreshes, so the top row
+  tracks the live figure by construction.

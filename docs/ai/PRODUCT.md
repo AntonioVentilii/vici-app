@@ -127,3 +127,20 @@ service.
 
 Decision record:
 [`specs/2026-06-12-fix-friend-request-errors-and-reject-policy.md`](./spec-driven-development/specs/2026-06-12-fix-friend-request-errors-and-reject-policy.md).
+
+### Transaction history (Dash)
+
+The holdings sheet on `/dash` links to `/dash/transactions`: a
+paginated, filterable feed of every event that changed the user's
+spendable VXP — bonuses (labelled from the `vxp:<type>:<key>` ledger
+memo), prediction stakes (bound to fills), wins/losses/break-evens
+(stake released + realized cashflow), and external transfers. The last
+column is the running spendable balance after each event, anchored on
+the live spendable figure so the top row always matches the Dash hero.
+Losses render amount `0` with the committed stake in the subtitle (the
+stake already left the balance at the fill). Wallet ↔ clearing
+collateral sweeps never render; only their ledger fee feeds the
+balance math. The ledger walk is capped
+(`TRANSACTION_HISTORY_MAX_LEDGER_PAGES`); when hit, a quiet "older
+history not shown" footer appears. Decision record:
+[`specs/2026-06-12-feat-transaction-history.md`](./spec-driven-development/specs/2026-06-12-feat-transaction-history.md).

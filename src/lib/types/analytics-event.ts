@@ -102,6 +102,13 @@ export type AnalyticsEventName =
 	| 'streak_milestone'
 	/** The recovery faucet was claimed. */
 	| 'faucet_claimed'
+	/**
+	 * The transaction-history page was opened; `source` carries the entry
+	 * point (`dash_sheet | direct`), `count` the rows loaded.
+	 */
+	| 'transactions_viewed'
+	/** A transaction-history filter chip was applied (`label` = filter). */
+	| 'transactions_filtered'
 	// ── Social & leagues ──────────────────────────────────────────────
 	/**
 	 * An add-friend attempt ran; `label` carries the outcome

@@ -25,6 +25,7 @@ export enum AppPath {
 	AdminVxp = '/admin/vxp',
 	AdminHaptics = '/admin/haptics',
 	Dash = '/dash',
+	DashTransactions = '/dash/transactions',
 	Portfolio = '/portfolio',
 	Arena = '/arena',
 	Flow = '/flow',

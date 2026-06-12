@@ -5629,6 +5629,35 @@ a.title-action::after {
 	letter-spacing: 0.03em;
 	cursor: pointer;
 }
+.db-hd-link {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 10px;
+	padding: 11px 12px;
+	border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--accent) 10%, transparent);
+	color: var(--color-accent);
+	text-decoration: none;
+}
+.db-hd-link-t {
+	display: flex;
+	flex: 1;
+	min-width: 0;
+	flex-direction: column;
+	gap: 1px;
+}
+.db-hd-link-t span {
+	color: var(--text-base);
+	font-size: 13px;
+	font-weight: 600;
+}
+.db-hd-link-t em {
+	font-style: normal;
+	color: var(--text-muted);
+	font-size: 11px;
+}
 
 @media (prefers-reduced-motion: reduce) {
 	.db-screen *,
