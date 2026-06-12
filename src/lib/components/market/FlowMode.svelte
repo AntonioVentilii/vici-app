@@ -775,13 +775,14 @@
 			dayStreak: dailyStreak,
 			isComeback,
 			// Seed the engine's lifetime-volume milestones from the REAL
-			// profile count (`totalTrades`, our lifetime call count)
-			// rather than the engine's persisted
-			// local tally, so milestone thresholds and the milestone
-			// count-up reflect actual lifetime activity. `totalTrades` is
-			// the lifetime call count BEFORE this swipe; the engine adds the
-			// current swipe (`+1`) internally. Falls back to the local tally
-			// when the profile is not yet hydrated.
+			// profile count (`totalTrades`, our lifetime call count) so
+			// milestone thresholds and the milestone count-up reflect actual
+			// lifetime activity. The engine treats it as a FLOOR merged with
+			// its own persisted tally — `totalTrades` is recomputed from
+			// trade history on profile syncs, not bumped per swipe, so it
+			// lags in-session and alone would replay the same milestone
+			// every swipe. `totalTrades` is the count BEFORE this swipe; the
+			// engine accounts for the current swipe internally.
 			lifetimeCalls: $userStore.profile?.totalTrades
 		});
 

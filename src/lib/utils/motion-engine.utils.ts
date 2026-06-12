@@ -308,8 +308,9 @@ export interface MotionSwipeInput {
 	wildcards?: boolean;
 	isComeback?: boolean;
 	// REAL lifetime call count from the profile (`me.calls`), BEFORE this
-	// swipe. When supplied, volume milestones fire at the true number
-	// rather than the engine's local tally.
+	// swipe. When supplied it seeds the engine's count as a FLOOR — the
+	// engine uses whichever is larger, this or its own persisted tally,
+	// since the profile count can lag behind in-session activity.
 	lifetimeCalls?: number;
 }
 
@@ -481,9 +482,22 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 		state.lifetime.no += 1;
 	}
 
-	// Prefer the app's REAL lifetime count (`me.calls`) when supplied, so
-	// volume milestones fire at the true number — not the local tally.
-	const calls = nonNullish(lifetimeCalls) ? lifetimeCalls + 1 : state.lifetime.calls;
+	// Lifetime call number for THIS swipe: the larger of the app's REAL
+	// count (`lifetimeCalls + 1`) and the engine's persisted tally. The
+	// profile count is recomputed from trade history on profile syncs —
+	// not bumped per swipe — so within a session it lags behind and, taken
+	// alone, would pin `calls` at the same number swipe after swipe and
+	// re-fire that milestone (e.g. "first call") on every card. The local
+	// tally (already incremented above) is strictly monotonic, so the max
+	// of the two advances every swipe while still snapping up to the true
+	// number when the profile is ahead (fresh device / cleared storage).
+	const calls = nonNullish(lifetimeCalls)
+		? Math.max(lifetimeCalls + 1, state.lifetime.calls)
+		: state.lifetime.calls;
+
+	// Write the merged count back so the persisted tally stays the
+	// high-water mark across sessions and devices.
+	state.lifetime.calls = calls;
 	const target = dailyTarget > 0 ? dailyTarget : 10;
 	const overtime = target >= DAILY_HARD_CAP;
 
