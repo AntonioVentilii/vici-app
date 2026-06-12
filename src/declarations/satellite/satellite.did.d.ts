@@ -170,6 +170,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { vxp_awarded: null }
 			| { league_joined: null }
@@ -863,6 +864,15 @@ export interface AppSearchProfilesResult {
 export interface AppSendFriendRequestArgs {
 	target: string;
 }
+export interface AppSendFriendRequestResult {
+	status:
+		| { sent: null }
+		| { auto_accepted: null }
+		| { already_friends: null }
+		| { rejected_cooldown: null }
+		| { already_pending: null };
+	retry_at_ms: [] | [number];
+}
 export interface AppSettleFounderAwardsResult {
 	settled: number;
 }
@@ -922,6 +932,7 @@ export interface AppTrackEventsArgs {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { vxp_awarded: null }
 			| { league_joined: null }
@@ -1175,7 +1186,7 @@ export interface _SERVICE {
 	>;
 	app_resume_my_account: ActorMethod<[], AppResumeMyAccountResult>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
-	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
+	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], AppSendFriendRequestResult>;
 	app_settle_founder_awards: ActorMethod<[], AppSettleFounderAwardsResult>;
 	app_settle_referral: ActorMethod<[AppSettleReferralArgs], undefined>;
 	app_submit_school: ActorMethod<[AppSubmitSchoolArgs], AppSubmitSchoolResult>;

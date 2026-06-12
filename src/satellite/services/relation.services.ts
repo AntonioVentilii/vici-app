@@ -1,8 +1,9 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { FRIEND_REQUEST_REJECTED_COOLDOWN_MS } from '$lib/constants/relation.constants';
 import { RelationCategory, RelationState } from '$lib/enums/relation';
-import type { Relation } from '$lib/types/relation';
-import { isNullish } from '@dfinity/utils';
-import { msgCaller } from '@junobuild/functions/ic-cdk';
+import type { FriendRequestOutcome, Relation } from '$lib/types/relation';
+import { isNullish, nonNullish } from '@dfinity/utils';
+import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
 	deleteDocStore,
@@ -149,7 +150,7 @@ export const listSentFriendRequests = (): Relation[] => {
 		);
 };
 
-export const sendFriendRequest = ({ target }: { target: PrincipalText }): void => {
+export const sendFriendRequest = ({ target }: { target: PrincipalText }): FriendRequestOutcome => {
 	const caller = msgCaller();
 
 	const sender = caller.toText();
@@ -162,18 +163,46 @@ export const sendFriendRequest = ({ target }: { target: PrincipalText }): void =
 		caller
 	});
 
-	if (!isNullish(existingDoc)) {
-		const existing = decodeDocData<Relation>(existingDoc.data);
+	const writePendingRequest = (version?: bigint): void => {
+		const relation: Relation = {
+			category: RelationCategory.FRIEND,
+			state: RelationState.PENDING,
+			participants: [sender, target]
+		};
 
+		setDocStore({
+			collection: Collection.RELATIONS,
+			key: relationId,
+			doc: {
+				version,
+				data: encodeDocData(relation)
+			},
+			caller
+		});
+	};
+
+	if (isNullish(existingDoc)) {
+		writePendingRequest();
+
+		return { status: 'sent' };
+	}
+
+	const existing = decodeDocData<Relation>(existingDoc.data);
+
+	if (existing.category !== RelationCategory.FRIEND) {
+		throw new Error(`Relation already exists with category: ${existing.category}`);
+	}
+
+	if (existing.state === RelationState.ACTIVE) {
+		return { status: 'already_friends' };
+	}
+
+	if (existing.state === RelationState.PENDING) {
 		// The other user already sent us a pending friend request: rather than
 		// surfacing an error, treat our outgoing request as an acceptance of
 		// theirs. The recipient of the existing request is `participants[1]`,
 		// so this only applies when the caller is on the receiving end.
-		if (
-			existing.category === RelationCategory.FRIEND &&
-			existing.state === RelationState.PENDING &&
-			existing.participants[1] === sender
-		) {
+		if (existing.participants[1] === sender) {
 			setDocStore({
 				collection: Collection.RELATIONS,
 				key: relationId,
@@ -187,26 +216,37 @@ export const sendFriendRequest = ({ target }: { target: PrincipalText }): void =
 				caller
 			});
 
-			return;
+			return { status: 'auto_accepted' };
 		}
 
-		throw new Error(`Friend request already exists with state: ${existing.state}`);
+		return { status: 'already_pending' };
 	}
 
-	const relation: Relation = {
-		category: RelationCategory.FRIEND,
-		state: RelationState.PENDING,
-		participants: [sender, target]
-	};
+	if (existing.state === RelationState.REJECTED) {
+		// The rejecter (`participants[1]` of the rejected request) may
+		// re-initiate at any time; the rejected sender only after the
+		// cooldown. The reject write is the last write a REJECTED doc
+		// receives, so the Juno-managed `updated_at` is the rejection time.
+		const isRejecter = existing.participants[1] === sender;
+		const rejectedAtMs = nonNullish(existingDoc.updated_at)
+			? Number(existingDoc.updated_at / 1_000_000n)
+			: undefined;
+		const retryAtMs = nonNullish(rejectedAtMs)
+			? rejectedAtMs + FRIEND_REQUEST_REJECTED_COOLDOWN_MS
+			: undefined;
 
-	setDocStore({
-		collection: Collection.RELATIONS,
-		key: relationId,
-		doc: {
-			data: encodeDocData(relation)
-		},
-		caller
-	});
+		const nowMs = Number(time() / 1_000_000n);
+
+		if (!isRejecter && nonNullish(retryAtMs) && nowMs < retryAtMs) {
+			return { status: 'rejected_cooldown', retryAtMs };
+		}
+
+		writePendingRequest(existingDoc.version);
+
+		return { status: 'sent' };
+	}
+
+	throw new Error(`Friend request already exists with state: ${existing.state}`);
 };
 
 export const acceptFriendRequest = ({ relationId }: { relationId: string }): void => {

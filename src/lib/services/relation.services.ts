@@ -1,7 +1,7 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
 import { syncGroupAdminsAfterUnfriend } from '$lib/services/group.services';
-import type { Relation } from '$lib/types/relation';
+import type { FriendRequestOutcome, Relation } from '$lib/types/relation';
 import { toRelationId } from '$lib/utils/relation.utils';
 import { isNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
@@ -71,10 +71,10 @@ export const sendFriendRequest = async ({
 }: {
 	target: string;
 	sender: PrincipalText;
-}): Promise<void> => {
+}): Promise<FriendRequestOutcome> => {
 	const resolved = await resolveTargetPrincipal({ input: target, sender });
 
-	await functions.sendFriendRequest({ target: resolved });
+	return await functions.sendFriendRequest({ target: resolved });
 };
 
 export const acceptFriendRequest = async ({
