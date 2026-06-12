@@ -66,6 +66,35 @@ This is what prevents a dual source of truth: a spec is authoritative
 only while `In progress`, and only for its own PR. Everything else
 defers to the code and `PRODUCT.md`.
 
+## Required content for every spec
+
+**Analytics.** Every spec analyzes whether the change should emit
+product analytics and proposes which events. The default answer is
+**yes** — instrument unless there is a stated reason not to; a new
+surface or behaviour without events is invisible to product analysis.
+The spec names the proposed events and their dimensional props,
+reusing names from the existing taxonomy where one fits. A new event
+name must land in **both** halves of the dual-source pair:
+`src/lib/types/analytics-event.ts` (TS union) and
+`src/lib/schema/analytics-event.schema.ts` (runtime Zod mirror) —
+svelte-check only catches the union; an enum mismatch fails at
+runtime. Capture goes through `track` in
+`src/lib/services/analytics.services.ts`. Behavioural data only —
+bounded prop vocabularies, no free-form text, no PII. If the spec
+concludes no analytics are warranted, it says so explicitly and why;
+silence reads as "not considered".
+
+**Issue linkage.** Before finalizing a spec, search the repository's
+open issues. If the change fixes one, record it in the spec and have
+the implementation PR close it via a closing keyword — plain
+`Closes #123` (no em-dash after the number, GitHub won't parse it;
+the link only resolves when the PR targets `main`). If the spec only
+**partially** fixes an issue, check whether closing the remaining gap
+is trivial — if it is, fold it into the spec's scope so the issue
+closes completely; if it isn't, do **not** use a closing keyword:
+reference the issue as `Part of #123` and state what remains under
+"Out of scope".
+
 ## Required content by area
 
 **Frontend — artifacts welcome (optional).** Put HTML mocks,

@@ -21,6 +21,21 @@ Status: Draft
 
 <!-- Explicit non-goals, deferred items, adjacent issues left alone. -->
 
+## Linked issues
+
+<!-- Search open issues before finalizing (see workflow.md § Required content for every spec).
+- Fully fixed → "Closes #N" here and in the implementation PR body (no em-dash after the number; only closes when the PR targets main).
+- Partially fixed → check whether completing the fix is trivial; fold it into scope if so, otherwise "Part of #N" and the remaining gap under Out of scope.
+- No related issue → say so. -->
+
+## Analytics
+
+<!-- Required analysis for every spec — the default is to instrument (see workflow.md § Required content for every spec).
+- Propose the events + dimensional props; reuse names from src/lib/types/analytics-event.ts where one fits.
+- A new event name goes in BOTH the TS union (src/lib/types/analytics-event.ts) AND the Zod mirror (src/lib/schema/analytics-event.schema.ts); capture via track() in src/lib/services/analytics.services.ts.
+- Behavioural data only — bounded prop vocabularies, no free-form text, no PII.
+- If no analytics are warranted, keep this section and state why. -->
+
 ## Design artifacts (frontend — optional)
 
 <!-- Relative links into ./<this-spec-filename>/ — wireframes, HTML mocks, screenshots. Deleted post-merge. Remove this section if unused.
