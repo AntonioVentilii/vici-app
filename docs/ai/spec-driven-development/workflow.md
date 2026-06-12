@@ -110,14 +110,15 @@ known — never one mixed "open items" list:
   architecture choice (two valid approaches, ship in v1 vs.
   fast-follow). These need an owner to decide, not more information.
 
-The two route differently: open questions go to whoever can find the
-answer; pending decisions go to whoever owns the call — they are the
-"deeper ambiguity" that step 4 says to stop for. The split also keeps
-the spec honest: it's easy to disguise an undecided choice as an "open
-question" and stall. When an open question gets answered it usually
-becomes a pending decision — move it across rather than leaving it
-ambiguous. A spec should not flip to `In progress` while pending
-decisions remain; once decided, record the outcome under "Decisions".
+The two kinds route differently: open questions go to whoever can
+find the answer; pending decisions go to whoever owns the call — they
+are the "deeper ambiguity" that step 4 says to stop for. The split
+also keeps the spec honest: it's easy to disguise an undecided choice
+as an "open question" and stall. When an open question gets answered
+it usually becomes a pending decision — move it across rather than
+leaving it ambiguous. Pending decisions gate step 3's status flip:
+resolve them before moving the spec to `In progress (#PR)`; once
+decided, record the outcome under "Decisions".
 
 ## Required content by area
 
@@ -171,7 +172,9 @@ build.
 2. **Spec** — copy [`template.md`](./template.md) into `specs/`, fill
    it in, status `Draft`.
 3. **Build** — read `AGENTS.md` + area README + `PRODUCT.md`, then the
-   spec. Flip status to `In progress (#PR)`. Update `PRODUCT.md` in
+   spec. Resolve any remaining pending decisions (see
+   [required content](#required-content-for-every-spec)), then flip
+   status to `In progress (#PR)`. Update `PRODUCT.md` in
    the same PR as the behaviour change — the implementer writes it
    while the context is fresh, and `main` never carries code whose
    product description disagrees.

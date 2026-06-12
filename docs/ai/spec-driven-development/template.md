@@ -65,7 +65,7 @@ Interactive HTML mocks must (see docs/ai/spec-driven-development/workflow.md § 
 
 ## Open questions
 
-<!-- Facts not yet known — to research, look up, or ask someone who can answer (see workflow.md § Required content for every spec). Once answered, an item usually moves to Pending decisions (or straight to Decisions). Remove this section when empty. -->
+<!-- Facts not yet known — to research, look up, or ask someone who can answer (see workflow.md § Required content for every spec). Once answered, an item usually becomes a pending decision — move it across; only the decided outcome lands under Decisions. Remove this section when empty. -->
 
 ## Pending decisions
 
