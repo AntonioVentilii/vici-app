@@ -562,6 +562,9 @@ export const itMessages = {
 	'admin.resolution.action.resolve_no': 'Risolvi NO',
 	'admin.resolution.action.resolve_yes': 'Risolvi YES',
 	'admin.resolution.clause_label': 'Clausola di risoluzione',
+	'admin.resolution.confirm.market_label': 'Mercato',
+	'admin.resolution.confirm.warning':
+		'Questa azione risolve il mercato per tutti i partecipanti e non può essere annullata.',
 	'admin.resolution.empty': 'Nessun mercato attivo da risolvere.',
 	'admin.resolution.expires': 'Scade: {date}',
 	'admin.resolution.history.title': 'Risoluzioni recenti',

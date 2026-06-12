@@ -566,6 +566,9 @@ export const ptMessages = {
 	'admin.resolution.action.resolve_no': 'Resolver NO',
 	'admin.resolution.action.resolve_yes': 'Resolver YES',
 	'admin.resolution.clause_label': 'Cláusula de resolução',
+	'admin.resolution.confirm.market_label': 'Mercado',
+	'admin.resolution.confirm.warning':
+		'Esta ação resolve o mercado para todos os participantes e não pode ser anulada.',
 	'admin.resolution.empty': 'Nenhum mercado ativo a aguardar resolução.',
 	'admin.resolution.expires': 'Expira: {date}',
 	'admin.resolution.history.title': 'Resoluções recentes',

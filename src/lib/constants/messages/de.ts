@@ -564,6 +564,9 @@ export const deMessages = {
 	'admin.resolution.action.resolve_no': 'NEIN auflösen',
 	'admin.resolution.action.resolve_yes': 'JA auflösen',
 	'admin.resolution.clause_label': 'Auflösungsklausel',
+	'admin.resolution.confirm.market_label': 'Markt',
+	'admin.resolution.confirm.warning':
+		'Dadurch wird der Markt für alle Teilnehmer aufgelöst. Dies kann nicht rückgängig gemacht werden.',
 	'admin.resolution.empty': 'Keine aktiven Märkte, die eine Auflösung benötigen.',
 	'admin.resolution.expires': 'Läuft ab: {date}',
 	'admin.resolution.history.title': 'Letzte Auflösungen',

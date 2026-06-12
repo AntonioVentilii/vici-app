@@ -557,6 +557,9 @@ export const enMessages = {
 	'admin.resolution.action.resolve_no': 'Resolve NO',
 	'admin.resolution.action.resolve_yes': 'Resolve YES',
 	'admin.resolution.clause_label': 'Resolution clause',
+	'admin.resolution.confirm.market_label': 'Market',
+	'admin.resolution.confirm.warning':
+		'This resolves the market for all participants and cannot be undone.',
 	'admin.resolution.empty': 'No active markets requiring resolution.',
 	'admin.resolution.expires': 'Expires: {date}',
 	'admin.resolution.history.title': 'Recent Resolutions',
