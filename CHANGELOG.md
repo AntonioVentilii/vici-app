@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/AntonioVentilii/vici-app/compare/v0.1.10...v0.1.11) (2026-06-13)
+
+
+### Bug Fixes
+
+* **flow:** map clearing trade errors to friendly messages ([#850](https://github.com/AntonioVentilii/vici-app/issues/850)) ([48384a7](https://github.com/AntonioVentilii/vici-app/commit/48384a7dc1892a8a1fa6842c82cdabdc73601282))
+
 ## [0.1.10](https://github.com/AntonioVentilii/vici-app/compare/v0.1.9...v0.1.10) (2026-06-13)
 
 
