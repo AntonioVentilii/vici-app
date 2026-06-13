@@ -1,5 +1,5 @@
 import type { ClearingDid } from '$declarations';
-import { ZERO } from '$lib/constants/app.constants';
+import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import type { MarketId } from '$lib/types/market';
 import type {
 	TransactionHistoryBonusTag,
@@ -86,19 +86,27 @@ interface HistoryEntry {
 }
 
 /**
- * Margin committed by an `Executed` fill: `qty × price`, rounded back to
- * clearing-margin base units — the same notional the wallet activity table
- * shows for trades. The sign is kept deliberately: should an event ever
- * carry a negative `qty` (a closing/sell fill), its proceeds must *credit*
- * spendable and unwind the accumulated stake — taking the absolute value
- * would debit the seller twice. Non-finite prices (malformed events)
- * contribute `ZERO` rather than poisoning the whole balance walk with
- * `NaN`.
+ * Margin committed by an `Executed` fill, in clearing-margin base units
+ * (`USD_DECIMALS`) — the unit every other delta and the spendable anchor
+ * speak.
+ *
+ * An event's `qty` is a whole contract count (1 unit = 1.0 of the
+ * underlying) and `price` a probability in [0, 1], so `qty × price` is the
+ * notional in *whole* VXP; scaling by `10^USD_DECIMALS` lifts it into base
+ * units. Without that scale a 5,000 VXP stake reads as `0.5` (`<1`) and,
+ * worse, never debits the running balance — the backward walk then
+ * underflows old balances into the negative.
+ *
+ * The sign is kept deliberately: should an event ever carry a negative
+ * `qty` (a closing/sell fill), its proceeds must *credit* spendable and
+ * unwind the accumulated stake — taking the absolute value would debit the
+ * seller twice. Non-finite prices (malformed events) contribute `ZERO`
+ * rather than poisoning the whole balance walk with `NaN`.
  */
 const executedCost = (event: ClearingDid.Event): bigint => {
-	const cost = Number(event.qty) * eventExecutionPrice(event);
+	const marginUnits = Number(event.qty) * eventExecutionPrice(event) * 10 ** USD_DECIMALS;
 
-	return Number.isFinite(cost) ? BigInt(Math.round(cost)) : ZERO;
+	return Number.isFinite(marginUnits) ? BigInt(Math.round(marginUnits)) : ZERO;
 };
 
 /**
@@ -254,11 +262,19 @@ const ledgerEntry = ({
 export const assembleTransactionHistory = ({
 	events,
 	ledgerEntries,
-	spendableAnchor
+	spendableAnchor,
+	includeGenesis = false
 }: {
 	events: ClearingDid.Event[];
 	ledgerEntries: TransactionHistoryLedgerEntry[];
 	spendableAnchor: bigint;
+	/**
+	 * Append the "joined Vici" genesis marker as the oldest row. Only pass
+	 * `true` when the full history was loaded (the ledger walk reached the
+	 * beginning, not the page cap) — otherwise there *is* older history and
+	 * the marker would lie about where the trail starts.
+	 */
+	includeGenesis?: boolean;
 }): TransactionHistoryRow[] => {
 	const entries = [...clearingEntries(events), ...ledgerEntries.map(ledgerEntry)].sort((a, b) =>
 		a.timestampNs === b.timestampNs ? 0 : a.timestampNs > b.timestampNs ? -1 : 1
@@ -273,6 +289,20 @@ export const assembleTransactionHistory = ({
 		}
 
 		running -= entry.delta;
+	}
+
+	// The account's origin: zero VXP, before any bonus or prediction. Dated to
+	// the oldest real event (the moment the user first showed up). Fixed at
+	// `ZERO` rather than the walked `running`, so it reads as a clean genesis
+	// even when resting-order margin leaves the walk a touch off the floor.
+	if (includeGenesis && entries.length > 0) {
+		rows.push({
+			id: 'genesis',
+			kind: 'joined',
+			timestampNs: entries[entries.length - 1].timestampNs,
+			delta: ZERO,
+			balance: ZERO
+		});
 	}
 
 	return rows;
