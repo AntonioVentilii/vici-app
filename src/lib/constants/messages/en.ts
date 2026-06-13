@@ -8,7 +8,7 @@ export const enMessages = {
 	'trade.error.common.unauthorized': "You're not allowed to do that.",
 	'trade.error.generic': "Your prediction couldn't be placed. Try again shortly.",
 	'trade.error.insufficient_margin':
-		'Not enough available balance — it frees up as your open predictions resolve.',
+		'Not enough available balance — this prediction needs {required}, but you have {available}. It frees up as your open predictions resolve.',
 	'trade.error.not_authorized_to_trade': "You don't have access to this market.",
 	'trade.error.not_order_creator': 'You can only cancel your own orders.',
 	'trade.error.order_not_found': 'That offer was just taken or withdrawn — try again.',

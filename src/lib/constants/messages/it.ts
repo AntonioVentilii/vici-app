@@ -8,7 +8,7 @@ export const itMessages = {
 	'trade.error.common.unauthorized': 'Non hai il permesso di farlo.',
 	'trade.error.generic': 'Impossibile inviare la tua previsione. Riprova tra poco.',
 	'trade.error.insufficient_margin':
-		'Saldo disponibile insufficiente — si libera man mano che le tue previsioni aperte si risolvono.',
+		'Saldo disponibile insufficiente — questa previsione richiede {required}, ma hai {available}. Si libera man mano che le tue previsioni aperte si risolvono.',
 	'trade.error.not_authorized_to_trade': 'Non hai accesso a questo mercato.',
 	'trade.error.not_order_creator': 'Puoi annullare solo i tuoi ordini.',
 	'trade.error.order_not_found': "Quell'offerta è stata appena presa o ritirata — riprova.",

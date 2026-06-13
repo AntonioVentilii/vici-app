@@ -1,4 +1,6 @@
 import type { ClearingDid } from '$declarations';
+import { USD_DECIMALS } from '$lib/constants/app.constants';
+import { formatToken } from '$lib/utils/format.utils';
 import type { MessageKey } from '$lib/utils/i18n.utils';
 import { assertNever } from '@dfinity/utils';
 
@@ -84,7 +86,18 @@ export const mapTradeError = (err: ClearingDid.TradeError): TradeErrorMessage =>
 	}
 
 	if ('InsufficientMargin' in err) {
-		return { key: 'trade.error.insufficient_margin' };
+		// `balance` (what's free) and `required` are clearing-margin base units
+		// (`USD_DECIMALS`); render them as whole grouped amounts, no unit symbol
+		// (the toast is domain-agnostic), and never surface the `user` principal.
+		const { balance, required } = err.InsufficientMargin;
+
+		return {
+			key: 'trade.error.insufficient_margin',
+			params: {
+				available: formatToken({ value: balance, unitName: USD_DECIMALS, displayDecimals: 0 }),
+				required: formatToken({ value: required, unitName: USD_DECIMALS, displayDecimals: 0 })
+			}
+		};
 	}
 
 	if ('NotOrderCreator' in err) {

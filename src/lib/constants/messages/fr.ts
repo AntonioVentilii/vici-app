@@ -9,7 +9,7 @@ export const frMessages = {
 	'trade.error.common.unauthorized': "Tu n'as pas le droit de faire ça.",
 	'trade.error.generic': "Ta prédiction n'a pas pu être placée. Réessaie dans un instant.",
 	'trade.error.insufficient_margin':
-		'Solde disponible insuffisant — il se libère à mesure que tes prédictions en cours se règlent.',
+		'Solde disponible insuffisant — cette prédiction nécessite {required}, mais tu as {available}. Il se libère à mesure que tes prédictions en cours se règlent.',
 	'trade.error.not_authorized_to_trade': "Tu n'as pas accès à ce marché.",
 	'trade.error.not_order_creator': 'Tu ne peux annuler que tes propres ordres.',
 	'trade.error.order_not_found': "Cette offre vient d'être prise ou retirée — réessaie.",

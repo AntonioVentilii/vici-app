@@ -13,7 +13,7 @@ export const deMessages = {
 	'trade.error.generic':
 		'Deine Vorhersage konnte nicht platziert werden. Versuche es gleich noch einmal.',
 	'trade.error.insufficient_margin':
-		'Nicht genug verfügbares Guthaben — es wird frei, sobald deine offenen Vorhersagen aufgelöst werden.',
+		'Nicht genug verfügbares Guthaben — diese Vorhersage benötigt {required}, du hast aber {available}. Es wird frei, sobald deine offenen Vorhersagen aufgelöst werden.',
 	'trade.error.not_authorized_to_trade': 'Du hast keinen Zugriff auf diesen Markt.',
 	'trade.error.not_order_creator': 'Du kannst nur deine eigenen Orders stornieren.',
 	'trade.error.order_not_found':
