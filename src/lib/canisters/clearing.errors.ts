@@ -1,6 +1,14 @@
 import type { ClearingDid } from '$declarations';
 import type { MessageKey } from '$lib/utils/i18n.utils';
-import { assertNever, jsonReplacer } from '@dfinity/utils';
+import { assertNever } from '@dfinity/utils';
+
+/**
+ * The discriminant of a Candid variant — its single top-level key (e.g.
+ * `'InsufficientMargin'`). Safe to surface in logs/`Error.message`: it
+ * names the failure without the variant's payload (principals, base-unit
+ * bigints), which stays solely on `TradeExecutionError.tradeError`.
+ */
+const variantName = (variant: object): string => Object.keys(variant)[0] ?? 'Unknown';
 
 /**
  * A clearing trade call (`submit_market_order` / `submit_limit_order` /
@@ -8,13 +16,13 @@ import { assertNever, jsonReplacer } from '@dfinity/utils';
  * Candid `TradeError` variant so the UI can render a localized,
  * human-readable reason instead of the raw `JSON.stringify`d `Err` (which
  * leaked principals and base-unit bigints into the "Prediction failed"
- * toast).
+ * toast). `Error.message` holds only the variant name — never the payload.
  */
 export class TradeExecutionError extends Error {
 	readonly tradeError: ClearingDid.TradeError;
 
 	constructor(tradeError: ClearingDid.TradeError) {
-		super(`Trade rejected: ${JSON.stringify(tradeError, jsonReplacer)}`);
+		super(`Trade rejected: ${variantName(tradeError)}`);
 		this.name = 'TradeExecutionError';
 		this.tradeError = tradeError;
 	}
@@ -50,7 +58,7 @@ const mapCommonError = (err: ClearingDid.CommonError): TradeErrorMessage => {
 		return { key: 'trade.error.common.registry_not_set' };
 	}
 
-	assertNever(err, `Unhandled CommonError variant: ${JSON.stringify(err, jsonReplacer)}`);
+	assertNever(err, `Unhandled CommonError variant: ${variantName(err)}`);
 };
 
 /**
@@ -99,7 +107,7 @@ export const mapTradeError = (err: ClearingDid.TradeError): TradeErrorMessage =>
 		return mapCommonError(err.Common);
 	}
 
-	assertNever(err, `Unhandled TradeError variant: ${JSON.stringify(err, jsonReplacer)}`);
+	assertNever(err, `Unhandled TradeError variant: ${variantName(err)}`);
 };
 
 /**
@@ -114,8 +122,11 @@ export const tradeErrorMessage = (error: unknown): TradeErrorMessage => {
 
 	try {
 		return mapTradeError(error.tradeError);
-	} catch (e: unknown) {
-		console.warn('Unmapped trade error variant:', error.tradeError, e);
+	} catch {
+		if (import.meta.env.DEV) {
+			// Variant name only — never the payload (principals, base-unit bigints).
+			console.warn('Unmapped trade error variant:', variantName(error.tradeError));
+		}
 
 		return { key: 'trade.error.generic' };
 	}
