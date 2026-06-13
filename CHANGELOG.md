@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.12](https://github.com/AntonioVentilii/vici-app/compare/v0.1.11...v0.1.12) (2026-06-13)
+
+
+### Bug Fixes
+
+* **dash:** correct prediction stakes and balances in transaction history ([#864](https://github.com/AntonioVentilii/vici-app/issues/864)) ([3d2435a](https://github.com/AntonioVentilii/vici-app/commit/3d2435ad41eb473cd2667e04c75f7eff4f18e7f3))
+
+
+### Miscellaneous Chores
+
+* **npm-deps-dev:** bump @sveltejs/kit from 2.61.1 to 2.63.0 ([#859](https://github.com/AntonioVentilii/vici-app/issues/859)) ([bb759b7](https://github.com/AntonioVentilii/vici-app/commit/bb759b75f0fd28f961761c9895ce173039500e44))
+* **npm-deps-dev:** bump @types/node from 25.8.0 to 25.9.2 ([#856](https://github.com/AntonioVentilii/vici-app/issues/856)) ([640d499](https://github.com/AntonioVentilii/vici-app/commit/640d4991713525a7d7492748f25a51e29372e6bf))
+* **npm-deps-dev:** bump eslint-plugin-prettier from 5.5.5 to 5.5.6 ([#855](https://github.com/AntonioVentilii/vici-app/issues/855)) ([0106fac](https://github.com/AntonioVentilii/vici-app/commit/0106facfe20b4d4addbc86735dba6052a9da99a5))
+* **npm-deps-dev:** bump prettier-plugin-svelte from 4.0.1 to 4.1.0 ([#862](https://github.com/AntonioVentilii/vici-app/issues/862)) ([d86d218](https://github.com/AntonioVentilii/vici-app/commit/d86d218c78f7e7b46e6e02763230f49c1ce99d73))
+* **npm-deps-dev:** bump string.prototype.trim from 1.2.10 to 1.2.11 ([#863](https://github.com/AntonioVentilii/vici-app/issues/863)) ([eac75c5](https://github.com/AntonioVentilii/vici-app/commit/eac75c5c5d143fe303c04e955c865fb0dce43e05))
+* **npm-deps-dev:** bump string.prototype.trimend from 1.0.9 to 1.0.10 ([#857](https://github.com/AntonioVentilii/vici-app/issues/857)) ([d148f76](https://github.com/AntonioVentilii/vici-app/commit/d148f76909bf2260219c452e5d5ebc32ee8cb24c))
+* **npm-deps-dev:** bump svelte from 5.55.9 to 5.56.2 ([#860](https://github.com/AntonioVentilii/vici-app/issues/860)) ([6978b0b](https://github.com/AntonioVentilii/vici-app/commit/6978b0b143b1d11a4bce596993293f69b86e6647))
+* **npm-deps-dev:** bump typed-array-length from 1.0.7 to 1.0.8 ([#858](https://github.com/AntonioVentilii/vici-app/issues/858)) ([439ce5f](https://github.com/AntonioVentilii/vici-app/commit/439ce5f47b6919614293e29b2556d5051d7c5e8a))
+* **npm-deps:** bump idb-keyval from 6.2.4 to 6.2.5 ([#861](https://github.com/AntonioVentilii/vici-app/issues/861)) ([faa7536](https://github.com/AntonioVentilii/vici-app/commit/faa75367a8fc147d86c9b299fdca9477076b0455))
+
 ## [0.1.11](https://github.com/AntonioVentilii/vici-app/compare/v0.1.10...v0.1.11) (2026-06-13)
 
 
