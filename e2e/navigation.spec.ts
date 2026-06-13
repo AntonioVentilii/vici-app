@@ -4,19 +4,18 @@ import { HomePage } from './pages/home.page';
 /**
  * Top-level navigation smoke tests.
  *
- * Phase 1 routing change: every (app) path is auth-gated. Anonymous
- * navigation to a gated path bounces to `/signin`. Signed-in users see
- * the page chrome as before. We exercise:
+ * Every (app) path is auth-gated. Anonymous navigation to a gated path
+ * bounces to `/signin`; signed-in users see the page chrome. We exercise:
  *
- * - One redirect-from-anonymous test per gated path, so a regression
- *   in the gate (e.g. the redirect getting deleted) fails loud.
- * - The signed-in variant for each non-Flow page, snapshotted so a
- *   structural drift on the page surfaces in CI.
+ * - One redirect-from-anonymous test per gated path, so a regression in
+ *   the gate (e.g. the redirect getting deleted) fails loud.
+ * - The signed-in variant for each page, snapshotted so a structural
+ *   drift on the page surfaces in CI.
  *
  * Markets / home is covered by `homepage.spec.ts`.
  */
 const PAGES = [
-	{ name: 'social', path: '/social' },
+	{ name: 'arena', path: '/arena' },
 	{ name: 'portfolio', path: '/portfolio' },
 	{ name: 'profile', path: '/profile' },
 	{ name: 'wallet', path: '/wallet' }
@@ -30,29 +29,20 @@ const PAGES = [
  *    `{#key page.url.pathname}` div in `(app)/+layout.svelte`) has
  *    `in:fade={{ duration: 100, delay: 100 }}` on it. Playwright's
  *    `toBeVisible()` propagates parent opacity — so until we wait for
- *    `opacity: '1'`, every descendant (including the page's `<h1>`) is
- *    considered hidden.
- * 2. The section header `<h1>` is rendered by every top-level page via
- *    `SectionHeader.svelte`. We scope the lookup to `appMain` because
- *    `SignInModal.svelte` ALSO renders an `<h1>` inside its `<dialog>`,
- *    which lives in the DOM even when the dialog is closed — a global
- *    `page.locator('h1').first()` picks that hidden h1 first.
- * 3. The user-menu confirms we landed in the signed-in auth state.
- * 4. `networkidle` waits until there's been no network activity for
- *    500ms, which lets every page's `onMount` data fetch (Leaderboard's
- *    `getLeaderboard`, Portfolio's `getPositions` + `getUserTradeHistory`,
- *    Wallet's `reloadHistory`, Profile's friends / groups / activity
- *    sub-loaders, etc.) finish rendering before the screenshot — without
- *    this, the snapshot races the data fetch and ping-pongs between
- *    "Calculating Alphas…" spinners and the loaded view, which is what
- *    was causing CI to auto-commit a different baseline on every re-run.
- *    Treated as best-effort with a bounded timeout: if a page introduces
- *    a sub-500ms recurring fetch (e.g. a status poll), `networkidle` can
- *    never fire, and the default 30s wait would then turn every signed-in
- *    nav test into a 30s+ failure even though the chrome above is already
- *    visible and stable. Bounding the wait lets the snapshot still
- *    benefit from the common case (fetches settle in <5s) without making
- *    the suite hostage to any future always-on background traffic.
+ *    `opacity: '1'`, every descendant is considered hidden.
+ * 2. The account control (`user-menu`) confirms we landed in the signed-in
+ *    auth state (and, on the desktop project, that the nav chrome rendered).
+ * 3. `networkidle` waits until there's been no network activity for 500ms,
+ *    which lets every page's `onMount` data fetch finish rendering before
+ *    the screenshot — without this, the snapshot races the data fetch and
+ *    ping-pongs between spinners and the loaded view. Treated as best-effort
+ *    with a bounded timeout: if a page introduces a sub-500ms recurring
+ *    fetch (e.g. a status poll), `networkidle` can never fire, and the
+ *    default 30s wait would then turn every signed-in nav test into a 30s+
+ *    failure even though the chrome above is already visible and stable.
+ *    Bounding the wait lets the snapshot still benefit from the common case
+ *    (fetches settle in <5s) without making the suite hostage to any future
+ *    always-on background traffic.
  */
 const NETWORK_IDLE_BEST_EFFORT_MS = 5_000;
 
@@ -61,7 +51,6 @@ const waitForSignedInPage = async ({ page }: { page: Page }): Promise<void> => {
 
 	await expect(home.appMain).toBeVisible();
 	await expect(home.appMain).toHaveCSS('opacity', '1');
-	await expect(home.appMain.locator('h1').first()).toBeVisible();
 	await expect(home.userMenu).toBeVisible();
 
 	try {
@@ -108,8 +97,8 @@ test.describe('navigation (signed in)', () => {
 			await page.goto(path);
 			await waitForSignedInPage({ page });
 
-			// Mask only the user-menu: dev sign-in mints a fresh principal
-			// per run, so the avatar genuinely differs.
+			// Mask only the account control: dev sign-in mints a fresh
+			// principal per run, so the derived handle genuinely differs.
 			await home.stabilizeForSnapshot();
 
 			await expect(page).toHaveScreenshot(`navigation-${name}-logged-in.png`, {

@@ -5,6 +5,7 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import { formatToken, probabilityToPercent } from '$lib/utils/format.utils';
@@ -42,7 +43,7 @@
 	const onClick = () => goto(resolve(`${AppPath.Markets}/${market.id}`));
 </script>
 
-<button class="card-inline" onclick={onClick} type="button">
+<button class="card-inline" data-tid={TestId.MarketCard} onclick={onClick} type="button">
 	<div class="row between">
 		{#if tag}
 			<span style:color={tagColor(tag)} class="tag"

@@ -51,7 +51,6 @@ move to one of the other sections.
 - `src/lib/components/market/CategoricalProbabilities.svelte`
 - `src/lib/components/market/MarketCardSkeleton.svelte`
 - `src/lib/components/market/MarketDepthPanel.svelte`
-- `src/lib/components/market/MarketFeed.svelte`
 - `src/lib/components/portfolio/PositionArtThumb.svelte`
 - `src/lib/components/profile/Avatar.svelte`
 - `src/lib/components/social/ActivityItem.svelte`

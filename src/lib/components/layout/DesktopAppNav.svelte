@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { navItems } from '$lib/constants/nav.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -140,7 +141,7 @@
 				>
 					<Settings aria-hidden="true" size={18} strokeWidth={1.8} />
 				</a>
-				<a class="app-desktop-nav-handle" href={AppPath.Profile}>
+				<a class="app-desktop-nav-handle" data-tid={TestId.UserMenu} href={AppPath.Profile}>
 					<User aria-hidden="true" size={14} strokeWidth={2} />
 					<span>{userNickname ?? '@you'}</span>
 				</a>
