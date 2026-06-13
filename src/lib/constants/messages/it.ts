@@ -1,4 +1,24 @@
 export const itMessages = {
+	'trade.error.arbitrage_limit_exceeded':
+		'Il prezzo di mercato è appena cambiato — aspetta un attimo e riprova.',
+	'trade.error.common.internal': 'Qualcosa è andato storto dalla nostra parte. Riprova tra poco.',
+	'trade.error.common.invalid_input': 'Impossibile elaborare questa previsione. Riprova.',
+	'trade.error.common.math_overflow': 'Impossibile elaborare questa previsione. Riprova.',
+	'trade.error.common.registry_not_set': 'I mercati non sono ancora pronti. Riprova tra poco.',
+	'trade.error.common.unauthorized': 'Non hai il permesso di farlo.',
+	'trade.error.generic': 'Impossibile inviare la tua previsione. Riprova tra poco.',
+	'trade.error.insufficient_margin':
+		'Saldo disponibile insufficiente — si libera man mano che le tue previsioni aperte si risolvono.',
+	'trade.error.not_authorized_to_trade': 'Non hai accesso a questo mercato.',
+	'trade.error.not_order_creator': 'Puoi annullare solo i tuoi ordini.',
+	'trade.error.order_not_found': "Quell'offerta è stata appena presa o ritirata — riprova.",
+	'trade.error.registry_error':
+		'Non siamo riusciti a raggiungere il mercato in questo momento. Riprova tra poco.',
+	'trade.error.self_trading_not_allowed':
+		'Non puoi prendere il lato opposto del tuo stesso ordine.',
+	'trade.error.series_already_settled':
+		'Questo mercato è già stato liquidato — le previsioni sono chiuse.',
+	'trade.error.series_not_found': 'Questo mercato non è più disponibile.',
 	'a11y.appearance': 'Aspetto',
 	'a11y.banner_juno_console': 'Apri la Juno Console per creare un nuovo Satellite di test',
 	'a11y.checking_signin': 'Verifica dello stato di accesso',

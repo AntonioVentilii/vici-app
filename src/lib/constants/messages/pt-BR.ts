@@ -5,6 +5,27 @@
 // chain `pt-BR` → `pt` → `en` still holds, so any missing pt-BR key surfaces
 // the European string before English.
 export const ptBRMessages = {
+	'trade.error.arbitrage_limit_exceeded':
+		'O preço de mercado acabou de mudar — espere um momento e tente de novo.',
+	'trade.error.common.internal': 'Algo deu errado do nosso lado. Tente de novo em instantes.',
+	'trade.error.common.invalid_input': 'Não foi possível processar esta previsão. Tente de novo.',
+	'trade.error.common.math_overflow': 'Não foi possível processar esta previsão. Tente de novo.',
+	'trade.error.common.registry_not_set':
+		'Os mercados ainda não estão prontos. Tente de novo em instantes.',
+	'trade.error.common.unauthorized': 'Você não tem permissão para fazer isso.',
+	'trade.error.generic': 'Não foi possível registrar sua previsão. Tente de novo em instantes.',
+	'trade.error.insufficient_margin':
+		'Saldo disponível insuficiente — ele é liberado conforme suas previsões em aberto são resolvidas.',
+	'trade.error.not_authorized_to_trade': 'Você não tem acesso a este mercado.',
+	'trade.error.not_order_creator': 'Você só pode cancelar suas próprias ordens.',
+	'trade.error.order_not_found': 'Essa oferta acabou de ser aceita ou retirada — tente de novo.',
+	'trade.error.registry_error':
+		'Não conseguimos acessar o mercado agora. Tente de novo em instantes.',
+	'trade.error.self_trading_not_allowed':
+		'Você não pode ficar com o lado oposto da sua própria ordem.',
+	'trade.error.series_already_settled':
+		'Este mercado já foi liquidado — as previsões estão encerradas.',
+	'trade.error.series_not_found': 'Este mercado não está mais disponível.',
 	'a11y.appearance': 'Aparência',
 	'a11y.banner_juno_console': 'Abra o Juno Console para criar um novo Satellite para testes',
 	'a11y.checking_signin': 'Verificando status de login',

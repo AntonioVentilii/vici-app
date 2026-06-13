@@ -1,4 +1,30 @@
 export const deMessages = {
+	'trade.error.arbitrage_limit_exceeded':
+		'Der Marktpreis hat sich gerade geändert — warte einen Moment und versuche es erneut.',
+	'trade.error.common.internal':
+		'Auf unserer Seite ist etwas schiefgelaufen. Versuche es gleich noch einmal.',
+	'trade.error.common.invalid_input':
+		'Diese Vorhersage konnte nicht verarbeitet werden. Versuche es erneut.',
+	'trade.error.common.math_overflow':
+		'Diese Vorhersage konnte nicht verarbeitet werden. Versuche es erneut.',
+	'trade.error.common.registry_not_set':
+		'Die Märkte sind noch nicht bereit. Versuche es gleich noch einmal.',
+	'trade.error.common.unauthorized': 'Das darfst du nicht.',
+	'trade.error.generic':
+		'Deine Vorhersage konnte nicht platziert werden. Versuche es gleich noch einmal.',
+	'trade.error.insufficient_margin':
+		'Nicht genug verfügbares Guthaben — es wird frei, sobald deine offenen Vorhersagen aufgelöst werden.',
+	'trade.error.not_authorized_to_trade': 'Du hast keinen Zugriff auf diesen Markt.',
+	'trade.error.not_order_creator': 'Du kannst nur deine eigenen Orders stornieren.',
+	'trade.error.order_not_found':
+		'Dieses Angebot wurde gerade angenommen oder zurückgezogen — versuche es erneut.',
+	'trade.error.registry_error':
+		'Wir konnten den Markt gerade nicht erreichen. Versuche es gleich noch einmal.',
+	'trade.error.self_trading_not_allowed':
+		'Du kannst nicht die Gegenseite deiner eigenen Order einnehmen.',
+	'trade.error.series_already_settled':
+		'Dieser Markt ist bereits abgerechnet — Vorhersagen sind geschlossen.',
+	'trade.error.series_not_found': 'Dieser Markt ist nicht mehr verfügbar.',
 	'a11y.appearance': 'Erscheinungsbild',
 	'a11y.banner_juno_console':
 		'Juno Console öffnen, um einen neuen Satellite zum Testen zu erstellen',

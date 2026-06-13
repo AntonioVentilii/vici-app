@@ -1,4 +1,24 @@
 export const frMessages = {
+	'trade.error.arbitrage_limit_exceeded':
+		'Le prix du marché vient de bouger — patiente un instant et réessaie.',
+	'trade.error.common.internal': 'Un problème est survenu de notre côté. Réessaie dans un instant.',
+	'trade.error.common.invalid_input': "Cette prédiction n'a pas pu être traitée. Réessaie.",
+	'trade.error.common.math_overflow': "Cette prédiction n'a pas pu être traitée. Réessaie.",
+	'trade.error.common.registry_not_set':
+		'Les marchés ne sont pas encore prêts. Réessaie dans un instant.',
+	'trade.error.common.unauthorized': "Tu n'as pas le droit de faire ça.",
+	'trade.error.generic': "Ta prédiction n'a pas pu être placée. Réessaie dans un instant.",
+	'trade.error.insufficient_margin':
+		'Solde disponible insuffisant — il se libère à mesure que tes prédictions en cours se règlent.',
+	'trade.error.not_authorized_to_trade': "Tu n'as pas accès à ce marché.",
+	'trade.error.not_order_creator': 'Tu ne peux annuler que tes propres ordres.',
+	'trade.error.order_not_found': "Cette offre vient d'être prise ou retirée — réessaie.",
+	'trade.error.registry_error':
+		'Impossible de joindre le marché pour le moment. Réessaie dans un instant.',
+	'trade.error.self_trading_not_allowed':
+		'Tu ne peux pas prendre la position inverse de ton propre ordre.',
+	'trade.error.series_already_settled': 'Ce marché est déjà réglé — les prédictions sont closes.',
+	'trade.error.series_not_found': "Ce marché n'est plus disponible.",
 	'a11y.appearance': 'Apparence',
 	'a11y.banner_juno_console': 'Ouvrir la console Juno pour créer un nouveau Satellite de test',
 	'a11y.checking_signin': 'Vérification de la connexion',

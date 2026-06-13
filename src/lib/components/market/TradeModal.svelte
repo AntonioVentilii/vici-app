@@ -2,6 +2,7 @@
 	import { X } from '@lucide/svelte/icons';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
+	import { tradeErrorMessage } from '$lib/canisters/clearing.errors';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -132,7 +133,7 @@
 			void fetchBalance();
 			onPredictionPlaced();
 		} catch (err: unknown) {
-			error = (err as Error).message ?? tr({ key: 'prediction.error.failed' });
+			error = tr(tradeErrorMessage(err));
 		} finally {
 			loading = false;
 		}

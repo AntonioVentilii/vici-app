@@ -4,6 +4,7 @@ import {
 	type ClearingDid,
 	type ClearingService
 } from '$declarations';
+import { TradeExecutionError } from '$lib/canisters/clearing.errors';
 import { ZERO } from '$lib/constants/app.constants';
 import type { CreateCanisterOptions } from '$lib/types/canister';
 import {
@@ -299,7 +300,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to submit limit order: ${JSON.stringify(result.Err, jsonReplacer)}`);
+		throw new TradeExecutionError(result.Err);
 	};
 
 	submitMarketOrder = async ({
@@ -314,7 +315,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to submit market order: ${JSON.stringify(result.Err, jsonReplacer)}`);
+		throw new TradeExecutionError(result.Err);
 	};
 
 	cancelLimitOrder = async ({
@@ -329,7 +330,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to cancel limit order: ${JSON.stringify(result.Err, jsonReplacer)}`);
+		throw new TradeExecutionError(result.Err);
 	};
 
 	getOrders = async (queryParams: QueryParams): Promise<ClearingDid.LimitOrder[]> => {

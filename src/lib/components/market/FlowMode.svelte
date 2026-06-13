@@ -6,6 +6,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { tradeErrorMessage } from '$lib/canisters/clearing.errors';
 	import FlowBottomBar from '$lib/components/market/FlowBottomBar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
@@ -673,6 +674,8 @@
 				sessionCommittedUsd =
 					sessionCommittedUsd > stakeUsd ? sessionCommittedUsd - stakeUsd : ZERO;
 
+				const { key, params } = tradeErrorMessage(e);
+
 				notificationsStore.add({
 					title: t({ locale: $localeStore, key: 'flow.notification.trade_failed_title' }),
 					message: t({
@@ -680,7 +683,7 @@
 						key: 'flow.notification.trade_failed_message',
 						params: {
 							title: currentMarket.title.slice(0, 30),
-							error: (e as Error).message
+							error: t({ locale: $localeStore, key, params })
 						}
 					}),
 					type: 'error'
