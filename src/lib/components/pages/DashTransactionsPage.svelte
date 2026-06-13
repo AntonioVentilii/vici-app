@@ -11,6 +11,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import {
 		ArrowLeftRight,
+		Flag,
 		Flame,
 		Gift,
 		Sparkles,
@@ -25,7 +26,12 @@
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
-	import { TRANSACTION_HISTORY_PAGE_SIZE, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+	import {
+		MILLISECOND_IN_NANOSECONDS,
+		TRANSACTION_HISTORY_PAGE_SIZE,
+		USD_DECIMALS,
+		ZERO
+	} from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { marketById } from '$lib/derived/market-by-id.derived';
 	import { tradeHistory, tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
@@ -45,7 +51,11 @@
 		TransactionHistoryFilter,
 		TransactionHistoryRow
 	} from '$lib/types/transaction-history';
-	import { decimalFixedValueToNumber, formatNanosecondsToDate } from '$lib/utils/format.utils';
+	import {
+		decimalFixedValueToNumber,
+		formatLongDate,
+		formatNanosecondsToDate
+	} from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { formatVxpBalance, formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
@@ -82,7 +92,8 @@
 		return assembleTransactionHistory({
 			events: $tradeHistory,
 			ledgerEntries: ledger?.entries ?? [],
-			spendableAnchor: $vxpSpendable
+			spendableAnchor: $vxpSpendable,
+			includeGenesis: nonNullish(ledger) && !ledger.truncated
 		});
 	});
 
@@ -156,6 +167,16 @@
 	const rowTitle = (row: TransactionHistoryRow): string => {
 		const locale = $localeStore;
 
+		if (row.kind === 'joined') {
+			return t({
+				locale,
+				key: 'settings.identity.joined',
+				params: {
+					date: formatLongDate({ date: row.timestampNs / MILLISECOND_IN_NANOSECONDS, locale })
+				}
+			});
+		}
+
 		if (row.kind === 'bonus') {
 			const bonusLabel = t({ locale, key: BONUS_LABEL_KEYS[row.bonusTag ?? 'unknown'] });
 
@@ -169,6 +190,11 @@
 	};
 
 	const rowMeta = (row: TransactionHistoryRow): string => {
+		// The genesis row already carries its date in the title.
+		if (row.kind === 'joined') {
+			return '';
+		}
+
 		const when = formatNanosecondsToDate({ nanoseconds: row.timestampNs });
 
 		if (row.kind === 'lost' && nonNullish(row.stake) && row.stake > ZERO) {
@@ -267,6 +293,8 @@
 							<Flame aria-hidden="true" size={15} strokeWidth={1.8} />
 						{:else if row.kind === 'liquidation'}
 							<Zap aria-hidden="true" size={15} strokeWidth={1.8} />
+						{:else if row.kind === 'joined'}
+							<Flag aria-hidden="true" size={15} strokeWidth={1.8} />
 						{:else}
 							<ArrowLeftRight aria-hidden="true" size={15} strokeWidth={1.8} />
 						{/if}
@@ -275,7 +303,9 @@
 						<span class="txh-title">{rowTitle(row)}</span>
 						<span class="txh-meta">{rowMeta(row)}</span>
 					</span>
-					<span class="txh-amt num is-{deltaTone(row)}">{deltaDisplay(row)}</span>
+					<span class="txh-amt num is-{deltaTone(row)}">
+						{row.kind === 'joined' ? '—' : deltaDisplay(row)}
+					</span>
 					<span class="txh-bal num"
 						>{formatVxpBalance({ value: row.balance, decimals: USD_DECIMALS })}</span
 					>

@@ -29,7 +29,9 @@ export type TransactionHistoryKind =
 	| 'received'
 	| 'sent'
 	| 'minted'
-	| 'burned';
+	| 'burned'
+	/** Synthetic genesis marker: the account's zero-VXP starting point. */
+	| 'joined';
 
 export interface TransactionHistoryRow {
 	id: string;

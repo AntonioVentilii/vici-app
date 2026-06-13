@@ -140,7 +140,10 @@ the live spendable figure so the top row always matches the Dash hero.
 Losses render amount `0` with the committed stake in the subtitle (the
 stake already left the balance at the fill). Wallet ↔ clearing
 collateral sweeps never render; only their ledger fee feeds the
-balance math. The ledger walk is capped
-(`TRANSACTION_HISTORY_MAX_LEDGER_PAGES`); when hit, a quiet "older
-history not shown" footer appears. Decision record:
+balance math. When the full history is loaded (the walk reached the
+beginning), a synthetic "Joined Vici" genesis row closes the feed — no
+amount, zero balance — marking the account's zero-VXP origin. The
+ledger walk is capped (`TRANSACTION_HISTORY_MAX_LEDGER_PAGES`); when
+hit, the genesis row is suppressed and a quiet "older history not
+shown" footer appears instead. Decision record:
 [`specs/2026-06-12-feat-transaction-history.md`](./spec-driven-development/specs/2026-06-12-feat-transaction-history.md).
