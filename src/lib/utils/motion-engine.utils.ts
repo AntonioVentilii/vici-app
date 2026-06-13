@@ -308,7 +308,7 @@ export interface MotionSwipeInput {
 	wildcards?: boolean;
 	isComeback?: boolean;
 	// REAL lifetime call count from the profile (`me.calls`), BEFORE this
-	// swipe. When supplied it seeds the engine's count as a FLOOR — the
+	// swipe. When supplied, it seeds the engine's count as a FLOOR — the
 	// engine uses whichever is larger, this or its own persisted tally,
 	// since the profile count can lag behind in-session activity.
 	lifetimeCalls?: number;
@@ -496,7 +496,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 		: state.lifetime.calls;
 
 	// Write the merged count back so the persisted tally stays the
-	// high-water mark across sessions and devices.
+	// high-water mark across this device's sessions.
 	state.lifetime.calls = calls;
 	const target = dailyTarget > 0 ? dailyTarget : 10;
 	const overtime = target >= DAILY_HARD_CAP;
