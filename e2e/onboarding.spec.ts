@@ -11,20 +11,19 @@ import { HomePage } from './pages/home.page';
  *
  * Walks the whole flow taking the handle-claim branch (Beat 2 pool pick →
  * primary CTA, distinct from the skip path the page object's sign-in
- * helper uses), signs in via the dev mock identity, and asserts it lands
- * on the signed-in profile shell.
+ * helper uses), signs in via the dev mock identity, and asserts the picked
+ * handle survives the handoff onto the new profile.
  *
- * NOTE: this deliberately does not assert the *picked* handle shows up on
- * the profile. On the dev provider the picked handle is currently dropped
- * — `signIn({ dev: {} })` resolves and fires `onSuccess` before the new
- * profile loads, so `/signup`'s `handleCompleteAuthenticated` bails on the
- * still-null profile and neither handoff path persists the handle (the
- * profile shows the bootstrapped principal default instead). That's a real
- * app bug tracked separately, not a flow this test should encode as
- * expected behaviour.
+ * The dev provider resolves `signIn({ dev: {} })` synchronously and fires
+ * `onSuccess` before the new profile hydrates, so `/signup`'s
+ * `handleCompleteAuthenticated` can't upsert the picks immediately — it
+ * falls back to the pending-onboarding stash, which the `(app)` layout
+ * drain applies once the profile lands. This test guards that path: the
+ * profile hero must show the picked handle, not the bootstrapped principal
+ * default.
  */
 test.describe('pre-sign-in onboarding', () => {
-	test('walks the beats and the handle-claim path lands signed in', async ({ page }) => {
+	test('walks the beats and applies the picked handle after dev sign-in', async ({ page }) => {
 		const home = new HomePage(page);
 
 		await page.goto('/signup');
@@ -45,6 +44,13 @@ test.describe('pre-sign-in onboarding', () => {
 			.locator(`[data-tid="onboarding-handle-suggestion"]:not([disabled])`)
 			.first();
 		await suggestion.waitFor({ state: 'visible' });
+
+		// The chip renders `@{handle}`; capture the handle so we can assert it
+		// survives the dev-provider handoff onto the profile.
+		const pickedHandle = (await suggestion.innerText()).trim().replace(/^@\s*/, '');
+
+		expect(pickedHandle.length).toBeGreaterThan(0);
+
 		await suggestion.click();
 		await home.onboardingPrimary.click();
 
@@ -59,5 +65,9 @@ test.describe('pre-sign-in onboarding', () => {
 
 		await expect(home.appMain).toBeVisible();
 		await expect(home.userMenu).toBeVisible();
+
+		// The picked handle survived the dev-provider handoff — the profile
+		// hero shows `@{handle}`, not the bootstrapped principal default.
+		await expect(home.appMain.locator('h1').filter({ hasText: `@${pickedHandle}` })).toBeVisible();
 	});
 });

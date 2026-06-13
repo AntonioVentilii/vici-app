@@ -165,7 +165,18 @@
 
 		const currentProfile = $userStore.profile;
 
+		// The dev / Internet Identity providers resolve `signIn()`
+		// synchronously, so `SignInProviderStack` fires `onSuccess` while
+		// `$userSignedIn` has already flipped true but `onAuthStateChange`
+		// hasn't landed the profile yet — there's nothing to upsert the picks
+		// onto. Rather than drop them, hand off via the same pre-auth stash the
+		// signed-out path uses and route into the app, where the `(app)` layout
+		// drain applies handle/team/side (and stamps `onboardingCompleted`)
+		// once the profile hydrates.
 		if (!currentProfile) {
+			handleCompletePreAuth(result);
+			void goto(resolve(AppPath.Flow), { replaceState: true });
+
 			return;
 		}
 
