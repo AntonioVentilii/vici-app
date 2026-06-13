@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Mock — VXP transaction history</title>
+		<style>
+			:root,
+			[data-theme='dark'] {
+				--bg-base: #0e0d0b;
+				--bg-surface: #16140f;
+				--text-base: #f2ecdc;
+				--text-muted: rgba(242, 236, 220, 0.5);
+				--border-base: rgba(242, 236, 220, 0.08);
+				--accent: #e2b842;
+				--accent-fg: #0e0d0b;
+				--yes: #4fd3a1;
+				--no: #ff6b6b;
+				--hold: #6b9fff;
+			}
+			[data-theme='light'] {
+				--bg-base: #f2ecdc;
+				--bg-surface: #faf6ea;
+				--text-base: #0e0d0b;
+				--text-muted: rgba(14, 13, 11, 0.5);
+				--border-base: rgba(14, 13, 11, 0.1);
+				--accent: #b68b1f;
+				--accent-fg: #0e0d0b;
+				--yes: #2ba178;
+				--no: #d04444;
+				--hold: #3a6fd8;
+			}
+			[data-theme='peach'] {
+				--bg-base: #fae0cc;
+				--bg-surface: #ffead9;
+				--text-base: #3d2419;
+				--text-muted: rgba(61, 36, 25, 0.5);
+				--border-base: rgba(61, 36, 25, 0.1);
+				--accent: #b68b1f;
+				--accent-fg: #3d2419;
+				--yes: #2ba178;
+				--no: #c84545;
+				--hold: #3a6fd8;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				padding: 24px 16px 64px;
+				font-family:
+					ui-sans-serif,
+					system-ui,
+					-apple-system,
+					sans-serif;
+				background: var(--bg-base);
+				color: var(--text-base);
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 20px;
+			}
+			.controls {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 16px 28px;
+				align-items: center;
+				justify-content: center;
+				background: var(--bg-surface);
+				border: 1px solid var(--border-base);
+				border-radius: 14px;
+				padding: 12px 18px;
+				font-size: 13px;
+			}
+			.controls fieldset {
+				border: 0;
+				padding: 0;
+				margin: 0;
+				display: flex;
+				gap: 10px;
+				align-items: center;
+			}
+			.controls legend {
+				float: left;
+				padding: 0 6px 0 0;
+				color: var(--text-muted);
+			}
+			.controls label {
+				display: flex;
+				gap: 4px;
+				align-items: center;
+				cursor: pointer;
+			}
+			button.theme,
+			button.copy {
+				font: inherit;
+				cursor: pointer;
+				border: 1px solid var(--border-base);
+				background: transparent;
+				color: var(--text-base);
+				border-radius: 999px;
+				padding: 5px 12px;
+			}
+			button.theme[aria-pressed='true'] {
+				background: var(--accent);
+				color: var(--accent-fg);
+				border-color: var(--accent);
+			}
+			button.copy {
+				background: var(--accent);
+				color: var(--accent-fg);
+				border-color: var(--accent);
+				font-weight: 600;
+			}
+			.frames {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 24px;
+				justify-content: center;
+				align-items: flex-start;
+			}
+			.frame {
+				width: 360px;
+				background: var(--bg-base);
+				border: 1px solid var(--border-base);
+				border-radius: 24px;
+				padding: 16px;
+				font-size: 13px;
+			}
+			.frame h3 {
+				margin: 0 0 10px;
+				font-size: 12px;
+				font-weight: 500;
+				color: var(--text-muted);
+				text-align: center;
+			}
+			.sheet {
+				background: var(--bg-surface);
+				border: 1px solid var(--border-base);
+				border-radius: 18px;
+				padding: 14px 16px 16px;
+			}
+			.grip {
+				width: 36px;
+				height: 4px;
+				border-radius: 2px;
+				background: var(--text-muted);
+				opacity: 0.5;
+				margin: 0 auto 14px;
+			}
+			.kv {
+				display: flex;
+				justify-content: space-between;
+				padding: 8px 0;
+				border-top: 1px solid var(--border-base);
+			}
+			.kv span:first-child {
+				color: var(--text-muted);
+			}
+			.linkrow {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				width: 100%;
+				margin-top: 12px;
+				padding: 11px 12px;
+				background: color-mix(in srgb, var(--accent) 12%, transparent);
+				border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+				border-radius: 12px;
+				color: inherit;
+				font: inherit;
+				text-align: left;
+				cursor: pointer;
+			}
+			.linkrow .t {
+				flex: 1;
+			}
+			.linkrow .t p {
+				margin: 0;
+			}
+			.linkrow .t p + p {
+				font-size: 11px;
+				color: var(--text-muted);
+			}
+			.chev {
+				color: var(--accent);
+				font-size: 16px;
+			}
+			.hdr {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-bottom: 12px;
+			}
+			.hdr .title {
+				font-size: 15px;
+				font-weight: 600;
+			}
+			.pill {
+				margin-left: auto;
+				font-size: 11px;
+				color: var(--accent);
+				background: color-mix(in srgb, var(--accent) 12%, transparent);
+				border-radius: 999px;
+				padding: 3px 10px;
+			}
+			.chips {
+				display: flex;
+				gap: 6px;
+				margin-bottom: 12px;
+			}
+			.chip {
+				border: 1px solid var(--border-base);
+				color: var(--text-muted);
+				border-radius: 999px;
+				padding: 3px 10px;
+				font-size: 11px;
+				background: transparent;
+				font: inherit;
+				cursor: pointer;
+			}
+			.chip.on {
+				background: var(--accent);
+				color: var(--accent-fg);
+				border-color: var(--accent);
+				font-weight: 600;
+			}
+			.row,
+			.thead {
+				display: grid;
+				grid-template-columns: 22px minmax(0, 1fr) 58px 62px;
+				gap: 8px;
+				align-items: center;
+				padding: 8px 2px;
+				border-top: 1px solid var(--border-base);
+			}
+			.thead {
+				border-top: 0;
+				padding-bottom: 4px;
+				font-size: 10px;
+				color: var(--text-muted);
+			}
+			.row .ico {
+				font-size: 14px;
+				text-align: center;
+			}
+			.row .what p {
+				margin: 0;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			.row .what p + p {
+				font-size: 10px;
+				color: var(--text-muted);
+			}
+			.amt,
+			.bal,
+			.thead span:nth-child(n + 3) {
+				text-align: right;
+				font-variant-numeric: tabular-nums;
+			}
+			.amt.up {
+				color: var(--yes);
+				font-weight: 600;
+			}
+			.amt.down {
+				color: var(--no);
+				font-weight: 600;
+			}
+			.amt.zero {
+				color: var(--text-muted);
+			}
+			.bal {
+				color: var(--text-base);
+				opacity: 0.85;
+			}
+			.pager {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-top: 12px;
+				padding-top: 10px;
+				border-top: 1px solid var(--border-base);
+				font-size: 11px;
+			}
+			.pager .n {
+				color: var(--text-muted);
+			}
+			.pages {
+				display: flex;
+				gap: 4px;
+				align-items: center;
+			}
+			.pg {
+				padding: 2px 7px;
+				border-radius: 6px;
+				color: var(--text-muted);
+			}
+			.pg.on {
+				background: var(--accent);
+				color: var(--accent-fg);
+				font-weight: 600;
+			}
+			.note {
+				max-width: 740px;
+				font-size: 12px;
+				color: var(--text-muted);
+				text-align: center;
+			}
+			textarea#out {
+				position: absolute;
+				left: -9999px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="controls">
+			<fieldset>
+				<legend>Theme</legend>
+				<button class="theme" data-t="dark" aria-pressed="true">dark</button>
+				<button class="theme" data-t="light" aria-pressed="false">light</button>
+				<button class="theme" data-t="peach" aria-pressed="false">peach</button>
+			</fieldset>
+			<fieldset id="route">
+				<legend>Route</legend>
+				<label
+					><input
+						type="radio"
+						name="route"
+						value="/dash/transactions"
+						checked
+					/>/dash/transactions</label
+				>
+				<label><input type="radio" name="route" value="/transactions" />/transactions</label>
+			</fieldset>
+			<fieldset id="psize">
+				<legend>Rows/page</legend>
+				<label><input type="radio" name="psize" value="10" checked />10</label>
+				<label><input type="radio" name="psize" value="20" />20</label>
+			</fieldset>
+			<fieldset>
+				<legend>Notes</legend>
+				<input
+					id="notes"
+					type="text"
+					aria-label="Free-form tweaks for the implementation"
+					placeholder="free-form tweaks…"
+					style="
+						font: inherit;
+						padding: 4px 8px;
+						border-radius: 8px;
+						border: 1px solid var(--border-base);
+						background: transparent;
+						color: inherit;
+						width: 180px;
+					"
+				/>
+			</fieldset>
+			<button class="copy" id="copy">Copy instructions</button>
+		</div>
+
+		<div class="frames">
+			<div class="frame" style="width: 320px">
+				<h3>1 · Holdings sheet — new link row</h3>
+				<div class="sheet">
+					<div class="grip"></div>
+					<p style="margin: 0; font-size: 12px; color: var(--text-muted)">Your stack</p>
+					<p style="margin: 2px 0 12px; font-size: 24px; font-weight: 600; color: var(--accent)">
+						1,825 <em style="font-size: 13px; font-style: normal; color: var(--text-muted)">VXP</em>
+					</p>
+					<div class="kv"><span>Lifetime earned</span><span>4,210</span></div>
+					<div class="kv"><span>Currently in play</span><span>180</span></div>
+					<div class="kv"><span>From referrals</span><span>500</span></div>
+					<button class="linkrow">
+						<span class="chev">⟲</span>
+						<span class="t">
+							<p>Transaction history</p>
+							<p>Bonuses, predictions, payouts</p>
+						</span>
+						<span class="chev">›</span>
+					</button>
+				</div>
+			</div>
+
+			<div class="frame">
+				<h3>2 · Transaction history page</h3>
+				<div class="hdr">
+					<span style="color: var(--text-muted)">‹</span>
+					<span class="title">Transactions</span>
+					<span class="pill">Available 1,825 VXP · 180 in play</span>
+				</div>
+				<div class="chips">
+					<button class="chip on">All</button>
+					<button class="chip">Predictions</button>
+					<button class="chip">Results</button>
+					<button class="chip">Bonuses</button>
+				</div>
+				<div class="thead">
+					<span></span><span>Activity</span><span>Amount</span><span>Balance</span>
+				</div>
+				<div class="row">
+					<span class="ico" style="color: var(--yes)">▲</span>
+					<span class="what"
+						><p>Won · Inter top 2 in Serie A?</p>
+						<p>Jun 12 · 09:14</p></span
+					>
+					<span class="amt up">+180</span><span class="bal">1,825</span>
+				</div>
+				<div class="row">
+					<span class="ico" style="color: var(--accent)">✦</span>
+					<span class="what"
+						><p>Bonus · 7-day streak</p>
+						<p>Jun 12 · 08:50</p></span
+					>
+					<span class="amt up">+50</span><span class="bal">1,645</span>
+				</div>
+				<div class="row">
+					<span class="ico" style="color: var(--no)">✕</span>
+					<span class="what"
+						><p>Lost · ETH ETF approved in June?</p>
+						<p>Jun 11 · 18:05 · stake of 75 not returned</p></span
+					>
+					<span class="amt zero">0</span><span class="bal">1,595</span>
+				</div>
+				<div class="row">
+					<span class="ico" style="color: var(--hold)">◎</span>
+					<span class="what"
+						><p>Prediction · BTC above $120k by July?</p>
+						<p>Jun 11 · 12:40</p></span
+					>
+					<span class="amt down">−100</span><span class="bal">1,595</span>
+				</div>
+				<div class="row">
+					<span class="ico" style="color: var(--hold)">◎</span>
+					<span class="what"
+						><p>Prediction · ETH ETF approved in June?</p>
+						<p>Jun 10 · 14:21</p></span
+					>
+					<span class="amt down">−75</span><span class="bal">1,695</span>
+				</div>
+				<div class="row">
+					<span class="ico" style="color: var(--accent)">✦</span>
+					<span class="what"
+						><p>Bonus · referral joined</p>
+						<p>Jun 9 · 10:02</p></span
+					>
+					<span class="amt up">+500</span><span class="bal">1,770</span>
+				</div>
+				<div class="pager">
+					<span class="n">118 transactions</span>
+					<span class="pages"
+						><span class="pg">‹</span><span class="pg on">1</span><span class="pg">2</span
+						><span class="pg">3</span><span class="pg">…</span><span class="pg">14</span
+						><span class="pg">›</span></span
+					>
+				</div>
+			</div>
+		</div>
+
+		<p class="note">
+			Losses show 0 (stake already debited at placement). Wallet↔clearing sweeps are hidden; their
+			fees still feed the running balance. Balance column = available (spendable) VXP after each
+			event.
+		</p>
+		<textarea id="out" aria-hidden="true"></textarea>
+
+		<script>
+			document.querySelectorAll('button.theme').forEach((b) =>
+				b.addEventListener('click', () => {
+					document.documentElement.dataset.theme = b.dataset.t;
+					document
+						.querySelectorAll('button.theme')
+						.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+				})
+			);
+			document.getElementById('copy').addEventListener('click', async () => {
+				const route = document.querySelector('input[name="route"]:checked').value;
+				const psize = document.querySelector('input[name="psize"]:checked').value;
+				const theme = document.documentElement.dataset.theme;
+				const notes = document.getElementById('notes').value.trim();
+				const text = [
+					'Final instructions for the VXP transaction history implementation (spec 2026-06-12-feat-transaction-history):',
+					`- Route: ${route} (AppPath entry + page shell named accordingly).`,
+					`- Rows per page: ${psize}, numbered pagination via Pagination.svelte.`,
+					'- Entry point: link row at the bottom of DashStackSheet ("Transaction history" + chevron, accent tint), as mocked.',
+					'- Page layout as mocked: ScreenHeader with back to /dash; header pill shows available VXP and in-play amount; filter chips All/Predictions/Results/Bonuses; columns icon+activity+timestamp / amount / running balance.',
+					'- Row semantics as mocked: bonuses + (accent), predictions placed − (hold signal), wins + (--yes), losses 0 with "stake of <n> not returned" subtitle (--no icon), sweeps hidden with fees folded into the balance.',
+					'- Running balance = available (spendable) VXP after each event, anchored on the current available balance, computed newest-first.',
+					`- Reviewed in theme: ${theme} (must work in dark, light, and peach).`,
+					notes ? `- Additional tweaks: ${notes}` : null
+				]
+					.filter(Boolean)
+					.join('\n');
+				try {
+					await navigator.clipboard.writeText(text);
+				} catch {
+					const out = document.getElementById('out');
+					out.value = text;
+					out.select();
+					document.execCommand('copy');
+				}
+				const btn = document.getElementById('copy');
+				btn.textContent = 'Copied ✓';
+				setTimeout(() => (btn.textContent = 'Copy instructions'), 1600);
+			});
+		</script>
+	</body>
+</html>
