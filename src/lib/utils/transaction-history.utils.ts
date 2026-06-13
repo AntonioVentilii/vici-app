@@ -295,11 +295,11 @@ export const assembleTransactionHistory = ({
 	// the oldest real event (the moment the user first showed up). Fixed at
 	// `ZERO` rather than the walked `running`, so it reads as a clean genesis
 	// even when resting-order margin leaves the walk a touch off the floor.
-	if (includeGenesis && rows.length > 0) {
+	if (includeGenesis && entries.length > 0) {
 		rows.push({
 			id: 'genesis',
 			kind: 'joined',
-			timestampNs: rows[rows.length - 1].timestampNs,
+			timestampNs: entries[entries.length - 1].timestampNs,
 			delta: ZERO,
 			balance: ZERO
 		});
