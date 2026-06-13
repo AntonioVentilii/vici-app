@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.10](https://github.com/AntonioVentilii/vici-app/compare/v0.1.9...v0.1.10) (2026-06-13)
+
+
+### Features
+
+* **dash:** transaction history page behind the holdings sheet ([#847](https://github.com/AntonioVentilii/vici-app/issues/847)) ([7b5807e](https://github.com/AntonioVentilii/vici-app/commit/7b5807e9b2950a8538de181020a2a79e81245798))
+
+
+### Bug Fixes
+
+* **flow:** stop the first-call beat replaying on every swipe ([#848](https://github.com/AntonioVentilii/vici-app/issues/848)) ([c0a1ee8](https://github.com/AntonioVentilii/vici-app/commit/c0a1ee822055203a1ad2d65deb92f1b379c03413))
+* **market:** make 'Top predictors here' real per-market data ([#843](https://github.com/AntonioVentilii/vici-app/issues/843)) ([1096bae](https://github.com/AntonioVentilii/vici-app/commit/1096bae84e7c1a1a61fcffa540e9e3064ae37b26))
+* **ui:** stop bottom sheets clipping glows at the side inset ([#845](https://github.com/AntonioVentilii/vici-app/issues/845)) ([c1a7824](https://github.com/AntonioVentilii/vici-app/commit/c1a78241d8bde30503c672a2540049da7e5305d9))
+
+
+### Miscellaneous Chores
+
+* **npm-deps:** bump esbuild, vite and @sveltejs/vite-plugin-svelte ([#849](https://github.com/AntonioVentilii/vici-app/issues/849)) ([424af76](https://github.com/AntonioVentilii/vici-app/commit/424af762264b788642753625340af366d16fb71f))
+
 ## [0.1.9](https://github.com/AntonioVentilii/vici-app/compare/v0.1.8...v0.1.9) (2026-06-12)
 
 
