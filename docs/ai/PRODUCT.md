@@ -40,6 +40,11 @@ VXP has 4 decimals: compare and transfer in base units
 
 ## VXP economy
 
+The compulsory rules of the economy — earn surfaces, caps, gates, the
+anti-farming posture, and the doc-drives-code reconciliation protocol —
+live in [`economy.md`](./economy.md). This section is the shipped-behaviour
+summary; `economy.md` is the governing policy.
+
 Earn-only, by design: there are **no VXP sinks**. Nothing charges VXP
 — league creation is free (founding _awards_ VXP), and the only
 outflow is prediction stakes, which are clearing collateral, not a

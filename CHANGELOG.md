@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.13](https://github.com/AntonioVentilii/vici-app/compare/v0.1.12...v0.1.13) (2026-06-13)
+
+
+### Bug Fixes
+
+* **transactions:** anchor running balance on total holdings ([#868](https://github.com/AntonioVentilii/vici-app/issues/868)) ([dc8003d](https://github.com/AntonioVentilii/vici-app/commit/dc8003d8531e72d4f7fa9b97960610fa3ffb7d79))
+
+
+### Miscellaneous Chores
+
+* **github-actions:** bump actions/checkout from 6.0.2 to 6.0.3 ([#853](https://github.com/AntonioVentilii/vici-app/issues/853)) ([6ddaf4d](https://github.com/AntonioVentilii/vici-app/commit/6ddaf4dfb76cee6b91b46dc81d4de9c51d91b8b2))
+* **github-actions:** bump googleapis/release-please-action from 66fbfe9439cb7a3660ecdc00d42573ef0bd00764 to 0b6b3fc0186a2f7118bfd88fab9ea481e1839504 ([#852](https://github.com/AntonioVentilii/vici-app/issues/852)) ([eaebdf6](https://github.com/AntonioVentilii/vici-app/commit/eaebdf65b7fea24847914c8f5b506b86415c73c9))
+
 ## [0.1.12](https://github.com/AntonioVentilii/vici-app/compare/v0.1.11...v0.1.12) (2026-06-13)
 
 
