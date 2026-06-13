@@ -41,15 +41,18 @@ export interface TransactionHistoryRow {
 	/** Only set for clearing-sourced rows. */
 	marketId?: MarketId;
 	timestampNs: bigint;
-	/** Signed spendable-VXP delta, clearing-margin base units. */
+	/**
+	 * Signed total-VXP delta, clearing-margin base units. Zero for
+	 * `prediction` rows — a fill reserves the user's own VXP without
+	 * changing what they own.
+	 */
 	delta: bigint;
 	/**
-	 * Stake context for `lost` / `neutral` rows — the margin that was
-	 * committed on the market (display only; the delta already accounts
-	 * for it).
+	 * Stake context for `prediction` rows — the margin moved into play by
+	 * the fill (display only; the total-balance delta is zero).
 	 */
 	stake?: bigint;
-	/** Running spendable balance after this event, clearing-margin units. */
+	/** Running total balance after this event, clearing-margin units. */
 	balance: bigint;
 }
 

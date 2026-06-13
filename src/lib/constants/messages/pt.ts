@@ -2283,8 +2283,8 @@ export const ptMessages = {
 	'transactions.kind.received': 'Recebidos',
 	'transactions.kind.sent': 'Enviados',
 	'transactions.kind.won': 'Ganha',
-	'transactions.stake_not_returned': 'Os {amount} em jogo não foram devolvidos',
 	'transactions.title': 'Transações',
+	'transactions.total': 'Total',
 	'transactions.truncated': 'Histórico anterior não exibido',
 	'trust.eyebrow': 'CONFIANÇA',
 	'trust.p1_b':

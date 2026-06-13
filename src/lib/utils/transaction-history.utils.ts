@@ -87,21 +87,16 @@ interface HistoryEntry {
 
 /**
  * Margin committed by an `Executed` fill, in clearing-margin base units
- * (`USD_DECIMALS`) — the unit every other delta and the spendable anchor
- * speak.
+ * (`USD_DECIMALS`). Carried on the prediction row as `stake` for display
+ * ("… in play") — it does **not** move the running balance: a fill only
+ * reserves the user's own VXP, it doesn't change what they own (see
+ * `clearingEntries`).
  *
  * An event's `qty` is a whole contract count (1 unit = 1.0 of the
  * underlying) and `price` a probability in [0, 1], so `qty × price` is the
  * notional in *whole* VXP; scaling by `10^USD_DECIMALS` lifts it into base
- * units. Without that scale a 5,000 VXP stake reads as `0.5` (`<1`) and,
- * worse, never debits the running balance — the backward walk then
- * underflows old balances into the negative.
- *
- * The sign is kept deliberately: should an event ever carry a negative
- * `qty` (a closing/sell fill), its proceeds must *credit* spendable and
- * unwind the accumulated stake — taking the absolute value would debit the
- * seller twice. Non-finite prices (malformed events) contribute `ZERO`
- * rather than poisoning the whole balance walk with `NaN`.
+ * units. Without that scale a 5,000 VXP stake reads as `0.5` (`<1`).
+ * Non-finite prices (malformed events) contribute `ZERO` rather than `NaN`.
  */
 const executedCost = (event: ClearingDid.Event): bigint => {
 	const marginUnits = Number(event.qty) * eventExecutionPrice(event) * 10 ** USD_DECIMALS;
@@ -110,57 +105,51 @@ const executedCost = (event: ClearingDid.Event): bigint => {
 };
 
 /**
- * Spendable-VXP contributions of the clearing trade history.
+ * Total-VXP contributions of the clearing trade history.
  *
- * Deltas bind to `Executed` fills, not `OrderPlaced`: the clearing canister
- * emits no cancellation event, so a resting order debited at placement could
- * never be credited back and would skew every older balance. The margin a
- * *resting* order holds is already reflected in the live spendable anchor,
- * so fills are the honest commit point.
+ * The running balance tracks **total holdings** — everything the user owns,
+ * spendable plus everything reserved for open positions and resting orders —
+ * so a trade moves the balance only when it changes what the user *owns*, not
+ * when VXP merely shifts between "available" and "in play":
  *
- * A `Settled` event's signed `qty` is the realized cashflow (see
- * `settledEventToResolvedPosition`); the spendable delta additionally
- * releases the margin committed by the position's fills — a full loss nets
- * to exactly zero, a win to stake + profit.
+ * - `Executed` (a fill) reserves margin but is wealth-neutral: the staked VXP
+ *   is still the user's, just locked. Its delta is `0`; the committed margin
+ *   rides on the row as `stake` for display.
+ * - `Settled` / `Liquidated` realize the position. The signed `qty` is the
+ *   realized cashflow (see `settledEventToResolvedPosition`) — a win adds the
+ *   profit, a full loss subtracts the stake, a break-even nets zero — and
+ *   that cashflow *is* the total delta. No margin-release term is needed,
+ *   because the fill never debited total in the first place.
+ *
+ * `OrderPlaced` (a resting order) reserves margin too but, like a fill,
+ * leaves total untouched — so it contributes no delta and renders no row.
+ * This is what lets the total-anchored walk reconcile to a clean zero genesis
+ * even with orders still resting: a spendable-anchored walk drifted the
+ * oldest balances negative by exactly that reserved-but-unrepresented amount.
  */
 const clearingEntries = (events: ClearingDid.Event[]): HistoryEntry[] => {
-	const ascending = [...events].sort((a, b) =>
-		a.timestamp === b.timestamp ? 0 : a.timestamp > b.timestamp ? 1 : -1
-	);
-
-	const stakeBySeries = new Map<string, bigint>();
 	const entries: HistoryEntry[] = [];
 
-	for (const event of ascending) {
+	for (const event of events) {
 		const [eventKey] = Object.keys(event.event_type) as Array<keyof ClearingDid.EventType>;
 		const marketId = event.series_id as MarketId;
 		const id = `clearing-${event.event_id.toString()}-${eventKey}`;
 
 		if (eventKey === 'Executed') {
-			const cost = executedCost(event);
-			stakeBySeries.set(marketId, (stakeBySeries.get(marketId) ?? ZERO) + cost);
-
 			entries.push({
 				timestampNs: event.timestamp,
-				delta: -cost,
+				delta: ZERO,
 				row: {
 					id,
 					kind: 'prediction',
 					marketId,
 					timestampNs: event.timestamp,
-					delta: -cost
+					delta: ZERO,
+					stake: executedCost(event)
 				}
 			});
 		} else if (eventKey === 'Settled' || eventKey === 'Liquidated') {
-			// Clamp at zero: a series whose closing fills credited more than
-			// its opening fills cost would otherwise "release" a negative
-			// stake and double-debit the settlement.
-			const accumulated = stakeBySeries.get(marketId) ?? ZERO;
-			const released = accumulated > ZERO ? accumulated : ZERO;
-			stakeBySeries.set(marketId, ZERO);
-
 			const cashflow = event.qty;
-			const delta = released + cashflow;
 
 			const kind =
 				eventKey === 'Liquidated'
@@ -173,19 +162,16 @@ const clearingEntries = (events: ClearingDid.Event[]): HistoryEntry[] => {
 
 			entries.push({
 				timestampNs: event.timestamp,
-				delta,
+				delta: cashflow,
 				row: {
 					id,
 					kind,
 					marketId,
 					timestampNs: event.timestamp,
-					delta,
-					stake: released
+					delta: cashflow
 				}
 			});
 		}
-
-		// `OrderPlaced` is ignored: informational only, no spendable move.
 	}
 
 	return entries;
@@ -252,22 +238,28 @@ const ledgerEntry = ({
 
 /**
  * Merge the clearing trade history and the VXP ledger trail into one
- * newest-first feed and stamp each visible row with the running spendable
+ * newest-first feed and stamp each visible row with the running **total**
  * balance after that event.
  *
- * The walk anchors on the *current* spendable figure and subtracts deltas
- * going back in time, so the top row always agrees with the number the Dash
- * hero shows — gaps in very old data shift old balances, never today's.
+ * The walk anchors on the *current* total-holdings figure — the same number
+ * the Dash "Holdings" hero shows — and subtracts deltas going back in time,
+ * so the top row always agrees with the hero. Because total moves only on
+ * realized cashflow (bonuses, wins, losses, transfers) and never on margin
+ * shifting in or out of play, the walk reconciles to a clean zero genesis no
+ * matter how much is currently reserved for open positions or resting orders
+ * — anchoring on *spendable* instead drifted the oldest balances negative by
+ * exactly that reserved amount. Genuine gaps in very old data still shift old
+ * balances, never today's.
  */
 export const assembleTransactionHistory = ({
 	events,
 	ledgerEntries,
-	spendableAnchor,
+	totalAnchor,
 	includeGenesis = false
 }: {
 	events: ClearingDid.Event[];
 	ledgerEntries: TransactionHistoryLedgerEntry[];
-	spendableAnchor: bigint;
+	totalAnchor: bigint;
 	/**
 	 * Append the "joined Vici" genesis marker as the oldest row. Only pass
 	 * `true` when the full history was loaded (the ledger walk reached the
@@ -281,7 +273,7 @@ export const assembleTransactionHistory = ({
 	);
 
 	const rows: TransactionHistoryRow[] = [];
-	let running = spendableAnchor;
+	let running = totalAnchor;
 
 	for (const entry of entries) {
 		if (nonNullish(entry.row)) {
@@ -292,9 +284,9 @@ export const assembleTransactionHistory = ({
 	}
 
 	// The account's origin: zero VXP, before any bonus or prediction. Dated to
-	// the oldest real event (the moment the user first showed up). Fixed at
-	// `ZERO` rather than the walked `running`, so it reads as a clean genesis
-	// even when resting-order margin leaves the walk a touch off the floor.
+	// the oldest real event (the moment the user first showed up). The
+	// total-anchored walk lands on `ZERO` here by construction; pinned
+	// explicitly so a truncated tail can't print a stray non-zero genesis.
 	if (includeGenesis && entries.length > 0) {
 		rows.push({
 			id: 'genesis',

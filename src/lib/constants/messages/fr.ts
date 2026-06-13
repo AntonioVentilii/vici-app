@@ -2293,8 +2293,8 @@ export const frMessages = {
 	'transactions.kind.received': 'Reçus',
 	'transactions.kind.sent': 'Envoyés',
 	'transactions.kind.won': 'Gagnée',
-	'transactions.stake_not_returned': '{amount} engagés non restitués',
 	'transactions.title': 'Transactions',
+	'transactions.total': 'Total',
 	'transactions.truncated': 'Historique antérieur non affiché',
 	'trust.eyebrow': 'CONFIANCE',
 	'trust.p1_b':

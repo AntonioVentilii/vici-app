@@ -5,6 +5,42 @@ This spec follows the workflow defined in
 
 Status: Implemented (#847)
 
+## Amendment (2026-06-13): running balance tracks total holdings
+
+The original build anchored the running balance on **spendable** VXP
+(see the "Running balance = available (spendable) VXP" and
+"Available-balance anchor" decisions below). That choice had a latent
+defect: spendable carves out margin reserved for open positions **and
+resting orders**, but the per-row deltas only represent filled/settled
+trades. Any margin reserved without a matching realized delta —
+chiefly resting limit orders — has nothing to give back as the walk
+goes into the past, so the entire historical balance ladder shifts
+down by that reserved amount and the oldest rows read **negative**
+(e.g. a first `+1,000` welcome bonus showing `−6,640`). It also never
+actually matched the Dash hero, which shows **total** holdings, not
+spendable.
+
+The running balance now anchors on **total holdings** and the headline
+surfaces the reconciling triple **total = available + in play**:
+
+- A prediction fill (`Executed`) is wealth-neutral — VXP moves into
+  play, total is unchanged — so it carries delta `0`, renders amount
+  `—`, and shows the committed stake as "… in play" in the subtitle.
+- A settlement's signed `qty` (realized cashflow) **is** the total
+  delta: a win credits the profit, a full loss debits the stake, a
+  break-even nets zero. No margin-release term, no per-series stake
+  accumulation.
+- Resting orders contribute no delta (as before) — but now their
+  reservation is correctly absent from a total-based walk, so the
+  column reconciles to a clean zero genesis regardless of open
+  exposure.
+
+This also resolves the long-standing "lost prediction shows `0`"
+confusion: a loss now shows the staked amount as a real negative at
+settlement. Current behaviour lives in `docs/ai/PRODUCT.md` §
+"Transaction history (Dash)"; the sections below are retained as the
+history of the original #847 build.
+
 ## Goal
 
 From the holdings bottom sheet on `/dash`, the user can open a
