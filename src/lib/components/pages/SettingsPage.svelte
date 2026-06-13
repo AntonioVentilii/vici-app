@@ -38,6 +38,7 @@
 	import { Collection } from '$lib/constants/collections.constants';
 	import { LOCALE_REGISTRY } from '$lib/constants/locale.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { localeStore, setLocale } from '$lib/stores/locale.store';
@@ -524,7 +525,12 @@
 
 		<div class="settings-destructive">
 			{#if !confirmingSignOut}
-				<Button class="settings-signout" onclick={() => (confirmingSignOut = true)} variant="ghost">
+				<Button
+					class="settings-signout"
+					data-tid={TestId.SignOutButton}
+					onclick={() => (confirmingSignOut = true)}
+					variant="ghost"
+				>
 					{t({ locale: $localeStore, key: 'settings.sign_out' })}
 				</Button>
 			{:else}
@@ -534,7 +540,12 @@
 						<Button onclick={() => (confirmingSignOut = false)} variant="ghost">
 							{t({ locale: $localeStore, key: 'settings.sign_out.cancel' })}
 						</Button>
-						<Button onclick={doSignOut} status={signOutStatus} variant="primary">
+						<Button
+							data-tid={TestId.Logout}
+							onclick={doSignOut}
+							status={signOutStatus}
+							variant="primary"
+						>
 							{t({ locale: $localeStore, key: 'settings.sign_out' })}
 						</Button>
 					</div>

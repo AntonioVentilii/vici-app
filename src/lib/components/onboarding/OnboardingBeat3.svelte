@@ -2,6 +2,7 @@
 	import { Gift } from '@lucide/svelte/icons';
 	import SignInProviderStack from '$lib/components/authn/SignInProviderStack.svelte';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { newUserVxpAmountMilestone1BaseUnits } from '$lib/constants/vxp-onboarding.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -88,7 +89,12 @@
 
 	<div class="ob2-auth-buttons">
 		{#if authenticated}
-			<button class="ob2-btn-primary" onclick={onComplete} type="button">
+			<button
+				class="ob2-btn-primary"
+				data-tid={TestId.OnboardingPrimary}
+				onclick={onComplete}
+				type="button"
+			>
 				{t({ locale: $localeStore, key: 'onboarding.beat3.finish_cta' })}
 			</button>
 		{:else}

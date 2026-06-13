@@ -3,6 +3,7 @@
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
@@ -168,7 +169,12 @@
 		</div>
 	{/if}
 
-	<button class="ob2-skip-team" onclick={() => onPick(null)} type="button">
+	<button
+		class="ob2-skip-team"
+		data-tid={TestId.OnboardingTeamSkip}
+		onclick={() => onPick(null)}
+		type="button"
+	>
 		{t({ locale: $localeStore, key: 'onboarding.beat1.skip' })}
 	</button>
 </div>

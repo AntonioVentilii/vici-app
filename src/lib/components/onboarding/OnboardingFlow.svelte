@@ -4,6 +4,7 @@
 	import OnboardingBeat1Card from '$lib/components/onboarding/OnboardingBeat1Card.svelte';
 	import OnboardingBeat2 from '$lib/components/onboarding/OnboardingBeat2.svelte';
 	import OnboardingBeat3 from '$lib/components/onboarding/OnboardingBeat3.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 
 	/**
@@ -93,7 +94,7 @@
 	};
 </script>
 
-<div class="ob ob-v2">
+<div class="ob ob-v2" data-tid={TestId.OnboardingFlow}>
 	<div class="ob-wrap">
 		<div class="ob-body-wrap">
 			{#if beat === '1a'}

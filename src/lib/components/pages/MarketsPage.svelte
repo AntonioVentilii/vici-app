@@ -5,6 +5,7 @@
 	import WorldCupRecapCard from '$lib/components/market/WorldCupRecapCard.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { marketTags, marketTagsNotInitialized } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { minuteTick_ms } from '$lib/derived/time.derived';
@@ -153,7 +154,7 @@
 	};
 </script>
 
-<div class="screen-scroll">
+<div class="screen-scroll" data-tid={TestId.MarketFeed}>
 	<!-- Header context eyebrow: the featured event as a mono-uppercase eyebrow
 	     line — matching the Dash / Arena eyebrow treatment — omitted entirely
 	     once no event is in focus. -->
@@ -200,6 +201,7 @@
 				<div
 					style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
 					aria-hidden="true"
+					data-tid={TestId.MarketCardSkeleton}
 				></div>
 			{/each}
 		</div>
@@ -246,6 +248,7 @@
 				<div
 					style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
 					aria-hidden="true"
+					data-tid={TestId.MarketCardSkeleton}
 				></div>
 			{/each}
 		</div>
