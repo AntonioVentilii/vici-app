@@ -6,7 +6,7 @@
 	 * pre-formatted from the host; referral totals come from the real referral
 	 * list (credited redemptions summed over the tiered reward curve).
 	 */
-	import { Gift } from '@lucide/svelte/icons';
+	import { ChevronRight, Gift, History } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
@@ -80,5 +80,17 @@
 			<Gift aria-hidden="true" size={15} strokeWidth={1.8} />
 			{t({ locale: $localeStore, key: 'dash.build.sheet_invite_cta' })}
 		</button>
+		<a
+			class="db-hd-link"
+			href={`${resolve(AppPath.DashTransactions)}?source=sheet`}
+			onclick={onClose}
+		>
+			<History aria-hidden="true" size={16} strokeWidth={1.8} />
+			<span class="db-hd-link-t">
+				<span>{t({ locale: $localeStore, key: 'dash.build.sheet_history' })}</span>
+				<em>{t({ locale: $localeStore, key: 'dash.build.sheet_history_sub' })}</em>
+			</span>
+			<ChevronRight aria-hidden="true" size={16} strokeWidth={1.8} />
+		</a>
 	</div>
 </BottomSheet>

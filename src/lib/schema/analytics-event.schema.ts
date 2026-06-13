@@ -52,6 +52,8 @@ export const AnalyticsEventNameSchema = j.enum([
 	'vxp_awarded',
 	'streak_milestone',
 	'faucet_claimed',
+	'transactions_viewed',
+	'transactions_filtered',
 	// Social & leagues
 	'friend_request_sent',
 	'league_created',

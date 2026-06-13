@@ -139,6 +139,7 @@ export const idlFactory = ({ IDL }) => {
 				name: IDL.Variant({
 					delete_confirmed: IDL.Null,
 					school_picked: IDL.Null,
+					transactions_viewed: IDL.Null,
 					resolution_disputed: IDL.Null,
 					streak_milestone: IDL.Null,
 					school_verify_email_submitted: IDL.Null,
@@ -155,6 +156,7 @@ export const idlFactory = ({ IDL }) => {
 					comment_posted: IDL.Null,
 					flow_swipe: IDL.Null,
 					referral_converted: IDL.Null,
+					transactions_filtered: IDL.Null,
 					school_verify_code_submitted: IDL.Null,
 					signed_in: IDL.Null,
 					signed_up: IDL.Null,
@@ -1080,6 +1082,7 @@ export const idlFactory = ({ IDL }) => {
 				name: IDL.Variant({
 					delete_confirmed: IDL.Null,
 					school_picked: IDL.Null,
+					transactions_viewed: IDL.Null,
 					resolution_disputed: IDL.Null,
 					streak_milestone: IDL.Null,
 					school_verify_email_submitted: IDL.Null,
@@ -1096,6 +1099,7 @@ export const idlFactory = ({ IDL }) => {
 					comment_posted: IDL.Null,
 					flow_swipe: IDL.Null,
 					referral_converted: IDL.Null,
+					transactions_filtered: IDL.Null,
 					school_verify_code_submitted: IDL.Null,
 					signed_in: IDL.Null,
 					signed_up: IDL.Null,

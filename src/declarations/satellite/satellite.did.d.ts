@@ -144,6 +144,7 @@ export interface AppGetAnalyticsSummaryResult {
 		name:
 			| { delete_confirmed: null }
 			| { school_picked: null }
+			| { transactions_viewed: null }
 			| { resolution_disputed: null }
 			| { streak_milestone: null }
 			| { school_verify_email_submitted: null }
@@ -160,6 +161,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
 			| { signed_up: null }
@@ -906,6 +908,7 @@ export interface AppTrackEventsArgs {
 		name:
 			| { delete_confirmed: null }
 			| { school_picked: null }
+			| { transactions_viewed: null }
 			| { resolution_disputed: null }
 			| { streak_milestone: null }
 			| { school_verify_email_submitted: null }
@@ -922,6 +925,7 @@ export interface AppTrackEventsArgs {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
 			| { signed_up: null }
