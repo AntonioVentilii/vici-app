@@ -36,7 +36,6 @@ export class HomePage {
 	readonly onboardingFlow: Locator;
 	readonly onboardingTeamSkip: Locator;
 	readonly onboardingCard: Locator;
-	readonly onboardingHandleSuggestion: Locator;
 	readonly onboardingHandleSkip: Locator;
 	readonly onboardingPrimary: Locator;
 
@@ -54,7 +53,6 @@ export class HomePage {
 		this.onboardingFlow = page.getByTestId(TestId.OnboardingFlow);
 		this.onboardingTeamSkip = page.getByTestId(TestId.OnboardingTeamSkip);
 		this.onboardingCard = page.getByTestId(TestId.OnboardingCard);
-		this.onboardingHandleSuggestion = page.getByTestId(TestId.OnboardingHandleSuggestion);
 		this.onboardingHandleSkip = page.getByTestId(TestId.OnboardingHandleSkip);
 		this.onboardingPrimary = page.getByTestId(TestId.OnboardingPrimary);
 	}
@@ -213,8 +211,8 @@ export class HomePage {
 	 * Vite dev-server proxy, which has been observed to enter a sticky
 	 * `socket hang up` / `ECONNRESET` state mid-suite. Top-level Playwright
 	 * retries don't help — they share the same dev-server process and the
-	 * connection pool stays poisoned. A `page.reload()` opens a fresh
-	 * browser context against the proxy and is often enough to recover.
+	 * connection pool stays poisoned. A `page.reload()` re-runs app init
+	 * against the proxy and is often enough to shake it loose.
 	 *
 	 * If the second attempt also fails, throws with the underlying error
 	 * wrapped in context so it doesn't get swallowed into a generic
@@ -237,7 +235,10 @@ export class HomePage {
 		try {
 			await attempt();
 		} catch (firstError: unknown) {
-			await this.page.reload({ waitUntil: 'networkidle' });
+			// `domcontentloaded`, not `networkidle`: the signed-in surfaces run
+			// background polling that can keep the network from ever going
+			// idle, which would hang the retry instead of recovering it.
+			await this.page.reload({ waitUntil: 'domcontentloaded' });
 
 			try {
 				await attempt();
