@@ -67,7 +67,12 @@ test.describe('pre-sign-in onboarding', () => {
 		await expect(home.userMenu).toBeVisible();
 
 		// The picked handle survived the dev-provider handoff — the profile
-		// hero shows `@{handle}`, not the bootstrapped principal default.
-		await expect(home.appMain.locator('h1').filter({ hasText: `@${pickedHandle}` })).toBeVisible();
+		// hero shows `@{handle}`, not the bootstrapped principal default. The
+		// hero handle is an editable button (`.profile-hero-handle`) on one's
+		// own profile and an `<h1>` on others'; both carry that class, so
+		// target it directly rather than the element type.
+		await expect(
+			home.appMain.locator('.profile-hero-handle').filter({ hasText: `@${pickedHandle}` })
+		).toBeVisible();
 	});
 });
