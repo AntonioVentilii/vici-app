@@ -2284,8 +2284,8 @@ export const esMessages = {
 	'transactions.kind.received': 'Recibidos',
 	'transactions.kind.sent': 'Enviados',
 	'transactions.kind.won': 'Ganada',
-	'transactions.stake_not_returned': 'Los {amount} en juego no se devolvieron',
 	'transactions.title': 'Transacciones',
+	'transactions.total': 'Total',
 	'transactions.truncated': 'Historial anterior no mostrado',
 	'trust.eyebrow': 'CONFIANZA',
 	'trust.p1_b':

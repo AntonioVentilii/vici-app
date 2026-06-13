@@ -131,14 +131,21 @@ Decision record:
 ### Transaction history (Dash)
 
 The holdings sheet on `/dash` links to `/dash/transactions`: a
-paginated, filterable feed of every event that changed the user's
-spendable VXP — bonuses (labelled from the `vxp:<type>:<key>` ledger
-memo), prediction stakes (bound to fills), wins/losses/break-evens
-(stake released + realized cashflow), and external transfers. The last
-column is the running spendable balance after each event, anchored on
-the live spendable figure so the top row always matches the Dash hero.
-Losses render amount `0` with the committed stake in the subtitle (the
-stake already left the balance at the fill). Wallet ↔ clearing
+paginated, filterable feed of every event that changed what the user
+owns — bonuses (labelled from the `vxp:<type>:<key>` ledger memo),
+prediction stakes (bound to fills), wins/losses/break-evens (realized
+cashflow), and external transfers. The header shows the dummy-safe
+triple that reconciles by construction — **total = available + in
+play** — and the last column is the running **total** balance after
+each event, anchored on the live total-holdings figure so the top row
+always matches the Dash hero. Placing a prediction is wealth-neutral
+(VXP moves into play, total is unchanged), so it carries no signed
+amount (`—`); the committed stake shows as "… in play" in the
+subtitle. Wins credit the profit, losses debit the stake, break-evens
+net zero. Because total never moves on margin shifting in or out of
+play, the column reconciles to a clean zero genesis no matter how much
+is currently reserved — anchoring on spendable instead drifted the
+oldest balances negative by the reserved amount. Wallet ↔ clearing
 collateral sweeps never render; only their ledger fee feeds the
 balance math. When the full history is loaded (the walk reached the
 beginning), a synthetic "Joined Vici" genesis row closes the feed — no

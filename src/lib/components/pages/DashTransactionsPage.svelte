@@ -1,12 +1,13 @@
 <script lang="ts">
 	/**
-	 * Transaction history — every event that changed the user's spendable
-	 * VXP, newest first: bonuses (labelled from the ledger award memo),
+	 * Transaction history — every event that changed what the user owns,
+	 * newest first: bonuses (labelled from the ledger award memo),
 	 * prediction stakes, settlements, and external transfers. The last
-	 * column carries the running spendable balance after each event,
-	 * anchored on the live spendable figure so the top row always matches
-	 * the Dash hero. Spec: docs/ai/spec-driven-development/specs/
-	 * 2026-06-12-feat-transaction-history.md.
+	 * column carries the running total balance after each event, anchored on
+	 * the live total-holdings figure so the top row always matches the Dash
+	 * hero and old rows never drift negative. The headline triple reconciles
+	 * by construction: total = available + in play. Spec: docs/ai/
+	 * spec-driven-development/specs/2026-06-12-feat-transaction-history.md.
 	 */
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import {
@@ -38,6 +39,7 @@
 	import {
 		vxpBacked,
 		vxpHoldingsNotInitialized,
+		vxpHoldingsTotal,
 		vxpSpendable
 	} from '$lib/derived/vxp-holdings.derived';
 	import { track } from '$lib/services/analytics.services';
@@ -92,7 +94,7 @@
 		return assembleTransactionHistory({
 			events: $tradeHistory,
 			ledgerEntries: ledger?.entries ?? [],
-			spendableAnchor: $vxpSpendable,
+			totalAnchor: $vxpHoldingsTotal,
 			includeGenesis: nonNullish(ledger) && !ledger.truncated
 		});
 	});
@@ -146,6 +148,9 @@
 		}
 	});
 
+	const totalDisplay = $derived(
+		formatVxpBalance({ value: $vxpHoldingsTotal, decimals: USD_DECIMALS })
+	);
 	const availableDisplay = $derived(
 		formatVxpBalance({ value: $vxpSpendable, decimals: USD_DECIMALS })
 	);
@@ -197,10 +202,12 @@
 
 		const when = formatNanosecondsToDate({ nanoseconds: row.timestampNs });
 
-		if (row.kind === 'lost' && nonNullish(row.stake) && row.stake > ZERO) {
+		// A fill moves the stake into play without changing total — surface the
+		// committed margin here so the muted "—" amount reads as "still yours".
+		if (row.kind === 'prediction' && nonNullish(row.stake) && row.stake > ZERO) {
 			return `${when} · ${t({
 				locale: $localeStore,
-				key: 'transactions.stake_not_returned',
+				key: 'transactions.in_play',
 				params: { amount: formatVxpBalance({ value: row.stake, decimals: USD_DECIMALS }) }
 			})}`;
 		}
@@ -209,6 +216,12 @@
 	};
 
 	const deltaDisplay = (row: TransactionHistoryRow): string => {
+		// Placing a prediction is wealth-neutral (VXP moves into play, total is
+		// unchanged), so it carries no signed amount — the meta shows the stake.
+		if (row.kind === 'prediction') {
+			return '—';
+		}
+
 		const value = decimalFixedValueToNumber({ value: row.delta, decimals: USD_DECIMALS });
 
 		if (value === 0) {
@@ -232,13 +245,23 @@
 	/>
 
 	<div class="txh-summary">
-		<span class="txh-available">
-			<em>{t({ locale: $localeStore, key: 'transactions.available' })}</em>
-			<span class="num">{availableDisplay} VXP</span>
+		<span class="txh-total">
+			<em>{t({ locale: $localeStore, key: 'transactions.total' })}</em>
+			<span class="num">{totalDisplay} VXP</span>
 		</span>
-		<span class="txh-inplay num">
-			{t({ locale: $localeStore, key: 'transactions.in_play', params: { amount: inPlayDisplay } })}
-		</span>
+		<div class="txh-breakdown">
+			<span class="txh-stat">
+				<em>{t({ locale: $localeStore, key: 'transactions.available' })}</em>
+				<span class="num">{availableDisplay}</span>
+			</span>
+			<span class="txh-inplay num">
+				{t({
+					locale: $localeStore,
+					key: 'transactions.in_play',
+					params: { amount: inPlayDisplay }
+				})}
+			</span>
+		</div>
 	</div>
 
 	<div
@@ -335,22 +358,45 @@
 
 	.txh-summary {
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
+		flex-direction: column;
 		gap: 8px;
 		padding: 2px var(--spacing-edge) 12px;
 	}
 
-	.txh-available {
+	.txh-total {
 		display: flex;
 		align-items: baseline;
 		gap: 8px;
 		color: var(--text-base);
-		font-size: var(--t-15);
+		font-size: var(--t-20);
 		font-weight: 600;
 	}
 
-	.txh-available em {
+	.txh-total em {
+		color: var(--text-muted);
+		font-size: var(--t-11);
+		font-style: normal;
+		font-weight: 400;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.txh-breakdown {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.txh-stat {
+		display: flex;
+		align-items: baseline;
+		gap: 6px;
+		color: var(--text-base);
+		font-size: var(--t-13);
+		font-weight: 600;
+	}
+
+	.txh-stat em {
 		color: var(--text-muted);
 		font-size: var(--t-11);
 		font-style: normal;

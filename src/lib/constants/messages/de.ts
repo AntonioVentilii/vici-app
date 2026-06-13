@@ -2301,8 +2301,8 @@ export const deMessages = {
 	'transactions.kind.received': 'Erhalten',
 	'transactions.kind.sent': 'Gesendet',
 	'transactions.kind.won': 'Gewonnen',
-	'transactions.stake_not_returned': 'Einsatz von {amount} nicht zurückerstattet',
 	'transactions.title': 'Transaktionen',
+	'transactions.total': 'Gesamt',
 	'transactions.truncated': 'Ältere Historie nicht angezeigt',
 	'trust.eyebrow': 'VERTRAUEN',
 	'trust.p1_b':
