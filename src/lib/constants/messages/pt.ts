@@ -3,6 +3,26 @@
 // (estar a + infinitive, clitic placement, tu register). Distinct from the
 // Brazilian `pt-BR` catalog, which is maintained as its own variant.
 export const ptMessages = {
+	'trade.error.arbitrage_limit_exceeded':
+		'O preço de mercado acabou de mudar — espera um momento e tenta novamente.',
+	'trade.error.common.internal': 'Algo correu mal do nosso lado. Tenta novamente daqui a pouco.',
+	'trade.error.common.invalid_input': 'Não foi possível processar esta previsão. Tenta novamente.',
+	'trade.error.common.math_overflow': 'Não foi possível processar esta previsão. Tenta novamente.',
+	'trade.error.common.registry_not_set':
+		'Os mercados ainda não estão prontos. Tenta novamente daqui a pouco.',
+	'trade.error.common.unauthorized': 'Não tens permissão para fazer isso.',
+	'trade.error.generic': 'Não foi possível colocar a tua previsão. Tenta novamente daqui a pouco.',
+	'trade.error.insufficient_margin':
+		'Saldo disponível insuficiente — esta previsão precisa de {required}, mas tens {available}. Fica livre à medida que as tuas previsões em aberto são resolvidas.',
+	'trade.error.not_authorized_to_trade': 'Não tens acesso a este mercado.',
+	'trade.error.not_order_creator': 'Só podes cancelar as tuas próprias ordens.',
+	'trade.error.order_not_found': 'Essa oferta acabou de ser aceite ou retirada — tenta novamente.',
+	'trade.error.registry_error':
+		'Não conseguimos aceder ao mercado neste momento. Tenta novamente daqui a pouco.',
+	'trade.error.self_trading_not_allowed': 'Não podes ficar com o lado oposto da tua própria ordem.',
+	'trade.error.series_already_settled':
+		'Este mercado já foi liquidado — as previsões estão encerradas.',
+	'trade.error.series_not_found': 'Este mercado já não está disponível.',
 	'a11y.appearance': 'Aparência',
 	'a11y.banner_juno_console': 'Abre o Juno Console para criar um novo Satellite para testes',
 	'a11y.checking_signin': 'A verificar o estado da sessão',

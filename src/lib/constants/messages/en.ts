@@ -1,4 +1,21 @@
 export const enMessages = {
+	'trade.error.arbitrage_limit_exceeded':
+		'The market price just moved — give it a moment and try again.',
+	'trade.error.common.internal': 'Something went wrong on our end. Try again shortly.',
+	'trade.error.common.invalid_input': "That prediction couldn't be processed. Try again.",
+	'trade.error.common.math_overflow': "That prediction couldn't be processed. Try again.",
+	'trade.error.common.registry_not_set': "Markets aren't ready yet. Try again shortly.",
+	'trade.error.common.unauthorized': "You're not allowed to do that.",
+	'trade.error.generic': "Your prediction couldn't be placed. Try again shortly.",
+	'trade.error.insufficient_margin':
+		'Not enough available balance — this prediction needs {required}, but you have {available}. It frees up as your open predictions resolve.',
+	'trade.error.not_authorized_to_trade': "You don't have access to this market.",
+	'trade.error.not_order_creator': 'You can only cancel your own orders.',
+	'trade.error.order_not_found': 'That offer was just taken or withdrawn — try again.',
+	'trade.error.registry_error': "We couldn't reach the market right now. Try again shortly.",
+	'trade.error.self_trading_not_allowed': "You can't take the other side of your own order.",
+	'trade.error.series_already_settled': 'This market has already settled — predictions are closed.',
+	'trade.error.series_not_found': 'This market is no longer available.',
 	'a11y.appearance': 'Appearance',
 	'a11y.banner_juno_console': 'Open the Juno Console to create a new Satellite for testing',
 	'a11y.checking_signin': 'Checking sign-in status',

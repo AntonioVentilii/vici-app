@@ -1,4 +1,25 @@
 export const esMessages = {
+	'trade.error.arbitrage_limit_exceeded':
+		'El precio del mercado acaba de moverse — espera un momento e inténtalo de nuevo.',
+	'trade.error.common.internal':
+		'Algo salió mal por nuestra parte. Inténtalo de nuevo en un momento.',
+	'trade.error.common.invalid_input': 'No se pudo procesar esta predicción. Inténtalo de nuevo.',
+	'trade.error.common.math_overflow': 'No se pudo procesar esta predicción. Inténtalo de nuevo.',
+	'trade.error.common.registry_not_set':
+		'Los mercados aún no están listos. Inténtalo de nuevo en un momento.',
+	'trade.error.common.unauthorized': 'No tienes permiso para hacer eso.',
+	'trade.error.generic': 'No se pudo colocar tu predicción. Inténtalo de nuevo en un momento.',
+	'trade.error.insufficient_margin':
+		'No tienes saldo disponible suficiente — esta predicción necesita {required}, pero tienes {available}. Se libera a medida que se resuelven tus predicciones abiertas.',
+	'trade.error.not_authorized_to_trade': 'No tienes acceso a este mercado.',
+	'trade.error.not_order_creator': 'Solo puedes cancelar tus propias órdenes.',
+	'trade.error.order_not_found': 'Esa oferta acaba de aceptarse o retirarse — inténtalo de nuevo.',
+	'trade.error.registry_error':
+		'No pudimos conectar con el mercado ahora mismo. Inténtalo de nuevo en un momento.',
+	'trade.error.self_trading_not_allowed': 'No puedes tomar el lado contrario de tu propia orden.',
+	'trade.error.series_already_settled':
+		'Este mercado ya se liquidó — las predicciones están cerradas.',
+	'trade.error.series_not_found': 'Este mercado ya no está disponible.',
 	'a11y.appearance': 'Apariencia',
 	'a11y.banner_juno_console': 'Abrir la Consola de Juno para crear un nuevo Satellite de pruebas',
 	'a11y.checking_signin': 'Comprobando estado de inicio de sesión',
