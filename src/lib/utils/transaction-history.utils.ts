@@ -20,6 +20,12 @@ export interface TransactionHistoryLedgerEntry {
 	memoTag?: TransactionHistoryBonusTag;
 	/** Transfer fee in native ledger units (`ZERO` when absent). */
 	fee: bigint;
+	/**
+	 * A transfer to the user's own account: the only real spendable change
+	 * is the fee, so it renders no row (the wallet's send + receive
+	 * pseudo-row pair would read as two phantom movements here).
+	 */
+	selfTransfer?: boolean;
 }
 
 const KNOWN_BONUS_TAGS: ReadonlySet<string> = new Set([
@@ -82,8 +88,12 @@ interface HistoryEntry {
 /**
  * Margin committed by an `Executed` fill: `qty × price`, rounded back to
  * clearing-margin base units — the same notional the wallet activity table
- * shows for trades. Non-finite prices (malformed events) contribute `ZERO`
- * rather than poisoning the whole balance walk with `NaN`.
+ * shows for trades. The sign is kept deliberately: should an event ever
+ * carry a negative `qty` (a closing/sell fill), its proceeds must *credit*
+ * spendable and unwind the accumulated stake — taking the absolute value
+ * would debit the seller twice. Non-finite prices (malformed events)
+ * contribute `ZERO` rather than poisoning the whole balance walk with
+ * `NaN`.
  */
 const executedCost = (event: ClearingDid.Event): bigint => {
 	const cost = Number(event.qty) * eventExecutionPrice(event);
@@ -134,7 +144,11 @@ const clearingEntries = (events: ClearingDid.Event[]): HistoryEntry[] => {
 				}
 			});
 		} else if (eventKey === 'Settled' || eventKey === 'Liquidated') {
-			const released = stakeBySeries.get(marketId) ?? ZERO;
+			// Clamp at zero: a series whose closing fills credited more than
+			// its opening fills cost would otherwise "release" a negative
+			// stake and double-debit the settlement.
+			const accumulated = stakeBySeries.get(marketId) ?? ZERO;
+			const released = accumulated > ZERO ? accumulated : ZERO;
 			stakeBySeries.set(marketId, ZERO);
 
 			const cashflow = event.qty;
@@ -177,7 +191,8 @@ const clearingEntries = (events: ClearingDid.Event[]): HistoryEntry[] => {
 const ledgerEntry = ({
 	transaction,
 	memoTag,
-	fee
+	fee,
+	selfTransfer
 }: TransactionHistoryLedgerEntry): HistoryEntry => {
 	const { token, type, timestamp, amount, id } = transaction;
 
@@ -189,6 +204,10 @@ const ledgerEntry = ({
 		nativeBalance: fee,
 		nativeDecimals: token.decimals
 	});
+
+	if (selfTransfer === true) {
+		return { timestampNs: timestamp, delta: -feeMargin };
+	}
 
 	const base = { id: `ledger-${id}`, timestampNs: timestamp };
 

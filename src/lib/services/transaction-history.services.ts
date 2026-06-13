@@ -119,13 +119,29 @@ const mapRawToEntries = ({
 		raw.map(({ id, transaction }) => [id.toString(), extractTxMeta(transaction)])
 	);
 
-	return raw
+	const mapped = raw
 		.flatMap(mapTransactionIcrcToSelf)
-		.map((transaction) => mapIcrcTransaction({ transaction, token: VXP_TOKEN, identity }))
-		.map((transaction) => {
-			// Self-transfer pseudo-rows carry a `-self` suffix on the ledger id.
-			const meta = metaById.get(transaction.id.replace(/-self$/, '')) ?? { fee: ZERO };
+		.map((transaction) => mapIcrcTransaction({ transaction, token: VXP_TOKEN, identity }));
 
-			return { transaction, memoTag: meta.memoTag, fee: meta.fee };
+	// The wallet mapper expands a self-transfer into send + receive
+	// pseudo-rows (`-self` id suffix on the receive leg). On this page the
+	// only real spendable change is the fee, so the receive leg is dropped
+	// and the remaining leg flagged — `ledgerEntry` turns it into a hidden
+	// fee-only contribution instead of two phantom rows.
+	const selfIds = new Set(
+		mapped.filter(({ id }) => id.endsWith('-self')).map(({ id }) => id.replace(/-self$/, ''))
+	);
+
+	return mapped
+		.filter(({ id }) => !id.endsWith('-self'))
+		.map((transaction) => {
+			const meta = metaById.get(transaction.id) ?? { fee: ZERO };
+
+			return {
+				transaction,
+				memoTag: meta.memoTag,
+				fee: meta.fee,
+				selfTransfer: selfIds.has(transaction.id)
+			};
 		});
 };
