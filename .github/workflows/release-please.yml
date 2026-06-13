@@ -39,7 +39,7 @@ jobs:
       # When updating this action, also bump the $schema version in
       # release-please-config.json to match the bundled release-please version
       # (check the action's release notes).
-      - uses: googleapis/release-please-action@66fbfe9439cb7a3660ecdc00d42573ef0bd00764 # v4.4.0
+      - uses: googleapis/release-please-action@0b6b3fc0186a2f7118bfd88fab9ea481e1839504 # v4.4.0
         with:
           token: ${{ secrets.RELEASE_PLEASE_PAT || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
