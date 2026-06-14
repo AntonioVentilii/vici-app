@@ -57,6 +57,7 @@ export const AnalyticsEventNameSchema = j.enum([
 	'transactions_filtered',
 	// Social & leagues
 	'friend_request_sent',
+	'friend_feed_reaction',
 	'league_created',
 	'league_joined',
 	'league_invite_sent',

@@ -1,0 +1,127 @@
+import { Collection } from '$lib/constants/collections.constants';
+import type { ActivityReactionSummary } from '$lib/stores/activity-reactions.store';
+import type { Activity, ActivityReaction } from '$lib/types/social';
+import { isNullish, nonNullish } from '@dfinity/utils';
+import { deleteDoc, getDoc, listDocs, setDoc } from '@junobuild/core';
+import type { PrincipalText } from '@junobuild/schema';
+
+/**
+ * Cap on the count-on-read reaction scan. One bounded `listDocs` per feed mount tallies likes
+ * client-side (see the persistence spec); past this window counts under-report, which is the
+ * documented ceiling that the deferred rollup-counter follow-up removes.
+ */
+export const ACTIVITY_REACTIONS_READ_LIMIT = 1000;
+
+/**
+ * The liked activity's own doc key — `${user}#${timestamp}#${type}`, the shape `logActivity` writes.
+ * `getGlobalActivities` drops the doc key, so it's reconstructed from the `Activity` fields (the
+ * satellite assert guarantees that exact shape). Shared so the service, store, and component agree.
+ */
+export const activityReactionKey = ({ activity }: { activity: Activity }): string =>
+	`${activity.user}#${activity.timestamp}#${activity.type}`;
+
+const reactionDocKey = ({
+	activity,
+	liker
+}: {
+	activity: Activity;
+	liker: PrincipalText;
+}): string => `${activityReactionKey({ activity })}#${liker}`;
+
+export const likeActivity = async ({
+	activity,
+	liker
+}: {
+	activity: Activity;
+	liker: PrincipalText;
+}): Promise<void> => {
+	const activityKey = activityReactionKey({ activity });
+
+	await setDoc<ActivityReaction>({
+		collection: Collection.ACTIVITY_REACTIONS,
+		doc: {
+			key: reactionDocKey({ activity, liker }),
+			data: {
+				activityKey,
+				liker,
+				timestamp: Date.now(),
+				activityTitle: activity.title,
+				// Denormalized for the like-received inbox card (spec B); omit when absent rather than
+				// persisting an explicit `undefined`.
+				...(nonNullish(activity.marketId) ? { marketId: activity.marketId } : {})
+			}
+		}
+	});
+};
+
+export const unlikeActivity = async ({
+	activity,
+	liker
+}: {
+	activity: Activity;
+	liker: PrincipalText;
+}): Promise<void> => {
+	const doc = await getDoc<ActivityReaction>({
+		collection: Collection.ACTIVITY_REACTIONS,
+		key: reactionDocKey({ activity, liker })
+	});
+
+	if (isNullish(doc)) {
+		return;
+	}
+
+	await deleteDoc({
+		collection: Collection.ACTIVITY_REACTIONS,
+		doc
+	});
+};
+
+/**
+ * The most-recent reactions across all users, bounded by {@link ACTIVITY_REACTIONS_READ_LIMIT}.
+ * Counts + the caller's own likes are tallied client-side from this single page (count-on-read).
+ */
+export const getActivityReactions = async ({
+	limit = ACTIVITY_REACTIONS_READ_LIMIT,
+	certified = false
+}: { limit?: number; certified?: boolean } = {}): Promise<ActivityReaction[]> => {
+	if (limit <= 0) {
+		return [];
+	}
+
+	const { items } = await listDocs<ActivityReaction>({
+		collection: Collection.ACTIVITY_REACTIONS,
+		filter: {
+			order: { field: 'created_at', desc: true },
+			paginate: { limit }
+		},
+		options: { certified }
+	});
+
+	return items.map(({ data }) => data);
+};
+
+/**
+ * Tally reactions into a per-`activityKey` summary (count + whether `viewer` is among the likers).
+ * This is the count-on-read aggregation the feed renders; `viewer` is the current principal, or
+ * `undefined` when anonymous (then `mineLiked` is always `false`).
+ */
+export const summarizeActivityReactions = ({
+	reactions,
+	viewer
+}: {
+	reactions: ActivityReaction[];
+	viewer: PrincipalText | undefined;
+}): Map<string, ActivityReactionSummary> => {
+	const summary = new Map<string, ActivityReactionSummary>();
+
+	for (const { activityKey, liker } of reactions) {
+		const current = summary.get(activityKey) ?? { count: 0, mineLiked: false };
+
+		summary.set(activityKey, {
+			count: current.count + 1,
+			mineLiked: current.mineLiked || (nonNullish(viewer) && liker === viewer)
+		});
+	}
+
+	return summary;
+};

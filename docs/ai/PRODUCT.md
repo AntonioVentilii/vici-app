@@ -85,9 +85,14 @@ it from the code.
 Each row of the Arena → Friends activity feed carries a single
 tap-to-react "like" (a `Zap` glyph). Tapping toggles it on/off and
 plays a brief tilt + laurel particle burst on commit; the motion is
-suppressed under reduced-motion. The reaction is local to the session —
-there is no persisted reaction model yet. See
-[`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md).
+suppressed under reduced-motion. The like is **persisted** — it survives
+a refresh, and each row shows a count of how many people liked it
+(aggregated across all users). Tapping is optimistic: it highlights
+immediately and rolls back with an error toast if the write fails. See
+[`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md)
+(the reaction redesign) and
+[`specs/2026-06-14-feat-friend-feed-like-persistence.md`](./spec-driven-development/specs/2026-06-14-feat-friend-feed-like-persistence.md)
+(persistence + counts).
 
 ### Market odds — skeleton while the book loads
 
