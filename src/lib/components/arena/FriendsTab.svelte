@@ -967,7 +967,7 @@
 	<!-- Friends ranked ─────────────────────────────────────────── -->
 	{#if loading}
 		<div class="friends-loading">
-			<LoadingSpinner />
+			<LoadingSpinner inlinePad />
 		</div>
 	{:else}
 		<section class="friends-section">

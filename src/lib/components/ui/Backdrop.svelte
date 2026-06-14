@@ -10,6 +10,6 @@
 
 <div class="bg-card/30 fixed inset-0 z-40 flex items-center justify-center backdrop-blur-xl">
 	{#if spinner}
-		<LoadingSpinner center={false} size="md" />
+		<LoadingSpinner size="md" />
 	{/if}
 </div>

@@ -159,7 +159,7 @@
 
 	{#if loading}
 		<div class="flex flex-col items-center justify-center py-20">
-			<LoadingSpinner center={false} size="md" />
+			<LoadingSpinner size="md" />
 			<span class="text-primary eyebrow-xs mt-4">
 				{t({ locale: $localeStore, key: 'market.order_book.updating' })}
 			</span>
