@@ -62,17 +62,21 @@ Activities — [`src/lib/services/activity.services.ts`](../../../../src/lib/ser
 Loader / store wiring:
 
 - [`src/lib/components/loaders/LoaderGlobalActivities.svelte`](../../../../src/lib/components/loaders/LoaderGlobalActivities.svelte)
-  calls `getGlobalActivities()` and hydrates `globalActivitiesStore`.
-- Derived feed: `src/lib/stores/activities.derived.ts` →
-  `FriendsTab.svelte`.
+  calls `getGlobalActivities()` and writes the
+  [`src/lib/stores/activities.store.ts`](../../../../src/lib/stores/activities.store.ts)
+  writable.
+- Derived feed:
+  [`src/lib/derived/activities.derived.ts`](../../../../src/lib/derived/activities.derived.ts)
+  → `FriendsTab.svelte`.
 
 Pattern to mirror — comment votes
 ([`src/lib/services/discussion.services.ts`](../../../../src/lib/services/discussion.services.ts),
-`upvoteComment`/`downvoteComment`): a binary, per-user reaction toggled
-with `setDoc`/`deleteDoc` and read back on load. The difference: comment
-votes live as `upvotes: PrincipalText[]` **on the comment doc**, which
-works only because the comment author isn't write-guarded against other
-voters. Activity docs **are** write-guarded
+`upvoteComment`/`downvoteComment`): a binary, per-user reaction read back
+on load. Note the mechanism differs from this spec's: comment votes
+`getDoc` the comment then `setDoc` it back with the caller added to /
+removed from `upvotes: PrincipalText[]` **on the comment doc** (no
+`deleteDoc`) — which works only because the comment author isn't
+write-guarded against other voters. Activity docs **are** write-guarded
 ([`src/satellite/services/activity.services.ts`](../../../../src/satellite/services/activity.services.ts),
 `assertSetActivity`: `data.user` must equal the caller, key must be
 `${caller}#${timestamp}#${type}`), so a different user **cannot** write
@@ -120,9 +124,9 @@ in `src/satellite/index.ts`.
    - `activityTitle` is a bounded string (cap its length, mirroring how
      `assertSetActivity` bounds activity fields) and `marketId`, when
      present, is a string.
-   No delete guard: a liker deletes only their own doc (Juno owner-scoped
-   delete on a public collection already restricts this to the doc owner;
-   confirm — see Open questions).
+     No delete guard: a liker deletes only their own doc (Juno owner-scoped
+     delete on a public collection already restricts this to the doc owner;
+     confirm — see Open questions).
 
 ### Frontend
 
@@ -215,7 +219,7 @@ mismatch fails at runtime.
 - **Memory & storage.** New `activity_reactions` collection, `stable`
   memory. One small doc per (activity, liker): key
   `${actor}#${ts}#${type}#${liker}` plus `{ activityKey, liker, timestamp,
-  activityTitle, marketId? }` (the last two denormalized for spec B's
+activityTitle, marketId? }` (the last two denormalized for spec B's
   card). Growth = total likes ever cast; append-mostly, with
   deletes on unlike. No retention/cleanup story in v1 (reactions persist
   with their activity); a cleanup pass can piggyback on activity

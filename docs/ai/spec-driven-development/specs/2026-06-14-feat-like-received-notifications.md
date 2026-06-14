@@ -19,13 +19,13 @@ the author has no way to know anyone reacted.
 — introduces the `activity_reactions` collection (one doc per
 activity-per-liker) and persists likes + counts. **This spec depends on
 spec A being merged** and adds no new collection, doc shape, or assert:
-it only *reads* the reactions A writes. The reaction doc already carries
+it only _reads_ the reactions A writes. The reaction doc already carries
 the fields this card needs (`activityKey`, `liker`, `timestamp`,
 `activityTitle`, `marketId?`), denormalized by A precisely so B needs no
 schema change.
 
 Reaction doc key (from spec A): `${actor}#${ts}#${type}#${liker}`. The
-**first** `#`-segment is the liked activity's author — so "likes on *my*
+**first** `#`-segment is the liked activity's author — so "likes on _my_
 calls" is a single key-prefix query (`matcher: { key: '^${myPrincipal}#' }`),
 the same shape `getSettlementActivities` already uses for key matchers in
 [`src/lib/services/activity.services.ts`](../../../../src/lib/services/activity.services.ts).
@@ -33,7 +33,7 @@ the same shape `getSettlementActivities` already uses for key matchers in
 Existing notification system to plug into (no new mechanism):
 
 - [`src/lib/stores/inbox.store.ts`](../../../../src/lib/stores/inbox.store.ts)
-  — the inbox is a merge of *derived* sources. The exact pattern to
+  — the inbox is a merge of _derived_ sources. The exact pattern to
   mirror is `friendRequestInboxStore` (≈ line 117):
   `derived([friendRequestsStore, profilesStore, userStore, localeStore], …)`
   maps pending `relations` docs → `InboxNotification[]` live; cards
@@ -45,7 +45,7 @@ Existing notification system to plug into (no new mechanism):
   `InboxNotificationKind` already includes `'social'` and `'friend_request'`.
 - [`src/lib/constants/notification-kind.constants.ts`](../../../../src/lib/constants/notification-kind.constants.ts)
   — maps each kind to an icon + default route + taxonomy label.
-- [`src/routes/(app)/notifications/+page.svelte`](../../../../src/routes/(app)/notifications/+page.svelte)
+- [`src/routes/(app)/notifications/+page.svelte`](<../../../../src/routes/(app)/notifications/+page.svelte>)
   renders the inbox at `/notifications` (unread + earlier sections,
   dismiss / mark-read).
 - Profiles for the liker's name/avatar come from `profilesStore`
@@ -56,7 +56,7 @@ Existing notification system to plug into (no new mechanism):
 
 1. New derived store `likesReceivedInboxStore: Readable<InboxNotification[]>`
    in `inbox.store.ts`, mirroring `friendRequestInboxStore`:
-   - Source: the current user's *received* reactions — reactions whose
+   - Source: the current user's _received_ reactions — reactions whose
      `activityKey` author segment equals `$userStore` principal. Loaded by
      a new `getReceivedActivityReactions({ liker?: never })`-style service
      call in spec A's `activity-reaction.services.ts` (a key-prefix
