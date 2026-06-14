@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.16](https://github.com/AntonioVentilii/vici-app/compare/v0.1.15...v0.1.16) (2026-06-14)
+
+
+### Features
+
+* **leagues:** league invite implies a friend invite ([#879](https://github.com/AntonioVentilii/vici-app/issues/879)) ([93568bb](https://github.com/AntonioVentilii/vici-app/commit/93568bbf4dff3f1177dc50177c134aba504ef0ec))
+* **markets:** show translated market metadata with an original-language toggle ([#883](https://github.com/AntonioVentilii/vici-app/issues/883)) ([a40bf90](https://github.com/AntonioVentilii/vici-app/commit/a40bf90e15d8b3ab699b9a738d226bf12e50d741))
+* **worlds:** base the all-time leaderboard on members' real lifetime stats ([#884](https://github.com/AntonioVentilii/vici-app/issues/884)) ([5a33662](https://github.com/AntonioVentilii/vici-app/commit/5a336620abc15d9c381ae5de8a6701f14ce19498))
+
+
+### Bug Fixes
+
+* **leagues:** surface incoming battle challenges and fix the recipient-side copy ([#882](https://github.com/AntonioVentilii/vici-app/issues/882)) ([ae5b655](https://github.com/AntonioVentilii/vici-app/commit/ae5b6559e6bfbf06f2c52c8cb5822fbef20cb3d7))
+* **referral:** retry the invite friendship instead of dropping it on a transient failure ([#881](https://github.com/AntonioVentilii/vici-app/issues/881)) ([b14b70a](https://github.com/AntonioVentilii/vici-app/commit/b14b70a368c2a79fd2b05a7332346798432d17b1))
+
 ## [0.1.15](https://github.com/AntonioVentilii/vici-app/compare/v0.1.14...v0.1.15) (2026-06-14)
 
 
