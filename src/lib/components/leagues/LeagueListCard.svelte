@@ -2,6 +2,7 @@
 	import { nonNullish } from '@dfinity/utils';
 	import { Check, ChevronRight } from '@lucide/svelte/icons';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
 	import { track } from '$lib/services/analytics.services';
 	import { buildLeagueShareUrl } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -214,14 +215,14 @@
 		<span class="head">
 			<span class="name">{league.name}</span>
 			{#if isRecommendation}
-				<span class="role-chip is-recommendation">
-					{t({ locale: $localeStore, key: 'leagues.card.recommend_chip' }).toUpperCase()}
-				</span>
+				<Badge size="xs" variant="success">
+					{t({ locale: $localeStore, key: 'leagues.card.recommend_chip' })}
+				</Badge>
 			{:else if roleLabel && role !== 'member'}
-				<span class="role-chip" data-role={role}>{roleLabel.toUpperCase()}</span>
+				<Badge size="xs" variant="warning">{roleLabel}</Badge>
 			{/if}
 			{#if challengeLabel}
-				<span class="challenge-chip">{challengeLabel.toUpperCase()}</span>
+				<Badge size="xs" variant="danger">{challengeLabel}</Badge>
 			{/if}
 		</span>
 
@@ -430,51 +431,6 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		min-width: 0;
-	}
-
-	/* Role chip explicitly references `--laurel` (NOT `--accent`):
-	   the outer button overrides `--accent` to the per-league colour
-	   for the logo tile gradient, so a bare `var(--accent)` here
-	   would tint owner / admin chips with the league's accent
-	   (sage / red / etc.) instead of the global laurel. */
-	.role-chip {
-		flex-shrink: 0;
-		display: inline-flex;
-		align-items: center;
-		padding: 2px 7px;
-		border-radius: var(--r-4);
-		font-family: var(--font-mono);
-		font-size: 9px;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		background: rgba(226, 184, 66, 0.14);
-		color: var(--laurel);
-	}
-
-	.role-chip[data-role='owner'] {
-		background: rgba(226, 184, 66, 0.14);
-		color: var(--laurel);
-	}
-
-	.role-chip.is-recommendation {
-		background: rgba(79, 211, 161, 0.12);
-		color: var(--yes);
-	}
-
-	/* Incoming-challenge chip — same dimensions as the role chip but in the
-	   battle red so a pending challenge reads as something to act on. */
-	.challenge-chip {
-		flex-shrink: 0;
-		display: inline-flex;
-		align-items: center;
-		padding: 2px 7px;
-		border-radius: var(--r-4);
-		font-family: var(--font-mono);
-		font-size: 9px;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		background: rgba(232, 90, 90, 0.16);
-		color: var(--no);
 	}
 
 	.meta {
