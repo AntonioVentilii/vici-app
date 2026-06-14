@@ -1,19 +1,11 @@
+import type { ActivityReaction } from '$lib/types/social';
 import { writable } from 'svelte/store';
 
 /**
- * Per-activity reaction tally: how many users liked the activity, and whether the current viewer is
- * one of them. Keyed by the activity's doc key (`${user}#${timestamp}#${type}`).
+ * Count-on-read reaction docs for the friend feed — the most-recent page across all users,
+ * populated by `LoaderGlobalActivities`. Consumers derive per-activity counts **and** the viewer's
+ * own likes from this raw list, keeping the viewer reactive (`$authPrincipal`) so persisted likes
+ * highlight as soon as auth resolves rather than only after a manual refresh. `undefined`
+ * distinguishes "not yet loaded" from "loaded but no reactions".
  */
-export interface ActivityReactionSummary {
-	count: number;
-	mineLiked: boolean;
-}
-
-/**
- * Count-on-read reaction summaries for the friend feed, keyed by activity doc key. Populated by
- * `LoaderGlobalActivities` (one bounded read alongside the activities fetch) and consumed by
- * `FriendsTab`. `undefined` distinguishes "not yet loaded" from "loaded but no reactions".
- */
-export const activityReactionsStore = writable<Map<string, ActivityReactionSummary> | undefined>(
-	undefined
-);
+export const activityReactionsStore = writable<ActivityReaction[] | undefined>(undefined);

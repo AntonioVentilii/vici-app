@@ -71,8 +71,12 @@ export const assertSetActivityReaction = ({
 		throw new Error('Activity reaction actor segment must be a valid principal.');
 	}
 
-	if (!/^\d+$/.test(timestampSegment)) {
-		throw new Error('Activity reaction key timestamp segment must be numeric.');
+	// Must be the canonical `${timestamp}` `logActivity` writes — a safe integer whose string form
+	// round-trips (rejects leading zeros / oversized values), mirroring `assertSetActivity`.
+	const timestampValue = Number(timestampSegment);
+
+	if (!Number.isSafeInteger(timestampValue) || `${timestampValue}` !== timestampSegment) {
+		throw new Error('Activity reaction key timestamp segment must be a canonical safe integer.');
 	}
 
 	if (!ACTIVITY_TYPES.includes(type)) {

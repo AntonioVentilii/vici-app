@@ -2,7 +2,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import type { Doc } from '@junobuild/core';
 	import { Check, ChevronRight, Link2, Plus, Share2, Zap } from '@lucide/svelte/icons';
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
@@ -26,6 +26,7 @@
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import {
 		activityReactionKey,
+		countActivityReactions,
 		likeActivity,
 		unlikeActivity
 	} from '$lib/services/activity-reaction.services';
@@ -665,56 +666,89 @@
 		$globalActivities.filter((activity) => friendIdSet.has(activity.user)).slice(0, 20)
 	);
 
-	// Persisted likes — one `activity_reactions` doc per (activity, liker),
-	// keyed by the activity's doc key. `likedKeys` is the optimistic local
-	// mirror (seeded from the loaded summaries below); it holds the full
-	// reaction key `${user}#${timestamp}#${type}`.
-	const likedKeys = new SvelteSet<string>();
+	// Persisted likes live in the `activity_reactions` collection (one doc
+	// per (activity, liker)). The feed renders server truth — per-row counts
+	// and the viewer's own likes, both derived below — with a per-row
+	// optimistic override layered on top, so a tap reflects instantly and
+	// reconciles to the server on the next load.
+	const REACTION_MOTION_MS = 600;
 
-	// Rows currently playing the commit motion. A second Set lets the
-	// tilt + burst run for one beat without coupling to the persistent
-	// liked state (so un-liking and re-liking re-fires the motion).
+	// Rows currently playing the commit motion — kept separate from liked
+	// state so un-liking then re-liking re-fires the tilt + burst.
 	const firingKeys = new SvelteSet<string>();
 
-	const REACTION_MOTION_MS = 600;
+	// Optimistic overrides keyed by activity doc key → the viewer's desired
+	// liked state. An entry shadows server truth until a reload confirms it
+	// (reconciled by the effect below) or a failed write reverts it.
+	const pendingLikes = new SvelteMap<string, boolean>();
 
 	const rowKey = (activity: Activity): string => activityReactionKey({ activity });
 
 	const isFiring = (activity: Activity): boolean => firingKeys.has(rowKey(activity));
 
-	// Count-on-read summaries (like count + whether the viewer liked) keyed
-	// by activity doc key, hydrated by `LoaderGlobalActivities`.
-	const reactionSummaries = $derived($activityReactionsStore);
+	// The most-recent reaction page (count-on-read), hydrated by
+	// `LoaderGlobalActivities`.
+	const reactions = $derived($activityReactionsStore);
 
-	// Seed the optimistic mirror from the loaded summaries: every activity
-	// the viewer has already liked starts highlighted. Depends only on the
-	// summaries store (never reads `likedKeys`), so local toggles between
-	// reloads don't retrigger it and there's no write-loop.
-	$effect(() => {
-		const summaries = reactionSummaries;
+	// Per-activity like counts from the loaded reactions.
+	const reactionCounts = $derived(
+		nonNullish(reactions) ? countActivityReactions(reactions) : undefined
+	);
 
-		if (isNullish(summaries)) {
-			return;
+	// Activity keys the viewer has liked per the server. Derived against
+	// `$authPrincipal` so likes highlight as soon as auth resolves — the
+	// loader runs identity-agnostically, so a signed-out load must not
+	// freeze this empty.
+	const serverLikedKeys = $derived.by(() => {
+		const keys = new SvelteSet<string>();
+		const me = $authPrincipal;
+
+		if (isNullish(me) || isNullish(reactions)) {
+			return keys;
 		}
 
-		for (const [key, summary] of summaries) {
-			if (summary.mineLiked) {
-				likedKeys.add(key);
+		for (const { activityKey, liker } of reactions) {
+			if (liker === me) {
+				keys.add(activityKey);
 			}
 		}
+
+		return keys;
 	});
 
-	// The like count for a row: the server tally adjusted by the viewer's
-	// optimistic local state, so a just-tapped like updates the number
+	// Drop optimistic overrides the server has caught up to, so server truth
+	// resumes once a like/unlike shows up in a reload (and a stale refresh
+	// can't re-add a key the viewer just removed). Depends only on
+	// `serverLikedKeys`; `pendingLikes` is read untracked so the self-write
+	// can't loop.
+	$effect(() => {
+		const liked = serverLikedKeys;
+
+		untrack(() => {
+			for (const [key, desired] of pendingLikes) {
+				if (liked.has(key) === desired) {
+					pendingLikes.delete(key);
+				}
+			}
+		});
+	});
+
+	const isActivityLiked = (activity: Activity): boolean => {
+		const key = rowKey(activity);
+
+		return pendingLikes.has(key) ? (pendingLikes.get(key) ?? false) : serverLikedKeys.has(key);
+	};
+
+	// The like count for a row: the server tally adjusted for the viewer's
+	// optimistic override, so a just-tapped like updates the number
 	// immediately and reconciles to the same value after the next reload.
 	const reactionCount = (activity: Activity): number => {
 		const key = rowKey(activity);
-		const summary = reactionSummaries?.get(key);
-		const base = summary?.count ?? 0;
-		const serverMine = summary?.mineLiked ?? false;
-		const localMine = likedKeys.has(key);
+		const base = reactionCounts?.get(key) ?? 0;
+		const serverMine = serverLikedKeys.has(key);
+		const mine = isActivityLiked(activity);
 
-		return base + (localMine ? 1 : 0) - (serverMine ? 1 : 0);
+		return base + (mine ? 1 : 0) - (serverMine ? 1 : 0);
 	};
 
 	const toggleLike = async (activity: Activity) => {
@@ -727,14 +761,13 @@
 		}
 
 		const key = rowKey(activity);
-		const wasLiked = likedKeys.has(key);
+		const desired = !isActivityLiked(activity);
 
-		// Optimistic: flip immediately and fire the commit motion as before;
-		// the persisted write happens after.
-		if (wasLiked) {
-			likedKeys.delete(key);
-		} else {
-			likedKeys.add(key);
+		// Optimistic: shadow server truth immediately and fire the commit
+		// motion; the persisted write happens after.
+		pendingLikes.set(key, desired);
+
+		if (desired) {
 			haptic('light-tap');
 
 			if (!prefersReducedMotion()) {
@@ -744,24 +777,20 @@
 		}
 
 		try {
-			if (wasLiked) {
-				await unlikeActivity({ activity, liker });
-			} else {
+			if (desired) {
 				await likeActivity({ activity, liker });
+			} else {
+				await unlikeActivity({ activity, liker });
 			}
 
 			track({
 				name: 'friend_feed_reaction',
 				source: 'arena',
-				label: wasLiked ? 'unlike' : 'like'
+				label: desired ? 'like' : 'unlike'
 			});
 		} catch (_err) {
-			// Roll the optimistic flag back and surface the standard error toast.
-			if (wasLiked) {
-				likedKeys.add(key);
-			} else {
-				likedKeys.delete(key);
-			}
+			// Revert the optimistic override to server truth + surface the toast.
+			pendingLikes.delete(key);
 
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
@@ -1136,7 +1165,7 @@
 			<ul class="feed-list">
 				{#each friendActivities as activity (rowKey(activity))}
 					{@const profile = friendProfiles.get(activity.user)}
-					{@const isLiked = likedKeys.has(rowKey(activity))}
+					{@const isLiked = isActivityLiked(activity)}
 					{@const likeCount = reactionCount(activity)}
 					<li>
 						<div class="feed-row">

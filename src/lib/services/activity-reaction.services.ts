@@ -1,5 +1,4 @@
 import { Collection } from '$lib/constants/collections.constants';
-import type { ActivityReactionSummary } from '$lib/stores/activity-reactions.store';
 import type { Activity, ActivityReaction } from '$lib/types/social';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, listDocs, setDoc } from '@junobuild/core';
@@ -101,27 +100,16 @@ export const getActivityReactions = async ({
 };
 
 /**
- * Tally reactions into a per-`activityKey` summary (count + whether `viewer` is among the likers).
- * This is the count-on-read aggregation the feed renders; `viewer` is the current principal, or
- * `undefined` when anonymous (then `mineLiked` is always `false`).
+ * Tally reactions into a per-`activityKey` like count (the count-on-read aggregation the feed
+ * renders). Viewer-agnostic: which of these the current user liked is derived separately and
+ * reactively from `$authPrincipal`, so it stays correct across sign-in without a refresh.
  */
-export const summarizeActivityReactions = ({
-	reactions,
-	viewer
-}: {
-	reactions: ActivityReaction[];
-	viewer: PrincipalText | undefined;
-}): Map<string, ActivityReactionSummary> => {
-	const summary = new Map<string, ActivityReactionSummary>();
+export const countActivityReactions = (reactions: ActivityReaction[]): Map<string, number> => {
+	const counts = new Map<string, number>();
 
-	for (const { activityKey, liker } of reactions) {
-		const current = summary.get(activityKey) ?? { count: 0, mineLiked: false };
-
-		summary.set(activityKey, {
-			count: current.count + 1,
-			mineLiked: current.mineLiked || (nonNullish(viewer) && liker === viewer)
-		});
+	for (const { activityKey } of reactions) {
+		counts.set(activityKey, (counts.get(activityKey) ?? 0) + 1);
 	}
 
-	return summary;
+	return counts;
 };
