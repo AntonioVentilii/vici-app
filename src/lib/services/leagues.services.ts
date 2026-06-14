@@ -1,6 +1,7 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
 import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
+import { authPrincipal } from '$lib/derived/user.derived';
 import { LeaguePrivacy } from '$lib/enums/league';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getMyReferralCode } from '$lib/services/referral.services';
@@ -25,8 +26,9 @@ import {
 	type LeagueMemberDoc,
 	type LeagueMemberRole
 } from '$lib/types/league-member';
-import { nonNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
+import type { PrincipalText } from '@junobuild/schema';
 import { get } from 'svelte/store';
 
 /**
@@ -510,22 +512,29 @@ export const updateLeague = async ({
 	return next;
 };
 
-// Session cache for the caller's own referral code — the same value for the whole
-// session, so resolve it once and reuse across every league-share build. Only a
-// positive result is cached; a missing code (not yet assigned / backfilled later)
-// stays retryable.
-let cachedReferralCode: string | undefined;
+// Cache for the caller's own referral code — the same value for a given identity,
+// so resolve it once and reuse across every league-share build. Keyed to the
+// signed-in principal so an in-session account switch (sign-out → sign-in without
+// a reload) never reuses the previous user's code. Only a positive result is
+// cached; a missing code (not yet assigned / backfilled later) stays retryable.
+let cachedReferral: { owner: PrincipalText; code: string } | undefined;
 
 const resolveMyReferralCode = async (): Promise<string | undefined> => {
-	if (nonNullish(cachedReferralCode)) {
-		return cachedReferralCode;
+	const owner = get(authPrincipal);
+
+	if (isNullish(owner)) {
+		return;
+	}
+
+	if (cachedReferral?.owner === owner) {
+		return cachedReferral.code;
 	}
 
 	try {
 		const code = await getMyReferralCode();
 
 		if (nonNullish(code)) {
-			cachedReferralCode = code;
+			cachedReferral = { owner, code };
 		}
 
 		return code;
