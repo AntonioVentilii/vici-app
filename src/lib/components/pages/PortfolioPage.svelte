@@ -2,6 +2,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
 	import PortfolioEmptyState from '$lib/components/portfolio/PortfolioEmptyState.svelte';
@@ -117,7 +118,11 @@
 				return acc;
 			}
 
-			return acc + calculatePositionPnL({ position: pos, market });
+			const pnl = calculatePositionPnL({ position: pos, market });
+
+			// Skip positions whose value is still unknown (book not read / empty)
+			// instead of treating them as 0 — see `calculatePositionValue`.
+			return nonNullish(pnl) ? acc + pnl : acc;
 		}, 0)
 	);
 
@@ -164,12 +169,12 @@
 
 	// ── Active-call row helpers ──────────────────────────────────────
 
-	const positionPnl = (pos: Position): number =>
+	const positionPnl = (pos: Position): number | undefined =>
 		calculatePositionPnL({ position: pos, market: getMarketById(pos.marketId) });
 
-	const formatRowPnl = (pos: Position): string =>
+	const formatRowPnl = (pnl: number): string =>
 		formatPositionPnLWithOptionalUnit({
-			pnl: positionPnl(pos),
+			pnl,
 			playground: $playgroundVxpUnitMode
 		});
 
@@ -198,9 +203,16 @@
 		return tagColor(tag ?? '');
 	};
 
-	const positionSideProb = (pos: Position): number => {
+	// Current implied probability for the position's side, or `undefined` when
+	// the market's probability is unknown (book not read / empty). Never coerce
+	// the unknown state to a fabricated 0% — callers render a placeholder.
+	const positionSideProb = (pos: Position): number | undefined => {
 		const market = getMarketById(pos.marketId);
-		const yesProb = market?.yesProbability ?? 0;
+		const yesProb = market?.yesProbability;
+
+		if (isNullish(yesProb)) {
+			return;
+		}
 
 		return pos.outcomeId === 'YES' ? yesProb : 1 - yesProb;
 	};
@@ -210,12 +222,12 @@
 
 	const positionMoveDisplay = (pos: Position): string | undefined => {
 		const entry = positionEntryProb(pos);
+		const current = positionSideProb(pos);
 
-		if (isNullish(entry)) {
+		if (isNullish(entry) || isNullish(current)) {
 			return;
 		}
 
-		const current = positionSideProb(pos);
 		const pctMove = (current - entry) * 100;
 		const sign = pctMove >= 0 ? '+' : '−';
 
@@ -356,6 +368,7 @@
 						{@const entry = positionEntryProb(pos)}
 						{@const current = positionSideProb(pos)}
 						{@const move = positionMoveDisplay(pos)}
+						{@const oddsVariant = market?.priceLoaded === true ? 'empty' : 'loading'}
 						{@const catLabel = categoryLabel(pos.marketId)}
 						{@const catAccent = categoryAccent(pos.marketId)}
 
@@ -381,7 +394,9 @@
 								</div>
 								<div class="portfolio-row-meta">
 									<span class="num portfolio-row-prob">
-										{#if nonNullish(entry)}
+										{#if isNullish(current)}
+											<MarketOddsSkeleton variant={oddsVariant} />
+										{:else if nonNullish(entry)}
 											{t({
 												locale: $localeStore,
 												key: 'portfolio.row.entry_to_current',
@@ -397,12 +412,16 @@
 									</span>
 									<span
 										class="num portfolio-row-pnl"
-										class:is-negative={pnl < 0}
-										class:is-positive={pnl >= 0}
+										class:is-negative={nonNullish(pnl) && pnl < 0}
+										class:is-positive={nonNullish(pnl) && pnl >= 0}
 									>
-										{formatRowPnl(pos)}{#if nonNullish(move)}<span class="portfolio-row-move">
-												· {move}</span
-											>{/if}
+										{#if isNullish(pnl)}
+											<MarketOddsSkeleton variant={oddsVariant} />
+										{:else}
+											{formatRowPnl(pnl)}{#if nonNullish(move)}<span class="portfolio-row-move">
+													· {move}</span
+												>{/if}
+										{/if}
 									</span>
 								</div>
 							</a>

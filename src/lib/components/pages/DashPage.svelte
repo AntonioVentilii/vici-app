@@ -122,12 +122,22 @@
 	};
 
 	// Day-0/1 market context — "{category} · {pct}% YES" from live consensus.
-	const crowdContextOf = (market: Market): string =>
-		t({
+	// When the probability is still unknown (book not yet read or empty; see
+	// `Market.yesProbability`) we drop the "{pct}% YES" clause and show the
+	// bare category rather than a fabricated "0% YES" / "NaN%".
+	const crowdContextOf = (market: Market): string => {
+		const { yesProbability } = market;
+
+		if (isNullish(yesProbability)) {
+			return categoryOf(market);
+		}
+
+		return t({
 			locale: $localeStore,
 			key: 'dash.build.zero_crowd_ctx',
-			params: { category: categoryOf(market), pct: probabilityToPercent(market.yesProbability) }
+			params: { category: categoryOf(market), pct: probabilityToPercent(yesProbability) }
 		});
+	};
 
 	// ─── Positions / orders ────────────────────────────────────────────
 	// The clearing canister deletes positions on settlement, so anything in

@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
 	import ProbBar from '$lib/components/ui/ProbBar.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import type { MarketTag } from '$lib/constants/market-tags.constants';
@@ -27,7 +29,13 @@
 
 	const { market, tag }: Props = $props();
 
-	const yes = $derived(probabilityToPercent(market.yesProbability));
+	// When the YES probability is unknown we render a skeleton in place of
+	// the percentage; the bar falls back to an empty track (0) rather than a
+	// misleading 50% fill.
+	const hasProbability = $derived(!isNullish(market.yesProbability));
+	const yes = $derived(
+		isNullish(market.yesProbability) ? 0 : probabilityToPercent(market.yesProbability)
+	);
 	// Cold-start: a market with no real volume yet reads "New" instead of
 	// "0 vol" — framing the empty market as an opportunity, never a synthetic
 	// crowd. Uses our real volume field only.
@@ -65,8 +73,14 @@
 		<div style="flex: 1;">
 			<ProbBar {yes} />
 		</div>
-		<span style:color={yes >= 50 ? 'var(--yes)' : 'var(--no)'} class="num t-body fw-600"
-			>{yes}%</span
-		>
+		{#if hasProbability}
+			<span style:color={yes >= 50 ? 'var(--yes)' : 'var(--no)'} class="num t-body fw-600"
+				>{yes}%</span
+			>
+		{:else}
+			<span class="num t-body fw-600"
+				><MarketOddsSkeleton variant={market.priceLoaded ? 'empty' : 'loading'} /></span
+			>
+		{/if}
 	</div>
 </button>

@@ -4,6 +4,7 @@
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import FlowCardFooter from '$lib/components/market/FlowCardFooter.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
 	import SeededAvatarStack from '$lib/components/ui/SeededAvatarStack.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
@@ -149,18 +150,34 @@
 	const backOverlayYes = $derived(flipped ? overlayYes * overlayDim : 0);
 	const backOverlayNo = $derived(flipped ? overlayNo * overlayDim : 0);
 
+	// Crowd consensus is unknown until the book is read (or it was read and
+	// is empty). When unknown we render an odds skeleton and suppress the
+	// payout preview rather than fabricate a 50/50 split. `priceKnown` is the
+	// single gate for every probability-derived surface on the card.
+	const priceKnown = $derived(nonNullish(market.yesProbability));
 	const crowdPct = $derived(consensusPercent(market));
 	const crowdSide = $derived(consensusSide(market));
-	const yesIsFav = $derived(crowdPct >= 50);
-	const noPct = $derived(100 - crowdPct);
+	const yesIsFav = $derived(nonNullish(crowdPct) && crowdPct >= 50);
+	const noPct = $derived(nonNullish(crowdPct) ? 100 - crowdPct : undefined);
 
 	// Payout preview — stake/(probability) − stake, clamped at p=0.05
-	// to keep long-shots from rendering pathological numbers.
+	// to keep long-shots from rendering pathological numbers. Only computed
+	// when the probability is known; otherwise the preview is suppressed.
 	const stakeNum = $derived(Math.max(0, Number(tradeAmount) || 0));
-	const probMyYes = $derived(Math.max(0.05, market.yesProbability));
-	const probMyNo = $derived(Math.max(0.05, 1 - market.yesProbability));
-	const winYes = $derived(Math.max(1, Math.round(stakeNum / probMyYes) - stakeNum));
-	const winNo = $derived(Math.max(1, Math.round(stakeNum / probMyNo) - stakeNum));
+	const winYes = $derived.by<number | undefined>(() => {
+		if (isNullish(market.yesProbability)) {
+			return;
+		}
+
+		return Math.max(1, Math.round(stakeNum / Math.max(0.05, market.yesProbability)) - stakeNum);
+	});
+	const winNo = $derived.by<number | undefined>(() => {
+		if (isNullish(market.yesProbability)) {
+			return;
+		}
+
+		return Math.max(1, Math.round(stakeNum / Math.max(0.05, 1 - market.yesProbability)) - stakeNum);
+	});
 
 	const sizeStake = $derived(Math.max(VXP_DEFAULT_STAKE, stakeNum));
 
@@ -427,7 +444,11 @@
 			dragX = 0;
 			dragY = 0;
 
-			if (!guided) {
+			// Suppress flip in guided mode, and until the price is known —
+			// the back face's community-read / stake sections all assume a
+			// resolved probability, so flipping to a fabricated split would
+			// surface a 50/50 the book never reported.
+			if (!guided && priceKnown) {
 				flipped = true;
 			}
 
@@ -578,7 +599,11 @@
 								</span>
 							{/if}
 						</div>
-						<ConsensusCompass size={42} yesProbability={market.yesProbability} />
+						<ConsensusCompass
+							priceLoaded={market.priceLoaded}
+							size={42}
+							yesProbability={market.yesProbability}
+						/>
 					</div>
 
 					{#if showPriorOnFront && priorCall}
@@ -648,48 +673,58 @@
 
 					<!-- Probability split — single bar with payout labels.
 				     Replaces the dual-box layout to compress space and
-				     surface upside without the misleading red 85% box. -->
+				     surface upside without the misleading red 85% box.
+				     When the probability is unknown the split + payout
+				     preview are replaced by an odds skeleton: a pulsing
+				     bar while the book loads, a neutral dash once it's
+				     read but has no liquidity. Never a fabricated 50/50. -->
 					<div class="flow-probs">
-						<div class="flow-probs-row">
-							<div class="flow-probs-side flow-probs-side-no">
-								<span class="flow-probs-pct num">{noPct}%</span>
-								<span class="flow-probs-label text-no">NO</span>
+						{#if priceKnown && nonNullish(crowdPct) && nonNullish(noPct) && nonNullish(winNo) && nonNullish(winYes)}
+							<div class="flow-probs-row">
+								<div class="flow-probs-side flow-probs-side-no">
+									<span class="flow-probs-pct num">{noPct}%</span>
+									<span class="flow-probs-label text-no">NO</span>
+								</div>
+								<div class="flow-probs-track" aria-hidden="true">
+									<div style:width="{noPct}%" class="flow-probs-fill-no"></div>
+									<div style:width="{crowdPct}%" class="flow-probs-fill-yes"></div>
+								</div>
+								<div class="flow-probs-side flow-probs-side-yes">
+									<span class="flow-probs-label text-yes">YES</span>
+									<span class="flow-probs-pct num">{crowdPct}%</span>
+								</div>
 							</div>
-							<div class="flow-probs-track" aria-hidden="true">
-								<div style:width="{noPct}%" class="flow-probs-fill-no"></div>
-								<div style:width="{crowdPct}%" class="flow-probs-fill-yes"></div>
+							<div class="flow-probs-action-row">
+								<div class="flow-probs-action flow-probs-action-no">
+									<span class="flow-probs-arrow text-no" aria-hidden="true">←</span>
+									<span class="flow-probs-payout num">
+										+{winNo}
+										<span class="flow-probs-payout-unit">VXP</span>
+									</span>
+									<span class="flow-probs-role allcaps">
+										{yesIsFav
+											? t({ locale: $localeStore, key: 'card.long_shot' })
+											: t({ locale: $localeStore, key: 'card.favorite' })}
+									</span>
+								</div>
+								<div class="flow-probs-action flow-probs-action-yes">
+									<span class="flow-probs-role allcaps">
+										{yesIsFav
+											? t({ locale: $localeStore, key: 'card.favorite' })
+											: t({ locale: $localeStore, key: 'card.long_shot' })}
+									</span>
+									<span class="flow-probs-payout num">
+										+{winYes}
+										<span class="flow-probs-payout-unit">VXP</span>
+									</span>
+									<span class="flow-probs-arrow text-yes" aria-hidden="true">→</span>
+								</div>
 							</div>
-							<div class="flow-probs-side flow-probs-side-yes">
-								<span class="flow-probs-label text-yes">YES</span>
-								<span class="flow-probs-pct num">{crowdPct}%</span>
+						{:else}
+							<div class="flow-probs-row flow-probs-row-unknown">
+								<MarketOddsSkeleton variant={market.priceLoaded ? 'empty' : 'loading'} />
 							</div>
-						</div>
-						<div class="flow-probs-action-row">
-							<div class="flow-probs-action flow-probs-action-no">
-								<span class="flow-probs-arrow text-no" aria-hidden="true">←</span>
-								<span class="flow-probs-payout num">
-									+{winNo}
-									<span class="flow-probs-payout-unit">VXP</span>
-								</span>
-								<span class="flow-probs-role allcaps">
-									{yesIsFav
-										? t({ locale: $localeStore, key: 'card.long_shot' })
-										: t({ locale: $localeStore, key: 'card.favorite' })}
-								</span>
-							</div>
-							<div class="flow-probs-action flow-probs-action-yes">
-								<span class="flow-probs-role allcaps">
-									{yesIsFav
-										? t({ locale: $localeStore, key: 'card.favorite' })
-										: t({ locale: $localeStore, key: 'card.long_shot' })}
-								</span>
-								<span class="flow-probs-payout num">
-									+{winYes}
-									<span class="flow-probs-payout-unit">VXP</span>
-								</span>
-								<span class="flow-probs-arrow text-yes" aria-hidden="true">→</span>
-							</div>
-						</div>
+						{/if}
 					</div>
 
 					<!-- Foot — SIZE · VXP chip + tap/swipe hint. -->
@@ -726,22 +761,27 @@
 				aria-hidden={!flipped}
 				onclick={closeBackOnTap}
 			>
-				<FlowCardBack
-					category={resolvedCategory}
-					{categoryAcc}
-					{crowdPct}
-					{crowdSide}
-					{followedLean}
-					interactive={flipped}
-					{market}
-					{metadata}
-					onClose={closeBack}
-					{onStakeChange}
-					{pointXs}
-					{points}
-					{priorCall}
-					{tradeAmount}
-				/>
+				{#if nonNullish(crowdPct) && nonNullish(crowdSide)}
+					<!-- Rendered only once the probability is known — the flip
+				     gesture is itself gated on `priceKnown`, so the back
+				     face never opens on a fabricated split. -->
+					<FlowCardBack
+						category={resolvedCategory}
+						{categoryAcc}
+						{crowdPct}
+						{crowdSide}
+						{followedLean}
+						interactive={flipped}
+						{market}
+						{metadata}
+						onClose={closeBack}
+						{onStakeChange}
+						{pointXs}
+						{points}
+						{priorCall}
+						{tradeAmount}
+					/>
+				{/if}
 
 				<!-- Back-face swipe still commits a call — corner stamps reuse
 			     the front-face YES/NO treatment; the doubly-rotated back face
@@ -1106,6 +1146,16 @@
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
 		gap: 10px;
+	}
+
+	/* Unknown-odds state — the skeleton bar / dash stands in for the
+	   split + payout rows, centered so the card silhouette stays stable
+	   whether the probability is known or still loading. */
+	.flow-probs-row-unknown {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 22px;
 	}
 
 	.flow-probs-side {

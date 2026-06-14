@@ -12,8 +12,9 @@ import { isNullish, nonNullish } from '@dfinity/utils';
  */
 export const mapMarketData = ({
 	series,
-	yesProbability = 0,
-	noProbability = 0,
+	yesProbability,
+	noProbability,
+	priceLoaded = false,
 	bestBid = undefined,
 	bestAsk = undefined,
 	bestBidQty = undefined,
@@ -25,6 +26,7 @@ export const mapMarketData = ({
 	series: RegistryDid.Series;
 	yesProbability?: number;
 	noProbability?: number;
+	priceLoaded?: boolean;
 	bestBid?: number;
 	bestAsk?: number;
 	bestBidQty?: bigint;
@@ -91,6 +93,7 @@ export const mapMarketData = ({
 		noVolume: ZERO,
 		yesProbability,
 		noProbability,
+		priceLoaded,
 		bestBid,
 		bestAsk,
 		bestBidQty,
@@ -104,7 +107,10 @@ export const mapMarketData = ({
 };
 
 /**
- * Mid-price estimate from bid/ask levels (0.5 if empty, else best bid/ask or one-sided).
+ * Mid-price estimate (0..1) from bid/ask levels: best bid/ask mid when both
+ * sides exist, the single side when one-sided, and **`undefined` when the book
+ * is empty** — there is no price to show. Callers must treat `undefined` as
+ * "unknown" (skeleton / no-liquidity), never substitute a 0.5 placeholder.
  */
 export const calculateProbability = ({
 	bids,
@@ -112,9 +118,9 @@ export const calculateProbability = ({
 }: {
 	bids: OrderBookLevel[];
 	asks: OrderBookLevel[];
-}): number => {
+}): number | undefined => {
 	if (bids.length === 0 && asks.length === 0) {
-		return 0.5;
+		return;
 	}
 
 	if (bids.length > 0 && asks.length > 0) {
@@ -154,12 +160,17 @@ export const resolveOutcomeExecutionPrice = ({
 			return limitPrice;
 		}
 
+		// Execution price is internal trade math (not the displayed odds), and the
+		// caller floors it at 0.01 below — so when neither a book side nor a known
+		// probability exists we fall back to the neutral mid here to stay a finite
+		// number. The trade surface gates on liquidity separately; this only keeps
+		// sizing/preview from going NaN on an unpriced market.
 		if (action === 'YES') {
-			return market.bestAsk ?? market.yesProbability;
+			return market.bestAsk ?? market.yesProbability ?? 0.5;
 		}
 
 		if (action === 'NO') {
-			return nonNullish(market.bestBid) ? 1 - market.bestBid : market.noProbability;
+			return nonNullish(market.bestBid) ? 1 - market.bestBid : (market.noProbability ?? 0.5);
 		}
 
 		const outcome = market.outcomes?.find((o) => o.id === action);

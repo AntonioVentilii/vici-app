@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CallSide } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
@@ -6,6 +7,17 @@
 	interface Props {
 		yesPercent: number;
 		noPercent: number;
+		/**
+		 * Whether the odds are known. When `false` the hero renders an odds
+		 * skeleton in place of both percentages (and a neutral bar) rather than
+		 * a misleading 0/100 split for an unpriced or empty book.
+		 */
+		known?: boolean;
+		/**
+		 * Whether the order book has been read — picks the skeleton variant when
+		 * the odds are unknown (`empty` dash vs `loading` bar).
+		 */
+		priceLoaded?: boolean;
 		/**
 		 * When the market has settled, the hero reads "FINAL YES" / "FINAL
 		 * NO" and dims the losing side so the winning outcome carries the
@@ -16,7 +28,14 @@
 		resolvedOutcome?: CallSide;
 	}
 
-	const { yesPercent, noPercent, resolved = false, resolvedOutcome }: Props = $props();
+	const {
+		yesPercent,
+		noPercent,
+		known = true,
+		priceLoaded = false,
+		resolved = false,
+		resolvedOutcome
+	}: Props = $props();
 
 	// Dim the side that lost once settled (only when we know the
 	// outcome). The winning side — and the live presentation — stay at
@@ -32,7 +51,11 @@
 <div class="prob-hero">
 	<div class="prob-hero-row">
 		<div class="prob-hero-side prob-hero-yes" class:is-lost={yesLost}>
-			<span class="num prob-hero-yes-pct">{yesPercent}%</span>
+			<span class="num prob-hero-yes-pct">
+				{#if known}{yesPercent}%{:else}<MarketOddsSkeleton
+						variant={priceLoaded ? 'empty' : 'loading'}
+					/>{/if}
+			</span>
 			<span class="prob-hero-eyebrow">
 				{resolved
 					? t({ locale: $localeStore, key: 'outcome.final_yes' })
@@ -45,13 +68,19 @@
 					? t({ locale: $localeStore, key: 'outcome.final_no' })
 					: t({ locale: $localeStore, key: 'outcome.no' })}
 			</span>
-			<span class="num prob-hero-no-pct">{noPercent}%</span>
+			<span class="num prob-hero-no-pct">
+				{#if known}{noPercent}%{:else}<MarketOddsSkeleton
+						variant={priceLoaded ? 'empty' : 'loading'}
+					/>{/if}
+			</span>
 		</div>
 	</div>
 
 	<div class="prob-hero-bar" role="presentation">
-		<span style:width={`${yesPercent}%`} class="prob-hero-bar-yes"></span>
-		<span style:width={`${noPercent}%`} class="prob-hero-bar-no"></span>
+		{#if known}
+			<span style:width={`${yesPercent}%`} class="prob-hero-bar-yes"></span>
+			<span style:width={`${noPercent}%`} class="prob-hero-bar-no"></span>
+		{/if}
 	</div>
 </div>
 
