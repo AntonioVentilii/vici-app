@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+import { MILLISECOND_IN_NANOSECONDS, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import {
 	INBOX_DISMISSED_STORAGE_KEY,
 	INBOX_READ_STORAGE_KEY,
@@ -12,6 +12,7 @@ import {
 	resolvedPositions,
 	resolvedPositionsNotInitialized
 } from '$lib/derived/resolved-positions.derived';
+import { receivedReactionsStore } from '$lib/stores/activity-reactions.store';
 import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/friends.store';
 import { localeStore } from '$lib/stores/locale.store';
 import { profilesStore } from '$lib/stores/profiles.store';
@@ -30,7 +31,7 @@ import {
 import { t } from '$lib/utils/i18n.utils';
 import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 import { get, set as setStorage } from '$lib/utils/storage.utils';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
 
@@ -232,6 +233,63 @@ const settledInboxStore: Readable<InboxNotification[]> = derived(
 		})
 );
 
+// ── Likes received on your own calls ────────────────────────────────────────
+
+/**
+ * Likes other users left on the viewer's OWN friend-feed calls, as inbox cards. Synthetic — derived
+ * live from `receivedReactionsStore` (a key-prefix read scoped to the viewer), not persisted — so a
+ * card disappears automatically when its reaction doc is deleted (an unlike), with no history store
+ * to retain it. Self-likes are excluded. Mirrors {@link friendRequestInboxStore}; the per-id read
+ * overlay in {@link combinedInboxStore} drives the read/unread state.
+ */
+const likesReceivedInboxStore: Readable<InboxNotification[]> = derived(
+	[receivedReactionsStore, profilesStore, userStore, localeStore],
+	([$received, $profiles, $user, $locale]) => {
+		const viewer = $user.user?.owner;
+
+		if (isNullish($received) || isNullish(viewer)) {
+			return [];
+		}
+
+		return $received
+			.filter(
+				(reaction) =>
+					// The read is author-scoped already; guard against a stale page from a previous
+					// principal, and never notify the viewer about liking their own call.
+					reaction.activityKey.startsWith(`${viewer}#`) && reaction.liker !== viewer
+			)
+			.map((reaction): InboxNotification => {
+				const profile = $profiles.get(reaction.liker);
+				const displayName = profile?.nickname?.trim()
+					? `@${profile.nickname.trim()}`
+					: shortenWithMiddleEllipsis({ text: reaction.liker, splitLength: 6 });
+
+				return {
+					// The reaction doc key is `${activityKey}#${liker}` — stable, so the card dedupes
+					// across refreshes and the read overlay sticks.
+					id: `like-received-${reaction.activityKey}#${reaction.liker}`,
+					kind: 'social',
+					title: t({
+						locale: $locale,
+						key: 'inbox.like_received.title',
+						params: { user: displayName }
+					}),
+					// The denormalized call title (spec A wrote it onto the reaction doc).
+					body: reaction.activityTitle,
+					when: formatRelativeAgoFromNs({
+						timestampNs: BigInt(reaction.timestamp) * MILLISECOND_IN_NANOSECONDS,
+						locale: $locale
+					}),
+					unread: true,
+					// Deep-link to the liked call's market via the kind router; falls back to Arena.
+					...(nonNullish(reaction.marketId) && reaction.marketId !== ''
+						? { mid: reaction.marketId }
+						: {})
+				};
+			});
+	}
+);
+
 // ── "While you were away" resolution digest ─────────────────────────────────
 // The Flow entry away-digest and the Dashboard resolution banner both surface
 // the calls that settled since the user last acknowledged their resolutions.
@@ -378,17 +436,25 @@ const inboxDismissedStore = writable<Set<string>>(loadStringSet(INBOX_DISMISSED_
 /**
  * The inbox surface (Notifications page, bell badge) reads from this combined
  * view. Order: live actionable items (friend requests), then real
- * settled-event notifications, then the persisted local seed. Settled cards
- * sit above the seeds so a freshly-resolved market lands at the top.
+ * settled-event notifications, then likes received on your calls, then the
+ * persisted local seed. Real event cards sit above the seeds so freshly-
+ * arrived items land at the top.
  *
  * Dismissed cards are filtered out, and the per-id read overlay is applied
  * on top of each item's own `unread` so a card tapped read in place stays
  * read across reloads.
  */
 export const combinedInboxStore: Readable<InboxNotification[]> = derived(
-	[friendRequestInboxStore, settledInboxStore, inboxStore, inboxReadStore, inboxDismissedStore],
-	([$requests, $settled, $inbox, $read, $dismissed]) =>
-		[...$requests, ...$settled, ...$inbox]
+	[
+		friendRequestInboxStore,
+		settledInboxStore,
+		likesReceivedInboxStore,
+		inboxStore,
+		inboxReadStore,
+		inboxDismissedStore
+	],
+	([$requests, $settled, $likesReceived, $inbox, $read, $dismissed]) =>
+		[...$requests, ...$settled, ...$likesReceived, ...$inbox]
 			.filter((item) => !$dismissed.has(item.id))
 			.map((item) => (item.unread && $read.has(item.id) ? { ...item, unread: false } : item))
 );
@@ -451,10 +517,14 @@ export const clearInboxToast = (): void => {
  *   clearing-canister trade history fetch completes (even if empty).
  * - `friendsRelationsLoadedStore` starts `false`, flips `true` once the
  *   first `refreshFriendRelations()` call completes.
+ * - `receivedReactionsStore` starts `undefined`, becomes an array once the
+ *   first received-reactions load completes (even if empty) — so a cold-start
+ *   backlog of likes on the viewer's calls is absorbed into the baseline
+ *   instead of replaying as arrival toasts.
  */
 const sourcesHydrated: Readable<boolean> = derived(
-	[resolvedPositionsNotInitialized, friendsRelationsLoadedStore],
-	([$notInit, $friendsLoaded]) => !$notInit && $friendsLoaded
+	[resolvedPositionsNotInitialized, friendsRelationsLoadedStore, receivedReactionsStore],
+	([$notInit, $friendsLoaded, $received]) => !$notInit && $friendsLoaded && nonNullish($received)
 );
 
 /**

@@ -1068,6 +1068,7 @@ export const itMessages = {
 	'hero.title_b': 'chi ha ragione.',
 	'inbox.friend_request.body': '{user} vuole connettersi.',
 	'inbox.friend_request.title': 'Richiesta di amicizia',
+	'inbox.like_received.title': 'A {user} è piaciuta la tua previsione',
 	'inbox.pending': 'In sospeso',
 	'inbox.resolve.body.lost': 'Hai perso {amount} su "{market}".',
 	'inbox.resolve.body.neutral': 'La tua call su "{market}" si è risolta.',

@@ -100,6 +100,47 @@ export const getActivityReactions = async ({
 };
 
 /**
+ * Cap on the received-reactions scan — likes on the viewer's OWN calls (the like-received inbox
+ * source). Scoped to one author's activities by the key prefix, so this is a small set even when the
+ * global feed is busy.
+ */
+export const RECEIVED_REACTIONS_READ_LIMIT = 200;
+
+/**
+ * Every like on `author`'s own activities. The reaction doc key is `${author}#${ts}#${type}#${liker}`,
+ * so the author (the liked call's owner) is the key prefix — a single key-prefix `listDocs` returns
+ * all likes on their calls, bounded and scoped to that author (not the global feed window). Backs
+ * the like-received inbox card; `author` is the viewer's principal.
+ */
+export const getReceivedActivityReactions = async ({
+	author,
+	limit = RECEIVED_REACTIONS_READ_LIMIT,
+	certified = false
+}: {
+	author: PrincipalText;
+	limit?: number;
+	certified?: boolean;
+}): Promise<ActivityReaction[]> => {
+	if (limit <= 0) {
+		return [];
+	}
+
+	const { items } = await listDocs<ActivityReaction>({
+		collection: Collection.ACTIVITY_REACTIONS,
+		filter: {
+			// Principal text is `[a-z0-9-]` only, so it carries no regex metacharacters — a bare `^…#`
+			// prefix matches exactly the author segment (principals never contain `#`).
+			matcher: { key: `^${author}#` },
+			order: { field: 'created_at', desc: true },
+			paginate: { limit }
+		},
+		options: { certified }
+	});
+
+	return items.map(({ data }) => data);
+};
+
+/**
  * Tally reactions into a per-`activityKey` like count (the count-on-read aggregation the feed
  * renders). Viewer-agnostic: which of these the current user liked is derived separately and
  * reactively from `$authPrincipal`, so it stays correct across sign-in without a refresh.
