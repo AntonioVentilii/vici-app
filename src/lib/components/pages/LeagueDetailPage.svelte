@@ -550,23 +550,34 @@
 	// break on the longer active streak, then on join order (oldest first)
 	// for a stable result. Members yet to settle a prediction sit at 0% and
 	// sink to the foot rather than riding their role to the top.
-	const sortedMembers = $derived.by(() =>
-		[...members].sort((a, b) => {
-			const accuracyDelta = memberAccuracy(b.member) - memberAccuracy(a.member);
+	//
+	// Accuracy/streak are snapshotted once per member before the sort so the
+	// O(n log n) comparator doesn't re-read the profile cache on every pass.
+	const sortedMembers = $derived.by(() => {
+		const ranked = members.map((m) => ({
+			member: m,
+			accuracy: memberAccuracy(m.member),
+			streak: memberStreak(m.member)
+		}));
+
+		ranked.sort((a, b) => {
+			const accuracyDelta = b.accuracy - a.accuracy;
 
 			if (accuracyDelta !== 0) {
 				return accuracyDelta;
 			}
 
-			const streakDelta = memberStreak(b.member) - memberStreak(a.member);
+			const streakDelta = b.streak - a.streak;
 
 			if (streakDelta !== 0) {
 				return streakDelta;
 			}
 
-			return a.joinedAtMs - b.joinedAtMs;
-		})
-	);
+			return a.member.joinedAtMs - b.member.joinedAtMs;
+		});
+
+		return ranked.map((r) => r.member);
+	});
 
 	// Active battle (in_flight first, else accepted / proposed).
 	// Resolved battles are excluded — the active card only shows a live
