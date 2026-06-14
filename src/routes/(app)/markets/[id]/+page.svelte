@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -18,11 +18,13 @@
 	import MarketDetailWhyNow from '$lib/components/market/MarketDetailWhyNow.svelte';
 	import MarketMetadataForm from '$lib/components/market/MarketMetadataForm.svelte';
 	import MarketResolutionInterface from '$lib/components/market/MarketResolutionInterface.svelte';
+	import MarketTranslationToggle from '$lib/components/market/MarketTranslationToggle.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import TradeModal from '$lib/components/market/TradeModal.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { MARKET_DETAIL_DIRECT_TRADE_ENABLED } from '$lib/constants/feature-flags.constants';
+	import { SUPPORTED_LOCALES } from '$lib/constants/locale.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
@@ -37,6 +39,7 @@
 	} from '$lib/derived/user.derived';
 	import { track } from '$lib/services/analytics.services';
 	import { getUserMarketSignals } from '$lib/services/market-signals.services';
+	import { listMarketTranslations } from '$lib/services/market-translation.services';
 	import { loadMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import { getMarketTopPredictors } from '$lib/services/top-predictors.services';
@@ -49,6 +52,7 @@
 		PriorCallSignal,
 		TopPredictorSignal
 	} from '$lib/types/market-signals';
+	import type { MarketTranslation } from '$lib/types/market-translation';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
 	import type {
@@ -56,6 +60,7 @@
 		PriceHistoryPeriod
 	} from '$lib/utils/market-price-history.utils';
 	import { categoryLabel } from '$lib/utils/market-tags.utils';
+	import { resolveMarketTranslation } from '$lib/utils/market-translation.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
@@ -63,6 +68,23 @@
 	let market = $state<Market | undefined>();
 
 	let positions = $state<Position[]>([]);
+
+	// Creator/admin-authored metadata translations for this market (one per
+	// `live` locale), read in bulk once per market. Empty until the read
+	// resolves and for markets with no translations at all.
+	let marketTranslations = $state<MarketTranslation[]>([]);
+	// Market id whose translations were read **successfully** — set only after a
+	// resolved response so a transient failure retries on the next market write
+	// (poll / certified update / re-navigation) instead of disabling for good.
+	let translationsFetchedForId = $state<MarketId | undefined>(undefined);
+	// In-flight market id — a plain (non-reactive) guard that dedupes the
+	// query→certified double load without re-triggering the fetch effect.
+	let translationsLoadingId: MarketId | undefined = undefined;
+
+	// Whether the reader has flipped the metadata back to the original
+	// (on-chain) language. Defaults to the translated view and snaps back to it
+	// on a market change (see the fetch effect below).
+	let showOriginal = $state(false);
 
 	// Viewer-relative market signals (the prior call they hold here, the
 	// lean of the people they follow). Sparse by construction — absent
@@ -158,6 +180,47 @@
 		]);
 
 		positions = positionsRes;
+	};
+
+	// Read this market's translations once per market and snap the view back to
+	// the translated default on a market change. One bulk call (not a per-locale
+	// round-trip) returns every stored locale; `resolveMarketTranslation` then
+	// picks the best match for the active locale via the fallback chain.
+	$effect(() => {
+		const id = market?.id;
+
+		if (isNullish(id) || translationsFetchedForId === id || translationsLoadingId === id) {
+			return;
+		}
+
+		translationsLoadingId = id;
+		showOriginal = false;
+		marketTranslations = [];
+
+		void loadTranslations(id);
+	});
+
+	// Fails open: any error simply leaves `marketTranslations` empty, so the
+	// page shows the original metadata and no toggle — never a broken state.
+	// `translationsFetchedForId` is set only on success, so a failed read is
+	// retried the next time this market is loaded rather than disabled for good.
+	const loadTranslations = async (id: MarketId) => {
+		try {
+			const items = await listMarketTranslations(id);
+
+			// Guard against a late response from a previously-viewed market.
+			if (market?.id === id) {
+				marketTranslations = items;
+			}
+
+			translationsFetchedForId = id;
+		} catch (err) {
+			console.warn('market detail: translations load failed', err);
+		} finally {
+			if (translationsLoadingId === id) {
+				translationsLoadingId = undefined;
+			}
+		}
 	};
 
 	// Fetch the active period's market-wide price history the first time
@@ -337,6 +400,51 @@
 	const metadata = $derived(nonNullish(market) ? $marketMetadata[market.id] : undefined);
 	const contextLine = $derived(metadata?.subtitle?.trim() ?? '');
 	const whyNow = $derived(metadata?.whyNow);
+
+	// Best translation for the reader's locale (resolved through the fallback
+	// chain), or `undefined` when none exists — which is what gates the toggle.
+	const activeTranslation = $derived(
+		resolveMarketTranslation({ translations: marketTranslations, locale: $localeStore })
+	);
+
+	// Native name of the translated language, for the "View in {language}"
+	// control. Falls back to the bare locale id if it's somehow not in the list.
+	const translatedLanguageLabel = $derived(
+		nonNullish(activeTranslation)
+			? (SUPPORTED_LOCALES.find(({ id }) => id === activeTranslation.locale)?.label ??
+					activeTranslation.locale)
+			: ''
+	);
+
+	// Show the original (on-chain) text when the reader has flipped the toggle
+	// or when there's no translation to show. Each field falls back to the
+	// original whenever the translated value is missing/blank — translations
+	// are user-authored, so a stray empty field must never blank out the title.
+	const showTranslated = $derived(nonNullish(activeTranslation) && !showOriginal);
+	const translatedTitle = $derived(activeTranslation?.translation.title ?? '');
+	const translatedResolution = $derived(activeTranslation?.translation.resolution ?? '');
+	const displayTitle = $derived(
+		showTranslated && notEmptyString(translatedTitle.trim())
+			? translatedTitle
+			: (market?.title ?? '')
+	);
+	const displayResolution = $derived(
+		showTranslated && notEmptyString(translatedResolution.trim())
+			? translatedResolution
+			: market?.resolution
+	);
+
+	const onToggleTranslation = () => {
+		showOriginal = !showOriginal;
+
+		if (nonNullish(market)) {
+			track({
+				name: 'market_translation_toggled',
+				marketId: market.id,
+				label: showOriginal ? 'original' : 'translated'
+			});
+		}
+	};
 
 	// `yesProbability` is optional — `undefined` while the book hasn't been
 	// read (or read empty). Fall back to 0 only for the percent math so we
@@ -560,7 +668,15 @@
 				{/if}
 			</div>
 
-			<h1 class="market-detail-title">{market.title}</h1>
+			<h1 class="market-detail-title">{displayTitle}</h1>
+
+			{#if nonNullish(activeTranslation)}
+				<MarketTranslationToggle
+					onToggle={onToggleTranslation}
+					{showOriginal}
+					{translatedLanguageLabel}
+				/>
+			{/if}
 
 			{#if contextLine !== ''}
 				<p class="market-detail-context">{contextLine}</p>
@@ -634,7 +750,7 @@
 			</section>
 		{/if}
 
-		<MarketDetailResolutionCard {market} />
+		<MarketDetailResolutionCard {market} resolution={displayResolution} />
 
 		{#if !isColdStart}
 			<!-- Hidden while the cold-start banner is up — a market with no

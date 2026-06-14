@@ -66,6 +66,11 @@ export type AnalyticsEventName =
 	| 'watchlist_removed'
 	/** The order book was opened for a market. */
 	| 'orderbook_viewed'
+	/**
+	 * The market-detail metadata language was toggled; `label` carries the
+	 * target view (`original | translated`).
+	 */
+	| 'market_translation_toggled'
 	// ── Trading ───────────────────────────────────────────────────────
 	/** A position was taken (cockpit's `position_taken`). */
 	| 'position_taken'

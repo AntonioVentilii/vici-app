@@ -27,8 +27,10 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { LeaguePrivacy } from '$lib/enums/league';
+	import { track } from '$lib/services/analytics.services';
 	import {
 		acceptBattle,
+		buildLeagueShareUrl,
 		kickoffBattle,
 		leaveLeague,
 		loadLeaguesByIds,
@@ -474,13 +476,23 @@
 		}
 
 		try {
-			const url = `${window.location.origin}/league/${league.inviteCode}`;
+			const { url, withReferral } = await buildLeagueShareUrl({
+				inviteCode: league.inviteCode
+			});
 			const shareText = t({
 				locale: $localeStore,
 				key: 'leagues.share_text'
 			});
 			await navigator.clipboard.writeText(`${shareText} ${url}`);
 			copied = true;
+
+			track({
+				name: 'league_invite_sent',
+				source: 'leagues',
+				leagueId: league.id,
+				ok: withReferral
+			});
+
 			setTimeout(() => {
 				copied = false;
 			}, 1600);
@@ -602,6 +614,14 @@
 		return activeBattle.sideA === leagueId ? activeBattle.sideB : activeBattle.sideA;
 	});
 
+	// A proposed battle where THIS league is the challenged side (`sideB`): the
+	// caller's league *received* the challenge and is the one expected to accept.
+	// Drives the recipient-facing copy so the card doesn't read as if the
+	// challenger is the party being awaited.
+	const isIncomingProposedBattle = $derived(
+		nonNullish(activeBattle) && activeBattle.state === 'proposed' && activeBattle.sideB === leagueId
+	);
+
 	const activeBattleStateLabelKey = $derived.by((): MessageKey | undefined => {
 		if (!activeBattle) {
 			return;
@@ -609,7 +629,9 @@
 
 		switch (activeBattle.state) {
 			case 'proposed':
-				return 'leagues.battle.state.proposed';
+				return isIncomingProposedBattle
+					? 'leagues.battle.state.incoming'
+					: 'leagues.battle.state.proposed';
 			case 'accepted':
 				return 'leagues.battle.state.accepted';
 			case 'in_flight':
@@ -650,7 +672,9 @@
 		if (activeBattle.state === 'proposed') {
 			return t({
 				locale: $localeStore,
-				key: 'leagues.detail.battle_meta_awaiting',
+				key: isIncomingProposedBattle
+					? 'leagues.detail.battle_meta_incoming'
+					: 'leagues.detail.battle_meta_awaiting',
 				params: { opponent: leagueName(activeBattleOpponentId) }
 			});
 		}
@@ -1300,6 +1324,12 @@
 					</div>
 					{#if activeBattleMetaLine}
 						<p class="league-detail-battle-meta num">{activeBattleMetaLine}</p>
+					{/if}
+
+					{#if isIncomingProposedBattle && !canAcceptBattle(activeBattle)}
+						<p class="league-detail-battle-hint num">
+							{t({ locale: $localeStore, key: 'leagues.detail.battle_owner_accepts' })}
+						</p>
 					{/if}
 
 					{#if canAcceptBattle(activeBattle)}
@@ -2116,6 +2146,13 @@
 	.league-detail-battle-meta {
 		font-size: var(--t-11);
 		color: var(--text-muted);
+	}
+
+	.league-detail-battle-hint {
+		margin-top: 0.15rem;
+		font-size: var(--t-10);
+		color: var(--text-muted);
+		opacity: 0.85;
 	}
 
 	.league-detail-battle-action {

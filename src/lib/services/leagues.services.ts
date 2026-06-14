@@ -1,7 +1,10 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
+import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
+import { authPrincipal } from '$lib/derived/user.derived';
 import { LeaguePrivacy } from '$lib/enums/league';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getMyReferralCode } from '$lib/services/referral.services';
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
@@ -23,8 +26,9 @@ import {
 	type LeagueMemberDoc,
 	type LeagueMemberRole
 } from '$lib/types/league-member';
-import { nonNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
+import type { PrincipalText } from '@junobuild/schema';
 import { get } from 'svelte/store';
 
 /**
@@ -506,6 +510,63 @@ export const updateLeague = async ({
 	});
 
 	return next;
+};
+
+// Cache for the caller's own referral code — the same value for a given identity,
+// so resolve it once and reuse across every league-share build. Keyed to the
+// signed-in principal so an in-session account switch (sign-out → sign-in without
+// a reload) never reuses the previous user's code. Only a positive result is
+// cached; a missing code (not yet assigned / backfilled later) stays retryable.
+let cachedReferral: { owner: PrincipalText; code: string } | undefined;
+
+const resolveMyReferralCode = async (): Promise<string | undefined> => {
+	const owner = get(authPrincipal);
+
+	if (isNullish(owner)) {
+		return;
+	}
+
+	if (cachedReferral?.owner === owner) {
+		return cachedReferral.code;
+	}
+
+	try {
+		const code = await getMyReferralCode();
+
+		if (nonNullish(code)) {
+			cachedReferral = { owner, code };
+		}
+
+		return code;
+	} catch {
+		// Best-effort: a failed lookup falls through to `undefined`, yielding a
+		// plain (no-`?ref=`) share link.
+	}
+};
+
+/**
+ * Builds the canonical league-invite URL (`{origin}/league/{code}`), appending
+ * the sharer's referral code as `?ref={code}` so the invite also implies a friend
+ * invite (auto-friendship on join, plus the new-user bonus for fresh sign-ups —
+ * the landing route + onboarding drain redeem the `?ref=` exactly like a plain
+ * friend invite). The param is appended only when a real referral code resolves;
+ * with none available the plain link is returned (a handle would fail
+ * `REFERRAL_CODE_REGEX` on the consuming side and be dropped, so it is never
+ * substituted). `withReferral` lets the caller annotate analytics.
+ */
+export const buildLeagueShareUrl = async ({
+	inviteCode
+}: {
+	inviteCode: string;
+}): Promise<{ url: string; withReferral: boolean }> => {
+	const base = `${window.location.origin}/league/${inviteCode}`;
+	const referralCode = await resolveMyReferralCode();
+
+	if (nonNullish(referralCode) && REFERRAL_CODE_REGEX.test(referralCode)) {
+		return { url: `${base}?ref=${referralCode}`, withReferral: true };
+	}
+
+	return { url: base, withReferral: false };
 };
 
 /**

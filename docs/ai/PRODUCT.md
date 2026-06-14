@@ -100,6 +100,20 @@ resolved markets show 100% / 0%. The detail page first-paints from a
 fast query, then upgrades to the certified read. See
 [`specs/2026-06-14-fix-market-odds-skeletons.md`](./spec-driven-development/specs/2026-06-14-fix-market-odds-skeletons.md).
 
+### Market metadata — translated by default, with an original toggle
+
+When a market has a creator/admin-authored translation for the reader's
+locale (resolved through the locale fallback chain), the market **detail
+page** shows the translated title and resolution clause **by default**. A
+small, secondary "View original" control sits under the title; toggling it
+reveals the on-chain original and a "View in {language}" control to return.
+A market with no translation for the reader's locale shows the original and
+renders no toggle. Navigating to another market resets to the translated
+view. Translations are read in one bulk call per market. This covers the
+detail page only — market cards/Flow and the `description`/outcome fields
+are not yet translated in-place. See
+[`specs/2026-06-14-feat-market-translation-display.md`](./spec-driven-development/specs/2026-06-14-feat-market-translation-display.md).
+
 ### Friendship rules
 
 The product rules for the friend graph. Surfaces: Arena → Friends
@@ -137,6 +151,14 @@ service.
 - **Invites.** Inviting by link rewards both sides via the referral
   bonuses in
   [`referral.constants.ts`](../../src/lib/constants/referral.constants.ts).
+- **A league invite implies a friend invite.** Sharing a league invite
+  link also carries the sharer's referral code (`?ref=`), so joining the
+  league auto-friends the person whose link was used: a brand-new
+  sign-up redeems it (friendship + new-user bonus) through the signup
+  drain, an existing signed-in user is friended on join (no bonus). A
+  plain link with no `?ref=` (sharer has no code yet) just joins the
+  league. No opt-out — the friendship is implicit. Decision record:
+  [`specs/2026-06-14-feat-league-invite-implies-friendship.md`](./spec-driven-development/specs/2026-06-14-feat-league-invite-implies-friendship.md).
 - **Errors.** Known outcomes surface as the specific messages above;
   an unexpected failure shows friendly copy carrying a short technical
   detail so a user screenshot is enough to diagnose.

@@ -1330,6 +1330,7 @@ export const deMessages = {
 	'leagues.battle.propose.submitting': 'Schlage vor…',
 	'leagues.battle.state.accepted': 'Angenommen',
 	'leagues.battle.state.in_flight': 'Läuft',
+	'leagues.battle.state.incoming': 'Eingehend',
 	'leagues.battle.state.proposed': 'Vorgeschlagen',
 	'leagues.battle.state.resolved': 'Beendet',
 	'leagues.battle.winner_draw': 'Unentschieden',
@@ -1353,6 +1354,10 @@ export const deMessages = {
 	'leagues.detail.battle_eyebrow': 'Battle',
 	'leagues.detail.battle_meta_awaiting': 'Warte auf Annahme von {opponent}',
 	'leagues.detail.battle_meta_day_of': 'Tag {day} von {days} · Genauigkeits-Duell',
+	'leagues.detail.battle_meta_incoming':
+		'{opponent} hat deine Liga herausgefordert – unten annehmen',
+	'leagues.detail.battle_owner_accepts':
+		'Nur der Eigentümer der Liga kann diese Herausforderung annehmen.',
 	'leagues.detail.invite_copied': 'Kopiert',
 	'leagues.detail.invite_label': 'Einladung',
 	'leagues.detail.lb_streak': '{count} in Folge',
@@ -1395,6 +1400,8 @@ export const deMessages = {
 	'leagues.card.join_invite': 'Sechs-Zeichen-Einladung',
 	'leagues.card.join_title': 'Mit Code beitreten',
 	'leagues.card.member_count_many': '{count} Mitglieder',
+	'leagues.card.incoming_battle_one': 'Neue Herausforderung',
+	'leagues.card.incoming_battle_many': '{count} Herausforderungen',
 	'leagues.card.member_count_one': '{count} Mitglied',
 	'leagues.card.rank_of': 'von {count}',
 	'leagues.card.recommend_chip': 'Anfrage',
@@ -1589,6 +1596,10 @@ export const deMessages = {
 	'market.tag.sports': 'Sport',
 	'market.tag.tech': 'Tech',
 	'market.tag.wc': 'WM',
+	'market.translation.view_in': 'Auf {language} anzeigen',
+	'market.translation.view_original': 'Original anzeigen',
+	'market.translation.viewing_original': 'Original',
+	'market.translation.viewing_translated': 'Übersetzt',
 	'market.vol_suffix': 'Vol.',
 	'markets.beyond.eyebrow': 'ÜBER DAS TURNIER HINAUS',
 	'markets.beyond.locked_copy':
