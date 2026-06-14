@@ -60,6 +60,22 @@ test.describe('pre-sign-in onboarding', () => {
 
 		await home.waitForSignedInShell();
 
+		// The handle handoff is applied asynchronously by the `(app)` layout
+		// drain once the profile hydrates (see the file header): it upserts the
+		// picked handle to the satellite, then clears the pre-auth stash under
+		// `vici:pending-onboarding`. Wait for that slot to drain before
+		// navigating — a full page load to `/profile` re-bootstraps from the
+		// satellite, and doing it mid-drain would read the not-yet-persisted
+		// profile (and flip the drain onto its returning-user branch), racing
+		// the handoff. Waiting on the slot can't mask a real failure: every
+		// drain outcome clears it, so a failed upsert still fails the handle
+		// assertion below.
+		await expect
+			.poll(() => page.evaluate(() => localStorage.getItem('vici:pending-onboarding')), {
+				timeout: 30_000
+			})
+			.toBeNull();
+
 		// The handle-claim path completed and reached the signed-in app.
 		await page.goto('/profile');
 

@@ -121,6 +121,11 @@ export type AnalyticsEventName =
 	 * rejected_cooldown | not_found | self | error`), `source` the surface.
 	 */
 	| 'friend_request_sent'
+	/**
+	 * A like on a friend-feed activity was toggled; `label` is the action
+	 * (`like | unlike`), `source` the surface (`arena`).
+	 */
+	| 'friend_feed_reaction'
 	/** A league was created. */
 	| 'league_created'
 	/** A user joined a league. */
