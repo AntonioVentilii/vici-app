@@ -191,6 +191,11 @@
 	// it for losing user activation), so we can't resolve the code on demand.
 	let inviteCode = $state<string | undefined>(undefined);
 
+	// True while the referral code is still resolving. Drives the hero CTA's
+	// skeleton/pulse state so the button holds its place from first paint
+	// instead of popping in once the code lands.
+	let inviteCodeLoading = $state(true);
+
 	// Canonical invite URL — `https://{origin}/join/{code}`. The slug is the viewer's
 	// stable referral code (never their mutable handle), so a shared link never rots on a
 	// rename. `/join/[code]` and `/i/[code]` render the same landing, so this resolves the
@@ -505,6 +510,8 @@
 				inviteCode = await getMyReferralCode();
 			} catch (_: unknown) {
 				// Best-effort: CTA hides if the code can't be resolved.
+			} finally {
+				inviteCodeLoading = false;
 			}
 		})();
 
@@ -605,9 +612,11 @@
 				<span class="num profile-hero-credibility">{topPercentLabel}</span>
 			{/if}
 
-			{#if isOwnProfile && nonNullish(inviteUrl)}
+			{#if isOwnProfile && (inviteCodeLoading || nonNullish(inviteUrl))}
 				<button
 					class="profile-hero-invite"
+					class:profile-hero-invite--pending={inviteCodeLoading}
+					disabled={inviteCodeLoading}
 					onclick={() => void handleInviteFriends()}
 					type="button"
 				>
@@ -1047,8 +1056,32 @@
 		transition: border-color var(--d-hover, 140ms) var(--ease-vici, ease);
 	}
 
-	.profile-hero-invite:hover {
+	.profile-hero-invite:hover:not(:disabled) {
 		border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+	}
+
+	/* Pending: the code is still resolving. The button holds its place from
+	   first paint and pulses to read as a skeleton until the share URL lands. */
+	.profile-hero-invite--pending {
+		cursor: default;
+		animation: profile-hero-invite-pulse 1.4s ease-in-out infinite;
+	}
+
+	@keyframes profile-hero-invite-pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.45;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.profile-hero-invite--pending {
+			animation: none;
+			opacity: 0.6;
+		}
 	}
 
 	/* Country-flag SVG inside an affiliation tile — fills the same 1.6rem
