@@ -351,7 +351,7 @@
 				data-tid={TestId.AppMain}
 				role="status"
 			>
-				<LoadingSpinner center={false} size="md" />
+				<LoadingSpinner size="md" />
 			</div>
 		{:else}
 			{#key page.url.pathname}

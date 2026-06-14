@@ -248,7 +248,7 @@
 	aria-live="polite"
 	role="status"
 >
-	<LoadingSpinner size="md" />
+	<LoadingSpinner inlinePad size="md" />
 	<p class="text-muted-foreground mt-4 text-sm">
 		{t({ locale: $localeStore, key: 'league_invite.resolving' })}
 	</p>

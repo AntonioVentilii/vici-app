@@ -61,7 +61,7 @@
 		<div class="custom-scrollbar flex max-h-120 flex-col gap-4 overflow-y-auto pr-2">
 			{#if loading}
 				<div class="flex justify-center py-8">
-					<LoadingSpinner />
+					<LoadingSpinner inlinePad />
 				</div>
 			{:else if activities.length === 0}
 				<p class="text-muted-foreground py-12 text-center text-sm italic opacity-50">

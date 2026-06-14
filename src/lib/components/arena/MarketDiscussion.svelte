@@ -144,7 +144,7 @@
 	<div class="flex flex-col gap-4">
 		{#if loading}
 			<div class="flex justify-center py-8">
-				<LoadingSpinner />
+				<LoadingSpinner inlinePad />
 			</div>
 		{:else if comments.length === 0}
 			<div class="py-12 text-center opacity-40">
