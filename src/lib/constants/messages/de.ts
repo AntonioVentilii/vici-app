@@ -1381,6 +1381,8 @@ export const deMessages = {
 	'leagues.detail.rename_label': 'Liga umbenennen',
 	'leagues.detail.rename_save': 'Speichern',
 	'leagues.detail.rename_saving': 'Speichere…',
+	'leagues.detail.role_admin': 'Admin',
+	'leagues.detail.role_owner': 'Inhaber',
 	'leagues.detail.trend_even': 'unverändert',
 	'leagues.detail.trend_this_week': '{count} diese Woche',
 	'leagues.detail.you_chip': 'Du',

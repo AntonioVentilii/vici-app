@@ -1369,6 +1369,8 @@ export const ptMessages = {
 	'leagues.detail.rename_label': 'Renomear liga',
 	'leagues.detail.rename_save': 'Guardar',
 	'leagues.detail.rename_saving': 'A guardar…',
+	'leagues.detail.role_admin': 'Admin',
+	'leagues.detail.role_owner': 'Proprietário',
 	'leagues.detail.trend_even': 'estável',
 	'leagues.detail.trend_this_week': '{count} esta semana',
 	'leagues.detail.you_chip': 'Tu',

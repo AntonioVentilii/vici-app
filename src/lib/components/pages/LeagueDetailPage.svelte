@@ -17,10 +17,12 @@
 	import ChallengeLeagueModal from '$lib/components/leagues/ChallengeLeagueModal.svelte';
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
 	import LeaguePrivacyModal from '$lib/components/leagues/LeaguePrivacyModal.svelte';
+	import LeagueRoleBadge from '$lib/components/leagues/LeagueRoleBadge.svelte';
 	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -1187,7 +1189,13 @@
 									owner={member.member}
 									self={member.member === selfPrincipal}
 								/>
-								<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
+								<span class="league-detail-lb-id">
+									<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
+									<LeagueRoleBadge role={member.role} />
+									{#if isYou}
+										<YouBadge size="xs" />
+									{/if}
+								</span>
 								<span class="league-detail-lb-streak num allcaps">
 									{t({
 										locale: $localeStore,
@@ -1222,8 +1230,10 @@
 							owner={youMember.member}
 							self={youMember.member === selfPrincipal}
 						/>
-						<span class="league-detail-lb-name">
-							{t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
+						<span class="league-detail-lb-id">
+							<span class="league-detail-lb-name">{memberHandle(youMember.member)}</span>
+							<LeagueRoleBadge role={youMember.role} />
+							<YouBadge size="xs" />
 						</span>
 						<span class="league-detail-lb-streak num allcaps">
 							{t({
@@ -1463,7 +1473,13 @@
 					self={openMember.member === selfPrincipal}
 				/>
 				<div class="league-detail-member-sheet-id">
-					<span class="league-detail-member-sheet-name">{memberHandle(openMember.member)}</span>
+					<span class="league-detail-member-sheet-name-row">
+						<span class="league-detail-member-sheet-name">{memberHandle(openMember.member)}</span>
+						<LeagueRoleBadge role={openMember.role} />
+						{#if openMember.member === selfPrincipal}
+							<YouBadge size="xs" />
+						{/if}
+					</span>
 					<span class="num league-detail-member-sheet-rank">
 						{t({
 							locale: $localeStore,
@@ -2291,10 +2307,20 @@
 		flex-shrink: 0;
 	}
 
+	/* Name cell — handle + role / YOU chips on one line. The handle
+	   ellipsizes (min-width:0) while the chips keep their intrinsic width. */
+	.league-detail-lb-id {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		min-width: 0;
+	}
+
 	.league-detail-lb-name {
 		font-size: var(--t-12);
 		font-weight: 500;
 		color: var(--text-base);
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -2400,11 +2426,19 @@
 		min-width: 0;
 	}
 
+	.league-detail-member-sheet-name-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		min-width: 0;
+	}
+
 	.league-detail-member-sheet-name {
 		font-family: var(--font-display);
 		font-size: var(--t-16);
 		font-weight: 700;
 		color: var(--text-base);
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;

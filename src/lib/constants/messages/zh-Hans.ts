@@ -1298,6 +1298,8 @@ export const zhHansMessages = {
 	'leagues.detail.rename_label': '重命名联盟',
 	'leagues.detail.rename_save': '保存',
 	'leagues.detail.rename_saving': '保存中…',
+	'leagues.detail.role_admin': '管理员',
+	'leagues.detail.role_owner': '群主',
 	'leagues.detail.trend_even': '持平',
 	'leagues.detail.trend_this_week': '本周 {count}',
 	'leagues.detail.you_chip': '你',
