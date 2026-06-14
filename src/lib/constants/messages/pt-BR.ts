@@ -1563,6 +1563,10 @@ export const ptBRMessages = {
 	'market.tag.sports': 'Esportes',
 	'market.tag.tech': 'Tecnologia',
 	'market.tag.wc': 'Copa do Mundo',
+	'market.translation.view_in': 'Ver em {language}',
+	'market.translation.view_original': 'Ver original',
+	'market.translation.viewing_original': 'Original',
+	'market.translation.viewing_translated': 'Traduzido',
 	'market.vol_suffix': 'vol',
 	'markets.beyond.eyebrow': 'ALÉM DA COPA',
 	'markets.beyond.locked_copy':

@@ -1578,6 +1578,10 @@ export const frMessages = {
 	'market.tag.sports': 'Sport',
 	'market.tag.tech': 'Tech',
 	'market.tag.wc': 'Coupe du monde',
+	'market.translation.view_in': 'Voir en {language}',
+	'market.translation.view_original': 'Voir l’original',
+	'market.translation.viewing_original': 'Original',
+	'market.translation.viewing_translated': 'Traduit',
 	'market.vol_suffix': 'vol',
 	'markets.beyond.eyebrow': 'AU-DELÀ DE LA COUPE',
 	'markets.beyond.locked_copy':

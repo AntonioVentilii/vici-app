@@ -1569,6 +1569,10 @@ export const ptMessages = {
 	'market.tag.sports': 'Desporto',
 	'market.tag.tech': 'Tecnologia',
 	'market.tag.wc': 'Campeonato do Mundo',
+	'market.translation.view_in': 'Ver em {language}',
+	'market.translation.view_original': 'Ver original',
+	'market.translation.viewing_original': 'Original',
+	'market.translation.viewing_translated': 'Traduzido',
 	'market.vol_suffix': 'vol',
 	'markets.beyond.eyebrow': 'ALÉM DO CAMPEONATO',
 	'markets.beyond.locked_copy':

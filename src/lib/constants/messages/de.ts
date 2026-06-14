@@ -1587,6 +1587,10 @@ export const deMessages = {
 	'market.tag.sports': 'Sport',
 	'market.tag.tech': 'Tech',
 	'market.tag.wc': 'WM',
+	'market.translation.view_in': 'Auf {language} anzeigen',
+	'market.translation.view_original': 'Original anzeigen',
+	'market.translation.viewing_original': 'Original',
+	'market.translation.viewing_translated': 'Übersetzt',
 	'market.vol_suffix': 'Vol.',
 	'markets.beyond.eyebrow': 'ÜBER DAS TURNIER HINAUS',
 	'markets.beyond.locked_copy':

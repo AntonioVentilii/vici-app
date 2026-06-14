@@ -201,6 +201,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { faucet_claimed: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
+			| { market_translation_toggled: null }
 			| { signed_out: null };
 		count: number;
 		start: number;
@@ -965,6 +966,7 @@ export interface AppTrackEventsArgs {
 			| { faucet_claimed: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
+			| { market_translation_toggled: null }
 			| { signed_out: null };
 		path: [] | [string];
 		count: [] | [number];

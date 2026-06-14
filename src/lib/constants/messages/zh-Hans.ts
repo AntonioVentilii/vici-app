@@ -1491,6 +1491,10 @@ export const zhHansMessages = {
 	'market.tag.sports': '体育',
 	'market.tag.tech': '科技',
 	'market.tag.wc': '世界杯',
+	'market.translation.view_in': '查看{language}版本',
+	'market.translation.view_original': '查看原文',
+	'market.translation.viewing_original': '原文',
+	'market.translation.viewing_translated': '已翻译',
 	'market.vol_suffix': '量',
 	'markets.beyond.eyebrow': '世界杯之外',
 	'markets.beyond.locked_copy':

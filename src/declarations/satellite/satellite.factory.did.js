@@ -196,6 +196,7 @@ export const idlFactory = ({ IDL }) => {
 					faucet_claimed: IDL.Null,
 					chat_sent: IDL.Null,
 					orderbook_viewed: IDL.Null,
+					market_translation_toggled: IDL.Null,
 					signed_out: IDL.Null
 				}),
 				count: IDL.Float64,
@@ -1139,6 +1140,7 @@ export const idlFactory = ({ IDL }) => {
 					faucet_claimed: IDL.Null,
 					chat_sent: IDL.Null,
 					orderbook_viewed: IDL.Null,
+					market_translation_toggled: IDL.Null,
 					signed_out: IDL.Null
 				}),
 				path: IDL.Opt(IDL.Text),
