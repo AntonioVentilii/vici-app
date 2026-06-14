@@ -26,7 +26,9 @@
 	} from '$lib/stores/leagues.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
+	import type { LeagueMemberDoc } from '$lib/types/league-member';
 	import { t } from '$lib/utils/i18n.utils';
+	import { leagueRankOf, rankLeagueMembers } from '$lib/utils/league-rank.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { refreshAllBalances } from '$lib/utils/refresh.utils';
 
@@ -57,6 +59,10 @@
 	interface LeagueRow extends LeagueWithRole {
 		memberCount: number;
 		members: string[];
+		// Full roster docs (with join timestamps) kept alongside the flat
+		// `members` principal list so the card can rank by accuracy through
+		// the shared helper, with join order as the stable tie-breaker.
+		roster: LeagueMemberDoc[];
 	}
 
 	let createOpen = $state(false);
@@ -92,7 +98,8 @@
 			return {
 				...m,
 				memberCount: members.length,
-				members
+				members,
+				roster
 			} satisfies LeagueRow;
 		})
 	);
@@ -179,21 +186,30 @@
 		return { handle, count: overlap.length, principals: overlap };
 	};
 
+	// Per-member stats for the accuracy ranking, read from the shared profile
+	// cache (`refreshMyLeagues` hydrates every roster member). Both default to
+	// 0 until the profile lands, matching the league detail page.
+	const memberAccuracy = (principal: string): number =>
+		$profilesStore.get(principal)?.accuracy ?? 0;
+
+	const memberStreak = (principal: string): number =>
+		$profilesStore.get(principal)?.dailyStreak ?? 0;
+
 	/**
-	 * Caller's 1-indexed position inside a league. The list endpoint
-	 * sorts members join-ascending; we surface that ordinal as the
-	 * "your rank" badge on the card. Undefined when the caller isn't
-	 * found in the (still-hydrating) roster.
+	 * Caller's 1-indexed position inside a league — the same accuracy-first
+	 * ranking the detail page and its leaderboard use, so the card badge
+	 * agrees with both. Undefined when the caller isn't found in the
+	 * (still-hydrating) roster, so the badge is hidden rather than wrong.
 	 */
-	const yourRankFor = (row: LeagueRow): number | undefined => {
-		if (isNullish(selfPrincipal)) {
-			return;
-		}
-
-		const idx = row.members.indexOf(selfPrincipal);
-
-		return idx === -1 ? undefined : idx + 1;
-	};
+	const yourRankFor = (row: LeagueRow): number | undefined =>
+		leagueRankOf({
+			sorted: rankLeagueMembers({
+				members: row.roster,
+				accuracyOf: memberAccuracy,
+				streakOf: memberStreak
+			}),
+			principal: selfPrincipal
+		});
 
 	/**
 	 * Per-league rank-trend for the viewer, keyed by league id. Sourced from
