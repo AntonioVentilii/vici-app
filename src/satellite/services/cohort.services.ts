@@ -1126,7 +1126,14 @@ export const getAffiliationStatsFn = ({
 
 	if (nonNullish(doc)) {
 		try {
-			rolling = decodeDocData<AffiliationStatsDoc>(doc.data);
+			const decoded = decodeDocData<AffiliationStatsDoc>(doc.data);
+
+			// Guard against a corrupted/legacy row whose body doesn't match the key it's stored
+			// under — mixing another affiliation's monthly window into this response would be worse
+			// than no monthly data. Treat a mismatch as malformed and fall back to the roster view.
+			if (decoded.kind === kind && decoded.affiliationIdentifier === affiliationIdentifier) {
+				rolling = decoded;
+			}
 		} catch {
 			// Malformed payload — fall through to the roster-derived view.
 		}
@@ -1211,18 +1218,16 @@ export const listAffiliationStatsFn = ({
 	const nowMs = Number(time() / 1_000_000n);
 	const anchor = monthAnchorFromMs(nowMs);
 
-	// Union of affiliations with current members (lifetime) and those with a
-	// rolling doc (monthly). An affiliation can have a rolling doc but an empty
-	// current roster (everyone left) — it still surfaces with its monthly
-	// window and a zero all-time tally.
-	const identifiers = new Set<string>([...lifetime.keys(), ...rolling.keys()]);
-
+	// Rank over the affiliations that have current members — their roster lifetime
+	// is the all-time tally. An affiliation whose roster has emptied (a rolling
+	// doc survives but nobody represents it now) has a zero tally and would fall
+	// below the floor anyway, so it's intentionally left off; the `rolling` map is
+	// consulted only for each ranked row's monthly window.
 	const stats: AffiliationStatsDoc[] = [];
 
-	for (const affiliationIdentifier of identifiers) {
-		const life = lifetime.get(affiliationIdentifier);
+	for (const [affiliationIdentifier, life] of lifetime) {
 		const month = rolling.get(affiliationIdentifier);
-		const totalCalls = life?.totalCalls ?? 0;
+		const { totalCalls, wins } = life;
 
 		// Same depth floor as before, now against the real lifetime tally — at
 		// tiny call counts the accuracy is too noisy to rank.
@@ -1231,7 +1236,7 @@ export const listAffiliationStatsFn = ({
 				kind,
 				affiliationIdentifier,
 				totalCalls,
-				wins: life?.wins ?? 0,
+				wins,
 				monthAnchor: month?.monthAnchor ?? anchor,
 				monthTotalCalls: month?.monthTotalCalls ?? 0,
 				monthWins: month?.monthWins ?? 0,
