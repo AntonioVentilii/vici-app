@@ -1344,6 +1344,8 @@ export const enMessages = {
 	'leagues.detail.rename_label': 'Rename league',
 	'leagues.detail.rename_save': 'Save',
 	'leagues.detail.rename_saving': 'Saving…',
+	'leagues.detail.role_admin': 'Admin',
+	'leagues.detail.role_owner': 'Owner',
 	'leagues.detail.trend_even': 'even',
 	'leagues.detail.trend_this_week': '{count} this week',
 	'leagues.detail.you_chip': 'You',

@@ -4,7 +4,7 @@
 	interface Props {
 		children: Snippet;
 		variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
-		size?: 'sm' | 'md';
+		size?: 'xs' | 'sm' | 'md';
 	}
 
 	const { children, variant = 'default', size = 'md' }: Props = $props();
@@ -18,6 +18,7 @@
 	};
 
 	const sizes: Record<NonNullable<Props['size']>, string> = {
+		xs: 'px-1.5 py-0.5 text-[9px]',
 		sm: 'px-2 py-0.5 text-[10px]',
 		md: 'px-2.5 py-1 text-xs'
 	};

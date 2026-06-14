@@ -1367,6 +1367,8 @@ export const itMessages = {
 	'leagues.detail.rename_label': 'Rinomina lega',
 	'leagues.detail.rename_save': 'Salva',
 	'leagues.detail.rename_saving': 'Salvataggio…',
+	'leagues.detail.role_admin': 'Admin',
+	'leagues.detail.role_owner': 'Proprietario',
 	'leagues.detail.trend_even': 'stabile',
 	'leagues.detail.trend_this_week': '{count} questa settimana',
 	'leagues.detail.you_chip': 'Tu',
