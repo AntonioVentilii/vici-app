@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Market translation display — mockup</title>
+		<style>
+			/* Token values lifted 1:1 from src/app.css (dark / light / peach). */
+			:root,
+			[data-theme='dark'] {
+				color-scheme: dark;
+				--bg-base: #0e0d0b;
+				--bg-surface: #16140f;
+				--text-base: #f2ecdc;
+				--text-muted: rgba(242, 236, 220, 0.5);
+				--text-faint: rgba(242, 236, 220, 0.28);
+				--border-base: rgba(242, 236, 220, 0.08);
+				--border-strong: rgba(242, 236, 220, 0.18);
+				--accent: #e2b842;
+				--yes: #4fd3a1;
+				--no: #ff6b6b;
+				--cat-macro: #7eb6ff;
+			}
+			[data-theme='light'] {
+				color-scheme: light;
+				--bg-base: #f2ecdc;
+				--bg-surface: #faf6ea;
+				--text-base: #0e0d0b;
+				--text-muted: rgba(14, 13, 11, 0.5);
+				--text-faint: rgba(14, 13, 11, 0.28);
+				--border-base: rgba(14, 13, 11, 0.1);
+				--border-strong: rgba(14, 13, 11, 0.2);
+				--accent: #b68b1f;
+				--yes: #2ba178;
+				--no: #d04444;
+				--cat-macro: #3f73d6;
+			}
+			[data-theme='peach'] {
+				color-scheme: light;
+				--bg-base: #fae0cc;
+				--bg-surface: #ffead9;
+				--text-base: #3d2419;
+				--text-muted: rgba(61, 36, 25, 0.5);
+				--text-faint: rgba(61, 36, 25, 0.28);
+				--border-base: rgba(61, 36, 25, 0.1);
+				--border-strong: rgba(61, 36, 25, 0.2);
+				--accent: #b68b1f;
+				--yes: #2ba178;
+				--no: #c84545;
+				--cat-macro: #3f73d6;
+			}
+
+			--r-12: 12px;
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: var(--bg-base);
+				color: var(--text-base);
+				font-family:
+					ui-sans-serif,
+					system-ui,
+					-apple-system,
+					'Segoe UI',
+					Roboto,
+					sans-serif;
+				transition:
+					background 0.2s ease,
+					color 0.2s ease;
+				padding: 24px 16px 64px;
+			}
+
+			.toolbar {
+				max-width: 480px;
+				margin: 0 auto 20px;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				align-items: center;
+				justify-content: space-between;
+			}
+			.seg {
+				display: inline-flex;
+				gap: 4px;
+				padding: 4px;
+				border: 1px solid var(--border-base);
+				border-radius: 999px;
+				background: var(--bg-surface);
+			}
+			.seg button {
+				border: 0;
+				background: transparent;
+				color: var(--text-muted);
+				font: inherit;
+				font-size: 12px;
+				font-weight: 600;
+				padding: 5px 12px;
+				border-radius: 999px;
+				cursor: pointer;
+			}
+			.seg button[aria-pressed='true'] {
+				background: var(--accent);
+				color: var(--bg-base);
+			}
+			.copy-btn {
+				border: 1px solid var(--border-strong);
+				background: transparent;
+				color: var(--text-base);
+				font: inherit;
+				font-size: 12px;
+				font-weight: 600;
+				padding: 8px 14px;
+				border-radius: 10px;
+				cursor: pointer;
+			}
+			.copy-btn:active {
+				transform: translateY(1px);
+			}
+
+			.phone {
+				max-width: 480px;
+				margin: 0 auto;
+				border: 1px solid var(--border-base);
+				border-radius: 20px;
+				background: var(--bg-base);
+				overflow: hidden;
+			}
+
+			/* --- detail hero (mirrors .market-detail-hero) --- */
+			.hero {
+				padding: 20px 20px 4px;
+			}
+			.chip-row {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+				margin-bottom: 12px;
+			}
+			.tag {
+				font-size: 11px;
+				font-weight: 700;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: var(--cat-macro);
+			}
+			.live-pill {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				font-size: 11px;
+				font-weight: 700;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: var(--yes);
+			}
+			.live-dot {
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: var(--yes);
+				box-shadow: 0 0 0 4px color-mix(in srgb, var(--yes) 18%, transparent);
+			}
+
+			.title {
+				margin: 0;
+				font-size: 22px;
+				line-height: 1.22;
+				font-weight: 700;
+				letter-spacing: -0.01em;
+			}
+			.context {
+				margin: 8px 0 0;
+				color: var(--text-muted);
+				font-size: 13px;
+				line-height: 1.5;
+			}
+
+			/* --- the new toggle (MarketTranslationToggle.svelte) --- */
+			.xl-toggle {
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				margin-top: 10px;
+				font-size: 11px;
+			}
+			.xl-state {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				color: var(--text-muted);
+				font-weight: 700;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+			}
+			.xl-globe {
+				width: 12px;
+				height: 12px;
+				opacity: 0.7;
+			}
+			.xl-sep {
+				color: var(--text-faint);
+			}
+			/* the secondary, smaller original-language affordance */
+			.xl-link {
+				border: 0;
+				background: transparent;
+				padding: 0;
+				cursor: pointer;
+				font: inherit;
+				font-size: 11px;
+				font-weight: 600;
+				color: var(--text-muted);
+				text-decoration: underline;
+				text-underline-offset: 2px;
+				text-decoration-color: var(--border-strong);
+			}
+			.xl-link:hover {
+				color: var(--accent);
+				text-decoration-color: var(--accent);
+			}
+
+			/* --- resolution card (mirrors .market-resolution-card) --- */
+			.res-card {
+				margin: 16px 20px 20px;
+				padding: 16px;
+				border: 1px solid var(--border-base);
+				border-radius: 12px;
+				background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
+			}
+			.res-eyebrow {
+				display: block;
+				color: var(--text-muted);
+				font-size: 10px;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+			}
+			.res-body {
+				margin: 8px 0 0;
+				color: var(--text-base);
+				font-size: 13px;
+				line-height: 1.55;
+			}
+			.res-foot {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+				margin-top: 12px;
+				padding-top: 10px;
+				border-top: 1px dashed var(--border-base);
+			}
+			.res-foot-row {
+				display: flex;
+				gap: 6px;
+				align-items: baseline;
+			}
+			.res-foot-row dt {
+				margin: 0;
+				color: var(--text-muted);
+				font-size: 10px;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+			}
+			.res-foot-row dd {
+				margin: 0;
+				color: var(--text-base);
+				font-size: 12px;
+			}
+
+			.outcomes {
+				margin: 0 20px 8px;
+			}
+			.outcome-row {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 10px 12px;
+				border: 1px solid var(--border-base);
+				border-radius: 10px;
+				margin-bottom: 6px;
+				font-size: 13px;
+			}
+			.outcome-row .pct {
+				font-variant-numeric: tabular-nums;
+				font-weight: 700;
+				color: var(--accent);
+			}
+
+			.note {
+				max-width: 480px;
+				margin: 18px auto 0;
+				color: var(--text-muted);
+				font-size: 12px;
+				line-height: 1.5;
+				text-align: center;
+			}
+			.toast {
+				position: fixed;
+				left: 50%;
+				bottom: 24px;
+				transform: translateX(-50%) translateY(20px);
+				background: var(--text-base);
+				color: var(--bg-base);
+				padding: 10px 16px;
+				border-radius: 10px;
+				font-size: 13px;
+				font-weight: 600;
+				opacity: 0;
+				pointer-events: none;
+				transition: all 0.2s ease;
+			}
+			.toast.show {
+				opacity: 1;
+				transform: translateX(-50%) translateY(0);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="toolbar">
+			<div class="seg" role="group" aria-label="Theme">
+				<button data-theme-btn="dark" aria-pressed="true">Dark</button>
+				<button data-theme-btn="light" aria-pressed="false">Light</button>
+				<button data-theme-btn="peach" aria-pressed="false">Peach</button>
+			</div>
+			<button class="copy-btn" id="copy">Copy instructions</button>
+		</div>
+
+		<div class="phone">
+			<section class="hero">
+				<div class="chip-row">
+					<span class="tag">Macro</span>
+					<span class="live-pill"><span class="live-dot"></span>Live</span>
+				</div>
+
+				<h1 class="title" id="title">¿Bajará la Fed los tipos antes de septiembre de 2026?</h1>
+				<p class="context" id="context">Contexto: decisión del FOMC · cierre 18 sep 2026</p>
+
+				<!-- MarketTranslationToggle — only rendered when a translation exists -->
+				<div class="xl-toggle" id="toggle">
+					<span class="xl-state">
+						<svg
+							class="xl-globe"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							aria-hidden="true"
+						>
+							<circle cx="12" cy="12" r="9" />
+							<path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18" />
+						</svg>
+						<span id="state-label">Traducido</span>
+					</span>
+					<span class="xl-sep">·</span>
+					<button class="xl-link" id="flip">Ver original</button>
+				</div>
+			</section>
+
+			<div class="outcomes" id="outcomes" style="display: none">
+				<div class="outcome-row">
+					<span id="oc1">Sí, recorte de 25 pb</span><span class="pct">61%</span>
+				</div>
+				<div class="outcome-row"><span id="oc2">Sin cambios</span><span class="pct">33%</span></div>
+			</div>
+
+			<div class="res-card">
+				<span class="res-eyebrow">Reglas de resolución</span>
+				<p class="res-body" id="resolution">
+					Se resuelve SÍ si el rango objetivo de los fondos federales se reduce en al menos 25 pb en
+					la reunión del FOMC anterior al 18 sep 2026, según el comunicado oficial.
+				</p>
+				<dl class="res-foot">
+					<div class="res-foot-row">
+						<dt>Fuente</dt>
+						<dd>Comunicado del FOMC</dd>
+					</div>
+					<div class="res-foot-row">
+						<dt>Liquida</dt>
+						<dd>18 sep 2026</dd>
+					</div>
+				</dl>
+			</div>
+		</div>
+
+		<p class="note">
+			Locale = <b>Español</b>. Default view shows the stored translation; the small underlined
+			<b>"Ver original"</b> link is the secondary affordance. Toggle it to see the on-chain original
+			(English) and a <b>"View in Español"</b> link to return. A market with no translation for the
+			active locale renders no toggle at all.
+		</p>
+
+		<div class="toast" id="toast">Copied ✓</div>
+
+		<script>
+			const COPY = {
+				es: {
+					stateTranslated: 'Traducido',
+					flipToOriginal: 'Ver original',
+					title: '¿Bajará la Fed los tipos antes de septiembre de 2026?',
+					context: 'Contexto: decisión del FOMC · cierre 18 sep 2026',
+					resolution:
+						'Se resuelve SÍ si el rango objetivo de los fondos federales se reduce en al menos 25 pb en la reunión del FOMC anterior al 18 sep 2026, según el comunicado oficial.',
+					oc1: 'Sí, recorte de 25 pb',
+					oc2: 'Sin cambios'
+				},
+				original: {
+					stateOriginal: 'Original',
+					flipToTranslated: 'View in Español',
+					title: 'Will the Fed cut rates before September 2026?',
+					context: 'Context: FOMC decision · closes 18 Sep 2026',
+					resolution:
+						'Resolves YES if the federal funds target range is lowered by at least 25 bps at the FOMC meeting before 18 Sep 2026, per the official statement.',
+					oc1: 'Yes, 25 bps cut',
+					oc2: 'No change'
+				}
+			};
+
+			let showOriginal = false;
+			const $ = (id) => document.getElementById(id);
+
+			function render() {
+				const t = showOriginal ? COPY.original : COPY.es;
+				$('title').textContent = t.title;
+				$('context').textContent = t.context;
+				$('resolution').textContent = t.resolution;
+				$('oc1').textContent = t.oc1;
+				$('oc2').textContent = t.oc2;
+				$('state-label').textContent = showOriginal
+					? COPY.original.stateOriginal
+					: COPY.es.stateTranslated;
+				$('flip').textContent = showOriginal
+					? COPY.original.flipToTranslated
+					: COPY.es.flipToOriginal;
+			}
+
+			$('flip').addEventListener('click', () => {
+				showOriginal = !showOriginal;
+				render();
+			});
+
+			document.querySelectorAll('[data-theme-btn]').forEach((btn) => {
+				btn.addEventListener('click', () => {
+					const theme = btn.getAttribute('data-theme-btn');
+					document.documentElement.setAttribute('data-theme', theme);
+					document
+						.querySelectorAll('[data-theme-btn]')
+						.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+				});
+			});
+
+			$('copy').addEventListener('click', async () => {
+				const instructions = [
+					'Implement spec specs/2026-06-14-feat-market-translation-display.md as reviewed in the mockup.',
+					'',
+					'Confirmed decisions from the mockup:',
+					'- Market DETAIL page only (cards/FlowCard deferred — out of scope).',
+					'- Default view = the stored translation for the reader’s resolved locale.',
+					'- One toggle flips ALL translatable metadata together: title, resolution clause, and categorical outcome labels.',
+					'- The original-language affordance is the small, SECONDARY underlined link ("View original" / "View in {language}") next to a muted uppercase state label ("Translated" / "Original") with a globe glyph.',
+					'- Render the toggle ONLY when a translation exists for the resolved locale; otherwise show the original with no toggle.',
+					'- Reset to the translated/default view when the market id or app locale changes.',
+					'- Read translations via one listMarketTranslations(marketId) bulk call; resolve the best match through localeFallbackChain + SUPPORTED_LOCALES.',
+					'- Emit market_translation_toggled { marketId, label: original|translated } on each flip (add to the analytics union AND the Zod mirror).',
+					'- Add i18n keys market.translation.{viewing_translated,view_original,viewing_original,view_in} to all live catalogs; update docs/ai/PRODUCT.md in the same PR.'
+				].join('\n');
+				try {
+					await navigator.clipboard.writeText(instructions);
+				} catch {
+					/* clipboard may be blocked in the sandbox; the toast still confirms intent */
+				}
+				const toast = $('toast');
+				toast.classList.add('show');
+				setTimeout(() => toast.classList.remove('show'), 1400);
+			});
+
+			render();
+		</script>
+	</body>
+</html>

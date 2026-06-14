@@ -1553,6 +1553,10 @@ export const enMessages = {
 	'market.tag.sports': 'Sports',
 	'market.tag.tech': 'Tech',
 	'market.tag.wc': 'World Cup',
+	'market.translation.view_in': 'View in {language}',
+	'market.translation.view_original': 'View original',
+	'market.translation.viewing_original': 'Original',
+	'market.translation.viewing_translated': 'Translated',
 	'market.vol_suffix': 'vol',
 	'markets.beyond.eyebrow': 'BEYOND THE CUP',
 	'markets.beyond.locked_copy':

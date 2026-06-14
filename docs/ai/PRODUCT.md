@@ -100,6 +100,20 @@ resolved markets show 100% / 0%. The detail page first-paints from a
 fast query, then upgrades to the certified read. See
 [`specs/2026-06-14-fix-market-odds-skeletons.md`](./spec-driven-development/specs/2026-06-14-fix-market-odds-skeletons.md).
 
+### Market metadata — translated by default, with an original toggle
+
+When a market has a creator/admin-authored translation for the reader's
+locale (resolved through the locale fallback chain), the market **detail
+page** shows the translated title and resolution clause **by default**. A
+small, secondary "View original" control sits under the title; toggling it
+reveals the on-chain original and a "View in {language}" control to return.
+A market with no translation for the reader's locale shows the original and
+renders no toggle. Navigating to another market resets to the translated
+view. Translations are read in one bulk call per market. This covers the
+detail page only — market cards/Flow and the `description`/outcome fields
+are not yet translated in-place. See
+[`specs/2026-06-14-feat-market-translation-display.md`](./spec-driven-development/specs/2026-06-14-feat-market-translation-display.md).
+
 ### Friendship rules
 
 The product rules for the friend graph. Surfaces: Arena → Friends

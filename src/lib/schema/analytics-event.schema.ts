@@ -32,6 +32,7 @@ export const AnalyticsEventNameSchema = j.enum([
 	'watchlist_added',
 	'watchlist_removed',
 	'orderbook_viewed',
+	'market_translation_toggled',
 	// Trading
 	'position_taken',
 	'position_closed',

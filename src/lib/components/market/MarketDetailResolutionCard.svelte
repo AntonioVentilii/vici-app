@@ -6,13 +6,19 @@
 
 	interface Props {
 		market: Market;
+		/**
+		 * Resolution clause to render in place of `market.resolution` — the
+		 * caller passes the locale-resolved (translated or original) clause.
+		 * Falls back to the market's own clause when omitted.
+		 */
+		resolution?: string;
 	}
 
-	const { market }: Props = $props();
+	const { market, resolution }: Props = $props();
 
 	// Trim before testing emptiness so a whitespace-only clause falls back to
 	// the templated sentence, matching FlowResolutionBlock.
-	const resolutionClause = $derived(market.resolution?.trim() ?? '');
+	const resolutionClause = $derived((resolution ?? market.resolution)?.trim() ?? '');
 	const closesLabel = $derived(formatDate(market.expiryDate));
 </script>
 

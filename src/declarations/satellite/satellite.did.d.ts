@@ -158,6 +158,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { watchlist_removed: null }
 			| { delete_succeeded: null }
 			| { referral_link_copied: null }
+			| { market_translation_toggled: null }
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
@@ -922,6 +923,7 @@ export interface AppTrackEventsArgs {
 			| { watchlist_removed: null }
 			| { delete_succeeded: null }
 			| { referral_link_copied: null }
+			| { market_translation_toggled: null }
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }

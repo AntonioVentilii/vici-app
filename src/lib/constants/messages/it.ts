@@ -1577,6 +1577,10 @@ export const itMessages = {
 	'market.tag.sports': 'Sport',
 	'market.tag.tech': 'Tech',
 	'market.tag.wc': 'Mondiali',
+	'market.translation.view_in': 'Vedi in {language}',
+	'market.translation.view_original': 'Vedi originale',
+	'market.translation.viewing_original': 'Originale',
+	'market.translation.viewing_translated': 'Tradotto',
 	'market.vol_suffix': 'vol',
 	'markets.beyond.eyebrow': 'OLTRE IL MONDIALE',
 	'markets.beyond.locked_copy':
