@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.1.14](https://github.com/AntonioVentilii/vici-app/compare/v0.1.13...v0.1.14) (2026-06-14)
+
+
+### Features
+
+* **markets:** translate deck-2026 markets into all live locales ([#873](https://github.com/AntonioVentilii/vici-app/issues/873)) ([047ed56](https://github.com/AntonioVentilii/vici-app/commit/047ed569444681e8d455cf93e6463b952d22691a))
+* **satellite:** allow market creators to write translations ([#876](https://github.com/AntonioVentilii/vici-app/issues/876)) ([1d722c7](https://github.com/AntonioVentilii/vici-app/commit/1d722c7c440c9b8f636e54422940cad24ba73526))
+
+
+### Bug Fixes
+
+* **markets:** show odds skeleton instead of a 50% placeholder while books load ([#875](https://github.com/AntonioVentilii/vici-app/issues/875)) ([643d1ee](https://github.com/AntonioVentilii/vici-app/commit/643d1eed62e6b0954ed056abb69b1d2c92ff19b5))
+* **onboarding:** persist picked handle on in-place sign-in handoff ([#872](https://github.com/AntonioVentilii/vici-app/issues/872)) ([8ff1c54](https://github.com/AntonioVentilii/vici-app/commit/8ff1c54ff77e8183baaec1f629fa88126f15889d))
+* **profile:** hold invite CTA with a pulse until referral code lands ([#874](https://github.com/AntonioVentilii/vici-app/issues/874)) ([08b69a3](https://github.com/AntonioVentilii/vici-app/commit/08b69a36004c30c1af72461dc9d21a092eaa7745))
+
+
+### Documentation
+
+* **ai:** VXP economy governing doc + reconciliation protocol ([#870](https://github.com/AntonioVentilii/vici-app/issues/870)) ([0fff204](https://github.com/AntonioVentilii/vici-app/commit/0fff2041d7dcf9ca976294916dddda17caa440a6))
+
+
+### Tests
+
+* **e2e:** rebuild the Playwright suite against the current app surface ([#869](https://github.com/AntonioVentilii/vici-app/issues/869)) ([04a20d6](https://github.com/AntonioVentilii/vici-app/commit/04a20d672c04d8f6db5c02d420c45cee37e76270))
+
 ## [0.1.13](https://github.com/AntonioVentilii/vici-app/compare/v0.1.12...v0.1.13) (2026-06-13)
 
 
