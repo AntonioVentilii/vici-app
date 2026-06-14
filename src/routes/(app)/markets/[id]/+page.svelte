@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -73,7 +73,13 @@
 	// `live` locale), read in bulk once per market. Empty until the read
 	// resolves and for markets with no translations at all.
 	let marketTranslations = $state<MarketTranslation[]>([]);
+	// Market id whose translations were read **successfully** — set only after a
+	// resolved response so a transient failure retries on the next market write
+	// (poll / certified update / re-navigation) instead of disabling for good.
 	let translationsFetchedForId = $state<MarketId | undefined>(undefined);
+	// In-flight market id — a plain (non-reactive) guard that dedupes the
+	// query→certified double load without re-triggering the fetch effect.
+	let translationsLoadingId: MarketId | undefined = undefined;
 
 	// Whether the reader has flipped the metadata back to the original
 	// (on-chain) language. Defaults to the translated view and snaps back to it
@@ -183,11 +189,11 @@
 	$effect(() => {
 		const id = market?.id;
 
-		if (isNullish(id) || translationsFetchedForId === id) {
+		if (isNullish(id) || translationsFetchedForId === id || translationsLoadingId === id) {
 			return;
 		}
 
-		translationsFetchedForId = id;
+		translationsLoadingId = id;
 		showOriginal = false;
 		marketTranslations = [];
 
@@ -196,6 +202,8 @@
 
 	// Fails open: any error simply leaves `marketTranslations` empty, so the
 	// page shows the original metadata and no toggle — never a broken state.
+	// `translationsFetchedForId` is set only on success, so a failed read is
+	// retried the next time this market is loaded rather than disabled for good.
 	const loadTranslations = async (id: MarketId) => {
 		try {
 			const items = await listMarketTranslations(id);
@@ -204,8 +212,14 @@
 			if (market?.id === id) {
 				marketTranslations = items;
 			}
+
+			translationsFetchedForId = id;
 		} catch (err) {
 			console.warn('market detail: translations load failed', err);
+		} finally {
+			if (translationsLoadingId === id) {
+				translationsLoadingId = undefined;
+			}
 		}
 	};
 
@@ -403,13 +417,21 @@
 	);
 
 	// Show the original (on-chain) text when the reader has flipped the toggle
-	// or when there's no translation to show.
+	// or when there's no translation to show. Each field falls back to the
+	// original whenever the translated value is missing/blank — translations
+	// are user-authored, so a stray empty field must never blank out the title.
 	const showTranslated = $derived(nonNullish(activeTranslation) && !showOriginal);
+	const translatedTitle = $derived(activeTranslation?.translation.title ?? '');
+	const translatedResolution = $derived(activeTranslation?.translation.resolution ?? '');
 	const displayTitle = $derived(
-		showTranslated ? (activeTranslation?.translation.title ?? '') : (market?.title ?? '')
+		showTranslated && notEmptyString(translatedTitle.trim())
+			? translatedTitle
+			: (market?.title ?? '')
 	);
 	const displayResolution = $derived(
-		showTranslated ? activeTranslation?.translation.resolution : market?.resolution
+		showTranslated && notEmptyString(translatedResolution.trim())
+			? translatedResolution
+			: market?.resolution
 	);
 
 	const onToggleTranslation = () => {

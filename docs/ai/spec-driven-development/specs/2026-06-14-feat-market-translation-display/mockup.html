@@ -59,7 +59,12 @@
 				background: var(--bg-base);
 				color: var(--text-base);
 				font-family:
-					ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+					ui-sans-serif,
+					system-ui,
+					-apple-system,
+					'Segoe UI',
+					Roboto,
+					sans-serif;
 				transition:
 					background 0.2s ease,
 					color 0.2s ease;
@@ -335,7 +340,14 @@
 				<!-- MarketTranslationToggle — only rendered when a translation exists -->
 				<div class="xl-toggle" id="toggle">
 					<span class="xl-state">
-						<svg class="xl-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<svg
+							class="xl-globe"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							aria-hidden="true"
+						>
 							<circle cx="12" cy="12" r="9" />
 							<path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18" />
 						</svg>
@@ -347,28 +359,36 @@
 			</section>
 
 			<div class="outcomes" id="outcomes" style="display: none">
-				<div class="outcome-row"><span id="oc1">Sí, recorte de 25 pb</span><span class="pct">61%</span></div>
+				<div class="outcome-row">
+					<span id="oc1">Sí, recorte de 25 pb</span><span class="pct">61%</span>
+				</div>
 				<div class="outcome-row"><span id="oc2">Sin cambios</span><span class="pct">33%</span></div>
 			</div>
 
 			<div class="res-card">
 				<span class="res-eyebrow">Reglas de resolución</span>
 				<p class="res-body" id="resolution">
-					Se resuelve SÍ si el rango objetivo de los fondos federales se reduce en al menos
-					25 pb en la reunión del FOMC anterior al 18 sep 2026, según el comunicado oficial.
+					Se resuelve SÍ si el rango objetivo de los fondos federales se reduce en al menos 25 pb en
+					la reunión del FOMC anterior al 18 sep 2026, según el comunicado oficial.
 				</p>
 				<dl class="res-foot">
-					<div class="res-foot-row"><dt>Fuente</dt><dd>Comunicado del FOMC</dd></div>
-					<div class="res-foot-row"><dt>Liquida</dt><dd>18 sep 2026</dd></div>
+					<div class="res-foot-row">
+						<dt>Fuente</dt>
+						<dd>Comunicado del FOMC</dd>
+					</div>
+					<div class="res-foot-row">
+						<dt>Liquida</dt>
+						<dd>18 sep 2026</dd>
+					</div>
 				</dl>
 			</div>
 		</div>
 
 		<p class="note">
 			Locale = <b>Español</b>. Default view shows the stored translation; the small underlined
-			<b>"Ver original"</b> link is the secondary affordance. Toggle it to see the on-chain
-			original (English) and a <b>"View in Español"</b> link to return. A market with no
-			translation for the active locale renders no toggle at all.
+			<b>"Ver original"</b> link is the secondary affordance. Toggle it to see the on-chain original
+			(English) and a <b>"View in Español"</b> link to return. A market with no translation for the
+			active locale renders no toggle at all.
 		</p>
 
 		<div class="toast" id="toast">Copied ✓</div>

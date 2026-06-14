@@ -153,6 +153,7 @@ export const idlFactory = ({ IDL }) => {
 					watchlist_removed: IDL.Null,
 					delete_succeeded: IDL.Null,
 					referral_link_copied: IDL.Null,
+					market_translation_toggled: IDL.Null,
 					comment_posted: IDL.Null,
 					flow_swipe: IDL.Null,
 					referral_converted: IDL.Null,
@@ -196,7 +197,6 @@ export const idlFactory = ({ IDL }) => {
 					faucet_claimed: IDL.Null,
 					chat_sent: IDL.Null,
 					orderbook_viewed: IDL.Null,
-					market_translation_toggled: IDL.Null,
 					signed_out: IDL.Null
 				}),
 				count: IDL.Float64,
@@ -1097,6 +1097,7 @@ export const idlFactory = ({ IDL }) => {
 					watchlist_removed: IDL.Null,
 					delete_succeeded: IDL.Null,
 					referral_link_copied: IDL.Null,
+					market_translation_toggled: IDL.Null,
 					comment_posted: IDL.Null,
 					flow_swipe: IDL.Null,
 					referral_converted: IDL.Null,
@@ -1140,7 +1141,6 @@ export const idlFactory = ({ IDL }) => {
 					faucet_claimed: IDL.Null,
 					chat_sent: IDL.Null,
 					orderbook_viewed: IDL.Null,
-					market_translation_toggled: IDL.Null,
 					signed_out: IDL.Null
 				}),
 				path: IDL.Opt(IDL.Text),

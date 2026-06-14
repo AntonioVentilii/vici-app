@@ -63,7 +63,7 @@ Market **detail page** only.
    muted inline control. Shown only when a translation is available. States:
    - viewing translated → label `Translated` + secondary button `View original`
    - viewing original → label `Original` + secondary button `View in {language}`
-   The original-language affordance is visually smaller/secondary, per the ask.
+     The original-language affordance is visually smaller/secondary, per the ask.
 3. Detail page wiring (`+page.svelte`):
    - On market load, `listMarketTranslations(market.id)` into a `SvelteMap`
      keyed by locale (mirrors the admin tab).

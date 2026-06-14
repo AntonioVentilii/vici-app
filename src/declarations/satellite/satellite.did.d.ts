@@ -158,6 +158,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { watchlist_removed: null }
 			| { delete_succeeded: null }
 			| { referral_link_copied: null }
+			| { market_translation_toggled: null }
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
@@ -201,7 +202,6 @@ export interface AppGetAnalyticsSummaryResult {
 			| { faucet_claimed: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
-			| { market_translation_toggled: null }
 			| { signed_out: null };
 		count: number;
 		start: number;
@@ -923,6 +923,7 @@ export interface AppTrackEventsArgs {
 			| { watchlist_removed: null }
 			| { delete_succeeded: null }
 			| { referral_link_copied: null }
+			| { market_translation_toggled: null }
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
@@ -966,7 +967,6 @@ export interface AppTrackEventsArgs {
 			| { faucet_claimed: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
-			| { market_translation_toggled: null }
 			| { signed_out: null };
 		path: [] | [string];
 		count: [] | [number];
