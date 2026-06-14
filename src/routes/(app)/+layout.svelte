@@ -345,13 +345,13 @@
 				blank shell, and the redirect effects above are held off too.
 			-->
 			<div
-				class="app-shell-content"
+				class="flex min-h-[calc(100vh-10rem)] items-center justify-center"
 				aria-label={t({ locale: $localeStore, key: 'authn.checking.aria' })}
 				aria-live="polite"
 				data-tid={TestId.AppMain}
 				role="status"
 			>
-				<LoadingSpinner size="md" />
+				<LoadingSpinner center={false} size="md" />
 			</div>
 		{:else}
 			{#key page.url.pathname}
