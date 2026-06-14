@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.15](https://github.com/AntonioVentilii/vici-app/compare/v0.1.14...v0.1.15) (2026-06-14)
+
+
+### Features
+
+* **leagues:** rank the league leaderboard by accuracy + role/YOU badges ([#878](https://github.com/AntonioVentilii/vici-app/issues/878)) ([c0056c2](https://github.com/AntonioVentilii/vici-app/commit/c0056c2e251566b4ff961f7af1d7eea05b632080))
+
 ## [0.1.14](https://github.com/AntonioVentilii/vici-app/compare/v0.1.13...v0.1.14) (2026-06-14)
 
 
