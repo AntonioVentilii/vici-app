@@ -68,7 +68,11 @@ Existing notification system to plug into (no new mechanism):
      `kind = 'social'`,
      `title` = an i18n string with the liker's display name,
      `body` = the denormalized `activityTitle`,
-     `when = reaction.timestamp`,
+     `when` = a user-facing relative-time **string** (`InboxNotification.when`
+     is a `string`), formatted from `reaction.timestamp` (ms) the way
+     `settledInboxStore` formats its `when` via `formatRelativeAgoFromNs`
+     — use that helper's millisecond analogue (or convert ms→ns), keyed on
+     `$localeStore`,
      `mid = reaction.marketId` (deep-link to the market) / `href` to the
      market route,
      `unread` = derived from the per-id read overlay.
@@ -100,10 +104,13 @@ Existing notification system to plug into (no new mechanism):
   per like, like the existing per-event settlement cards. Collapsing
   bursts into a single card is a fast-follow if the volume warrants it
   (see Pending decisions).
-- **Notifying on unlike** — removing a like does not retract or alter a
-  card. The reaction doc disappears on unlike (spec A `deleteDoc`), so a
-  live-derived card naturally drops; a card already marked read stays in
-  history. No special handling.
+- **Notifying on unlike** — no special handling. Because the card is
+  derived live from the `activity_reactions` docs and spec A deletes the
+  doc on unlike, the card simply disappears from the inbox, **regardless
+  of whether it had been marked read** — there is no separate history
+  store to retain it (consistent with not persisting cards elsewhere).
+  This is the accepted behaviour, not a gap: an unlike fully withdraws the
+  notification.
 
 ## Linked issues
 
@@ -168,8 +175,9 @@ collection, doc shape, assert, hook, endpoint, or `.did` regeneration.
 - [ ] The card counts toward the unread badge and respects mark-read /
       mark-all-read.
 - [ ] Liking your own call produces no card.
-- [ ] Unliking removes the live (still-unread) card; no error on a card
-      already read.
+- [ ] Unliking removes the card from the inbox whether or not it was read
+      (the reaction doc is deleted; no history store retains it); no error
+      in either case.
 - [ ] `npm run quality` (incl. i18n) and `npm run check` pass. No
       satellite build needed (no `src/satellite/**` change).
 
