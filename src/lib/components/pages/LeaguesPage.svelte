@@ -196,20 +196,36 @@
 		$profilesStore.get(principal)?.dailyStreak ?? 0;
 
 	/**
-	 * Caller's 1-indexed position inside a league — the same accuracy-first
-	 * ranking the detail page and its leaderboard use, so the card badge
-	 * agrees with both. Undefined when the caller isn't found in the
-	 * (still-hydrating) roster, so the badge is hidden rather than wrong.
+	 * Caller's 1-indexed rank per league — the same accuracy-first ranking the
+	 * detail page and its leaderboard use, so the card badge agrees with both.
+	 * Computed once per (rows, viewer, profile-cache) change rather than per
+	 * card render: the page re-renders for unrelated reactive churn (trend
+	 * resolution, modal toggles), and re-sorting every roster each time is
+	 * wasted O(n log n). Leagues where the caller isn't in the (still-
+	 * hydrating) roster are absent, so the badge is hidden rather than wrong.
 	 */
-	const yourRankFor = (row: LeagueRow): number | undefined =>
-		leagueRankOf({
-			sorted: rankLeagueMembers({
-				members: row.roster,
-				accuracyOf: memberAccuracy,
-				streakOf: memberStreak
-			}),
-			principal: selfPrincipal
-		});
+	const yourRankByLeague = $derived.by(() => {
+		const ranks = new SvelteMap<string, number>();
+
+		for (const row of rows) {
+			const rank = leagueRankOf({
+				sorted: rankLeagueMembers({
+					members: row.roster,
+					accuracyOf: memberAccuracy,
+					streakOf: memberStreak
+				}),
+				principal: selfPrincipal
+			});
+
+			if (nonNullish(rank)) {
+				ranks.set(row.league.id, rank);
+			}
+		}
+
+		return ranks;
+	});
+
+	const yourRankFor = (row: LeagueRow): number | undefined => yourRankByLeague.get(row.league.id);
 
 	/**
 	 * Per-league rank-trend for the viewer, keyed by league id. Sourced from

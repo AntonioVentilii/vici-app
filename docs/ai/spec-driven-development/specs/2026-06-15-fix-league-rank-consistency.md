@@ -149,7 +149,7 @@ are untouched.
 ## Implementation outline
 
 1. Add `src/lib/utils/league-rank.utils.ts`:
-   - `rankLeagueMembers(members, { accuracyOf, streakOf })` → members
+   - `rankLeagueMembers({ members, accuracyOf, streakOf })` → members
      sorted by accuracy desc, streak desc, `joinedAtMs` asc (the exact
      comparator currently inlined at `LeagueDetailPage.svelte:577`).
    - `leagueRankOf({ sorted, principal })` → 1-based index, or `undefined`
