@@ -9,6 +9,7 @@ import {
 	REFERRAL_EXISTING_USER_REASON,
 	REFERRAL_VXP_BONUS_BASE_UNITS
 } from '$lib/constants/referral.constants';
+import { track } from '$lib/services/analytics.services';
 import { joinLeagueByInvite } from '$lib/services/leagues.services';
 import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
 import { claimReferralFriendship, redeemReferralCode } from '$lib/services/referral.services';
@@ -133,10 +134,12 @@ const parsePendingOnboarding = (raw: string): PendingOnboarding | undefined => {
  */
 const redeemPendingReferralIfAny = async ({
 	code,
-	locale
+	locale,
+	source
 }: {
 	code: string | undefined;
 	locale: AppLocale;
+	source: string;
 }): Promise<void> => {
 	if (!code) {
 		return;
@@ -144,6 +147,8 @@ const redeemPendingReferralIfAny = async ({
 
 	try {
 		await redeemReferralCode({ code });
+
+		track({ name: 'referral_redeemed', source });
 
 		notificationsStore.add({
 			title: t({
@@ -167,6 +172,8 @@ const redeemPendingReferralIfAny = async ({
 		if (reason === REFERRAL_EXISTING_USER_REASON) {
 			try {
 				await claimReferralFriendship({ code });
+
+				track({ name: 'referral_redeemed', source });
 
 				notificationsStore.add({
 					title: t({
@@ -314,6 +321,11 @@ export const drainPendingOnboarding = async ({
 				try {
 					await claimReferralFriendship({ code: friendshipCode });
 
+					track({
+						name: 'referral_redeemed',
+						source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
+					});
+
 					notificationsStore.add({
 						title: t({
 							locale,
@@ -392,7 +404,11 @@ export const drainPendingOnboarding = async ({
 
 				// Handle collision is independent of the referral redemption — the user is still a
 				// new sign-up and deserves the bonus.
-				void redeemPendingReferralIfAny({ code: pending.referralCode, locale });
+				void redeemPendingReferralIfAny({
+					code: pending.referralCode,
+					locale,
+					source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
+				});
 				void joinPendingLeagueIfAny({ code: pending.leagueInvite, locale });
 
 				// Any unavailable reason — `'taken'`, or the
@@ -434,7 +450,11 @@ export const drainPendingOnboarding = async ({
 		// Redeem after the profile is in place so the satellite assertion (which requires an
 		// existing profile) passes. Fire-and-forget — the toast inside handles success and
 		// failure, and we don't want to keep the loading state open for the ledger transfer.
-		void redeemPendingReferralIfAny({ code: pending.referralCode, locale });
+		void redeemPendingReferralIfAny({
+			code: pending.referralCode,
+			locale,
+			source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
+		});
 		void joinPendingLeagueIfAny({ code: pending.leagueInvite, locale });
 
 		return { kind: 'applied' };

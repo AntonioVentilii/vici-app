@@ -1,7 +1,9 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
+import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
 import { LeaguePrivacy } from '$lib/enums/league';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getMyReferralCode } from '$lib/services/referral.services';
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
@@ -506,6 +508,56 @@ export const updateLeague = async ({
 	});
 
 	return next;
+};
+
+// Session cache for the caller's own referral code — the same value for the whole
+// session, so resolve it once and reuse across every league-share build. Only a
+// positive result is cached; a missing code (not yet assigned / backfilled later)
+// stays retryable.
+let cachedReferralCode: string | undefined;
+
+const resolveMyReferralCode = async (): Promise<string | undefined> => {
+	if (nonNullish(cachedReferralCode)) {
+		return cachedReferralCode;
+	}
+
+	try {
+		const code = await getMyReferralCode();
+
+		if (nonNullish(code)) {
+			cachedReferralCode = code;
+		}
+
+		return code;
+	} catch {
+		// Best-effort: a failed lookup falls through to `undefined`, yielding a
+		// plain (no-`?ref=`) share link.
+	}
+};
+
+/**
+ * Builds the canonical league-invite URL (`{origin}/league/{code}`), appending
+ * the sharer's referral code as `?ref={code}` so the invite also implies a friend
+ * invite (auto-friendship on join, plus the new-user bonus for fresh sign-ups —
+ * the landing route + onboarding drain redeem the `?ref=` exactly like a plain
+ * friend invite). The param is appended only when a real referral code resolves;
+ * with none available the plain link is returned (a handle would fail
+ * `REFERRAL_CODE_REGEX` on the consuming side and be dropped, so it is never
+ * substituted). `withReferral` lets the caller annotate analytics.
+ */
+export const buildLeagueShareUrl = async ({
+	inviteCode
+}: {
+	inviteCode: string;
+}): Promise<{ url: string; withReferral: boolean }> => {
+	const base = `${window.location.origin}/league/${inviteCode}`;
+	const referralCode = await resolveMyReferralCode();
+
+	if (nonNullish(referralCode) && REFERRAL_CODE_REGEX.test(referralCode)) {
+		return { url: `${base}?ref=${referralCode}`, withReferral: true };
+	}
+
+	return { url: base, withReferral: false };
 };
 
 /**
