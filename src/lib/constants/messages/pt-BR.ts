@@ -1431,6 +1431,8 @@ export const ptBRMessages = {
 	'loop.title_a': 'Três estados.',
 	'loop.title_b': 'Um loop.',
 	'market.closes': 'fecha',
+	'market.odds.loading': 'Carregando probabilidades',
+	'market.odds.no_liquidity': 'Ainda sem liquidez',
 	'market.detail.admin_actions': 'Ações de administrador',
 	'market.detail.back_to_markets': 'Voltar aos mercados',
 	'market.detail.chart.eyebrow': 'Histórico de preços',

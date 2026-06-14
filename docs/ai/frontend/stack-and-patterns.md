@@ -190,6 +190,17 @@ the service layer and let the service own caching.
   explicitly so intent is visible at the call site and so a future
   `strict: false` slip can't silently widen it back to `any`. Narrow with
   `instanceof Error` or a `zod` schema before reading properties.
+- **Optional over a sentinel for "not known yet".** When a numeric field
+  can be genuinely unknown (still loading, or empty), model it as
+  optional (`field?: number`) and let consumers render a skeleton /
+  placeholder for `isNullish` — do not pick a magic in-range default that
+  is indistinguishable from a real value. `Market.yesProbability` is the
+  worked example: a `0.5` default read as a real coin-flip and showed
+  un-loaded markets as 50%. It is now optional, paired with a
+  `priceLoaded` boolean that separates _loading_ (skeleton) from
+  _loaded-but-empty_ (dash); the odds placeholder is
+  `$lib/components/market/MarketOddsSkeleton.svelte`. See
+  [`PRODUCT.md`](../PRODUCT.md) → "Market odds".
 
 ## Service / data flow
 

@@ -753,8 +753,13 @@
 			}, 1600);
 		}
 
-		const yesProb = currentMarket.yesProbability ?? 0.5;
-		const isContrarian = yesProb <= 0.25 || yesProb >= 0.75;
+		// A call is "contrarian" only against a known crowd consensus. With an
+		// unknown probability (book unread / no liquidity) there's no consensus
+		// to lean against, so the swipe is treated as neutral (not contrarian)
+		// rather than assuming a 50/50 split — the motion engine still receives
+		// a definite boolean.
+		const yesProb = currentMarket.yesProbability;
+		const isContrarian = nonNullish(yesProb) && (yesProb <= 0.25 || yesProb >= 0.75);
 
 		// The motion engine's cadence (rhythm 3 / 5 / 8, overtime 11 / 13, and
 		// the daily / overtime-complete beat) keys off the CUMULATIVE daily
@@ -1056,7 +1061,15 @@
 			return;
 		}
 
-		const yes = m.yesProbability ?? 0.5;
+		// No consensus yet when the probability is unknown (book unread /
+		// no liquidity) — there's no minority side to nudge against, so the
+		// Trickster contrarian beat stays quiet rather than asserting 50/50.
+		const yes = m.yesProbability;
+
+		if (isNullish(yes)) {
+			return;
+		}
+
 		const consensusSide = yes >= 0.75 ? 'YES' : yes <= 0.25 ? 'NO' : null;
 
 		if (isNullish(consensusSide)) {

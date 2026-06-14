@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
@@ -76,7 +77,13 @@
 	const artCategory = $derived(resolveFlowArtCategory({ categoryId: 'wc', seed: market.id }));
 	const accent = $derived(tagColor('wc'));
 
-	const yesPct = $derived(Math.round(market.yesProbability * 100));
+	// The onboarding card binds to a synthetic fixture that always carries a
+	// probability, so `hasProbability` is true in practice — the guard is here
+	// for type-safety now that `yesProbability` is optional on `Market`.
+	const hasProbability = $derived(!isNullish(market.yesProbability));
+	const yesPct = $derived(
+		isNullish(market.yesProbability) ? 0 : Math.round(market.yesProbability * 100)
+	);
 	const noPct = $derived(100 - yesPct);
 
 	// Footer volume line — formatted volume when the market has any, else
@@ -306,13 +313,21 @@
 							<span class="ob-prob-eyebrow no">
 								{t({ locale: $localeStore, key: 'flow.action.no' })}
 							</span>
-							<span class="ob-prob-num">{noPct}%</span>
+							<span class="ob-prob-num">
+								{#if hasProbability}{noPct}%{:else}<MarketOddsSkeleton
+										variant={market.priceLoaded ? 'empty' : 'loading'}
+									/>{/if}
+							</span>
 						</div>
 						<div class="ob-prob yes">
 							<span class="ob-prob-eyebrow yes">
 								{t({ locale: $localeStore, key: 'flow.action.yes' })}
 							</span>
-							<span class="ob-prob-num">{yesPct}%</span>
+							<span class="ob-prob-num">
+								{#if hasProbability}{yesPct}%{:else}<MarketOddsSkeleton
+										variant={market.priceLoaded ? 'empty' : 'loading'}
+									/>{/if}
+							</span>
 						</div>
 					</div>
 					<div class="ob-foot">

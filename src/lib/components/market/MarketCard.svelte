@@ -151,6 +151,7 @@
 						{#if market.payoffType === 'Binary'}
 							<BinaryProbabilities
 								noProbability={market.noProbability}
+								priceLoaded={market.priceLoaded}
 								winningOutcome={isResolved ? market.outcome : undefined}
 								yesProbability={market.yesProbability}
 							/>

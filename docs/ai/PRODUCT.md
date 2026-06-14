@@ -89,6 +89,17 @@ suppressed under reduced-motion. The reaction is local to the session —
 there is no persisted reaction model yet. See
 [`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md).
 
+### Market odds — skeleton while the book loads
+
+A market's YES/NO odds are the live order-book mid. Until that book has
+been read the odds are **unknown, not 50%** — the card shows a loading
+skeleton (a repeat visit seeds the last-known odds from a local cache
+for an instant paint, then upgrades in place). A market whose book is
+read but empty shows a neutral dash, never a fabricated coin-flip;
+resolved markets show 100% / 0%. The detail page first-paints from a
+fast query, then upgrades to the certified read. See
+[`specs/2026-06-14-fix-market-odds-skeletons.md`](./spec-driven-development/specs/2026-06-14-fix-market-odds-skeletons.md).
+
 ### Friendship rules
 
 The product rules for the friend graph. Surfaces: Arena → Friends

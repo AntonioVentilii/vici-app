@@ -50,7 +50,19 @@
 
 	const { market, category, priorCall = null, onClose, onCopied }: Props = $props();
 
-	const yesPct = $derived(Math.round((market.yesProbability ?? 0.5) * 100));
+	// Crowd YES percentage, or `undefined` when the probability is unknown
+	// (book unread / no liquidity). The share text and card must not claim a
+	// fabricated 50% — when unknown we drop the stat from the copy entirely and
+	// suppress the percentage-bearing card image rather than minting a number.
+	const yesPct = $derived<number | undefined>(
+		isNullish(market.yesProbability) ? undefined : Math.round(market.yesProbability * 100)
+	);
+
+	// The shareable card image renders the YES percentage prominently, so it's
+	// only offered once the probability is known. Until then the image surfaces
+	// (preview, "Share card" CTA, story tiles) are disabled — link sharing,
+	// which carries no percentage, stays available.
+	const cardAvailable = $derived(nonNullish(yesPct));
 
 	// Category for the card artwork accent + tag. Falls back to a
 	// deterministic per-market resolution when the host didn't supply one.
@@ -81,18 +93,27 @@
 	const origin = $derived(browser ? window.location.origin : 'https://vici.market');
 	const url = $derived(`${origin}/m/${market.id}?ref=${refToken}`);
 
-	const text = $derived(
-		nonNullish(priorCall)
-			? t({
-					locale: $localeStore,
-					key: 'flow.share.text_post'
-				})
-			: t({
-					locale: $localeStore,
-					key: 'flow.share.text_pre',
-					params: { title: market.title, yes: yesPct }
-				})
-	);
+	const text = $derived.by(() => {
+		if (nonNullish(priorCall)) {
+			return t({ locale: $localeStore, key: 'flow.share.text_post' });
+		}
+
+		// No probability yet → percent-free copy (the `text_pre` template
+		// embeds `{yes}%`, which would read as a fabricated 50% here).
+		if (isNullish(yesPct)) {
+			return t({
+				locale: $localeStore,
+				key: 'flow.share.text_pre_no_pct',
+				params: { title: market.title }
+			});
+		}
+
+		return t({
+			locale: $localeStore,
+			key: 'flow.share.text_pre',
+			params: { title: market.title, yes: yesPct }
+		});
+	});
 
 	// Native share sheet — Safari (iOS) and Chrome (Android) expose
 	// `navigator.share`. File-share is a narrower capability (story apps
@@ -124,6 +145,13 @@
 		let alive = true;
 
 		void (async () => {
+			// The share card draws the YES percentage prominently; without a
+			// known probability we skip the preview entirely rather than render
+			// a fabricated 50%. Link-sharing stays available below.
+			if (isNullish(yesPct)) {
+				return;
+			}
+
 			try {
 				const result = await renderPredictionCard({
 					market: {
@@ -271,6 +299,14 @@
 			return;
 		}
 
+		// Without a known probability the card image is unavailable (it would
+		// claim a fabricated 50%); degrade to a plain link share instead.
+		if (isNullish(yesPct)) {
+			await fallbackShareLink();
+
+			return;
+		}
+
 		haptic('light-tap');
 		busy = true;
 
@@ -382,7 +418,12 @@
 			<span class="share-card-pitch">
 				{t({ locale: $localeStore, key: 'flow.share.card_pitch' })}
 			</span>
-			<button class="share-card-cta" disabled={busy} onclick={() => shareImage()} type="button">
+			<button
+				class="share-card-cta"
+				disabled={busy || !cardAvailable}
+				onclick={() => shareImage()}
+				type="button"
+			>
 				<ImageIcon aria-hidden="true" size={15} strokeWidth={2} />
 				{t({ locale: $localeStore, key: cardCtaKey })}
 			</button>
@@ -398,7 +439,7 @@
 			<button
 				class="share-tile"
 				aria-label={t({ locale: $localeStore, key: app.labelKey })}
-				disabled={busy}
+				disabled={busy || !cardAvailable}
 				onclick={() => shareImage(app)}
 				type="button"
 			>

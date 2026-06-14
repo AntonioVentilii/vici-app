@@ -37,7 +37,7 @@
 	} from '$lib/derived/user.derived';
 	import { track } from '$lib/services/analytics.services';
 	import { getUserMarketSignals } from '$lib/services/market-signals.services';
-	import { getMarket } from '$lib/services/market.services';
+	import { loadMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import { getMarketTopPredictors } from '$lib/services/top-predictors.services';
 	import { loadMarketPriceCandles } from '$lib/services/trade.services';
@@ -101,6 +101,10 @@
 
 	let lockedToastOpen = $state(false);
 
+	// Market id whose viewer signals we've already pulled on the foreground
+	// paint — keeps the certified update's second `onLoad` from re-fetching.
+	let signalsFetchedForId: MarketId | undefined;
+
 	const fetchMarket = async ({ id, silent = false }: { id: MarketId; silent?: boolean }) => {
 		if (!silent) {
 			loading = true;
@@ -114,24 +118,46 @@
 			// market id re-arms the fetch effect for the new market.
 			topPredictors = undefined;
 			topPredictorsMarketId = undefined;
+
+			// Re-arm the viewer-signals fetch for this foreground load (it
+			// fires once, on the first `onLoad`).
+			signalsFetchedForId = undefined;
 		}
 
-		const [marketRes, positionsRes] = await Promise.all([getMarket(id), getPositionsForMarket(id)]);
+		// Query-then-update: `loadMarket` fires `onLoad` twice — first with the
+		// fast uncertified query (drives the first paint, replacing the
+		// skeleton), then with the certified update which upgrades the view in
+		// place. We clear `loading` and fetch the viewer signals on the FIRST
+		// arrival only, so a foreground load paints from the query and the
+		// later certified result silently refreshes.
+		const [, positionsRes] = await Promise.all([
+			loadMarket({
+				marketId: id,
+				onLoad: ({ response }) => {
+					market = response;
 
-		market = marketRes;
+					if (!silent) {
+						loading = false;
+
+						// Signals only change with the viewer's own activity, not
+						// with the 30s consensus poll — fetch them on the first
+						// foreground paint and skip the silent refresh so we don't
+						// re-pull trade history + friend activity every tick. Guard
+						// against the certified update re-firing them.
+						if (signalsFetchedForId !== id) {
+							signalsFetchedForId = id;
+							void fetchSignals(response);
+						}
+					}
+				},
+				onUpdateError: (error) => {
+					console.error('market detail: certified update failed', error);
+				}
+			}),
+			getPositionsForMarket(id)
+		]);
+
 		positions = positionsRes;
-
-		if (!silent) {
-			loading = false;
-		}
-
-		// Signals only change with the viewer's own activity, not with
-		// the 30s consensus poll — fetch them on the foreground load and
-		// skip the silent refresh so we don't re-pull trade history +
-		// friend activity every tick.
-		if (!silent) {
-			void fetchSignals(marketRes);
-		}
 	};
 
 	// Fetch the active period's market-wide price history the first time
@@ -312,8 +338,14 @@
 	const contextLine = $derived(metadata?.subtitle?.trim() ?? '');
 	const whyNow = $derived(metadata?.whyNow);
 
+	// `yesProbability` is optional — `undefined` while the book hasn't been
+	// read (or read empty). Fall back to 0 only for the percent math so we
+	// never multiply `undefined` into a NaN; the prob hero treats a flat 0/100
+	// split as its neutral state.
 	const yesPercent = $derived(
-		nonNullish(market) ? Math.min(100, Math.max(0, Math.round(market.yesProbability * 100))) : 0
+		nonNullish(market?.yesProbability)
+			? Math.min(100, Math.max(0, Math.round(market.yesProbability * 100)))
+			: 0
 	);
 	const noPercent = $derived(100 - yesPercent);
 
