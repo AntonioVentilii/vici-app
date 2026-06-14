@@ -1368,6 +1368,8 @@ export const esMessages = {
 	'leagues.detail.rename_label': 'Renombrar liga',
 	'leagues.detail.rename_save': 'Guardar',
 	'leagues.detail.rename_saving': 'Guardando…',
+	'leagues.detail.role_admin': 'Admin',
+	'leagues.detail.role_owner': 'Propietario',
 	'leagues.detail.trend_even': 'sin cambios',
 	'leagues.detail.trend_this_week': '{count} esta semana',
 	'leagues.detail.you_chip': 'Tú',

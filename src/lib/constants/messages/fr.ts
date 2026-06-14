@@ -1376,6 +1376,8 @@ export const frMessages = {
 	'leagues.detail.rename_label': 'Renommer la ligue',
 	'leagues.detail.rename_save': 'Enregistrer',
 	'leagues.detail.rename_saving': 'Enregistrement…',
+	'leagues.detail.role_admin': 'Admin',
+	'leagues.detail.role_owner': 'Propriétaire',
 	'leagues.detail.trend_even': 'stable',
 	'leagues.detail.trend_this_week': '{count} cette semaine',
 	'leagues.detail.you_chip': 'Toi',

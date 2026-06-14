@@ -17,10 +17,12 @@
 	import ChallengeLeagueModal from '$lib/components/leagues/ChallengeLeagueModal.svelte';
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
 	import LeaguePrivacyModal from '$lib/components/leagues/LeaguePrivacyModal.svelte';
+	import LeagueRoleBadge from '$lib/components/leagues/LeagueRoleBadge.svelte';
 	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -545,36 +547,38 @@
 	const formatAccuracy = (principal: string): string =>
 		formatLocalePercent({ value: memberAccuracy(principal) / 100, locale: $localeStore });
 
-	// Sort the roster so the caller sits on top, then owners, admins,
-	// members. Within each band we preserve join order (oldest first)
-	// — the satellite already sorts join asc so we just leave members
-	// alone after the role pass.
+	// Rank the roster by accuracy — the figure each row surfaces — so the
+	// leaderboard reads top-down by performance, like the global one. Ties
+	// break on the longer active streak, then on join order (oldest first)
+	// for a stable result. Members yet to settle a prediction sit at 0% and
+	// sink to the foot rather than riding their role to the top.
+	//
+	// Accuracy/streak are snapshotted once per member before the sort so the
+	// O(n log n) comparator doesn't re-read the profile cache on every pass.
 	const sortedMembers = $derived.by(() => {
-		const roleWeight: Record<LeagueMemberRole, number> = {
-			owner: 0,
-			admin: 1,
-			member: 2
-		};
+		const ranked = members.map((m) => ({
+			member: m,
+			accuracy: memberAccuracy(m.member),
+			streak: memberStreak(m.member)
+		}));
 
-		return [...members].sort((a, b) => {
-			if (nonNullish(selfPrincipal)) {
-				if (a.member === selfPrincipal && b.member !== selfPrincipal) {
-					return -1;
-				}
+		ranked.sort((a, b) => {
+			const accuracyDelta = b.accuracy - a.accuracy;
 
-				if (b.member === selfPrincipal && a.member !== selfPrincipal) {
-					return 1;
-				}
+			if (accuracyDelta !== 0) {
+				return accuracyDelta;
 			}
 
-			const weightDelta = roleWeight[a.role] - roleWeight[b.role];
+			const streakDelta = b.streak - a.streak;
 
-			if (weightDelta !== 0) {
-				return weightDelta;
+			if (streakDelta !== 0) {
+				return streakDelta;
 			}
 
-			return a.joinedAtMs - b.joinedAtMs;
+			return a.member.joinedAtMs - b.member.joinedAtMs;
 		});
+
+		return ranked.map((r) => r.member);
 	});
 
 	// Active battle (in_flight first, else accepted / proposed).
@@ -794,11 +798,11 @@
 		return rows.sort((a, b) => b.ts - a.ts).slice(0, 6);
 	});
 
-	// Leaderboard rows. Without per-member accuracy on the satellite,
-	// the "This week" and "All time" tabs both render the same roster
-	// projection — caller-handles + role chip — top-6, with a sticky
-	// YOU row at the bottom. The tab is wired so future per-period
-	// stats can drop in without a structural refactor.
+	// Leaderboard rows — the accuracy-ranked roster, top-6, with a sticky
+	// YOU row at the bottom for callers who fall outside it. The "This week"
+	// and "All time" tabs still render the same lifetime-accuracy projection;
+	// the tab is wired so per-window member stats can replace the sort key
+	// without a structural refactor once the clearing canister exposes them.
 	const leaderboardTop = $derived(sortedMembers.slice(0, 6));
 
 	const youMember = $derived.by((): LeagueMemberDoc | undefined => {
@@ -1185,7 +1189,13 @@
 									owner={member.member}
 									self={member.member === selfPrincipal}
 								/>
-								<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
+								<span class="league-detail-lb-id">
+									<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
+									<LeagueRoleBadge role={member.role} />
+									{#if isYou}
+										<YouBadge size="xs" />
+									{/if}
+								</span>
 								<span class="league-detail-lb-streak num allcaps">
 									{t({
 										locale: $localeStore,
@@ -1220,8 +1230,10 @@
 							owner={youMember.member}
 							self={youMember.member === selfPrincipal}
 						/>
-						<span class="league-detail-lb-name">
-							{t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
+						<span class="league-detail-lb-id">
+							<span class="league-detail-lb-name">{memberHandle(youMember.member)}</span>
+							<LeagueRoleBadge role={youMember.role} />
+							<YouBadge size="xs" />
 						</span>
 						<span class="league-detail-lb-streak num allcaps">
 							{t({
@@ -1461,7 +1473,13 @@
 					self={openMember.member === selfPrincipal}
 				/>
 				<div class="league-detail-member-sheet-id">
-					<span class="league-detail-member-sheet-name">{memberHandle(openMember.member)}</span>
+					<span class="league-detail-member-sheet-name-row">
+						<span class="league-detail-member-sheet-name">{memberHandle(openMember.member)}</span>
+						<LeagueRoleBadge role={openMember.role} />
+						{#if openMember.member === selfPrincipal}
+							<YouBadge size="xs" />
+						{/if}
+					</span>
 					<span class="num league-detail-member-sheet-rank">
 						{t({
 							locale: $localeStore,
@@ -2289,10 +2307,20 @@
 		flex-shrink: 0;
 	}
 
+	/* Name cell — handle + role / YOU chips on one line. The handle
+	   ellipsizes (min-width:0) while the chips keep their intrinsic width. */
+	.league-detail-lb-id {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		min-width: 0;
+	}
+
 	.league-detail-lb-name {
 		font-size: var(--t-12);
 		font-weight: 500;
 		color: var(--text-base);
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -2398,11 +2426,19 @@
 		min-width: 0;
 	}
 
+	.league-detail-member-sheet-name-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		min-width: 0;
+	}
+
 	.league-detail-member-sheet-name {
 		font-family: var(--font-display);
 		font-size: var(--t-16);
 		font-weight: 700;
 		color: var(--text-base);
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
