@@ -1078,6 +1078,7 @@ export const deMessages = {
 	'hero.title_b': 'wer Recht hat.',
 	'inbox.friend_request.body': '{user} möchte sich verbinden.',
 	'inbox.friend_request.title': 'Freundschaftsanfrage',
+	'inbox.like_received.title': '{user} hat deinen Tipp geliked',
 	'inbox.pending': 'Ausstehend',
 	'inbox.resolve.body.lost': 'Du hast {amount} bei "{market}" verloren.',
 	'inbox.resolve.body.neutral': 'Deine Vorhersage zu "{market}" wurde aufgelöst.',

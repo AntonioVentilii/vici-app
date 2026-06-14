@@ -8,6 +8,7 @@
 	import { reconcileIdentityScopedStorage } from '$lib/services/identity-storage.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { ensureProfile, calculateAndSyncStats } from '$lib/services/profile.services';
+	import { receivedReactionsStore } from '$lib/stores/activity-reactions.store';
 	import { clearAffiliations } from '$lib/stores/affiliations.store';
 	import { followingStore } from '$lib/stores/following.store';
 	import { clearFriendRelations } from '$lib/stores/friends.store';
@@ -68,6 +69,7 @@
 		followingStore.set(undefined);
 		positionsStore.set(undefined);
 		tradeHistoryStore.set(undefined);
+		receivedReactionsStore.set(undefined);
 
 		// Same idea for the identity-scoped localStorage caches, except
 		// those are local-authoritative (not server-backed) — see

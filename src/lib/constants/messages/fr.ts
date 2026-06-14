@@ -1074,6 +1074,7 @@ export const frMessages = {
 	'hero.title_b': 'qui a raison.',
 	'inbox.friend_request.body': '{user} veut se connecter.',
 	'inbox.friend_request.title': 'Demande d’ami',
+	'inbox.like_received.title': '{user} a aimé ta prédiction',
 	'inbox.pending': 'En attente',
 	'inbox.resolve.body.lost': 'Vous avez perdu {amount} sur "{market}".',
 	'inbox.resolve.body.neutral': 'Votre prédiction sur "{market}" est résolue.',

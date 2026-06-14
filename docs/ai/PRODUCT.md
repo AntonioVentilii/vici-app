@@ -88,11 +88,16 @@ plays a brief tilt + laurel particle burst on commit; the motion is
 suppressed under reduced-motion. The like is **persisted** — it survives
 a refresh, and each row shows a count of how many people liked it
 (aggregated across all users). Tapping is optimistic: it highlights
-immediately and rolls back with an error toast if the write fails. See
+immediately and rolls back with an error toast if the write fails. When
+someone likes your call, you get an in-app inbox notification ("{user}
+liked your call") that deep-links to the market; liking your own call
+never notifies you, and an unlike withdraws the card. See
 [`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md)
-(the reaction redesign) and
+(the reaction redesign),
 [`specs/2026-06-14-feat-friend-feed-like-persistence.md`](./spec-driven-development/specs/2026-06-14-feat-friend-feed-like-persistence.md)
-(persistence + counts).
+(persistence + counts), and
+[`specs/2026-06-14-feat-like-received-notifications.md`](./spec-driven-development/specs/2026-06-14-feat-like-received-notifications.md)
+(the like-received notification).
 
 ### Market odds — skeleton while the book loads
 
