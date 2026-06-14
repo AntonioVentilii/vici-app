@@ -2,6 +2,8 @@
 	import { nonNullish } from '@dfinity/utils';
 	import { Check, ChevronRight } from '@lucide/svelte/icons';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import { track } from '$lib/services/analytics.services';
+	import { buildLeagueShareUrl } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
@@ -141,13 +143,22 @@
 		event.stopPropagation();
 
 		try {
-			const url = `${window.location.origin}/league/${league.inviteCode}`;
+			const { url, withReferral } = await buildLeagueShareUrl({
+				inviteCode: league.inviteCode
+			});
 			const shareText = t({
 				locale: $localeStore,
 				key: 'leagues.share_text'
 			});
 			await navigator.clipboard.writeText(`${shareText} ${url}`);
 			copied = true;
+
+			track({
+				name: 'league_invite_sent',
+				source: 'leagues',
+				leagueId: league.id,
+				ok: withReferral
+			});
 
 			setTimeout(() => {
 				copied = false;

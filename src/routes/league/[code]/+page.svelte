@@ -7,9 +7,12 @@
 	import { page } from '$app/state';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
+	import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { authBusy, userSignedIn } from '$lib/derived/user.derived';
+	import { track } from '$lib/services/analytics.services';
 	import { joinLeagueByInvite, lookupLeagueByInvite } from '$lib/services/leagues.services';
+	import { claimReferralFriendship } from '$lib/services/referral.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -33,12 +36,35 @@
 	 *   3. **Signed-in & onboarded** — resolve the league, join it (or
 	 *      route straight in if already a member), then land on the
 	 *      league detail page.
+	 *
+	 * A league invite also implies a friend invite. The sharer's referral
+	 * code rides along as `?ref={code}` (see `buildLeagueShareUrl`); we route
+	 * it through the existing referral machinery split by sign-in state:
+	 * signed-out → stash it next to the league invite so the signup drain
+	 * redeems it (friendship + new-user bonus); signed-in returning user →
+	 * claim the friendship directly after the join (no bonus, idempotent).
+	 * The pending-onboarding slot is signed-out machinery — its drain toasts
+	 * "account exists" for returning users — so we never stash `?ref=` for a
+	 * signed-in session.
 	 */
 
 	let resolved = false;
 
 	const rawCode = $derived(page.params.code ?? '');
 	const normalizedCode = $derived(rawCode.toUpperCase().trim());
+	// The sharer's referral code, when the invite link carried one. Validated
+	// to the canonical code shape so a stray / malformed `?ref=` is ignored.
+	const referralCode = $derived.by(() => {
+		const raw = page.url.searchParams.get('ref');
+
+		if (!nonNullish(raw)) {
+			return;
+		}
+
+		const normalized = raw.toUpperCase().trim();
+
+		return REFERRAL_CODE_REGEX.test(normalized) ? normalized : undefined;
+	});
 	const onboardingCompleted = $derived(
 		$userStore.profile?.preferences?.onboardingCompleted === true
 	);
@@ -94,6 +120,16 @@
 						})()
 					: {};
 			parsed.leagueInvite = normalizedCode;
+
+			// First-referrer-wins: a code stashed by an earlier `?ref=` (e.g. a
+			// market share) is never overwritten. Mirrors the (app) layout's
+			// capture rule, which is itself signed-out-only.
+			const hasReferral = typeof parsed.referralCode === 'string' && parsed.referralCode.length > 0;
+
+			if (nonNullish(referralCode) && !hasReferral) {
+				parsed.referralCode = referralCode;
+			}
+
 			localStorage.setItem(PENDING_ONBOARDING_STORAGE_KEY, JSON.stringify(parsed));
 		} catch {
 			// Best-effort: signup still works without the stashed invite —
@@ -174,6 +210,22 @@
 					goLeaguesList();
 
 					return;
+				}
+			}
+
+			// A league invite implies a friend invite. A signed-in returning user
+			// is past the signup window, so there's no VXP bonus — just land them
+			// in the sharer's friends list. Best-effort and idempotent: the
+			// satellite no-ops an existing relation and rejects self-referral.
+			if (nonNullish(referralCode)) {
+				try {
+					await claimReferralFriendship({ code: referralCode });
+					track({ name: 'referral_redeemed', source: 'league_invite' });
+				} catch (friendErr: unknown) {
+					console.warn(
+						'League invite friendship claim failed',
+						friendErr instanceof Error ? friendErr.message : friendErr
+					);
 				}
 			}
 

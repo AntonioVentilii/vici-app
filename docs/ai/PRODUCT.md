@@ -137,6 +137,14 @@ service.
 - **Invites.** Inviting by link rewards both sides via the referral
   bonuses in
   [`referral.constants.ts`](../../src/lib/constants/referral.constants.ts).
+- **A league invite implies a friend invite.** Sharing a league invite
+  link also carries the sharer's referral code (`?ref=`), so joining the
+  league auto-friends the person whose link was used: a brand-new
+  sign-up redeems it (friendship + new-user bonus) through the signup
+  drain, an existing signed-in user is friended on join (no bonus). A
+  plain link with no `?ref=` (sharer has no code yet) just joins the
+  league. No opt-out — the friendship is implicit. Decision record:
+  [`specs/2026-06-14-feat-league-invite-implies-friendship.md`](./spec-driven-development/specs/2026-06-14-feat-league-invite-implies-friendship.md).
 - **Errors.** Known outcomes surface as the specific messages above;
   an unexpected failure shows friendly copy carrying a short technical
   detail so a user screenshot is enough to diagnose.
