@@ -599,7 +599,11 @@
 								</span>
 							{/if}
 						</div>
-						<ConsensusCompass size={42} yesProbability={market.yesProbability} />
+						<ConsensusCompass
+							priceLoaded={market.priceLoaded}
+							size={42}
+							yesProbability={market.yesProbability}
+						/>
 					</div>
 
 					{#if showPriorOnFront && priorCall}

@@ -18,12 +18,16 @@
 		// `undefined` means the book isn't known yet — the dial renders a
 		// centred (horizontal) needle and a skeleton in place of the percentage.
 		yesProbability: number | undefined;
+		// Whether the order book has been read. Distinguishes *loading* (book
+		// not read yet → pulsing bar) from *loaded-but-empty* (no liquidity →
+		// neutral dash) when `yesProbability` is unknown.
+		priceLoaded?: boolean;
 		// Rendered px size (square). 42 matches the in-card dial; 56
 		// works well on a wider FlowCardBack panel.
 		size?: number;
 	}
 
-	const { yesProbability, size = 42 }: Props = $props();
+	const { yesProbability, priceLoaded = false, size = 42 }: Props = $props();
 
 	const known = $derived(!isNullish(yesProbability));
 	const yesPct = $derived(
@@ -42,9 +46,9 @@
 <div
 	class="flow-compass {sideClass}"
 	aria-label={known ? `${yesPct}% YES consensus` : undefined}
-	role="img"
+	role={known ? 'img' : undefined}
 >
-	<svg height={size} viewBox="0 0 42 42" width={size}>
+	<svg aria-hidden="true" height={size} viewBox="0 0 42 42" width={size}>
 		<!-- Outer ring -->
 		<circle cx="21" cy="21" fill="none" r="18" stroke="var(--border-base)" stroke-width="1.2" />
 		<!-- YES (top) and NO (bottom) pole tick marks -->
@@ -69,7 +73,9 @@
 	{#if known}
 		<span class="flow-compass-pct num">{leadingPct}%</span>
 	{:else}
-		<span class="flow-compass-pct num"><MarketOddsSkeleton /></span>
+		<span class="flow-compass-pct num"
+			><MarketOddsSkeleton variant={priceLoaded ? 'empty' : 'loading'} /></span
+		>
 	{/if}
 </div>
 

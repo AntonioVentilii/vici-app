@@ -340,12 +340,11 @@
 
 	// `yesProbability` is optional — `undefined` while the book hasn't been
 	// read (or read empty). Fall back to 0 only for the percent math so we
-	// never multiply `undefined` into a NaN; the prob hero treats a flat 0/100
-	// split as its neutral state.
+	// never multiply `undefined` into a NaN; the prob hero renders an odds
+	// skeleton (not a 0/100 split) whenever `oddsKnown` is false.
+	const oddsKnown = $derived(nonNullish(market?.yesProbability));
 	const yesPercent = $derived(
-		nonNullish(market?.yesProbability)
-			? Math.min(100, Math.max(0, Math.round(market.yesProbability * 100)))
-			: 0
+		oddsKnown ? Math.min(100, Math.max(0, Math.round((market?.yesProbability ?? 0) * 100))) : 0
 	);
 	const noPercent = $derived(100 - yesPercent);
 
@@ -603,7 +602,14 @@
 			</section>
 		{/if}
 
-		<MarketDetailProbHero {noPercent} resolved={isResolved} {resolvedOutcome} {yesPercent} />
+		<MarketDetailProbHero
+			known={oddsKnown}
+			{noPercent}
+			priceLoaded={market.priceLoaded}
+			resolved={isResolved}
+			{resolvedOutcome}
+			{yesPercent}
+		/>
 
 		<MarketDetailChartCard
 			marketId={market.id}
