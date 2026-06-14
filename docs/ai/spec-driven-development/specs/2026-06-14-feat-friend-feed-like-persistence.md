@@ -24,6 +24,15 @@ Out of scope: "A persisted, satellite-backed reaction model (counts, who
 reacted) … persistence is a tracked follow-up"). This spec is that
 follow-up.
 
+**This is spec A of a two-spec split.** It delivers persistence + counts
+on the Friends feed. Notifying the activity's author when their call is
+liked is spec B —
+[`2026-06-14-feat-like-received-notifications.md`](./2026-06-14-feat-like-received-notifications.md)
+— which derives an inbox card from the `activity_reactions` collection
+this spec introduces. The doc shape below is deliberately defined once
+here (including the fields B's card needs) so B adds no schema/assert
+change.
+
 Frontend — [`src/lib/components/arena/FriendsTab.svelte`](../../../../src/lib/components/arena/FriendsTab.svelte):
 
 - `likedKeys = new SvelteSet<string>()` (line 665) — the local-only set
@@ -90,8 +99,16 @@ in `src/satellite/index.ts`.
      segments total (`actor`, `timestamp`, `type`, `liker`). Principals,
      numeric timestamps, and `ActivityType` tokens never contain `#`, so
      the split is exact (same guarantee `assertSetActivity` relies on).
-   - **Doc data**: `{ activityKey: string; liker: PrincipalText; timestamp: number }`
-     (`activityKey` = the `activityDocKey` above).
+   - **Doc data**: `{ activityKey: string; liker: PrincipalText; timestamp: number; activityTitle: string; marketId?: string }`.
+     `activityKey` = the `activityDocKey` above. `activityTitle` (and the
+     optional `marketId` for deep-linking) are **denormalized copies of
+     the liked activity's fields**, carried so spec B's notification card
+     reads "Alice liked your call: <title>" without a second fetch. They
+     are not used by spec A itself — they are written now so the doc shape
+     and assert stay stable across both PRs. Low-stakes spoofability: a
+     liker writes the title, so it could be falsified, but it only affects
+     the card shown to the activity's own author about their own call —
+     noted, accepted.
 2. Write-time guard `assertSetActivityReaction` in a new
    `src/satellite/services/activity-reaction.services.ts`, wired into
    `assertSetDocCollections` in `src/satellite/index.ts`. It enforces:
@@ -99,7 +116,10 @@ in `src/satellite/index.ts`.
    - the key is exactly `${activityKey}#${caller}` with a well-formed
      embedded `activityDocKey` (3 inner segments, middle is `^\d+$`, last
      is a known `ActivityType`),
-   - `timestamp` is a safe integer.
+   - `timestamp` is a safe integer,
+   - `activityTitle` is a bounded string (cap its length, mirroring how
+     `assertSetActivity` bounds activity fields) and `marketId`, when
+     present, is a string.
    No delete guard: a liker deletes only their own doc (Juno owner-scoped
    delete on a public collection already restricts this to the doc owner;
    confirm — see Open questions).
@@ -110,7 +130,9 @@ in `src/satellite/index.ts`.
    - `activityReactionKey({ activity })` → the reconstructed
      `${user}#${timestamp}#${type}` doc key (shared helper so the
      component and loader agree).
-   - `likeActivity({ activity, liker })` → `setDoc(ACTIVITY_REACTIONS, …)`.
+   - `likeActivity({ activity, liker })` → `setDoc(ACTIVITY_REACTIONS, …)`,
+     writing `activityTitle` (and `marketId` when set) from the `Activity`
+     for spec B's card.
    - `unlikeActivity({ activity, liker })` → `getDoc` then `deleteDoc`
      (mirrors `deleteComment`).
    - `getActivityReactions({ limit })` → one bounded `listDocs`
@@ -145,12 +167,20 @@ in `src/satellite/index.ts`.
   doc maintained by `onSetDoc`/`onDeleteDoc` hooks (the
   `league_stats`/`affiliation_stats` fan-out idiom) is the 100×-scale
   follow-up — see Technical requirements § Scalability.
-- **Notifying the actor** that someone liked their call (no activity row,
-  no push). Reactions are silent acknowledgements, as today.
+- **Notifying the actor** that someone liked their call — owned by spec B
+  ([`2026-06-14-feat-like-received-notifications.md`](./2026-06-14-feat-like-received-notifications.md)).
+  Spec A only persists the reactions B reads; it adds no inbox card.
 - **Reactions beyond a single binary like** (emoji set, multiple reaction
   types).
 - The non-friend / ranked-friends fallback branches of the feed and the
   feed's data source — owned by other specs.
+- **Other activity surfaces.** The like button stays on the Arena →
+  Friends feed only. `MarketRecentTrades` (market detail "Recent trades")
+  gets no button, and the standalone global `ActivityFeed` / `ActivityItem`
+  is currently unmounted (zero `<ActivityFeed>` usages in `src/`; only
+  stale comments reference a former Leaderboard "Activity" tab) — reviving
+  it is not in scope. The backend model is surface-agnostic, so adding
+  these later needs no schema change.
 
 ## Linked issues
 
@@ -184,8 +214,9 @@ mismatch fails at runtime.
   `getGlobalActivities` call.
 - **Memory & storage.** New `activity_reactions` collection, `stable`
   memory. One small doc per (activity, liker): key
-  `${actor}#${ts}#${type}#${liker}` plus `{ activityKey, liker,
-  timestamp }`. Growth = total likes ever cast; append-mostly, with
+  `${actor}#${ts}#${type}#${liker}` plus `{ activityKey, liker, timestamp,
+  activityTitle, marketId? }` (the last two denormalized for spec B's
+  card). Growth = total likes ever cast; append-mostly, with
   deletes on unlike. No retention/cleanup story in v1 (reactions persist
   with their activity); a cleanup pass can piggyback on activity
   pruning if/when that lands.
@@ -285,3 +316,15 @@ mismatch fails at runtime.
 - **Optimistic UI retained.** The existing instant highlight + motion is
   kept (the persisted write happens after), so the redesign's tactile
   feel is unchanged; only a failed write rolls back.
+- **Count-on-read confirmed (owner-delegated).** The owner delegated the
+  count-architecture call; count-on-read is chosen for the reasons above,
+  with the rollup as the documented scale follow-up.
+- **Two-spec split + denormalized card fields.** Persistence+counts (this
+  spec) and notifications (spec B) ship as separate PRs per the
+  one-spec-one-PR rule. To avoid a doc-shape/assert change in B, the
+  reaction doc carries `activityTitle` + `marketId` now, even though spec
+  A doesn't render them.
+- **Friends feed only.** The standalone global feed is dead code
+  (unmounted) and `MarketRecentTrades` has no like affordance today;
+  scoping to the one live surface that already has the button keeps this
+  PR tight, and the surface-agnostic backend leaves the door open.
