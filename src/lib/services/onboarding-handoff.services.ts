@@ -35,9 +35,10 @@ interface PendingOnboarding {
 	referralCode?: string;
 	leagueInvite?: string;
 	/**
-	 * How many times the referral redeem/claim has already been attempted from a re-stashed
-	 * payload. Bounds the {@link MAX_REFERRAL_DRAIN_ATTEMPTS} retry loop so a persistently failing
-	 * redeem can't keep the slot armed forever.
+	 * How many times the referral redeem/claim has been attempted so far (0 on the first drain,
+	 * incremented each time a transient failure re-stashes the code). Bounds the
+	 * {@link MAX_REFERRAL_DRAIN_ATTEMPTS} retry loop so a persistently failing redeem can't keep the
+	 * slot armed forever.
 	 */
 	referralAttempts?: number;
 }
@@ -185,6 +186,21 @@ const resolvePendingReferral = async ({
 		return true;
 	}
 
+	const notifyFailed = (reason: string): void => {
+		notificationsStore.add({
+			title: t({
+				locale,
+				key: 'onboarding.handoff.referral_failed_title'
+			}),
+			message: t({
+				locale,
+				key: 'onboarding.handoff.referral_failed',
+				params: { reason: reason || code }
+			}),
+			type: 'error'
+		});
+	};
+
 	try {
 		await redeemReferralCode({ code });
 
@@ -227,12 +243,19 @@ const resolvePendingReferral = async ({
 
 				return true;
 			} catch (friendErr: unknown) {
-				// The friendship claim failed after the window elapsed — keep the code for a
-				// bounded retry rather than losing the connection to a transient blip.
-				console.warn(
-					'claimReferralFriendship fallback failed',
-					friendErr instanceof Error ? friendErr.message : friendErr
-				);
+				const friendReason = friendErr instanceof Error ? friendErr.message : '';
+
+				// `redeemReferralCode` throws the signup-window reason *before* validating the
+				// code/owner, so the claim is the first call to reach those checks — a bad code or
+				// self-referral surfaces deterministically here. Treat those as terminal (surface +
+				// clear); keep only genuine transient failures for a bounded retry.
+				if (isTerminalReferralReason(friendReason)) {
+					notifyFailed(friendReason);
+
+					return true;
+				}
+
+				console.warn('claimReferralFriendship fallback failed', friendReason || friendErr);
 
 				return false;
 			}
@@ -241,18 +264,7 @@ const resolvePendingReferral = async ({
 		// Deterministic rejection (bad code, already redeemed, self-referral) — retrying can't
 		// help, so surface it and let the caller clear the slot.
 		if (isTerminalReferralReason(reason)) {
-			notificationsStore.add({
-				title: t({
-					locale,
-					key: 'onboarding.handoff.referral_failed_title'
-				}),
-				message: t({
-					locale,
-					key: 'onboarding.handoff.referral_failed',
-					params: { reason: reason || code }
-				}),
-				type: 'error'
-			});
+			notifyFailed(reason);
 
 			return true;
 		}
@@ -352,8 +364,10 @@ const settlePendingSlot = ({
 /**
  * Drains the pre-auth onboarding payload for a freshly signed-in session: parses the stash,
  * branches on returning-vs-new user, applies the profile upsert (with a nickname-collision
- * probe), clears the storage slot, and kicks off the best-effort referral redeem + league
- * auto-join. Returns a {@link DrainOutcome} the caller maps to the primary notification toast.
+ * probe), awaits the best-effort referral redeem/claim, then settles the storage slot via
+ * {@link settlePendingSlot} (cleared on a terminal outcome, or re-armed with the bare referral
+ * code for a bounded retry on a transient failure). The league auto-join fires best-effort and
+ * idempotent. Returns a {@link DrainOutcome} the caller maps to the primary notification toast.
  *
  * Preconditions (the caller must already have verified): running in the browser, signed-in,
  * a hydrated `userStore.profile`, and that this is not already mid-drain.
@@ -397,11 +411,12 @@ export const drainPendingOnboarding = async ({
 	// is destructive. Preserve the existing profile and tell them.
 	//
 	// A stashed `referralCode` is the one piece of the payload that
-	// *is* still actionable for a returning user: they can't redeem
-	// the VXP bonus (they're not a fresh signup), but they can still
-	// land in the inviter's friends list. Fire `claimReferralFriendship`
-	// before clearing the payload — fire-and-forget so a transient
-	// failure never blocks the account-exists message.
+	// *is* still actionable for a returning user: a genuine returning
+	// user can't redeem the VXP bonus (the satellite's signup-window
+	// check rejects them, falling back to a friendship-only claim), but
+	// they still land in the inviter's friends list. We await the
+	// resolve below so the slot is settled correctly — re-armed for a
+	// bounded retry on a transient failure rather than silently dropped.
 	if (profileExisted) {
 		// A stashed league invite is still actionable for a returning user — join is
 		// independent of the signup bonus and idempotent. Fire-and-forget.
