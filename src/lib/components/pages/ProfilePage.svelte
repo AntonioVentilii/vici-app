@@ -45,7 +45,7 @@
 			aria-live="polite"
 			role="status"
 		>
-			<LoadingSpinner center={false} size="md" />
+			<LoadingSpinner size="md" />
 			<h2 class="font-display text-foreground mt-6 text-2xl font-semibold">
 				{t({ locale: $localeStore, key: 'profile.loading.title' })}
 			</h2>

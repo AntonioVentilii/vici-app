@@ -142,7 +142,7 @@
 
 	{#if loading}
 		<div class="flex justify-center py-12">
-			<LoadingSpinner center={false} size="sm" />
+			<LoadingSpinner size="sm" />
 		</div>
 	{:else if sortedMarkets.length === 0}
 		<p class="text-muted-foreground py-12 text-center text-sm italic">

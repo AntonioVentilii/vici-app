@@ -2,10 +2,18 @@
 	interface Props {
 		class?: string;
 		size?: 'xs' | 'sm' | 'md' | 'lg' | 'current';
-		center?: boolean;
+		/**
+		 * Drop-in contextual loader: wrap the spinner in
+		 * `flex justify-center py-24`. This centers it horizontally and
+		 * adds vertical breathing room — it does NOT center vertically in
+		 * the viewport. For full-screen states leave this off (the default)
+		 * and let the caller own the centering with an explicit-height flex
+		 * wrapper.
+		 */
+		inlinePad?: boolean;
 	}
 
-	const { class: className = '', size = 'md', center = true }: Props = $props();
+	const { class: className = '', size = 'md', inlinePad = false }: Props = $props();
 
 	const sizeClasses = {
 		xs: 'h-4 w-4',
@@ -27,7 +35,7 @@
 	const SHIMMER_DELAY_S = 0.18;
 </script>
 
-<div class={center ? `flex justify-center py-24 ${className}` : className}>
+<div class={inlinePad ? `flex justify-center py-24 ${className}` : className}>
 	<svg
 		class="laurel-ring {sizeClasses[size]}"
 		aria-hidden="true"

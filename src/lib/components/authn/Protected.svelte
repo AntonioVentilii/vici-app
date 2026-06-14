@@ -31,7 +31,7 @@
 		aria-live="polite"
 		role="status"
 	>
-		<LoadingSpinner size="md" />
+		<LoadingSpinner inlinePad size="md" />
 	</div>
 {:else}
 	<div class="flex flex-col items-center justify-center py-20 text-center">

@@ -148,7 +148,7 @@
 
 	{#if status === 'loading'}
 		<div class="flex justify-center py-8">
-			<LoadingSpinner center={false} size="sm" />
+			<LoadingSpinner size="sm" />
 		</div>
 	{:else if status === 'error'}
 		<div
