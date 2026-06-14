@@ -59,7 +59,6 @@
 		LEAGUE_NAME_MIN_LENGTH
 	} from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
-	import type { StandingsWindow } from '$lib/types/standings';
 	import {
 		formatDate,
 		formatLocalePercent,
@@ -67,6 +66,7 @@
 		shortenPrincipal
 	} from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { leagueRankOf, rankLeagueMembers } from '$lib/utils/league-rank.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
@@ -329,12 +329,6 @@
 		}
 	};
 
-	// The caller's standing within the league, ranked by net realized P&L over
-	// the active window (clearing canister `list_leaderboard`, filtered to this
-	// league's roster). `undefined` until it loads or when the caller has no
-	// settled position in the window.
-	let standingRank = $state<number | undefined>(undefined);
-
 	// Caller's weekly rank-trend within the league — the sign of their
 	// week-over-week movement, mapped onto the card convention (negative =
 	// climbed, shown as ▲). Sourced from the weekly window's `rankDelta`
@@ -342,27 +336,6 @@
 	// "this week" copy stays accurate even on the All-time tab. `0` =
 	// no comparable prior week (newcomer / no settled position) → "even".
 	let standingTrend = $state(0);
-
-	$effect(() => {
-		const owner = selfPrincipal;
-		const window: StandingsWindow = leaderboardTab === 'week' ? 'week' : 'all';
-		const roster = members.map((m) => m.member);
-
-		if (isNullish(owner) || roster.length === 0) {
-			standingRank = undefined;
-
-			return;
-		}
-
-		getLeagueStandings({ window, members: roster })
-			.then((result) => {
-				standingRank = findOwnStanding({ result, owner })?.rank;
-			})
-			.catch((err: unknown) => {
-				console.error(err);
-				standingRank = undefined;
-			});
-	});
 
 	$effect(() => {
 		const owner = selfPrincipal;
@@ -408,22 +381,13 @@
 	});
 
 	// 1-indexed position of the caller for the head card's `N°{NN}` corner
-	// badge. Prefers the clearing standings rank; falls back to the roster
-	// order (the leaderboard render order) while standings load or when the
-	// caller has no settled position yet, so the badge is never blank.
-	const yourRank = $derived.by(() => {
-		if (nonNullish(standingRank)) {
-			return standingRank;
-		}
-
-		if (isNullish(selfPrincipal)) {
-			return 1;
-		}
-
-		const idx = sortedMembers.findIndex((m) => m.member === selfPrincipal);
-
-		return idx === -1 ? 1 : idx + 1;
-	});
+	// badge and the `#N` rank block. It is the caller's index in the same
+	// accuracy-ranked roster the leaderboard list renders, so the badge, the
+	// rank block, and the list all show one number. Defaults to 1 only when
+	// the caller isn't in the (still-hydrating) roster, so it's never blank.
+	const yourRank = $derived.by(
+		() => leagueRankOf({ sorted: sortedMembers, principal: selfPrincipal }) ?? 1
+	);
 
 	// Maps the three-way privacy onto its chip label key. A league with an
 	// absent field resolves to `open` via `leaguePrivacy`.
@@ -559,39 +523,12 @@
 	const formatAccuracy = (principal: string): string =>
 		formatLocalePercent({ value: memberAccuracy(principal) / 100, locale: $localeStore });
 
-	// Rank the roster by accuracy — the figure each row surfaces — so the
-	// leaderboard reads top-down by performance, like the global one. Ties
-	// break on the longer active streak, then on join order (oldest first)
-	// for a stable result. Members yet to settle a prediction sit at 0% and
-	// sink to the foot rather than riding their role to the top.
-	//
-	// Accuracy/streak are snapshotted once per member before the sort so the
-	// O(n log n) comparator doesn't re-read the profile cache on every pass.
-	const sortedMembers = $derived.by(() => {
-		const ranked = members.map((m) => ({
-			member: m,
-			accuracy: memberAccuracy(m.member),
-			streak: memberStreak(m.member)
-		}));
-
-		ranked.sort((a, b) => {
-			const accuracyDelta = b.accuracy - a.accuracy;
-
-			if (accuracyDelta !== 0) {
-				return accuracyDelta;
-			}
-
-			const streakDelta = b.streak - a.streak;
-
-			if (streakDelta !== 0) {
-				return streakDelta;
-			}
-
-			return a.member.joinedAtMs - b.member.joinedAtMs;
-		});
-
-		return ranked.map((r) => r.member);
-	});
+	// The roster ranked by accuracy — the figure each row surfaces — so the
+	// leaderboard reads top-down by performance, like the global one, and the
+	// hero rank badge (which indexes into this same order) agrees with it.
+	const sortedMembers = $derived(
+		rankLeagueMembers({ members, accuracyOf: memberAccuracy, streakOf: memberStreak })
+	);
 
 	// Active battle (in_flight first, else accepted / proposed).
 	// Resolved battles are excluded — the active card only shows a live
