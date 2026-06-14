@@ -1,7 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
 import { SUPPORTED_LOCALES, type AppLocale } from '$lib/constants/locale.constants';
 import type { MarketTranslation, MarketTranslationInput } from '$lib/types/market-translation';
-import { isAdmin } from '$satellite/services/_authz';
+import { isCreatorOrAdmin } from '$satellite/services/_authz';
 import { isNullish } from '@dfinity/utils';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
@@ -37,11 +37,13 @@ const assertSupportedLocale = (locale: string): AppLocale => {
 const translationKey = ({ seriesId, locale }: { seriesId: string; locale: AppLocale }): string =>
 	`${seriesId}__${locale}`;
 
-const assertAdmin = (): void => {
-	const caller = msgCaller();
-
-	if (!isAdmin({ caller })) {
-		throw new Error('Only an admin can edit market translations.');
+const assertCanWriteMarketTranslation = async ({
+	seriesId
+}: {
+	seriesId: string;
+}): Promise<void> => {
+	if (!(await isCreatorOrAdmin({ caller: msgCaller(), seriesId }))) {
+		throw new Error('Only the market creator or an admin can edit market translations.');
 	}
 };
 
@@ -78,7 +80,7 @@ export const listMarketTranslations = ({ seriesId }: { seriesId: string }): Mark
 	return items.map(([_, doc]) => decodeDocData<MarketTranslation>(doc.data));
 };
 
-export const upsertMarketTranslation = ({
+export const upsertMarketTranslation = async ({
 	seriesId,
 	locale,
 	data
@@ -86,8 +88,8 @@ export const upsertMarketTranslation = ({
 	seriesId: string;
 	locale: string;
 	data: MarketTranslationInput;
-}): MarketTranslation => {
-	assertAdmin();
+}): Promise<MarketTranslation> => {
+	await assertCanWriteMarketTranslation({ seriesId });
 
 	const validated = assertSupportedLocale(locale);
 	const caller = msgCaller();

@@ -353,8 +353,8 @@ export const upsertMarketTranslation = defineUpdate({
 	result: j.strictObject({
 		translation: MarketTranslationSchema
 	}),
-	handler: (args) => ({
-		translation: upsertMarketTranslationFn(args)
+	handler: async (args) => ({
+		translation: await upsertMarketTranslationFn(args)
 	})
 });
 
