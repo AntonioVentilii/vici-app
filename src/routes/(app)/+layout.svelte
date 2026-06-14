@@ -345,7 +345,7 @@
 				blank shell, and the redirect effects above are held off too.
 			-->
 			<div
-				class="app-shell-content flex min-h-[calc(100vh-10rem)] items-center justify-center"
+				class="flex min-h-[calc(100vh-10rem)] items-center justify-center"
 				aria-label={t({ locale: $localeStore, key: 'authn.checking.aria' })}
 				aria-live="polite"
 				data-tid={TestId.AppMain}
