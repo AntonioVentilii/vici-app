@@ -52,12 +52,11 @@
 	 *     user is affiliated and outside the visible window, a sticky
 	 *     `is-you` row pins to the bottom.
 	 *
-	 * Note: the per-affiliation `wins/totalCalls` accuracy we project
-	 * here is the lifetime bucket — the satellite doesn't yet write a
-	 * WC-tagged sub-bucket, so the "WC" scope ranks by lifetime and
-	 * the "month" scope ranks by monthly accuracy. When the
-	 * featured-event-tag hook lands, swap the WC bucket source and the
-	 * UI is otherwise stable.
+	 * Note: the per-affiliation `wins/totalCalls` accuracy we project here is
+	 * the all-time bucket — the satellite sums the current roster's real
+	 * lifetime record, so the "WC" scope ranks by the members' actual history.
+	 * The "month" scope ranks by the current-month window the rolling stats
+	 * doc accrues.
 	 */
 
 	const PODIUM_SIZE = 3;

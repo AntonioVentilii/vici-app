@@ -4,6 +4,7 @@ import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 import {
 	affiliationStatsKey,
 	MIN_CALLS_FOR_RANK,
+	monthAnchorFromMs,
 	type AffiliationStatsDoc
 } from '$lib/types/affiliation-stats';
 import type { BattleDoc } from '$lib/types/battle';
@@ -15,7 +16,7 @@ import {
 import type { LeagueMemberDoc } from '$lib/types/league-member';
 import type { Relation } from '$lib/types/relation';
 import { isNullish, nonNullish } from '@dfinity/utils';
-import { msgCaller } from '@junobuild/functions/ic-cdk';
+import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
 
 /**
@@ -1003,10 +1004,108 @@ export const listAffiliationChampionshipsFn = ({
 };
 
 /**
- * Single-doc lookup for `affiliation_stats`. Returns `undefined`
- * when no stats doc exists yet (the affiliation hasn't been the
- * subject of any settled call). Callers should treat that as
- * "unranked / no data" rather than as an error.
+ * Subset of the profile payload the lifetime aggregate reads. Mirrors the
+ * slice `affiliation-stats.services` decodes for the per-trade fan-out, but
+ * here we read the *full* lifetime totals rather than a before/after delta.
+ */
+interface ProfileLifetimeSlice {
+	totalTrades?: number;
+	winRate?: number;
+}
+
+/**
+ * Real lifetime tally for a Worlds kind, summed over each affiliation's
+ * CURRENT roster. For every membership row of the kind we read the member's
+ * profile and add their lifetime `totalTrades` (calls) plus derived wins
+ * (`round(totalTrades × winRate / 100)`, capped at the trade count) into that
+ * affiliation's bucket.
+ *
+ * This is what makes the all-time board reflect the members' real history:
+ * the moment a user with prior activity joins, their full record counts
+ * toward the affiliation — and leaving removes it — rather than only the
+ * activity accrued *while* affiliated (which the rolling `affiliation_stats`
+ * doc tracks for the monthly/season board).
+ *
+ * Cost: one `affiliations` scan plus one `profiles` read per membership of the
+ * kind (bounded by the active roster). Pass `affiliationIdentifier` to limit
+ * the profile reads to a single affiliation (the detail-page lookup).
+ */
+const aggregateMembersLifetime = ({
+	kind,
+	affiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	affiliationIdentifier?: string;
+}): Map<string, { totalCalls: number; wins: number }> => {
+	const caller = msgCaller().toUint8Array();
+
+	const { items } = listDocsStore({
+		collection: Collection.AFFILIATIONS,
+		caller,
+		params: {}
+	});
+
+	const lifetime = new Map<string, { totalCalls: number; wins: number }>();
+
+	for (const [, item] of items) {
+		let aff: AffiliationDoc | undefined;
+
+		try {
+			aff = readAffiliationDoc(item.data);
+		} catch {
+			// skip malformed
+			aff = undefined;
+		}
+
+		const matches =
+			nonNullish(aff) &&
+			aff.kind === kind &&
+			(isNullish(affiliationIdentifier) || aff.affiliationIdentifier === affiliationIdentifier);
+
+		if (matches && nonNullish(aff)) {
+			const profileDoc = getDocStore({
+				collection: Collection.PROFILES,
+				key: aff.member,
+				caller
+			});
+
+			let slice: ProfileLifetimeSlice | undefined;
+
+			if (nonNullish(profileDoc)) {
+				try {
+					slice = decodeDocData<ProfileLifetimeSlice>(profileDoc.data);
+				} catch {
+					// skip malformed
+					slice = undefined;
+				}
+			}
+
+			const trades = slice?.totalTrades ?? 0;
+
+			if (nonNullish(slice) && trades > 0) {
+				// `winRate` is a 0..100 percentage; cap the derived win count at the
+				// trade total so the aggregate keeps `wins ≤ totalCalls`.
+				const wins = Math.min(trades, Math.round((trades * (slice.winRate ?? 0)) / 100));
+				const bucket = lifetime.get(aff.affiliationIdentifier) ?? { totalCalls: 0, wins: 0 };
+
+				bucket.totalCalls += trades;
+				bucket.wins += wins;
+				lifetime.set(aff.affiliationIdentifier, bucket);
+			}
+		}
+	}
+
+	return lifetime;
+};
+
+/**
+ * Single-affiliation stats for the detail page. The all-time totals
+ * (`totalCalls` / `wins`) reflect the current roster's real lifetime
+ * (see {@link aggregateMembersLifetime}); the monthly/season window comes
+ * from the rolling `affiliation_stats` doc.
+ *
+ * Returns `undefined` only when the affiliation has neither a stats doc nor
+ * any members with history — callers treat that as "unranked / no data".
  */
 export const getAffiliationStatsFn = ({
 	kind,
@@ -1023,27 +1122,51 @@ export const getAffiliationStatsFn = ({
 		caller: caller.toUint8Array()
 	});
 
-	if (isNullish(doc)) {
+	let rolling: AffiliationStatsDoc | undefined;
+
+	if (nonNullish(doc)) {
+		try {
+			rolling = decodeDocData<AffiliationStatsDoc>(doc.data);
+		} catch {
+			// Malformed payload — fall through to the roster-derived view.
+		}
+	}
+
+	const lifetime = aggregateMembersLifetime({ kind, affiliationIdentifier }).get(
+		affiliationIdentifier
+	);
+
+	if (isNullish(rolling) && isNullish(lifetime)) {
 		return;
 	}
 
-	try {
-		return decodeDocData<AffiliationStatsDoc>(doc.data);
-	} catch {
-		// Malformed payload — treat as "no stats" for callers.
-	}
+	const nowMs = Number(time() / 1_000_000n);
+
+	return {
+		kind,
+		affiliationIdentifier,
+		totalCalls: lifetime?.totalCalls ?? 0,
+		wins: lifetime?.wins ?? 0,
+		monthAnchor: rolling?.monthAnchor ?? monthAnchorFromMs(nowMs),
+		monthTotalCalls: rolling?.monthTotalCalls ?? 0,
+		monthWins: rolling?.monthWins ?? 0,
+		updatedAtMs: rolling?.updatedAtMs ?? nowMs
+	};
 };
 
 /**
- * Ranked leaderboard scan for a Worlds kind. Returns every stats
- * doc for the requested kind, sorted by accuracy descending.
- * Affiliations below `MIN_CALLS_FOR_RANK` are filtered out — at
- * tiny call counts the accuracy is too noisy to rank.
+ * Ranked leaderboard scan for a Worlds kind. The all-time totals
+ * (`totalCalls` / `wins`) are the current roster's real lifetime
+ * (see {@link aggregateMembersLifetime}), so the WC/all-time board reflects
+ * the members' actual history; the monthly window is carried over from each
+ * affiliation's rolling `affiliation_stats` doc for the season board. An
+ * affiliation surfaces as soon as its roster's combined lifetime crosses
+ * `MIN_CALLS_FOR_RANK` — even before anyone has traded since joining.
  *
- * Sort key: `wins / totalCalls` desc, then `totalCalls` desc
- * (rewards depth), then `affiliationIdentifier` asc (deterministic tie
- * break across re-runs — same rule the Worlds podium fan-out
- * uses, so the leaderboard and the awards agree).
+ * Sort key: `wins / totalCalls` desc, then `totalCalls` desc (rewards depth),
+ * then `affiliationIdentifier` asc (deterministic tie break across re-runs —
+ * same rule the Worlds podium fan-out uses, so the leaderboard and the awards
+ * agree).
  */
 export const listAffiliationStatsFn = ({
 	kind,
@@ -1052,31 +1175,68 @@ export const listAffiliationStatsFn = ({
 	kind: AffiliationKind;
 	limit?: number;
 }): AffiliationStatsDoc[] => {
-	const caller = msgCaller();
+	const caller = msgCaller().toUint8Array();
+
+	// All-time totals: the real lifetime of the current roster, per affiliation.
+	const lifetime = aggregateMembersLifetime({ kind });
+
+	// Monthly/season window: the rolling stats docs, keyed by affiliation.
 	const { items } = listDocsStore({
 		collection: Collection.AFFILIATION_STATS,
-		caller: caller.toUint8Array(),
+		caller,
 		params: {}
 	});
 
-	const stats: AffiliationStatsDoc[] = [];
+	const rolling = new Map<string, AffiliationStatsDoc>();
 
 	for (const [docKey, item] of items) {
-		// Filter out snapshot docs (3-segment keys) — only rolling
-		// (current-month) docs participate in the live leaderboard.
-		// Counting slashes is cheaper than splitting; we just need >1.
+		// Skip snapshot docs (3-segment keys) — only rolling (current-month)
+		// docs carry the live monthly window. Counting slashes is cheaper than
+		// splitting; we just need >1.
 		const isRollingDoc = docKey.indexOf('/') === docKey.lastIndexOf('/');
 
 		if (isRollingDoc) {
 			try {
 				const doc = decodeDocData<AffiliationStatsDoc>(item.data);
 
-				if (doc.kind === kind && doc.totalCalls >= MIN_CALLS_FOR_RANK) {
-					stats.push(doc);
+				if (doc.kind === kind) {
+					rolling.set(doc.affiliationIdentifier, doc);
 				}
 			} catch {
 				// skip malformed
 			}
+		}
+	}
+
+	const nowMs = Number(time() / 1_000_000n);
+	const anchor = monthAnchorFromMs(nowMs);
+
+	// Union of affiliations with current members (lifetime) and those with a
+	// rolling doc (monthly). An affiliation can have a rolling doc but an empty
+	// current roster (everyone left) — it still surfaces with its monthly
+	// window and a zero all-time tally.
+	const identifiers = new Set<string>([...lifetime.keys(), ...rolling.keys()]);
+
+	const stats: AffiliationStatsDoc[] = [];
+
+	for (const affiliationIdentifier of identifiers) {
+		const life = lifetime.get(affiliationIdentifier);
+		const month = rolling.get(affiliationIdentifier);
+		const totalCalls = life?.totalCalls ?? 0;
+
+		// Same depth floor as before, now against the real lifetime tally — at
+		// tiny call counts the accuracy is too noisy to rank.
+		if (totalCalls >= MIN_CALLS_FOR_RANK) {
+			stats.push({
+				kind,
+				affiliationIdentifier,
+				totalCalls,
+				wins: life?.wins ?? 0,
+				monthAnchor: month?.monthAnchor ?? anchor,
+				monthTotalCalls: month?.monthTotalCalls ?? 0,
+				monthWins: month?.monthWins ?? 0,
+				updatedAtMs: month?.updatedAtMs ?? nowMs
+			});
 		}
 	}
 

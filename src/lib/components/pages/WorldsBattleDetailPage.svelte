@@ -55,10 +55,13 @@
 	 *     surface as an eyebrow card at the bottom so users learn what
 	 *     they're playing for.
 	 *
-	 * Roster ordering is driven off `listAffiliationStats`.
-	 * Affiliations without a stats doc (no resolved calls yet) don't
-	 * appear in the ranked list — the affiliation detail page is the
-	 * place to land before your first call resolves.
+	 * Roster ordering is driven off `listAffiliationStats`. The all-time
+	 * (`wc`) totals reflect the current roster's real lifetime — the satellite
+	 * sums each member's lifetime record — so an affiliation appears (and ranks
+	 * by its members' true history) as soon as that combined lifetime crosses
+	 * the ranking floor, even before anyone has traded since joining. The
+	 * `month` scope still ranks by the current-month window the rolling stats
+	 * doc accrues.
 	 */
 	interface Props {
 		kind: AffiliationKind;
