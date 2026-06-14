@@ -17,6 +17,7 @@
 	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
 	import {
 		friendRecommendedLeaguesStore,
+		leagueBattlesStore,
 		leagueMembersStore,
 		leaguesErrorStore,
 		leaguesLoadedStore,
@@ -263,6 +264,15 @@
 	// standing has resolved a comparable prior-week rank for the viewer.
 	const trendFor = (row: LeagueRow): number => leagueTrends.get(row.league.id) ?? 0;
 
+	// Count of incoming, not-yet-accepted challenges where this league is the
+	// challenged side (`sideB`). Surfaces a chip on owned cards so the challenge
+	// is visible without opening the league. Read from the same per-league
+	// battle list the detail page renders, so it stays in sync after a refresh.
+	const incomingChallengesFor = (row: LeagueRow): number =>
+		($leagueBattlesStore.get(row.league.id) ?? []).filter(
+			(b) => b.state === 'proposed' && b.sideB === row.league.id
+		).length;
+
 	const openCreate = () => {
 		createOpen = true;
 	};
@@ -343,6 +353,7 @@
 						<li>
 							<LeagueListCard
 								friendOverlap={friendOverlapFor(row)}
+								incomingChallengeCount={incomingChallengesFor(row)}
 								league={row.league}
 								memberCount={row.memberCount}
 								onclick={() => handleCardClick(row.league.id)}
