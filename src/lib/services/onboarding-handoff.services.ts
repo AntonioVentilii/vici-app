@@ -9,6 +9,7 @@ import {
 	REFERRAL_EXISTING_USER_REASON,
 	REFERRAL_VXP_BONUS_BASE_UNITS
 } from '$lib/constants/referral.constants';
+import { track } from '$lib/services/analytics.services';
 import { joinLeagueByInvite } from '$lib/services/leagues.services';
 import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
 import { claimReferralFriendship, redeemReferralCode } from '$lib/services/referral.services';
@@ -177,10 +178,12 @@ const parsePendingOnboarding = (raw: string): PendingOnboarding | undefined => {
  */
 const resolvePendingReferral = async ({
 	code,
-	locale
+	locale,
+	source
 }: {
 	code: string | undefined;
 	locale: AppLocale;
+	source: string;
 }): Promise<boolean> => {
 	if (!code) {
 		return true;
@@ -203,6 +206,8 @@ const resolvePendingReferral = async ({
 
 	try {
 		await redeemReferralCode({ code });
+
+		track({ name: 'referral_redeemed', source });
 
 		notificationsStore.add({
 			title: t({
@@ -228,6 +233,8 @@ const resolvePendingReferral = async ({
 		if (reason === REFERRAL_EXISTING_USER_REASON) {
 			try {
 				await claimReferralFriendship({ code });
+
+				track({ name: 'referral_redeemed', source });
 
 				notificationsStore.add({
 					title: t({
@@ -427,7 +434,11 @@ export const drainPendingOnboarding = async ({
 		// returning user). It also covers the retry of a re-stashed code from an earlier drain
 		// that failed transiently — if that retry still lands inside the window, the bonus is
 		// honoured. Await it so the slot is settled (cleared, or re-armed for one more retry).
-		const referralResolved = await resolvePendingReferral({ code: pending.referralCode, locale });
+		const referralResolved = await resolvePendingReferral({
+			code: pending.referralCode,
+			locale,
+			source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
+		});
 		settlePendingSlot({ pending, referralResolved });
 
 		return { kind: 'account_exists', nickname: profile.nickname };
@@ -484,7 +495,8 @@ export const drainPendingOnboarding = async ({
 				void joinPendingLeagueIfAny({ code: pending.leagueInvite, locale });
 				const referralResolved = await resolvePendingReferral({
 					code: pending.referralCode,
-					locale
+					locale,
+					source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
 				});
 				settlePendingSlot({ pending, referralResolved });
 
@@ -530,7 +542,11 @@ export const drainPendingOnboarding = async ({
 		// (the bonus is deferred to the referee's first trade), so this stays cheap. The league
 		// join is idempotent and fire-and-forget.
 		void joinPendingLeagueIfAny({ code: pending.leagueInvite, locale });
-		const referralResolved = await resolvePendingReferral({ code: pending.referralCode, locale });
+		const referralResolved = await resolvePendingReferral({
+			code: pending.referralCode,
+			locale,
+			source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
+		});
 		settlePendingSlot({ pending, referralResolved });
 
 		return { kind: 'applied' };

@@ -2,6 +2,8 @@
 	import { nonNullish } from '@dfinity/utils';
 	import { Check, ChevronRight } from '@lucide/svelte/icons';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import { track } from '$lib/services/analytics.services';
+	import { buildLeagueShareUrl } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
@@ -52,6 +54,10 @@
 		 *  are not). Swaps the role chip for a `REQUEST` chip and
 		 *  hides the copy pill. */
 		isRecommendation?: boolean;
+		/** Count of incoming, not-yet-accepted battle challenges where
+		 *  this league is the challenged side. Surfaces a chip so the
+		 *  owner sees a pending challenge without opening the league. */
+		incomingChallengeCount?: number;
 		/** Click handler — opens the league detail page (or join
 		 *  flow for recommendations). */
 		onclick: () => void;
@@ -65,8 +71,24 @@
 		yourRank,
 		trend = 0,
 		isRecommendation = false,
+		incomingChallengeCount = 0,
 		onclick
 	}: Props = $props();
+
+	const challengeLabel = $derived.by(() => {
+		if (incomingChallengeCount <= 0) {
+			return;
+		}
+
+		return t({
+			locale: $localeStore,
+			key:
+				incomingChallengeCount === 1
+					? 'leagues.card.incoming_battle_one'
+					: 'leagues.card.incoming_battle_many',
+			params: { count: incomingChallengeCount }
+		});
+	});
 
 	// First three overlapping friends, resolved against the shared
 	// profile cache so the stacked cluster shows real avatars.
@@ -141,13 +163,22 @@
 		event.stopPropagation();
 
 		try {
-			const url = `${window.location.origin}/league/${league.inviteCode}`;
+			const { url, withReferral } = await buildLeagueShareUrl({
+				inviteCode: league.inviteCode
+			});
 			const shareText = t({
 				locale: $localeStore,
 				key: 'leagues.share_text'
 			});
 			await navigator.clipboard.writeText(`${shareText} ${url}`);
 			copied = true;
+
+			track({
+				name: 'league_invite_sent',
+				source: 'leagues',
+				leagueId: league.id,
+				ok: withReferral
+			});
 
 			setTimeout(() => {
 				copied = false;
@@ -188,6 +219,9 @@
 				</span>
 			{:else if roleLabel && role !== 'member'}
 				<span class="role-chip" data-role={role}>{roleLabel.toUpperCase()}</span>
+			{/if}
+			{#if challengeLabel}
+				<span class="challenge-chip">{challengeLabel.toUpperCase()}</span>
 			{/if}
 		</span>
 
@@ -425,6 +459,22 @@
 	.role-chip.is-recommendation {
 		background: rgba(79, 211, 161, 0.12);
 		color: var(--yes);
+	}
+
+	/* Incoming-challenge chip — same dimensions as the role chip but in the
+	   battle red so a pending challenge reads as something to act on. */
+	.challenge-chip {
+		flex-shrink: 0;
+		display: inline-flex;
+		align-items: center;
+		padding: 2px 7px;
+		border-radius: var(--r-4);
+		font-family: var(--font-mono);
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		background: rgba(232, 90, 90, 0.16);
+		color: var(--no);
 	}
 
 	.meta {
