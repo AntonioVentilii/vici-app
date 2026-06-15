@@ -7,6 +7,6 @@
 
 import { MediaQuery } from 'svelte/reactivity';
 
-const mobile = new MediaQuery('(width < 56rem)');
+const mobile = new MediaQuery('(max-width: 55.999rem)');
 
 export const isMobileViewport = (): boolean => mobile.current;
