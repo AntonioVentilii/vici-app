@@ -37,6 +37,14 @@
 	const initial = $derived([...label][0] ?? '');
 
 	let showTooltip = $state(false);
+
+	// Drop a left-open tooltip when the chip stops being collapsed (e.g. the
+	// viewport widens past the breakpoint), so it can't reappear pre-opened.
+	$effect(() => {
+		if (!collapsed) {
+			showTooltip = false;
+		}
+	});
 </script>
 
 {#if role === 'owner' || role === 'admin'}
