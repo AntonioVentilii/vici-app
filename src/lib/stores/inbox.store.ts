@@ -23,6 +23,7 @@ import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox'
 import type { Market } from '$lib/types/market';
 import type { ResolvedPosition } from '$lib/types/position';
 import type { Relation } from '$lib/types/relation';
+import type { ActivityReaction } from '$lib/types/social';
 import {
 	decimalFixedValueToNumber,
 	formatRelativeAgoFromNs,
@@ -241,6 +242,12 @@ const settledInboxStore: Readable<InboxNotification[]> = derived(
  * card disappears automatically when its reaction doc is deleted (an unlike), with no history store
  * to retain it. Self-likes are excluded. Mirrors {@link friendRequestInboxStore}; the per-id read
  * overlay in {@link combinedInboxStore} drives the read/unread state.
+ *
+ * Aggregated: all likes on one call collapse into a SINGLE card ("{user} and N more liked your
+ * call"), keyed by the activity (not per-liker), so a burst of likes is one inbox entry and one
+ * toast — not N. The card carries the most-recent liker's name + timestamp; marking it read marks
+ * the whole burst. The stable per-activity id means a later like on an already-read call updates the
+ * count in place without re-pinging.
  */
 const likesReceivedInboxStore: Readable<InboxNotification[]> = derived(
 	[receivedReactionsStore, profilesStore, userStore, localeStore],
@@ -251,42 +258,54 @@ const likesReceivedInboxStore: Readable<InboxNotification[]> = derived(
 			return [];
 		}
 
-		return $received
-			.filter(
-				(reaction) =>
-					// The read is author-scoped already; guard against a stale page from a previous
-					// principal, and never notify the viewer about liking their own call.
-					reaction.activityKey.startsWith(`${viewer}#`) && reaction.liker !== viewer
-			)
-			.map((reaction): InboxNotification => {
-				const profile = $profiles.get(reaction.liker);
-				const displayName = profile?.nickname?.trim()
-					? `@${profile.nickname.trim()}`
-					: shortenWithMiddleEllipsis({ text: reaction.liker, splitLength: 6 });
+		// Group likes by the call they're on. The read is author-scoped already; guard against a stale
+		// page from a previous principal, and never notify the viewer about liking their own call.
+		const byActivity = new Map<string, ActivityReaction[]>();
 
-				return {
-					// The reaction doc key is `${activityKey}#${liker}` — stable, so the card dedupes
-					// across refreshes and the read overlay sticks.
-					id: `like-received-${reaction.activityKey}#${reaction.liker}`,
-					kind: 'social',
-					title: t({
-						locale: $locale,
-						key: 'inbox.like_received.title',
-						params: { user: displayName }
-					}),
-					// The denormalized call title (spec A wrote it onto the reaction doc).
-					body: reaction.activityTitle,
-					when: formatRelativeAgoFromNs({
-						timestampNs: BigInt(reaction.timestamp) * MILLISECOND_IN_NANOSECONDS,
-						locale: $locale
-					}),
-					unread: true,
-					// Deep-link to the liked call's market via the kind router; falls back to Arena.
-					...(nonNullish(reaction.marketId) && reaction.marketId !== ''
-						? { mid: reaction.marketId }
-						: {})
-				};
-			});
+		for (const reaction of $received) {
+			if (reaction.activityKey.startsWith(`${viewer}#`) && reaction.liker !== viewer) {
+				const likes = byActivity.get(reaction.activityKey) ?? [];
+				likes.push(reaction);
+				byActivity.set(reaction.activityKey, likes);
+			}
+		}
+
+		return Array.from(byActivity.values(), (likes): InboxNotification => {
+			// Most-recent like fronts the card (name + timestamp + denormalized title / market).
+			const [latest, ...rest] = [...likes].sort((a, b) => b.timestamp - a.timestamp);
+			const profile = $profiles.get(latest.liker);
+			const displayName = profile?.nickname?.trim()
+				? `@${profile.nickname.trim()}`
+				: shortenWithMiddleEllipsis({ text: latest.liker, splitLength: 6 });
+
+			return {
+				// Keyed by the activity (not the liker) so the burst is one card and the read overlay
+				// sticks across refreshes as the count grows.
+				id: `like-received-${latest.activityKey}`,
+				kind: 'social',
+				title:
+					rest.length === 0
+						? t({
+								locale: $locale,
+								key: 'inbox.like_received.title',
+								params: { user: displayName }
+							})
+						: t({
+								locale: $locale,
+								key: 'inbox.like_received.title_multi',
+								params: { user: displayName, count: rest.length }
+							}),
+				// The denormalized call title (spec A wrote it onto the reaction doc).
+				body: latest.activityTitle,
+				when: formatRelativeAgoFromNs({
+					timestampNs: BigInt(latest.timestamp) * MILLISECOND_IN_NANOSECONDS,
+					locale: $locale
+				}),
+				unread: true,
+				// Deep-link to the liked call's market via the kind router; falls back to Arena.
+				...(nonNullish(latest.marketId) && latest.marketId !== '' ? { mid: latest.marketId } : {})
+			};
+		});
 	}
 );
 
