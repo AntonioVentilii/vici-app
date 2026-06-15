@@ -244,11 +244,14 @@ export const recordFlowSwipeFn = ({ dayKey }: { dayKey: string }): RecordFlowSwi
 		caller: callerBytes
 	});
 
-	// No profile yet (anonymous or pre-onboarding): nothing to persist, but
-	// report a started day so the FE still has an authoritative-shaped count
-	// to gate on for this session.
+	// A swipe only ever comes from a signed-in caller, who always has a
+	// profile (created at onboarding); a missing doc here means a broken or
+	// half-created account. Fail fast rather than fabricate an
+	// authoritative-shaped count — the Flow commit's catch clamps the
+	// optimistic tally to the last server-confirmed value, so a rejection
+	// degrades gracefully instead of silently re-opening the cap.
 	if (isNullish(profileDoc)) {
-		return { dailyGoalDone: 1, dailyGoalDate: dayKey, capReached: 1 >= DAILY_HARD_CAP };
+		throw new Error('Cannot record a Flow swipe: the caller has no profile.');
 	}
 
 	const profile = decodeDocData<UserProfile>(profileDoc.data);
