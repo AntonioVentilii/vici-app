@@ -2387,8 +2387,8 @@ a.title-action::after {
 		0 0 24px rgba(14, 13, 11, 0.7),
 		0 0 6px rgba(14, 13, 11, 0.5);
 }
-:global([data-theme='light']) .flow-coach-center,
-:global([data-theme='peach']) .flow-coach-center {
+[data-theme='light'] .flow-coach-center,
+[data-theme='peach'] .flow-coach-center {
 	text-shadow:
 		0 2px 12px color-mix(in srgb, var(--text-base) 95%, transparent),
 		0 0 24px color-mix(in srgb, var(--text-base) 90%, transparent),
@@ -4939,8 +4939,8 @@ a.title-action::after {
 .ob2-tos .serif-italic {
 	color: var(--fg-dim);
 }
-:global([data-theme='light']) .share-chan,
-:global([data-theme='peach']) .share-chan {
+[data-theme='light'] .share-chan,
+[data-theme='peach'] .share-chan {
 	background: rgba(14, 13, 11, 0.04);
 }
 .share-chan:hover {
