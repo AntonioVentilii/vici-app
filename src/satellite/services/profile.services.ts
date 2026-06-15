@@ -638,6 +638,13 @@ export const assertDailyGoalMonotonic = ({
 	const proposedProfile = decodeDocData<UserProfile>(proposed.data);
 	const proposedDone = proposedProfile.dailyGoalDone ?? 0;
 
+	// Reject non-integer / negative / non-finite counts outright: the cap
+	// invariant assumes a whole-number tally in [0, cap], and a NaN or
+	// fractional value would slip past the bounds checks below.
+	if (!Number.isInteger(proposedDone) || proposedDone < 0) {
+		throw new Error('dailyGoalDone must be a non-negative integer.');
+	}
+
 	if (proposedDone > DAILY_HARD_CAP) {
 		throw new Error(`dailyGoalDone cannot exceed the daily hard cap of ${DAILY_HARD_CAP}.`);
 	}

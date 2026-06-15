@@ -271,9 +271,11 @@ export const persistDailyStreak = ({
  *
  * The returned `{ dailyGoalDone, dailyGoalDate, capReached }` is the source
  * of truth for the cross-session daily hard cap, so a cleared or signed-out
- * client can no longer reset it. Callers await this and gate on the result;
- * on a transport failure they fall back to the optimistic local count but
- * must never let it rise above the last known server value.
+ * client can no longer reset it. The Flow commit fires this without blocking
+ * the swipe animation and reconciles the returned count into local state +
+ * the mirror in `.then(...)`; on a transport failure it keeps the optimistic
+ * local count but clamps it so the session never rises above the last value
+ * the server confirmed for the day.
  */
 export const recordFlowSwipe = ({
 	dayKey
