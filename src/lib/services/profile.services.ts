@@ -3,7 +3,11 @@ import { functions } from '$declarations/satellite/satellite.api';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { COMEBACK_COLD_STREAK_LOSSES } from '$lib/constants/menagerie.constants';
-import { MIN_NICKNAME_LENGTH, sanitizeNickname } from '$lib/constants/profile.constants';
+import {
+	MIN_NICKNAME_LENGTH,
+	nicknameUniqueKey,
+	sanitizeNickname
+} from '$lib/constants/profile.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
@@ -352,6 +356,109 @@ export const upsertProfile = async (
 			data
 		}
 	});
+};
+
+/**
+ * Persist the onboarding picks (handle + backed team/side + completion flag) onto the freshest
+ * profile doc, serialized through {@link patchProfile}'s queue.
+ *
+ * This MUST go through the patch queue rather than a full-snapshot {@link upsertProfile}: on the
+ * login that finishes onboarding, {@link calculateAndSyncStats} writes the same doc concurrently
+ * (it's awaited right after `userStore.set` in `Authn.svelte`, so it overlaps the post-signin
+ * drain). A full-snapshot write built from the pre-sync profile would lose the optimistic-version
+ * race and throw — silently dropping the user's picks (the "could not save your onboarding
+ * choices" report: handle present from the bootstrap, country/team blank). A field-level patch on
+ * the freshest doc both avoids the conflict and leaves the concurrently-written stats intact.
+ *
+ * `setHandle` is gated by the caller's availability probe — pass `true` only when the picked handle
+ * is free. The handle-change cooldown stamp is decided here against the FRESH stored nickname so a
+ * concurrent rename can't desync it.
+ *
+ * Resolves to `{ profile, handleApplied }`. `handleApplied` is `false` when the handle was never
+ * requested (`setHandle: false`) OR when it was claimed in the TOCTOU window between the caller's
+ * probe and this write (the satellite rejects the whole doc with "already taken"): in that case
+ * the handle is dropped and the rest of the picks are retried so team/side/completion — which are
+ * independent of the handle — still persist. The caller maps `setHandle && !handleApplied` to a
+ * collision toast.
+ */
+export const applyOnboardingPicks = async ({
+	principal,
+	handle,
+	setHandle,
+	interests,
+	email,
+	favoriteParticipantId,
+	favoriteSide
+}: {
+	principal: PrincipalText;
+	handle: string | null;
+	setHandle: boolean;
+	interests?: string[];
+	email?: string;
+	favoriteParticipantId: string;
+	favoriteSide: string;
+}): Promise<{ profile: UserProfile; handleApplied: boolean }> => {
+	const buildPatch =
+		(includeHandle: boolean) =>
+		(current: UserProfile): Partial<UserProfile> => {
+			const patch: Partial<UserProfile> = {
+				preferences: {
+					...current.preferences,
+					favoriteParticipantId,
+					favoriteSide,
+					onboardingCompleted: true
+				}
+			};
+
+			if (nonNullish(interests)) {
+				patch.interests = interests;
+			}
+
+			if (nonNullish(email) && email.length > 0) {
+				patch.email = email;
+			}
+
+			if (includeHandle && nonNullish(handle)) {
+				patch.nickname = handle;
+
+				// Stamp the handle-change time only on a real change so the
+				// set-profile assertion accepts the write — the bootstrapped
+				// nickname almost always differs from the picked handle.
+				if (nicknameUniqueKey(handle) !== nicknameUniqueKey(current.nickname ?? '')) {
+					patch.handleLastChangeMs = Date.now();
+				}
+			}
+
+			return patch;
+		};
+
+	if (!setHandle || isNullish(handle)) {
+		return {
+			profile: await patchProfile({ principal, patch: buildPatch(false) }),
+			handleApplied: false
+		};
+	}
+
+	try {
+		return {
+			profile: await patchProfile({ principal, patch: buildPatch(true) }),
+			handleApplied: true
+		};
+	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : '';
+
+		// TOCTOU: the handle was free at the caller's probe but got claimed before this write
+		// landed, so the satellite rejected the whole doc. Retry WITHOUT the handle so the rest of
+		// the picks still persist; the caller surfaces the collision and the user renames later.
+		if (message.includes('already taken')) {
+			return {
+				profile: await patchProfile({ principal, patch: buildPatch(false) }),
+				handleApplied: false
+			};
+		}
+
+		throw err;
+	}
 };
 
 /**
