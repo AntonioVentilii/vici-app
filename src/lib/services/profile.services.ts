@@ -373,8 +373,15 @@ export const upsertProfile = async (
  * `setHandle` is gated by the caller's availability probe — pass `true` only when the picked handle
  * is free. The handle-change cooldown stamp is decided here against the FRESH stored nickname so a
  * concurrent rename can't desync it.
+ *
+ * Resolves to `{ profile, handleApplied }`. `handleApplied` is `false` when the handle was never
+ * requested (`setHandle: false`) OR when it was claimed in the TOCTOU window between the caller's
+ * probe and this write (the satellite rejects the whole doc with "already taken"): in that case
+ * the handle is dropped and the rest of the picks are retried so team/side/completion — which are
+ * independent of the handle — still persist. The caller maps `setHandle && !handleApplied` to a
+ * collision toast.
  */
-export const applyOnboardingPicks = ({
+export const applyOnboardingPicks = async ({
 	principal,
 	handle,
 	setHandle,
@@ -390,10 +397,10 @@ export const applyOnboardingPicks = ({
 	email?: string;
 	favoriteParticipantId: string;
 	favoriteSide: string;
-}): Promise<UserProfile> =>
-	patchProfile({
-		principal,
-		patch: (current) => {
+}): Promise<{ profile: UserProfile; handleApplied: boolean }> => {
+	const buildPatch =
+		(includeHandle: boolean) =>
+		(current: UserProfile): Partial<UserProfile> => {
 			const patch: Partial<UserProfile> = {
 				preferences: {
 					...current.preferences,
@@ -411,7 +418,7 @@ export const applyOnboardingPicks = ({
 				patch.email = email;
 			}
 
-			if (setHandle && nonNullish(handle)) {
+			if (includeHandle && nonNullish(handle)) {
 				patch.nickname = handle;
 
 				// Stamp the handle-change time only on a real change so the
@@ -423,8 +430,36 @@ export const applyOnboardingPicks = ({
 			}
 
 			return patch;
+		};
+
+	if (!setHandle || isNullish(handle)) {
+		return {
+			profile: await patchProfile({ principal, patch: buildPatch(false) }),
+			handleApplied: false
+		};
+	}
+
+	try {
+		return {
+			profile: await patchProfile({ principal, patch: buildPatch(true) }),
+			handleApplied: true
+		};
+	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : '';
+
+		// TOCTOU: the handle was free at the caller's probe but got claimed before this write
+		// landed, so the satellite rejected the whole doc. Retry WITHOUT the handle so the rest of
+		// the picks still persist; the caller surfaces the collision and the user renames later.
+		if (message.includes('already taken')) {
+			return {
+				profile: await patchProfile({ principal, patch: buildPatch(false) }),
+				handleApplied: false
+			};
 		}
-	});
+
+		throw err;
+	}
+};
 
 /**
  * Case-insensitive search over nickname, owner, and document key via secure satellite query.

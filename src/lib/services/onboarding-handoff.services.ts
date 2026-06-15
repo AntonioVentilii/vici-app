@@ -474,8 +474,10 @@ export const drainPendingOnboarding = async ({
 
 		// Field-level patch (NOT a full-snapshot write): `calculateAndSyncStats` writes this same
 		// doc concurrently on the finishing login, so a stale full snapshot would lose the
-		// optimistic-version race and throw — silently dropping these picks.
-		const nextProfile = await applyOnboardingPicks({
+		// optimistic-version race and throw — silently dropping these picks. A handle claimed in
+		// the TOCTOU window after the probe is dropped here (the rest still persists), reported via
+		// `handleApplied`.
+		const { profile: nextProfile, handleApplied } = await applyOnboardingPicks({
 			principal: profile.owner,
 			handle: pending.handle,
 			setHandle,
@@ -484,6 +486,10 @@ export const drainPendingOnboarding = async ({
 			favoriteParticipantId: participantPreference,
 			favoriteSide: sidePreference
 		});
+
+		if (setHandle && !handleApplied) {
+			handleCollision = true;
+		}
 
 		userStore.update((curr) => ({ ...curr, profile: nextProfile }));
 
@@ -506,17 +512,13 @@ export const drainPendingOnboarding = async ({
 			? { kind: 'collision', handle: pending.handle ?? '' }
 			: { kind: 'applied' };
 	} catch (err: unknown) {
-		const message = err instanceof Error ? err.message : '';
-
-		// Surface the real failure — the generic toast otherwise
-		// swallows it, which is what made this class of bug invisible.
+		// A handle collision is handled inside `applyOnboardingPicks` (it retries without the
+		// handle and reports it via `handleApplied`), so anything reaching here is a genuine
+		// failure to persist. Surface it — the generic toast otherwise swallows it, which is what
+		// made this class of bug invisible.
 		console.error('Onboarding handoff (pre-auth drain) failed:', err);
 
 		localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
-
-		if (message.includes('already taken')) {
-			return { kind: 'collision', handle: pending.handle ?? '' };
-		}
 
 		return { kind: 'failed' };
 	}

@@ -188,6 +188,7 @@
 			// skips the nickname update so team/side/completion (the picks that matter) still
 			// persist; only the collision case is worth a toast. The user can rename later.
 			let setHandle = false;
+			let handleCollision = false;
 
 			if (nonNullish(result.handle)) {
 				const probe = await checkNicknameAvailability({
@@ -198,31 +199,38 @@
 				if (probe.available) {
 					setHandle = true;
 				} else if (probe.reason === 'taken') {
-					notificationsStore.add({
-						title: t({
-							locale: $localeStore,
-							key: 'onboarding.handoff.collision_title'
-						}),
-						message: t({
-							locale: $localeStore,
-							key: 'onboarding.handoff.collision',
-							params: { handle: result.handle }
-						}),
-						type: 'error'
-					});
+					handleCollision = true;
 				}
 			}
 
 			// Field-level patch (NOT a full-snapshot write): `calculateAndSyncStats` writes this
 			// same doc concurrently on this finishing login, so a stale full snapshot would lose
-			// the optimistic-version race and throw — silently dropping these picks.
-			const nextProfile = await applyOnboardingPicks({
+			// the optimistic-version race and throw — silently dropping these picks. A handle
+			// claimed in the TOCTOU window after the probe is dropped (the rest still persists),
+			// reported via `handleApplied`.
+			const { profile: nextProfile, handleApplied } = await applyOnboardingPicks({
 				principal: currentProfile.owner,
 				handle: result.handle,
 				setHandle,
 				favoriteParticipantId: participantPreference,
 				favoriteSide: sidePreference
 			});
+
+			if (setHandle && !handleApplied) {
+				handleCollision = true;
+			}
+
+			if (handleCollision && nonNullish(result.handle)) {
+				notificationsStore.add({
+					title: t({ locale: $localeStore, key: 'onboarding.handoff.collision_title' }),
+					message: t({
+						locale: $localeStore,
+						key: 'onboarding.handoff.collision',
+						params: { handle: result.handle }
+					}),
+					type: 'error'
+				});
+			}
 
 			// Bake the new profile into the store so the (app) layout's
 			// redirect effect sees `onboardingCompleted: true` immediately
@@ -231,32 +239,16 @@
 
 			void goto(resolve(AppPath.Flow), { replaceState: true });
 		} catch (err: unknown) {
-			const message = err instanceof Error ? err.message : '';
-
-			// Surface the real failure — the generic toast below otherwise
-			// swallows it, which is what made this class of bug invisible.
+			// A handle collision is handled inside `applyOnboardingPicks` (it retries without the
+			// handle), so anything reaching here is a genuine failure to persist. Surface it — the
+			// generic toast otherwise swallows it, which is what made this class of bug invisible.
 			console.error('Onboarding handoff (authenticated) failed:', err);
 
-			if (message.includes('already taken')) {
-				notificationsStore.add({
-					title: t({
-						locale: $localeStore,
-						key: 'onboarding.handoff.collision_title'
-					}),
-					message: t({
-						locale: $localeStore,
-						key: 'onboarding.handoff.collision',
-						params: { handle: result.handle ?? '' }
-					}),
-					type: 'error'
-				});
-			} else {
-				notificationsStore.add({
-					title: t({ locale: $localeStore, key: 'onboarding.handoff.failed_title' }),
-					message: t({ locale: $localeStore, key: 'onboarding.handoff.failed' }),
-					type: 'error'
-				});
-			}
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'onboarding.handoff.failed_title' }),
+				message: t({ locale: $localeStore, key: 'onboarding.handoff.failed' }),
+				type: 'error'
+			});
 		} finally {
 			applyingAuthenticatedHandoff = false;
 		}
