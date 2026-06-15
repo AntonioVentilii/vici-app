@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.2.0](https://github.com/AntonioVentilii/vici-app/compare/v0.1.17...v0.2.0) (2026-06-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **markets:** satellite `.did` adds `app_list_market_translations_for_locales` (additive query).
+
+### Features
+
+* **analytics:** track inbox notification opens ([#896](https://github.com/AntonioVentilii/vici-app/issues/896)) ([bcaacfe](https://github.com/AntonioVentilii/vici-app/commit/bcaacfe39b38c9141333df0747c39b25c9965861))
+* **arena:** aggregate like-received notifications per call ([#895](https://github.com/AntonioVentilii/vici-app/issues/895)) ([238285c](https://github.com/AntonioVentilii/vici-app/commit/238285c0cc5aea76161f2048ab7b01ff1e94cce9))
+* **arena:** like-count rollup + admin recompute ([#897](https://github.com/AntonioVentilii/vici-app/issues/897)) ([d05343c](https://github.com/AntonioVentilii/vici-app/commit/d05343ce10dd06617f543aeb937cc5b06689af37))
+* **leagues:** collapse owner/admin role chips to initials on mobile ([#898](https://github.com/AntonioVentilii/vici-app/issues/898)) ([abaf3d5](https://github.com/AntonioVentilii/vici-app/commit/abaf3d5263fd2b3018a6587d03011f4e489f9207))
+* **leagues:** tap tooltip for the collapsed mobile role chip ([#901](https://github.com/AntonioVentilii/vici-app/issues/901)) ([04f390d](https://github.com/AntonioVentilii/vici-app/commit/04f390d3d9d12080ac10b53b9d9d2f1403cde6c8))
+* **markets:** translate market metadata everywhere with a global language preference and per-item toggle ([#905](https://github.com/AntonioVentilii/vici-app/issues/905)) ([496b370](https://github.com/AntonioVentilii/vici-app/commit/496b370ecb1ce1762641b32ba9a40183b5db3bb7))
+
+
+### Bug Fixes
+
+* **arena:** surface incoming league challenges in the Battles inbox ([#903](https://github.com/AntonioVentilii/vici-app/issues/903)) ([e25cae9](https://github.com/AntonioVentilii/vici-app/commit/e25cae95047d4596beac049e8f3d657ebbe2d581))
+* **flow:** enforce the daily swipe cap server-side ([#904](https://github.com/AntonioVentilii/vici-app/issues/904)) ([419b14c](https://github.com/AntonioVentilii/vici-app/commit/419b14c6db4544bae4c4cd12d695344a518e5d6a))
+* **flow:** ignore the entry-dismiss tap so the first card doesn't flip ([#899](https://github.com/AntonioVentilii/vici-app/issues/899)) ([ef1a605](https://github.com/AntonioVentilii/vici-app/commit/ef1a605e826481dc00f5011ec1f95fe097e7a7b2))
+
+
+### Code Refactoring
+
+* **ui:** extract NestedButton for tap targets nested in clickable rows ([#902](https://github.com/AntonioVentilii/vici-app/issues/902)) ([e2fd0d1](https://github.com/AntonioVentilii/vici-app/commit/e2fd0d11af3e2f68512ceadd595f384dffa49c94))
+
 ## [0.1.17](https://github.com/AntonioVentilii/vici-app/compare/v0.1.16...v0.1.17) (2026-06-15)
 
 
