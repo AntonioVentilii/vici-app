@@ -1442,7 +1442,7 @@
 				<div class="league-detail-member-sheet-id">
 					<span class="league-detail-member-sheet-name-row">
 						<span class="league-detail-member-sheet-name">{memberHandle(openMember.member)}</span>
-						<LeagueRoleBadge role={openMember.role} />
+						<LeagueRoleBadge expanded role={openMember.role} />
 						{#if openMember.member === selfPrincipal}
 							<YouBadge size="xs" />
 						{/if}
