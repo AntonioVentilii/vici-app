@@ -30,6 +30,10 @@ const rawBySeriesId = new Map<string, MarketTranslation[]>();
 // fetches genuinely-new `(seriesId, locale)` pairs.
 const fetchedLocalesBySeriesId = new Map<string, Set<string>>();
 
+// Must stay ≤ the satellite query's `MAX_BULK_SERIES_IDS` cap. `hydrate`
+// chunks the visible set to this bound so a larger page isn't truncated.
+const BULK_SERIES_ID_LIMIT = 200;
+
 const candidateLocales = (locale: AppLocale): AppLocale[] => [...localeFallbackChain(locale)];
 
 const reResolve = (locale: AppLocale): void => {
@@ -77,7 +81,21 @@ export const hydrate = async (seriesIds: string[]): Promise<void> => {
 	}
 
 	try {
-		const docs = await listMarketTranslationsForLocales({ seriesIds: pending, locales });
+		// The satellite query caps `seriesIds` per call (`MAX_BULK_SERIES_IDS`);
+		// chunk to that bound so a visible set larger than the cap isn't silently
+		// truncated — which would seed the dropped ids with empty lists and pin
+		// them as "fetched" with no translation forever.
+		const batches: string[][] = [];
+
+		for (let i = 0; i < pending.length; i += BULK_SERIES_ID_LIMIT) {
+			batches.push(pending.slice(i, i + BULK_SERIES_ID_LIMIT));
+		}
+
+		const docs = (
+			await Promise.all(
+				batches.map((seriesIds) => listMarketTranslationsForLocales({ seriesIds, locales }))
+			)
+		).flat();
 
 		for (const doc of docs) {
 			const existing = rawBySeriesId.get(doc.seriesId) ?? [];
