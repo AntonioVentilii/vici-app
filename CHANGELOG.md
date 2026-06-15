@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.2](https://github.com/AntonioVentilii/vici-app/compare/v0.2.1...v0.2.2) (2026-06-15)
+
+
+### Features
+
+* **arena:** resolve battles from real league accuracy, automatically ([#912](https://github.com/AntonioVentilii/vici-app/issues/912)) ([024aed9](https://github.com/AntonioVentilii/vici-app/commit/024aed998b07a70d778af6244d821ca61a3e641b))
+
+
+### Bug Fixes
+
+* **markets:** point-lookup market translations instead of scanning the collection ([#911](https://github.com/AntonioVentilii/vici-app/issues/911)) ([0b5ffd3](https://github.com/AntonioVentilii/vici-app/commit/0b5ffd311897773fc80528f625340f3ccf67e7f2))
+
 ## [0.2.1](https://github.com/AntonioVentilii/vici-app/compare/v0.2.0...v0.2.1) (2026-06-15)
 
 
