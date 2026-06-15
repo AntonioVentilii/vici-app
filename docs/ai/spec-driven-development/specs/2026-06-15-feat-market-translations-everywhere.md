@@ -6,7 +6,7 @@ explicitly deferred by `2026-06-14-feat-market-translation-display.md`
 (#883), which shipped translated metadata + a toggle on the market
 **detail page only**.
 
-Status: Draft
+Status: In progress (#905)
 
 ## Goal
 
