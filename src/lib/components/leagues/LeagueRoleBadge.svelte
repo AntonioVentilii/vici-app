@@ -2,6 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import { clickOutside } from '$lib/actions/click-outside';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import NestedButton from '$lib/components/ui/NestedButton.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { LeagueMemberRole } from '$lib/types/league-member';
 	import { t } from '$lib/utils/i18n.utils';
@@ -49,32 +50,17 @@
 
 {#if role === 'owner' || role === 'admin'}
 	{#if collapsed}
-		<!-- A nested <button> inside the leaderboard row's <button> would be
-		     invalid HTML, so the tap target is a `<span role="button">` (mirrors
-		     the copy pill in LeagueListCard). -->
 		<span class="relative inline-flex" use:clickOutside={() => (showTooltip = false)}>
-			<span
+			<NestedButton
 				class="focus-visible:ring-primary inline-flex rounded-full focus-visible:ring-2 focus-visible:outline-hidden"
-				aria-expanded={showTooltip}
-				aria-label={label}
-				onclick={(event) => {
-					event.stopPropagation();
-					showTooltip = !showTooltip;
-				}}
-				onkeydown={(event) => {
-					if (event.key === 'Enter' || event.key === ' ') {
-						event.preventDefault();
-						event.stopPropagation();
-						showTooltip = !showTooltip;
-					}
-				}}
-				role="button"
-				tabindex="0"
+				expanded={showTooltip}
+				{label}
+				onclick={() => (showTooltip = !showTooltip)}
 			>
 				<Badge size="xs" variant={role === 'owner' ? 'warning' : 'default'}>
 					{initial}
 				</Badge>
-			</span>
+			</NestedButton>
 
 			{#if showTooltip}
 				<span

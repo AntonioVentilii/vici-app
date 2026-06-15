@@ -3,6 +3,7 @@
 	import { Check, ChevronRight } from '@lucide/svelte/icons';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import NestedButton from '$lib/components/ui/NestedButton.svelte';
 	import { track } from '$lib/services/analytics.services';
 	import { buildLeagueShareUrl } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -160,9 +161,7 @@
 		});
 	});
 
-	const handleCopy = async (event: MouseEvent | KeyboardEvent) => {
-		event.stopPropagation();
-
+	const handleCopy = async () => {
 		try {
 			const { url, withReferral } = await buildLeagueShareUrl({
 				inviteCode: league.inviteCode
@@ -281,25 +280,13 @@
 			<ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} />
 		{/if}
 		{#if !isRecommendation}
-			<!-- Nested interactive control inside a button is technically
-			     invalid HTML; we use a `<span role="button">` so the
-			     copy pill stays accessible without nesting buttons. -->
-			<span
-				class="copy-pill"
-				class:is-copied={copied}
-				aria-label={t({
+			<NestedButton
+				class="copy-pill {copied ? 'is-copied' : ''}"
+				label={t({
 					locale: $localeStore,
 					key: copied ? 'leagues.card.copy_done' : 'leagues.card.copy'
 				})}
-				onclick={handleCopy}
-				onkeydown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault();
-						void handleCopy(e);
-					}
-				}}
-				role="button"
-				tabindex="0"
+				onclick={() => void handleCopy()}
 			>
 				{#if copied}
 					<Check aria-hidden="true" size={11} strokeWidth={2.4} />
@@ -307,7 +294,7 @@
 				{:else}
 					{t({ locale: $localeStore, key: 'leagues.card.copy' })}
 				{/if}
-			</span>
+			</NestedButton>
 		{/if}
 	</span>
 </button>
@@ -550,7 +537,10 @@
 	   per-card colour for the logo tile gradient, and a bare
 	   `var(--accent)` here would tint the copy pill with that per-
 	   league colour instead of the global laurel. */
-	.copy-pill {
+	/* The pill renders inside the shared `NestedButton`, so it's a child-
+	   component element; scope the styles under `.trailing` and reach it with
+	   `:global(...)` (effectively local — they only match inside this card). */
+	.trailing :global(.copy-pill) {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.2rem;
@@ -568,11 +558,11 @@
 		transition: background-color 160ms var(--ease-vici);
 	}
 
-	.copy-pill:hover {
+	.trailing :global(.copy-pill:hover) {
 		background: rgba(226, 184, 66, 0.14);
 	}
 
-	.copy-pill.is-copied {
+	.trailing :global(.copy-pill.is-copied) {
 		color: var(--laurel);
 	}
 </style>
