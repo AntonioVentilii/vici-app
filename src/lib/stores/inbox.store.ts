@@ -272,7 +272,12 @@ const likesReceivedInboxStore: Readable<InboxNotification[]> = derived(
 
 		return Array.from(byActivity.values(), (likes): InboxNotification => {
 			// Most-recent like fronts the card (name + timestamp + denormalized title / market).
-			const [latest, ...rest] = [...likes].sort((a, b) => b.timestamp - a.timestamp);
+			// Single pass for the latest reaction — no sort allocation; the count is the rest.
+			// `likes` is non-empty (a group exists only because a reaction was pushed into it).
+			const latest = likes.reduce((max, reaction) =>
+				reaction.timestamp > max.timestamp ? reaction : max
+			);
+			const restCount = likes.length - 1;
 			const profile = $profiles.get(latest.liker);
 			const displayName = profile?.nickname?.trim()
 				? `@${profile.nickname.trim()}`
@@ -284,7 +289,7 @@ const likesReceivedInboxStore: Readable<InboxNotification[]> = derived(
 				id: `like-received-${latest.activityKey}`,
 				kind: 'social',
 				title:
-					rest.length === 0
+					restCount === 0
 						? t({
 								locale: $locale,
 								key: 'inbox.like_received.title',
@@ -293,7 +298,7 @@ const likesReceivedInboxStore: Readable<InboxNotification[]> = derived(
 						: t({
 								locale: $locale,
 								key: 'inbox.like_received.title_multi',
-								params: { user: displayName, count: rest.length }
+								params: { user: displayName, count: restCount }
 							}),
 				// The denormalized call title (spec A wrote it onto the reaction doc).
 				body: latest.activityTitle,
