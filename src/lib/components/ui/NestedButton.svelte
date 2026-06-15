@@ -46,7 +46,21 @@
 	aria-label={label}
 	onclick={activate}
 	onkeydown={(event) => {
-		if (event.key === 'Enter' || event.key === ' ') {
+		if (event.key === 'Enter') {
+			// Enter activates on keydown; ignore auto-repeat so a held key fires once.
+			if (event.repeat) {
+				return;
+			}
+			event.preventDefault();
+			activate(event);
+		} else if (event.key === ' ') {
+			// Match native buttons: Space activates on keyup. preventDefault here
+			// only to stop the page scrolling while the key is held.
+			event.preventDefault();
+		}
+	}}
+	onkeyup={(event) => {
+		if (event.key === ' ') {
 			event.preventDefault();
 			activate(event);
 		}
