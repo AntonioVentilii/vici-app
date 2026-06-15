@@ -16,6 +16,7 @@
 	import { clearMyMenagerieSignals } from '$lib/stores/menagerie.store';
 	import { positionsStore } from '$lib/stores/positions.store';
 	import { setCachedProfile } from '$lib/stores/profiles.store';
+	import { clearMyReferrals } from '$lib/stores/referrals.store';
 	import { tradeHistoryStore } from '$lib/stores/trade-history.store';
 	import { userStore } from '$lib/stores/user.store';
 
@@ -66,6 +67,7 @@
 		clearAffiliations();
 		clearLeagues();
 		clearMyMenagerieSignals();
+		clearMyReferrals();
 		followingStore.set(undefined);
 		positionsStore.set(undefined);
 		tradeHistoryStore.set(undefined);
