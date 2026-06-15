@@ -153,6 +153,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }
@@ -922,6 +923,7 @@ export interface AppTrackEventsArgs {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }

@@ -1013,6 +1013,7 @@ export const zhHansMessages = {
 	'inbox.friend_request.body': '{user} 想要与你建立联系。',
 	'inbox.friend_request.title': '好友请求',
 	'inbox.like_received.title': '{user} 赞了你的预测',
+	'inbox.like_received.title_multi': '{user} 和另外 {count} 人赞了你的预测',
 	'inbox.pending': '待处理',
 	'inbox.resolve.body.lost': '你在「{market}」上失去了 {amount}。',
 	'inbox.resolve.body.neutral': '你对「{market}」的预测已结算。',

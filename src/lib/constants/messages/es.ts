@@ -1070,6 +1070,7 @@ export const esMessages = {
 	'inbox.friend_request.body': '{user} quiere conectar contigo.',
 	'inbox.friend_request.title': 'Solicitud de amistad',
 	'inbox.like_received.title': 'A {user} le gustó tu predicción',
+	'inbox.like_received.title_multi': 'A {user} y {count} más les gustó tu predicción',
 	'inbox.pending': 'Pendiente',
 	'inbox.resolve.body.lost': 'Perdiste {amount} en "{market}".',
 	'inbox.resolve.body.neutral': 'Tu predicción sobre "{market}" se resolvió.',
