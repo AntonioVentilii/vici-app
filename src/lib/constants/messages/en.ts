@@ -1246,13 +1246,13 @@ export const enMessages = {
 	'leagues.privacy.desc_invite':
 		'Not publicly listed. Joinable by invite code, and recommended to members’ friends.',
 	'leagues.privacy.desc_open':
-		'Publicly listed. Anyone can find and join it, and it’s recommended to members’ friends.',
+		'Publicly listed and recommended to members’ friends. Joining still needs an invite code.',
 	'leagues.privacy.desc_private':
 		'Hidden. Reachable only by invite code, and never surfaced anywhere.',
 	'leagues.privacy.edit_label': 'Change privacy',
 	'leagues.privacy.save': 'Save',
 	'leagues.privacy.saving': 'Saving…',
-	'leagues.privacy.sub': 'Choose who can find and join this league.',
+	'leagues.privacy.sub': 'Choose who can find this league.',
 	'leagues.privacy.title': 'League privacy',
 	'leagues.create.submitting': 'Creating…',
 	'leagues.challenge.cta_send': 'Send challenge',

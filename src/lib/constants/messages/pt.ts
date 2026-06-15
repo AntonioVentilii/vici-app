@@ -1264,13 +1264,13 @@ export const ptMessages = {
 	'leagues.privacy.desc_invite':
 		'Não listada publicamente. Acesso por código de convite e recomendada aos amigos dos membros.',
 	'leagues.privacy.desc_open':
-		'Listada publicamente. Qualquer pessoa pode encontrá-la e aderir, e é recomendada aos amigos dos membros.',
+		'Listada publicamente e recomendada aos amigos dos membros. Para aderir continua a ser necessário um código de convite.',
 	'leagues.privacy.desc_private':
 		'Oculta. Acessível apenas por código de convite e nunca apresentada em lado nenhum.',
 	'leagues.privacy.edit_label': 'Alterar privacidade',
 	'leagues.privacy.save': 'Guardar',
 	'leagues.privacy.saving': 'A guardar…',
-	'leagues.privacy.sub': 'Escolha quem pode encontrar esta liga e aderir.',
+	'leagues.privacy.sub': 'Escolha quem pode encontrar esta liga.',
 	'leagues.privacy.title': 'Privacidade da liga',
 	'leagues.detail.hero_chip_invite': 'Apenas por convite',
 	'leagues.detail.hero_chip_kind': 'Liga',

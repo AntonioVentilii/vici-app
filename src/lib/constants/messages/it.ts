@@ -1260,13 +1260,13 @@ export const itMessages = {
 	'leagues.privacy.desc_invite':
 		'Non elencata pubblicamente. Si entra con codice d’invito ed è consigliata agli amici dei membri.',
 	'leagues.privacy.desc_open':
-		'Elencata pubblicamente. Chiunque può trovarla e unirsi, ed è consigliata agli amici dei membri.',
+		'Elencata pubblicamente e consigliata agli amici dei membri. Per unirsi serve comunque un codice d’invito.',
 	'leagues.privacy.desc_private':
 		'Nascosta. Raggiungibile solo con codice d’invito e mai mostrata da nessuna parte.',
 	'leagues.privacy.edit_label': 'Modifica privacy',
 	'leagues.privacy.save': 'Salva',
 	'leagues.privacy.saving': 'Salvataggio…',
-	'leagues.privacy.sub': 'Scegli chi può trovare questa lega e unirsi.',
+	'leagues.privacy.sub': 'Scegli chi può trovare questa lega.',
 	'leagues.privacy.title': 'Privacy della lega',
 	'leagues.detail.hero_chip_invite': 'Solo su invito',
 	'leagues.detail.hero_chip_kind': 'Lega',

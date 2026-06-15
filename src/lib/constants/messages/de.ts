@@ -1273,13 +1273,13 @@ export const deMessages = {
 	'leagues.privacy.desc_invite':
 		'Nicht öffentlich gelistet. Beitritt per Einladungscode und wird Freunden von Mitgliedern empfohlen.',
 	'leagues.privacy.desc_open':
-		'Öffentlich gelistet. Jeder kann sie finden und ihr beitreten, und sie wird Freunden von Mitgliedern empfohlen.',
+		'Öffentlich gelistet und wird Freunden von Mitgliedern empfohlen. Der Beitritt erfordert weiterhin einen Einladungscode.',
 	'leagues.privacy.desc_private':
 		'Verborgen. Nur per Einladungscode erreichbar und nirgends sichtbar.',
 	'leagues.privacy.edit_label': 'Sichtbarkeit ändern',
 	'leagues.privacy.save': 'Speichern',
 	'leagues.privacy.saving': 'Wird gespeichert…',
-	'leagues.privacy.sub': 'Lege fest, wer diese Liga finden und ihr beitreten kann.',
+	'leagues.privacy.sub': 'Lege fest, wer diese Liga finden kann.',
 	'leagues.privacy.title': 'Liga-Sichtbarkeit',
 	'leagues.detail.hero_chip_invite': 'Nur mit Einladung',
 	'leagues.detail.hero_chip_kind': 'Liga',

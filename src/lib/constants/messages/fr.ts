@@ -1268,13 +1268,13 @@ export const frMessages = {
 	'leagues.privacy.desc_invite':
 		'Non répertoriée publiquement. Accessible par code d’invitation et recommandée aux amis des membres.',
 	'leagues.privacy.desc_open':
-		'Répertoriée publiquement. Tout le monde peut la trouver et la rejoindre, et elle est recommandée aux amis des membres.',
+		'Répertoriée publiquement et recommandée aux amis des membres. Rejoindre nécessite toujours un code d’invitation.',
 	'leagues.privacy.desc_private':
 		'Masquée. Accessible uniquement par code d’invitation et jamais affichée nulle part.',
 	'leagues.privacy.edit_label': 'Modifier la confidentialité',
 	'leagues.privacy.save': 'Enregistrer',
 	'leagues.privacy.saving': 'Enregistrement…',
-	'leagues.privacy.sub': 'Choisissez qui peut trouver cette ligue et la rejoindre.',
+	'leagues.privacy.sub': 'Choisissez qui peut trouver cette ligue.',
 	'leagues.privacy.title': 'Confidentialité de la ligue',
 	'leagues.detail.hero_chip_invite': 'Sur invitation',
 	'leagues.detail.hero_chip_kind': 'Ligue',

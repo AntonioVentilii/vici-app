@@ -1262,13 +1262,13 @@ export const esMessages = {
 	'leagues.privacy.desc_invite':
 		'No aparece en listas públicas. Se entra con código de invitación y se recomienda a los amigos de los miembros.',
 	'leagues.privacy.desc_open':
-		'Aparece en listas públicas. Cualquiera puede encontrarla y unirse, y se recomienda a los amigos de los miembros.',
+		'Aparece en listas públicas y se recomienda a los amigos de los miembros. Para unirse sigue haciendo falta un código de invitación.',
 	'leagues.privacy.desc_private':
 		'Oculta. Solo accesible con código de invitación y nunca aparece en ningún sitio.',
 	'leagues.privacy.edit_label': 'Cambiar privacidad',
 	'leagues.privacy.save': 'Guardar',
 	'leagues.privacy.saving': 'Guardando…',
-	'leagues.privacy.sub': 'Elige quién puede encontrar esta liga y unirse a ella.',
+	'leagues.privacy.sub': 'Elige quién puede encontrar esta liga.',
 	'leagues.privacy.title': 'Privacidad de la liga',
 	'leagues.detail.hero_chip_invite': 'Solo con invitación',
 	'leagues.detail.hero_chip_kind': 'Liga',
