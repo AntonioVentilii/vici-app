@@ -558,7 +558,12 @@ export const BattleWireSchema = j.strictObject({
 	trashTalk: j.string().optional(),
 	scoreA: j.number().optional(),
 	scoreB: j.number().optional(),
-	winner: j.enum(['A', 'B', 'draw']).optional()
+	// Window call counts per side (`Δcalls`) — let the FE tell a real
+	// draw (tied accuracy) from a void face-off (both sides zero calls).
+	callsA: j.number().optional(),
+	callsB: j.number().optional(),
+	winner: j.enum(['A', 'B', 'draw']).optional(),
+	resolvedAtMs: j.number().optional()
 });
 
 export type WireBattle = j.infer<typeof BattleWireSchema>;
@@ -577,7 +582,10 @@ export const toWireBattle = (battle: {
 	trashTalk?: string;
 	scoreA?: number;
 	scoreB?: number;
+	callsA?: number;
+	callsB?: number;
 	winner?: 'A' | 'B' | 'draw';
+	resolvedAtMs?: number;
 }): WireBattle => ({
 	id: battle.id,
 	kind: battle.kind,
@@ -592,7 +600,10 @@ export const toWireBattle = (battle: {
 	trashTalk: battle.trashTalk,
 	scoreA: battle.scoreA,
 	scoreB: battle.scoreB,
-	winner: battle.winner
+	callsA: battle.callsA,
+	callsB: battle.callsB,
+	winner: battle.winner,
+	resolvedAtMs: battle.resolvedAtMs
 });
 
 // ─── Affiliations ───────────────────────────────────────────────

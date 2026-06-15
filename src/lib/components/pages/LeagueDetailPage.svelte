@@ -10,6 +10,7 @@
 		Trash2
 	} from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -18,7 +19,6 @@
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
 	import LeaguePrivacyModal from '$lib/components/leagues/LeaguePrivacyModal.svelte';
 	import LeagueRoleBadge from '$lib/components/leagues/LeagueRoleBadge.svelte';
-	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
@@ -34,6 +34,7 @@
 		kickoffBattle,
 		leaveLeague,
 		loadLeaguesByIds,
+		resolveBattle,
 		retractBattle,
 		updateLeague,
 		validateLeagueDraft
@@ -634,7 +635,8 @@
 
 	// Per-battle transition affordances. Owner-only.
 	let actingBattleId = $state<string | null>(null);
-	let resolveBattleTarget = $state<BattleDoc | null>(null);
+	// Battle ids a lazy auto-resolve has already been attempted for.
+	const autoResolveAttempted = new SvelteSet<string>();
 
 	const canAcceptBattle = (battle: BattleDoc): boolean =>
 		myRole === 'owner' && battle.state === 'proposed' && battle.sideB === leagueId;
@@ -708,10 +710,61 @@
 		}
 	};
 
-	const handleResolveBattleDone = () => {
-		resolveBattleTarget = null;
-		void refreshMyLeagues();
+	// Resolve in one tap — scores are each league's window accuracy,
+	// computed by the service and re-verified by the satellite assert.
+	const handleResolveBattle = async (battle: BattleDoc, source: 'auto' | 'nudge') => {
+		if (nonNullish(actingBattleId)) {
+			return;
+		}
+
+		actingBattleId = battle.id;
+
+		try {
+			const resolved = await resolveBattle({ battle });
+
+			const ourLetter = resolved.sideA === leagueId ? 'A' : 'B';
+			const isVoid =
+				resolved.winner === 'draw' && (resolved.callsA ?? 0) === 0 && (resolved.callsB ?? 0) === 0;
+
+			track({
+				name: 'battle_resolved',
+				battleId: resolved.id,
+				leagueId,
+				source,
+				label: isVoid
+					? 'void'
+					: resolved.winner === 'draw'
+						? 'draw'
+						: resolved.winner === ourLetter
+							? 'win'
+							: 'loss',
+				value: Math.max(resolved.scoreA ?? 0, resolved.scoreB ?? 0)
+			});
+
+			await refreshMyLeagues();
+		} catch (err) {
+			console.error('LeagueDetailPage: resolveBattle failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			actingBattleId = null;
+		}
 	};
+
+	// Lazy auto-resolution for the active battle once it settles (Juno has
+	// no scheduler). Guarded so a re-render doesn't loop on the same write.
+	$effect(() => {
+		const target = activeBattle;
+
+		if (
+			nonNullish(target) &&
+			canResolveBattle(target) &&
+			isNullish(actingBattleId) &&
+			!autoResolveAttempted.has(target.id)
+		) {
+			autoResolveAttempted.add(target.id);
+			void handleResolveBattle(target, 'auto');
+		}
+	});
 
 	// Recent activity feed. Built from the battle list — newest first by
 	// kickoff (in_flight) or settle (resolved). We cap at 6 rows so the
@@ -1294,10 +1347,13 @@
 					{:else if canResolveBattle(activeBattle)}
 						<button
 							class="league-detail-battle-action is-primary"
-							onclick={() => (resolveBattleTarget = activeBattle ?? null)}
+							disabled={actingBattleId === activeBattle.id}
+							onclick={() => handleResolveBattle(activeBattle, 'nudge')}
 							type="button"
 						>
-							{t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
+							{actingBattleId === activeBattle.id
+								? t({ locale: $localeStore, key: 'leagues.battle.action.resolving' })
+								: t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
 						</button>
 					{/if}
 					{#if canRetractBattle(activeBattle)}
@@ -1417,14 +1473,6 @@
 		onSaved={handlePrivacyChanged}
 	/>
 {/if}
-
-<ResolveBattleModal
-	battle={resolveBattleTarget}
-	isOpen={nonNullish(resolveBattleTarget)}
-	onClose={() => (resolveBattleTarget = null)}
-	onResolved={handleResolveBattleDone}
-	ourLeagueId={leagueId}
-/>
 
 <!-- ─── Member detail sheet · avatar + accuracy / streak stats ─── -->
 <BottomSheet isOpen={nonNullish(openMember)} onClose={() => (openMember = null)}>

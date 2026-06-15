@@ -735,6 +735,8 @@ export const idlFactory = ({ IDL }) => {
 				trash_talk: IDL.Opt(IDL.Text),
 				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
 				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
+				calls_a: IDL.Opt(IDL.Float64),
+				calls_b: IDL.Opt(IDL.Float64),
 				score_a: IDL.Opt(IDL.Float64),
 				score_b: IDL.Opt(IDL.Float64),
 				scope: IDL.Opt(IDL.Text),
@@ -749,6 +751,7 @@ export const idlFactory = ({ IDL }) => {
 				proposer: IDL.Text,
 				kickoff_ms: IDL.Float64,
 				wager: IDL.Opt(IDL.Float64),
+				resolved_at_ms: IDL.Opt(IDL.Float64),
 				settle_ms: IDL.Float64
 			})
 		)
@@ -828,6 +831,8 @@ export const idlFactory = ({ IDL }) => {
 				trash_talk: IDL.Opt(IDL.Text),
 				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
 				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
+				calls_a: IDL.Opt(IDL.Float64),
+				calls_b: IDL.Opt(IDL.Float64),
 				score_a: IDL.Opt(IDL.Float64),
 				score_b: IDL.Opt(IDL.Float64),
 				scope: IDL.Opt(IDL.Text),
@@ -842,6 +847,7 @@ export const idlFactory = ({ IDL }) => {
 				proposer: IDL.Text,
 				kickoff_ms: IDL.Float64,
 				wager: IDL.Opt(IDL.Float64),
+				resolved_at_ms: IDL.Opt(IDL.Float64),
 				settle_ms: IDL.Float64
 			})
 		)

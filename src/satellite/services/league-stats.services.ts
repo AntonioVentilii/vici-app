@@ -1,8 +1,11 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { isMarketTag, MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
 import { leagueMemberKey, type LeagueMemberDoc } from '$lib/types/league-member';
 import { leagueStatsKey, type LeagueStatsDoc } from '$lib/types/league-stats';
 import type { UserProfile } from '$lib/types/profile';
+import type { CategoryStatsBucket, UserStatsDoc } from '$lib/types/user-stats';
 import { isHibernated } from '$satellite/services/profile.services';
+import { escapeRegex } from '$satellite/utils/regex.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext, OnSetDocContext } from '@junobuild/functions';
@@ -69,7 +72,7 @@ export const assertSetLeagueStats = ({
 		);
 	}
 
-	// 5. Wins ≤ totalCalls — sanity invariant.
+	// 5. Wins ≤ totalCalls — sanity invariant (aggregate + every bucket).
 	if (proposedDoc.wins > proposedDoc.totalCalls) {
 		throw new Error(
 			`league_stats wins (${proposedDoc.wins}) cannot exceed totalCalls (${proposedDoc.totalCalls}).`
@@ -80,7 +83,30 @@ export const assertSetLeagueStats = ({
 		throw new Error('league_stats counters must be non-negative.');
 	}
 
-	// 4. Forward-only counters.
+	for (const [tag, bucket] of Object.entries(proposedDoc.categories ?? {})) {
+		if (isNullish(bucket)) {
+			continue;
+		}
+
+		// Keys are bounded to the known market tags — the collection is
+		// member-writable, so an unconstrained key set would let any member
+		// bloat the doc with arbitrary categories.
+		if (!isMarketTag(tag)) {
+			throw new Error(`league_stats category key "${tag}" is not a known market tag.`);
+		}
+
+		if (bucket.wins > bucket.calls) {
+			throw new Error(
+				`league_stats category "${tag}" wins (${bucket.wins}) cannot exceed calls (${bucket.calls}).`
+			);
+		}
+
+		if (bucket.calls < 0 || bucket.wins < 0) {
+			throw new Error(`league_stats category "${tag}" counters must be non-negative.`);
+		}
+	}
+
+	// 4. Forward-only counters (aggregate + every bucket).
 	if (nonNullish(current)) {
 		const currentDoc = decodeDocData<LeagueStatsDoc>(current.data);
 
@@ -94,6 +120,22 @@ export const assertSetLeagueStats = ({
 
 		if (currentDoc.leagueId !== proposedDoc.leagueId) {
 			throw new Error('league_stats leagueId is immutable.');
+		}
+
+		for (const [tag, currentBucket] of Object.entries(currentDoc.categories ?? {})) {
+			if (isNullish(currentBucket)) {
+				continue;
+			}
+
+			const proposedBucket = proposedDoc.categories?.[tag as MarketTag];
+
+			if (
+				isNullish(proposedBucket) ||
+				proposedBucket.calls < currentBucket.calls ||
+				proposedBucket.wins < currentBucket.wins
+			) {
+				throw new Error(`league_stats category "${tag}" counters cannot decrease.`);
+			}
 		}
 	}
 };
@@ -179,35 +221,33 @@ export const onProfileSetForLeagueStats = (ctx: OnSetDocContext): void => {
 	const callerText = Principal.fromUint8Array(caller).toText();
 	const nowMs = Number(time() / 1_000_000n);
 
-	// Scan league memberships for the caller. Key shape
-	// `${leagueId}/${memberPrincipal}` — filter on the suffix.
+	// Scan the caller's memberships only. Key shape
+	// `${leagueId}/${memberPrincipal}`, so a key matcher anchored to the
+	// caller suffix bounds the read to their rows instead of scanning every
+	// membership in the collection.
 	const { items } = listDocsStore({
 		collection: Collection.LEAGUE_MEMBERS,
 		caller,
-		params: {}
+		params: { matcher: { key: `/${escapeRegex(callerText)}$` } }
 	});
 
-	const suffix = `/${callerText}`;
+	for (const [, item] of items) {
+		let memberDoc: LeagueMemberDoc | undefined;
 
-	for (const [memberKey, item] of items) {
-		if (memberKey.endsWith(suffix)) {
-			let memberDoc: LeagueMemberDoc | undefined;
+		try {
+			memberDoc = decodeDocData<LeagueMemberDoc>(item.data);
+		} catch {
+			memberDoc = undefined;
+		}
 
-			try {
-				memberDoc = decodeDocData<LeagueMemberDoc>(item.data);
-			} catch {
-				memberDoc = undefined;
-			}
-
-			if (nonNullish(memberDoc) && memberDoc.member === callerText) {
-				incrementLeagueStats({
-					caller,
-					leagueId: memberDoc.leagueId,
-					deltaTrades,
-					deltaWins,
-					nowMs
-				});
-			}
+		if (nonNullish(memberDoc) && memberDoc.member === callerText) {
+			incrementLeagueStats({
+				caller,
+				leagueId: memberDoc.leagueId,
+				deltaTrades,
+				deltaWins,
+				nowMs
+			});
 		}
 	}
 };
@@ -250,6 +290,182 @@ const incrementLeagueStats = ({
 		...baseDoc,
 		totalCalls: baseDoc.totalCalls + deltaTrades,
 		wins: baseDoc.wins + deltaWins,
+		updatedAtMs: nowMs
+	};
+
+	setDocStore({
+		collection: Collection.LEAGUE_STATS,
+		key: docKey,
+		caller,
+		doc: {
+			data: encodeDocData(next),
+			version: existing?.version
+		}
+	});
+};
+
+/**
+ * Post-write hook on `USER_STATS`. Maintains the per-category buckets
+ * on each of the writer's `league_stats` docs, sourced exactly from the
+ * user's `categoryStats` deltas. The aggregate counters
+ * (`totalCalls` / `wins`) stay owned by `onProfileSetForLeagueStats`;
+ * this hook only touches `categories`, so the two hooks never contend
+ * for the same field even though both write the same doc.
+ *
+ *  - First-write path (`before` null): the full `categoryStats` seeds
+ *    the buckets.
+ *  - Idempotent: identical before/after → zero deltas → no write.
+ *  - Hibernation: skip when the writer's profile is hibernated (parity
+ *    with the aggregate hook's stats freeze).
+ */
+export const onUserStatsSetForLeagueStats = (ctx: OnSetDocContext): void => {
+	const {
+		caller,
+		data: { collection, data }
+	} = ctx;
+
+	if (collection !== Collection.USER_STATS) {
+		return;
+	}
+
+	const { before, after } = data;
+
+	let afterStats: UserStatsDoc;
+	let beforeStats: UserStatsDoc | undefined;
+
+	try {
+		afterStats = decodeDocData<UserStatsDoc>(after.data);
+		beforeStats = nonNullish(before) ? decodeDocData<UserStatsDoc>(before.data) : undefined;
+	} catch {
+		return;
+	}
+
+	const callerText = Principal.fromUint8Array(caller).toText();
+
+	// Stats freeze — a hibernated account must not move shared stats.
+	const profile = getDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller
+	});
+
+	if (nonNullish(profile)) {
+		try {
+			if (isHibernated(decodeDocData<UserProfile>(profile.data))) {
+				return;
+			}
+		} catch {
+			// Unreadable profile — fall through and let the deltas apply.
+		}
+	}
+
+	// Per-category deltas, clamped ≥ 0. A re-aggregation only grows in
+	// practice; the clamp defends the forward-only assert regardless.
+	const deltas: Partial<Record<MarketTag, CategoryStatsBucket>> = {};
+	let hasDelta = false;
+
+	for (const tag of MARKET_TAGS) {
+		const afterBucket = afterStats.categoryStats[tag];
+
+		if (isNullish(afterBucket)) {
+			continue;
+		}
+
+		const beforeBucket = beforeStats?.categoryStats[tag];
+		const deltaCalls = Math.max(0, afterBucket.calls - (beforeBucket?.calls ?? 0));
+		// Clamp wins to calls: a re-aggregation can shift bucket composition
+		// so raw `Δwins > Δcalls`, which the forward-only assert (wins ≤
+		// calls) would reject and fail the whole hook write.
+		const deltaWins = Math.min(
+			deltaCalls,
+			Math.max(0, afterBucket.wins - (beforeBucket?.wins ?? 0))
+		);
+
+		if (deltaCalls > 0 || deltaWins > 0) {
+			deltas[tag] = { calls: deltaCalls, wins: deltaWins };
+			hasDelta = true;
+		}
+	}
+
+	if (!hasDelta) {
+		return;
+	}
+
+	const nowMs = Number(time() / 1_000_000n);
+
+	// Scan the caller's memberships only. Key shape
+	// `${leagueId}/${memberPrincipal}`, so a key matcher anchored to the
+	// caller suffix bounds the read to their rows instead of scanning every
+	// membership in the collection.
+	const { items } = listDocsStore({
+		collection: Collection.LEAGUE_MEMBERS,
+		caller,
+		params: { matcher: { key: `/${escapeRegex(callerText)}$` } }
+	});
+
+	for (const [, item] of items) {
+		let memberDoc: LeagueMemberDoc | undefined;
+
+		try {
+			memberDoc = decodeDocData<LeagueMemberDoc>(item.data);
+		} catch {
+			memberDoc = undefined;
+		}
+
+		if (nonNullish(memberDoc) && memberDoc.member === callerText) {
+			incrementLeagueStatsCategories({ caller, leagueId: memberDoc.leagueId, deltas, nowMs });
+		}
+	}
+};
+
+/**
+ * Apply per-category increments to a single league's stats doc, leaving
+ * the `'all'` aggregate untouched. Creates the doc on first write.
+ */
+const incrementLeagueStatsCategories = ({
+	caller,
+	leagueId,
+	deltas,
+	nowMs
+}: {
+	caller: Uint8Array;
+	leagueId: string;
+	deltas: Partial<Record<MarketTag, CategoryStatsBucket>>;
+	nowMs: number;
+}): void => {
+	const docKey = leagueStatsKey({ leagueId });
+	const existing = getDocStore({
+		collection: Collection.LEAGUE_STATS,
+		key: docKey,
+		caller
+	});
+
+	const baseDoc: LeagueStatsDoc = isNullish(existing)
+		? {
+				leagueId,
+				totalCalls: 0,
+				wins: 0,
+				updatedAtMs: nowMs
+			}
+		: decodeDocData<LeagueStatsDoc>(existing.data);
+
+	const categories: Partial<Record<MarketTag, CategoryStatsBucket>> = { ...baseDoc.categories };
+
+	for (const [tag, delta] of Object.entries(deltas)) {
+		if (isNullish(delta)) {
+			continue;
+		}
+
+		const current = categories[tag as MarketTag] ?? { calls: 0, wins: 0 };
+		categories[tag as MarketTag] = {
+			calls: current.calls + delta.calls,
+			wins: current.wins + delta.wins
+		};
+	}
+
+	const next: LeagueStatsDoc = {
+		...baseDoc,
+		categories,
 		updatedAtMs: nowMs
 	};
 

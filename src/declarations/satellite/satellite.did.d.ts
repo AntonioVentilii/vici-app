@@ -620,6 +620,8 @@ export interface AppListLeagueBattlesResult {
 		trash_talk: [] | [string];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
+		calls_a: [] | [number];
+		calls_b: [] | [number];
 		score_a: [] | [number];
 		score_b: [] | [number];
 		scope: [] | [string];
@@ -629,6 +631,7 @@ export interface AppListLeagueBattlesResult {
 		proposer: string;
 		kickoff_ms: number;
 		wager: [] | [number];
+		resolved_at_ms: [] | [number];
 		settle_ms: number;
 	}>;
 }
@@ -704,6 +707,8 @@ export interface AppListMyBattlesResult {
 		trash_talk: [] | [string];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
+		calls_a: [] | [number];
+		calls_b: [] | [number];
 		score_a: [] | [number];
 		score_b: [] | [number];
 		scope: [] | [string];
@@ -713,6 +718,7 @@ export interface AppListMyBattlesResult {
 		proposer: string;
 		kickoff_ms: number;
 		wager: [] | [number];
+		resolved_at_ms: [] | [number];
 		settle_ms: number;
 	}>;
 }

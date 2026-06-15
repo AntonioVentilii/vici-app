@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
-	import { SvelteMap } from 'svelte/reactivity';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
-	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { isMarketTag, MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { track } from '$lib/services/analytics.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
 		acceptBattle,
@@ -16,6 +16,7 @@
 		listMyBattles,
 		listMyLeagues,
 		loadLeaguesByIds,
+		resolveBattle,
 		retractBattle,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
@@ -53,8 +54,9 @@
 	let loadState: 'loading' | 'ready' | 'not_found' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	let actingBattleId = $state<string | null>(null);
-	let resolveTarget = $state<BattleDoc | null>(null);
-	let resolveOurSide = $state<string | null>(null);
+	// Battle ids we've already fired a lazy auto-resolve attempt for, so a
+	// re-render past settle doesn't loop on the same write.
+	const autoResolveAttempted = new SvelteSet<string>();
 
 	const load = async () => {
 		try {
@@ -240,20 +242,76 @@
 		}
 	};
 
-	const openResolve = () => {
-		if (!battle || isNullish(ownedSide)) {
+	const trackResolved = ({
+		resolved,
+		ourSide,
+		source
+	}: {
+		resolved: BattleDoc;
+		ourSide: string;
+		source: 'auto' | 'nudge';
+	}) => {
+		const ourLetter = ourSide === resolved.sideA ? 'A' : 'B';
+		const isVoid =
+			resolved.winner === 'draw' && (resolved.callsA ?? 0) === 0 && (resolved.callsB ?? 0) === 0;
+		const label = isVoid
+			? 'void'
+			: resolved.winner === 'draw'
+				? 'draw'
+				: resolved.winner === ourLetter
+					? 'win'
+					: 'loss';
+
+		track({
+			name: 'battle_resolved',
+			battleId: resolved.id,
+			leagueId: ourSide,
+			source,
+			label,
+			value: Math.max(resolved.scoreA ?? 0, resolved.scoreB ?? 0)
+		});
+	};
+
+	// Resolve the battle in one tap: scores are each league's window
+	// accuracy, computed by the service from `league_stats` and re-verified
+	// by the satellite assert — there is nothing for the user to enter.
+	const handleResolve = async (source: 'auto' | 'nudge') => {
+		const ourSide = ownedSide;
+
+		if (!battle || nonNullish(actingBattleId) || isNullish(ourSide)) {
 			return;
 		}
 
-		resolveTarget = battle;
-		resolveOurSide = ownedSide;
+		const target = battle;
+		actingBattleId = target.id;
+
+		try {
+			const resolved = await resolveBattle({ battle: target });
+			trackResolved({ resolved, ourSide, source });
+			await load();
+		} catch (err) {
+			console.error('BattleDetailPage: resolveBattle failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			actingBattleId = null;
+		}
 	};
 
-	const onResolveDone = () => {
-		resolveTarget = null;
-		resolveOurSide = null;
-		void load();
-	};
+	// Lazy auto-resolution: Juno has no scheduler, so a settled battle
+	// resolves the first time a side owner opens it. The Set guards against
+	// re-firing on re-render; the manual "Resolve now" button stays as a
+	// fallback if the auto attempt fails.
+	$effect(() => {
+		if (
+			canResolve &&
+			nonNullish(battle) &&
+			isNullish(actingBattleId) &&
+			!autoResolveAttempted.has(battle.id)
+		) {
+			autoResolveAttempted.add(battle.id);
+			void handleResolve('auto');
+		}
+	});
 
 	const backToInbox = () => {
 		void goto(`${resolve(AppPath.Arena)}/battles`);
@@ -318,7 +376,13 @@
 					</span>
 					<span class="battle-detail-team-name">{sideLabel(battle.sideA)}</span>
 					<span class="battle-detail-score num">
-						{battle.scoreA ?? '—'}
+						{battle.state === 'resolved' && nonNullish(battle.scoreA)
+							? t({
+									locale: $localeStore,
+									key: 'leagues.battle.score_pct',
+									params: { pct: battle.scoreA }
+								})
+							: '—'}
 					</span>
 				</div>
 
@@ -334,14 +398,22 @@
 					</span>
 					<span class="battle-detail-team-name">{sideLabel(battle.sideB)}</span>
 					<span class="battle-detail-score num">
-						{battle.scoreB ?? '—'}
+						{battle.state === 'resolved' && nonNullish(battle.scoreB)
+							? t({
+									locale: $localeStore,
+									key: 'leagues.battle.score_pct',
+									params: { pct: battle.scoreB }
+								})
+							: '—'}
 					</span>
 				</div>
 			</div>
 
 			{#if battle.state === 'resolved' && battle.winner === 'draw'}
 				<p class="allcaps battle-detail-winner">
-					{t({ locale: $localeStore, key: 'leagues.battle.winner_draw' })}
+					{(battle.callsA ?? 0) === 0 && (battle.callsB ?? 0) === 0
+						? t({ locale: $localeStore, key: 'leagues.battle.winner_void' })
+						: t({ locale: $localeStore, key: 'leagues.battle.winner_draw' })}
 				</p>
 			{:else if battle.state === 'proposed'}
 				<p class="serif-italic battle-detail-pending-foot">
@@ -414,8 +486,15 @@
 						: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 				</button>
 			{:else if canResolve}
-				<button class="battle-detail-action is-primary" onclick={openResolve} type="button">
-					{t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
+				<button
+					class="battle-detail-action is-primary"
+					disabled={actingBattleId === battle.id}
+					onclick={() => handleResolve('nudge')}
+					type="button"
+				>
+					{actingBattleId === battle.id
+						? t({ locale: $localeStore, key: 'leagues.battle.action.resolving' })
+						: t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
 				</button>
 			{/if}
 			{#if canRetract}
@@ -433,19 +512,6 @@
 		</section>
 	{/if}
 </div>
-
-{#if nonNullish(resolveTarget) && nonNullish(resolveOurSide)}
-	<ResolveBattleModal
-		battle={resolveTarget}
-		isOpen={true}
-		onClose={() => {
-			resolveTarget = null;
-			resolveOurSide = null;
-		}}
-		onResolved={onResolveDone}
-		ourLeagueId={resolveOurSide}
-	/>
-{/if}
 
 <style lang="postcss">
 	.battle-detail {

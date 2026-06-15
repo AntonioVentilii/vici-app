@@ -50,6 +50,7 @@ import {
 } from '$lib/types/school-submission';
 import { spMatchEmail, spNormalize } from '$lib/utils/school-picker.utils';
 import { logInfo } from '$satellite/utils/logger.utils';
+import { escapeRegex } from '$satellite/utils/regex.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import { IcManagementIdl } from '@junobuild/functions/canisters/ic-management';
@@ -84,9 +85,6 @@ const adminCaller = (): Uint8Array => {
 
 	return first;
 };
-
-/** Escape a value for safe interpolation into a `listDocsStore` key regex. */
-const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // ─── Inputs / outputs (mirror the FE service signatures) ─────────────────
 
