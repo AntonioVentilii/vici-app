@@ -1,10 +1,11 @@
 import { Collection } from '$lib/constants/collections.constants';
-import { MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
+import { isMarketTag, MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
 import { leagueMemberKey, type LeagueMemberDoc } from '$lib/types/league-member';
 import { leagueStatsKey, type LeagueStatsDoc } from '$lib/types/league-stats';
 import type { UserProfile } from '$lib/types/profile';
 import type { CategoryStatsBucket, UserStatsDoc } from '$lib/types/user-stats';
 import { isHibernated } from '$satellite/services/profile.services';
+import { escapeRegex } from '$satellite/utils/regex.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext, OnSetDocContext } from '@junobuild/functions';
@@ -85,6 +86,13 @@ export const assertSetLeagueStats = ({
 	for (const [tag, bucket] of Object.entries(proposedDoc.categories ?? {})) {
 		if (isNullish(bucket)) {
 			continue;
+		}
+
+		// Keys are bounded to the known market tags — the collection is
+		// member-writable, so an unconstrained key set would let any member
+		// bloat the doc with arbitrary categories.
+		if (!isMarketTag(tag)) {
+			throw new Error(`league_stats category key "${tag}" is not a known market tag.`);
 		}
 
 		if (bucket.wins > bucket.calls) {
@@ -213,35 +221,33 @@ export const onProfileSetForLeagueStats = (ctx: OnSetDocContext): void => {
 	const callerText = Principal.fromUint8Array(caller).toText();
 	const nowMs = Number(time() / 1_000_000n);
 
-	// Scan league memberships for the caller. Key shape
-	// `${leagueId}/${memberPrincipal}` — filter on the suffix.
+	// Scan the caller's memberships only. Key shape
+	// `${leagueId}/${memberPrincipal}`, so a key matcher anchored to the
+	// caller suffix bounds the read to their rows instead of scanning every
+	// membership in the collection.
 	const { items } = listDocsStore({
 		collection: Collection.LEAGUE_MEMBERS,
 		caller,
-		params: {}
+		params: { matcher: { key: `/${escapeRegex(callerText)}$` } }
 	});
 
-	const suffix = `/${callerText}`;
+	for (const [, item] of items) {
+		let memberDoc: LeagueMemberDoc | undefined;
 
-	for (const [memberKey, item] of items) {
-		if (memberKey.endsWith(suffix)) {
-			let memberDoc: LeagueMemberDoc | undefined;
+		try {
+			memberDoc = decodeDocData<LeagueMemberDoc>(item.data);
+		} catch {
+			memberDoc = undefined;
+		}
 
-			try {
-				memberDoc = decodeDocData<LeagueMemberDoc>(item.data);
-			} catch {
-				memberDoc = undefined;
-			}
-
-			if (nonNullish(memberDoc) && memberDoc.member === callerText) {
-				incrementLeagueStats({
-					caller,
-					leagueId: memberDoc.leagueId,
-					deltaTrades,
-					deltaWins,
-					nowMs
-				});
-			}
+		if (nonNullish(memberDoc) && memberDoc.member === callerText) {
+			incrementLeagueStats({
+				caller,
+				leagueId: memberDoc.leagueId,
+				deltaTrades,
+				deltaWins,
+				nowMs
+			});
 		}
 	}
 };
@@ -367,7 +373,13 @@ export const onUserStatsSetForLeagueStats = (ctx: OnSetDocContext): void => {
 
 		const beforeBucket = beforeStats?.categoryStats[tag];
 		const deltaCalls = Math.max(0, afterBucket.calls - (beforeBucket?.calls ?? 0));
-		const deltaWins = Math.max(0, afterBucket.wins - (beforeBucket?.wins ?? 0));
+		// Clamp wins to calls: a re-aggregation can shift bucket composition
+		// so raw `Δwins > Δcalls`, which the forward-only assert (wins ≤
+		// calls) would reject and fail the whole hook write.
+		const deltaWins = Math.min(
+			deltaCalls,
+			Math.max(0, afterBucket.wins - (beforeBucket?.wins ?? 0))
+		);
 
 		if (deltaCalls > 0 || deltaWins > 0) {
 			deltas[tag] = { calls: deltaCalls, wins: deltaWins };
@@ -381,21 +393,17 @@ export const onUserStatsSetForLeagueStats = (ctx: OnSetDocContext): void => {
 
 	const nowMs = Number(time() / 1_000_000n);
 
-	// Scan league memberships for the caller — key shape
-	// `${leagueId}/${memberPrincipal}`, filter on the suffix.
+	// Scan the caller's memberships only. Key shape
+	// `${leagueId}/${memberPrincipal}`, so a key matcher anchored to the
+	// caller suffix bounds the read to their rows instead of scanning every
+	// membership in the collection.
 	const { items } = listDocsStore({
 		collection: Collection.LEAGUE_MEMBERS,
 		caller,
-		params: {}
+		params: { matcher: { key: `/${escapeRegex(callerText)}$` } }
 	});
 
-	const suffix = `/${callerText}`;
-
-	for (const [memberKey, item] of items) {
-		if (!memberKey.endsWith(suffix)) {
-			continue;
-		}
-
+	for (const [, item] of items) {
 		let memberDoc: LeagueMemberDoc | undefined;
 
 		try {
