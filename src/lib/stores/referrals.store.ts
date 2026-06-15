@@ -25,8 +25,21 @@ export const myReferralsLoadedStore = writable<boolean>(false);
 
 let inFlight: Promise<void> | undefined;
 
+// Bumped by every `clearMyReferrals()` (i.e. each auth transition). A refresh
+// captures the epoch when it starts and only commits its result if the epoch
+// is unchanged on resolution — so a fetch that was in flight across a
+// sign-out/sign-in can't repopulate the cache (or flip `loaded`) for the wrong
+// principal.
+let epoch = 0;
+
 const runRefresh = async (): Promise<void> => {
+	const startedAt = epoch;
+
 	const items = await listMyReferrals();
+
+	if (epoch !== startedAt) {
+		return;
+	}
 
 	myReferralsStore.set(items);
 	myReferralsLoadedStore.set(true);
@@ -35,10 +48,12 @@ const runRefresh = async (): Promise<void> => {
 /**
  * Refetches the viewer's referral rows into the shared store. Same-tick
  * concurrent callers (e.g. Dash and Arena mounting together) share the
- * in-flight promise so we don't issue duplicate query calls. Fail-open: a
- * rejected fetch leaves the previous cache untouched and never flips the
- * loaded flag, so a cold failure keeps showing the skeleton rather than a
- * misleading zero.
+ * in-flight promise so we don't issue duplicate query calls.
+ *
+ * Fails open: a rejected fetch is caught and logged here (never propagated to
+ * callers, mirroring `affiliations.store` / `leagues.store`), leaving the
+ * previous cache and the `loaded` flag untouched — so a cold failure keeps
+ * showing the skeleton and a background failure keeps the cached figure.
  */
 export const refreshMyReferrals = async (): Promise<void> => {
 	if (inFlight) {
@@ -47,15 +62,22 @@ export const refreshMyReferrals = async (): Promise<void> => {
 		return;
 	}
 
-	const current = runRefresh().finally(() => {
-		inFlight = undefined;
-	});
+	const current = runRefresh()
+		.catch((err) => {
+			console.error('referrals.store: refresh failed', err);
+		})
+		.finally(() => {
+			inFlight = undefined;
+		});
 	inFlight = current;
 
 	await current;
 };
 
 export const clearMyReferrals = (): void => {
+	// Invalidate any in-flight refresh so its result is dropped instead of
+	// repopulating the cleared cache for the previous principal.
+	epoch += 1;
 	myReferralsStore.set([]);
 	myReferralsLoadedStore.set(false);
 };

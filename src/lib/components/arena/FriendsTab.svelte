@@ -180,11 +180,10 @@
 
 		// Refresh the viewer's redemption rows into the shared store so the hero's
 		// social-proof + cap lines reflect the real, tiered economy rather than a flat
-		// per-friend estimate. Fail-open: the store leaves the previous cache untouched
-		// on error, so the hero falls back to its zero-state on a cold failure.
-		void refreshMyReferrals().catch(() => {
-			// Decorative social proof — keep the cached list on failure.
-		});
+		// per-friend estimate. The store fails open internally, leaving the previous
+		// cache untouched on error, so the hero falls back to its zero-state on a cold
+		// failure.
+		void refreshMyReferrals();
 
 		return () => {
 			alive = false;

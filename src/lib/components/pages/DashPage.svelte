@@ -403,12 +403,9 @@
 
 		// Stale-while-revalidate: the shared store keeps the last list across
 		// navigation, so a revisit shows the cached count immediately while this
-		// background refresh reconciles any newly credited redemptions.
-		try {
-			await refreshMyReferrals();
-		} catch (err) {
-			console.error('DashPage: failed to load referrals', err);
-		}
+		// background refresh reconciles any newly credited redemptions. The store
+		// fails open internally, so no defensive wrapping is needed here.
+		void refreshMyReferrals();
 	});
 </script>
 
