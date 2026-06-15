@@ -51,6 +51,7 @@
 			if (event.repeat) {
 				return;
 			}
+
 			event.preventDefault();
 			activate(event);
 		} else if (event.key === ' ') {
