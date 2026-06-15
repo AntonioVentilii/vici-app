@@ -164,6 +164,7 @@ const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 				'delete_confirmed',
 				'delete_succeeded',
 				'exit_signal',
+				'notification_opened',
 				'app_error',
 				'perf_metric'
 			]),
@@ -1733,6 +1734,7 @@ const AppTrackEventsArgsSchema = j.strictObject({
 				'delete_confirmed',
 				'delete_succeeded',
 				'exit_signal',
+				'notification_opened',
 				'app_error',
 				'perf_metric'
 			]),
