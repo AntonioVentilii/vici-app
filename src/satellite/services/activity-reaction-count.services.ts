@@ -1,5 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
-import type { ActivityReaction, ActivityReactionCount } from '$lib/types/social';
+import type { ActivityReactionCount } from '$lib/types/social';
 import { isAdmin } from '$satellite/services/_authz';
 import { logError } from '$satellite/utils/logger.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -159,17 +159,13 @@ export const recomputeActivityReactionCountsFn = (): { recomputed: number } => {
 
 	const tally = new Map<string, number>();
 
-	for (const [, doc] of reactionItems) {
-		let reaction: ActivityReaction | undefined;
+	for (const [reactionKey] of reactionItems) {
+		// Derive the activity key from the doc KEY, not the payload — so a malformed reaction body
+		// doesn't drop a like from the exact recount (the key shape is assert-enforced on write).
+		const activityKey = activityKeyFromReactionKey(reactionKey);
 
-		try {
-			reaction = decodeDocData<ActivityReaction>(doc.data);
-		} catch {
-			reaction = undefined;
-		}
-
-		if (nonNullish(reaction)) {
-			tally.set(reaction.activityKey, (tally.get(reaction.activityKey) ?? 0) + 1);
+		if (nonNullish(activityKey)) {
+			tally.set(activityKey, (tally.get(activityKey) ?? 0) + 1);
 		}
 	}
 
@@ -199,27 +195,33 @@ export const recomputeActivityReactionCountsFn = (): { recomputed: number } => {
 
 		const target = tally.get(activityKey) ?? 0;
 
-		if (nonNullish(existing)) {
-			const current = decodeDocData<ActivityReactionCount>(existing.data).count;
+		let current: number | undefined;
 
-			if (current === target) {
-				continue;
+		if (nonNullish(existing)) {
+			try {
+				current = decodeDocData<ActivityReactionCount>(existing.data).count;
+			} catch {
+				// Malformed counter doc — don't let it abort the repair; treat as needing a rewrite.
+				current = undefined;
 			}
 		}
 
-		const next: ActivityReactionCount = { activityKey, count: target, updatedAtMs: now };
+		// Only write docs that are off-target — skip the ones already exact.
+		if (current !== target) {
+			const next: ActivityReactionCount = { activityKey, count: target, updatedAtMs: now };
 
-		setDocStore({
-			collection: Collection.ACTIVITY_REACTION_COUNTS,
-			key: activityKey,
-			caller: admin,
-			doc: {
-				data: encodeDocData(next),
-				version: existing?.version
-			}
-		});
+			setDocStore({
+				collection: Collection.ACTIVITY_REACTION_COUNTS,
+				key: activityKey,
+				caller: admin,
+				doc: {
+					data: encodeDocData(next),
+					version: existing?.version
+				}
+			});
 
-		recomputed += 1;
+			recomputed += 1;
+		}
 	}
 
 	return { recomputed };

@@ -125,10 +125,12 @@ user-facing action; the like itself is already tracked
   prefix scan of `activity_reactions`) is the corrective — noted as a
   follow-up, not built here. **This is the main reason to review the design
   before implementing.**
-- **Upgrade & compatibility.** Additive: a new collection + two hooks. No
-  change to existing doc shapes or the `.did` surface (no new endpoint), so
-  no bindings regen is expected — confirm `npm run juno:functions:build`
-  produces no diff. Not breaking.
+- **Upgrade & compatibility.** Additive: a new collection, two hooks, and
+  the admin `recomputeActivityReactionCounts` endpoint (the owner-chosen
+  drift corrector — see Decisions). The endpoint adds a method to the
+  `.did` surface, so bindings **do** regenerate (`src/declarations/**` +
+  `satellite_extension.did` committed). No change to existing doc shapes;
+  not breaking.
 - **Security.** `activity_reaction_counts` is controllers-write, so clients
   can't forge counts; public read. The hooks write as admin via
   `getAdminAccessKeys`.
