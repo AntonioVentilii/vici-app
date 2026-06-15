@@ -805,6 +805,9 @@ export interface AppLookupReferralCodeArgs {
 export interface AppLookupReferralCodeResult {
 	owner: [] | [string];
 }
+export interface AppRecomputeActivityReactionCountsResult {
+	recomputed: number;
+}
 export interface AppRecoverMyAccountResult {
 	ok: boolean;
 	recovered: [] | [boolean];
@@ -1187,6 +1190,7 @@ export interface _SERVICE {
 		AppLookupLeagueByInviteResult
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
+	app_recompute_activity_reaction_counts: ActorMethod<[], AppRecomputeActivityReactionCountsResult>;
 	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;
 	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;

@@ -137,6 +137,8 @@ type AppFollowUserArgs = record { target : text };
 
 type AppHibernateMyAccountResult = record { ok : bool; reason : opt variant { no_profile; deleted } };
 
+type AppRecomputeActivityReactionCountsResult = record { recomputed : float64 };
+
 type AppRecoverMyAccountResult = record { ok : bool; recovered : opt bool; reason : opt variant { expired } };
 
 type AppRedeemReferralCodeArgs = record { code : text };
@@ -233,6 +235,7 @@ service : {
 	app_delete_my_account : (AppDeleteMyAccountArgs) -> (AppDeleteMyAccountResult);
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_hibernate_my_account : () -> (AppHibernateMyAccountResult);
+	app_recompute_activity_reaction_counts : () -> (AppRecomputeActivityReactionCountsResult);
 	app_recover_my_account : () -> (AppRecoverMyAccountResult);
 	app_redeem_referral_code : (AppRedeemReferralCodeArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();

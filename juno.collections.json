@@ -8,6 +8,7 @@
 	"MARKET_TRANSLATIONS": "market_translations",
 	"ACTIVITIES": "activities",
 	"ACTIVITY_REACTIONS": "activity_reactions",
+	"ACTIVITY_REACTION_COUNTS": "activity_reaction_counts",
 	"VXP_ONBOARDING": "vxp_onboarding",
 	"VXP_AWARDS": "vxp_awards",
 	"REFERRAL_CODES": "referral_codes",

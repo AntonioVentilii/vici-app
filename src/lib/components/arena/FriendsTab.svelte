@@ -26,7 +26,6 @@
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import {
 		activityReactionKey,
-		countActivityReactions,
 		likeActivity,
 		unlikeActivity
 	} from '$lib/services/activity-reaction.services';
@@ -40,7 +39,10 @@
 		unfriendUser
 	} from '$lib/services/relation.services';
 	import { loadGlobalStandings } from '$lib/services/standings.services';
-	import { activityReactionsStore } from '$lib/stores/activity-reactions.store';
+	import {
+		activityReactionCountsStore,
+		activityReactionsStore
+	} from '$lib/stores/activity-reactions.store';
 	import {
 		friendRequestsStore,
 		friendsListStore,
@@ -686,14 +688,14 @@
 
 	const isFiring = (activity: Activity): boolean => firingKeys.has(rowKey(activity));
 
-	// The most-recent reaction page (count-on-read), hydrated by
-	// `LoaderGlobalActivities`.
+	// The most-recent reaction page, hydrated by `LoaderGlobalActivities`.
+	// Used only to derive the viewer's own-like state (below); the like
+	// *count* comes from the server rollup.
 	const reactions = $derived($activityReactionsStore);
 
-	// Per-activity like counts from the loaded reactions.
-	const reactionCounts = $derived(
-		nonNullish(reactions) ? countActivityReactions(reactions) : undefined
-	);
+	// Per-activity like counts from the server-maintained rollup (O(1) per
+	// activity), hydrated by `LoaderGlobalActivities`.
+	const reactionCounts = $derived($activityReactionCountsStore);
 
 	// Activity keys the viewer has liked per the server. Derived against
 	// `$authPrincipal` so likes highlight as soon as auth resolves — the
