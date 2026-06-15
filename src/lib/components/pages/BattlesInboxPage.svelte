@@ -15,7 +15,7 @@
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
 	import { daysToFinal } from '$lib/derived/featured-event.derived';
-	import { listMyLeagues, loadLeaguesByIds } from '$lib/services/leagues.services';
+	import { loadLeaguesByIds } from '$lib/services/leagues.services';
 	import { getCurrentTournament } from '$lib/services/tournament.services';
 	import { listAffiliationStats } from '$lib/services/worlds.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
@@ -82,9 +82,10 @@
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	// League ids the caller belongs to — feeds the tournament card's
-	// "your league is in" row. League battles themselves live under the
-	// Leagues surface, so we keep only the ids, not the battle list.
-	let myLeagueIds: string[] = $state([]);
+	// "your league is in" row. Derived from the same `leagues` store the
+	// incoming-challenge section reads, so league membership has a single
+	// source of truth and the inbox never re-lists the caller's leagues.
+	const myLeagueIds = $derived($myLeaguesStore.map((m) => m.league.id));
 
 	// ─── Incoming league challenges ─────────────────────────────────
 	// Proposed battles where a league the caller OWNS is the challenged
@@ -150,13 +151,11 @@
 
 	const load = async () => {
 		try {
-			const [mineList, schools, countries, tour] = await Promise.all([
-				listMyLeagues(),
+			const [schools, countries, tour] = await Promise.all([
 				listAffiliationStats({ kind: 'university' }),
 				listAffiliationStats({ kind: 'country' }),
 				getCurrentTournament()
 			]);
-			myLeagueIds = mineList.map((m) => m.league.id);
 			uniStats = schools;
 			countryStats = countries;
 			({ tournament, matches } = tour);
