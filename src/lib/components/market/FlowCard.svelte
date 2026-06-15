@@ -37,6 +37,14 @@
 		// When true, the parent has paused the deck (e.g. a sheet is
 		// open) and the card desaturates / dims its faces.
 		locked?: boolean;
+		// Gates gesture entry without touching the card's visuals. FlowMode
+		// holds this false for the first card's rise-in after the entry
+		// overlay is dismissed, so the dismissing tap's trailing events
+		// (desktop mouseup/click, and the synthetic mouse chain a touch
+		// fires ~300 ms after touchend) can't leak into a tap-to-flip on the
+		// card that mounts underneath. Default true keeps static / guided
+		// usages unaffected.
+		gesturesArmed?: boolean;
 		// Generative-artwork category. FlowMode resolves this from the
 		// market's primary tag; FlowCard treats it as opaque and falls back
 		// to a hash-derived bucket when the market has no tags.
@@ -78,6 +86,7 @@
 		tradeAmount,
 		interactive = true,
 		locked = false,
+		gesturesArmed = true,
 		category,
 		subtitle,
 		committedAction = null,
@@ -342,7 +351,7 @@
 	};
 
 	const onPointerDown = (e: MouseEvent | TouchEvent) => {
-		if (!interactive || isCommitted) {
+		if (!interactive || isCommitted || !gesturesArmed) {
 			return;
 		}
 
