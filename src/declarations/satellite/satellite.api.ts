@@ -1476,6 +1476,22 @@ const hibernateMyAccount = async (): Promise<j.infer<typeof AppHibernateMyAccoun
 	return AppHibernateMyAccountResultSchema.parse(result);
 };
 
+const AppRecomputeActivityReactionCountsResultSchema = j.strictObject({ recomputed: j.number() });
+
+const recomputeActivityReactionCounts = async (): Promise<
+	j.infer<typeof AppRecomputeActivityReactionCountsResultSchema>
+> => {
+	const { app_recompute_activity_reaction_counts } =
+		await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_recompute_activity_reaction_counts();
+
+	const result = schemaFromIdl({
+		schema: AppRecomputeActivityReactionCountsResultSchema,
+		value: idlResult
+	});
+	return AppRecomputeActivityReactionCountsResultSchema.parse(result);
+};
+
 const AppRecoverMyAccountResultSchema = j.strictObject({
 	ok: j.boolean(),
 	recovered: j.optional(j.boolean()),
@@ -2011,6 +2027,7 @@ export const functions = {
 	deleteMyAccount,
 	followUser,
 	hibernateMyAccount,
+	recomputeActivityReactionCounts,
 	recoverMyAccount,
 	redeemReferralCode,
 	rejectFriendRequest,

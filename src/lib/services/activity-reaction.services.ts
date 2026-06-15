@@ -1,5 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
-import type { Activity, ActivityReaction } from '$lib/types/social';
+import type { Activity, ActivityReaction, ActivityReactionCount } from '$lib/types/social';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, listDocs, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
@@ -140,17 +140,32 @@ export const getReceivedActivityReactions = async ({
 	return items.map(({ data }) => data);
 };
 
-/**
- * Tally reactions into a per-`activityKey` like count (the count-on-read aggregation the feed
- * renders). Viewer-agnostic: which of these the current user liked is derived separately and
- * reactively from `$authPrincipal`, so it stays correct across sign-in without a refresh.
- */
-export const countActivityReactions = (reactions: ActivityReaction[]): Map<string, number> => {
-	const counts = new Map<string, number>();
+/** Cap on the like-count rollup read for the feed. */
+export const ACTIVITY_REACTION_COUNTS_READ_LIMIT = 1000;
 
-	for (const { activityKey } of reactions) {
-		counts.set(activityKey, (counts.get(activityKey) ?? 0) + 1);
+/**
+ * Per-activity like counts from the server-maintained `activity_reaction_counts` rollup, as a
+ * `Map<activityKey, count>`. One bounded read replaces the former count-on-read tally over the
+ * reaction page — the count is O(1) per activity regardless of total likes. Ordered by `updated_at`
+ * so the most-recently-liked activities (which the feed shows) are within the window. Which of these
+ * the viewer liked is still derived separately from the reaction docs.
+ */
+export const getActivityReactionCounts = async ({
+	limit = ACTIVITY_REACTION_COUNTS_READ_LIMIT,
+	certified = false
+}: { limit?: number; certified?: boolean } = {}): Promise<Map<string, number>> => {
+	if (limit <= 0) {
+		return new Map();
 	}
 
-	return counts;
+	const { items } = await listDocs<ActivityReactionCount>({
+		collection: Collection.ACTIVITY_REACTION_COUNTS,
+		filter: {
+			order: { field: 'updated_at', desc: true },
+			paginate: { limit }
+		},
+		options: { certified }
+	});
+
+	return new Map(items.map(({ data }) => [data.activityKey, data.count]));
 };

@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: Implemented (#897)
 
 ## Goal
 
@@ -166,27 +166,30 @@ user-facing action; the like itself is already tracked
 
 ## Open questions
 
-- Does staging need a one-shot **backfill** of counts for likes that
-  predate this hook? (The friend feed is low-volume; may be fine to start
-  from zero and let counts accrue. Decide with the owner.)
-- FE count read: a single bounded `listDocs` over `activity_reaction_counts`
-  (recent-window, same ceiling shape but on the smaller counts collection)
-  vs. a batched per-visible-activity read (exact, ~20 `getDoc`s). Confirm
-  which during build — the batched read is exact and bounded by feed size,
-  so likely preferred.
-
-## Pending decisions
-
-- **Ship despite the concurrency drift, or invest in a correction now?**
-  The version-locked-no-retry counter mirrors the repo's accepted
-  `league_stats` precedent and is correct except under same-activity
-  same-instant like races (rare; cosmetic under-count). Options: (a) ship
-  as-is + document (recommended — matches precedent, lowest risk); (b) add
-  an admin recompute endpoint in the same PR; (c) defer the whole rollup
-  until a race-proof primitive exists. Owner call before flipping to
-  `In progress`.
+- ~~Backfill for pre-hook likes?~~ **Resolved:** the admin
+  `recomputeActivityReactionCounts` endpoint doubles as the backfill — run
+  it once after deploy to seed counts from existing reactions; no separate
+  migration.
+- ~~FE count read: bounded `listDocs` vs per-activity `getDoc`?~~
+  **Resolved:** a single bounded `listDocs` over `activity_reaction_counts`
+  ordered by `updated_at desc` (`ACTIVITY_REACTION_COUNTS_READ_LIMIT`). One
+  call; the counts collection is one doc per activity (far smaller than the
+  reactions collection), and a fed activity's last-like recency keeps its
+  counter inside the window — so the residual window is far higher than the
+  count-on-read ceiling it replaces, without N+1 reads.
 
 ## Decisions
+
+- **Counter drift correction: admin recompute endpoint (owner-decided).**
+  Ship the version-locked counter (option a's behaviour) **and** an
+  admin-gated `recomputeActivityReactionCounts` endpoint that re-derives
+  exact counts from `activity_reactions` — so any same-instant-race drift
+  (or pre-rollup backfill gap) is correctable on demand without a migration.
+  The endpoint scans `activity_reactions`, tallies per `activityKey`, and
+  upserts the counter docs as admin. Admin-gated via `isAdmin`
+  (`_authz.ts`), mirroring `sweepExpiredDeletions`. This adds a
+  `defineUpdate` to the Candid surface — so unlike the rest of the rollup,
+  bindings **do** regenerate.
 
 - **Counter collection, not an array on the activity.** Same reasoning as
   spec A's per-liker docs — an array invites lost-update races and the
