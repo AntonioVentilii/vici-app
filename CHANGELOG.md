@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.1.17](https://github.com/AntonioVentilii/vici-app/compare/v0.1.16...v0.1.17) (2026-06-15)
+
+
+### Features
+
+* **arena:** notify the author when their call is liked ([#894](https://github.com/AntonioVentilii/vici-app/issues/894)) ([97e484b](https://github.com/AntonioVentilii/vici-app/commit/97e484b0be05ee68d1e9730d0e3c63e6c32668c4))
+* **arena:** persist friend-feed likes with counts ([#891](https://github.com/AntonioVentilii/vici-app/issues/891)) ([0e6c88f](https://github.com/AntonioVentilii/vici-app/commit/0e6c88f5bb0ca6104ff96db940201d8a6a960920))
+
+
+### Bug Fixes
+
+* **app:** center the auth-hydration loader to match the boot spinner ([#886](https://github.com/AntonioVentilii/vici-app/issues/886)) ([196ab5e](https://github.com/AntonioVentilii/vici-app/commit/196ab5e228dff86d2c0d089f37fa996a0c450394))
+* **leagues:** rank members by accuracy consistently everywhere ([#893](https://github.com/AntonioVentilii/vici-app/issues/893)) ([b4a450b](https://github.com/AntonioVentilii/vici-app/commit/b4a450b421512755a9ef385cc7731ac84a4c2e2a))
+* **markets:** correct 2026 World Cup deck resolutions and expiry times ([#892](https://github.com/AntonioVentilii/vici-app/issues/892)) ([c3f5c15](https://github.com/AntonioVentilii/vici-app/commit/c3f5c15af291532d9df324cd6820e0ce380a120f))
+* **ui:** align the YOU badge to the role badges via the shared Badge component ([#887](https://github.com/AntonioVentilii/vici-app/issues/887)) ([93276e3](https://github.com/AntonioVentilii/vici-app/commit/93276e377429f47d7ac898611ad59864d04b31a9))
+
+
+### Documentation
+
+* **spec:** draft friend-feed like persistence + like-received notification specs ([#890](https://github.com/AntonioVentilii/vici-app/issues/890)) ([4738a4c](https://github.com/AntonioVentilii/vici-app/commit/4738a4cf5ce7eb702c72ba0a2a84646f1a388a2f))
+
+
+### Code Refactoring
+
+* **ui:** replace LoadingSpinner's misleading center prop with inlinePad ([#889](https://github.com/AntonioVentilii/vici-app/issues/889)) ([45e0c44](https://github.com/AntonioVentilii/vici-app/commit/45e0c44fb021bea4166fd39b86438418eddc8af3))
+
 ## [0.1.16](https://github.com/AntonioVentilii/vici-app/compare/v0.1.15...v0.1.16) (2026-06-14)
 
 
