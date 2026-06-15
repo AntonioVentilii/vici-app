@@ -221,3 +221,25 @@ ranking). A member with no settled prediction sits at 0% and sinks to
 the foot rather than riding join order or role to the top. Decision
 record:
 [`specs/2026-06-15-fix-league-rank-consistency.md`](./spec-driven-development/specs/2026-06-15-fix-league-rank-consistency.md).
+
+### Flow daily swipe cap — server-authoritative
+
+The Flow daily cap (15 swipes/day — the daily-ten goal plus the +5
+Push-to-15 overtime) is counted on the **satellite**, not the client. A
+committed swipe calls `recordFlowSwipe`, sending only the client's local
+day key (`YYYY-MM-DD`); the server reads the caller's own profile, rolls
+over by that key, and writes the capped increment **itself** — the client
+never sends a count, so it can't reset or inflate the total. A
+monotonic-per-day assert on the `profiles` collection rejects any direct
+client write that lowers the day's count or pushes it past the cap. The
+result: the "come back tomorrow" takeover holds across reloads, cleared
+storage, sign-outs, and device switches — losing the localStorage mirror
+(now only an offline hint that can never raise the count above the server
+value) no longer hands a fresh allotment. **Known limitation (by
+design):** Flow orders go from the client straight to the agnostic
+clearing engine, so this fixes the reported honest-client reset leak, not
+adversarial bypass — a crafted client that skips the satellite call (or
+forges a different day key) could still place an order. Closing that would
+require routing orders through the satellite or an engine-side limit, a
+separate larger change. Decision record:
+[`specs/2026-06-15-fix-flow-daily-cap-server-authoritative.md`](./spec-driven-development/specs/2026-06-15-fix-flow-daily-cap-server-authoritative.md).

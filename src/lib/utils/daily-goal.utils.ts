@@ -55,14 +55,15 @@ export const applyDailyGoalBump = ({
 	return { done: Math.min(target, base + 1), date: today };
 };
 
-// localStorage mirror of the daily-goal count. The authoritative copy
-// lives on the profile (`persistDailyGoal`), but that write is a
-// best-effort async round-trip to the satellite — in a flaky in-app
-// browser webview it can silently drop, which would reset the count to
-// 0 on re-entry and let a user blow past the daily hard cap (#484). The
-// mirror is written synchronously on every commit so the cap survives a
-// refresh even when the server write is lost, and is reconciled with the
-// profile (max wins) on entry.
+// localStorage mirror of the daily-goal count. The AUTHORITATIVE copy
+// lives on the profile and is set by the satellite (`recordFlowSwipe`,
+// which the server computes and caps — the client never sends a count).
+// The mirror is only a fast OFFLINE HINT: written synchronously on every
+// commit so the cap still gates a refresh that races the server read or a
+// signed-out / offline session, but it can never RAISE the count above the
+// authoritative server value (that's what let a cleared client re-open the
+// cap before — the leak this fix closes). On entry the server count wins;
+// the mirror only fills in when there is no server value yet.
 // Namespaced + versioned to match the repo's other persisted keys
 // (`vici.motion.state.v3`, `vici-theme`) and leave room for a future
 // shape migration.
@@ -95,21 +96,31 @@ export const clearDailyGoalMirror = (): void => {
 };
 
 /**
- * Effective daily-goal state on Flow entry. Takes the higher of the
- * profile count and the localStorage mirror (both rolled over to today
- * first, so a stale day reads as 0), so a lost server write can't reset
- * the cap. When the profile wins, the reconciled max is written back to
- * the mirror so a later entry *without* a hydrated profile (signed out /
- * offline / failed fetch) still gates on the real count instead of a
- * stale lower mirror. Reads and (conditionally) writes the mirror.
+ * Effective daily-goal state on Flow entry. The profile count is the
+ * AUTHORITATIVE server value (set by `recordFlowSwipe`); the localStorage
+ * mirror is only an offline hint. So:
+ *
+ *  - When a server count is hydrated (`hasProfile`), it WINS outright — the
+ *    mirror can never raise it. This is the fix for the honest-reset leak:
+ *    a cleared / stale client that re-saved a lower count used to be able to
+ *    re-open the cap via a symmetric `max`; now it can't.
+ *  - When there is no server value yet (signed out, profile not loaded, or
+ *    a failed fetch), the mirror alone gates the session (rolled over to
+ *    today, so a stale day reads as 0).
+ *
+ * The reconciled count is written back to the mirror only when it doesn't
+ * already match, so a later entry without a hydrated profile still gates on
+ * the freshest known count. Reads and (conditionally) writes the mirror.
  */
 export const reconcileDailyGoalOnEntry = ({
 	done,
 	date,
+	hasProfile = false,
 	now = new Date()
 }: {
 	done: number;
 	date?: string;
+	hasProfile?: boolean;
 	now?: Date;
 }): { done: number; date: string | undefined } => {
 	const mirror = readDailyGoalMirror();
@@ -117,10 +128,11 @@ export const reconcileDailyGoalOnEntry = ({
 	const mirrorDone = nonNullish(mirror)
 		? rolloverDailyGoal({ done: mirror.done, date: mirror.date, now })
 		: 0;
-	const best = Math.max(profileDone, mirrorDone);
+	// Server value wins when present; otherwise the mirror is the only gate.
+	const best = hasProfile ? profileDone : mirrorDone;
 	const today = todayKey(now);
 
-	if (best > 0 && best > mirrorDone) {
+	if (best > 0 && best !== mirrorDone) {
 		writeDailyGoalMirror({ done: best, date: today });
 	}
 

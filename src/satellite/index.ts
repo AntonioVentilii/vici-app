@@ -94,9 +94,11 @@ import {
 	upsertMarketTranslation as upsertMarketTranslationFn
 } from '$satellite/services/market-translation.services';
 import {
+	assertDailyGoalMonotonic,
 	assertValidNickname,
 	checkNicknameAvailabilityFn,
 	getProfile as getProfileFn,
+	recordFlowSwipeFn,
 	searchProfiles as searchProfilesFn
 } from '$satellite/services/profile.services';
 import {
@@ -312,6 +314,26 @@ export const checkNicknameAvailability = defineQuery({
 			? { available: true as const }
 			: { available: false as const, reason: result.reason };
 	}
+});
+
+// Server-authoritative Flow daily-cap increment. Called once per committed
+// Flow swipe. The client sends only its local-day key (`YYYY-MM-DD`, from
+// `todayKey`) as the rollover boundary — never a count: the server reads the
+// caller's profile, rolls over by `dayKey`, and writes the capped increment
+// itself. The returned `dailyGoalDone` / `capReached` are the source of truth
+// for the cross-session "come back tomorrow" takeover, so a cleared or
+// signed-out client can no longer reset the cap. Backed by the monotonic
+// PROFILES assert (`assertDailyGoalMonotonic`).
+export const recordFlowSwipe = defineUpdate({
+	args: j.strictObject({
+		dayKey: j.string()
+	}),
+	result: j.strictObject({
+		dailyGoalDone: j.number(),
+		dailyGoalDate: j.string(),
+		capReached: j.boolean()
+	}),
+	handler: ({ dayKey }) => recordFlowSwipeFn({ dayKey })
 });
 
 export const getMarketMetadata = defineQuery({
@@ -1124,6 +1146,17 @@ export const getMonthlyLeaderboard = defineQuery({
 	}
 });
 
+/**
+ * Composed `profiles` pre-write veto. Each sub-assert (`assertValidNickname`,
+ * `assertDailyGoalMonotonic`) is exported independently from its service so
+ * they stay unit-testable; we compose them here to keep the dispatch table's
+ * one-assert-per-collection invariant. A throw from either rejects the write.
+ */
+const assertProfile = (context: AssertSetDocContext): void => {
+	assertValidNickname(context);
+	assertDailyGoalMonotonic(context);
+};
+
 const assertSetDocCollections = [
 	Collection.ACTIVITIES,
 	Collection.ACTIVITY_REACTIONS,
@@ -1153,7 +1186,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 		const fn: Record<AssertSetDocCollection, (ctx: AssertSetDocContext) => void> = {
 			[Collection.ACTIVITIES]: assertSetActivity,
 			[Collection.ACTIVITY_REACTIONS]: assertSetActivityReaction,
-			[Collection.PROFILES]: assertValidNickname,
+			[Collection.PROFILES]: assertProfile,
 			[Collection.ROLES]: assertSetRole,
 			[Collection.REFERRAL_CODES]: assertSetReferralCode,
 			[Collection.REFERRALS]: assertSetReferral,

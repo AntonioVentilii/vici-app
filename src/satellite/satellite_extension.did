@@ -139,6 +139,10 @@ type AppHibernateMyAccountResult = record { ok : bool; reason : opt variant { no
 
 type AppRecomputeActivityReactionCountsResult = record { recomputed : float64 };
 
+type AppRecordFlowSwipeArgs = record { day_key : text };
+
+type AppRecordFlowSwipeResult = record { daily_goal_done : float64; daily_goal_date : text; cap_reached : bool };
+
 type AppRecoverMyAccountResult = record { ok : bool; recovered : opt bool; reason : opt variant { expired } };
 
 type AppRedeemReferralCodeArgs = record { code : text };
@@ -236,6 +240,7 @@ service : {
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_hibernate_my_account : () -> (AppHibernateMyAccountResult);
 	app_recompute_activity_reaction_counts : () -> (AppRecomputeActivityReactionCountsResult);
+	app_record_flow_swipe : (AppRecordFlowSwipeArgs) -> (AppRecordFlowSwipeResult);
 	app_recover_my_account : () -> (AppRecoverMyAccountResult);
 	app_redeem_referral_code : (AppRedeemReferralCodeArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();

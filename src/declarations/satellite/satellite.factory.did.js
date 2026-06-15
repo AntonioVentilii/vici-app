@@ -976,6 +976,12 @@ export const idlFactory = ({ IDL }) => {
 	const AppRecomputeActivityReactionCountsResult = IDL.Record({
 		recomputed: IDL.Float64
 	});
+	const AppRecordFlowSwipeArgs = IDL.Record({ day_key: IDL.Text });
+	const AppRecordFlowSwipeResult = IDL.Record({
+		daily_goal_date: IDL.Text,
+		daily_goal_done: IDL.Float64,
+		cap_reached: IDL.Bool
+	});
 	const AppRecoverMyAccountResult = IDL.Record({
 		ok: IDL.Bool,
 		recovered: IDL.Opt(IDL.Bool),
@@ -1410,6 +1416,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppRecomputeActivityReactionCountsResult],
 			[]
 		),
+		app_record_flow_swipe: IDL.Func([AppRecordFlowSwipeArgs], [AppRecordFlowSwipeResult], []),
 		app_recover_my_account: IDL.Func([], [AppRecoverMyAccountResult], []),
 		app_redeem_referral_code: IDL.Func([AppRedeemReferralCodeArgs], [], []),
 		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),
