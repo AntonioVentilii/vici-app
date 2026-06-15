@@ -11,6 +11,14 @@ import { writable } from 'svelte/store';
 export const activityReactionsStore = writable<ActivityReaction[] | undefined>(undefined);
 
 /**
+ * Per-activity like counts (`Map<activityKey, count>`) from the server-maintained
+ * `activity_reaction_counts` rollup, populated by `LoaderGlobalActivities`. Replaces the former
+ * count-on-read tally over {@link activityReactionsStore} — the feed reads the count in O(1) per
+ * activity. `undefined` until first load.
+ */
+export const activityReactionCountsStore = writable<Map<string, number> | undefined>(undefined);
+
+/**
  * Likes other users left on the viewer's OWN activities — the source for the like-received inbox
  * card (spec B). Populated by `LoaderReceivedReactions` via a key-prefix read scoped to the viewer's
  * principal. `undefined` until first load, which the inbox toast gate keys off so a cold-start

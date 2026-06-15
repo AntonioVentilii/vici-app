@@ -153,6 +153,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }
@@ -804,6 +805,9 @@ export interface AppLookupReferralCodeArgs {
 export interface AppLookupReferralCodeResult {
 	owner: [] | [string];
 }
+export interface AppRecomputeActivityReactionCountsResult {
+	recomputed: number;
+}
 export interface AppRecoverMyAccountResult {
 	ok: boolean;
 	recovered: [] | [boolean];
@@ -919,6 +923,7 @@ export interface AppTrackEventsArgs {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }
@@ -1185,6 +1190,7 @@ export interface _SERVICE {
 		AppLookupLeagueByInviteResult
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
+	app_recompute_activity_reaction_counts: ActorMethod<[], AppRecomputeActivityReactionCountsResult>;
 	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;
 	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;

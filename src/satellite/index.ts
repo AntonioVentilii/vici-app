@@ -32,6 +32,11 @@ import {
 	resumeMyAccountFn,
 	sweepExpiredDeletionsFn
 } from '$satellite/services/account.services';
+import {
+	onActivityReactionDelete,
+	onActivityReactionSet,
+	recomputeActivityReactionCountsFn
+} from '$satellite/services/activity-reaction-count.services';
 import { assertSetActivityReaction } from '$satellite/services/activity-reaction.services';
 import { assertSetActivity } from '$satellite/services/activity.services';
 import {
@@ -948,6 +953,19 @@ export const sweepExpiredDeletions = defineUpdate({
 	handler: sweepExpiredDeletionsFn
 });
 
+// Admin-only corrective for the friend-feed like counts: re-derives every
+// activity's exact like count from `activity_reactions` and overwrites the
+// `activity_reaction_counts` rollup docs. Heals any drift from a
+// concurrent-like version race (the hooks are best-effort) and backfills
+// counts for likes that predate the rollup. Admin-gated; `recomputed` is
+// the number of counter docs written.
+export const recomputeActivityReactionCounts = defineUpdate({
+	result: j.strictObject({
+		recomputed: j.number()
+	}),
+	handler: () => recomputeActivityReactionCountsFn()
+});
+
 // Monthly tournament — Proposal 3. The draw is fire-and-forget on
 // every Tournament-page mount: idempotent via doc-key collision on
 // the month anchor (a second call returns `already_drawn` cleanly).
@@ -1180,6 +1198,7 @@ export const assertDeleteDoc = defineAssert<AssertDeleteDoc>({
 
 const setDocCollections = [
 	Collection.ACTIVITIES,
+	Collection.ACTIVITY_REACTIONS,
 	Collection.PROFILES,
 	Collection.ROLES,
 	Collection.REFERRALS,
@@ -1218,6 +1237,7 @@ export const onSetDoc = defineHook<OnSetDoc>({
 		const fn: Record<OnSetDocCollection, RunFunction<OnSetDocContext>> = {
 			[Collection.PROFILES]: onProfileSetComposed,
 			[Collection.ACTIVITIES]: onActivitySetComposed,
+			[Collection.ACTIVITY_REACTIONS]: onActivityReactionSet,
 			[Collection.ROLES]: syncRoleToEngineOnSet,
 			[Collection.REFERRALS]: onReferralSetForVxpPayout,
 			[Collection.LEAGUES]: onLeagueSetForFounderVxpPayout
@@ -1227,7 +1247,7 @@ export const onSetDoc = defineHook<OnSetDoc>({
 	}
 });
 
-const deleteDocCollections = [Collection.ROLES] as const;
+const deleteDocCollections = [Collection.ROLES, Collection.ACTIVITY_REACTIONS] as const;
 
 type OnDeleteDocCollection = (typeof deleteDocCollections)[number];
 
@@ -1235,7 +1255,8 @@ export const onDeleteDoc = defineHook<OnDeleteDoc>({
 	collections: deleteDocCollections,
 	run: async (context) => {
 		const fn: Record<OnDeleteDocCollection, RunFunction<OnDeleteDocContext>> = {
-			[Collection.ROLES]: syncRoleToEngineOnDelete
+			[Collection.ROLES]: syncRoleToEngineOnDelete,
+			[Collection.ACTIVITY_REACTIONS]: onActivityReactionDelete
 		};
 
 		await fn[context.data.collection]?.(context);

@@ -20,6 +20,7 @@ enum JunoDatastoreCollection {
 	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
 	ACTIVITY_REACTIONS = 'activity_reactions',
+	ACTIVITY_REACTION_COUNTS = 'activity_reaction_counts',
 	VXP_ONBOARDING = 'vxp_onboarding',
 	VXP_AWARDS = 'vxp_awards',
 	REFERRAL_CODES = 'referral_codes',
@@ -152,6 +153,18 @@ export default defineConfig(({ mode }) => ({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				// Per-activity like-count rollup. Public read (the feed renders
+				// counts); controllers write so only the satellite hooks
+				// (onActivityReactionSet / onActivityReactionDelete, writing as
+				// admin) can move a count — a client can't forge one. Maintained
+				// server-side; the admin recompute endpoint re-derives exact
+				// counts from `activity_reactions` on demand.
+				{
+					collection: JunoDatastoreCollection.ACTIVITY_REACTION_COUNTS,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
 				},
 				{
 					collection: JunoDatastoreCollection.VXP_ONBOARDING,

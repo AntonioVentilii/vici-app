@@ -1053,6 +1053,7 @@ export const enMessages = {
 	'inbox.friend_request.body': '{user} wants to connect.',
 	'inbox.friend_request.title': 'Friend request',
 	'inbox.like_received.title': '{user} liked your call',
+	'inbox.like_received.title_multi': '{user} and {count} more liked your call',
 	'inbox.pending': 'Pending',
 	'inbox.resolve.body.lost': 'You lost {amount} on "{market}".',
 	'inbox.resolve.body.neutral': 'Your call on "{market}" resolved.',

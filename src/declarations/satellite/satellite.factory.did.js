@@ -148,6 +148,7 @@ export const idlFactory = ({ IDL }) => {
 					flow_card_expanded: IDL.Null,
 					affiliation_removed: IDL.Null,
 					league_invite_sent: IDL.Null,
+					notification_opened: IDL.Null,
 					position_taken: IDL.Null,
 					flow_abandoned: IDL.Null,
 					watchlist_removed: IDL.Null,
@@ -972,6 +973,9 @@ export const idlFactory = ({ IDL }) => {
 	const AppLookupReferralCodeResult = IDL.Record({
 		owner: IDL.Opt(IDL.Text)
 	});
+	const AppRecomputeActivityReactionCountsResult = IDL.Record({
+		recomputed: IDL.Float64
+	});
 	const AppRecoverMyAccountResult = IDL.Record({
 		ok: IDL.Bool,
 		recovered: IDL.Opt(IDL.Bool),
@@ -1093,6 +1097,7 @@ export const idlFactory = ({ IDL }) => {
 					flow_card_expanded: IDL.Null,
 					affiliation_removed: IDL.Null,
 					league_invite_sent: IDL.Null,
+					notification_opened: IDL.Null,
 					position_taken: IDL.Null,
 					flow_abandoned: IDL.Null,
 					watchlist_removed: IDL.Null,
@@ -1399,6 +1404,11 @@ export const idlFactory = ({ IDL }) => {
 			[AppLookupReferralCodeArgs],
 			[AppLookupReferralCodeResult],
 			['query']
+		),
+		app_recompute_activity_reaction_counts: IDL.Func(
+			[],
+			[AppRecomputeActivityReactionCountsResult],
+			[]
 		),
 		app_recover_my_account: IDL.Func([], [AppRecoverMyAccountResult], []),
 		app_redeem_referral_code: IDL.Func([AppRedeemReferralCodeArgs], [], []),
