@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: Implemented (#894)
 
 ## Goal
 
@@ -120,15 +120,17 @@ keyword.
 ## Analytics
 
 The like/unlike action itself is already instrumented by spec A
-(`friend_feed_reaction`). For B, the meaningful new signal is engagement
-with the resulting notification. Reuse the existing inbox-open/notification
-instrumentation if one exists; **open question** — confirm whether the
-inbox already emits an open/click event. If it does, no new event is
-needed (the `'social'` kind / source already distinguishes it). If it
-does not, propose a single `notification_opened` event with
-`label: 'like_received'`, added to **both** the TS union
-(`src/lib/types/analytics-event.ts`) and the Zod mirror
-(`src/lib/schema/analytics-event.schema.ts`). No PII — bounded label only.
+(`friend_feed_reaction`). For B, the meaningful new signal would be
+engagement with the resulting notification.
+
+**Resolved (no analytics added in B).** Checked `NotificationsPage` and
+`NotifToastHost`: the inbox emits **no** open/click event today, for any
+kind. A `notification_opened` event would therefore be a new cross-cutting
+instrument on the shared inbox tap handler — it spans every notification
+kind, not this card — so it belongs to a dedicated inbox-analytics change,
+not this single-card feature. The like itself is already captured by spec
+A's `friend_feed_reaction`, so B ships with no new event. Recorded under
+Decisions.
 
 ## Technical requirements (satellite / backend — mandatory)
 
@@ -183,11 +185,12 @@ collection, doc shape, assert, hook, endpoint, or `.did` regeneration.
 
 ## Open questions
 
-- Does the inbox already emit an open/click analytics event (reusable for
-  `like_received`)? Drives whether B adds a new event name (see Analytics).
-- Which existing loader mount is the right host for the received-reactions
-  fetch (reuse over a bespoke loader)? Confirm during build against the
-  friend-request / settlement load sites.
+- ~~Does the inbox already emit an open/click analytics event?~~
+  **Resolved:** no — so B adds none (see Analytics + Decisions).
+- ~~Which existing loader mount hosts the received-reactions fetch?~~
+  **Resolved:** `LoaderReceivedReactions` mounts in the deferred block of
+  `src/lib/components/loaders/Loaders.svelte`, beside `LoaderFollowing` /
+  `LoaderGlobalActivities` — identity-scoped, off the critical-path burst.
 
 ## Pending decisions
 
@@ -209,3 +212,16 @@ collection, doc shape, assert, hook, endpoint, or `.did` regeneration.
   pattern, keeps a single source of truth, and needs no new write path.
 - **In-app inbox only.** Every existing notification source is in-app;
   matching that keeps B client-only and avoids a push-infra dependency.
+- **No analytics event in B.** The inbox has no open/click instrument
+  today; adding one is a cross-cutting concern across every kind, not this
+  card, and the like is already tracked by spec A. Deferred to a dedicated
+  inbox-analytics change rather than bolted onto this feature.
+- **Cold-start toast gate extended.** `receivedReactionsStore` joins the
+  `sourcesHydrated` gate so a backlog of existing likes is absorbed as the
+  toast baseline instead of replaying as arrival toasts on load; `Authn`
+  resets the store on every auth transition (mirroring the other
+  user-scoped caches) so a previous principal's likes never leak or replay.
+- **Reused spec A's denormalized fields + key prefix.** The card needs no
+  new read shape: `activityTitle` / `marketId` ride on the reaction doc,
+  and "likes on my calls" is the doc-key prefix (`^${me}#`), so B is a
+  pure client-side read + derive with no satellite change.

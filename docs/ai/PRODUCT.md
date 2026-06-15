@@ -85,9 +85,19 @@ it from the code.
 Each row of the Arena → Friends activity feed carries a single
 tap-to-react "like" (a `Zap` glyph). Tapping toggles it on/off and
 plays a brief tilt + laurel particle burst on commit; the motion is
-suppressed under reduced-motion. The reaction is local to the session —
-there is no persisted reaction model yet. See
-[`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md).
+suppressed under reduced-motion. The like is **persisted** — it survives
+a refresh, and each row shows a count of how many people liked it
+(aggregated across all users). Tapping is optimistic: it highlights
+immediately and rolls back with an error toast if the write fails. When
+someone likes your call, you get an in-app inbox notification ("{user}
+liked your call") that deep-links to the market; liking your own call
+never notifies you, and an unlike withdraws the card. See
+[`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md)
+(the reaction redesign),
+[`specs/2026-06-14-feat-friend-feed-like-persistence.md`](./spec-driven-development/specs/2026-06-14-feat-friend-feed-like-persistence.md)
+(persistence + counts), and
+[`specs/2026-06-14-feat-like-received-notifications.md`](./spec-driven-development/specs/2026-06-14-feat-like-received-notifications.md)
+(the like-received notification).
 
 ### Market odds — skeleton while the book loads
 
@@ -192,3 +202,20 @@ ledger walk is capped (`TRANSACTION_HISTORY_MAX_LEDGER_PAGES`); when
 hit, the genesis row is suppressed and a quiet "older history not
 shown" footer appears instead. Decision record:
 [`specs/2026-06-12-feat-transaction-history.md`](./spec-driven-development/specs/2026-06-12-feat-transaction-history.md).
+
+### League rank — one accuracy-first ranking everywhere
+
+A member's rank within a league is the same number wherever it is shown:
+the leagues-list card badge, the league detail hero (`#N` + the `N°NN`
+corner badge), and the detail-page leaderboard list. All three derive
+from a single ranking — **prediction accuracy** (win rate) descending,
+tie-broken on the longer active streak, then on join order (oldest
+first) — defined once in
+[`league-rank.utils.ts`](../../src/lib/utils/league-rank.utils.ts). It is
+window-independent: the figure is a single lifetime value, so the THIS
+WEEK and ALL TIME tabs show the same order (the tabs and the weekly
+▲/▼ rank-trend flourish are presentational and do not change the
+ranking). A member with no settled prediction sits at 0% and sinks to
+the foot rather than riding join order or role to the top. Decision
+record:
+[`specs/2026-06-15-fix-league-rank-consistency.md`](./spec-driven-development/specs/2026-06-15-fix-league-rank-consistency.md).

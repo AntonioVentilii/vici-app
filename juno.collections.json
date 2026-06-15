@@ -7,6 +7,7 @@
 	"MARKET_METADATA": "market_metadata",
 	"MARKET_TRANSLATIONS": "market_translations",
 	"ACTIVITIES": "activities",
+	"ACTIVITY_REACTIONS": "activity_reactions",
 	"VXP_ONBOARDING": "vxp_onboarding",
 	"VXP_AWARDS": "vxp_awards",
 	"REFERRAL_CODES": "referral_codes",

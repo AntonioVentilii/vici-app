@@ -10,6 +10,7 @@
 	import LoaderMarkets from '$lib/components/loaders/LoaderMarkets.svelte';
 	import LoaderOrders from '$lib/components/loaders/LoaderOrders.svelte';
 	import LoaderPositions from '$lib/components/loaders/LoaderPositions.svelte';
+	import LoaderReceivedReactions from '$lib/components/loaders/LoaderReceivedReactions.svelte';
 	import LoaderTradeHistory from '$lib/components/loaders/LoaderTradeHistory.svelte';
 	import PlaygroundVxpAutoDeposit from '$lib/components/wallet/PlaygroundVxpAutoDeposit.svelte';
 
@@ -60,4 +61,6 @@
 	<LoaderFollowing />
 
 	<LoaderGlobalActivities />
+
+	<LoaderReceivedReactions />
 {/if}

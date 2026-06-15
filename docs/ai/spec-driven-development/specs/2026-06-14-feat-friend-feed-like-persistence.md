@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: Implemented (#891)
 
 ## Goal
 
@@ -294,14 +294,16 @@ activityTitle, marketId? }` (the last two denormalized for spec B's
 
 ## Open questions
 
-- Juno owner-scoped delete on a public-write collection: confirm a
-  non-owner principal cannot `delete_doc` another user's reaction without
-  an explicit delete assert. If it can, add `assertDeleteActivityReaction`
-  binding `caller` to the key's `liker` segment.
-- For the deferred rollup-hook counts: confirm the `onSetDoc` context
-  exposes a create-vs-update signal (prior-doc presence) so the counter
-  increments only on a genuine new like, not on a re-set of an existing
-  reaction doc.
+- ~~Juno owner-scoped delete on a public-write collection~~ **Resolved:**
+  no delete assert was added. The existing public-write `comments`
+  collection deletes the same way (`deleteComment` is a bare
+  `getDoc` + `deleteDoc` with no `assertDeleteDoc`), so Juno's
+  owner-scoped delete is the established model — an unlike can only remove
+  the liker's own reaction doc.
+- For the deferred rollup-hook counts (not built here): confirm the
+  `onSetDoc` context exposes a create-vs-update signal (prior-doc
+  presence) so the counter increments only on a genuine new like. Carries
+  over to the rollup follow-up.
 
 ## Decisions
 
@@ -332,3 +334,17 @@ activityTitle, marketId? }` (the last two denormalized for spec B's
   (unmounted) and `MarketRecentTrades` has no like affordance today;
   scoping to the one live surface that already has the button keeps this
   PR tight, and the surface-agnostic backend leaves the door open.
+
+### Divergences from the spec (recorded at implementation)
+
+- **No new i18n key for the count.** The spec left the accessible count
+  label optional. Rather than add a key across all 12 catalogs, the count
+  is composed into the existing localized `arena.friends.feed.like` label
+  for the button's accessible name (`"Like · 3"`) and shown as an
+  aria-hidden numeral — zero i18n churn, catalogs stay in parity.
+- **Error toast reuses `common.error.generic`** instead of a bespoke
+  "like failed" string (same no-new-key reasoning).
+- **`likedKeys` re-keyed to the full activity doc key**
+  (`${user}#${timestamp}#${type}`) via the shared `activityReactionKey`,
+  replacing the old `${timestamp}#${user}` UI key, so the optimistic
+  mirror, the store summaries, and the persisted docs all agree.
