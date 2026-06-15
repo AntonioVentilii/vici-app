@@ -5,13 +5,7 @@ import { isCreatorOrAdmin } from '$satellite/services/_authz';
 import { logInfo } from '$satellite/utils/logger.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
-import {
-	decodeDocData,
-	encodeDocData,
-	getDocStore,
-	listDocsStore,
-	setDocStore
-} from '@junobuild/functions/sdk';
+import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobuild/functions/sdk';
 
 const callerText = (): string => msgCaller().toText();
 
@@ -76,19 +70,24 @@ export const getMarketTranslation = ({
 };
 
 export const listMarketTranslations = ({ seriesId }: { seriesId: string }): MarketTranslation[] => {
-	const { items } = listDocsStore({
-		collection: Collection.MARKET_TRANSLATIONS,
-		caller: msgCaller(),
-		// `description = seriesId` is written by upsert; matcher.description is
-		// a regex, so anchor it to avoid prefix collisions.
-		params: {
-			matcher: {
-				description: `^${seriesId}$`
-			}
-		}
-	});
+	const caller = msgCaller();
 
-	return items.map(([_, doc]) => decodeDocData<MarketTranslation>(doc.data));
+	// Point-lookup each supported locale by its deterministic key rather than
+	// scanning the collection. `listDocsStore` iterates every doc in the
+	// collection (a matcher filters the *result*, not the work), so once the
+	// collection grew the query blew the 5B-instruction single-message limit and
+	// trapped (IC0522) — which surfaced as the detail page silently losing all
+	// translations. A bounded set of exact-key reads is O(locales) and
+	// scale-stable, mirroring `listMarketTranslationsForLocales`.
+	return SUPPORTED_LOCALES.map(({ id }) =>
+		getDocStore({
+			collection: Collection.MARKET_TRANSLATIONS,
+			key: translationKey({ seriesId, locale: id }),
+			caller
+		})
+	)
+		.filter(nonNullish)
+		.map((doc) => decodeDocData<MarketTranslation>(doc.data));
 };
 
 /**
