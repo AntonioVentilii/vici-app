@@ -96,6 +96,9 @@ export const itMessages = {
 	'battles.create.trash_talk_placeholder': 'Di’ la tua…',
 	'battles.create.wager_none': 'Nessuna posta',
 	'battles.create.wager_value': '{amount} VXP',
+	'battles.incoming.cta': 'Esamina la sfida',
+	'battles.incoming.meta': 'Tocca per esaminare e accettare',
+	'battles.incoming.title': '{opponent} ha sfidato {league}',
 	'battles.intro.body':
 		'Una sfida di precisione a tempo. Lega contro lega. Scuola contro scuola. Il confronto tra di voi.',
 	'battles.intro.dismiss': 'Chiudi',
@@ -104,6 +107,7 @@ export const itMessages = {
 	'battles.leagues_link.cta': 'Vai alle Leghe',
 	'battles.leagues_link.lede': '«Vuoi uno scontro di lega?»',
 	'battles.leagues_link.sub': 'Sfida un’altra lega dalla pagina della tua lega.',
+	'battles.section.incoming': 'Sfide in arrivo',
 	'battles.section.tournament': 'Battle del torneo',
 	'battles.section.worlds_countries': 'Worlds Paesi',
 	'battles.section.worlds_universities': 'Worlds Università',

@@ -96,6 +96,9 @@ export const frMessages = {
 	'battles.create.trash_talk_placeholder': 'Dis ce que tu as à dire…',
 	'battles.create.wager_none': 'Sans mise',
 	'battles.create.wager_value': '{amount} VXP',
+	'battles.incoming.cta': 'Voir le défi',
+	'battles.incoming.meta': 'Touchez pour voir et accepter',
+	'battles.incoming.title': '{opponent} a défié {league}',
 	'battles.intro.body':
 		'Un duel de précision chronométré. Ligue contre ligue. École contre école. Le face-à-face entre vous.',
 	'battles.intro.dismiss': 'Fermer',
@@ -104,6 +107,7 @@ export const frMessages = {
 	'battles.leagues_link.cta': 'Voir les Ligues',
 	'battles.leagues_link.lede': '« Envie d’un duel de ligue ? »',
 	'battles.leagues_link.sub': 'Défie une autre ligue depuis la page de ta ligue.',
+	'battles.section.incoming': 'Défis reçus',
 	'battles.section.tournament': 'Battle du tournoi',
 	'battles.section.worlds_countries': 'Worlds Pays',
 	'battles.section.worlds_universities': 'Worlds Universités',

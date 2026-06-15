@@ -100,6 +100,9 @@ export const ptMessages = {
 	'battles.create.trash_talk_placeholder': 'Diz o que pensas…',
 	'battles.create.wager_none': 'Sem aposta',
 	'battles.create.wager_value': '{amount} VXP',
+	'battles.incoming.cta': 'Ver o desafio',
+	'battles.incoming.meta': 'Toca para ver e aceitar',
+	'battles.incoming.title': '{opponent} desafiou {league}',
 	'battles.intro.body':
 		'Um duelo de precisão cronometrado. Liga contra liga. Escola contra escola. O registo entre vocês.',
 	'battles.intro.dismiss': 'Dispensar',
@@ -108,6 +111,7 @@ export const ptMessages = {
 	'battles.leagues_link.cta': 'Ir para Ligas',
 	'battles.leagues_link.lede': '“Queres um duelo de liga?”',
 	'battles.leagues_link.sub': 'Desafia outra liga pela página da tua liga.',
+	'battles.section.incoming': 'Desafios recebidos',
 	'battles.section.tournament': 'Battle do torneio',
 	'battles.section.worlds_countries': 'Worlds Países',
 	'battles.section.worlds_universities': 'Worlds Universidades',

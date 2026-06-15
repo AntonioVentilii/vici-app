@@ -103,6 +103,9 @@ export const ptBRMessages = {
 	'battles.create.trash_talk_placeholder': 'Diga o que pensa…',
 	'battles.create.wager_none': 'Sem aposta',
 	'battles.create.wager_value': '{amount} VXP',
+	'battles.incoming.cta': 'Ver o desafio',
+	'battles.incoming.meta': 'Toque para ver e aceitar',
+	'battles.incoming.title': '{opponent} desafiou {league}',
 	'battles.intro.body':
 		'Um duelo de precisão cronometrado. Liga contra liga. Escola contra escola. O retrospecto entre vocês.',
 	'battles.intro.dismiss': 'Dispensar',
@@ -111,6 +114,7 @@ export const ptBRMessages = {
 	'battles.leagues_link.cta': 'Ir para Ligas',
 	'battles.leagues_link.lede': '“Quer um duelo de liga?”',
 	'battles.leagues_link.sub': 'Desafie outra liga pela página da sua liga.',
+	'battles.section.incoming': 'Desafios recebidos',
 	'battles.section.tournament': 'Battle do torneio',
 	'battles.section.worlds_countries': 'Worlds Países',
 	'battles.section.worlds_universities': 'Worlds Universidades',

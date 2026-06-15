@@ -103,6 +103,9 @@ export const deMessages = {
 	'battles.create.trash_talk_placeholder': 'Sag deine Meinung…',
 	'battles.create.wager_none': 'Kein Einsatz',
 	'battles.create.wager_value': '{amount} VXP',
+	'battles.incoming.cta': 'Herausforderung ansehen',
+	'battles.incoming.meta': 'Zum Ansehen und Annehmen tippen',
+	'battles.incoming.title': '{opponent} hat {league} herausgefordert',
 	'battles.intro.body':
 		'Ein Genauigkeits-Duell auf Zeit. Liga gegen Liga. Schule gegen Schule. Die Bilanz zwischen euch.',
 	'battles.intro.dismiss': 'Schließen',
@@ -111,6 +114,7 @@ export const deMessages = {
 	'battles.leagues_link.cta': 'Zu den Ligen',
 	'battles.leagues_link.lede': '„Willst du einen Liga-Battle?“',
 	'battles.leagues_link.sub': 'Fordere eine andere Liga von der Seite deiner Liga aus heraus.',
+	'battles.section.incoming': 'Eingehende Herausforderungen',
 	'battles.section.tournament': 'Turnier-Battle',
 	'battles.section.worlds_countries': 'Worlds Länder',
 	'battles.section.worlds_universities': 'Worlds Universitäten',
