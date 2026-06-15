@@ -78,6 +78,11 @@ export const unlikeActivity = async ({
 /**
  * The most-recent reactions across all users, bounded by {@link ACTIVITY_REACTIONS_READ_LIMIT}.
  * Counts + the caller's own likes are tallied client-side from this single page (count-on-read).
+ *
+ * Hydrated at startup by `LoaderGlobalActivities` (global shell, no identity required), so a read
+ * failure degrades to an empty page rather than an unhandled rejection: the feed renders without
+ * persisted likes. This tolerates the window where a fresh FE bundle is live before its collection
+ * config has been applied to the satellite, plus any transient query reject.
  */
 export const getActivityReactions = async ({
 	limit = ACTIVITY_REACTIONS_READ_LIMIT,
@@ -87,16 +92,22 @@ export const getActivityReactions = async ({
 		return [];
 	}
 
-	const { items } = await listDocs<ActivityReaction>({
-		collection: Collection.ACTIVITY_REACTIONS,
-		filter: {
-			order: { field: 'created_at', desc: true },
-			paginate: { limit }
-		},
-		options: { certified }
-	});
+	try {
+		const { items } = await listDocs<ActivityReaction>({
+			collection: Collection.ACTIVITY_REACTIONS,
+			filter: {
+				order: { field: 'created_at', desc: true },
+				paginate: { limit }
+			},
+			options: { certified }
+		});
 
-	return items.map(({ data }) => data);
+		return items.map(({ data }) => data);
+	} catch (err: unknown) {
+		console.error('Failed to load activity reactions', err);
+
+		return [];
+	}
 };
 
 /**
@@ -125,19 +136,25 @@ export const getReceivedActivityReactions = async ({
 		return [];
 	}
 
-	const { items } = await listDocs<ActivityReaction>({
-		collection: Collection.ACTIVITY_REACTIONS,
-		filter: {
-			// Principal text is `[a-z0-9-]` only, so it carries no regex metacharacters — a bare `^…#`
-			// prefix matches exactly the author segment (principals never contain `#`).
-			matcher: { key: `^${author}#` },
-			order: { field: 'created_at', desc: true },
-			paginate: { limit }
-		},
-		options: { certified }
-	});
+	try {
+		const { items } = await listDocs<ActivityReaction>({
+			collection: Collection.ACTIVITY_REACTIONS,
+			filter: {
+				// Principal text is `[a-z0-9-]` only, so it carries no regex metacharacters — a bare `^…#`
+				// prefix matches exactly the author segment (principals never contain `#`).
+				matcher: { key: `^${author}#` },
+				order: { field: 'created_at', desc: true },
+				paginate: { limit }
+			},
+			options: { certified }
+		});
 
-	return items.map(({ data }) => data);
+		return items.map(({ data }) => data);
+	} catch (err: unknown) {
+		console.error('Failed to load received activity reactions', err);
+
+		return [];
+	}
 };
 
 /** Cap on the like-count rollup read for the feed. */
@@ -158,14 +175,20 @@ export const getActivityReactionCounts = async ({
 		return new Map();
 	}
 
-	const { items } = await listDocs<ActivityReactionCount>({
-		collection: Collection.ACTIVITY_REACTION_COUNTS,
-		filter: {
-			order: { field: 'updated_at', desc: true },
-			paginate: { limit }
-		},
-		options: { certified }
-	});
+	try {
+		const { items } = await listDocs<ActivityReactionCount>({
+			collection: Collection.ACTIVITY_REACTION_COUNTS,
+			filter: {
+				order: { field: 'updated_at', desc: true },
+				paginate: { limit }
+			},
+			options: { certified }
+		});
 
-	return new Map(items.map(({ data }) => [data.activityKey, data.count]));
+		return new Map(items.map(({ data }) => [data.activityKey, data.count]));
+	} catch (err: unknown) {
+		console.error('Failed to load activity reaction counts', err);
+
+		return new Map();
+	}
 };
