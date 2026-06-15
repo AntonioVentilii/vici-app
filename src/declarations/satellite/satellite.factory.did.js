@@ -172,6 +172,7 @@ export const idlFactory = ({ IDL }) => {
 					provider_linked: IDL.Null,
 					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
+					battle_declined: IDL.Null,
 					vxp_awarded: IDL.Null,
 					league_joined: IDL.Null,
 					exit_signal: IDL.Null,
@@ -191,6 +192,7 @@ export const idlFactory = ({ IDL }) => {
 					league_created: IDL.Null,
 					onboarding_step: IDL.Null,
 					market_viewed: IDL.Null,
+					battle_expired: IDL.Null,
 					delete_flow_opened: IDL.Null,
 					affiliation_set: IDL.Null,
 					session_started: IDL.Null,
@@ -733,6 +735,8 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				id: IDL.Text,
 				trash_talk: IDL.Opt(IDL.Text),
+				respond_by_ms: IDL.Opt(IDL.Float64),
+				responded_at_ms: IDL.Opt(IDL.Float64),
 				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
 				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
 				calls_a: IDL.Opt(IDL.Float64),
@@ -742,9 +746,11 @@ export const idlFactory = ({ IDL }) => {
 				scope: IDL.Opt(IDL.Text),
 				state: IDL.Variant({
 					resolved: IDL.Null,
+					expired: IDL.Null,
 					proposed: IDL.Null,
 					in_flight: IDL.Null,
-					accepted: IDL.Null
+					accepted: IDL.Null,
+					declined: IDL.Null
 				}),
 				side_a: IDL.Text,
 				side_b: IDL.Text,
@@ -829,6 +835,8 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				id: IDL.Text,
 				trash_talk: IDL.Opt(IDL.Text),
+				respond_by_ms: IDL.Opt(IDL.Float64),
+				responded_at_ms: IDL.Opt(IDL.Float64),
 				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
 				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
 				calls_a: IDL.Opt(IDL.Float64),
@@ -838,9 +846,11 @@ export const idlFactory = ({ IDL }) => {
 				scope: IDL.Opt(IDL.Text),
 				state: IDL.Variant({
 					resolved: IDL.Null,
+					expired: IDL.Null,
 					proposed: IDL.Null,
 					in_flight: IDL.Null,
-					accepted: IDL.Null
+					accepted: IDL.Null,
+					declined: IDL.Null
 				}),
 				side_a: IDL.Text,
 				side_b: IDL.Text,
@@ -1151,6 +1161,7 @@ export const idlFactory = ({ IDL }) => {
 					provider_linked: IDL.Null,
 					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
+					battle_declined: IDL.Null,
 					vxp_awarded: IDL.Null,
 					league_joined: IDL.Null,
 					exit_signal: IDL.Null,
@@ -1170,6 +1181,7 @@ export const idlFactory = ({ IDL }) => {
 					league_created: IDL.Null,
 					onboarding_step: IDL.Null,
 					market_viewed: IDL.Null,
+					battle_expired: IDL.Null,
 					delete_flow_opened: IDL.Null,
 					affiliation_set: IDL.Null,
 					session_started: IDL.Null,

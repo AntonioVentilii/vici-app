@@ -12,6 +12,7 @@
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
 		acceptBattle,
+		declineBattle,
 		kickoffBattle,
 		listMyBattles,
 		listMyLeagues,
@@ -149,6 +150,10 @@
 				return 'leagues.battle.state.in_flight';
 			case 'resolved':
 				return 'leagues.battle.state.resolved';
+			case 'declined':
+				return 'leagues.battle.state.declined';
+			case 'expired':
+				return 'leagues.battle.state.expired';
 		}
 	};
 
@@ -178,6 +183,7 @@
 	});
 
 	const canAccept = $derived(battle?.state === 'proposed' && ownedSide === battle.sideB);
+	const canDecline = $derived(battle?.state === 'proposed' && ownedSide === battle.sideB);
 	const canKickoff = $derived(
 		battle?.state === 'accepted' && nonNullish(ownedSide) && Date.now() >= battle.kickoffMs
 	);
@@ -200,6 +206,25 @@
 			await load();
 		} catch (err) {
 			console.error('BattleDetailPage: acceptBattle failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			actingBattleId = null;
+		}
+	};
+
+	const handleDecline = async () => {
+		if (!battle || nonNullish(actingBattleId)) {
+			return;
+		}
+
+		actingBattleId = battle.id;
+
+		try {
+			await declineBattle({ battle });
+			track({ name: 'battle_declined', battleId: battle.id });
+			await load();
+		} catch (err) {
+			console.error('BattleDetailPage: declineBattle failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBattleId = null;
@@ -474,6 +499,18 @@
 						? t({ locale: $localeStore, key: 'leagues.battle.action.accepting' })
 						: t({ locale: $localeStore, key: 'leagues.battle.action.accept' })}
 				</button>
+				{#if canDecline}
+					<button
+						class="battle-detail-action is-danger"
+						disabled={actingBattleId === battle.id}
+						onclick={handleDecline}
+						type="button"
+					>
+						{actingBattleId === battle.id
+							? t({ locale: $localeStore, key: 'leagues.battle.action.declining' })
+							: t({ locale: $localeStore, key: 'leagues.battle.action.decline' })}
+					</button>
+				{/if}
 			{:else if canKickoff}
 				<button
 					class="battle-detail-action is-primary"

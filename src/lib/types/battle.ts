@@ -25,14 +25,28 @@
  * hand-crafted write cannot post a false score.
  */
 
+import { DAY_IN_MS } from '$lib/constants/app.constants';
 import { MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
 import type { CategoryStatsBucket } from '$lib/types/user-stats';
 
 export type BattleKind = 'league' | 'duel';
 
-export type BattleState = 'proposed' | 'accepted' | 'in_flight' | 'resolved';
+export type BattleState =
+	| 'proposed'
+	| 'accepted'
+	| 'in_flight'
+	| 'resolved'
+	| 'declined'
+	| 'expired';
 
 export type BattleWinner = 'A' | 'B' | 'draw';
+
+/** Terminal states — no further transition is allowed. */
+export const BATTLE_TERMINAL_STATES: ReadonlySet<BattleState> = new Set<BattleState>([
+	'resolved',
+	'declined',
+	'expired'
+]);
 
 /**
  * Which calls count toward a battle's scoreline. `'all'` counts every
@@ -61,6 +75,30 @@ export const BATTLE_WAGER_DEFAULT = BATTLE_WAGER_MIN;
 
 /** Trash-talk message length cap — brevity is rewarded. */
 export const BATTLE_TRASH_TALK_MAX_LENGTH = 60;
+
+/**
+ * How long a `proposed` battle waits for the opponent to respond before
+ * it lapses to `expired`. Fixed; not exposed in the propose modal. The
+ * deadline is stamped at proposal as `respondByMs = now + this`.
+ */
+export const BATTLE_RESPOND_BY_MS = 3 * DAY_IN_MS;
+
+/**
+ * Far upper bound on a single league's simultaneous `in_flight` battles.
+ * A safety rail, not a product limit — normal use never approaches it.
+ * Enforced client-side (the accept CTA is blocked at the cap); see the
+ * spec for why a server-side count was deliberately not added.
+ */
+export const BATTLE_MAX_CONCURRENT_IN_FLIGHT = 100;
+
+/**
+ * Tolerance when the assert checks that an accept stamped `kickoffMs ≈
+ * now`. The client uses `Date.now()` just before the call; the satellite
+ * compares against IC `time()` at execution — a few seconds apart. Wide
+ * enough to absorb that skew, tiny next to a multi-day window, so a
+ * backdated window can't slip through.
+ */
+export const BATTLE_ACCEPT_CLOCK_TOLERANCE_MS = 5 * 60 * 1000;
 
 export interface BattleDoc {
 	/** Stable battle id — matches the doc key. */
@@ -102,6 +140,21 @@ export interface BattleDoc {
 	 * and immutable thereafter.
 	 */
 	trashTalk?: string;
+	/**
+	 * Deadline (ms since epoch) by which the challenged side must accept
+	 * or the proposal lapses to `expired`. Stamped at proposal as
+	 * `now + {@link BATTLE_RESPOND_BY_MS}`. Absent on legacy rows written
+	 * before expiry shipped — callers fall back to `kickoffMs` (the old
+	 * "starts tomorrow" deadline). Immutable after the proposed state.
+	 */
+	respondByMs?: number;
+	/**
+	 * When the challenged side responded — set to `now` on accept (it
+	 * equals the freshly-set `kickoffMs`) and on decline. Drives the
+	 * proposer's inbox card "when". Unset while `proposed`; absent for
+	 * `expired` (no response) — that card uses {@link respondByMs}.
+	 */
+	respondedAtMs?: number;
 	/**
 	 * Side A's counter snapshot at kickoff, for the battle's {@link scope}
 	 * bucket. Stamped server-side on the `accepted → in_flight`
@@ -165,18 +218,27 @@ export const BATTLE_STATES: ReadonlySet<BattleState> = new Set<BattleState>([
 	'proposed',
 	'accepted',
 	'in_flight',
-	'resolved'
+	'resolved',
+	'declined',
+	'expired'
 ]);
 
 export const BATTLE_KINDS: ReadonlySet<BattleKind> = new Set<BattleKind>(['league', 'duel']);
 
 /**
  * Forward-only transition map. `current → allowed-next`. Terminal
- * states (`resolved`) have no entry.
+ * states (`resolved`, `declined`, `expired`) have no outgoing edges.
+ *
+ * A `proposed` battle can: be accepted (duels go through `accepted`,
+ * then a separate kickoff), kick off directly (league accept fuses the
+ * kickoff — the window starts at acceptance), be declined by the
+ * challenged side, or expire once `respondByMs` passes.
  */
 export const BATTLE_TRANSITIONS: Readonly<Record<BattleState, ReadonlySet<BattleState>>> = {
-	proposed: new Set<BattleState>(['accepted']),
+	proposed: new Set<BattleState>(['accepted', 'in_flight', 'declined', 'expired']),
 	accepted: new Set<BattleState>(['in_flight']),
 	in_flight: new Set<BattleState>(['resolved']),
-	resolved: new Set<BattleState>()
+	resolved: new Set<BattleState>(),
+	declined: new Set<BattleState>(),
+	expired: new Set<BattleState>()
 };

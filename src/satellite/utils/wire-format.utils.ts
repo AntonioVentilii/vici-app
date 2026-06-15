@@ -547,9 +547,14 @@ export const BattleWireSchema = j.strictObject({
 	sideA: j.string(),
 	sideB: j.string(),
 	proposer: PrincipalTextSchema,
-	state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+	state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved', 'declined', 'expired']),
 	kickoffMs: j.number(),
 	settleMs: j.number(),
+	// Deadline to accept before the proposal lapses to `expired`, and when
+	// the challenged side responded (accept/decline). Both optional —
+	// absent on legacy rows and on still-`proposed` battles respectively.
+	respondByMs: j.number().optional(),
+	respondedAtMs: j.number().optional(),
 	// Scope is a loose string on the wire (not a j.enum) so legacy rows
 	// without the field, and any future category tag, decode without a
 	// migration. The FE re-narrows via `isBattleScope`.
@@ -574,9 +579,11 @@ export const toWireBattle = (battle: {
 	sideA: string;
 	sideB: string;
 	proposer: string;
-	state: 'proposed' | 'accepted' | 'in_flight' | 'resolved';
+	state: 'proposed' | 'accepted' | 'in_flight' | 'resolved' | 'declined' | 'expired';
 	kickoffMs: number;
 	settleMs: number;
+	respondByMs?: number;
+	respondedAtMs?: number;
 	scope?: string;
 	wager?: number;
 	trashTalk?: string;
@@ -595,6 +602,8 @@ export const toWireBattle = (battle: {
 	state: battle.state,
 	kickoffMs: battle.kickoffMs,
 	settleMs: battle.settleMs,
+	respondByMs: battle.respondByMs,
+	respondedAtMs: battle.respondedAtMs,
 	scope: battle.scope,
 	wager: battle.wager,
 	trashTalk: battle.trashTalk,

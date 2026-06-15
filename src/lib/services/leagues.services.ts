@@ -7,6 +7,7 @@ import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getMyReferralCode } from '$lib/services/referral.services';
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import {
+	BATTLE_RESPOND_BY_MS,
 	BATTLE_SCOPE_DEFAULT,
 	BATTLE_TRASH_TALK_MAX_LENGTH,
 	BATTLE_WAGER_MAX,
@@ -700,6 +701,8 @@ const projectBattleWire = (b: {
 	state: BattleDoc['state'];
 	kickoffMs: number;
 	settleMs: number;
+	respondByMs?: number;
+	respondedAtMs?: number;
 	scope?: string;
 	wager?: number;
 	trashTalk?: string;
@@ -718,6 +721,8 @@ const projectBattleWire = (b: {
 	state: b.state,
 	kickoffMs: b.kickoffMs,
 	settleMs: b.settleMs,
+	respondByMs: b.respondByMs,
+	respondedAtMs: b.respondedAtMs,
 	// Re-narrow the loose wire string back to the typed union; drop
 	// anything outside the closed scope set (legacy / unknown).
 	scope: nonNullish(b.scope) && isBattleScope(b.scope) ? b.scope : undefined,
@@ -773,26 +778,31 @@ export const getMyBattleStats = async (): Promise<{ boutsWon: number }> =>
  * (sideB) league doesn't need to exist on the satellite for the
  * proposal to land — accept goes through a separate assert pass
  * under the opponent owner's caller identity.
+ *
+ * The competition window starts when the opponent **accepts**, so the
+ * proposer only chooses a `durationMs` (the window length). We persist a
+ * provisional window (`kickoffMs = now`, `settleMs = now + durationMs`)
+ * whose length encodes the duration; accept resets `kickoffMs` to its own
+ * "now" and preserves that length. `respondByMs` bounds how long the
+ * proposal waits before it lapses to `expired`.
  */
 export const proposeBattle = async ({
 	sideA,
 	sideB,
-	kickoffMs,
-	settleMs,
+	durationMs,
 	scope,
 	wager,
 	trashTalk
 }: {
 	sideA: string;
 	sideB: string;
-	kickoffMs: number;
-	settleMs: number;
+	durationMs: number;
 	scope?: BattleScope;
 	wager?: number;
 	trashTalk?: string;
 }): Promise<BattleDoc> => {
-	if (kickoffMs >= settleMs) {
-		throw new Error('Kickoff must be strictly before settle.');
+	if (!Number.isFinite(durationMs) || durationMs <= 0) {
+		throw new Error('Battle duration must be a positive number of milliseconds.');
 	}
 
 	if (nonNullish(scope) && !isBattleScope(scope)) {
@@ -816,7 +826,8 @@ export const proposeBattle = async ({
 
 	const identity = await safeGetIdentityOnce();
 	const proposerPrincipal = identity.getPrincipal().toText();
-	const battleId = `${sideA}--vs--${sideB}-${Date.now().toString(36)}`;
+	const now = Date.now();
+	const battleId = `${sideA}--vs--${sideB}-${now.toString(36)}`;
 
 	const battle: BattleDoc = {
 		id: battleId,
@@ -825,8 +836,11 @@ export const proposeBattle = async ({
 		sideB,
 		proposer: proposerPrincipal,
 		state: 'proposed',
-		kickoffMs,
-		settleMs,
+		// Provisional window — reset to the accept moment on accept. Its
+		// length is the chosen duration the accept preserves.
+		kickoffMs: now,
+		settleMs: now + durationMs,
+		respondByMs: now + BATTLE_RESPOND_BY_MS,
 		// Persist scope only when narrowed (omit the 'all' default so legacy
 		// reads and the default render path stay identical).
 		...(nonNullish(scope) && scope !== 'all' ? { scope } : {}),
@@ -847,35 +861,6 @@ export const proposeBattle = async ({
 };
 
 /**
- * Battle state transitions — thin write helpers. The satellite assert
- * (BE-6) enforces the forward-only state machine + per-transition
- * authorisation; the FE just packages the doc + signs the call.
- *
- * All three read the existing doc first so we round-trip the
- * server's `version` token, which Juno's optimistic-concurrency guard
- * requires on every update of an existing doc.
- */
-export const acceptBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
-	const existing = await getDoc<BattleDoc>({
-		collection: Collection.BATTLES,
-		key: battle.id
-	});
-
-	if (!existing) {
-		throw new Error('Battle no longer exists.');
-	}
-
-	const next: BattleDoc = { ...existing.data, state: 'accepted' };
-
-	await setDoc<BattleDoc>({
-		collection: Collection.BATTLES,
-		doc: { key: battle.id, data: next, version: existing.version }
-	});
-
-	return next;
-};
-
-/**
  * Read a league's `(calls, wins)` bucket for a battle scope from the
  * public `league_stats` doc. Missing doc / category → a zero bucket.
  */
@@ -892,6 +877,137 @@ const readLeagueStatsBucket = async ({
 	});
 
 	return leagueStatsBucket(doc?.data, scope);
+};
+
+/**
+ * Battle state transitions — thin write helpers. The satellite assert
+ * (BE-6) enforces the forward-only state machine + per-transition
+ * authorisation; the FE just packages the doc + signs the call. Each
+ * reads the existing doc first to round-trip the server's `version`
+ * token, which Juno's optimistic-concurrency guard requires.
+ */
+
+/**
+ * Accept a battle proposal. For a **league** battle this fuses the
+ * kickoff: the window starts now (`kickoffMs = now`, the proposed
+ * duration preserved as `settleMs - kickoffMs`), each side's current
+ * `league_stats` bucket is stamped as the baseline the window delta is
+ * measured against, and the state goes straight to `in_flight`. Duels
+ * (no `league_stats` to delta) just move to `accepted` and kick off
+ * separately. `respondedAtMs` records when the challenged side answered.
+ */
+export const acceptBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		throw new Error('Battle no longer exists.');
+	}
+
+	const current = existing.data;
+
+	if (current.kind !== 'league') {
+		const acceptedDuel: BattleDoc = { ...current, state: 'accepted' };
+
+		await setDoc<BattleDoc>({
+			collection: Collection.BATTLES,
+			doc: { key: battle.id, data: acceptedDuel, version: existing.version }
+		});
+
+		return acceptedDuel;
+	}
+
+	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
+	const durationMs = current.settleMs - current.kickoffMs;
+	const kickoffMs = Date.now();
+
+	const next: BattleDoc = {
+		...current,
+		state: 'in_flight',
+		kickoffMs,
+		settleMs: kickoffMs + durationMs,
+		respondedAtMs: kickoffMs,
+		baselineA: await readLeagueStatsBucket({ leagueId: current.sideA, scope }),
+		baselineB: await readLeagueStatsBucket({ leagueId: current.sideB, scope })
+	};
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
+
+	return next;
+};
+
+/**
+ * Decline a battle proposal (`proposed → declined`). Only the challenged
+ * side's owner can call this; the satellite assert hard-rejects anyone
+ * else and any battle past `proposed`. `respondedAtMs` records when.
+ */
+export const declineBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		throw new Error('Battle no longer exists.');
+	}
+
+	if (existing.data.state !== 'proposed') {
+		throw new Error('Only proposed battles can be declined.');
+	}
+
+	const next: BattleDoc = { ...existing.data, state: 'declined', respondedAtMs: Date.now() };
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
+
+	return next;
+};
+
+/**
+ * Lazily expire a `proposed` battle whose respond-by deadline has passed
+ * (`proposed → expired`). Idempotent: a battle that is no longer
+ * `proposed`, or not yet past its deadline, is returned unchanged with no
+ * write. Mirrors the lazy auto-resolve path — Juno has no scheduler, so a
+ * stale proposal is swept the first time a side owner reads it. Legacy
+ * rows without `respondByMs` fall back to `kickoffMs`.
+ */
+export const maybeExpireBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		return battle;
+	}
+
+	const current = existing.data;
+
+	if (current.state !== 'proposed') {
+		return current;
+	}
+
+	const respondByMs = current.respondByMs ?? current.kickoffMs;
+
+	if (Date.now() < respondByMs) {
+		return current;
+	}
+
+	const next: BattleDoc = { ...current, state: 'expired' };
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
+
+	return next;
 };
 
 /**

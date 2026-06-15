@@ -31,9 +31,11 @@
 	import {
 		acceptBattle,
 		buildLeagueShareUrl,
+		declineBattle,
 		kickoffBattle,
 		leaveLeague,
 		loadLeaguesByIds,
+		maybeExpireBattle,
 		resolveBattle,
 		retractBattle,
 		updateLeague,
@@ -52,7 +54,11 @@
 	} from '$lib/stores/leagues.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
-	import type { BattleDoc, BattleState } from '$lib/types/battle';
+	import {
+		BATTLE_MAX_CONCURRENT_IN_FLIGHT,
+		type BattleDoc,
+		type BattleState
+	} from '$lib/types/battle';
 	import {
 		leagueEmblem,
 		leaguePrivacy,
@@ -531,43 +537,44 @@
 		rankLeagueMembers({ members, accuracyOf: memberAccuracy, streakOf: memberStreak })
 	);
 
-	// Active battle (in_flight first, else accepted / proposed).
-	// Resolved battles are excluded — the active card only shows a live
-	// or near-live match-up.
-	const activeBattle = $derived.by(() => {
-		const live = battles.find((b) => b.state === 'in_flight');
-
-		if (live) {
-			return live;
-		}
-
-		return battles.find((b) => b.state === 'accepted' || b.state === 'proposed');
-	});
-
-	const activeBattleOpponentId = $derived.by((): string | undefined => {
-		if (!activeBattle) {
-			return;
-		}
-
-		return activeBattle.sideA === leagueId ? activeBattle.sideB : activeBattle.sideA;
-	});
-
-	// A proposed battle where THIS league is the challenged side (`sideB`): the
-	// caller's league *received* the challenge and is the one expected to accept.
-	// Drives the recipient-facing copy so the card doesn't read as if the
-	// challenger is the party being awaited.
-	const isIncomingProposedBattle = $derived(
-		nonNullish(activeBattle) && activeBattle.state === 'proposed' && activeBattle.sideB === leagueId
+	// The backend allows any number of concurrent battles per league, so
+	// the section renders lists, not a single slot. Three buckets:
+	//   - incomingRequests — proposals THIS league must accept or decline
+	//   - liveBattles      — accepted / in_flight match-ups under way
+	//   - outgoingProposals — proposals we sent, awaiting the opponent
+	const incomingRequests = $derived(
+		battles
+			.filter((b) => b.state === 'proposed' && b.sideB === leagueId)
+			.sort((a, b) => (a.respondByMs ?? a.kickoffMs) - (b.respondByMs ?? b.kickoffMs))
 	);
+	const liveBattles = $derived(
+		battles
+			.filter((b) => b.state === 'in_flight' || b.state === 'accepted')
+			.sort((a, b) => a.settleMs - b.settleMs)
+	);
+	const outgoingProposals = $derived(
+		battles
+			.filter((b) => b.state === 'proposed' && b.sideA === leagueId)
+			.sort((a, b) => a.kickoffMs - b.kickoffMs)
+	);
+	const hasAnyBattle = $derived(
+		incomingRequests.length > 0 || liveBattles.length > 0 || outgoingProposals.length > 0
+	);
+	const inFlightCount = $derived(battles.filter((b) => b.state === 'in_flight').length);
 
-	const activeBattleStateLabelKey = $derived.by((): MessageKey | undefined => {
-		if (!activeBattle) {
-			return;
-		}
+	const opponentIdOf = (battle: BattleDoc): string =>
+		battle.sideA === leagueId ? battle.sideB : battle.sideA;
 
-		switch (activeBattle.state) {
+	// A proposed battle where THIS league is the challenged side (`sideB`):
+	// we *received* the challenge and are expected to respond. Drives the
+	// recipient-facing copy and the accept/decline affordances.
+	const isIncomingProposed = (battle: BattleDoc): boolean =>
+		battle.state === 'proposed' && battle.sideB === leagueId;
+
+	const stateLabelKeyOf = (battle: BattleDoc): MessageKey => {
+		switch (battle.state) {
 			case 'proposed':
-				return isIncomingProposedBattle
+				return isIncomingProposed(battle)
 					? 'leagues.battle.state.incoming'
 					: 'leagues.battle.state.proposed';
 			case 'accepted':
@@ -575,12 +582,13 @@
 			case 'in_flight':
 				return 'leagues.battle.state.in_flight';
 			case 'resolved':
-				// `activeBattle` filter excludes resolved battles, so this
-				// branch is unreachable today; the case exists for
-				// exhaustiveness.
 				return 'leagues.battle.state.resolved';
+			case 'declined':
+				return 'leagues.battle.state.declined';
+			case 'expired':
+				return 'leagues.battle.state.expired';
 		}
-	});
+	};
 
 	// A battle stores only the opponent's league id; resolve it to the
 	// current name (own memberships → directory cache → shortened id).
@@ -598,32 +606,26 @@
 		}
 	});
 
-	// Meta line under the active battle headline:
-	//   Proposed         → "Awaiting acceptance from {opponent}".
+	// Meta line under a battle headline:
+	//   Proposed         → "Awaiting acceptance from {opponent}" /
+	//                       "{opponent} challenged your league".
 	//   Accepted /
 	//   in-flight        → "Day {day} of {days} · accuracy face-off".
-	const activeBattleMetaLine = $derived.by((): string | undefined => {
-		if (!activeBattle || !activeBattleOpponentId) {
-			return;
-		}
-
-		if (activeBattle.state === 'proposed') {
+	const metaLineOf = (battle: BattleDoc): string => {
+		if (battle.state === 'proposed') {
 			return t({
 				locale: $localeStore,
-				key: isIncomingProposedBattle
+				key: isIncomingProposed(battle)
 					? 'leagues.detail.battle_meta_incoming'
 					: 'leagues.detail.battle_meta_awaiting',
-				params: { opponent: leagueName(activeBattleOpponentId) }
+				params: { opponent: leagueName(opponentIdOf(battle)) }
 			});
 		}
 
-		const totalDays = Math.max(
-			1,
-			Math.round((activeBattle.settleMs - activeBattle.kickoffMs) / DAY_IN_MS)
-		);
+		const totalDays = Math.max(1, Math.round((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
 		const elapsedDays = Math.max(
 			1,
-			Math.min(totalDays, Math.ceil((Date.now() - activeBattle.kickoffMs) / DAY_IN_MS))
+			Math.min(totalDays, Math.ceil((Date.now() - battle.kickoffMs) / DAY_IN_MS))
 		);
 
 		return t({
@@ -631,15 +633,23 @@
 			key: 'leagues.detail.battle_meta_day_of',
 			params: { day: elapsedDays, days: totalDays }
 		});
-	});
+	};
 
 	// Per-battle transition affordances. Owner-only.
 	let actingBattleId = $state<string | null>(null);
-	// Battle ids a lazy auto-resolve has already been attempted for.
+	// Battle ids a lazy auto-resolve / auto-expire has already been
+	// attempted for, so a re-render doesn't loop on the same write.
 	const autoResolveAttempted = new SvelteSet<string>();
+	const autoExpireAttempted = new SvelteSet<string>();
+
+	// The challenged side's owner can respond to a proposal. Accept is
+	// additionally blocked at the far concurrency rail (a safety bound, not
+	// a product limit — see BATTLE_MAX_CONCURRENT_IN_FLIGHT).
+	const canRespondToBattle = (battle: BattleDoc): boolean =>
+		myRole === 'owner' && battle.state === 'proposed' && battle.sideB === leagueId;
 
 	const canAcceptBattle = (battle: BattleDoc): boolean =>
-		myRole === 'owner' && battle.state === 'proposed' && battle.sideB === leagueId;
+		canRespondToBattle(battle) && inFlightCount < BATTLE_MAX_CONCURRENT_IN_FLIGHT;
 
 	const canKickoffBattle = (battle: BattleDoc): boolean =>
 		myRole === 'owner' &&
@@ -710,6 +720,49 @@
 		}
 	};
 
+	const handleDeclineBattle = async (battle: BattleDoc) => {
+		if (nonNullish(actingBattleId)) {
+			return;
+		}
+
+		actingBattleId = battle.id;
+
+		try {
+			await declineBattle({ battle });
+			track({ name: 'battle_declined', battleId: battle.id, leagueId });
+			await refreshMyLeagues();
+		} catch (err) {
+			console.error('LeagueDetailPage: declineBattle failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			actingBattleId = null;
+		}
+	};
+
+	// Lazily expire a stale proposal (Juno has no scheduler). Background
+	// sweep — failures stay silent rather than flashing the error banner.
+	const handleExpireBattle = async (battle: BattleDoc) => {
+		if (nonNullish(actingBattleId)) {
+			return;
+		}
+
+		actingBattleId = battle.id;
+
+		try {
+			const expired = await maybeExpireBattle({ battle });
+
+			if (expired.state === 'expired') {
+				track({ name: 'battle_expired', battleId: battle.id, leagueId });
+			}
+
+			await refreshMyLeagues();
+		} catch (err) {
+			console.error('LeagueDetailPage: maybeExpireBattle failed', err);
+		} finally {
+			actingBattleId = null;
+		}
+	};
+
 	// Resolve in one tap — scores are each league's window accuracy,
 	// computed by the service and re-verified by the satellite assert.
 	const handleResolveBattle = async (battle: BattleDoc, source: 'auto' | 'nudge') => {
@@ -750,19 +803,34 @@
 		}
 	};
 
-	// Lazy auto-resolution for the active battle once it settles (Juno has
-	// no scheduler). Guarded so a re-render doesn't loop on the same write.
+	// Lazy maintenance, owner-only (Juno has no scheduler): settled
+	// battles auto-resolve and stale proposals auto-expire the first time
+	// an owner opens the league. One write per pass — the effect re-runs
+	// after the refresh and picks up the next candidate.
 	$effect(() => {
-		const target = activeBattle;
+		if (myRole !== 'owner' || nonNullish(actingBattleId)) {
+			return;
+		}
 
-		if (
-			nonNullish(target) &&
-			canResolveBattle(target) &&
-			isNullish(actingBattleId) &&
-			!autoResolveAttempted.has(target.id)
-		) {
-			autoResolveAttempted.add(target.id);
-			void handleResolveBattle(target, 'auto');
+		const toResolve = battles.find((b) => canResolveBattle(b) && !autoResolveAttempted.has(b.id));
+
+		if (nonNullish(toResolve)) {
+			autoResolveAttempted.add(toResolve.id);
+			void handleResolveBattle(toResolve, 'auto');
+
+			return;
+		}
+
+		const toExpire = battles.find(
+			(b) =>
+				b.state === 'proposed' &&
+				Date.now() >= (b.respondByMs ?? b.kickoffMs) &&
+				!autoExpireAttempted.has(b.id)
+		);
+
+		if (nonNullish(toExpire)) {
+			autoExpireAttempted.add(toExpire.id);
+			void handleExpireBattle(toExpire);
 		}
 	});
 
@@ -779,32 +847,41 @@
 	}
 
 	const activity = $derived.by((): ActivityRow[] => {
+		const verbKeys: Record<BattleState, MessageKey> = {
+			proposed: 'leagues.detail.activity_verb_proposed',
+			accepted: 'leagues.detail.activity_verb_accepted',
+			in_flight: 'leagues.detail.activity_verb_in_flight',
+			resolved: 'leagues.detail.activity_verb_resolved',
+			declined: 'leagues.detail.activity_verb_declined',
+			expired: 'leagues.detail.activity_verb_expired'
+		};
+		const stateKeys: Record<BattleState, MessageKey> = {
+			proposed: 'leagues.battle.state.proposed',
+			accepted: 'leagues.battle.state.accepted',
+			in_flight: 'leagues.battle.state.in_flight',
+			resolved: 'leagues.battle.state.resolved',
+			declined: 'leagues.battle.state.declined',
+			expired: 'leagues.battle.state.expired'
+		};
+
 		const rows: ActivityRow[] = battles.map((b) => {
 			const opponentId = b.sideA === leagueId ? b.sideB : b.sideA;
-			const ts = b.state === 'resolved' ? b.settleMs : b.kickoffMs;
-			const verbKey: MessageKey =
+			// Newest-first sort key: when the row's defining moment happened.
+			const ts =
 				b.state === 'resolved'
-					? 'leagues.detail.activity_verb_resolved'
-					: b.state === 'in_flight'
-						? 'leagues.detail.activity_verb_in_flight'
-						: b.state === 'accepted'
-							? 'leagues.detail.activity_verb_accepted'
-							: 'leagues.detail.activity_verb_proposed';
-			const stateKey: MessageKey =
-				b.state === 'proposed'
-					? 'leagues.battle.state.proposed'
-					: b.state === 'accepted'
-						? 'leagues.battle.state.accepted'
-						: b.state === 'in_flight'
-							? 'leagues.battle.state.in_flight'
-							: 'leagues.battle.state.resolved';
+					? (b.resolvedAtMs ?? b.settleMs)
+					: b.state === 'declined'
+						? (b.respondedAtMs ?? b.kickoffMs)
+						: b.state === 'expired'
+							? (b.respondByMs ?? b.kickoffMs)
+							: b.kickoffMs;
 
 			return {
 				battleId: b.id,
 				opponentId,
-				stateKey,
+				stateKey: stateKeys[b.state],
 				ts,
-				verbKey,
+				verbKey: verbKeys[b.state],
 				state: b.state
 			};
 		});
@@ -1286,90 +1363,126 @@
 			{/if}
 		</section>
 
-		<!-- ─── Battle section · secondary to standings, so it sits below
-		     the leaderboard. Active card OR challenge-another-league CTA. ─── -->
+		<!-- ─── Battle section · secondary to standings, so it sits below the
+		     leaderboard. Incoming requests, live match-ups, and the proposals
+		     we've sent — the backend allows any number of battles at once. ─── -->
+		{#snippet battleCard(battle: BattleDoc)}
+			<div class="league-detail-battle-card" data-state={battle.state}>
+				<div class="league-detail-battle-tags">
+					<span class="league-detail-battle-tag allcaps" data-state={battle.state}>
+						{t({ locale: $localeStore, key: stateLabelKeyOf(battle) })}
+					</span>
+				</div>
+				<div class="league-detail-battle-headline">
+					<span>{league.name}</span>
+					<span class="serif-italic league-detail-battle-vs">vs</span>
+					<span>{leagueName(opponentIdOf(battle))}</span>
+				</div>
+				<p class="league-detail-battle-meta num">{metaLineOf(battle)}</p>
+
+				{#if isIncomingProposed(battle)}
+					{#if canRespondToBattle(battle)}
+						<div class="league-detail-battle-actions">
+							<button
+								class="league-detail-battle-action is-primary"
+								disabled={actingBattleId === battle.id || !canAcceptBattle(battle)}
+								onclick={() => handleAcceptBattle(battle)}
+								type="button"
+							>
+								{actingBattleId === battle.id
+									? t({ locale: $localeStore, key: 'leagues.battle.action.accepting' })
+									: t({ locale: $localeStore, key: 'leagues.battle.action.accept' })}
+							</button>
+							<button
+								class="league-detail-battle-action is-danger"
+								disabled={actingBattleId === battle.id}
+								onclick={() => handleDeclineBattle(battle)}
+								type="button"
+							>
+								{actingBattleId === battle.id
+									? t({ locale: $localeStore, key: 'leagues.battle.action.declining' })
+									: t({ locale: $localeStore, key: 'leagues.battle.action.decline' })}
+							</button>
+						</div>
+						{#if !canAcceptBattle(battle)}
+							<p class="league-detail-battle-hint num">
+								{t({ locale: $localeStore, key: 'leagues.battle.cap_reached' })}
+							</p>
+						{/if}
+					{:else}
+						<p class="league-detail-battle-hint num">
+							{t({ locale: $localeStore, key: 'leagues.detail.battle_owner_accepts' })}
+						</p>
+					{/if}
+				{:else if canKickoffBattle(battle)}
+					<button
+						class="league-detail-battle-action is-primary"
+						disabled={actingBattleId === battle.id}
+						onclick={() => handleKickoffBattle(battle)}
+						type="button"
+					>
+						{actingBattleId === battle.id
+							? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
+							: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
+					</button>
+				{:else if canResolveBattle(battle)}
+					<button
+						class="league-detail-battle-action is-primary"
+						disabled={actingBattleId === battle.id}
+						onclick={() => handleResolveBattle(battle, 'nudge')}
+						type="button"
+					>
+						{actingBattleId === battle.id
+							? t({ locale: $localeStore, key: 'leagues.battle.action.resolving' })
+							: t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
+					</button>
+				{/if}
+
+				{#if canRetractBattle(battle)}
+					<button
+						class="league-detail-battle-action is-danger"
+						disabled={actingBattleId === battle.id}
+						onclick={() => handleRetractBattle(battle)}
+						type="button"
+					>
+						{actingBattleId === battle.id
+							? t({ locale: $localeStore, key: 'leagues.battle.action.retracting' })
+							: t({ locale: $localeStore, key: 'leagues.battle.action.retract' })}
+					</button>
+				{/if}
+			</div>
+		{/snippet}
+
 		<section class="league-detail-section">
 			<div class="league-detail-section-head">
 				<span class="eyebrow league-detail-section-title">
 					{t({ locale: $localeStore, key: 'leagues.detail.battle_eyebrow' })}
 				</span>
-				{#if canChallenge && !activeBattle}
+				{#if canChallenge}
 					<span class="num league-detail-section-side">
 						{t({ locale: $localeStore, key: 'leagues.detail.battle_admin_chip' })}
 					</span>
 				{/if}
 			</div>
 
-			{#if activeBattle && activeBattleStateLabelKey && activeBattleOpponentId}
-				<div class="league-detail-battle-card" data-state={activeBattle.state}>
-					<div class="league-detail-battle-tags">
-						<span class="league-detail-battle-tag allcaps" data-state={activeBattle.state}>
-							{t({ locale: $localeStore, key: activeBattleStateLabelKey })}
-						</span>
-					</div>
-					<div class="league-detail-battle-headline">
-						<span>{league.name}</span>
-						<span class="serif-italic league-detail-battle-vs">vs</span>
-						<span>{leagueName(activeBattleOpponentId)}</span>
-					</div>
-					{#if activeBattleMetaLine}
-						<p class="league-detail-battle-meta num">{activeBattleMetaLine}</p>
-					{/if}
+			{#if incomingRequests.length > 0}
+				<p class="eyebrow league-detail-battle-group-label">
+					{t({ locale: $localeStore, key: 'leagues.detail.battle_requests_label' })}
+				</p>
+				{#each incomingRequests as battle (battle.id)}
+					{@render battleCard(battle)}
+				{/each}
+			{/if}
 
-					{#if isIncomingProposedBattle && !canAcceptBattle(activeBattle)}
-						<p class="league-detail-battle-hint num">
-							{t({ locale: $localeStore, key: 'leagues.detail.battle_owner_accepts' })}
-						</p>
-					{/if}
+			{#each liveBattles as battle (battle.id)}
+				{@render battleCard(battle)}
+			{/each}
 
-					{#if canAcceptBattle(activeBattle)}
-						<button
-							class="league-detail-battle-action is-primary"
-							disabled={actingBattleId === activeBattle.id}
-							onclick={() => handleAcceptBattle(activeBattle)}
-							type="button"
-						>
-							{actingBattleId === activeBattle.id
-								? t({ locale: $localeStore, key: 'leagues.battle.action.accepting' })
-								: t({ locale: $localeStore, key: 'leagues.battle.action.accept' })}
-						</button>
-					{:else if canKickoffBattle(activeBattle)}
-						<button
-							class="league-detail-battle-action is-primary"
-							disabled={actingBattleId === activeBattle.id}
-							onclick={() => handleKickoffBattle(activeBattle)}
-							type="button"
-						>
-							{actingBattleId === activeBattle.id
-								? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
-								: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
-						</button>
-					{:else if canResolveBattle(activeBattle)}
-						<button
-							class="league-detail-battle-action is-primary"
-							disabled={actingBattleId === activeBattle.id}
-							onclick={() => handleResolveBattle(activeBattle, 'nudge')}
-							type="button"
-						>
-							{actingBattleId === activeBattle.id
-								? t({ locale: $localeStore, key: 'leagues.battle.action.resolving' })
-								: t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
-						</button>
-					{/if}
-					{#if canRetractBattle(activeBattle)}
-						<button
-							class="league-detail-battle-action is-danger"
-							disabled={actingBattleId === activeBattle.id}
-							onclick={() => handleRetractBattle(activeBattle)}
-							type="button"
-						>
-							{actingBattleId === activeBattle.id
-								? t({ locale: $localeStore, key: 'leagues.battle.action.retracting' })
-								: t({ locale: $localeStore, key: 'leagues.battle.action.retract' })}
-						</button>
-					{/if}
-				</div>
-			{:else}
+			{#each outgoingProposals as battle (battle.id)}
+				{@render battleCard(battle)}
+			{/each}
+
+			{#if !hasAnyBattle}
 				<div class="league-detail-battle-empty">
 					<p class="serif-italic league-detail-battle-empty-lede">
 						{t({ locale: $localeStore, key: 'leagues.detail.battle_empty_lede' })}
@@ -1377,17 +1490,18 @@
 					<p class="league-detail-battle-empty-sub">
 						{t({ locale: $localeStore, key: 'leagues.detail.battle_empty_sub' })}
 					</p>
-					{#if canChallenge}
-						<button
-							class="league-detail-battle-empty-cta"
-							onclick={() => (challengeOpen = true)}
-							type="button"
-						>
-							<span>{t({ locale: $localeStore, key: 'leagues.detail.battle_challenge_cta' })}</span>
-							<ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
-						</button>
-					{/if}
 				</div>
+			{/if}
+
+			{#if canChallenge}
+				<button
+					class="league-detail-battle-empty-cta"
+					onclick={() => (challengeOpen = true)}
+					type="button"
+				>
+					<span>{t({ locale: $localeStore, key: 'leagues.detail.battle_challenge_cta' })}</span>
+					<ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
+				</button>
 			{/if}
 		</section>
 
@@ -2167,6 +2281,28 @@
 	.league-detail-battle-action:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	/* Accept + Decline sit side by side on an incoming request. */
+	.league-detail-battle-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-top: 0.25rem;
+	}
+
+	.league-detail-battle-actions .league-detail-battle-action {
+		margin-top: 0;
+	}
+
+	.league-detail-battle-group-label {
+		margin: 0.15rem 0 -0.15rem;
+		color: var(--text-muted);
+	}
+
+	.league-detail-battle-tag[data-state='declined'] {
+		color: var(--no);
+		background: color-mix(in srgb, var(--no) 16%, transparent);
 	}
 
 	.league-detail-battle-empty {

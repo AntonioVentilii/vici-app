@@ -41,7 +41,9 @@ export const NOTIFICATION_KIND_CONFIG: Record<InboxNotificationKind, Notificatio
 	challenge: { icon: Swords, dest: AppPath.Arena, label: 'Challenge' },
 	level: { icon: Sparkles, dest: AppPath.Profile, label: 'Level' },
 	market: { icon: Target, dest: AppPath.Markets, label: 'Market' },
-	friend_request: { icon: UserPlus, dest: AppPath.Arena, label: 'Friend request' }
+	friend_request: { icon: UserPlus, dest: AppPath.Arena, label: 'Friend request' },
+	battle_accepted: { icon: Swords, dest: AppPath.Arena, label: 'Battle accepted' },
+	battle_declined: { icon: Swords, dest: AppPath.Arena, label: 'Battle declined' }
 };
 
 /**

@@ -1,5 +1,10 @@
 import { browser } from '$app/environment';
-import { MILLISECOND_IN_NANOSECONDS, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+import {
+	DAY_IN_MS,
+	MILLISECOND_IN_NANOSECONDS,
+	USD_DECIMALS,
+	ZERO
+} from '$lib/constants/app.constants';
 import {
 	INBOX_DISMISSED_STORAGE_KEY,
 	INBOX_READ_STORAGE_KEY,
@@ -14,6 +19,8 @@ import {
 } from '$lib/derived/resolved-positions.derived';
 import { receivedReactionsStore } from '$lib/stores/activity-reactions.store';
 import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/friends.store';
+import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
+import { leagueBattlesStore } from '$lib/stores/leagues.store';
 import { localeStore } from '$lib/stores/locale.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { initStorageStore } from '$lib/stores/storage.store';
@@ -27,7 +34,8 @@ import type { ActivityReaction } from '$lib/types/social';
 import {
 	decimalFixedValueToNumber,
 	formatRelativeAgoFromNs,
-	shortenWithMiddleEllipsis
+	shortenWithMiddleEllipsis,
+	shortLeagueId
 } from '$lib/utils/format.utils';
 import { t } from '$lib/utils/i18n.utils';
 import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
@@ -147,6 +155,68 @@ const friendRequestInboxStore: Readable<InboxNotification[]> = derived(
 				href: AppPath.Arena
 			};
 		});
+	}
+);
+
+// ── Battle response notifications ───────────────────────────────────────────
+// Juno docs aren't pushed live across users, so a league owner whose
+// challenge the opponent just accepted or declined wouldn't otherwise know.
+// We derive a card from the battles the viewer *proposed* that have left the
+// `proposed` state recently — the proposer's league is always `sideA`. The
+// card ages out of the window so it can't linger forever; resolution has its
+// own surface (the league detail), so resolved battles don't notify here.
+
+const BATTLE_NOTIFICATION_WINDOW_MS = 3 * DAY_IN_MS;
+
+const battleInboxStore: Readable<InboxNotification[]> = derived(
+	[leagueBattlesStore, leagueDirectoryStore, userStore, localeStore],
+	([$battles, $directory, $user, $locale]) => {
+		const viewer = $user.user?.owner;
+
+		if (isNullish(viewer)) {
+			return [];
+		}
+
+		const now = Date.now();
+		// A battle between two leagues the viewer owns appears in both
+		// per-league lists, so dedupe by id (Map keeps the last seen).
+		const proposed = [...$battles.values()]
+			.flat()
+			.filter(
+				(battle) =>
+					battle.proposer === viewer &&
+					(battle.state === 'in_flight' || battle.state === 'declined')
+			);
+		const matched = [...new Map(proposed.map((battle) => [battle.id, battle])).values()]
+			.map((battle) => ({ battle, respondedAtMs: battle.respondedAtMs ?? battle.kickoffMs }))
+			.filter(({ respondedAtMs }) => now - respondedAtMs <= BATTLE_NOTIFICATION_WINDOW_MS);
+
+		return matched
+			.sort((a, b) => b.respondedAtMs - a.respondedAtMs)
+			.map(({ battle, respondedAtMs }) => {
+				const accepted = battle.state === 'in_flight';
+				const opponent = $directory.get(battle.sideB)?.name ?? shortLeagueId(battle.sideB);
+
+				return {
+					id: `battle-${battle.state}-${battle.id}`,
+					kind: accepted ? ('battle_accepted' as const) : ('battle_declined' as const),
+					title: t({
+						locale: $locale,
+						key: accepted ? 'inbox.battle_accepted.title' : 'inbox.battle_declined.title'
+					}),
+					body: t({
+						locale: $locale,
+						key: accepted ? 'inbox.battle_accepted.body' : 'inbox.battle_declined.body',
+						params: { opponent }
+					}),
+					when: formatRelativeAgoFromNs({
+						timestampNs: BigInt(Math.round(respondedAtMs)) * MILLISECOND_IN_NANOSECONDS,
+						locale: $locale
+					}),
+					unread: true,
+					href: `${AppPath.Arena}/leagues/${battle.sideA}`
+				};
+			});
 	}
 );
 
@@ -471,14 +541,15 @@ const inboxDismissedStore = writable<Set<string>>(loadStringSet(INBOX_DISMISSED_
 export const combinedInboxStore: Readable<InboxNotification[]> = derived(
 	[
 		friendRequestInboxStore,
+		battleInboxStore,
 		settledInboxStore,
 		likesReceivedInboxStore,
 		inboxStore,
 		inboxReadStore,
 		inboxDismissedStore
 	],
-	([$requests, $settled, $likesReceived, $inbox, $read, $dismissed]) =>
-		[...$requests, ...$settled, ...$likesReceived, ...$inbox]
+	([$requests, $battles, $settled, $likesReceived, $inbox, $read, $dismissed]) =>
+		[...$requests, ...$battles, ...$settled, ...$likesReceived, ...$inbox]
 			.filter((item) => !$dismissed.has(item.id))
 			.map((item) => (item.unread && $read.has(item.id) ? { ...item, unread: false } : item))
 );

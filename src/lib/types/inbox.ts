@@ -5,7 +5,9 @@ export type InboxNotificationKind =
 	| 'challenge'
 	| 'level'
 	| 'market'
-	| 'friend_request';
+	| 'friend_request'
+	| 'battle_accepted'
+	| 'battle_declined';
 
 export interface InboxNotification {
 	id: string;

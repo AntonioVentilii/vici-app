@@ -136,6 +136,10 @@ export type AnalyticsEventName =
 	| 'battle_proposed'
 	/** A battle was accepted. */
 	| 'battle_accepted'
+	/** A battle proposal was declined by the challenged side. */
+	| 'battle_declined'
+	/** A battle proposal lapsed unanswered past its respond-by deadline. */
+	| 'battle_expired'
 	/** A battle resolved. */
 	| 'battle_resolved'
 	/** A comment was posted. */

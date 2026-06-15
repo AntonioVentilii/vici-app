@@ -191,14 +191,10 @@
 		submitError = null;
 
 		try {
-			const kickoffMs = Date.now() + DAY_IN_MS;
-			const settleMs = kickoffMs + duration * DAY_IN_MS;
-
 			const battle = await proposeBattle({
 				sideA: fromLeague.id,
 				sideB: opponent.id,
-				kickoffMs,
-				settleMs,
+				durationMs: duration * DAY_IN_MS,
 				scope,
 				wager,
 				trashTalk
