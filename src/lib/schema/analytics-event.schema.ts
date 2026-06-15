@@ -79,6 +79,8 @@ export const AnalyticsEventNameSchema = j.enum([
 	'delete_confirmed',
 	'delete_succeeded',
 	'exit_signal',
+	// Notifications
+	'notification_opened',
 	// Health
 	'app_error',
 	'perf_metric'

@@ -6,6 +6,7 @@
 	import NotifRow from '$lib/components/ui/NotifRow.svelte';
 	import { notificationDestination } from '$lib/constants/notification-kind.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { track } from '$lib/services/analytics.services';
 	import { refreshFriendRelations } from '$lib/stores/friends.store';
 	import {
 		combinedInboxStore,
@@ -29,6 +30,7 @@
 	// because the market path is dynamic.
 	const open = (notification: InboxNotification) => {
 		markInboxRead(notification.id);
+		track({ name: 'notification_opened', label: notification.kind });
 		void goto(
 			notificationDestination({
 				kind: notification.kind,

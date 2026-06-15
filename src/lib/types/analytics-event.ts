@@ -165,6 +165,14 @@ export type AnalyticsEventName =
 	| 'delete_succeeded'
 	/** An exit-signal reason was captured (pairs with the existing `exit_signals` collection). */
 	| 'exit_signal'
+	// ── Notifications ─────────────────────────────────────────────────
+	/**
+	 * An inbox notification was opened — tapped on the Notifications page or
+	 * its arrival toast. `label` carries the notification `kind`
+	 * (`resolve | streak | social | challenge | level | market | friend_request`),
+	 * so engagement can be sliced by notification type.
+	 */
+	| 'notification_opened'
 	// ── Health ────────────────────────────────────────────────────────
 	/** A client-side error surfaced (no PII — message is omitted/coarse). */
 	| 'app_error'
