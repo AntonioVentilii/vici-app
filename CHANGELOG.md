@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.1](https://github.com/AntonioVentilii/vici-app/compare/v0.2.0...v0.2.1) (2026-06-15)
+
+
+### Features
+
+* **dash:** skeleton the referral + today figures while their async data loads ([#909](https://github.com/AntonioVentilii/vici-app/issues/909)) ([4358010](https://github.com/AntonioVentilii/vici-app/commit/4358010496c4354f11070e365f86edb7708217d3))
+
+
+### Bug Fixes
+
+* **arena:** tolerate + observe failed reaction reads at startup ([#908](https://github.com/AntonioVentilii/vici-app/issues/908)) ([76eca50](https://github.com/AntonioVentilii/vici-app/commit/76eca5071961114ac0bd86546f27a3d6b4be55b8))
+* **leagues:** clarify privacy gates discovery, not joining ([#910](https://github.com/AntonioVentilii/vici-app/issues/910)) ([6407522](https://github.com/AntonioVentilii/vici-app/commit/64075222392952dfdc8d78051f997ef9cf7a67f1))
+* **onboarding:** stop the login stats-sync race from dropping onboarding picks ([#906](https://github.com/AntonioVentilii/vici-app/issues/906)) ([9e7a460](https://github.com/AntonioVentilii/vici-app/commit/9e7a460eaea4fbaeebb6d5f76c50718f25f4aae6))
+
 ## [0.2.0](https://github.com/AntonioVentilii/vici-app/compare/v0.1.17...v0.2.0) (2026-06-15)
 
 
