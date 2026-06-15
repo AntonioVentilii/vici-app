@@ -89,9 +89,11 @@ suppressed under reduced-motion. The like is **persisted** — it survives
 a refresh, and each row shows a count of how many people liked it
 (aggregated across all users). Tapping is optimistic: it highlights
 immediately and rolls back with an error toast if the write fails. When
-someone likes your call, you get an in-app inbox notification ("{user}
-liked your call") that deep-links to the market; liking your own call
-never notifies you, and an unlike withdraws the card. See
+someone likes your call, you get an in-app inbox notification that
+deep-links to the market; liking your own call never notifies you, and an
+unlike withdraws the card. Multiple likes on the same call collapse into a
+single card ("{user} and N more liked your call") rather than one per
+liker. See
 [`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md)
 (the reaction redesign),
 [`specs/2026-06-14-feat-friend-feed-like-persistence.md`](./spec-driven-development/specs/2026-06-14-feat-friend-feed-like-persistence.md)

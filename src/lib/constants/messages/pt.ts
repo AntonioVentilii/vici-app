@@ -1073,6 +1073,7 @@ export const ptMessages = {
 	'inbox.friend_request.body': '{user} quer ligar-se a ti.',
 	'inbox.friend_request.title': 'Pedido de amizade',
 	'inbox.like_received.title': '{user} gostou da tua previsão',
+	'inbox.like_received.title_multi': '{user} e mais {count} gostaram da tua previsão',
 	'inbox.pending': 'Pendente',
 	'inbox.resolve.body.lost': 'Perdeste {amount} em "{market}".',
 	'inbox.resolve.body.neutral': 'A tua previsão sobre "{market}" foi resolvida.',
