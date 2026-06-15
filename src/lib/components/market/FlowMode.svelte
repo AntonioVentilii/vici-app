@@ -151,6 +151,20 @@
 	// 480 ms clears both windows and the 440 ms rise-in animation.
 	let deckGesturesArmed = $state(false);
 	const ENTRY_GESTURE_GUARD_MS = 480;
+
+	// Arm deck gestures once the entry transition's trailing events have
+	// drained (see above). Driven by `entered` so the timer is cleared if
+	// FlowMode unmounts mid-window.
+	$effect(() => {
+		if (!entered) {
+			return;
+		}
+
+		const timer = setTimeout(() => (deckGesturesArmed = true), ENTRY_GESTURE_GUARD_MS);
+
+		return () => clearTimeout(timer);
+	});
+
 	// The away-digest while the entry gate is open. Tracks the live store so
 	// a late trade-history fetch still populates the recap; the moment the
 	// user enters, `markResolutionsSeen` empties it and the overlay unmounts
@@ -1000,8 +1014,6 @@
 
 		markResolutionsSeen();
 		entered = true;
-		deckGesturesArmed = false;
-		setTimeout(() => (deckGesturesArmed = true), ENTRY_GESTURE_GUARD_MS);
 	};
 
 	// "Back to dashboard →" — close the takeover and return to the
