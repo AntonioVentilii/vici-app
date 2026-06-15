@@ -1,8 +1,30 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { track } from '$lib/services/analytics.services';
 import type { Activity, ActivityReaction, ActivityReactionCount } from '$lib/types/social';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, listDocs, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
+
+/**
+ * Record a failed reaction read as an observable `app_error` event rather than
+ * letting it vanish behind a console line. These reads hydrate the global shell
+ * at startup, so a silent fallback would mask a persistent misconfiguration
+ * (e.g. a read-permission or schema regression) as an empty feed forever — the
+ * tracked event keeps the failure (and its rate) visible in the cockpit.
+ * `track` is fire-and-forget and never throws, so this can't re-break startup.
+ */
+const trackReactionReadFailure = ({
+	collection,
+	operation,
+	err
+}: {
+	collection: string;
+	operation: string;
+	err: unknown;
+}): void => {
+	console.error(`Failed to load ${collection} (${operation})`, err);
+	track({ name: 'app_error', source: collection, label: operation });
+};
 
 /**
  * Cap on the count-on-read reaction scan. One bounded `listDocs` per feed mount tallies likes
@@ -78,6 +100,12 @@ export const unlikeActivity = async ({
 /**
  * The most-recent reactions across all users, bounded by {@link ACTIVITY_REACTIONS_READ_LIMIT}.
  * Counts + the caller's own likes are tallied client-side from this single page (count-on-read).
+ *
+ * Hydrated at startup by `LoaderGlobalActivities` (global shell, no identity required), so a read
+ * failure degrades to an empty page rather than an unhandled rejection: the feed renders without
+ * persisted likes. This tolerates the window where a fresh FE bundle is live before its collection
+ * config has been applied to the satellite, plus any transient query reject — but the failure is
+ * tracked (see {@link trackReactionReadFailure}), never silently swallowed.
  */
 export const getActivityReactions = async ({
 	limit = ACTIVITY_REACTIONS_READ_LIMIT,
@@ -87,16 +115,22 @@ export const getActivityReactions = async ({
 		return [];
 	}
 
-	const { items } = await listDocs<ActivityReaction>({
-		collection: Collection.ACTIVITY_REACTIONS,
-		filter: {
-			order: { field: 'created_at', desc: true },
-			paginate: { limit }
-		},
-		options: { certified }
-	});
+	try {
+		const { items } = await listDocs<ActivityReaction>({
+			collection: Collection.ACTIVITY_REACTIONS,
+			filter: {
+				order: { field: 'created_at', desc: true },
+				paginate: { limit }
+			},
+			options: { certified }
+		});
 
-	return items.map(({ data }) => data);
+		return items.map(({ data }) => data);
+	} catch (err: unknown) {
+		trackReactionReadFailure({ collection: Collection.ACTIVITY_REACTIONS, operation: 'list', err });
+
+		return [];
+	}
 };
 
 /**
@@ -125,19 +159,29 @@ export const getReceivedActivityReactions = async ({
 		return [];
 	}
 
-	const { items } = await listDocs<ActivityReaction>({
-		collection: Collection.ACTIVITY_REACTIONS,
-		filter: {
-			// Principal text is `[a-z0-9-]` only, so it carries no regex metacharacters — a bare `^…#`
-			// prefix matches exactly the author segment (principals never contain `#`).
-			matcher: { key: `^${author}#` },
-			order: { field: 'created_at', desc: true },
-			paginate: { limit }
-		},
-		options: { certified }
-	});
+	try {
+		const { items } = await listDocs<ActivityReaction>({
+			collection: Collection.ACTIVITY_REACTIONS,
+			filter: {
+				// Principal text is `[a-z0-9-]` only, so it carries no regex metacharacters — a bare `^…#`
+				// prefix matches exactly the author segment (principals never contain `#`).
+				matcher: { key: `^${author}#` },
+				order: { field: 'created_at', desc: true },
+				paginate: { limit }
+			},
+			options: { certified }
+		});
 
-	return items.map(({ data }) => data);
+		return items.map(({ data }) => data);
+	} catch (err: unknown) {
+		trackReactionReadFailure({
+			collection: Collection.ACTIVITY_REACTIONS,
+			operation: 'list_received',
+			err
+		});
+
+		return [];
+	}
 };
 
 /** Cap on the like-count rollup read for the feed. */
@@ -158,14 +202,24 @@ export const getActivityReactionCounts = async ({
 		return new Map();
 	}
 
-	const { items } = await listDocs<ActivityReactionCount>({
-		collection: Collection.ACTIVITY_REACTION_COUNTS,
-		filter: {
-			order: { field: 'updated_at', desc: true },
-			paginate: { limit }
-		},
-		options: { certified }
-	});
+	try {
+		const { items } = await listDocs<ActivityReactionCount>({
+			collection: Collection.ACTIVITY_REACTION_COUNTS,
+			filter: {
+				order: { field: 'updated_at', desc: true },
+				paginate: { limit }
+			},
+			options: { certified }
+		});
 
-	return new Map(items.map(({ data }) => [data.activityKey, data.count]));
+		return new Map(items.map(({ data }) => [data.activityKey, data.count]));
+	} catch (err: unknown) {
+		trackReactionReadFailure({
+			collection: Collection.ACTIVITY_REACTION_COUNTS,
+			operation: 'list',
+			err
+		});
+
+		return new Map();
+	}
 };
