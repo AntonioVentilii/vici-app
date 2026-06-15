@@ -1,9 +1,6 @@
 import { browser } from '$app/environment';
 import type { AppLocale } from '$lib/constants/locale.constants';
-import {
-	nicknameUniqueKey,
-	PENDING_ONBOARDING_STORAGE_KEY
-} from '$lib/constants/profile.constants';
+import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 import {
 	REFERRAL_CODE_REGEX,
 	REFERRAL_EXISTING_USER_REASON,
@@ -11,7 +8,7 @@ import {
 } from '$lib/constants/referral.constants';
 import { track } from '$lib/services/analytics.services';
 import { joinLeagueByInvite } from '$lib/services/leagues.services';
-import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
+import { applyOnboardingPicks, checkNicknameAvailability } from '$lib/services/profile.services';
 import { claimReferralFriendship, redeemReferralCode } from '$lib/services/referral.services';
 import { notificationsStore } from '$lib/stores/notification.store';
 import { userStore } from '$lib/stores/user.store';
@@ -451,86 +448,41 @@ export const drainPendingOnboarding = async ({
 	// `preferences` so the seed defaults stay intact.
 	const sidePreference = pending.side ?? '';
 	const participantPreference = pending.participantId ?? '';
-	const baseUpdated = {
-		...profile,
-		interests: pending.interests,
-		...(pending.email && { email: pending.email }),
-		preferences: {
-			...profile.preferences,
-			favoriteParticipantId: participantPreference,
-			favoriteSide: sidePreference,
-			onboardingCompleted: true
-		}
-	};
 
 	try {
-		let nextProfile = baseUpdated;
+		// Pre-flight: a brand-new user can still collide if the handle was claimed in the window
+		// between onboarding step 4 and sign-in landing. Probe first so we can keep
+		// team/side/onboardingCompleted (which are independent of the handle) and let the user
+		// rename later from their profile. Any unavailable reason — `'taken'`, or the
+		// `'too_short'` / `'required'` cases that `parsePendingOnboarding`'s tolerated legacy
+		// payloads can still produce — skips the nickname update; only `'taken'` is worth a toast.
+		let setHandle = false;
+		let handleCollision = false;
 
 		if (nonNullish(pending.handle)) {
-			// Pre-flight: a brand-new user can still collide if
-			// the handle was claimed in the window between
-			// onboarding step 4 and sign-in landing. Probe first
-			// so we can keep team/side/onboardingCompleted (which
-			// are independent of the handle) and let the user
-			// rename later from their profile.
 			const probe = await checkNicknameAvailability({
 				nickname: pending.handle,
 				principal: profile.owner
 			});
 
-			if (!probe.available) {
-				// Apply interests + email + team/side/completion
-				// even when the handle is skipped — they're
-				// independently useful and the user can rename
-				// later.
-				await upsertProfile({
-					key: profile.owner,
-					data: baseUpdated
-				});
-
-				userStore.update((curr) => ({ ...curr, profile: baseUpdated }));
-
-				// Handle collision is independent of the referral redemption — the user is still a
-				// new sign-up and deserves the bonus. The league join is idempotent.
-				void joinPendingLeagueIfAny({ code: pending.leagueInvite, locale });
-				const referralResolved = await resolvePendingReferral({
-					code: pending.referralCode,
-					locale,
-					source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
-				});
-				settlePendingSlot({ pending, referralResolved });
-
-				// Any unavailable reason — `'taken'`, or the
-				// `'too_short'` / `'required'` cases that
-				// `parsePendingOnboarding`'s tolerated legacy payloads
-				// can still produce — must SKIP the nickname update.
-				// Only the collision case is worth a toast; the user
-				// can rename later from their profile.
-				return probe.reason === 'taken'
-					? { kind: 'collision', handle: pending.handle }
-					: { kind: 'applied' };
+			if (probe.available) {
+				setHandle = true;
+			} else if (probe.reason === 'taken') {
+				handleCollision = true;
 			}
-
-			// Stamp the handle-change time so the set-profile assertion
-			// accepts the write. The satellite requires
-			// `handleLastChangeMs` ≈ now whenever the (normalized)
-			// nickname differs from the stored doc, and rejects a moved
-			// stamp when it is unchanged — so stamp only on a real change.
-			// The bootstrapped nickname almost always differs from the
-			// picked handle, which is the case that was failing.
-			const handleChanged =
-				nicknameUniqueKey(pending.handle) !== nicknameUniqueKey(profile.nickname ?? '');
-
-			nextProfile = {
-				...baseUpdated,
-				nickname: pending.handle,
-				...(handleChanged && { handleLastChangeMs: Date.now() })
-			};
 		}
 
-		await upsertProfile({
-			key: nextProfile.owner,
-			data: nextProfile
+		// Field-level patch (NOT a full-snapshot write): `calculateAndSyncStats` writes this same
+		// doc concurrently on the finishing login, so a stale full snapshot would lose the
+		// optimistic-version race and throw — silently dropping these picks.
+		const nextProfile = await applyOnboardingPicks({
+			principal: profile.owner,
+			handle: pending.handle,
+			setHandle,
+			interests: pending.interests,
+			email: pending.email,
+			favoriteParticipantId: participantPreference,
+			favoriteSide: sidePreference
 		});
 
 		userStore.update((curr) => ({ ...curr, profile: nextProfile }));
@@ -540,7 +492,8 @@ export const drainPendingOnboarding = async ({
 		// terminally resolved — a transient failure re-arms the code for a bounded retry instead
 		// of silently dropping the friendship + bonus. Redeeming itself does no ledger transfer
 		// (the bonus is deferred to the referee's first trade), so this stays cheap. The league
-		// join is idempotent and fire-and-forget.
+		// join is idempotent and fire-and-forget. A handle collision is independent of all this —
+		// the user is still a new sign-up and deserves the bonus.
 		void joinPendingLeagueIfAny({ code: pending.leagueInvite, locale });
 		const referralResolved = await resolvePendingReferral({
 			code: pending.referralCode,
@@ -549,7 +502,9 @@ export const drainPendingOnboarding = async ({
 		});
 		settlePendingSlot({ pending, referralResolved });
 
-		return { kind: 'applied' };
+		return handleCollision
+			? { kind: 'collision', handle: pending.handle ?? '' }
+			: { kind: 'applied' };
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : '';
 

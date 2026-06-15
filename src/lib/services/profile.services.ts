@@ -3,7 +3,11 @@ import { functions } from '$declarations/satellite/satellite.api';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { COMEBACK_COLD_STREAK_LOSSES } from '$lib/constants/menagerie.constants';
-import { MIN_NICKNAME_LENGTH, sanitizeNickname } from '$lib/constants/profile.constants';
+import {
+	MIN_NICKNAME_LENGTH,
+	nicknameUniqueKey,
+	sanitizeNickname
+} from '$lib/constants/profile.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
@@ -353,6 +357,74 @@ export const upsertProfile = async (
 		}
 	});
 };
+
+/**
+ * Persist the onboarding picks (handle + backed team/side + completion flag) onto the freshest
+ * profile doc, serialized through {@link patchProfile}'s queue.
+ *
+ * This MUST go through the patch queue rather than a full-snapshot {@link upsertProfile}: on the
+ * login that finishes onboarding, {@link calculateAndSyncStats} writes the same doc concurrently
+ * (it's awaited right after `userStore.set` in `Authn.svelte`, so it overlaps the post-signin
+ * drain). A full-snapshot write built from the pre-sync profile would lose the optimistic-version
+ * race and throw — silently dropping the user's picks (the "could not save your onboarding
+ * choices" report: handle present from the bootstrap, country/team blank). A field-level patch on
+ * the freshest doc both avoids the conflict and leaves the concurrently-written stats intact.
+ *
+ * `setHandle` is gated by the caller's availability probe — pass `true` only when the picked handle
+ * is free. The handle-change cooldown stamp is decided here against the FRESH stored nickname so a
+ * concurrent rename can't desync it.
+ */
+export const applyOnboardingPicks = ({
+	principal,
+	handle,
+	setHandle,
+	interests,
+	email,
+	favoriteParticipantId,
+	favoriteSide
+}: {
+	principal: PrincipalText;
+	handle: string | null;
+	setHandle: boolean;
+	interests?: string[];
+	email?: string;
+	favoriteParticipantId: string;
+	favoriteSide: string;
+}): Promise<UserProfile> =>
+	patchProfile({
+		principal,
+		patch: (current) => {
+			const patch: Partial<UserProfile> = {
+				preferences: {
+					...current.preferences,
+					favoriteParticipantId,
+					favoriteSide,
+					onboardingCompleted: true
+				}
+			};
+
+			if (nonNullish(interests)) {
+				patch.interests = interests;
+			}
+
+			if (nonNullish(email) && email.length > 0) {
+				patch.email = email;
+			}
+
+			if (setHandle && nonNullish(handle)) {
+				patch.nickname = handle;
+
+				// Stamp the handle-change time only on a real change so the
+				// set-profile assertion accepts the write — the bootstrapped
+				// nickname almost always differs from the picked handle.
+				if (nicknameUniqueKey(handle) !== nicknameUniqueKey(current.nickname ?? '')) {
+					patch.handleLastChangeMs = Date.now();
+				}
+			}
+
+			return patch;
+		}
+	});
 
 /**
  * Case-insensitive search over nickname, owner, and document key via secure satellite query.
