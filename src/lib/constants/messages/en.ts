@@ -93,6 +93,9 @@ export const enMessages = {
 	'battles.create.trash_talk_placeholder': 'Say your piece…',
 	'battles.create.wager_none': 'No stake',
 	'battles.create.wager_value': '{amount} VXP',
+	'battles.incoming.cta': 'Review challenge',
+	'battles.incoming.meta': 'Tap to review and accept',
+	'battles.incoming.title': '{opponent} challenged {league}',
 	'battles.intro.body':
 		'A timed accuracy face-off. League vs. league. School vs. school. The record between you.',
 	'battles.intro.dismiss': 'Dismiss',
@@ -101,6 +104,7 @@ export const enMessages = {
 	'battles.leagues_link.cta': 'Go to Leagues',
 	'battles.leagues_link.lede': '“Want a league battle?”',
 	'battles.leagues_link.sub': 'Challenge another league from your league’s page.',
+	'battles.section.incoming': 'Incoming Challenges',
 	'battles.section.tournament': 'Tournament Battle',
 	'battles.section.worlds_countries': 'Worlds Countries',
 	'battles.section.worlds_universities': 'Worlds Universities',
