@@ -11,6 +11,7 @@
 	import { minuteTick_ms } from '$lib/derived/time.derived';
 	import { worldCupPhase } from '$lib/derived/world-cup.derived';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { hydrate as hydrateMarketTranslations } from '$lib/stores/market-translations.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import type { Market } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
@@ -141,6 +142,25 @@
 			.sort(byVolumeDesc)
 			.slice(0, TRENDING_LIMIT)
 	);
+
+	// Every market with a row on the board, deduped. Drives one bulk
+	// translation read for the whole page so each card resolves its overlay
+	// from cache instead of firing its own per-series fetch (the N+1 the
+	// detail-page spec called out).
+	const visibleSeriesIds = $derived([
+		...new Set([
+			...savedMarkets.map((m) => m.id),
+			...trendingMarkets.map((m) => m.id),
+			...resolvingSoon.map((m) => m.id),
+			...restMarkets.map((m) => m.id)
+		])
+	]);
+
+	$effect(() => {
+		if (visibleSeriesIds.length > 0) {
+			void hydrateMarketTranslations(visibleSeriesIds);
+		}
+	});
 
 	// "See all" on the trending rail scrolls to the main list rather than a
 	// separate route — the list is sorted by the same volume signal.

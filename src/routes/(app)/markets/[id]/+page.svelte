@@ -46,6 +46,7 @@
 	import { loadMarketPriceCandles } from '$lib/services/trade.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
 	import type { CallSide, Market, MarketId } from '$lib/types/market';
 	import type {
 		FollowedLeanSignal,
@@ -82,9 +83,10 @@
 	let translationsLoadingId: MarketId | undefined = undefined;
 
 	// Whether the reader has flipped the metadata back to the original
-	// (on-chain) language. Defaults to the translated view and snaps back to it
-	// on a market change (see the fetch effect below).
-	let showOriginal = $state(false);
+	// (on-chain) language. Seeds from the global market-language preference and
+	// snaps back to that default on a market change (see the fetch effect
+	// below); a per-market flip stays local and doesn't change the preference.
+	let showOriginal = $state($marketLanguagePreference === 'original');
 
 	// Viewer-relative market signals (the prior call they hold here, the
 	// lean of the people they follow). Sparse by construction — absent
@@ -194,7 +196,7 @@
 		}
 
 		translationsLoadingId = id;
-		showOriginal = false;
+		showOriginal = $marketLanguagePreference === 'original';
 		marketTranslations = [];
 
 		void loadTranslations(id);
@@ -441,6 +443,7 @@
 			track({
 				name: 'market_translation_toggled',
 				marketId: market.id,
+				source: 'detail',
 				label: showOriginal ? 'original' : 'translated'
 			});
 		}
@@ -809,6 +812,7 @@
 
 		{#if MARKET_DETAIL_DIRECT_TRADE_ENABLED && nonNullish(selectedSide)}
 			<TradeModal
+				{displayTitle}
 				{market}
 				onClose={() => (selectedSide = undefined)}
 				{onPredictionPlaced}

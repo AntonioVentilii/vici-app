@@ -928,6 +928,45 @@ const listMarketTranslations = async (
 	return AppListMarketTranslationsResultSchema.parse(result);
 };
 
+const AppListMarketTranslationsForLocalesArgsSchema = j.strictObject({
+	seriesIds: j.array(j.string()),
+	locales: j.array(j.string())
+});
+const AppListMarketTranslationsForLocalesResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			seriesId: j.string(),
+			locale: j.string(),
+			title: j.string(),
+			description: j.string(),
+			resolution: j.string(),
+			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
+			updatedAt: j.number(),
+			updatedBy: j.string()
+		})
+	)
+});
+
+const listMarketTranslationsForLocales = async (
+	args: j.infer<typeof AppListMarketTranslationsForLocalesArgsSchema>
+): Promise<j.infer<typeof AppListMarketTranslationsForLocalesResultSchema>> => {
+	const parsedArgs = AppListMarketTranslationsForLocalesArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListMarketTranslationsForLocalesArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_market_translations_for_locales']>[0];
+
+	const { app_list_market_translations_for_locales } =
+		await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_list_market_translations_for_locales(idlArgs);
+
+	const result = schemaFromIdl({
+		schema: AppListMarketTranslationsForLocalesResultSchema,
+		value: idlResult
+	});
+	return AppListMarketTranslationsForLocalesResultSchema.parse(result);
+};
+
 const AppListMyAffiliationsResultSchema = j.strictObject({
 	university: j.optional(
 		j.strictObject({
@@ -2032,6 +2071,7 @@ export const functions = {
 	listLeagueBattles,
 	listLeagueMembers,
 	listMarketTranslations,
+	listMarketTranslationsForLocales,
 	listMyAffiliations,
 	listMyBattles,
 	listMyBlockingLeagues,

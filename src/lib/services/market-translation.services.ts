@@ -21,6 +21,25 @@ export const listMarketTranslations = async (seriesId: string): Promise<MarketTr
 	return items.map(fromWireMarketTranslation);
 };
 
+/**
+ * Bulk overlay read for a set of markets across a set of candidate locales
+ * (the reader's fallback chain). Returns every stored translation doc whose
+ * `(seriesId, locale)` is in the cartesian set — the caller resolves
+ * best-per-series with `resolveMarketTranslation`. One round-trip for a whole
+ * list/deck rather than one per card.
+ */
+export const listMarketTranslationsForLocales = async ({
+	seriesIds,
+	locales
+}: {
+	seriesIds: string[];
+	locales: AppLocale[];
+}): Promise<MarketTranslation[]> => {
+	const { items } = await functions.listMarketTranslationsForLocales({ seriesIds, locales });
+
+	return items.map(fromWireMarketTranslation);
+};
+
 export const upsertMarketTranslation = async ({
 	seriesId,
 	locale,

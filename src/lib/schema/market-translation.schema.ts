@@ -52,3 +52,8 @@ export const GetMarketTranslationArgsSchema = j.strictObject({
 export const ListMarketTranslationsArgsSchema = j.strictObject({
 	seriesId: j.string()
 });
+
+export const ListMarketTranslationsForLocalesArgsSchema = j.strictObject({
+	seriesIds: j.array(j.string()),
+	locales: j.array(AppLocaleSchema)
+});

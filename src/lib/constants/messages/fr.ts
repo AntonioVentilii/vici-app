@@ -2075,6 +2075,9 @@ export const frMessages = {
 	'settings.legal.privacy': 'Politique de confidentialité',
 	'settings.legal.rules': 'Règles de résolution',
 	'settings.legal.terms': 'Conditions de service',
+	'settings.market_language': 'Afficher les marchés dans votre langue',
+	'settings.market_language.sub':
+		'Traduit les titres et détails des marchés dans votre langue lorsque disponible. Désactivez pour toujours voir la version originale.',
 	'settings.notifications': 'Notifications',
 	'settings.notifications.sub': '{count} sur {total} actives · 19h00 quotidien',
 	'settings.preferences': 'Préférences',

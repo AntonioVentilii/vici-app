@@ -10,6 +10,7 @@
 		Globe,
 		Info,
 		Key,
+		Languages,
 		LineChart,
 		Lock,
 		Mail,
@@ -42,6 +43,7 @@
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { localeStore, setLocale } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { theme } from '$lib/stores/theme.store';
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';
@@ -354,6 +356,14 @@
 					</span>
 				{/snippet}
 			</SetRow>
+
+			<SetToggle
+				checked={$marketLanguagePreference === 'translated'}
+				icon={Languages}
+				label={t({ locale: $localeStore, key: 'settings.market_language' })}
+				onchange={(value) => marketLanguagePreference.set(value ? 'translated' : 'original')}
+				sub={t({ locale: $localeStore, key: 'settings.market_language.sub' })}
+			/>
 
 			<SetToggle
 				checked={$preferencesStore.hapticsEnabled}

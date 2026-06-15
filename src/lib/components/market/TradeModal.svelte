@@ -45,9 +45,16 @@
 		selectedOutcome: CallSide;
 		onClose: () => void;
 		onPredictionPlaced: () => void;
+		/**
+		 * Translated market title for the active locale; defaults to the
+		 * on-chain original so callers without a translation render unchanged.
+		 */
+		displayTitle?: string;
 	}
 
-	const { market, selectedOutcome, onClose, onPredictionPlaced }: Props = $props();
+	const { market, selectedOutcome, onClose, onPredictionPlaced, displayTitle }: Props = $props();
+
+	const questionTitle = $derived(displayTitle ?? market.title);
 
 	const tr = ({ key, params }: { key: MessageKey; params?: Record<string, string | number> }) =>
 		t({ locale: $localeStore, key, params });
@@ -165,7 +172,7 @@
 		</button>
 	</div>
 
-	<p class="confirm-question">{market.title}</p>
+	<p class="confirm-question">{questionTitle}</p>
 
 	{#if $userSignedIn}
 		<div class="confirm-card">

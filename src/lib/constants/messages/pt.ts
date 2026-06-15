@@ -2066,6 +2066,9 @@ export const ptMessages = {
 	'settings.legal.privacy': 'Política de privacidade',
 	'settings.legal.rules': 'Regras de resolução',
 	'settings.legal.terms': 'Termos de serviço',
+	'settings.market_language': 'Mostrar mercados no seu idioma',
+	'settings.market_language.sub':
+		'Traduz títulos e detalhes dos mercados para o seu idioma quando disponível. Desative para ver sempre o original.',
 	'settings.notifications': 'Notificações',
 	'settings.notifications.sub': '{count} de {total} ativas · diariamente às 19h',
 	'settings.preferences': 'Preferências',
