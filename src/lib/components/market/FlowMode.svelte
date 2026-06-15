@@ -143,6 +143,28 @@
 	// brief branded moment, no required tap); a real digest waits for the user
 	// (tap-anywhere / CTA, with a safety auto-enter). See FlowEntry.
 	let entered = $state(false);
+	// Deck gestures stay disarmed until the first card has risen in after
+	// entry. The entry overlay enters on `pointerdown`, so the dismissing
+	// tap's trailing events — desktop `mouseup`/`click`, and the synthetic
+	// mouse chain a touch fires ~300 ms after `touchend` — would otherwise
+	// land on the freshly-mounted FlowCard and register as a tap-to-flip.
+	// 480 ms clears both windows and the 440 ms rise-in animation.
+	let deckGesturesArmed = $state(false);
+	const ENTRY_GESTURE_GUARD_MS = 480;
+
+	// Arm deck gestures once the entry transition's trailing events have
+	// drained (see above). Driven by `entered` so the timer is cleared if
+	// FlowMode unmounts mid-window.
+	$effect(() => {
+		if (!entered) {
+			return;
+		}
+
+		const timer = setTimeout(() => (deckGesturesArmed = true), ENTRY_GESTURE_GUARD_MS);
+
+		return () => clearTimeout(timer);
+	});
+
 	// The away-digest while the entry gate is open. Tracks the live store so
 	// a late trade-history fetch still populates the recap; the moment the
 	// user enters, `markResolutionsSeen` empties it and the overlay unmounts
@@ -1198,6 +1220,7 @@
 										{categoryAcc}
 										committedAction={currentCard.id === committedMarketId ? committedAction : null}
 										{followedLean}
+										gesturesArmed={deckGesturesArmed}
 										interactive
 										market={currentCard}
 										{metadata}
