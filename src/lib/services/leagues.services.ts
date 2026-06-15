@@ -7,9 +7,12 @@ import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getMyReferralCode } from '$lib/services/referral.services';
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import {
+	BATTLE_SCOPE_DEFAULT,
 	BATTLE_TRASH_TALK_MAX_LENGTH,
 	BATTLE_WAGER_MAX,
 	BATTLE_WAGER_MIN,
+	battleAccuracyPct,
+	deriveBattleWinner,
 	isBattleScope,
 	type BattleDoc,
 	type BattleScope
@@ -26,6 +29,7 @@ import {
 	type LeagueMemberDoc,
 	type LeagueMemberRole
 } from '$lib/types/league-member';
+import { leagueStatsBucket, leagueStatsKey, type LeagueStatsDoc } from '$lib/types/league-stats';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
@@ -701,7 +705,10 @@ const projectBattleWire = (b: {
 	trashTalk?: string;
 	scoreA?: number;
 	scoreB?: number;
+	callsA?: number;
+	callsB?: number;
 	winner?: BattleDoc['winner'];
+	resolvedAtMs?: number;
 }): BattleDoc => ({
 	id: b.id,
 	kind: b.kind,
@@ -718,7 +725,10 @@ const projectBattleWire = (b: {
 	trashTalk: b.trashTalk,
 	scoreA: b.scoreA,
 	scoreB: b.scoreB,
-	winner: b.winner
+	callsA: b.callsA,
+	callsB: b.callsB,
+	winner: b.winner,
+	resolvedAtMs: b.resolvedAtMs
 });
 
 /**
@@ -846,15 +856,79 @@ export const proposeBattle = async ({
  * requires on every update of an existing doc.
  */
 export const acceptBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
-	const next: BattleDoc = { ...battle, state: 'accepted' };
-	await writeBattleTransition({ battle, next });
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		throw new Error('Battle no longer exists.');
+	}
+
+	const next: BattleDoc = { ...existing.data, state: 'accepted' };
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
 
 	return next;
 };
 
+/**
+ * Read a league's `(calls, wins)` bucket for a battle scope from the
+ * public `league_stats` doc. Missing doc / category → a zero bucket.
+ */
+const readLeagueStatsBucket = async ({
+	leagueId,
+	scope
+}: {
+	leagueId: string;
+	scope: BattleScope;
+}): Promise<{ calls: number; wins: number }> => {
+	const doc = await getDoc<LeagueStatsDoc>({
+		collection: Collection.LEAGUE_STATS,
+		key: leagueStatsKey({ leagueId })
+	});
+
+	return leagueStatsBucket(doc?.data, scope);
+};
+
+/**
+ * Kick a battle off (`accepted → in_flight`). For league battles this
+ * stamps each side's current `league_stats` bucket as the baseline the
+ * window delta is measured against; the satellite assert re-reads
+ * `league_stats` and rejects a baseline that doesn't match. The next
+ * doc is built from the freshly-read raw doc so no field is lost to a
+ * stale wire projection.
+ */
 export const kickoffBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
-	const next: BattleDoc = { ...battle, state: 'in_flight' };
-	await writeBattleTransition({ battle, next });
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		throw new Error('Battle no longer exists.');
+	}
+
+	const current = existing.data;
+	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
+
+	const next: BattleDoc =
+		current.kind === 'league'
+			? {
+					...current,
+					state: 'in_flight',
+					baselineA: await readLeagueStatsBucket({ leagueId: current.sideA, scope }),
+					baselineB: await readLeagueStatsBucket({ leagueId: current.sideB, scope })
+				}
+			: { ...current, state: 'in_flight' };
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
 
 	return next;
 };
@@ -888,29 +962,16 @@ export const retractBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 	});
 };
 
-export const resolveBattle = async ({
-	battle,
-	scoreA,
-	scoreB
-}: {
-	battle: BattleDoc;
-	scoreA: number;
-	scoreB: number;
-}): Promise<BattleDoc> => {
-	const winner = scoreA > scoreB ? 'A' : scoreA < scoreB ? 'B' : 'draw';
-	const next: BattleDoc = { ...battle, state: 'resolved', scoreA, scoreB, winner };
-	await writeBattleTransition({ battle, next });
-
-	return next;
-};
-
-const writeBattleTransition = async ({
-	battle,
-	next
-}: {
-	battle: BattleDoc;
-	next: BattleDoc;
-}): Promise<void> => {
+/**
+ * Resolve a league battle (`in_flight → resolved`). Takes no scores:
+ * each side's score is its prediction accuracy over the window,
+ * computed from the delta between the current `league_stats` bucket and
+ * the baseline stamped at kickoff. The satellite assert re-derives the
+ * same figures from `league_stats` and rejects any mismatch, so the
+ * result can't be falsified. Idempotent at the call site: an
+ * already-resolved battle is returned unchanged without a write.
+ */
+export const resolveBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
 	const existing = await getDoc<BattleDoc>({
 		collection: Collection.BATTLES,
 		key: battle.id
@@ -920,12 +981,59 @@ const writeBattleTransition = async ({
 		throw new Error('Battle no longer exists.');
 	}
 
+	const current = existing.data;
+
+	if (current.state === 'resolved') {
+		return current;
+	}
+
+	if (current.kind !== 'league') {
+		throw new Error('Only league battles resolve from league accuracy.');
+	}
+
+	if (isNullish(current.baselineA) || isNullish(current.baselineB)) {
+		throw new Error('Battle is missing its kickoff baselines.');
+	}
+
+	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
+	const [statsA, statsB] = await Promise.all([
+		readLeagueStatsBucket({ leagueId: current.sideA, scope }),
+		readLeagueStatsBucket({ leagueId: current.sideB, scope })
+	]);
+
+	const deltaA = {
+		calls: Math.max(0, statsA.calls - current.baselineA.calls),
+		wins: Math.max(0, statsA.wins - current.baselineA.wins)
+	};
+	const deltaB = {
+		calls: Math.max(0, statsB.calls - current.baselineB.calls),
+		wins: Math.max(0, statsB.wins - current.baselineB.wins)
+	};
+
+	const scoreA = battleAccuracyPct(deltaA);
+	const scoreB = battleAccuracyPct(deltaB);
+	const winner = deriveBattleWinner({
+		scoreA,
+		scoreB,
+		callsA: deltaA.calls,
+		callsB: deltaB.calls
+	});
+
+	const next: BattleDoc = {
+		...current,
+		state: 'resolved',
+		scoreA,
+		scoreB,
+		callsA: deltaA.calls,
+		callsB: deltaB.calls,
+		winner,
+		resolvedAtMs: Date.now()
+	};
+
 	await setDoc<BattleDoc>({
 		collection: Collection.BATTLES,
-		doc: {
-			key: battle.id,
-			data: next,
-			version: existing.version
-		}
+		doc: { key: battle.id, data: next, version: existing.version }
 	});
+
+	return next;
 };

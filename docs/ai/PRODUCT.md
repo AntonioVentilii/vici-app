@@ -232,6 +232,47 @@ the foot rather than riding join order or role to the top. Decision
 record:
 [`specs/2026-06-15-fix-league-rank-consistency.md`](./spec-driven-development/specs/2026-06-15-fix-league-rank-consistency.md).
 
+### Battles — accuracy face-offs that resolve themselves
+
+A **battle** is a time-bound accuracy face-off between two leagues. Its
+lifecycle is forward-only: **proposed → accepted → in_flight →
+resolved**. The owner of one league proposes; the other league's owner
+accepts; either owner kicks it off once the window opens; it resolves
+once the window closes.
+
+**Who can challenge whom is governed by league privacy.** Only **OPEN**
+leagues are discoverable in challenge search and challengeable by
+outsiders; a league you are **already a member of** is always
+challengeable regardless of its privacy. INVITE and PRIVATE leagues
+never surface as opponents to non-members. You must own the side you
+challenge from. Privacy is **discovery-only**: changing a league's
+privacy after a battle exists never retracts or alters it — a battle's
+identity freezes at proposal and it runs to resolution; tightening
+privacy just removes the league from future challenge search.
+
+**The score is each league's prediction accuracy over the window, and
+nobody types it.** At kickoff the satellite snapshots each league's
+`league_stats` counters (for the battle's category scope — `'all'` or a
+single market tag) as a baseline. At resolution the window result is the
+delta between the current counters and that baseline: `accuracy =
+Δwins / Δcalls`, as a percentage. Higher accuracy wins; an equal-accuracy
+tie breaks toward the league that made **more** predictions; a remaining
+tie — or both leagues making zero predictions in the window (a **void**
+face-off) — is a draw. This matches the accuracy-first league-rank metric
+so a battle and the leaderboard tell the same story. Resolution is
+**trustless**: the `battles` assert independently re-derives the scores
+and winner from `league_stats` and rejects any write whose numbers don't
+match, so no owner can post a fabricated result. Because Juno has no
+scheduler, a settled battle resolves **lazily** — the first time a side
+owner opens the battle (or the league) after the window closes, with a
+one-tap "Resolve now" as a manual fallback. **Known limitations (by
+design):** the snapshot delta measures kickoff → resolution rather than
+the exact window, so prompt (auto) resolution keeps it ≈ the intended
+window — the same approximation the monthly tournament already uses; and
+the optional VXP **wager** is a displayed stake only, not yet moved
+between leagues on resolution. Decision record:
+[`specs/2026-06-15-feat-battle-auto-resolution.md`](./spec-driven-development/specs/2026-06-15-feat-battle-auto-resolution.md).
+
 ### Flow daily swipe cap — server-authoritative
 
 The Flow daily cap (15 swipes/day — the daily-ten goal plus the +5

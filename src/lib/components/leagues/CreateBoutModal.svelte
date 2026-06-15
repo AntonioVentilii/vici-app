@@ -7,6 +7,7 @@
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { track } from '$lib/services/analytics.services';
 	import {
 		listChallengeableLeagues,
 		listMyLeagues,
@@ -201,6 +202,13 @@
 				scope,
 				wager,
 				trashTalk
+			});
+
+			track({
+				name: 'battle_proposed',
+				battleId: battle.id,
+				leagueId: fromLeague.id,
+				label: scope
 			});
 
 			onProposed?.(battle);

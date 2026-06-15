@@ -841,7 +841,10 @@ const AppListLeagueBattlesResultSchema = j.strictObject({
 			trashTalk: j.optional(j.string()),
 			scoreA: j.optional(j.number()),
 			scoreB: j.optional(j.number()),
-			winner: j.optional(j.enum(['A', 'B', 'draw']))
+			callsA: j.optional(j.number()),
+			callsB: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw'])),
+			resolvedAtMs: j.optional(j.number())
 		})
 	)
 });
@@ -1014,7 +1017,10 @@ const AppListMyBattlesResultSchema = j.strictObject({
 			trashTalk: j.optional(j.string()),
 			scoreA: j.optional(j.number()),
 			scoreB: j.optional(j.number()),
-			winner: j.optional(j.enum(['A', 'B', 'draw']))
+			callsA: j.optional(j.number()),
+			callsB: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw'])),
+			resolvedAtMs: j.optional(j.number())
 		})
 	)
 });

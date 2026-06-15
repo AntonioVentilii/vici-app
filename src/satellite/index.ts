@@ -82,7 +82,8 @@ import {
 } from '$satellite/services/league-member.services';
 import {
 	assertSetLeagueStats,
-	onProfileSetForLeagueStats
+	onProfileSetForLeagueStats,
+	onUserStatsSetForLeagueStats
 } from '$satellite/services/league-stats.services';
 import { assertSetLeague, transferLeagueOwnershipFn } from '$satellite/services/league.services';
 import {
@@ -1252,7 +1253,8 @@ const setDocCollections = [
 	Collection.PROFILES,
 	Collection.ROLES,
 	Collection.REFERRALS,
-	Collection.LEAGUES
+	Collection.LEAGUES,
+	Collection.USER_STATS
 ] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
@@ -1290,7 +1292,8 @@ export const onSetDoc = defineHook<OnSetDoc>({
 			[Collection.ACTIVITY_REACTIONS]: onActivityReactionSet,
 			[Collection.ROLES]: syncRoleToEngineOnSet,
 			[Collection.REFERRALS]: onReferralSetForVxpPayout,
-			[Collection.LEAGUES]: onLeagueSetForFounderVxpPayout
+			[Collection.LEAGUES]: onLeagueSetForFounderVxpPayout,
+			[Collection.USER_STATS]: onUserStatsSetForLeagueStats
 		};
 
 		await fn[context.data.collection]?.(context);

@@ -4,24 +4,29 @@
  * A battle is a time-bound competition between two parties:
  *
  *   - `league` — leagueA vs leagueB. Either league's owner can
- *     propose; the other league's owner accepts. Settling happens
- *     when both leagues' members have logged calls during the
- *     battle window and the satellite computes accuracy averages.
+ *     propose; the other league's owner accepts. The score is each
+ *     league's prediction accuracy over the battle window, computed by
+ *     the satellite from the delta of its `league_stats` counters
+ *     between kickoff and settle (no human enters a score).
  *
  *   - `duel` — proposer principal vs challenger principal. Same
  *     state machine, simpler auth (both principals are explicit
- *     on the doc).
+ *     on the doc). Duels have no `league_stats` to delta, so they are
+ *     out of scope for auto-resolution for now.
  *
  * State machine (forward-only):
  *
  *   proposed → accepted → in_flight → resolved
  *
  * Each transition is gated by the satellite assert on caller +
- * current state. Scores write once at the `resolved` transition;
- * winner is derived from scores.
+ * current state. Kickoff stamps each side's baseline counter snapshot;
+ * resolve computes scores from the window delta and derives the
+ * winner. The assert re-derives both from `league_stats` so a
+ * hand-crafted write cannot post a false score.
  */
 
 import { MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
+import type { CategoryStatsBucket } from '$lib/types/user-stats';
 
 export type BattleKind = 'league' | 'duel';
 
@@ -97,13 +102,64 @@ export interface BattleDoc {
 	 * and immutable thereafter.
 	 */
 	trashTalk?: string;
-	/** Side A score at settle. Write-once when state moves to `resolved`. */
+	/**
+	 * Side A's counter snapshot at kickoff, for the battle's {@link scope}
+	 * bucket. Stamped server-side on the `accepted → in_flight`
+	 * transition and write-once thereafter. The window delta is
+	 * `current league_stats − baseline`.
+	 */
+	baselineA?: CategoryStatsBucket;
+	/** Side B's counter snapshot at kickoff. See {@link baselineA}. */
+	baselineB?: CategoryStatsBucket;
+	/** Side A accuracy score (0–100) over the window. Write-once at `resolved`. */
 	scoreA?: number;
-	/** Side B score at settle. Write-once when state moves to `resolved`. */
+	/** Side B accuracy score (0–100) over the window. Write-once at `resolved`. */
 	scoreB?: number;
-	/** Derived from scores at settle. Write-once. */
+	/** Side A window call count (`Δcalls`) — the accuracy tie-break. Write-once at `resolved`. */
+	callsA?: number;
+	/** Side B window call count (`Δcalls`). Write-once at `resolved`. */
+	callsB?: number;
+	/** Derived from scores + call counts at settle. Write-once. */
 	winner?: BattleWinner;
+	/** When the battle resolved (ms since epoch). Write-once at `resolved`. */
+	resolvedAtMs?: number;
 }
+
+/**
+ * Window accuracy as a 0–100 percentage from a counter delta. A side
+ * with no calls in the window scores 0 (it forfeits the face-off).
+ */
+export const battleAccuracyPct = ({ calls, wins }: CategoryStatsBucket): number =>
+	calls > 0 ? Math.round((wins / calls) * 100) : 0;
+
+/**
+ * Derive the winner from both sides' window results. Accuracy-first
+ * (matching the league-rank metric), tie-broken on prediction volume
+ * (`calls`), then a draw. Two sides with zero windowed calls is a void
+ * face-off → `draw`. Shared by the resolve endpoint and the assert so
+ * both compute the identical outcome.
+ */
+export const deriveBattleWinner = ({
+	scoreA,
+	scoreB,
+	callsA,
+	callsB
+}: {
+	scoreA: number;
+	scoreB: number;
+	callsA: number;
+	callsB: number;
+}): BattleWinner => {
+	if (scoreA !== scoreB) {
+		return scoreA > scoreB ? 'A' : 'B';
+	}
+
+	if (callsA !== callsB) {
+		return callsA > callsB ? 'A' : 'B';
+	}
+
+	return 'draw';
+};
 
 export const BATTLE_STATES: ReadonlySet<BattleState> = new Set<BattleState>([
 	'proposed',
