@@ -1958,6 +1958,8 @@ export const zhHansMessages = {
 	'settings.legal.privacy': '隐私政策',
 	'settings.legal.rules': '裁定规则',
 	'settings.legal.terms': '服务条款',
+	'settings.market_language': '以你的语言显示市场',
+	'settings.market_language.sub': '在可用时将市场标题和详情翻译成你的语言。关闭后始终显示原文。',
 	'settings.notifications': '通知',
 	'settings.notifications.sub': '{count}/{total} 已开 · 每日 19:00',
 	'settings.preferences': '偏好',

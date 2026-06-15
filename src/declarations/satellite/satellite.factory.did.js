@@ -783,6 +783,24 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListMarketTranslationsForLocalesArgs = IDL.Record({
+		locales: IDL.Vec(IDL.Text),
+		series_ids: IDL.Vec(IDL.Text)
+	});
+	const AppListMarketTranslationsForLocalesResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				title: IDL.Text,
+				updated_at: IDL.Float64,
+				updated_by: IDL.Text,
+				series_id: IDL.Text,
+				locale: IDL.Text,
+				description: IDL.Text,
+				resolution: IDL.Text,
+				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+			})
+		)
+	});
 	const AppListMyAffiliationsResult = IDL.Record({
 		country: IDL.Opt(
 			IDL.Record({
@@ -1377,6 +1395,11 @@ export const idlFactory = ({ IDL }) => {
 		app_list_market_translations: IDL.Func(
 			[AppListMarketTranslationsArgs],
 			[AppListMarketTranslationsResult],
+			['query']
+		),
+		app_list_market_translations_for_locales: IDL.Func(
+			[AppListMarketTranslationsForLocalesArgs],
+			[AppListMarketTranslationsForLocalesResult],
 			['query']
 		),
 		app_list_my_affiliations: IDL.Func([], [AppListMyAffiliationsResult], ['query']),

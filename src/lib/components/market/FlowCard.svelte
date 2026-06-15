@@ -5,6 +5,7 @@
 	import FlowCardFooter from '$lib/components/market/FlowCardFooter.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
+	import MarketTranslationToggle from '$lib/components/market/MarketTranslationToggle.svelte';
 	import SeededAvatarStack from '$lib/components/ui/SeededAvatarStack.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
@@ -18,6 +19,7 @@
 		FollowedLeanSignal,
 		PriorCallSignal
 	} from '$lib/types/market-signals';
+	import type { MarketTranslation } from '$lib/types/market-translation';
 	import { resolveFlowArtCategory, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import {
 		consensusPercent,
@@ -26,6 +28,7 @@
 	} from '$lib/utils/flow-card-display.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { marketDisplayText } from '$lib/utils/market-translation.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
@@ -77,6 +80,20 @@
 		// SKIP is suppressed: the first call must commit a YES/NO, never
 		// open depth or skip. The footer hint switches to "SWIPE TO CALL".
 		guided?: boolean;
+		// Resolved metadata translation for this market in the active locale,
+		// or undefined when none exists (which gates the quick toggle). When
+		// present and `showOriginal` is false, the title / subtitle / back-face
+		// resolution render translated.
+		translation?: MarketTranslation;
+		// Per-card quick-toggle state, owned by the parent (FlowMode). True =
+		// show the on-chain original even when a translation exists.
+		showOriginal?: boolean;
+		// Native label of the translation's language, for the "View in {lang}"
+		// quick toggle. Absent when there is no translation.
+		translatedLanguageLabel?: string;
+		// Flip this one card between translated and original. No-op-safe when
+		// absent (static / guided usages don't wire it).
+		onToggleTranslation?: () => void;
 	}
 
 	const {
@@ -97,8 +114,18 @@
 		points,
 		pointXs,
 		onStakeChange,
-		guided = false
+		guided = false,
+		translation,
+		showOriginal = false,
+		translatedLanguageLabel,
+		onToggleTranslation
 	}: Props = $props();
+
+	// Single source for the card's rendered text: translated unless the viewer
+	// flipped this card to the original (or no translation exists). The
+	// subtitle fallback below reads `display.description` / `display.resolution`
+	// so it compares the same language the card is showing.
+	const display = $derived(marketDisplayText({ market, translation, showOriginal }));
 
 	const isCommitted = $derived(nonNullish(committedAction));
 
@@ -286,9 +313,9 @@
 	// front-card line reads as a snippet, not an accent. Suppress it in
 	// that case; otherwise trim the distinct blurb for the last-resort line.
 	const descriptionSubtitle = $derived.by<string | undefined>(() => {
-		const description = market.description.trim();
+		const description = display.description.trim();
 
-		if (description.length === 0 || description === market.resolution.trim()) {
+		if (description.length === 0 || description === display.resolution.trim()) {
 			return;
 		}
 
@@ -632,9 +659,19 @@
 						</p>
 					{/if}
 
-					<h2 class="flow-card-title">{market.title}</h2>
+					<h2 class="flow-card-title">{display.title}</h2>
 					{#if subtitleText}
 						<p class="flow-card-sub serif-italic acc">{subtitleText}</p>
+					{/if}
+					{#if nonNullish(translation) && nonNullish(translatedLanguageLabel) && nonNullish(onToggleTranslation)}
+						<div class="flow-card-translation">
+							<MarketTranslationToggle
+								onToggle={onToggleTranslation}
+								{showOriginal}
+								{translatedLanguageLabel}
+								variant="compact"
+							/>
+						</div>
 					{/if}
 				</header>
 
@@ -779,6 +816,8 @@
 						{categoryAcc}
 						{crowdPct}
 						{crowdSide}
+						displayResolution={display.resolution}
+						displayTitle={display.title}
 						{followedLean}
 						interactive={flipped}
 						{market}
@@ -1043,6 +1082,12 @@
 		font-family: var(--font-serif);
 		font-style: italic;
 		font-weight: 400;
+	}
+
+	/* Quiet language affordance directly under the title/subtitle, kept off
+	   the card's gesture surface via `data-no-card-gesture`. */
+	.flow-card-translation {
+		margin-top: 6px;
 	}
 
 	.flow-momentum-sep {

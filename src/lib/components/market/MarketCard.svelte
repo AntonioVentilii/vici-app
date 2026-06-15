@@ -6,6 +6,7 @@
 	import { resolve } from '$app/paths';
 	import BinaryProbabilities from '$lib/components/market/BinaryProbabilities.svelte';
 	import CategoricalProbabilities from '$lib/components/market/CategoricalProbabilities.svelte';
+	import MarketTranslationToggle from '$lib/components/market/MarketTranslationToggle.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import SuggestedBadge from '$lib/components/market/SuggestedBadge.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
@@ -14,13 +15,17 @@
 	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
+	import { track } from '$lib/services/analytics.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
+	import { marketTranslations } from '$lib/stores/market-translations.store';
 	import type { Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import { isSocial } from '$lib/utils/balance-domain.utils';
 	import { isMarketSuggested } from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { categoryLabel } from '$lib/utils/market-tags.utils';
+	import { marketDisplayText, translatedLanguageLabel } from '$lib/utils/market-translation.utils';
 	import { getOutcomeVariant, getTimeRemaining } from '$lib/utils/market.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
@@ -40,6 +45,36 @@
 	}
 
 	const { market, index = 0, metadata, tag }: Props = $props();
+
+	// Resolved translation for this market in the active locale (or undefined
+	// when none exists), bulk-hydrated by the markets page. Its presence gates
+	// the quick toggle.
+	const translation = $derived($marketTranslations.get(market.id));
+
+	// Per-item quick-toggle state, seeded from the global preference and
+	// flippable for this one card without changing the default. As a writable
+	// `$derived` it re-seeds whenever the global preference changes, while an
+	// `onToggle` flip stays local to this card.
+	let showOriginal = $derived($marketLanguagePreference === 'original');
+
+	const display = $derived(marketDisplayText({ market, translation, showOriginal }));
+
+	// Translated outcome titles keyed by id, for CategoricalProbabilities.
+	// Empty (every outcome falls back to its original) when no translation is
+	// active or the market is binary.
+	const translatedOutcomeTitles = $derived(
+		Object.fromEntries((market.outcomes ?? []).map((o) => [o.id, display.outcomeTitle(o.id)]))
+	);
+
+	const onToggleTranslation = () => {
+		showOriginal = !showOriginal;
+		track({
+			name: 'market_translation_toggled',
+			marketId: market.id,
+			source: 'card',
+			label: showOriginal ? 'original' : 'translated'
+		});
+	};
 
 	const isChallenge = $derived(isSocial(market.balanceDomain));
 	const isResolved = $derived(market.status === 'Resolved');
@@ -139,11 +174,19 @@
 					<h3
 						class="text-foreground group-hover:text-primary font-display text-[15px] leading-snug font-semibold tracking-tight transition-colors sm:text-base"
 					>
-						{market.title}
+						{display.title}
 					</h3>
 					<p class="text-muted-foreground line-clamp-2 text-xs leading-relaxed sm:text-sm">
-						{market.description}
+						{display.description}
 					</p>
+					{#if nonNullish(translation)}
+						<MarketTranslationToggle
+							onToggle={onToggleTranslation}
+							{showOriginal}
+							translatedLanguageLabel={translatedLanguageLabel(translation.locale)}
+							variant="compact"
+						/>
+					{/if}
 				</div>
 
 				<div class="mt-auto space-y-4">
@@ -158,6 +201,7 @@
 						{:else}
 							<CategoricalProbabilities
 								outcomes={market.outcomes ?? []}
+								translatedTitles={translatedOutcomeTitles}
 								winningOutcomeId={isResolved ? market.outcome : undefined}
 							/>
 						{/if}

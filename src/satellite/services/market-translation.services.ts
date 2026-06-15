@@ -2,7 +2,8 @@ import { Collection } from '$lib/constants/collections.constants';
 import { SUPPORTED_LOCALES, type AppLocale } from '$lib/constants/locale.constants';
 import type { MarketTranslation, MarketTranslationInput } from '$lib/types/market-translation';
 import { isCreatorOrAdmin } from '$satellite/services/_authz';
-import { isNullish } from '@dfinity/utils';
+import { logInfo } from '$satellite/utils/logger.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
@@ -15,6 +16,16 @@ import {
 const callerText = (): string => msgCaller().toText();
 
 const SUPPORTED_LOCALE_IDS: ReadonlySet<string> = new Set(SUPPORTED_LOCALES.map((l) => l.id));
+
+/**
+ * Upper bound on the number of series ids accepted by the bulk read, so a
+ * large deck (or a malformed caller) can't fan one query into an unbounded
+ * sweep of per-key reads. The markets surfaces that drive this — the list
+ * board and the Flow deck — sit comfortably below this ceiling; anything
+ * larger is truncated (with a `log`) rather than refused, so the visible
+ * head still renders translated.
+ */
+const MAX_BULK_SERIES_IDS = 200;
 
 /**
  * Schema-side `locale` is `j.string()` (see the schema for why), so validate
@@ -78,6 +89,59 @@ export const listMarketTranslations = ({ seriesId }: { seriesId: string }): Mark
 	});
 
 	return items.map(([_, doc]) => decodeDocData<MarketTranslation>(doc.data));
+};
+
+/**
+ * Bulk overlay read for the markets surfaces (list board, Flow deck). Returns
+ * every stored translation doc whose `(seriesId, locale)` lies in the
+ * cartesian product of the requested ids and candidate locales — the reader's
+ * locale fallback chain. The server is a dumb filter: it returns the raw
+ * matching docs and the caller resolves best-per-series via the shared
+ * `resolveMarketTranslation`, so the fallback policy lives in exactly one
+ * place (shared with the detail page).
+ *
+ * Each doc is fetched by exact key (`${seriesId}__${locale}`), so a missing
+ * `(seriesId, locale)` pair simply contributes nothing — there is no list
+ * scan. `seriesIds` is capped at {@link MAX_BULK_SERIES_IDS} so a single call
+ * can't issue an unbounded number of per-key reads; unsupported locales are
+ * dropped up front.
+ */
+export const listMarketTranslationsForLocales = ({
+	seriesIds,
+	locales
+}: {
+	seriesIds: string[];
+	locales: string[];
+}): MarketTranslation[] => {
+	const boundedSeriesIds =
+		seriesIds.length > MAX_BULK_SERIES_IDS ? seriesIds.slice(0, MAX_BULK_SERIES_IDS) : seriesIds;
+
+	if (seriesIds.length > MAX_BULK_SERIES_IDS) {
+		logInfo({
+			message: 'market translations bulk read capped',
+			detail: { requested: seriesIds.length, cap: MAX_BULK_SERIES_IDS }
+		});
+	}
+
+	const validLocales = locales.filter((locale) => SUPPORTED_LOCALE_IDS.has(locale)) as AppLocale[];
+	const caller = msgCaller();
+	const translations: MarketTranslation[] = [];
+
+	for (const seriesId of boundedSeriesIds) {
+		for (const locale of validLocales) {
+			const doc = getDocStore({
+				collection: Collection.MARKET_TRANSLATIONS,
+				key: translationKey({ seriesId, locale }),
+				caller
+			});
+
+			if (nonNullish(doc)) {
+				translations.push(decodeDocData<MarketTranslation>(doc.data));
+			}
+		}
+	}
+
+	return translations;
 };
 
 export const upsertMarketTranslation = async ({

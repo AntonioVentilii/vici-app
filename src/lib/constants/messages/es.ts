@@ -2064,6 +2064,9 @@ export const esMessages = {
 	'settings.legal.privacy': 'Política de privacidad',
 	'settings.legal.rules': 'Reglas de resolución',
 	'settings.legal.terms': 'Términos de servicio',
+	'settings.market_language': 'Mostrar los mercados en tu idioma',
+	'settings.market_language.sub':
+		'Traduce los títulos y detalles de los mercados a tu idioma cuando esté disponible. Desactívalo para ver siempre el original.',
 	'settings.notifications': 'Notificaciones',
 	'settings.notifications.sub': '{count} de {total} activadas · diario 19:00',
 	'settings.preferences': 'Preferencias',

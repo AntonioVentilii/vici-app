@@ -646,6 +646,22 @@ export interface AppListLeagueMembersResult {
 export interface AppListMarketTranslationsArgs {
 	series_id: string;
 }
+export interface AppListMarketTranslationsForLocalesArgs {
+	locales: Array<string>;
+	series_ids: Array<string>;
+}
+export interface AppListMarketTranslationsForLocalesResult {
+	items: Array<{
+		title: string;
+		updated_at: number;
+		updated_by: string;
+		series_id: string;
+		locale: string;
+		description: string;
+		resolution: string;
+		outcomes: Array<{ id: string; title: string }>;
+	}>;
+}
 export interface AppListMarketTranslationsResult {
 	items: Array<{
 		title: string;
@@ -1173,6 +1189,10 @@ export interface _SERVICE {
 	app_list_market_translations: ActorMethod<
 		[AppListMarketTranslationsArgs],
 		AppListMarketTranslationsResult
+	>;
+	app_list_market_translations_for_locales: ActorMethod<
+		[AppListMarketTranslationsForLocalesArgs],
+		AppListMarketTranslationsForLocalesResult
 	>;
 	app_list_my_affiliations: ActorMethod<[], AppListMyAffiliationsResult>;
 	app_list_my_battles: ActorMethod<[], AppListMyBattlesResult>;

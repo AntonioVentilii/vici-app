@@ -79,6 +79,10 @@ type AppListMarketTranslationsArgs = record { series_id : text };
 
 type AppListMarketTranslationsResult = record { items : vec record { series_id : text; locale : text; title : text; description : text; resolution : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
 
+type AppListMarketTranslationsForLocalesArgs = record { series_ids : vec text; locales : vec text };
+
+type AppListMarketTranslationsForLocalesResult = record { items : vec record { series_id : text; locale : text; title : text; description : text; resolution : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
+
 type AppListMyAffiliationsResult = record { university : opt record { member : text; kind : variant { university; country }; affiliation_identifier : text; joined_at_ms : float64; locked_until_ms : float64 }; country : opt record { member : text; kind : variant { university; country }; affiliation_identifier : text; joined_at_ms : float64; locked_until_ms : float64 } };
 
 type AppListMyBattlesResult = record { items : vec record { id : text; kind : variant { league; duel }; side_a : text; side_b : text; proposer : text; state : variant { proposed; accepted; in_flight; resolved }; kickoff_ms : float64; settle_ms : float64; scope : opt text; wager : opt float64; trash_talk : opt text; score_a : opt float64; score_b : opt float64; winner : opt variant { A; B; draw } } };
@@ -215,6 +219,7 @@ service : {
 	app_list_league_battles : (AppListLeagueBattlesArgs) -> (AppListLeagueBattlesResult) query;
 	app_list_league_members : (AppListLeagueMembersArgs) -> (AppListLeagueMembersResult) query;
 	app_list_market_translations : (AppListMarketTranslationsArgs) -> (AppListMarketTranslationsResult) query;
+	app_list_market_translations_for_locales : (AppListMarketTranslationsForLocalesArgs) -> (AppListMarketTranslationsForLocalesResult) query;
 	app_list_my_affiliations : () -> (AppListMyAffiliationsResult) query;
 	app_list_my_battles : () -> (AppListMyBattlesResult) query;
 	app_list_my_blocking_leagues : () -> (AppListMyBlockingLeaguesResult) query;

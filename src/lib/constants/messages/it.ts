@@ -2058,6 +2058,9 @@ export const itMessages = {
 	'settings.legal.privacy': 'Informativa privacy',
 	'settings.legal.rules': 'Regole di risoluzione',
 	'settings.legal.terms': 'Termini di servizio',
+	'settings.market_language': 'Mostra i mercati nella tua lingua',
+	'settings.market_language.sub':
+		'Traduce titoli e dettagli dei mercati nella tua lingua dove disponibile. Disattiva per vedere sempre l’originale.',
 	'settings.notifications': 'Notifiche',
 	'settings.notifications.sub': '{count} di {total} attive · ogni giorno 19:00',
 	'settings.preferences': 'Preferenze',

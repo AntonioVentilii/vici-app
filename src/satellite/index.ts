@@ -13,6 +13,7 @@ import {
 import {
 	GetMarketTranslationArgsSchema,
 	ListMarketTranslationsArgsSchema,
+	ListMarketTranslationsForLocalesArgsSchema,
 	MarketTranslationSchema,
 	UpsertMarketTranslationArgsSchema
 } from '$lib/schema/market-translation.schema';
@@ -91,6 +92,7 @@ import {
 import {
 	getMarketTranslation as getMarketTranslationFn,
 	listMarketTranslations as listMarketTranslationsFn,
+	listMarketTranslationsForLocales as listMarketTranslationsForLocalesFn,
 	upsertMarketTranslation as upsertMarketTranslationFn
 } from '$satellite/services/market-translation.services';
 import {
@@ -351,6 +353,21 @@ export const listMarketTranslations = defineQuery({
 	}),
 	handler: (args) => ({
 		items: listMarketTranslationsFn(args).map(toWireMarketTranslation)
+	})
+});
+
+// Bulk overlay read for the markets surfaces (list board, Flow deck): one
+// query returns every stored translation doc across the visible series ids ×
+// the reader's candidate locales, replacing N per-card per-series reads. The
+// server returns raw matching docs; the FE resolves best-per-series with the
+// shared `resolveMarketTranslation`.
+export const listMarketTranslationsForLocales = defineQuery({
+	args: ListMarketTranslationsForLocalesArgsSchema,
+	result: j.strictObject({
+		items: j.array(MarketTranslationWireSchema)
+	}),
+	handler: (args) => ({
+		items: listMarketTranslationsForLocalesFn(args).map(toWireMarketTranslation)
 	})
 });
 

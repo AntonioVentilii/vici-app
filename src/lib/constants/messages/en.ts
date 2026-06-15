@@ -2058,6 +2058,9 @@ export const enMessages = {
 	'settings.legal.privacy': 'Privacy policy',
 	'settings.legal.rules': 'Resolution rules',
 	'settings.legal.terms': 'Terms of service',
+	'settings.market_language': 'Show markets in your language',
+	'settings.market_language.sub':
+		'Translate market titles and details into your language where available. Turn off to always see the original.',
 	'settings.notifications': 'Notifications',
 	'settings.notifications.sub': '{count} of {total} on · daily 7pm',
 	'settings.preferences': 'Preferences',

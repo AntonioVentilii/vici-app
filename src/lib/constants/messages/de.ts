@@ -2084,6 +2084,9 @@ export const deMessages = {
 	'settings.legal.privacy': 'Datenschutzerklärung',
 	'settings.legal.rules': 'Auflösungsregeln',
 	'settings.legal.terms': 'Nutzungsbedingungen',
+	'settings.market_language': 'Märkte in deiner Sprache anzeigen',
+	'settings.market_language.sub':
+		'Übersetzt Markttitel und -details in deine Sprache, sofern verfügbar. Schalte es aus, um immer das Original zu sehen.',
 	'settings.notifications': 'Benachrichtigungen',
 	'settings.notifications.sub': '{count} von {total} aktiv · täglich 19:00',
 	'settings.preferences': 'Präferenzen',

@@ -41,6 +41,11 @@
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
+	import {
+		hydrate as hydrateMarketTranslations,
+		marketTranslations
+	} from '$lib/stores/market-translations.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -81,6 +86,7 @@
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import type { MarketPriceSeries } from '$lib/utils/market-price-history.utils';
+	import { translatedLanguageLabel } from '$lib/utils/market-translation.utils';
 	import {
 		DAILY_HARD_CAP,
 		recordMotionSwipe,
@@ -380,6 +386,11 @@
 				metadataById: marketMetadataMap,
 				signals: userSignals
 			} = prepared);
+
+			// One bulk read for the whole deck so each card resolves its
+			// translation overlay from cache rather than firing a per-series
+			// fetch as the viewer swipes.
+			void hydrateMarketTranslations(markets.map((m) => m.id));
 
 			const { profile } = $userStore;
 
@@ -1040,6 +1051,36 @@
 
 	const currentCard = $derived(markets[currentIndex]);
 
+	// Resolved translation overlay for the focused card (or undefined when the
+	// market has no translation for the active locale) — gates the card's quick
+	// toggle and feeds its display text.
+	const currentTranslation = $derived(
+		nonNullish(currentCard) ? $marketTranslations.get(currentCard.id) : undefined
+	);
+
+	// Per-card quick-toggle state. Seeds from the global preference and resets
+	// to that default whenever the focused card changes (a flip is local to the
+	// card the viewer is on and doesn't change the preference).
+	let flowShowOriginal = $state($marketLanguagePreference === 'original');
+	$effect(() => {
+		currentIndex;
+		$marketLanguagePreference;
+		flowShowOriginal = $marketLanguagePreference === 'original';
+	});
+
+	const onToggleFlowTranslation = () => {
+		flowShowOriginal = !flowShowOriginal;
+
+		if (nonNullish(currentCard)) {
+			track({
+				name: 'market_translation_toggled',
+				marketId: currentCard.id,
+				source: 'deck',
+				label: flowShowOriginal ? 'original' : 'translated'
+			});
+		}
+	};
+
 	// Lazily fetch the focused card's real price history the first time it's
 	// reached (cached by id, so re-visiting is instant). Independent of the
 	// viewer — it's the same series for everyone, so it loads regardless of
@@ -1228,11 +1269,17 @@
 										onStakeChange={(next) => {
 											tradeAmount = next;
 										}}
+										onToggleTranslation={onToggleFlowTranslation}
 										pointXs={priceSeries?.xs}
 										points={priceSeries?.yes}
 										{priorCall}
+										showOriginal={flowShowOriginal}
 										signedIn={nonNullish($userStore.user)}
 										{tradeAmount}
+										translatedLanguageLabel={nonNullish(currentTranslation)
+											? translatedLanguageLabel(currentTranslation.locale)
+											: undefined}
+										translation={currentTranslation}
 									/>
 								</div>
 							</div>

@@ -112,19 +112,29 @@ resolved markets show 100% / 0%. The detail page first-paints from a
 fast query, then upgrades to the certified read. See
 [`specs/2026-06-14-fix-market-odds-skeletons.md`](./spec-driven-development/specs/2026-06-14-fix-market-odds-skeletons.md).
 
-### Market metadata — translated by default, with an original toggle
+### Market metadata — translated everywhere, with a global preference and a per-item toggle
 
 When a market has a creator/admin-authored translation for the reader's
-locale (resolved through the locale fallback chain), the market **detail
-page** shows the translated title and resolution clause **by default**. A
-small, secondary "View original" control sits under the title; toggling it
-reveals the on-chain original and a "View in {language}" control to return.
-A market with no translation for the reader's locale shows the original and
-renders no toggle. Navigating to another market resets to the translated
-view. Translations are read in one bulk call per market. This covers the
-detail page only — market cards/Flow and the `description`/outcome fields
-are not yet translated in-place. See
-[`specs/2026-06-14-feat-market-translation-display.md`](./spec-driven-development/specs/2026-06-14-feat-market-translation-display.md).
+locale (resolved through the locale fallback chain), its title, description,
+resolution clause, and categorical outcome labels render in that language
+**everywhere** — list rows, market cards, the Flow deck (front + back), the
+trade modal, share text, and the detail page — not just the detail page.
+A single global preference governs the default ("Show markets in your
+language" in Settings → Preferences): on (the default) shows translations
+where they exist; off always shows the on-chain original. The preference is
+client-persisted in `localStorage` (identity-agnostic, like the theme), so
+cross-device sync is deferred. On top of that default, every card and the
+detail page carry a small quick switch — shown only when a translation
+exists — that flips that one item between translated and original without
+changing the global preference; the flip is ephemeral and resets on
+navigation. A market with no translation for the reader's locale shows the
+original and renders no toggle. Rendering a list/deck issues one bulk
+translation read for all visible markets (not one per card); changing the
+app locale re-resolves every visible translation. Market **search** still
+matches against the original text (a follow-up). See
+[`specs/2026-06-15-feat-market-translations-everywhere.md`](./spec-driven-development/specs/2026-06-15-feat-market-translations-everywhere.md)
+(fast-follow to
+[`specs/2026-06-14-feat-market-translation-display.md`](./spec-driven-development/specs/2026-06-14-feat-market-translation-display.md)).
 
 ### Friendship rules
 

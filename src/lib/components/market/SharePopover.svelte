@@ -46,9 +46,17 @@
 		priorCall?: PriorCallLite | null;
 		onClose?: () => void;
 		onCopied?: (message?: string) => void;
+		/**
+		 * Translated market title for the active locale; defaults to the
+		 * on-chain original. Used in the share copy and the rendered card so a
+		 * reader shares the question in the language they're reading it.
+		 */
+		displayTitle?: string;
 	}
 
-	const { market, category, priorCall = null, onClose, onCopied }: Props = $props();
+	const { market, category, priorCall = null, onClose, onCopied, displayTitle }: Props = $props();
+
+	const shareTitle = $derived(displayTitle ?? market.title);
 
 	// Crowd YES percentage, or `undefined` when the probability is unknown
 	// (book unread / no liquidity). The share text and card must not claim a
@@ -104,14 +112,14 @@
 			return t({
 				locale: $localeStore,
 				key: 'flow.share.text_pre_no_pct',
-				params: { title: market.title }
+				params: { title: shareTitle }
 			});
 		}
 
 		return t({
 			locale: $localeStore,
 			key: 'flow.share.text_pre',
-			params: { title: market.title, yes: yesPct }
+			params: { title: shareTitle, yes: yesPct }
 		});
 	});
 
@@ -156,7 +164,7 @@
 				const result = await renderPredictionCard({
 					market: {
 						id: market.id,
-						question: market.title,
+						question: shareTitle,
 						yesPercent: yesPct,
 						category: cardCategory
 					},
@@ -314,7 +322,7 @@
 			const result: ShareCardResult | null = await renderPredictionCard({
 				market: {
 					id: market.id,
-					question: market.title,
+					question: shareTitle,
 					yesPercent: yesPct,
 					category: cardCategory
 				},
