@@ -263,25 +263,26 @@ export const persistDailyStreak = ({
 	});
 
 /**
- * Persist the user's daily-goal counter. Called from Flow Mode after
- * each committed prediction so the goal survives a refresh and reflects
- * the day's running total across sessions.
+ * Record one committed Flow swipe against the server-authoritative daily
+ * cap. The satellite owns the count: we send only our local-day key (the
+ * `YYYY-MM-DD` from `todayKey`) as the rollover boundary — never a count —
+ * and the server reads the caller's profile, rolls over by the key, and
+ * writes the capped increment itself.
  *
- * Best-effort — callers should fire-and-forget; the local UI already
- * reflects the bumped count for the rest of the session even if the
- * round-trip fails. Serialized via `patchProfile` so overlapping writes
- * (the first-swipe streak write, or rapid goal bumps) apply in order
- * and only ever override the daily-goal fields.
+ * The returned `{ dailyGoalDone, dailyGoalDate, capReached }` is the source
+ * of truth for the cross-session daily hard cap, so a cleared or signed-out
+ * client can no longer reset it. The Flow commit fires this without blocking
+ * the swipe animation and reconciles the returned count into local state +
+ * the mirror in `.then(...)`; on a transport failure it keeps the optimistic
+ * local count but clamps it so the session never rises above the last value
+ * the server confirmed for the day.
  */
-export const persistDailyGoal = ({
-	principal,
-	dailyGoalDone,
-	dailyGoalDate
+export const recordFlowSwipe = ({
+	dayKey
 }: {
-	principal: PrincipalText;
-	dailyGoalDone: number;
-	dailyGoalDate: string;
-}): Promise<UserProfile> => patchProfile({ principal, patch: { dailyGoalDone, dailyGoalDate } });
+	dayKey: string;
+}): Promise<{ dailyGoalDone: number; dailyGoalDate: string; capReached: boolean }> =>
+	functions.recordFlowSwipe({ dayKey });
 
 /**
  * Persist the Menagerie celebration ledger — the set of `${slug}:${tier}` keys

@@ -808,6 +808,14 @@ export interface AppLookupReferralCodeResult {
 export interface AppRecomputeActivityReactionCountsResult {
 	recomputed: number;
 }
+export interface AppRecordFlowSwipeArgs {
+	day_key: string;
+}
+export interface AppRecordFlowSwipeResult {
+	daily_goal_date: string;
+	daily_goal_done: number;
+	cap_reached: boolean;
+}
 export interface AppRecoverMyAccountResult {
 	ok: boolean;
 	recovered: [] | [boolean];
@@ -1191,6 +1199,7 @@ export interface _SERVICE {
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
 	app_recompute_activity_reaction_counts: ActorMethod<[], AppRecomputeActivityReactionCountsResult>;
+	app_record_flow_swipe: ActorMethod<[AppRecordFlowSwipeArgs], AppRecordFlowSwipeResult>;
 	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;
 	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;

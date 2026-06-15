@@ -33,7 +33,7 @@
 	import { track } from '$lib/services/analytics.services';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
-	import { persistDailyGoal, persistDailyStreak } from '$lib/services/profile.services';
+	import { persistDailyStreak, recordFlowSwipe } from '$lib/services/profile.services';
 	import { loadMarketPriceCandles } from '$lib/services/trade.services';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { showCompanion } from '$lib/stores/companion.store';
@@ -248,10 +248,18 @@
 	let dailyStreak = $state(0);
 	let lastActiveDay = $state<string | undefined>(undefined);
 	// Daily-goal counter + the local day it belongs to. Hydrated from the
-	// profile on mount and persisted after every committed prediction, so
-	// the goal survives a refresh and resets when the day rolls over.
+	// profile on mount and recorded server-side after every committed
+	// prediction, so the goal survives a refresh and resets when the day
+	// rolls over.
 	let dailyGoalCount = $state(0);
 	let dailyGoalDate = $state<string | undefined>(undefined);
+	// Last count the server confirmed for `dailyGoalDate`. The satellite is
+	// authoritative for the daily cap (`recordFlowSwipe`); this tracks the
+	// freshest server value so the error path can clamp the optimistic local
+	// count back down to it — a dropped record must never let the session
+	// climb past what the server actually counted (don't reintroduce the
+	// honest-reset leak via the failure branch).
+	let lastServerDailyGoalDone = $state(0);
 	let hasMarkedActiveThisSession = false;
 	// Set on the first swipe of a session that resumes after a broken
 	// streak. Drives the no-shame "comeback" opener (distinct from the
@@ -388,17 +396,25 @@
 				({ lastActiveDay } = profile);
 			}
 
-			// Seed the daily-goal count from the higher of the profile
-			// and the localStorage mirror (#484): a lost best-effort
-			// profile write must not reset the count and re-open the
-			// daily hard cap. Runs even when signed out so the mirror
-			// alone still gates an anonymous session.
+			// Seed the daily-goal count. The profile count is the
+			// authoritative server value (set by `recordFlowSwipe`); it
+			// wins outright when hydrated so a cleared / stale client can't
+			// re-open the daily hard cap. The localStorage mirror only
+			// gates a signed-out / not-yet-loaded session.
 			const reconciledGoal = reconcileDailyGoalOnEntry({
 				done: profile?.dailyGoalDone ?? 0,
-				date: profile?.dailyGoalDate
+				date: profile?.dailyGoalDate,
+				hasProfile: nonNullish(profile)
 			});
 			dailyGoalCount = reconciledGoal.done;
 			dailyGoalDate = reconciledGoal.date;
+			// The hydrated profile count is the last value the server
+			// confirmed for today; the optimistic commit path never lets the
+			// session fall below it on a record failure.
+			lastServerDailyGoalDone = rolloverDailyGoal({
+				done: profile?.dailyGoalDone ?? 0,
+				date: profile?.dailyGoalDate
+			});
 
 			// Snapshot the cumulative daily count this sitting resumes from.
 			// Rolled over against the current day so a stale stored date reads
@@ -721,11 +737,11 @@
 		sessionStaked += stakeHuman;
 
 		// Daily-goal bump — every committed YES / NO counts toward the
-		// day's goal (skips returned early above). Rolls over to a fresh
-		// day if needed, caps at the hard cap, and persists best-effort so
-		// the running total survives a refresh. This is the cross-session
-		// streak / hard-cap source; the engine's beat cadence runs off the
-		// per-session counter below.
+		// day's goal (skips returned early above). The OPTIMISTIC local bump
+		// runs first so the in-session cadence / cap takeover react instantly;
+		// it rolls over to a fresh day if needed and caps at the hard cap.
+		// This is the cross-session streak / hard-cap source; the engine's
+		// beat cadence runs off the per-session counter below.
 		const goalBump = applyDailyGoalBump({
 			done: dailyGoalCount,
 			date: dailyGoalDate,
@@ -737,24 +753,57 @@
 		dailyGoalCount = goalBump.done;
 		dailyGoalDate = goalBump.date;
 
-		// Synchronous, offline-safe mirror — written before the
-		// best-effort profile round-trip below so the daily hard cap
-		// survives a refresh even if that write is dropped (#484).
+		// Synchronous, offline-safe mirror — written before the server
+		// round-trip below so the daily hard cap survives a refresh that
+		// races the record. The mirror is only an offline hint; it can never
+		// raise the count above the authoritative server value on entry.
 		writeDailyGoalMirror(goalBump);
 
+		const goalDayKey = goalBump.date;
 		const goalPrincipal = $userStore.user?.key;
 
+		// Record the swipe SERVER-side — the satellite owns the count. We send
+		// only our local-day key as the rollover boundary; the server reads
+		// the profile, rolls over, and writes the capped increment itself, so
+		// a cleared / signed-out client can no longer reset the cap. The
+		// authoritative count it returns reconciles the local state + mirror.
+		// On a transport failure the optimistic bump stands but is clamped so
+		// the session can never exceed the last count the server confirmed.
 		if (nonNullish(goalPrincipal)) {
-			void persistDailyGoal({
-				principal: goalPrincipal,
-				dailyGoalDone: goalBump.done,
-				dailyGoalDate: goalBump.date
-			})
-				.then((data) => {
-					userStore.update((s) => ({ ...s, profile: data }));
+			void recordFlowSwipe({ dayKey: goalDayKey })
+				.then(({ dailyGoalDone: serverDone, dailyGoalDate: serverDate }) => {
+					lastServerDailyGoalDone = serverDone;
+					dailyGoalCount = serverDone;
+					dailyGoalDate = serverDate;
+					writeDailyGoalMirror({ done: serverDone, date: serverDate });
+
+					userStore.update((s) =>
+						s.profile
+							? {
+									...s,
+									profile: {
+										...s.profile,
+										dailyGoalDone: serverDone,
+										dailyGoalDate: serverDate
+									}
+								}
+							: s
+					);
 				})
 				.catch((e: unknown) => {
-					console.warn('Daily-goal persistence failed (non-fatal):', e);
+					console.warn('Flow swipe record failed (non-fatal):', e);
+
+					// Degrade gracefully: never let the dropped record leave the
+					// session above the last server-confirmed count for this day.
+					const clamped = rolloverDailyGoal({
+						done: lastServerDailyGoalDone,
+						date: goalDayKey
+					});
+
+					if (dailyGoalCount > clamped && clamped > 0) {
+						dailyGoalCount = clamped;
+						writeDailyGoalMirror({ done: clamped, date: goalDayKey });
+					}
 				});
 		}
 

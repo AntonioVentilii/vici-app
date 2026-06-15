@@ -24,6 +24,7 @@
 //     a broken streak, separate from the daily "welcome back".
 //   • Single-pass priority resolver — never two beats back to back.
 
+import { DAILY_HARD_CAP } from '$lib/constants/flow-rewards.constants';
 import type { FlowAction } from '$lib/types/market';
 import type { MessageKey } from '$lib/utils/i18n.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -268,8 +269,10 @@ const OT_RHYTHM: Record<number, OvertimeBeat> = {
 };
 
 // Daily hard cap — the daily-ten / overtime cadence never schedules a
-// rhythm beat beyond this many calls in a single day.
-export const DAILY_HARD_CAP = 15;
+// rhythm beat beyond this many calls in a single day. The constant lives
+// in a dependency-free constants module so the satellite can own it too;
+// re-exported here so the motion engine's existing importers are unchanged.
+export { DAILY_HARD_CAP };
 
 // ── Beat payload — consumed by `MotionBeat.svelte`. Copy is carried as
 // an i18n key (`copyKey`); the chips/labels (`treatKey`, `subKey`,

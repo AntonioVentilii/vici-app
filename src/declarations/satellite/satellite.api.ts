@@ -1493,6 +1493,29 @@ const recomputeActivityReactionCounts = async (): Promise<
 	return AppRecomputeActivityReactionCountsResultSchema.parse(result);
 };
 
+const AppRecordFlowSwipeArgsSchema = j.strictObject({ dayKey: j.string() });
+const AppRecordFlowSwipeResultSchema = j.strictObject({
+	dailyGoalDone: j.number(),
+	dailyGoalDate: j.string(),
+	capReached: j.boolean()
+});
+
+const recordFlowSwipe = async (
+	args: j.infer<typeof AppRecordFlowSwipeArgsSchema>
+): Promise<j.infer<typeof AppRecordFlowSwipeResultSchema>> => {
+	const parsedArgs = AppRecordFlowSwipeArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppRecordFlowSwipeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_record_flow_swipe']>[0];
+
+	const { app_record_flow_swipe } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_record_flow_swipe(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppRecordFlowSwipeResultSchema, value: idlResult });
+	return AppRecordFlowSwipeResultSchema.parse(result);
+};
+
 const AppRecoverMyAccountResultSchema = j.strictObject({
 	ok: j.boolean(),
 	recovered: j.optional(j.boolean()),
@@ -2030,6 +2053,7 @@ export const functions = {
 	followUser,
 	hibernateMyAccount,
 	recomputeActivityReactionCounts,
+	recordFlowSwipe,
 	recoverMyAccount,
 	redeemReferralCode,
 	rejectFriendRequest,
