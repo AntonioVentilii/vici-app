@@ -27,6 +27,8 @@
 		referralVxpDisplay: string;
 		/** Number of credited referrals behind that VXP. */
 		referralCount: number;
+		/** Referral list not fetched yet — pulse a placeholder instead of "0". */
+		referralsLoading: boolean;
 	}
 
 	let {
@@ -36,7 +38,8 @@
 		lifetimeDisplay,
 		inPlayDisplay,
 		referralVxpDisplay,
-		referralCount
+		referralCount,
+		referralsLoading
 	}: Props = $props();
 
 	const openInvite = (): void => {
@@ -62,19 +65,26 @@
 		</div>
 		<div class="db-hd-row">
 			<span class="db-hd-k">{t({ locale: $localeStore, key: 'dash.build.sheet_referrals' })}</span>
-			<span class="db-hd-v num">
-				{referralVxpDisplay}
-				<em>
-					{t({
-						locale: $localeStore,
-						key:
-							referralCount === 1
-								? 'dash.build.sheet_referrals_one'
-								: 'dash.build.sheet_referrals_many',
-						params: { count: referralCount }
-					})}
-				</em>
-			</span>
+			{#if referralsLoading}
+				<span class="db-hd-v db-hd-ph" aria-hidden="true">
+					<span class="db-hd-ph-bar"></span>
+					<span class="db-hd-ph-bar db-hd-ph-bar-sm"></span>
+				</span>
+			{:else}
+				<span class="db-hd-v num">
+					{referralVxpDisplay}
+					<em>
+						{t({
+							locale: $localeStore,
+							key:
+								referralCount === 1
+									? 'dash.build.sheet_referrals_one'
+									: 'dash.build.sheet_referrals_many',
+							params: { count: referralCount }
+						})}
+					</em>
+				</span>
+			{/if}
 		</div>
 		<button class="db-hd-cta" onclick={openInvite} type="button">
 			<Gift aria-hidden="true" size={15} strokeWidth={1.8} />

@@ -30,7 +30,7 @@
 		unlikeActivity
 	} from '$lib/services/activity-reaction.services';
 	import { track } from '$lib/services/analytics.services';
-	import { getMyReferralCode, listMyReferrals } from '$lib/services/referral.services';
+	import { getMyReferralCode } from '$lib/services/referral.services';
 	import {
 		acceptFriendRequest,
 		cancelFriendRequest,
@@ -53,10 +53,10 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore, type NotificationType } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
+	import { myReferralsStore, refreshMyReferrals } from '$lib/stores/referrals.store';
 	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
-	import type { ReferralListItem } from '$lib/types/referral';
 	import type { Relation } from '$lib/types/relation';
 	import type { Activity } from '$lib/types/social';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
@@ -134,9 +134,11 @@
 	// The viewer's own redemption rows (newest-first), one per friend who signed up
 	// with their code. Each row carries `withinReferrerCap`, which marks whether that
 	// redemption actually paid the referrer under the diminishing tier curve + hard cap
-	// (see `referral.constants.ts`). Loaded on mount; stays empty on failure so the hero
-	// degrades to its zero-state rather than blocking the tab.
-	let myReferrals = $state<ReferralListItem[]>([]);
+	// (see `referral.constants.ts`). Read from the shared `referrals.store` — the same
+	// cache the Dash stack-sheet reads — so the two surfaces can never disagree and a
+	// tab switch reuses the list instead of re-querying. Stays empty on failure so the
+	// hero degrades to its zero-state rather than blocking the tab.
+	const myReferrals = $derived($myReferralsStore);
 
 	onMount(() => {
 		let alive = true;
@@ -176,20 +178,13 @@
 			}
 		})();
 
-		// Fetch the viewer's redemption rows so the hero's social-proof + cap lines reflect
-		// the real, tiered economy rather than a flat per-friend estimate. Fail-open: an
-		// error leaves the list empty and the hero falls back to its zero-state.
-		void (async () => {
-			try {
-				const items = await listMyReferrals();
-
-				if (alive) {
-					myReferrals = items;
-				}
-			} catch {
-				// Decorative social proof — leave the list empty on failure.
-			}
-		})();
+		// Refresh the viewer's redemption rows into the shared store so the hero's
+		// social-proof + cap lines reflect the real, tiered economy rather than a flat
+		// per-friend estimate. Fail-open: the store leaves the previous cache untouched
+		// on error, so the hero falls back to its zero-state on a cold failure.
+		void refreshMyReferrals().catch(() => {
+			// Decorative social proof — keep the cached list on failure.
+		});
 
 		return () => {
 			alive = false;
