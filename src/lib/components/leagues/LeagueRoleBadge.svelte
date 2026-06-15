@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
+	import { clickOutside } from '$lib/actions/click-outside';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { LeagueMemberRole } from '$lib/types/league-member';
 	import { t } from '$lib/utils/i18n.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { isMobileViewport } from '$lib/utils/viewport.utils';
 
 	interface Props {
@@ -25,21 +28,59 @@
 		})
 	);
 
-	// On the cramped mobile leaderboard rows the chip would crowd the name, so
-	// it collapses to its initial; the full word stays reachable via the chip's
-	// title and via the member sheet, which renders the badge expanded.
+	// On the cramped mobile leaderboard rows the spelled-out chip crowds the
+	// handle, so it collapses to its initial and reveals the full role in a tap
+	// tooltip. Desktop (and the roomy member sheet) keep the word inline.
 	const collapsed = $derived(isMobileViewport() && !expanded);
 	// Codepoint-aware first character so a non-BMP / combined localized initial
 	// doesn't split mid-grapheme.
 	const initial = $derived([...label][0] ?? '');
+
+	let showTooltip = $state(false);
 </script>
 
 {#if role === 'owner' || role === 'admin'}
-	<Badge
-		size="xs"
-		title={collapsed ? label : undefined}
-		variant={role === 'owner' ? 'warning' : 'default'}
-	>
-		{collapsed ? initial : label}
-	</Badge>
+	{#if collapsed}
+		<!-- A nested <button> inside the leaderboard row's <button> would be
+		     invalid HTML, so the tap target is a `<span role="button">` (mirrors
+		     the copy pill in LeagueListCard). -->
+		<span class="relative inline-flex" use:clickOutside={() => (showTooltip = false)}>
+			<span
+				class="focus-visible:ring-primary inline-flex rounded-full focus-visible:ring-2 focus-visible:outline-hidden"
+				aria-expanded={showTooltip}
+				aria-label={label}
+				onclick={(event) => {
+					event.stopPropagation();
+					showTooltip = !showTooltip;
+				}}
+				onkeydown={(event) => {
+					if (event.key === 'Enter' || event.key === ' ') {
+						event.preventDefault();
+						event.stopPropagation();
+						showTooltip = !showTooltip;
+					}
+				}}
+				role="button"
+				tabindex="0"
+			>
+				<Badge size="xs" variant={role === 'owner' ? 'warning' : 'default'}>
+					{initial}
+				</Badge>
+			</span>
+
+			{#if showTooltip}
+				<span
+					class="bg-popover border-border-strong shadow-modal text-foreground absolute top-full left-1/2 z-50 mt-1 -translate-x-1/2 rounded-[6px] border px-2 py-1 text-[10px] font-semibold whitespace-nowrap backdrop-blur-md"
+					role="tooltip"
+					transition:fade={prefersReducedMotion() ? { duration: 0 } : { duration: 120 }}
+				>
+					{label}
+				</span>
+			{/if}
+		</span>
+	{:else}
+		<Badge size="xs" variant={role === 'owner' ? 'warning' : 'default'}>
+			{label}
+		</Badge>
+	{/if}
 {/if}
