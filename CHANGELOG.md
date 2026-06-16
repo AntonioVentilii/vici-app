@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.3](https://github.com/AntonioVentilii/vici-app/compare/v0.2.2...v0.2.3) (2026-06-16)
+
+
+### Features
+
+* **arena:** surface, decline, and expire battle proposals; accept starts the clock ([#917](https://github.com/AntonioVentilii/vici-app/issues/917)) ([b1aec79](https://github.com/AntonioVentilii/vici-app/commit/b1aec79be965ba8b7b64c0720579fc95ab6f36c6))
+
+
+### Bug Fixes
+
+* **css:** drop invalid :global() wrappers from global stylesheet ([#916](https://github.com/AntonioVentilii/vici-app/issues/916)) ([7a59bef](https://github.com/AntonioVentilii/vici-app/commit/7a59bef5b3f5d4f26b2c3878a74113e69d248916))
+
+
+### Miscellaneous Chores
+
+* **npm-deps-dev:** bump js-yaml from 4.1.1 to 4.2.0 ([#913](https://github.com/AntonioVentilii/vici-app/issues/913)) ([39b232c](https://github.com/AntonioVentilii/vici-app/commit/39b232c291c500469ea7f36d105283c545487627))
+
 ## [0.2.2](https://github.com/AntonioVentilii/vici-app/compare/v0.2.1...v0.2.2) (2026-06-15)
 
 
