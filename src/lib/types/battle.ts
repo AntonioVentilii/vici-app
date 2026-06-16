@@ -149,10 +149,12 @@ export interface BattleDoc {
 	 */
 	respondByMs?: number;
 	/**
-	 * When the challenged side responded — set to `now` on accept (it
-	 * equals the freshly-set `kickoffMs`) and on decline. Drives the
-	 * proposer's inbox card "when". Unset while `proposed`; absent for
-	 * `expired` (no response) — that card uses {@link respondByMs}.
+	 * When the challenged side responded to the proposal — stamped on the
+	 * league accept (`proposed → in_flight`, where it equals the freshly
+	 * set `kickoffMs`) and on decline (`proposed → declined`). Not set by a
+	 * duel accept (`proposed → accepted`), which doesn't start a clock, nor
+	 * by `expired` (no response — that card uses {@link respondByMs}).
+	 * Drives the proposer's inbox card "when".
 	 */
 	respondedAtMs?: number;
 	/**

@@ -1385,7 +1385,7 @@
 						<div class="league-detail-battle-actions">
 							<button
 								class="league-detail-battle-action is-primary"
-								disabled={actingBattleId === battle.id || !canAcceptBattle(battle)}
+								disabled={nonNullish(actingBattleId) || !canAcceptBattle(battle)}
 								onclick={() => handleAcceptBattle(battle)}
 								type="button"
 							>
@@ -1395,7 +1395,7 @@
 							</button>
 							<button
 								class="league-detail-battle-action is-danger"
-								disabled={actingBattleId === battle.id}
+								disabled={nonNullish(actingBattleId)}
 								onclick={() => handleDeclineBattle(battle)}
 								type="button"
 							>
@@ -1417,7 +1417,7 @@
 				{:else if canKickoffBattle(battle)}
 					<button
 						class="league-detail-battle-action is-primary"
-						disabled={actingBattleId === battle.id}
+						disabled={nonNullish(actingBattleId)}
 						onclick={() => handleKickoffBattle(battle)}
 						type="button"
 					>
@@ -1428,7 +1428,7 @@
 				{:else if canResolveBattle(battle)}
 					<button
 						class="league-detail-battle-action is-primary"
-						disabled={actingBattleId === battle.id}
+						disabled={nonNullish(actingBattleId)}
 						onclick={() => handleResolveBattle(battle, 'nudge')}
 						type="button"
 					>
@@ -1441,7 +1441,7 @@
 				{#if canRetractBattle(battle)}
 					<button
 						class="league-detail-battle-action is-danger"
-						disabled={actingBattleId === battle.id}
+						disabled={nonNullish(actingBattleId)}
 						onclick={() => handleRetractBattle(battle)}
 						type="button"
 					>

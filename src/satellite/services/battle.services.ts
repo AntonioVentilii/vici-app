@@ -347,8 +347,9 @@ export const assertSetBattle = ({
 		);
 	}
 
-	// respondedAtMs may only be stamped on the response transitions
-	// (accept → in_flight, or decline); frozen otherwise.
+	// respondedAtMs may only be stamped on a response to a proposal —
+	// the league accept (`proposed → in_flight`) or a decline
+	// (`proposed → declined`); frozen on every other transition.
 	const isResponseTransition =
 		currentDoc.state === 'proposed' &&
 		(proposedDoc.state === 'in_flight' || proposedDoc.state === 'declined');
@@ -359,11 +360,15 @@ export const assertSetBattle = ({
 		);
 	}
 
-	// Baselines are stamped on the accepted → in_flight transition and
-	// frozen thereafter. They may only appear/change on a doc whose
-	// current state is `accepted`.
+	// Baselines are stamped at kickoff and frozen thereafter. Kickoff is
+	// either a duel/legacy `accepted → in_flight` or the league
+	// accept-fuses-kickoff `proposed → in_flight` (same `isAcceptKickoff`
+	// transition that opens the window). Outside those, baselines may not
+	// appear or change.
+	const stampsBaseline = currentDoc.state === 'accepted' || isAcceptKickoff;
+
 	if (
-		currentDoc.state !== 'accepted' &&
+		!stampsBaseline &&
 		(!bucketsNullableEqual(currentDoc.baselineA, proposedDoc.baselineA) ||
 			!bucketsNullableEqual(currentDoc.baselineB, proposedDoc.baselineB))
 	) {
