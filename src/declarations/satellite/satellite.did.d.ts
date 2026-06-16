@@ -177,6 +177,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { provider_linked: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
+			| { battle_declined: null }
 			| { vxp_awarded: null }
 			| { league_joined: null }
 			| { exit_signal: null }
@@ -196,6 +197,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { league_created: null }
 			| { onboarding_step: null }
 			| { market_viewed: null }
+			| { battle_expired: null }
 			| { delete_flow_opened: null }
 			| { affiliation_set: null }
 			| { session_started: null }
@@ -618,6 +620,8 @@ export interface AppListLeagueBattlesResult {
 	items: Array<{
 		id: string;
 		trash_talk: [] | [string];
+		respond_by_ms: [] | [number];
+		responded_at_ms: [] | [number];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
 		calls_a: [] | [number];
@@ -625,7 +629,13 @@ export interface AppListLeagueBattlesResult {
 		score_a: [] | [number];
 		score_b: [] | [number];
 		scope: [] | [string];
-		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
+		state:
+			| { resolved: null }
+			| { expired: null }
+			| { proposed: null }
+			| { in_flight: null }
+			| { accepted: null }
+			| { declined: null };
 		side_a: string;
 		side_b: string;
 		proposer: string;
@@ -705,6 +715,8 @@ export interface AppListMyBattlesResult {
 	items: Array<{
 		id: string;
 		trash_talk: [] | [string];
+		respond_by_ms: [] | [number];
+		responded_at_ms: [] | [number];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
 		calls_a: [] | [number];
@@ -712,7 +724,13 @@ export interface AppListMyBattlesResult {
 		score_a: [] | [number];
 		score_b: [] | [number];
 		scope: [] | [string];
-		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
+		state:
+			| { resolved: null }
+			| { expired: null }
+			| { proposed: null }
+			| { in_flight: null }
+			| { accepted: null }
+			| { declined: null };
 		side_a: string;
 		side_b: string;
 		proposer: string;
@@ -977,6 +995,7 @@ export interface AppTrackEventsArgs {
 			| { provider_linked: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
+			| { battle_declined: null }
 			| { vxp_awarded: null }
 			| { league_joined: null }
 			| { exit_signal: null }
@@ -996,6 +1015,7 @@ export interface AppTrackEventsArgs {
 			| { league_created: null }
 			| { onboarding_step: null }
 			| { market_viewed: null }
+			| { battle_expired: null }
 			| { delete_flow_opened: null }
 			| { affiliation_set: null }
 			| { session_started: null }

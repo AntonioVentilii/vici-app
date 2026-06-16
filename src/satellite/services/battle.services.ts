@@ -1,6 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
 import { LeaguePrivacy } from '$lib/enums/league';
 import {
+	BATTLE_ACCEPT_CLOCK_TOLERANCE_MS,
 	BATTLE_KINDS,
 	BATTLE_SCOPE_DEFAULT,
 	BATTLE_SCOPES,
@@ -69,7 +70,18 @@ const bucketsNullableEqual = (
  *                             battles sideB must be challengeable —
  *                             an OPEN league or one the proposer is a
  *                             member of.
- *       - `proposed → accepted` — caller is the *other* side's owner.
+ *       - `proposed → accepted` — caller is the *other* side's owner
+ *                             (duel path; leagues fuse accept+kickoff).
+ *       - `proposed → in_flight` — league accept fuses the kickoff:
+ *                             the `sideB` owner accepts and the window
+ *                             starts now (`kickoffMs ≈ now`, the
+ *                             proposed duration preserved). Baselines
+ *                             are stamped + re-validated exactly as the
+ *                             `accepted → in_flight` kickoff does.
+ *       - `proposed → declined` — the `sideB` owner declines; terminal.
+ *       - `proposed → expired` — a side owner lazily expires a proposal
+ *                             past `respondByMs` (fallback `kickoffMs`);
+ *                             terminal.
  *       - `accepted → in_flight` — either side's owner, once
  *                                  `now >= kickoffMs`. League battles
  *                                  stamp each side's `league_stats`
@@ -159,6 +171,14 @@ export const assertSetBattle = ({
 		throw new Error(
 			`battles trashTalk must be at most ${BATTLE_TRASH_TALK_MAX_LENGTH} characters (got ${proposedDoc.trashTalk.length}).`
 		);
+	}
+
+	if (nonNullish(proposedDoc.respondByMs) && !Number.isFinite(proposedDoc.respondByMs)) {
+		throw new Error('battles respondByMs must be a finite number.');
+	}
+
+	if (nonNullish(proposedDoc.respondedAtMs) && !Number.isFinite(proposedDoc.respondedAtMs)) {
+		throw new Error('battles respondedAtMs must be a finite number.');
 	}
 
 	// Proposer principal must parse.
@@ -263,6 +283,10 @@ export const assertSetBattle = ({
 			throw new Error('New battles must not carry baselineA / baselineB.');
 		}
 
+		if (nonNullish(proposedDoc.respondedAtMs)) {
+			throw new Error('New battles must not carry respondedAtMs (no response yet).');
+		}
+
 		if (proposedDoc.proposer !== callerText) {
 			throw new Error('battles proposer must match the caller principal.');
 		}
@@ -299,30 +323,52 @@ export const assertSetBattle = ({
 		currentDoc.proposer !== proposedDoc.proposer ||
 		currentDoc.scope !== proposedDoc.scope ||
 		currentDoc.wager !== proposedDoc.wager ||
-		currentDoc.trashTalk !== proposedDoc.trashTalk
+		currentDoc.trashTalk !== proposedDoc.trashTalk ||
+		currentDoc.respondByMs !== proposedDoc.respondByMs
 	) {
 		throw new Error(
-			'battles identity fields are immutable (id, kind, sideA, sideB, proposer, scope, wager, trashTalk).'
+			'battles identity fields are immutable (id, kind, sideA, sideB, proposer, scope, wager, trashTalk, respondByMs).'
 		);
 	}
 
-	// Window discipline — kickoffMs / settleMs immutable after
-	// `accepted` (only the proposed-state-only "edit-window" branch
-	// can change them, and we don't allow re-editing in `proposed`
-	// either; identity-field-immutability already covers the
-	// in-state case if scopes drift).
+	// Window discipline — the window may only change on the league
+	// accept transition (`proposed → in_flight`), which starts the clock
+	// at acceptance. Every other transition (decline, expire, duel
+	// accept, kickoff, resolve, same-state edits) must leave
+	// `kickoffMs` / `settleMs` exactly as proposed.
+	const isAcceptKickoff = currentDoc.state === 'proposed' && proposedDoc.state === 'in_flight';
+
 	if (
-		currentDoc.state !== 'proposed' &&
+		!isAcceptKickoff &&
 		(currentDoc.kickoffMs !== proposedDoc.kickoffMs || currentDoc.settleMs !== proposedDoc.settleMs)
 	) {
-		throw new Error('battles kickoffMs / settleMs are frozen after the proposed state.');
+		throw new Error(
+			'battles kickoffMs / settleMs may only change when a league proposal is accepted.'
+		);
 	}
 
-	// Baselines are stamped on the accepted → in_flight transition and
-	// frozen thereafter. They may only appear/change on a doc whose
-	// current state is `accepted`.
+	// respondedAtMs may only be stamped on a response to a proposal —
+	// the league accept (`proposed → in_flight`) or a decline
+	// (`proposed → declined`); frozen on every other transition.
+	const isResponseTransition =
+		currentDoc.state === 'proposed' &&
+		(proposedDoc.state === 'in_flight' || proposedDoc.state === 'declined');
+
+	if (!isResponseTransition && currentDoc.respondedAtMs !== proposedDoc.respondedAtMs) {
+		throw new Error(
+			'battles respondedAtMs may only be set when the proposal is accepted or declined.'
+		);
+	}
+
+	// Baselines are stamped at kickoff and frozen thereafter. Kickoff is
+	// either a duel/legacy `accepted → in_flight` or the league
+	// accept-fuses-kickoff `proposed → in_flight` (same `isAcceptKickoff`
+	// transition that opens the window). Outside those, baselines may not
+	// appear or change.
+	const stampsBaseline = currentDoc.state === 'accepted' || isAcceptKickoff;
+
 	if (
-		currentDoc.state !== 'accepted' &&
+		!stampsBaseline &&
 		(!bucketsNullableEqual(currentDoc.baselineA, proposedDoc.baselineA) ||
 			!bucketsNullableEqual(currentDoc.baselineB, proposedDoc.baselineB))
 	) {
@@ -351,6 +397,81 @@ export const assertSetBattle = ({
 
 		if (hasResultFields || hasBaselineFields) {
 			throw new Error('battles accept must not carry scores or baselines.');
+		}
+	} else if (transition === 'proposed->in_flight') {
+		// League accept fuses the kickoff: the challenged side accepts and
+		// the competition window starts now. (Duels still accept first,
+		// then kick off — see accepted->in_flight.)
+		if (proposedDoc.kind !== 'league') {
+			throw new Error('only league battles may go proposed → in_flight (duels accept first).');
+		}
+
+		if (!isSideOwner(currentDoc.sideB)) {
+			throw new Error('battles accept requires sideB owner.');
+		}
+
+		if (hasResultFields) {
+			throw new Error('battles accept must not carry scoreA / scoreB / callsA / callsB / winner.');
+		}
+
+		// Window starts at acceptance: kickoffMs ≈ now, the proposed
+		// duration preserved as the window length.
+		if (Math.abs(proposedDoc.kickoffMs - nowMs) > BATTLE_ACCEPT_CLOCK_TOLERANCE_MS) {
+			throw new Error('battles accept must set kickoffMs to ~now.');
+		}
+
+		const durationMs = currentDoc.settleMs - currentDoc.kickoffMs;
+
+		if (proposedDoc.settleMs !== proposedDoc.kickoffMs + durationMs) {
+			throw new Error('battles accept must preserve the proposed window length.');
+		}
+
+		// Snapshot each side's league_stats bucket as the baseline; the
+		// assert re-reads it so the baseline can't be faked.
+		if (isNullish(proposedDoc.baselineA) || isNullish(proposedDoc.baselineB)) {
+			throw new Error('league battles require baselineA and baselineB at accept.');
+		}
+
+		if (
+			!bucketsEqual(proposedDoc.baselineA, readLeagueStatsBucket(currentDoc.sideA)) ||
+			!bucketsEqual(proposedDoc.baselineB, readLeagueStatsBucket(currentDoc.sideB))
+		) {
+			throw new Error('battles accept baselines must equal the current league_stats snapshot.');
+		}
+
+		if (isNullish(proposedDoc.respondedAtMs)) {
+			throw new Error('battles accept must stamp respondedAtMs.');
+		}
+	} else if (transition === 'proposed->declined') {
+		// The challenged side declines the proposal.
+		if (!isSideOwner(currentDoc.sideB)) {
+			throw new Error('battles decline requires sideB owner.');
+		}
+
+		if (hasResultFields || hasBaselineFields) {
+			throw new Error('declined battles must not carry scores or baselines.');
+		}
+
+		if (isNullish(proposedDoc.respondedAtMs)) {
+			throw new Error('battles decline must stamp respondedAtMs.');
+		}
+	} else if (transition === 'proposed->expired') {
+		// Lazy expiry once the respond-by deadline passes — written by a
+		// side owner the first time they open the league/battle (Juno has
+		// no scheduler). Legacy rows without respondByMs fall back to
+		// kickoffMs.
+		if (!isSideOwner(currentDoc.sideA) && !isSideOwner(currentDoc.sideB)) {
+			throw new Error('battles expire requires sideA or sideB owner.');
+		}
+
+		const respondByMs = currentDoc.respondByMs ?? currentDoc.kickoffMs;
+
+		if (nowMs < respondByMs) {
+			throw new Error('battles cannot expire before respondByMs.');
+		}
+
+		if (hasResultFields || hasBaselineFields || nonNullish(proposedDoc.respondedAtMs)) {
+			throw new Error('expired battles must not carry scores, baselines, or respondedAtMs.');
 		}
 	} else if (transition === 'accepted->in_flight') {
 		if (!isSideOwner(currentDoc.sideA) && !isSideOwner(currentDoc.sideB)) {

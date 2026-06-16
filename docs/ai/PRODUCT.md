@@ -234,11 +234,23 @@ record:
 
 ### Battles — accuracy face-offs that resolve themselves
 
-A **battle** is a time-bound accuracy face-off between two leagues. Its
-lifecycle is forward-only: **proposed → accepted → in_flight →
-resolved**. The owner of one league proposes; the other league's owner
-accepts; either owner kicks it off once the window opens; it resolves
-once the window closes.
+A **battle** is a time-bound accuracy face-off between two leagues. The
+owner of one league proposes; the challenged league's owner **accepts or
+declines**, and an unanswered proposal **expires** after a fixed
+respond-by window (3 days). For a league battle, **accepting starts the
+clock** — the proposer picks only a duration (7 / 14 / 30 days), and the
+N-day window runs from the moment of acceptance (accept fuses the old
+separate kickoff). The forward-only lifecycle is therefore **proposed →
+in_flight → resolved**, with **declined** and **expired** as terminal
+ends of an unaccepted proposal. A league may run **any number of battles
+at once** (a far client-side rail of 100 simultaneous live battles
+guards against abuse); incoming challenges surface as a "Battle requests"
+list on the league page even while other battles are live, so a busy
+league can still accept or decline. Because Juno docs aren't pushed live
+across users, the proposer is told their challenge was accepted or
+declined via an inbox notification derived from the battle's own state.
+(Duels — principal-vs-principal — keep the older **proposed → accepted →
+in_flight → resolved** manual-score path and aren't user-creatable yet.)
 
 **Who can challenge whom is governed by league privacy.** Only **OPEN**
 leagues are discoverable in challenge search and challengeable by

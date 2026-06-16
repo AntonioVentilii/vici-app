@@ -63,6 +63,8 @@ export const AnalyticsEventNameSchema = j.enum([
 	'league_invite_sent',
 	'battle_proposed',
 	'battle_accepted',
+	'battle_declined',
+	'battle_expired',
 	'battle_resolved',
 	'comment_posted',
 	'chat_sent',
