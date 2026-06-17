@@ -9,7 +9,6 @@
 	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
 	import WorldsBattleCard from '$lib/components/worlds/WorldsBattleCard.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { isMarketTag, MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
 		WORLDS_COUNTRIES,
@@ -24,13 +23,14 @@
 	import { leagueBattlesStore, myLeaguesStore, refreshMyLeagues } from '$lib/stores/leagues.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
-	import { BATTLE_SCOPE_DEFAULT, type BattleDoc, type BattleScope } from '$lib/types/battle';
+	import type { BattleDoc } from '$lib/types/battle';
 	import {
 		TOURNAMENT_ROUNDS,
 		type TournamentDoc,
 		type TournamentMatchDoc,
 		type TournamentRound
 	} from '$lib/types/tournament';
+	import { battleScopeLabel } from '$lib/utils/battle.utils';
 	import { shortLeagueId } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
@@ -114,17 +114,6 @@
 		$leagueDirectoryStore.get(id)?.name ??
 		shortLeagueId(id);
 
-	// Localized scope label — `all` (or absent on legacy rows) reads
-	// "All calls"; a market-tag scope reuses the canonical category catalog.
-	// Mirrors the battle detail page so the label never drifts.
-	const scopeLabel = (scope: BattleScope | undefined): string => {
-		const resolved = scope ?? BATTLE_SCOPE_DEFAULT;
-
-		return resolved !== 'all' && isMarketTag(resolved)
-			? t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[resolved] })
-			: t({ locale: $localeStore, key: 'battle.detail.scope_all' });
-	};
-
 	// A challenger can send more than one challenge to the same league, so
 	// the card must show what sets each apart — duration · scope · optional
 	// wager. Without it two proposals render identically and the recipient
@@ -133,7 +122,7 @@
 		const days = Math.max(1, Math.ceil((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
 		const facts = [
 			t({ locale: $localeStore, key: 'leagues.challenge.duration_days', params: { count: days } }),
-			scopeLabel(battle.scope)
+			battleScopeLabel({ scope: battle.scope, locale: $localeStore })
 		];
 
 		if (nonNullish(battle.wager) && battle.wager > 0) {

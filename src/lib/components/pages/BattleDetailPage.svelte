@@ -7,7 +7,6 @@
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { isMarketTag, MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
@@ -21,12 +20,8 @@
 	} from '$lib/services/leagues.services';
 	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import {
-		BATTLE_SCOPE_DEFAULT,
-		type BattleDoc,
-		type BattleScope,
-		type BattleState
-	} from '$lib/types/battle';
+	import type { BattleDoc, BattleState } from '$lib/types/battle';
+	import { battleScopeLabel } from '$lib/utils/battle.utils';
 	import { formatDate, shortLeagueId } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
@@ -125,17 +120,6 @@
 
 		return b?.role === 'owner' ? battle.sideB : undefined;
 	});
-
-	// Localized scope label: `all` (or absent on legacy rows) reads
-	// "All calls"; a market-tag scope reuses the canonical category
-	// catalog so the label never drifts from the rest of the app.
-	const scopeLabel = (scope: BattleScope | undefined): string => {
-		const resolved = scope ?? BATTLE_SCOPE_DEFAULT;
-
-		return resolved !== 'all' && isMarketTag(resolved)
-			? t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[resolved] })
-			: t({ locale: $localeStore, key: 'battle.detail.scope_all' });
-	};
 
 	const stateLabelKey = (state: BattleState): MessageKey => {
 		switch (state) {
@@ -357,7 +341,9 @@
 			</div>
 			<div class="battle-detail-meta-row">
 				<span class="eyebrow">{t({ locale: $localeStore, key: 'battle.detail.scope_label' })}</span>
-				<span class="num allcaps">{scopeLabel(battle.scope)}</span>
+				<span class="num allcaps"
+					>{battleScopeLabel({ scope: battle.scope, locale: $localeStore })}</span
+				>
 			</div>
 			{#if nonNullish(battle.wager) && battle.wager > 0}
 				<div class="battle-detail-meta-row">
