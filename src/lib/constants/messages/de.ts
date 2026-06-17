@@ -104,7 +104,6 @@ export const deMessages = {
 	'battles.create.wager_none': 'Kein Einsatz',
 	'battles.create.wager_value': '{amount} VXP',
 	'battles.incoming.cta': 'Herausforderung ansehen',
-	'battles.incoming.meta': 'Zum Ansehen und Annehmen tippen',
 	'battles.incoming.title': '{opponent} hat {league} herausgefordert',
 	'battles.intro.body':
 		'Ein Genauigkeits-Duell auf Zeit. Liga gegen Liga. Schule gegen Schule. Die Bilanz zwischen euch.',

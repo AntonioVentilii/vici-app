@@ -1,0 +1,25 @@
+import type { AppLocale } from '$lib/constants/locale.constants';
+import { isMarketTag, MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
+import { BATTLE_SCOPE_DEFAULT, type BattleScope } from '$lib/types/battle';
+import { t } from '$lib/utils/i18n.utils';
+
+/**
+ * Single source of truth for a battle's scope label. `all` (and legacy
+ * rows with no scope) read "All calls"; a market-tag scope reuses the
+ * canonical category catalog so the label stays identical on every
+ * surface that renders a battle (the Battles inbox card and the battle
+ * detail page) and can't drift between them.
+ */
+export const battleScopeLabel = ({
+	scope,
+	locale
+}: {
+	scope: BattleScope | undefined;
+	locale: AppLocale;
+}): string => {
+	const resolved = scope ?? BATTLE_SCOPE_DEFAULT;
+
+	return resolved !== 'all' && isMarketTag(resolved)
+		? t({ locale, key: MARKET_TAG_LABEL_KEYS[resolved] })
+		: t({ locale, key: 'battle.detail.scope_all' });
+};

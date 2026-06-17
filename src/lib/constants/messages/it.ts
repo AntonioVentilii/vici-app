@@ -97,7 +97,6 @@ export const itMessages = {
 	'battles.create.wager_none': 'Nessuna posta',
 	'battles.create.wager_value': '{amount} VXP',
 	'battles.incoming.cta': 'Esamina la sfida',
-	'battles.incoming.meta': 'Tocca per esaminare e accettare',
 	'battles.incoming.title': '{opponent} ha sfidato {league}',
 	'battles.intro.body':
 		'Una sfida di precisione a tempo. Lega contro lega. Scuola contro scuola. Il confronto tra di voi.',
