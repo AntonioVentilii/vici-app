@@ -4,20 +4,18 @@ Everything an agent needs to open a green PR.
 
 ## 1. PR title
 
-The repo follows [Conventional Commits](https://www.conventionalcommits.org/).
-Recent merged history (from `git log` on `main`) — use as templates:
+The repo follows [Conventional Commits](https://www.conventionalcommits.org/),
+with a **required scope**. Templates:
 
 - `feat(collateral): use nanoid for operation IDs`
-- `feat: count docs instead of list`
-- `feat: upgrade juno functions v0.9 and drop candid for ledger transfer`
-- `fix: market resolution & settlement UX`
 - `fix(collateral): use nanoid for operation IDs (replaces insecure Math.random fallback)`
-- `chore: update and pin bindgen`
-- `chore: group hosting in new juno.config section`
+- `feat(market): count docs instead of list`
+- `fix(market): resolution & settlement UX`
+- `chore(deps): update and pin bindgen`
 - `chore(npm-deps-dev): bump @junobuild/config from 3.0.0 to 3.0.1`
-- `docs: replace Motoko mention with Rust`
+- `docs(readme): replace Motoko mention with Rust`
 
-Pattern: `verb(scope): description` — scope optional but encouraged.
+Pattern: `type(scope): description` — the scope is **required** (the `pr-title` check rejects a scopeless title).
 
 ### Verbs
 
