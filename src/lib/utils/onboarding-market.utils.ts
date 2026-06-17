@@ -1,7 +1,9 @@
 import { DAY_IN_MS, ZERO } from '$lib/constants/app.constants';
+import type { AppLocale } from '$lib/constants/locale.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { FeaturedEvent, FeaturedEventParticipant } from '$lib/types/featured-event';
 import type { Market } from '$lib/types/market';
+import { t } from '$lib/utils/i18n.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { PrincipalTextSchema } from '@junobuild/schema';
 
@@ -46,10 +48,12 @@ const seededPredictors = (id: string): number => {
 
 export const buildOnboardingFirstCallMarket = ({
 	event,
-	participant
+	participant,
+	locale
 }: {
 	event: FeaturedEvent;
 	participant: FeaturedEventParticipant | undefined;
+	locale: AppLocale;
 }): Market => {
 	const advancement = participant ? event.advancementMarkets?.[participant.id] : undefined;
 
@@ -63,11 +67,26 @@ export const buildOnboardingFirstCallMarket = ({
 		event.favouriteIds[0] ??
 		event.id;
 
+	const eventName = event.shortTitle ?? event.title;
+
+	// `advancement.q` is the registry's advancement question — authored
+	// upstream and not in our control to localise here, so it's used
+	// verbatim when present. The two template fallbacks are ours, so they
+	// route through `t()`; team and event names are proper nouns passed
+	// through as interpolation params.
 	const title =
 		advancement?.q ??
 		(participant
-			? `Will ${participant.name} win the ${event.shortTitle ?? event.title}?`
-			: `Will ${event.shortTitle ?? event.title} produce a champion?`);
+			? t({
+					locale,
+					key: 'onboarding.beat1b.winner_question',
+					params: { participant: participant.name, event: eventName }
+				})
+			: t({
+					locale,
+					key: 'onboarding.beat1b.champion_question',
+					params: { event: eventName }
+				}));
 
 	const yesPct = advancement?.yes ?? Math.max(5, Math.min(95, Math.round(participant?.odds ?? 50)));
 	const yesProbability = Math.max(0.05, Math.min(0.95, yesPct / 100));
