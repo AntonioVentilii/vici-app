@@ -1183,7 +1183,7 @@ export const ptBRMessages = {
 	'invite.generic_error_title': 'Convite indisponível',
 	'invite.invalid_body': 'Esse link de convite não parece válido. Peça um novo.',
 	'invite.invalid_title': 'Link de convite inválido',
-	'invite.resolving': 'A resolver convite…',
+	'invite.resolving': 'Resolvendo convite…',
 	'invite.self_body': 'Você não pode usar seu próprio link de convite.',
 	'invite.self_title': 'Esse é o seu link',
 	'invite.sheet.body':
@@ -1712,7 +1712,7 @@ export const ptBRMessages = {
 	'onboarding.beat2.affil_eyebrow': 'Seu perfil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.check_failed': 'Não foi possível verificar — tente mesmo assim',
-	'onboarding.beat2.avail.checking': 'A verificar disponibilidade…',
+	'onboarding.beat2.avail.checking': 'Verificando disponibilidade…',
 	'onboarding.beat2.avail.invalid': 'Só letras, números, . _ -',
 	'onboarding.beat2.avail.just_taken': 'Acabaram de pegar — escolha outro',
 	'onboarding.beat2.avail.taken': 'Já em uso — tente uma variante',
@@ -2091,7 +2091,7 @@ export const ptBRMessages = {
 	'signin.legal.terms': 'Termos',
 	'signin.loading.apple': 'Abrindo Apple…',
 	'signin.loading.dev': 'Entrando…',
-	'signin.loading.email': 'A configurar…',
+	'signin.loading.email': 'Configurando…',
 	'signin.loading.google': 'Abrindo Google…',
 	'signin.loading.ii': 'Abrindo Internet Identity…',
 	'signin.loading.passkey': 'Abrindo Passkey…',
@@ -2510,7 +2510,7 @@ export const ptBRMessages = {
 	'worlds.picker.school.add_explainer':
 		'Enviamos um código de 6 dígitos para o seu endereço escolar. Digite-o para verificar. A sua escola fica pública quando 3 estudantes verificados se inscreverem.',
 	'worlds.picker.school.add_title': 'Adicione a sua universidade',
-	'worlds.picker.school.adding': 'A adicionar',
+	'worlds.picker.school.adding': 'Adicionando',
 	'worlds.picker.school.code_body':
 		'Digite o código de 6 dígitos que enviamos. Verifique o spam se não estiver na caixa.',
 	'worlds.picker.school.code_label': 'Código de 6 dígitos',
@@ -2542,7 +2542,7 @@ export const ptBRMessages = {
 	'worlds.picker.school.not_in_directory':
 		'✓ Não está no nosso diretório. Continue para verificar com o e-mail escolar.',
 	'worlds.picker.school.send_code': 'Enviar código de 6 dígitos →',
-	'worlds.picker.school.sending': 'A enviar…',
+	'worlds.picker.school.sending': 'Enviando…',
 	'worlds.picker.school.skip_unverified': 'Ignorar — adicionar sem verificação',
 	'worlds.picker.school.status_pending': 'Pendente',
 	'worlds.picker.school.status_verified': 'Escola verificada',
@@ -2552,14 +2552,14 @@ export const ptBRMessages = {
 	'worlds.picker.school.verify_cta': 'Verificar →',
 	'worlds.picker.school.verify_explainer':
 		'Enviamos um código de 6 dígitos para o seu endereço escolar. Digite-o para verificar a sua adesão a {name}.',
-	'worlds.picker.school.verify_eyebrow': 'A verificar adesão a',
+	'worlds.picker.school.verify_eyebrow': 'Verificando adesão a',
 	'worlds.picker.school.verify_school_title': 'Verifique a sua escola',
 	'worlds.picker.school.verify_title': 'Verificar · {name}',
 	'worlds.picker.school.verify_with': 'Verificar com @{domain} →',
-	'worlds.picker.school.verifying': 'A verificar…',
+	'worlds.picker.school.verifying': 'Verificando…',
 	'worlds.picker.school.wrong_address': 'Endereço errado — altere',
 	'worlds.picker.school.wrong_domain':
-		'Não é um endereço de {name}. Esperava-se algo a terminar em @{domain}.',
+		'Não é um endereço de {name}. Esperava-se algo terminando em @{domain}.',
 	'worlds.picker.search_country': 'Buscar entre {count} países…',
 	'worlds.picker.search_university': 'Buscar entre {count} universidades…',
 	'worlds.picker.title_country': 'Escolha seu país',
