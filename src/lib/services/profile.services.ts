@@ -194,6 +194,33 @@ export const updateInterests = async ({
 	await patchProfile({ principal, patch: { interests } });
 };
 
+/**
+ * Persist a partial `preferences` change through the serialized patch
+ * queue, leaf-merging onto the freshest stored slice. Settings surfaces
+ * and the preferences store own different leaves and fire independently;
+ * routing them here (instead of a full-snapshot `upsertProfile` built
+ * from a local mirror) is what keeps a sound/haptics/visibility toggle
+ * from reverting the onboarding-picked `favoriteParticipantId` it never
+ * had in its snapshot.
+ *
+ * `visibility` mirrors the top-level enum the wire format reads for
+ * leaderboard / search filtering; pass it only when the change includes
+ * `sharing.profileVisibility`.
+ */
+export const persistPreferences = ({
+	principal,
+	preferences,
+	visibility
+}: {
+	principal: PrincipalText;
+	preferences: Partial<UserProfile['preferences']>;
+	visibility?: ProfileVisibility;
+}): Promise<UserProfile> =>
+	patchProfile({
+		principal,
+		patch: nonNullish(visibility) ? { preferences, visibility } : { preferences }
+	});
+
 // Serializes the fire-and-forget profile writers (daily streak + daily
 // goal). Both fire on the same first swipe and the goal fires on every
 // subsequent prediction, so without serialization their read-modify-
@@ -204,11 +231,28 @@ export const updateInterests = async ({
 let profilePatchQueue: Promise<unknown> = Promise.resolve();
 
 /**
+ * A `patchProfile` patch may carry only the preference leaves it owns —
+ * the queue merges them onto the freshest stored `preferences` rather
+ * than replacing the whole slice. So a `favoriteSide`-only write can't
+ * drop a concurrently-written `favoriteParticipantId`, and vice versa.
+ */
+type ProfilePatch = Omit<Partial<UserProfile>, 'preferences'> & {
+	preferences?: Partial<UserProfile['preferences']>;
+};
+
+/**
  * Merge a partial field set onto the freshest profile doc, serialized
  * against other profile patches from this module. Reads the latest doc
  * inside the queued turn so concurrent patches never overlay a stale
  * snapshot. Best-effort: callers fire-and-forget; failures don't break
  * the chain.
+ *
+ * `preferences` is merged at the leaf level: a patch carrying a partial
+ * `preferences` overrides only the keys it names and keeps every other
+ * stored preference. A shallow `{ ...current, ...resolved }` would
+ * replace the whole `preferences` object, so a partial patch built from
+ * a stale snapshot (or one that simply omits a sibling) would silently
+ * drop fields like the onboarding-picked `favoriteParticipantId`.
  */
 const patchProfile = ({
 	principal,
@@ -218,12 +262,18 @@ const patchProfile = ({
 	// A static field set, or a function that derives the patch from the
 	// freshest profile (e.g. `longestStreak = max(existing, dailyStreak)`),
 	// evaluated inside the queued turn so it sees prior writes.
-	patch: Partial<UserProfile> | ((current: UserProfile) => Partial<UserProfile>);
+	patch: ProfilePatch | ((current: UserProfile) => ProfilePatch);
 }): Promise<UserProfile> => {
 	const run = profilePatchQueue.then(async () => {
 		const profileDoc = await getProfile(principal);
 		const resolved = typeof patch === 'function' ? patch(profileDoc.data) : patch;
-		const data: UserProfile = { ...profileDoc.data, ...resolved };
+		const data: UserProfile = {
+			...profileDoc.data,
+			...resolved,
+			preferences: nonNullish(resolved.preferences)
+				? { ...profileDoc.data.preferences, ...resolved.preferences }
+				: profileDoc.data.preferences
+		};
 
 		await upsertProfile({ ...profileDoc, data });
 
@@ -330,9 +380,17 @@ export const upsertProfile = async (
 		key
 	});
 
+	const base = existing?.data ?? profileDoc.data;
 	const data: UserProfile = {
-		...(existing?.data ?? profileDoc.data),
-		...profileDoc.data
+		...base,
+		...profileDoc.data,
+		// Leaf-merge `preferences` onto the freshest stored slice rather than
+		// replacing it. Full-snapshot callers (avatar parts, handle rename)
+		// carry a `preferences` they built from an in-store snapshot that can
+		// predate a concurrent write — without this merge, an avatar save right
+		// after onboarding would replace `preferences` and drop the just-picked
+		// `favoriteParticipantId`.
+		preferences: { ...base.preferences, ...profileDoc.data.preferences }
 	};
 
 	if (isNullish(existing)) {
@@ -400,10 +458,12 @@ export const applyOnboardingPicks = async ({
 }): Promise<{ profile: UserProfile; handleApplied: boolean }> => {
 	const buildPatch =
 		(includeHandle: boolean) =>
-		(current: UserProfile): Partial<UserProfile> => {
-			const patch: Partial<UserProfile> = {
+		(current: UserProfile): ProfilePatch => {
+			// Only the onboarding-owned preference leaves: `patchProfile`
+			// merges them onto the freshest stored `preferences`, so a
+			// concurrent write to a sibling preference can't be reverted here.
+			const patch: ProfilePatch = {
 				preferences: {
-					...current.preferences,
 					favoriteParticipantId,
 					favoriteSide,
 					onboardingCompleted: true
