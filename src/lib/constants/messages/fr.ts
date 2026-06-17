@@ -97,7 +97,6 @@ export const frMessages = {
 	'battles.create.wager_none': 'Sans mise',
 	'battles.create.wager_value': '{amount} VXP',
 	'battles.incoming.cta': 'Voir le défi',
-	'battles.incoming.meta': 'Touchez pour voir et accepter',
 	'battles.incoming.title': '{opponent} a défié {league}',
 	'battles.intro.body':
 		'Un duel de précision chronométré. Ligue contre ligue. École contre école. Le face-à-face entre vous.',

@@ -9,6 +9,7 @@
 	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
 	import WorldsBattleCard from '$lib/components/worlds/WorldsBattleCard.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
+	import { isMarketTag, MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
 		WORLDS_COUNTRIES,
@@ -23,6 +24,7 @@
 	import { leagueBattlesStore, myLeaguesStore, refreshMyLeagues } from '$lib/stores/leagues.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+	import { BATTLE_SCOPE_DEFAULT, type BattleDoc, type BattleScope } from '$lib/types/battle';
 	import {
 		TOURNAMENT_ROUNDS,
 		type TournamentDoc,
@@ -111,6 +113,41 @@
 		$myLeaguesStore.find((m) => m.league.id === id)?.league.name ??
 		$leagueDirectoryStore.get(id)?.name ??
 		shortLeagueId(id);
+
+	// Localized scope label — `all` (or absent on legacy rows) reads
+	// "All calls"; a market-tag scope reuses the canonical category catalog.
+	// Mirrors the battle detail page so the label never drifts.
+	const scopeLabel = (scope: BattleScope | undefined): string => {
+		const resolved = scope ?? BATTLE_SCOPE_DEFAULT;
+
+		return resolved !== 'all' && isMarketTag(resolved)
+			? t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[resolved] })
+			: t({ locale: $localeStore, key: 'battle.detail.scope_all' });
+	};
+
+	// A challenger can send more than one challenge to the same league, so
+	// the card must show what sets each apart — duration · scope · optional
+	// wager. Without it two proposals render identically and the recipient
+	// can't tell why they have two.
+	const challengeFacts = (battle: BattleDoc): string => {
+		const days = Math.max(1, Math.round((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
+		const facts = [
+			t({ locale: $localeStore, key: 'leagues.challenge.duration_days', params: { count: days } }),
+			scopeLabel(battle.scope)
+		];
+
+		if (nonNullish(battle.wager) && battle.wager > 0) {
+			facts.push(
+				t({
+					locale: $localeStore,
+					key: 'battle.detail.wager_value',
+					params: { amount: battle.wager }
+				})
+			);
+		}
+
+		return facts.join(' · ');
+	};
 
 	// Hydrate the directory for every challenger so each row reads a name
 	// instead of a shortened id.
@@ -379,9 +416,10 @@
 							params: { opponent: opponentName(battle.sideA), league: league.name }
 						})}
 					</h3>
-					<p class="battles-card-meta">
-						{t({ locale: $localeStore, key: 'battles.incoming.meta' })}
-					</p>
+					<p class="battles-card-meta">{challengeFacts(battle)}</p>
+					{#if nonNullish(battle.trashTalk) && battle.trashTalk.length > 0}
+						<p class="battles-card-trash serif-italic">“{battle.trashTalk}”</p>
+					{/if}
 					<span class="battles-see-all allcaps">
 						{t({ locale: $localeStore, key: 'battles.incoming.cta' })} →
 					</span>
@@ -772,6 +810,13 @@
 		font-size: var(--t-10);
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-wide);
+	}
+
+	.battles-card-trash {
+		margin: -0.35rem 0 0.6rem;
+		font-size: var(--t-12);
+		line-height: 1.35;
+		color: var(--text-base);
 	}
 
 	/* ─── your-row inside grouped card ──────────────────────── */

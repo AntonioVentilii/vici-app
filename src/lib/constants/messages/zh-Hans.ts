@@ -92,7 +92,6 @@ export const zhHansMessages = {
 	'battles.create.wager_none': '无赌注',
 	'battles.create.wager_value': '{amount} VXP',
 	'battles.incoming.cta': '查看挑战',
-	'battles.incoming.meta': '点按查看并接受',
 	'battles.incoming.title': '{opponent} 向 {league} 发起挑战',
 	'battles.intro.body': '一场限时准确度对决。联盟对联盟。学校对学校。你们之间的交锋记录。',
 	'battles.intro.dismiss': '关闭',

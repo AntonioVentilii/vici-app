@@ -98,7 +98,6 @@ export const esMessages = {
 	'battles.create.wager_none': 'Sin apuesta',
 	'battles.create.wager_value': '{amount} VXP',
 	'battles.incoming.cta': 'Revisar el reto',
-	'battles.incoming.meta': 'Toca para revisar y aceptar',
 	'battles.incoming.title': '{opponent} retó a {league}',
 	'battles.intro.body':
 		'Un cara a cara de precisión con cronómetro. Liga contra liga. Escuela contra escuela. El historial entre ustedes.',

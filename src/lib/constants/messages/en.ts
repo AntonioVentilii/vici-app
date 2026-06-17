@@ -94,7 +94,6 @@ export const enMessages = {
 	'battles.create.wager_none': 'No stake',
 	'battles.create.wager_value': '{amount} VXP',
 	'battles.incoming.cta': 'Review challenge',
-	'battles.incoming.meta': 'Tap to review and accept',
 	'battles.incoming.title': '{opponent} challenged {league}',
 	'battles.intro.body':
 		'A timed accuracy face-off. League vs. league. School vs. school. The record between you.',

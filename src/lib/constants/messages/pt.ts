@@ -101,7 +101,6 @@ export const ptMessages = {
 	'battles.create.wager_none': 'Sem aposta',
 	'battles.create.wager_value': '{amount} VXP',
 	'battles.incoming.cta': 'Ver o desafio',
-	'battles.incoming.meta': 'Toca para ver e aceitar',
 	'battles.incoming.title': '{opponent} desafiou {league}',
 	'battles.intro.body':
 		'Um duelo de precisão cronometrado. Liga contra liga. Escola contra escola. O registo entre vocês.',
