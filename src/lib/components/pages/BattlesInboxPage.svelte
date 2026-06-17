@@ -130,7 +130,7 @@
 	// wager. Without it two proposals render identically and the recipient
 	// can't tell why they have two.
 	const challengeFacts = (battle: BattleDoc): string => {
-		const days = Math.max(1, Math.round((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
+		const days = Math.max(1, Math.ceil((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
 		const facts = [
 			t({ locale: $localeStore, key: 'leagues.challenge.duration_days', params: { count: days } }),
 			scopeLabel(battle.scope)
