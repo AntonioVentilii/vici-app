@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
@@ -51,9 +51,12 @@
 	let loadState: 'loading' | 'ready' | 'not_found' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	let actingBattleId = $state<string | null>(null);
-	// Battle ids we've already fired a lazy auto-resolve attempt for, so a
-	// re-render past settle doesn't loop on the same write.
-	const autoResolveAttempted = new SvelteSet<string>();
+	// Battle id → count of lazy auto-resolve attempts. We retry a transient
+	// failure on the next effect pass (there's no manual button to fall back
+	// on) but cap it so a persistently failing write doesn't hammer the
+	// backend on every re-render.
+	const autoResolveAttempts = new SvelteMap<string, number>();
+	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
 
 	const load = async () => {
 		try {
@@ -314,17 +317,17 @@
 	};
 
 	// Lazy auto-resolution: Juno has no scheduler, so a settled battle
-	// resolves the first time a side owner opens it. The Set guards against
-	// re-firing on re-render; the manual "Resolve now" button stays as a
-	// fallback if the auto attempt fails.
+	// resolves the first time a side owner opens it. The attempt counter
+	// guards against re-firing on every re-render while still allowing a
+	// transient failure to retry, up to the cap.
 	$effect(() => {
 		if (
 			canResolve &&
 			nonNullish(battle) &&
 			isNullish(actingBattleId) &&
-			!autoResolveAttempted.has(battle.id)
+			(autoResolveAttempts.get(battle.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
 		) {
-			autoResolveAttempted.add(battle.id);
+			autoResolveAttempts.set(battle.id, (autoResolveAttempts.get(battle.id) ?? 0) + 1);
 			void handleResolve('auto');
 		}
 	});
@@ -516,7 +519,7 @@
 						: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 				</button>
 			{:else if isFinalizing}
-				<p class="battle-detail-finalizing num" aria-live="polite">
+				<p class="battle-detail-finalizing num" aria-live="polite" role="status">
 					<LoadingSpinner size="xs" />
 					<span>{t({ locale: $localeStore, key: 'leagues.battle.action.finalizing' })}</span>
 				</p>

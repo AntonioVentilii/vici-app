@@ -10,7 +10,7 @@
 		Trash2
 	} from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -638,9 +638,12 @@
 
 	// Per-battle transition affordances. Owner-only.
 	let actingBattleId = $state<string | null>(null);
-	// Battle ids a lazy auto-resolve / auto-expire has already been
-	// attempted for, so a re-render doesn't loop on the same write.
-	const autoResolveAttempted = new SvelteSet<string>();
+	// Battle id → count of lazy auto-resolve attempts. We retry a transient
+	// failure on the next effect pass (there's no manual button to fall back
+	// on) but cap it so a persistently failing write doesn't hammer the
+	// backend on every re-render. Expiry stays a one-shot Set.
+	const autoResolveAttempts = new SvelteMap<string, number>();
+	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
 	const autoExpireAttempted = new SvelteSet<string>();
 
 	// The challenged side's owner can respond to a proposal. Accept is
@@ -818,10 +821,12 @@
 			return;
 		}
 
-		const toResolve = battles.find((b) => canResolveBattle(b) && !autoResolveAttempted.has(b.id));
+		const toResolve = battles.find(
+			(b) => canResolveBattle(b) && (autoResolveAttempts.get(b.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
+		);
 
 		if (nonNullish(toResolve)) {
-			autoResolveAttempted.add(toResolve.id);
+			autoResolveAttempts.set(toResolve.id, (autoResolveAttempts.get(toResolve.id) ?? 0) + 1);
 			void handleResolveBattle(toResolve, 'auto');
 
 			return;
@@ -1432,7 +1437,7 @@
 							: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 					</button>
 				{:else if isBattleFinalizing(battle)}
-					<p class="league-detail-battle-finalizing num" aria-live="polite">
+					<p class="league-detail-battle-finalizing num" aria-live="polite" role="status">
 						<LoadingSpinner size="xs" />
 						<span>{t({ locale: $localeStore, key: 'leagues.battle.action.finalizing' })}</span>
 					</p>
