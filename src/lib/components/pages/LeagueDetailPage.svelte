@@ -662,15 +662,18 @@
 		Date.now() >= battle.kickoffMs;
 
 	// A settled in-flight battle is shown as "finalizing" to everyone — the
-	// resolution is silent, so there is no button to press. The label is
-	// purely informational; the owner-only silent write happens below.
+	// resolution is silent, so there is no button to press. Membership only
+	// decides who actually triggers the trustless write (below); the label
+	// is purely informational.
 	const isBattleFinalizing = (battle: BattleDoc): boolean =>
 		battle.state === 'in_flight' &&
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.settleMs;
 
+	// Any member of this league can trigger the write — the satellite
+	// re-derives the scores, so the writer's identity can't skew them.
 	const canResolveBattle = (battle: BattleDoc): boolean =>
-		myRole === 'owner' && isBattleFinalizing(battle);
+		nonNullish(myRole) && isBattleFinalizing(battle);
 
 	const canRetractBattle = (battle: BattleDoc): boolean =>
 		battle.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal;
@@ -812,12 +815,12 @@
 		}
 	};
 
-	// Lazy maintenance, owner-only (Juno has no scheduler): settled
-	// battles auto-resolve and stale proposals auto-expire the first time
-	// an owner opens the league. One write per pass — the effect re-runs
-	// after the refresh and picks up the next candidate.
+	// Lazy maintenance (Juno has no scheduler): a settled battle resolves
+	// the first time any member of either side opens the league, and stale
+	// proposals expire the first time an owner does. One write per pass —
+	// the effect re-runs after the refresh and picks up the next candidate.
 	$effect(() => {
-		if (myRole !== 'owner' || nonNullish(actingBattleId)) {
+		if (isNullish(myRole) || nonNullish(actingBattleId)) {
 			return;
 		}
 
@@ -829,6 +832,12 @@
 			autoResolveAttempts.set(toResolve.id, (autoResolveAttempts.get(toResolve.id) ?? 0) + 1);
 			void handleResolveBattle(toResolve, 'auto');
 
+			return;
+		}
+
+		// Expiry stays owner-only — the satellite gate for proposed->expired
+		// is still isSideOwner, so a non-owner attempt would be rejected.
+		if (myRole !== 'owner') {
 			return;
 		}
 

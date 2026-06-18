@@ -181,8 +181,28 @@
 		nonNullish(battle) && battle.state === 'in_flight' && Date.now() >= battle.settleMs
 	);
 
+	// The side whose league the viewer belongs to (any role). Resolution is
+	// open to members, not just owners — the satellite re-derives the scores,
+	// so the writer can't skew them. Duels carry no members, so they fall
+	// back to the principal-owned side.
+	const resolverSide = $derived.by((): string | undefined => {
+		if (!battle) {
+			return;
+		}
+
+		if (battle.kind !== 'league') {
+			return ownedSide;
+		}
+
+		if (membershipByLeagueId.has(battle.sideA)) {
+			return battle.sideA;
+		}
+
+		return membershipByLeagueId.has(battle.sideB) ? battle.sideB : undefined;
+	});
+
 	const canResolve = $derived(
-		battle?.state === 'in_flight' && nonNullish(ownedSide) && Date.now() >= battle.settleMs
+		battle?.state === 'in_flight' && nonNullish(resolverSide) && Date.now() >= battle.settleMs
 	);
 	const canRetract = $derived(
 		battle?.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal
@@ -295,7 +315,7 @@
 	// accuracy, computed by the service from `league_stats` and re-verified
 	// by the satellite assert — there is nothing for the user to enter.
 	const handleResolve = async (source: 'auto' | 'nudge') => {
-		const ourSide = ownedSide;
+		const ourSide = resolverSide;
 
 		if (!battle || nonNullish(actingBattleId) || isNullish(ourSide)) {
 			return;
@@ -317,9 +337,10 @@
 	};
 
 	// Lazy auto-resolution: Juno has no scheduler, so a settled battle
-	// resolves the first time a side owner opens it. The attempt counter
-	// guards against re-firing on every re-render while still allowing a
-	// transient failure to retry, up to the cap.
+	// resolves the first time any member of either side opens it. The attempt
+	// counter guards against re-firing on every re-render while still letting
+	// a transient failure retry up to the cap; resolution is silent, so the
+	// page only ever shows a "finalizing" indicator, never a button.
 	$effect(() => {
 		if (
 			canResolve &&
