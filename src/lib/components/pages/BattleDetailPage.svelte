@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { track } from '$lib/services/analytics.services';
@@ -171,6 +172,12 @@
 	const canKickoff = $derived(
 		battle?.state === 'accepted' && nonNullish(ownedSide) && Date.now() >= battle.kickoffMs
 	);
+	// Shown to everyone while a settled battle awaits its silent write —
+	// there is no button to press, just a "finalizing" indicator.
+	const isFinalizing = $derived(
+		nonNullish(battle) && battle.state === 'in_flight' && Date.now() >= battle.settleMs
+	);
+
 	const canResolve = $derived(
 		battle?.state === 'in_flight' && nonNullish(ownedSide) && Date.now() >= battle.settleMs
 	);
@@ -508,17 +515,11 @@
 						? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
 						: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 				</button>
-			{:else if canResolve}
-				<button
-					class="battle-detail-action is-primary"
-					disabled={actingBattleId === battle.id}
-					onclick={() => handleResolve('nudge')}
-					type="button"
-				>
-					{actingBattleId === battle.id
-						? t({ locale: $localeStore, key: 'leagues.battle.action.resolving' })
-						: t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
-				</button>
+			{:else if isFinalizing}
+				<p class="battle-detail-finalizing num" aria-live="polite">
+					<LoadingSpinner size="xs" />
+					<span>{t({ locale: $localeStore, key: 'leagues.battle.action.finalizing' })}</span>
+				</p>
 			{/if}
 			{#if canRetract}
 				<button
@@ -754,6 +755,15 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.55rem;
+	}
+
+	.battle-detail-finalizing {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: var(--t-13);
+		font-weight: 700;
+		color: var(--text-muted);
 	}
 
 	.battle-detail-action {

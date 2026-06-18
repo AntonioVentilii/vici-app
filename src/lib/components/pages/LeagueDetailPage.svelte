@@ -22,6 +22,7 @@
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -657,11 +658,16 @@
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.kickoffMs;
 
-	const canResolveBattle = (battle: BattleDoc): boolean =>
-		myRole === 'owner' &&
+	// A settled in-flight battle is shown as "finalizing" to everyone — the
+	// resolution is silent, so there is no button to press. The label is
+	// purely informational; the owner-only silent write happens below.
+	const isBattleFinalizing = (battle: BattleDoc): boolean =>
 		battle.state === 'in_flight' &&
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.settleMs;
+
+	const canResolveBattle = (battle: BattleDoc): boolean =>
+		myRole === 'owner' && isBattleFinalizing(battle);
 
 	const canRetractBattle = (battle: BattleDoc): boolean =>
 		battle.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal;
@@ -1425,17 +1431,11 @@
 							? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
 							: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 					</button>
-				{:else if canResolveBattle(battle)}
-					<button
-						class="league-detail-battle-action is-primary"
-						disabled={nonNullish(actingBattleId)}
-						onclick={() => handleResolveBattle(battle, 'nudge')}
-						type="button"
-					>
-						{actingBattleId === battle.id
-							? t({ locale: $localeStore, key: 'leagues.battle.action.resolving' })
-							: t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
-					</button>
+				{:else if isBattleFinalizing(battle)}
+					<p class="league-detail-battle-finalizing num" aria-live="polite">
+						<LoadingSpinner size="xs" />
+						<span>{t({ locale: $localeStore, key: 'leagues.battle.action.finalizing' })}</span>
+					</p>
 				{/if}
 
 				{#if canRetractBattle(battle)}
@@ -2252,6 +2252,16 @@
 		font-size: var(--t-10);
 		color: var(--text-muted);
 		opacity: 0.85;
+	}
+
+	.league-detail-battle-finalizing {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.35rem;
+		font-size: var(--t-11);
+		font-weight: 700;
+		color: var(--text-muted);
 	}
 
 	.league-detail-battle-action {
