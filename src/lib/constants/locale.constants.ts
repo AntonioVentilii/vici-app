@@ -323,9 +323,10 @@ export const LOCALE_REGISTRY: readonly LocaleEntry[] = [
 /**
  * The flat list of locales with a populated catalog (`tier: 'live'`), carrying
  * a compact `{ id, label, short }` shape. It is the allowlist for the live,
- * fully-translated set: browser auto-detection only ever resolves to one of
- * these (see `detectBrowserLocale`), and the market-translation surfaces gate
- * their per-locale fields against it.
+ * fully-translated set: it scopes the primary-subtag fallback in browser
+ * auto-detection (see `detectBrowserLocale` — the exact-tag tier matches any
+ * registered locale via `REGISTERED_LOCALE_IDS`), and the market-translation
+ * surfaces gate their per-locale fields against it.
  *
  * The `hidden` flag (a language's neutral base) is deliberately ignored here —
  * grouping by language/region is the picker's concern, handled by
@@ -343,6 +344,16 @@ export const SUPPORTED_LOCALES: readonly {
 	label,
 	short
 }));
+
+/**
+ * Every registered locale id, in registry order — `live` and `soon` alike.
+ *
+ * Browser detection uses this for its exact-tag match so a regional catalog
+ * (`pt-BR`, `es-MX`, …) is caught on a first visit even while it is `soon`,
+ * instead of fuzzy-collapsing onto its `live` base. The looser primary-subtag
+ * fallback stays scoped to `SUPPORTED_LOCALES` (see `detectBrowserLocale`).
+ */
+export const REGISTERED_LOCALE_IDS: readonly AppLocale[] = LOCALE_REGISTRY.map(({ id }) => id);
 
 /**
  * A language grouped with its selectable regional editions, for the two-axis
