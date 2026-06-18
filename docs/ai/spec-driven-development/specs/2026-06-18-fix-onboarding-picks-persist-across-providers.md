@@ -140,7 +140,12 @@ Capture "this sign-in bootstrapped the profile" at the moment
 
 - `profile.services.ts`: record the principal in a session-scoped
   "bootstrapped this session" set when `ensureProfile` creates a new doc
-  (`existed: false`), exposed via a small getter.
+  (`existed: false`), exposed via a small getter. Cleared on sign-out
+  (`Authn.svelte`'s null-user branch, via `forgetBootstrappedThisSession`)
+  so a sign-out → sign-in in the same tab is judged fresh and a returning
+  user isn't re-run through the new-user branch — the double-pass race
+  this guards is within one sign-in (both passes carry a non-null user),
+  so clearing on sign-out never reopens it.
 - The drain treats a principal bootstrapped this session as new
   regardless of a later racy `getDoc` read. A genuinely returning user
   (doc predates this session) is unaffected — their saved profile is

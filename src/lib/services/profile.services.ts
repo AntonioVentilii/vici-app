@@ -567,6 +567,19 @@ const bootstrappedThisSession = new Set<PrincipalText>();
 export const wasBootstrappedThisSession = (principal: PrincipalText): boolean =>
 	bootstrappedThisSession.has(principal);
 
+/**
+ * Reset the bootstrapped-this-session capture. Called on sign-out (which always
+ * fires `onAuthStateChange(null)`), so a user who created a profile earlier in
+ * this tab, signed out, and signs back in is correctly seen as RETURNING — not
+ * re-classified as new (which would let a referral-only pending payload run the
+ * new-user branch and clobber their saved picks). The double-`onAuthStateChange`
+ * race this set guards happens within a single sign-in (both passes carry a
+ * non-null user), so clearing on sign-out never reopens it.
+ */
+export const forgetBootstrappedThisSession = (): void => {
+	bootstrappedThisSession.clear();
+};
+
 export const ensureProfile = async (user: User): Promise<EnsureProfileResult> => {
 	const principal = user.key;
 	const profileDoc = await getProfile(principal);
