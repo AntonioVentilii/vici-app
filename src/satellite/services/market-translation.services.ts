@@ -26,16 +26,20 @@ const REGISTERED_LOCALE_ID_SET: ReadonlySet<string> = new Set(REGISTERED_LOCALE_
  */
 const MAX_BULK_SERIES_IDS = 200;
 
+/** Type guard: is this string one of the registered locale ids (live + soon)? */
+const isRegisteredLocale = (locale: string): locale is AppLocale =>
+	REGISTERED_LOCALE_ID_SET.has(locale);
+
 /**
  * Schema-side `locale` is `j.string()` (see the schema for why), so validate
  * the value here against the registered locale ids before we persist or read.
  */
-const assertSupportedLocale = (locale: string): AppLocale => {
-	if (!REGISTERED_LOCALE_ID_SET.has(locale)) {
+const assertRegisteredLocale = (locale: string): AppLocale => {
+	if (!isRegisteredLocale(locale)) {
 		throw new Error(`Unsupported locale: ${locale}`);
 	}
 
-	return locale as AppLocale;
+	return locale;
 };
 
 /**
@@ -63,7 +67,7 @@ export const getMarketTranslation = ({
 	seriesId: string;
 	locale: string;
 }): MarketTranslation | undefined => {
-	const validated = assertSupportedLocale(locale);
+	const validated = assertRegisteredLocale(locale);
 	const doc = getDocStore({
 		collection: Collection.MARKET_TRANSLATIONS,
 		key: translationKey({ seriesId, locale: validated }),
@@ -126,9 +130,7 @@ export const listMarketTranslationsForLocales = ({
 		});
 	}
 
-	const validLocales = locales.filter((locale) =>
-		REGISTERED_LOCALE_ID_SET.has(locale)
-	) as AppLocale[];
+	const validLocales = locales.filter(isRegisteredLocale);
 	const caller = msgCaller();
 	const translations: MarketTranslation[] = [];
 
@@ -160,7 +162,7 @@ export const upsertMarketTranslation = async ({
 }): Promise<MarketTranslation> => {
 	await assertCanWriteMarketTranslation({ seriesId });
 
-	const validated = assertSupportedLocale(locale);
+	const validated = assertRegisteredLocale(locale);
 	const caller = msgCaller();
 	const key = translationKey({ seriesId, locale: validated });
 	const current = getDocStore({
