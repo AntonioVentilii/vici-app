@@ -10,7 +10,7 @@
 		Trash2
 	} from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -22,6 +22,7 @@
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -637,9 +638,12 @@
 
 	// Per-battle transition affordances. Owner-only.
 	let actingBattleId = $state<string | null>(null);
-	// Battle ids a lazy auto-resolve / auto-expire has already been
-	// attempted for, so a re-render doesn't loop on the same write.
-	const autoResolveAttempted = new SvelteSet<string>();
+	// Battle id → count of lazy auto-resolve attempts. We retry a transient
+	// failure on the next effect pass (there's no manual button to fall back
+	// on) but cap it so a persistently failing write doesn't hammer the
+	// backend on every re-render. Expiry stays a one-shot Set.
+	const autoResolveAttempts = new SvelteMap<string, number>();
+	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
 	const autoExpireAttempted = new SvelteSet<string>();
 
 	// The challenged side's owner can respond to a proposal. Accept is
@@ -657,11 +661,16 @@
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.kickoffMs;
 
-	const canResolveBattle = (battle: BattleDoc): boolean =>
-		myRole === 'owner' &&
+	// A settled in-flight battle is shown as "finalizing" to everyone — the
+	// resolution is silent, so there is no button to press. The label is
+	// purely informational; the owner-only silent write happens below.
+	const isBattleFinalizing = (battle: BattleDoc): boolean =>
 		battle.state === 'in_flight' &&
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.settleMs;
+
+	const canResolveBattle = (battle: BattleDoc): boolean =>
+		myRole === 'owner' && isBattleFinalizing(battle);
 
 	const canRetractBattle = (battle: BattleDoc): boolean =>
 		battle.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal;
@@ -812,10 +821,12 @@
 			return;
 		}
 
-		const toResolve = battles.find((b) => canResolveBattle(b) && !autoResolveAttempted.has(b.id));
+		const toResolve = battles.find(
+			(b) => canResolveBattle(b) && (autoResolveAttempts.get(b.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
+		);
 
 		if (nonNullish(toResolve)) {
-			autoResolveAttempted.add(toResolve.id);
+			autoResolveAttempts.set(toResolve.id, (autoResolveAttempts.get(toResolve.id) ?? 0) + 1);
 			void handleResolveBattle(toResolve, 'auto');
 
 			return;
@@ -1425,17 +1436,11 @@
 							? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
 							: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 					</button>
-				{:else if canResolveBattle(battle)}
-					<button
-						class="league-detail-battle-action is-primary"
-						disabled={nonNullish(actingBattleId)}
-						onclick={() => handleResolveBattle(battle, 'nudge')}
-						type="button"
-					>
-						{actingBattleId === battle.id
-							? t({ locale: $localeStore, key: 'leagues.battle.action.resolving' })
-							: t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
-					</button>
+				{:else if isBattleFinalizing(battle)}
+					<p class="league-detail-battle-finalizing num" aria-live="polite" role="status">
+						<LoadingSpinner size="xs" />
+						<span>{t({ locale: $localeStore, key: 'leagues.battle.action.finalizing' })}</span>
+					</p>
 				{/if}
 
 				{#if canRetractBattle(battle)}
@@ -2252,6 +2257,16 @@
 		font-size: var(--t-10);
 		color: var(--text-muted);
 		opacity: 0.85;
+	}
+
+	.league-detail-battle-finalizing {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.35rem;
+		font-size: var(--t-11);
+		font-weight: 700;
+		color: var(--text-muted);
 	}
 
 	.league-detail-battle-action {
