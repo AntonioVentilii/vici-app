@@ -225,9 +225,22 @@ const STORE_OWNED_PREFERENCE_KEYS = [
 ] as const satisfies readonly (keyof UserPreferences)[];
 
 /**
- * Shallow diff of the store-owned preference leaves: the keys whose
- * value changed between `prev` and `next`. Reference equality is enough
- * because every write produces fresh objects/arrays via `hydrateShape`.
+ * Structural equality for a preference leaf. `hydrateShape` rebuilds the
+ * object/array leaves (`notify`, `defaultAmount`, `sharing`, `flowTags`,
+ * `savedMarketIds`) on every write, so reference equality would flag them
+ * as changed even when their values didn't move. Falling back to a
+ * stable JSON compare keeps the diff semantic — the leaf shapes are small
+ * and JSON-safe with deterministic key order from `hydrateShape`.
+ */
+const leafEquals = (a: unknown, b: unknown): boolean =>
+	a === b || JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * Diff of the store-owned preference leaves: the keys whose value
+ * actually changed between `prev` and `next`. Object/array leaves are
+ * compared structurally so a write that only flips one toggle doesn't
+ * re-send (and potentially overwrite from a stale local snapshot) the
+ * untouched sub-objects.
  */
 const changedPreferenceLeaves = ({
 	prev,
@@ -239,7 +252,7 @@ const changedPreferenceLeaves = ({
 	const patch: Partial<UserPreferences> = {};
 
 	for (const key of STORE_OWNED_PREFERENCE_KEYS) {
-		if (prev[key] !== next[key]) {
+		if (!leafEquals(prev[key], next[key])) {
 			(patch as Record<string, unknown>)[key] = next[key];
 		}
 	}
@@ -287,12 +300,20 @@ const persistToProfile = ({
 
 	// Sync the in-memory userStore optimistically so a re-subscribe
 	// doesn't immediately re-hydrate the local store with the old
-	// preferences value. Leaf-merge so the onboarding-owned picks the
-	// patch never carries (favourite team/side) stay put.
-	userStore.update((data) => ({
-		...data,
-		profile: { ...profile, preferences: { ...profile.preferences, ...patch } }
-	}));
+	// preferences value. Re-read the profile from the update callback's
+	// own `data` rather than the snapshot captured above: if the store
+	// changed in between (sign-out, a concurrent optimistic write), this
+	// must not clobber the newer state or reintroduce a profile after
+	// sign-out. Leaf-merge so the onboarding-owned picks the patch never
+	// carries (favourite team/side) stay put.
+	userStore.update((data) =>
+		isNullish(data.profile)
+			? data
+			: {
+					...data,
+					profile: { ...data.profile, preferences: { ...data.profile.preferences, ...patch } }
+				}
+	);
 
 	void persistPreferences({ principal, preferences: patch }).catch((err) => {
 		console.error('preferencesStore: failed to persist to profile', err);
