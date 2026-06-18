@@ -861,8 +861,12 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
-		/* Depth context for the 3D rotateY on `.flow-flipper`. */
+		/* Depth context for the 3D rotateY on `.flow-flipper`. The
+		   `-webkit-` prefix is not optional on iOS: older Safari/WebKit
+		   ignores the unprefixed `perspective`, so without it the rotation
+		   has no depth and the flip degrades to an instant backface swap. */
 		perspective: 1400px;
+		-webkit-perspective: 1400px;
 	}
 
 	.flow-card {
@@ -877,6 +881,16 @@
 		   vertical scroll there still works. */
 		touch-action: none;
 		will-change: transform;
+		/* The card carries a live `transform` (the drag translate / rotate),
+		   which makes it a containing block for its descendants' 3D space.
+		   WebKit flattens that space at any transformed ancestor whose
+		   transform-style is the default `flat`, collapsing the flipper's
+		   rotateY into this plane — so the flip renders as an instant
+		   backface swap instead of an animated 3D rotation. Propagate the
+		   3D context (rooted in `.flow-card-root`'s perspective) through to
+		   `.flow-flipper` so the rotation keeps its depth on WebKit. */
+		transform-style: preserve-3d;
+		-webkit-transform-style: preserve-3d;
 	}
 	.flow-card.is-grabbing {
 		cursor: grabbing !important;
@@ -903,7 +917,14 @@
 	.flow-flipper {
 		position: absolute;
 		inset: 0;
+		/* Mirror `.flow-card`'s prefixed `preserve-3d`: this is the element
+		   that actually rotates, and on iOS WebKit the unprefixed
+		   `transform-style` alone is ignored — the faces then flatten into
+		   one plane and `backface-visibility` culls discretely, so the flip
+		   snaps to the other side with no visible rotation (the reported iOS
+		   bug). The `-webkit-` prefix keeps the faces in shared 3D space. */
 		transform-style: preserve-3d;
+		-webkit-transform-style: preserve-3d;
 		transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
 	}
 	.flow-flipper.is-flipped {

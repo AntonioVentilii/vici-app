@@ -8,7 +8,11 @@ import {
 } from '$lib/constants/referral.constants';
 import { track } from '$lib/services/analytics.services';
 import { joinLeagueByInvite } from '$lib/services/leagues.services';
-import { applyOnboardingPicks, checkNicknameAvailability } from '$lib/services/profile.services';
+import {
+	applyOnboardingPicks,
+	checkNicknameAvailability,
+	wasBootstrappedThisSession
+} from '$lib/services/profile.services';
 import { claimReferralFriendship, redeemReferralCode } from '$lib/services/referral.services';
 import { notificationsStore } from '$lib/stores/notification.store';
 import { userStore } from '$lib/stores/user.store';
@@ -33,6 +37,13 @@ interface PendingOnboarding {
 	referralCode?: string;
 	leagueInvite?: string;
 	/**
+	 * Which sign-in provider finished the flow (stashed by `SignInProviderStack`
+	 * before the provider runs, so it survives a redirect). Drives the
+	 * `onboarding_completed` analytics dimension; absent on a stash written by a
+	 * pre-provider surface.
+	 */
+	provider?: OnboardingProvider;
+	/**
 	 * How many times the referral redeem/claim has been attempted so far (0 on the first drain,
 	 * incremented each time a transient failure re-stashes the code). Bounds the
 	 * {@link MAX_REFERRAL_DRAIN_ATTEMPTS} retry loop so a persistently failing redeem can't keep the
@@ -47,6 +58,13 @@ interface PendingOnboarding {
  * times, after which the slot is abandoned so a hard failure doesn't loop indefinitely.
  */
 const MAX_REFERRAL_DRAIN_ATTEMPTS = 3;
+
+/** Bounded vocabulary of sign-in providers, for the completion analytics. */
+const ONBOARDING_PROVIDERS = ['apple', 'google', 'email', 'ii', 'passkey', 'dev'] as const;
+type OnboardingProvider = (typeof ONBOARDING_PROVIDERS)[number];
+
+const isOnboardingProvider = (value: unknown): value is OnboardingProvider =>
+	typeof value === 'string' && (ONBOARDING_PROVIDERS as readonly string[]).includes(value);
 
 /**
  * Substrings of the satellite's deterministic referral rejections (bad code, already redeemed,
@@ -151,6 +169,9 @@ const parsePendingOnboarding = (raw: string): PendingOnboarding | undefined => {
 		return;
 	}
 
+	const provider =
+		'provider' in parsed && isOnboardingProvider(parsed.provider) ? parsed.provider : undefined;
+
 	return {
 		handle,
 		participantId,
@@ -159,7 +180,8 @@ const parsePendingOnboarding = (raw: string): PendingOnboarding | undefined => {
 		email,
 		referralCode,
 		leagueInvite,
-		referralAttempts
+		referralAttempts,
+		provider
 	};
 };
 
@@ -421,7 +443,14 @@ export const drainPendingOnboarding = async ({
 	// they still land in the inviter's friends list. We await the
 	// resolve below so the slot is settled correctly — re-armed for a
 	// bounded retry on a transient failure rather than silently dropped.
-	if (profileExisted) {
+	// `profileExisted` alone is racy: a second `onAuthStateChange` pass during a
+	// fresh sign-in re-reads the doc this session just bootstrapped and reports
+	// it as pre-existing, which would route a brand-new user here and drop their
+	// picks. Trust the deterministic session capture — only a principal whose
+	// doc predates this session is a genuine returning user.
+	const isReturningUser = profileExisted && !wasBootstrappedThisSession(profile.owner);
+
+	if (isReturningUser) {
 		// A stashed league invite is still actionable for a returning user — join is
 		// independent of the signup bonus and idempotent. Fire-and-forget.
 		void joinPendingLeagueIfAny({ code: pending.leagueInvite, locale });
@@ -507,6 +536,17 @@ export const drainPendingOnboarding = async ({
 			source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
 		});
 		settlePendingSlot({ pending, referralResolved });
+
+		// Activation milestone. `label` carries the finishing provider (bounded
+		// vocab, stashed pre-redirect) and `ok` whether a team was persisted —
+		// the dimensions that make a provider-specific persistence regression
+		// visible. Reuses existing props (no new key → no analytics schema regen).
+		track({
+			name: 'onboarding_completed',
+			source: 'onboarding',
+			...(nonNullish(pending.provider) && { label: pending.provider }),
+			ok: participantPreference.length > 0
+		});
 
 		return handleCollision
 			? { kind: 'collision', handle: pending.handle ?? '' }

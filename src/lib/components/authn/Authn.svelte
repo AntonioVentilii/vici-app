@@ -7,7 +7,11 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { reconcileIdentityScopedStorage } from '$lib/services/identity-storage.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import { ensureProfile, calculateAndSyncStats } from '$lib/services/profile.services';
+	import {
+		ensureProfile,
+		calculateAndSyncStats,
+		forgetBootstrappedThisSession
+	} from '$lib/services/profile.services';
 	import { receivedReactionsStore } from '$lib/stores/activity-reactions.store';
 	import { clearAffiliations } from '$lib/stores/affiliations.store';
 	import { followingStore } from '$lib/stores/following.store';
@@ -82,6 +86,11 @@
 			if (isNullish(user)) {
 				setSignedInFlag(false);
 
+				// Drop the new-user capture: the next sign-in (even same principal,
+				// same tab) must be judged fresh, so a returning user isn't re-run
+				// through the onboarding drain's new-user branch.
+				forgetBootstrappedThisSession();
+
 				userStore.set({
 					user: undefined,
 					profile: undefined,
@@ -96,6 +105,8 @@
 
 			if (isNullish(userText)) {
 				setSignedInFlag(false);
+
+				forgetBootstrappedThisSession();
 
 				userStore.set({
 					user: undefined,

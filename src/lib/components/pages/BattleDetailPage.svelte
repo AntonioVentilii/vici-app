@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { track } from '$lib/services/analytics.services';
@@ -50,9 +51,12 @@
 	let loadState: 'loading' | 'ready' | 'not_found' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	let actingBattleId = $state<string | null>(null);
-	// Battle ids we've already fired a lazy auto-resolve attempt for, so a
-	// re-render past settle doesn't loop on the same write.
-	const autoResolveAttempted = new SvelteSet<string>();
+	// Battle id → count of lazy auto-resolve attempts. We retry a transient
+	// failure on the next effect pass (there's no manual button to fall back
+	// on) but cap it so a persistently failing write doesn't hammer the
+	// backend on every re-render.
+	const autoResolveAttempts = new SvelteMap<string, number>();
+	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
 
 	const load = async () => {
 		try {
@@ -171,8 +175,34 @@
 	const canKickoff = $derived(
 		battle?.state === 'accepted' && nonNullish(ownedSide) && Date.now() >= battle.kickoffMs
 	);
+	// Shown to everyone while a settled battle awaits its silent write —
+	// there is no button to press, just a "finalizing" indicator.
+	const isFinalizing = $derived(
+		nonNullish(battle) && battle.state === 'in_flight' && Date.now() >= battle.settleMs
+	);
+
+	// The side whose league the viewer belongs to (any role). Resolution is
+	// open to members, not just owners — the satellite re-derives the scores,
+	// so the writer can't skew them. Duels carry no members, so they fall
+	// back to the principal-owned side.
+	const resolverSide = $derived.by((): string | undefined => {
+		if (!battle) {
+			return;
+		}
+
+		if (battle.kind !== 'league') {
+			return ownedSide;
+		}
+
+		if (membershipByLeagueId.has(battle.sideA)) {
+			return battle.sideA;
+		}
+
+		return membershipByLeagueId.has(battle.sideB) ? battle.sideB : undefined;
+	});
+
 	const canResolve = $derived(
-		battle?.state === 'in_flight' && nonNullish(ownedSide) && Date.now() >= battle.settleMs
+		battle?.state === 'in_flight' && nonNullish(resolverSide) && Date.now() >= battle.settleMs
 	);
 	const canRetract = $derived(
 		battle?.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal
@@ -285,7 +315,7 @@
 	// accuracy, computed by the service from `league_stats` and re-verified
 	// by the satellite assert — there is nothing for the user to enter.
 	const handleResolve = async (source: 'auto' | 'nudge') => {
-		const ourSide = ownedSide;
+		const ourSide = resolverSide;
 
 		if (!battle || nonNullish(actingBattleId) || isNullish(ourSide)) {
 			return;
@@ -307,17 +337,18 @@
 	};
 
 	// Lazy auto-resolution: Juno has no scheduler, so a settled battle
-	// resolves the first time a side owner opens it. The Set guards against
-	// re-firing on re-render; the manual "Resolve now" button stays as a
-	// fallback if the auto attempt fails.
+	// resolves the first time any member of either side opens it. The attempt
+	// counter guards against re-firing on every re-render while still letting
+	// a transient failure retry up to the cap; resolution is silent, so the
+	// page only ever shows a "finalizing" indicator, never a button.
 	$effect(() => {
 		if (
 			canResolve &&
 			nonNullish(battle) &&
 			isNullish(actingBattleId) &&
-			!autoResolveAttempted.has(battle.id)
+			(autoResolveAttempts.get(battle.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
 		) {
-			autoResolveAttempted.add(battle.id);
+			autoResolveAttempts.set(battle.id, (autoResolveAttempts.get(battle.id) ?? 0) + 1);
 			void handleResolve('auto');
 		}
 	});
@@ -508,17 +539,11 @@
 						? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
 						: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 				</button>
-			{:else if canResolve}
-				<button
-					class="battle-detail-action is-primary"
-					disabled={actingBattleId === battle.id}
-					onclick={() => handleResolve('nudge')}
-					type="button"
-				>
-					{actingBattleId === battle.id
-						? t({ locale: $localeStore, key: 'leagues.battle.action.resolving' })
-						: t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
-				</button>
+			{:else if isFinalizing}
+				<p class="battle-detail-finalizing num" aria-live="polite" role="status">
+					<LoadingSpinner size="xs" />
+					<span>{t({ locale: $localeStore, key: 'leagues.battle.action.finalizing' })}</span>
+				</p>
 			{/if}
 			{#if canRetract}
 				<button
@@ -754,6 +779,15 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.55rem;
+	}
+
+	.battle-detail-finalizing {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: var(--t-13);
+		font-weight: 700;
+		color: var(--text-muted);
 	}
 
 	.battle-detail-action {

@@ -75,6 +75,41 @@
 	// When the email row is expanded the other providers dim to 0.4.
 	const isFaded = $derived(emailOpen && isNullish(signingIn));
 
+	// Record which provider finished the onboarding flow into the pending
+	// stash, BEFORE the provider runs — a redirect provider (Google) navigates
+	// away inside `run()`, so this is the only point the provider id can be
+	// captured for the post-redirect drain's `onboarding_completed` analytics.
+	// Single-field merge, mirroring `stashPendingEmail`. Signup only: a
+	// returning-user sign-in has no onboarding to attribute, and a lone
+	// `{ provider }` payload is dropped by the drain's parser anyway.
+	const stashPendingProvider = (id: ProviderId): void => {
+		if (!isSignUp) {
+			return;
+		}
+
+		try {
+			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
+			const parsed: Record<string, unknown> = nonNullish(raw)
+				? ((): Record<string, unknown> => {
+						try {
+							const value: unknown = JSON.parse(raw);
+
+							return typeof value === 'object' && nonNullish(value)
+								? (value as Record<string, unknown>)
+								: {};
+						} catch {
+							return {};
+						}
+					})()
+				: {};
+			parsed.provider = id;
+			localStorage.setItem(PENDING_ONBOARDING_STORAGE_KEY, JSON.stringify(parsed));
+		} catch {
+			// Storage unavailable (private mode) — analytics provenance is lost,
+			// sign-in still works.
+		}
+	};
+
 	const startSignIn = async ({
 		id,
 		run
@@ -87,6 +122,7 @@
 		}
 
 		signingIn = id;
+		stashPendingProvider(id);
 
 		try {
 			await run();
@@ -116,6 +152,7 @@
 		}
 
 		signingIn = 'apple';
+		stashPendingProvider('apple');
 
 		try {
 			await signInWithApple();

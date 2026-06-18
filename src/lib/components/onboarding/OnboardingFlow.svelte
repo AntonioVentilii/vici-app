@@ -26,6 +26,17 @@
 			side: 'YES' | 'NO' | null;
 			handle: string | null;
 		}) => void;
+		// Fires when the user reaches Beat 3 (the auth gate), BEFORE any
+		// provider runs — so the picks are durable in storage before a
+		// full-page redirect provider (Google) can carry off the volatile
+		// component state. In-page providers still finalise via `onComplete`;
+		// this is the redirect-safe handoff. Re-fires when the user edits a
+		// pick and returns to Beat 3.
+		onPicksReady?: (result: {
+			participantId: string | null;
+			side: 'YES' | 'NO' | null;
+			handle: string | null;
+		}) => void;
 		// True when the user is already signed in (post-signin onboarding path).
 		authenticated?: boolean;
 		// Deep-link preselect (e.g. tapping a landing favourite → `/signup?team=BR`).
@@ -36,7 +47,7 @@
 		initialParticipantId?: string;
 	}
 
-	const { onComplete, authenticated = false, initialParticipantId }: Props = $props();
+	const { onComplete, onPicksReady, authenticated = false, initialParticipantId }: Props = $props();
 
 	type Beat = '1a' | '1b' | '2' | '3';
 
@@ -79,6 +90,13 @@
 	const handleHandle = (next: string | null) => {
 		handle = next;
 		beat = '3';
+
+		// Persist the picks the moment the auth gate is reached, before the
+		// user taps a provider. A redirect provider (Google) navigates the
+		// document away inside `signIn()`, so the post-auth `onComplete`
+		// never fires for it and the picks held in this component's state are
+		// lost — stashing here makes them survive the round-trip.
+		onPicksReady?.({ participantId, side, handle: next });
 	};
 
 	const handleHandleBack = () => {
