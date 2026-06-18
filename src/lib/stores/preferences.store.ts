@@ -2,10 +2,9 @@ import { browser } from '$app/environment';
 import { MARKET_TAGS } from '$lib/constants/market-tags.constants';
 import { PREFERENCES_STORAGE_KEY } from '$lib/constants/settings.constants';
 import { authPrincipal } from '$lib/derived/user.derived';
-import { upsertProfile } from '$lib/services/profile.services';
+import { persistPreferences } from '$lib/services/profile.services';
 import { userStore } from '$lib/stores/user.store';
 import type { SettingsVisibility, SharingPrefs, UserPreferences } from '$lib/types/preferences';
-import type { UserProfile } from '$lib/types/profile';
 import { visibilityFromProfile } from '$lib/utils/visibility.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { get, writable } from 'svelte/store';
@@ -16,16 +15,17 @@ import { get, writable } from 'svelte/store';
  * Source of truth is `profile.preferences` on the user's profile doc.
  * The store mirrors that field locally so components can read with
  * `$preferencesStore.foo` and write with `preferencesStore.update(fn)`
- * without each consumer learning the upsertProfile dance.
+ * without each consumer learning the profile-write dance.
  *
  * Write path: every `update`/`set` optimistically updates the local
- * value, then fires `upsertProfile` in the background. Failures are
+ * value, then persists only the changed leaves through the serialized
+ * patch queue (`persistPreferences`) in the background. Failures are
  * logged; the local optimistic state stays in place (the next profile
  * load will reconcile if the server-side write actually dropped).
  *
  * Migration: on the *first* hydrate per session, any legacy payload
  * still sitting under `localStorage[PREFERENCES_STORAGE_KEY]` is
- * merged into the profile (one-time push via `upsertProfile`) and then
+ * merged into the profile (one-time push of the changed leaves) and then
  * the localStorage entry is cleared. Subsequent sessions read straight
  * from the profile.
  */
@@ -204,11 +204,81 @@ const internal = writable<UserPreferences>({ ...DEFAULT_PREFERENCES });
 let legacyMigrationAttempted = false;
 
 /**
- * Push `next` to the profile via `upsertProfile`. Fire-and-forget
- * with a console.error fallback. Optimistic local updates have
- * already happened; this is purely the persistence side.
+ * The preference leaves this store owns — everything except the
+ * onboarding-owned picks (`favoriteParticipantId`, `favoriteSide`,
+ * `onboardingCompleted`), which only the onboarding handoff writes. The
+ * local mirror seeds those to the schema defaults before the profile
+ * loads, so persisting them from here would revert the onboarding pick
+ * the user just made; the diff below is scoped to these keys to keep
+ * them out of every settings write.
  */
-const persistToProfile = (next: UserPreferences): void => {
+const STORE_OWNED_PREFERENCE_KEYS = [
+	'defaultAmount',
+	'notify',
+	'flowSessionLength',
+	'hapticsEnabled',
+	'soundEnabled',
+	'sharing',
+	'flowTags',
+	'worldCupMode',
+	'savedMarketIds'
+] as const satisfies readonly (keyof UserPreferences)[];
+
+/**
+ * Structural equality for a preference leaf. `hydrateShape` rebuilds the
+ * object/array leaves (`notify`, `defaultAmount`, `sharing`, `flowTags`,
+ * `savedMarketIds`) on every write, so reference equality would flag them
+ * as changed even when their values didn't move. Falling back to a
+ * stable JSON compare keeps the diff semantic — the leaf shapes are small
+ * and JSON-safe with deterministic key order from `hydrateShape`.
+ */
+const leafEquals = (a: unknown, b: unknown): boolean =>
+	a === b || JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * Diff of the store-owned preference leaves: the keys whose value
+ * actually changed between `prev` and `next`. Object/array leaves are
+ * compared structurally so a write that only flips one toggle doesn't
+ * re-send (and potentially overwrite from a stale local snapshot) the
+ * untouched sub-objects.
+ */
+const changedPreferenceLeaves = ({
+	prev,
+	next
+}: {
+	prev: UserPreferences;
+	next: UserPreferences;
+}): Partial<UserPreferences> => {
+	const patch: Partial<UserPreferences> = {};
+
+	for (const key of STORE_OWNED_PREFERENCE_KEYS) {
+		if (!leafEquals(prev[key], next[key])) {
+			(patch as Record<string, unknown>)[key] = next[key];
+		}
+	}
+
+	return patch;
+};
+
+/**
+ * Persist only the preference leaves that changed, through the
+ * serialized patch queue (`persistPreferences` leaf-merges onto the
+ * freshest stored slice). Optimistic local updates have already
+ * happened; this is purely the persistence side. Fire-and-forget with a
+ * console.error fallback.
+ *
+ * A full-snapshot write from this local mirror would carry a stale
+ * `favoriteParticipantId` (the mirror seeds it to '' before the profile
+ * loads) and revert a freshly onboarded country pick — so we send only
+ * the changed store-owned leaves and let the queue merge.
+ */
+const persistToProfile = ({
+	prev,
+	next
+}: {
+	prev: UserPreferences;
+	next: UserPreferences;
+}): void => {
 	if (!browser) {
 		return;
 	}
@@ -222,17 +292,30 @@ const persistToProfile = (next: UserPreferences): void => {
 		return;
 	}
 
-	const merged: UserProfile = {
-		...profile,
-		preferences: next
-	};
+	const patch = changedPreferenceLeaves({ prev, next });
+
+	if (Object.keys(patch).length === 0) {
+		return;
+	}
 
 	// Sync the in-memory userStore optimistically so a re-subscribe
 	// doesn't immediately re-hydrate the local store with the old
-	// preferences value.
-	userStore.update((data) => ({ ...data, profile: merged }));
+	// preferences value. Re-read the profile from the update callback's
+	// own `data` rather than the snapshot captured above: if the store
+	// changed in between (sign-out, a concurrent optimistic write), this
+	// must not clobber the newer state or reintroduce a profile after
+	// sign-out. Leaf-merge so the onboarding-owned picks the patch never
+	// carries (favourite team/side) stay put.
+	userStore.update((data) =>
+		isNullish(data.profile)
+			? data
+			: {
+					...data,
+					profile: { ...data.profile, preferences: { ...data.profile.preferences, ...patch } }
+				}
+	);
 
-	void upsertProfile({ key: principal, data: merged }).catch((err) => {
+	void persistPreferences({ principal, preferences: patch }).catch((err) => {
 		console.error('preferencesStore: failed to persist to profile', err);
 	});
 };
@@ -289,7 +372,7 @@ if (browser) {
 				};
 				const migrated = hydrateShape({ partial: mergedPartial });
 				internal.set(migrated);
-				persistToProfile(migrated);
+				persistToProfile({ prev: fromProfile, next: migrated });
 				clearLegacyLocalStorage();
 
 				return;
@@ -303,7 +386,7 @@ if (browser) {
 /**
  * The public preferences store. Reading returns the hydrated
  * `UserPreferences`. Writing updates the local mirror optimistically
- * and queues an `upsertProfile`.
+ * and queues a leaf-level preference patch.
  *
  * `persistToProfile` is called *after* `internal.set` returns so we
  * don't re-enter the subscriber chain while the local store is
@@ -316,15 +399,16 @@ if (browser) {
 export const preferencesStore = {
 	subscribe: internal.subscribe,
 	set: (next: UserPreferences) => {
+		const current = get(internal);
 		const hydrated = hydrateShape({ partial: next });
 		internal.set(hydrated);
-		persistToProfile(hydrated);
+		persistToProfile({ prev: current, next: hydrated });
 	},
 	update: (updater: (current: UserPreferences) => UserPreferences) => {
 		const current = get(internal);
 		const next = hydrateShape({ partial: updater(current) });
 		internal.set(next);
-		persistToProfile(next);
+		persistToProfile({ prev: current, next });
 	}
 };
 
