@@ -548,6 +548,38 @@ const extractOpenIdProfile = (user: User): OpenIdProviderProfile | undefined => 
 	return providerData?.openid;
 };
 
+// Principals whose profile doc was created by THIS browser session's
+// `ensureProfile` (first-touch bootstrap). `onAuthStateChange` can fire a
+// second pass whose `getDoc` now finds the just-created doc and reports
+// `existed: true`; if that lands before the onboarding drain effect reads
+// `profileExisted`, the drain wrongly takes the returning-user branch and
+// drops the picks. This set is the deterministic "is this principal new in
+// this session?" signal the drain consults so a benign second pass can't
+// flip it. Session-scoped (page lifetime); a genuinely returning user whose
+// doc predates this session is never added.
+const bootstrappedThisSession = new Set<PrincipalText>();
+
+/**
+ * True when `ensureProfile` created this principal's profile during the
+ * current browser session — authoritative regardless of a later racy
+ * `getDoc` read. Used by the onboarding drain to decide new-vs-returning.
+ */
+export const wasBootstrappedThisSession = (principal: PrincipalText): boolean =>
+	bootstrappedThisSession.has(principal);
+
+/**
+ * Reset the bootstrapped-this-session capture. Called on sign-out (which always
+ * fires `onAuthStateChange(null)`), so a user who created a profile earlier in
+ * this tab, signed out, and signs back in is correctly seen as RETURNING — not
+ * re-classified as new (which would let a referral-only pending payload run the
+ * new-user branch and clobber their saved picks). The double-`onAuthStateChange`
+ * race this set guards happens within a single sign-in (both passes carry a
+ * non-null user), so clearing on sign-out never reopens it.
+ */
+export const forgetBootstrappedThisSession = (): void => {
+	bootstrappedThisSession.clear();
+};
+
 export const ensureProfile = async (user: User): Promise<EnsureProfileResult> => {
 	const principal = user.key;
 	const profileDoc = await getProfile(principal);
@@ -641,11 +673,15 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 			const fallback: UserProfile = { ...data, nickname: principal };
 			await upsertProfile({ ...profileDoc, data: fallback });
 
+			bootstrappedThisSession.add(principal);
+
 			return { profile: fallback, existed: false };
 		}
 
 		throw err;
 	}
+
+	bootstrappedThisSession.add(principal);
 
 	return { profile: data, existed: false };
 };

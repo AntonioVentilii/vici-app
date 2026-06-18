@@ -306,3 +306,20 @@ forges a different day key) could still place an order. Closing that would
 require routing orders through the satellite or an engine-side limit, a
 separate larger change. Decision record:
 [`specs/2026-06-15-fix-flow-daily-cap-server-authoritative.md`](./spec-driven-development/specs/2026-06-15-fix-flow-daily-cap-server-authoritative.md).
+
+### Onboarding — picks persist across every sign-in provider
+
+A new user's onboarding picks — backed team/country, first call, handle,
+and the completion flag — land on the new profile no matter which sign-in
+provider finishes the 3-beat flow. The picks are stashed to local storage
+the moment the user reaches the auth step (Beat 3), **before** any
+provider runs, so a full-page OAuth redirect (Google) can't carry off the
+volatile in-flight state — the post-sign-in drain reads the stash and
+applies it. The "is this a brand-new account?" decision the drain uses to
+avoid overwriting a returning user's saved profile is anchored to whether
+this browser session bootstrapped the profile, not a reactive flag a
+second auth pass could flip — so a genuine new user's picks are never
+dropped, and a genuine returning user's profile is never clobbered. The
+flow emits the `onboarding_completed` analytics event with the finishing
+provider and whether a team was persisted. Decision record:
+[`specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`](./spec-driven-development/specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md).
