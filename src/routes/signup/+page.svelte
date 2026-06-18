@@ -112,14 +112,21 @@
 		// see `SignInProviderStack`) must survive this rebuild so the drain
 		// persists it onto the profile.
 		const existingEmail = typeof existing.email === 'string' ? existing.email : undefined;
+		// A league invite stashed by `/league/[code]` (the signed-out invite
+		// landing routes here through onboarding) must ALSO survive this
+		// rebuild — otherwise the drain never auto-joins the league and the
+		// invitee lands friended (from the referral) but not a member.
+		const existingLeagueInvite =
+			typeof existing.leagueInvite === 'string' ? existing.leagueInvite : undefined;
 
 		// Skip the write if the user bailed before making any pick **and** there's no
-		// stashed referral code or email to carry forward — nothing to hand off.
+		// stashed referral code, league invite, or email to carry forward — nothing to hand off.
 		if (
 			isNullish(result.handle) &&
 			isNullish(result.participantId) &&
 			isNullish(result.side) &&
 			isNullish(existingReferralCode) &&
+			isNullish(existingLeagueInvite) &&
 			isNullish(existingEmail)
 		) {
 			return;
@@ -135,6 +142,7 @@
 					interests: [],
 					completedAt: new Date().toISOString(),
 					...(nonNullish(existingReferralCode) && { referralCode: existingReferralCode }),
+					...(nonNullish(existingLeagueInvite) && { leagueInvite: existingLeagueInvite }),
 					...(nonNullish(existingEmail) && { email: existingEmail })
 				})
 			);
