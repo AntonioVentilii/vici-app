@@ -1,5 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
-import { SUPPORTED_LOCALES, type AppLocale } from '$lib/constants/locale.constants';
+import { REGISTERED_LOCALE_IDS, type AppLocale } from '$lib/constants/locale.constants';
 import type { MarketTranslation, MarketTranslationInput } from '$lib/types/market-translation';
 import { isCreatorOrAdmin } from '$satellite/services/_authz';
 import { logInfo } from '$satellite/utils/logger.utils';
@@ -9,7 +9,12 @@ import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobui
 
 const callerText = (): string => msgCaller().toText();
 
-const SUPPORTED_LOCALE_IDS: ReadonlySet<string> = new Set(SUPPORTED_LOCALES.map((l) => l.id));
+// Market overlays are allowed for any REGISTERED locale, not just the `live`
+// tier in `SUPPORTED_LOCALES`. A translation doc is independent of the FE
+// string catalog's completeness, so a `soon` locale (e.g. `pt-BR`) can carry
+// market translations before its UI catalog is fully aligned — which is the
+// whole point of seeding them ahead of promoting the locale to `live`.
+const REGISTERED_LOCALE_ID_SET: ReadonlySet<string> = new Set(REGISTERED_LOCALE_IDS);
 
 /**
  * Upper bound on the number of series ids accepted by the bulk read, so a
@@ -23,11 +28,10 @@ const MAX_BULK_SERIES_IDS = 200;
 
 /**
  * Schema-side `locale` is `j.string()` (see the schema for why), so validate
- * the value here against the canonical `SUPPORTED_LOCALES` list before we
- * persist or read.
+ * the value here against the registered locale ids before we persist or read.
  */
 const assertSupportedLocale = (locale: string): AppLocale => {
-	if (!SUPPORTED_LOCALE_IDS.has(locale)) {
+	if (!REGISTERED_LOCALE_ID_SET.has(locale)) {
 		throw new Error(`Unsupported locale: ${locale}`);
 	}
 
@@ -72,14 +76,14 @@ export const getMarketTranslation = ({
 export const listMarketTranslations = ({ seriesId }: { seriesId: string }): MarketTranslation[] => {
 	const caller = msgCaller();
 
-	// Point-lookup each supported locale by its deterministic key rather than
+	// Point-lookup each registered locale by its deterministic key rather than
 	// scanning the collection. `listDocsStore` iterates every doc in the
 	// collection (a matcher filters the *result*, not the work), so once the
 	// collection grew the query blew the 5B-instruction single-message limit and
 	// trapped (IC0522) — which surfaced as the detail page silently losing all
 	// translations. A bounded set of exact-key reads is O(locales) and
 	// scale-stable, mirroring `listMarketTranslationsForLocales`.
-	return SUPPORTED_LOCALES.map(({ id }) =>
+	return REGISTERED_LOCALE_IDS.map((id) =>
 		getDocStore({
 			collection: Collection.MARKET_TRANSLATIONS,
 			key: translationKey({ seriesId, locale: id }),
@@ -122,7 +126,9 @@ export const listMarketTranslationsForLocales = ({
 		});
 	}
 
-	const validLocales = locales.filter((locale) => SUPPORTED_LOCALE_IDS.has(locale)) as AppLocale[];
+	const validLocales = locales.filter((locale) =>
+		REGISTERED_LOCALE_ID_SET.has(locale)
+	) as AppLocale[];
 	const caller = msgCaller();
 	const translations: MarketTranslation[] = [];
 
