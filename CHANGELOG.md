@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/AntonioVentilii/vici-app/compare/v0.2.4...v0.2.5) (2026-06-18)
+
+
+### Bug Fixes
+
+* **satellite:** allow market translations for registered soon-tier locales ([#932](https://github.com/AntonioVentilii/vici-app/issues/932)) ([c836e01](https://github.com/AntonioVentilii/vici-app/commit/c836e013fc18d28b59e9bfc9d76ee127f1f7c13f))
+
 ## [0.2.4](https://github.com/AntonioVentilii/vici-app/compare/v0.2.3...v0.2.4) (2026-06-18)
 
 
