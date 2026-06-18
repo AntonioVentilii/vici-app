@@ -68,7 +68,9 @@
 
 	// Synthetic `Market` the card binds to. Built off the featured-event
 	// fixture (onboarding runs pre-auth, before any market hydrates).
-	const market = $derived(buildOnboardingFirstCallMarket({ event, participant: picked }));
+	const market = $derived(
+		buildOnboardingFirstCallMarket({ event, participant: picked, locale: $localeStore })
+	);
 
 	// Resolved artwork category + accent. The featured event is the WC
 	// tentpole, so the band uses the WC visual language and laurel-gold
