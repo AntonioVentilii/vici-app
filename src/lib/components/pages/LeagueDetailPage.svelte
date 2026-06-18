@@ -22,6 +22,7 @@
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -657,11 +658,19 @@
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.kickoffMs;
 
-	const canResolveBattle = (battle: BattleDoc): boolean =>
-		myRole === 'owner' &&
+	// A settled in-flight battle is shown as "finalizing" to everyone — the
+	// resolution is silent, so there is no button to press. Membership only
+	// decides who actually triggers the trustless write (below); the label
+	// is purely informational.
+	const isBattleFinalizing = (battle: BattleDoc): boolean =>
 		battle.state === 'in_flight' &&
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.settleMs;
+
+	// Any member of this league can trigger the write — the satellite
+	// re-derives the scores, so the writer's identity can't skew them.
+	const canResolveBattle = (battle: BattleDoc): boolean =>
+		nonNullish(myRole) && isBattleFinalizing(battle);
 
 	const canRetractBattle = (battle: BattleDoc): boolean =>
 		battle.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal;
@@ -803,12 +812,12 @@
 		}
 	};
 
-	// Lazy maintenance, owner-only (Juno has no scheduler): settled
-	// battles auto-resolve and stale proposals auto-expire the first time
-	// an owner opens the league. One write per pass — the effect re-runs
-	// after the refresh and picks up the next candidate.
+	// Lazy maintenance (Juno has no scheduler): a settled battle resolves
+	// the first time any member of either side opens the league, and stale
+	// proposals expire the first time an owner does. One write per pass —
+	// the effect re-runs after the refresh and picks up the next candidate.
 	$effect(() => {
-		if (myRole !== 'owner' || nonNullish(actingBattleId)) {
+		if (isNullish(myRole) || nonNullish(actingBattleId)) {
 			return;
 		}
 
@@ -818,6 +827,12 @@
 			autoResolveAttempted.add(toResolve.id);
 			void handleResolveBattle(toResolve, 'auto');
 
+			return;
+		}
+
+		// Expiry stays owner-only — the satellite gate for proposed->expired
+		// is still isSideOwner, so a non-owner attempt would be rejected.
+		if (myRole !== 'owner') {
 			return;
 		}
 
@@ -1425,17 +1440,11 @@
 							? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
 							: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 					</button>
-				{:else if canResolveBattle(battle)}
-					<button
-						class="league-detail-battle-action is-primary"
-						disabled={nonNullish(actingBattleId)}
-						onclick={() => handleResolveBattle(battle, 'nudge')}
-						type="button"
-					>
-						{actingBattleId === battle.id
-							? t({ locale: $localeStore, key: 'leagues.battle.action.resolving' })
-							: t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
-					</button>
+				{:else if isBattleFinalizing(battle)}
+					<p class="league-detail-battle-finalizing num" aria-live="polite">
+						<LoadingSpinner size="xs" />
+						<span>{t({ locale: $localeStore, key: 'leagues.battle.action.finalizing' })}</span>
+					</p>
 				{/if}
 
 				{#if canRetractBattle(battle)}
@@ -2252,6 +2261,16 @@
 		font-size: var(--t-10);
 		color: var(--text-muted);
 		opacity: 0.85;
+	}
+
+	.league-detail-battle-finalizing {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.35rem;
+		font-size: var(--t-11);
+		font-weight: 700;
+		color: var(--text-muted);
 	}
 
 	.league-detail-battle-action {
