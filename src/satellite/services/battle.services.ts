@@ -503,8 +503,20 @@ export const assertSetBattle = ({
 			throw new Error('duel battles must not carry baselines.');
 		}
 	} else if (transition === 'in_flight->resolved') {
-		if (!isSideOwner(currentDoc.sideA) && !isSideOwner(currentDoc.sideB)) {
-			throw new Error('battles resolve requires sideA or sideB owner.');
+		// Resolution is trustless: the integrity check below re-derives every
+		// score field from the frozen baselines and the current league_stats,
+		// so the writer's identity can't change the outcome. We therefore let
+		// any member of either side trigger it, not just owners — many more
+		// people can finalize a settled battle just by viewing it, which is
+		// the only liveness available without a scheduler. Duels carry no
+		// members, so they stay principal-only.
+		const canResolveSide =
+			proposedDoc.kind === 'league'
+				? isMemberOfLeague(currentDoc.sideA) || isMemberOfLeague(currentDoc.sideB)
+				: isSideOwner(currentDoc.sideA) || isSideOwner(currentDoc.sideB);
+
+		if (!canResolveSide) {
+			throw new Error('battles resolve requires a sideA or sideB member.');
 		}
 
 		if (nowMs < currentDoc.settleMs) {
