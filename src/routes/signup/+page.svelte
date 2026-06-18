@@ -269,4 +269,9 @@
 	};
 </script>
 
-<OnboardingFlow {authenticated} {initialParticipantId} onComplete={handleComplete} />
+<OnboardingFlow
+	{authenticated}
+	{initialParticipantId}
+	onComplete={handleComplete}
+	onPicksReady={handleCompletePreAuth}
+/>
