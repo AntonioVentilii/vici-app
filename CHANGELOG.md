@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.2.4](https://github.com/AntonioVentilii/vici-app/compare/v0.2.3...v0.2.4) (2026-06-18)
+
+
+### Features
+
+* **arena:** finalize settled battles silently with a "finalizing" indicator ([#928](https://github.com/AntonioVentilii/vici-app/issues/928)) ([8ba1e34](https://github.com/AntonioVentilii/vici-app/commit/8ba1e34969d2f7d684cbefaf013e3f7c766785a1))
+* **arena:** let any league member finalize a settled battle ([#929](https://github.com/AntonioVentilii/vici-app/issues/929)) ([cb736a8](https://github.com/AntonioVentilii/vici-app/commit/cb736a8b024f2ee5321078d28a0159ac6f597048))
+* **i18n:** add Brazilian Portuguese (pt-BR) market translations ([#930](https://github.com/AntonioVentilii/vici-app/issues/930)) ([2214710](https://github.com/AntonioVentilii/vici-app/commit/221471021cf3118a1cfe97b9618fa451ffc5abf7))
+
+
+### Bug Fixes
+
+* **arena:** distinguish duplicate incoming challenges in the Battles inbox ([#919](https://github.com/AntonioVentilii/vici-app/issues/919)) ([aa0963a](https://github.com/AntonioVentilii/vici-app/commit/aa0963a5bad534c291bdcaf5f077e5917ccfcf60))
+* **flow:** animate the card flip on iOS (WebKit 3D transforms) ([#921](https://github.com/AntonioVentilii/vici-app/issues/921)) ([4b55404](https://github.com/AntonioVentilii/vici-app/commit/4b55404402accd48a57a3f21a940d6247437e932))
+* **flow:** animate the card flip on iOS instead of snapping ([#927](https://github.com/AntonioVentilii/vici-app/issues/927)) ([888e7b4](https://github.com/AntonioVentilii/vici-app/commit/888e7b49a53dd8fb38f3e9fe6f66f4078a721505))
+* **i18n:** detect pt-BR on first visit and correct Brazilian Portuguese terms ([#923](https://github.com/AntonioVentilii/vici-app/issues/923)) ([95234b0](https://github.com/AntonioVentilii/vici-app/commit/95234b0e8c7d8ea10a5c3db6d2f5748fe52f312c))
+* **onboarding:** localize the sample swipe card question ([#922](https://github.com/AntonioVentilii/vici-app/issues/922)) ([0cf12ad](https://github.com/AntonioVentilii/vici-app/commit/0cf12adb48b20297eb1ced0dd553e4eba7da73a0))
+* **onboarding:** persist picks across every sign-in provider ([#926](https://github.com/AntonioVentilii/vici-app/issues/926)) ([bd4e050](https://github.com/AntonioVentilii/vici-app/commit/bd4e050763747312e8bdebd90ca2e467ee82f540))
+* **onboarding:** persist the chosen country (favorite team) reliably ([#924](https://github.com/AntonioVentilii/vici-app/issues/924)) ([ac0e6ff](https://github.com/AntonioVentilii/vici-app/commit/ac0e6ffe79b566af69abf5b9dc311d53cb72ae9e))
+* **onboarding:** preserve league invite through the signup handoff ([#931](https://github.com/AntonioVentilii/vici-app/issues/931)) ([ce79c24](https://github.com/AntonioVentilii/vici-app/commit/ce79c248030479c929997db5bcfc26aff8208466))
+
+
+### Continuous Integration
+
+* **checks:** add a scope-required PR title check ([#918](https://github.com/AntonioVentilii/vici-app/issues/918)) ([6a6f734](https://github.com/AntonioVentilii/vici-app/commit/6a6f73497fd1af0cbb06f370c5e88f3d3120825e))
+
 ## [0.2.3](https://github.com/AntonioVentilii/vici-app/compare/v0.2.2...v0.2.3) (2026-06-16)
 
 
