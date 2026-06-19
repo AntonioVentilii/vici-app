@@ -1190,7 +1190,7 @@
 			"pt-BR": {
 				"title": "Uma seleção estreante ganhará de uma ex-campeã na fase de grupos?",
 				"description": "Quadro alargado · mais estreantes",
-				"resolution": "Resolve-se como SIM se uma seleção que se estreia num Mundial ganhar uma ex-campeã na fase de grupos. Encerra em 18 de junho de 2026."
+				"resolution": "Resolve-se como SIM se uma seleção que se estreia num Mundial ganhar de uma ex-campeã na fase de grupos. Encerra em 18 de junho de 2026."
 			},
 			"zh-Hans": {
 				"title": "首次参赛的国家队会在小组赛中击败前冠军吗？",
@@ -7764,7 +7764,7 @@
 				"resolution": "Resolve-se como SIM se o resultado estiver empatado após 90 minutos; uma vitória de qualquer uma das equipas resolve-se como NÃO."
 			},
 			"pt-BR": {
-				"title": "Alemanha contra Curaçau terminará empatada?",
+				"title": "Alemanha contra Curaçao terminará empatada?",
 				"description": "Empate após 90' · Grupo E · Houston",
 				"resolution": "Resolve-se como SIM se o resultado estiver empatado após 90 minutos; uma vitória de qualquer uma das seleções resolve-se como NÃO."
 			},
@@ -11796,7 +11796,7 @@
 				"resolution": "Resolve-se como SIM se for marcado pelo menos um golo antes do intervalo; caso contrário, NÃO."
 			},
 			"pt-BR": {
-				"title": "Será marcado um gol na primeira parte de Alemanha vs Curaçau?",
+				"title": "Será marcado um gol na primeira parte de Alemanha vs Curaçao?",
 				"description": "Início rápido em foco",
 				"resolution": "Resolve-se como SIM se for marcado pelo menos um gol antes do intervalo; caso contrário, NÃO."
 			},
@@ -26293,7 +26293,7 @@
 			},
 			"pt-BR": {
 				"title": "O Senegal vai ganhar da Noruega?",
-				"description": "Grupo I · Rodada 2 · New York/New Jersey",
+				"description": "Grupo I · Rodada 2 · Nova Iorque/Nova Jérsia",
 				"resolution": "Resolve-se como SIM se o Senegal ganhar nos 90 minutos; um empate ou uma vitória da Noruega resolve-se como NÃO."
 			},
 			"zh-Hans": {
@@ -30900,7 +30900,7 @@
 				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais golos nos 90 minutos; caso contrário, NÃO."
 			},
 			"pt-BR": {
-				"title": "Haverá 3 ou mais gols em Curaçau contra a Costa do Marfim?",
+				"title": "Haverá 3 ou mais gols em Curaçao contra a Costa do Marfim?",
 				"description": "Mercado de gols · ambos os ataques à prova",
 				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais gols nos 90 minutos; caso contrário, NÃO."
 			},
@@ -31140,9 +31140,9 @@
 				"resolution": "Resolve-se como SIM se Curaçau vencer nos 90 minutos; um empate ou uma vitória da Costa do Marfim resolve-se como NÃO."
 			},
 			"pt-BR": {
-				"title": "Curaçau vai ganhar da Costa do Marfim?",
+				"title": "Curaçao vai ganhar da Costa do Marfim?",
 				"description": "Possível surpresa · Grupo E · Filadélfia",
-				"resolution": "Resolve-se como SIM se Curaçau ganhar nos 90 minutos; um empate ou uma vitória da Costa do Marfim resolve-se como NÃO."
+				"resolution": "Resolve-se como SIM se Curaçao ganhar nos 90 minutos; um empate ou uma vitória da Costa do Marfim resolve-se como NÃO."
 			},
 			"zh-Hans": {
 				"title": "库拉索会击败科特迪瓦吗？",
