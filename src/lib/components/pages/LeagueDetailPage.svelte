@@ -777,7 +777,13 @@
 
 	// Resolve in one tap — scores are each league's window accuracy,
 	// computed by the service and re-verified by the satellite assert.
-	const handleResolveBattle = async (battle: BattleDoc, source: 'auto' | 'nudge') => {
+	const handleResolveBattle = async ({
+		battle,
+		source
+	}: {
+		battle: BattleDoc;
+		source: 'auto' | 'nudge';
+	}) => {
 		if (nonNullish(actingBattleId)) {
 			return;
 		}
@@ -830,7 +836,7 @@
 
 		if (nonNullish(toResolve)) {
 			autoResolveAttempts.set(toResolve.id, (autoResolveAttempts.get(toResolve.id) ?? 0) + 1);
-			void handleResolveBattle(toResolve, 'auto');
+			void handleResolveBattle({ battle: toResolve, source: 'auto' });
 
 			return;
 		}

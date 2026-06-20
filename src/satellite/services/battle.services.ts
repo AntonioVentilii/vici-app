@@ -27,17 +27,22 @@ import { time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
 
 /** Window delta between a baseline snapshot and the current bucket, clamped `≥ 0`. */
-const deltaBucket = (
-	baseline: CategoryStatsBucket,
-	current: CategoryStatsBucket
-): CategoryStatsBucket => ({
+const deltaBucket = ({
+	baseline,
+	current
+}: {
+	baseline: CategoryStatsBucket;
+	current: CategoryStatsBucket;
+}): CategoryStatsBucket => ({
 	calls: Math.max(0, current.calls - baseline.calls),
 	wins: Math.max(0, current.wins - baseline.wins)
 });
 
+// eslint-disable-next-line local-rules/prefer-object-params -- equality predicate; a/b read best positionally
 const bucketsEqual = (a: CategoryStatsBucket, b: CategoryStatsBucket): boolean =>
 	a.calls === b.calls && a.wins === b.wins;
 
+// eslint-disable-next-line local-rules/prefer-object-params -- equality predicate; a/b read best positionally
 const bucketsNullableEqual = (
 	a: CategoryStatsBucket | undefined,
 	b: CategoryStatsBucket | undefined
@@ -245,13 +250,13 @@ export const assertSetBattle = ({
 		});
 
 		if (isNullish(statsDoc)) {
-			return leagueStatsBucket(undefined, scope);
+			return leagueStatsBucket({ doc: undefined, scope });
 		}
 
 		try {
-			return leagueStatsBucket(decodeDocData<LeagueStatsDoc>(statsDoc.data), scope);
+			return leagueStatsBucket({ doc: decodeDocData<LeagueStatsDoc>(statsDoc.data), scope });
 		} catch {
-			return leagueStatsBucket(undefined, scope);
+			return leagueStatsBucket({ doc: undefined, scope });
 		}
 	};
 
@@ -539,8 +544,14 @@ export const assertSetBattle = ({
 				throw new Error('league battles state="resolved" requires callsA and callsB.');
 			}
 
-			const deltaA = deltaBucket(currentDoc.baselineA, readLeagueStatsBucket(currentDoc.sideA));
-			const deltaB = deltaBucket(currentDoc.baselineB, readLeagueStatsBucket(currentDoc.sideB));
+			const deltaA = deltaBucket({
+				baseline: currentDoc.baselineA,
+				current: readLeagueStatsBucket(currentDoc.sideA)
+			});
+			const deltaB = deltaBucket({
+				baseline: currentDoc.baselineB,
+				current: readLeagueStatsBucket(currentDoc.sideB)
+			});
 			const expectedScoreA = battleAccuracyPct(deltaA);
 			const expectedScoreB = battleAccuracyPct(deltaB);
 			const expectedWinner = deriveBattleWinner({
