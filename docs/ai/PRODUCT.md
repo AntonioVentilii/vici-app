@@ -112,6 +112,17 @@ resolved markets show 100% / 0%. The detail page first-paints from a
 fast query, then upgrades to the certified read. See
 [`specs/2026-06-14-fix-market-odds-skeletons.md`](./spec-driven-development/specs/2026-06-14-fix-market-odds-skeletons.md).
 
+### Market pricing — maker-liquidity disclosure
+
+The market detail page states, in plain language, where the line comes
+from: a live order book that VICI's market maker seeds with resting
+liquidity, so the price can move from the first call without implying a
+crowd of phantom predictors. The disclosure is a quiet caption under the
+stats grid and is mutually exclusive with the cold-start cue — an empty
+market shows "your prediction sets the first read"; a market with a line
+shows the maker disclosure. See
+[`specs/2026-06-20-feat-maker-liquidity-disclosure.md`](./spec-driven-development/specs/2026-06-20-feat-maker-liquidity-disclosure.md).
+
 ### Market metadata — translated everywhere, with a global preference and a per-item toggle
 
 When a market has a creator/admin-authored translation for the reader's

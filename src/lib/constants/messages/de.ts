@@ -1491,6 +1491,8 @@ export const deMessages = {
 	'market.detail.followed_lean.label': 'Predictors, denen du folgst',
 	'market.detail.head_suffix': 'Soziale Märkte',
 	'market.detail.locked_in': 'Eingebucht.',
+	'market.detail.maker.disclosure':
+		'Die Preise stammen aus einem Live-Orderbuch. VICIs Market Maker stellt ruhende Liquidität bereit, sodass sich die Linie ab dem ersten Tipp bewegt.',
 	'market.detail.not_found.cta': 'Zurück zu Märkten',
 	'market.detail.not_found.sub': 'Der gesuchte Markt ist entweder verborgen oder existiert nicht.',
 	'market.detail.not_found.title': '404 – Markt nicht gefunden',

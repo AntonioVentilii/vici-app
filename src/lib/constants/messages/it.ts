@@ -1475,6 +1475,8 @@ export const itMessages = {
 	'market.detail.followed_lean.label': 'Predittori che segui',
 	'market.detail.head_suffix': 'Mercati Sociali',
 	'market.detail.locked_in': 'Confermato.',
+	'market.detail.maker.disclosure':
+		'I prezzi provengono da un book ordini dal vivo. Il market maker di VICI fornisce liquidità di partenza, così la linea si muove fin dalla prima previsione.',
 	'market.detail.not_found.cta': 'Torna ai mercati',
 	'market.detail.not_found.sub': 'Il mercato che cerchi è nascosto o non esiste.',
 	'market.detail.not_found.title': '404 - Mercato non trovato',

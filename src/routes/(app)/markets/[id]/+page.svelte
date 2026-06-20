@@ -751,6 +751,15 @@
 					{t({ locale: $localeStore, key: 'market.detail.coldstart.body' })}
 				</p>
 			</section>
+		{:else}
+			<!-- Maker-liquidity disclosure — once a line exists, say where it
+			     comes from: a live order book that VICI's market maker seeds
+			     with resting liquidity. Keeps a thin market from reading as a
+			     crowd of phantom predictors. Mutually exclusive with the
+			     cold-start cue, which already explains the empty state. -->
+			<p class="market-detail-maker-note">
+				{t({ locale: $localeStore, key: 'market.detail.maker.disclosure' })}
+			</p>
 		{/if}
 
 		<MarketDetailResolutionCard {market} resolution={displayResolution} />
@@ -966,6 +975,16 @@
 	.market-detail-coldstart-line b {
 		color: var(--text-base);
 		font-weight: 700;
+	}
+
+	/* Maker-liquidity disclosure — a quiet caption, not a stat. Sits under
+	   the stats grid to answer "how is this priced" without competing with
+	   the numbers above it. */
+	.market-detail-maker-note {
+		margin: 0 1.25rem 0.5rem;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		line-height: 1.45;
 	}
 
 	/* No-longer-trading footer — quiet centred note that stands in for the

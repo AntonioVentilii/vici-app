@@ -1483,6 +1483,8 @@ export const frMessages = {
 	'market.detail.followed_lean.label': 'Prédicteurs que vous suivez',
 	'market.detail.head_suffix': 'Marchés Sociaux',
 	'market.detail.locked_in': 'Confirmé.',
+	'market.detail.maker.disclosure':
+		'Les prix proviennent d’un carnet d’ordres en direct. Le teneur de marché de VICI fournit de la liquidité, afin que la ligne bouge dès la première prédiction.',
 	'market.detail.not_found.cta': 'Retour aux marchés',
 	'market.detail.not_found.sub': 'Le marché que vous cherchez est caché ou n’existe pas.',
 	'market.detail.not_found.title': '404 - Marché introuvable',

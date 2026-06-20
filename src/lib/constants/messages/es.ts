@@ -1473,6 +1473,8 @@ export const esMessages = {
 	'market.detail.followed_lean.label': 'Predictores que sigues',
 	'market.detail.head_suffix': 'Mercados Sociales',
 	'market.detail.locked_in': 'Confirmado.',
+	'market.detail.maker.disclosure':
+		'Los precios provienen de un libro de órdenes en vivo. El creador de mercado de VICI aporta liquidez, de modo que la línea se mueve desde la primera predicción.',
 	'market.detail.not_found.cta': 'Volver a mercados',
 	'market.detail.not_found.sub': 'El mercado que buscas está oculto o no existe.',
 	'market.detail.not_found.title': '404 - Mercado no encontrado',
