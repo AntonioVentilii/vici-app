@@ -330,6 +330,9 @@
 		align-items: center;
 		padding: 0 32px;
 		text-align: center;
+		/* let taps fall through to the full-screen scrim button so the whole
+		   surface dismisses — "tap anywhere" */
+		pointer-events: none;
 	}
 
 	.mr-badge-fly {
@@ -519,6 +522,7 @@
 		right: 0;
 		bottom: 104px;
 		z-index: 2;
+		pointer-events: none;
 		text-align: center;
 		font-size: 11px;
 		letter-spacing: 0.04em;
