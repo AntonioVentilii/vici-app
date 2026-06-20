@@ -417,7 +417,6 @@ export const ptBRMessages = {
 	'menagerie.raven.oracle': 'Contra a corrente',
 	'menagerie.raven.rule': 'Vença 3 · 10 · 25 palpites com consenso abaixo de 30%.',
 	'menagerie.reveal.aria': '{name} desbloqueado',
-	'menagerie.reveal.cta': 'Adicionar à coleção',
 	'menagerie.reveal.dismiss': 'Dispensar',
 	'menagerie.reveal.hint': 'Toque em qualquer lugar para continuar',
 	'menagerie.reveal.legendary': 'LENDÁRIO · DESBLOQUEADO',

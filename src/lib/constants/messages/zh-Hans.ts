@@ -393,7 +393,6 @@ export const zhHansMessages = {
 	'menagerie.raven.oracle': '逆势而行',
 	'menagerie.raven.rule': '在共识低于 30% 时赢得 3 · 10 · 25 次预测。',
 	'menagerie.reveal.aria': '已解锁 {name}',
-	'menagerie.reveal.cta': '加入收藏',
 	'menagerie.reveal.dismiss': '关闭',
 	'menagerie.reveal.hint': '点击任意处继续',
 	'menagerie.reveal.legendary': '传奇 · 已解锁',
