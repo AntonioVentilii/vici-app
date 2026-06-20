@@ -122,7 +122,9 @@ the static line is the recommended default.
 - **Static line over interactive popover.** Shipped as an always-visible
   muted caption — zero analytics/regen cost, and the message is short
   enough that a popover added friction without value.
-- **Placement & gating.** Rendered under the stats grid, mutually
-  exclusive with the cold-start cue (`{:else}` of `isColdStart`): an empty
-  market keeps "your prediction sets the first read"; a market with a line
-  shows the maker disclosure.
+- **Placement & gating.** Rendered under the stats grid, gated to live
+  markets (`{:else if isLive}` after `isColdStart`, which itself implies
+  `isLive`): a live empty market keeps "your prediction sets the first
+  read"; a live market with a line shows the maker disclosure; resolved /
+  expired markets show neither, since the book is no longer the price
+  source.

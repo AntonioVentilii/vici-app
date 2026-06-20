@@ -751,12 +751,14 @@
 					{t({ locale: $localeStore, key: 'market.detail.coldstart.body' })}
 				</p>
 			</section>
-		{:else}
-			<!-- Maker-liquidity disclosure — once a line exists, say where it
-			     comes from: a live order book that VICI's market maker seeds
-			     with resting liquidity. Keeps a thin market from reading as a
-			     crowd of phantom predictors. Mutually exclusive with the
-			     cold-start cue, which already explains the empty state. -->
+		{:else if isLive}
+			<!-- Maker-liquidity disclosure — once a live market has a line, say
+			     where it comes from: a live order book that VICI's market maker
+			     seeds with resting liquidity. Keeps a thin market from reading
+			     as a crowd of phantom predictors. Gated to live markets — the
+			     book is no longer the price source once resolved/expired — and
+			     mutually exclusive with the cold-start cue (which itself only
+			     fires for live markets). -->
 			<p class="market-detail-maker-note">
 				{t({ locale: $localeStore, key: 'market.detail.maker.disclosure' })}
 			</p>
