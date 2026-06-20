@@ -254,6 +254,23 @@ export const getSeriesPriceHistory = async ({
 	});
 };
 
+/**
+ * Market-wide traded volume for a set of series in one call. See
+ * {@link ClearingCanister.listSeriesTradedVolumes}.
+ */
+export const listSeriesTradedVolumes = async ({
+	identity,
+	seriesIds,
+	...queryParams
+}: {
+	identity: Identity;
+	seriesIds: string[];
+} & QueryParams): Promise<ClearingDid.SeriesTradedVolume[]> => {
+	const { listSeriesTradedVolumes } = await clearingCanister({ identity });
+
+	return await listSeriesTradedVolumes({ seriesIds, ...queryParams });
+};
+
 export const listOrders = async ({
 	identity,
 	...rest

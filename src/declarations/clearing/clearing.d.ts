@@ -1002,6 +1002,22 @@ export interface ListSeriesTradeHistoryParams {
 	limit: [] | [bigint];
 }
 /**
+ * Input parameters for
+ * [`list_series_traded_volumes`](super::list_series_traded_volumes).
+ *
+ * Totals each series' market-wide traded volume in one call so a front end can
+ * label a page of market cards without a per-card round-trip. Unknown or
+ * untraded ids simply total zero. Callers should request a bounded page of
+ * series (the set they render): the read sums each series' trade tape, so the
+ * work scales with the trades on the requested series.
+ */
+export interface ListSeriesTradedVolumesParams {
+	/**
+	 * The series to total. Results are returned one per id, in this order.
+	 */
+	series_ids: Array<string>;
+}
+/**
  * Input parameters for [`list_settled_series`](super::list_settled_series).
  *
  * A series is considered settled the moment a settlement plan is opened for it
@@ -1534,6 +1550,28 @@ export interface SeriesTradePoint {
 	 * Execution price of the trade.
 	 */
 	price: Price;
+}
+/**
+ * One series' cumulative market-wide traded volume.
+ *
+ * `volume` is the traded *notional* — the sum over executed trades of
+ * `qty · price`, the value that changed hands — in USD base units (the
+ * `USD_DECIMALS` scale), not a contract count. `trade_count` is the number of
+ * executed trades. An untraded or unknown series totals zero on both.
+ */
+export interface SeriesTradedVolume {
+	/**
+	 * The series these totals are for (echoes the requested id).
+	 */
+	series_id: string;
+	/**
+	 * Cumulative traded notional (sum of `qty · price`) in USD base units.
+	 */
+	volume: bigint;
+	/**
+	 * Number of executed trades on the series.
+	 */
+	trade_count: bigint;
 }
 /**
  * Input parameters for initiating a series settlement.
@@ -2361,6 +2399,23 @@ export interface _SERVICE {
 	 * trade. Mirrors the pagination contract of `list_settled_series`.
 	 */
 	list_series_trade_history: ActorMethod<[ListSeriesTradeHistoryParams], SeriesTradeHistoryPage>;
+	/**
+	 * Returns each requested series' cumulative market-wide traded volume — the
+	 * notional that changed hands (sum of `qty · price`) in USD base units — plus
+	 * its executed-trade count, one entry per requested id in request order.
+	 *
+	 * Lets a front end label a page of market cards in a single call instead of a
+	 * per-card read. An unknown or untraded series totals zero. Served from the
+	 * same `SERIES_TRADE_HISTORY` index as [`list_series_trade_history`] — no
+	 * write-path cost and no persisted aggregate — by summing each series' tape on
+	 * read, so the work scales with the trades on the requested series; callers
+	 * should pass the bounded page they render. Guarded by
+	 * `caller_is_not_anonymous`, matching the other series-scoped reads.
+	 */
+	list_series_traded_volumes: ActorMethod<
+		[ListSeriesTradedVolumesParams],
+		Array<SeriesTradedVolume>
+	>;
 	/**
 	 * Lists the ids of series that have been settled (resolved), with stable
 	 * cursor pagination.
