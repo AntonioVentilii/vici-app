@@ -406,7 +406,6 @@ export const enMessages = {
 	'menagerie.raven.oracle': 'Against the grain',
 	'menagerie.raven.rule': 'Win 3 · 10 · 25 calls where consensus was under 30%.',
 	'menagerie.reveal.aria': '{name} unlocked',
-	'menagerie.reveal.cta': 'Add to collection',
 	'menagerie.reveal.dismiss': 'Dismiss',
 	'menagerie.reveal.hint': 'Tap anywhere to continue',
 	'menagerie.reveal.legendary': 'LEGENDARY · UNLOCKED',
