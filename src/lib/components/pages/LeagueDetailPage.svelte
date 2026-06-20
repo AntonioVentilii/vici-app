@@ -15,7 +15,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
-	import ChallengeLeagueModal from '$lib/components/leagues/ChallengeLeagueModal.svelte';
+	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
 	import LeaguePrivacyModal from '$lib/components/leagues/LeaguePrivacyModal.svelte';
 	import LeagueRoleBadge from '$lib/components/leagues/LeagueRoleBadge.svelte';
@@ -1573,8 +1573,8 @@
 </div>
 
 {#if nonNullish(league) && canChallenge}
-	<ChallengeLeagueModal
-		fromLeague={league}
+	<CreateBoutModal
+		fromLeagueId={league.id}
 		isOpen={challengeOpen}
 		onClose={() => (challengeOpen = false)}
 		onProposed={handleBattleProposed}
