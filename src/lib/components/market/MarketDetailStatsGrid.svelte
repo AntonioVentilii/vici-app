@@ -6,6 +6,7 @@
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { formatLongDate, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { marketBookLiquidity } from '$lib/utils/market.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	interface Props {
@@ -23,14 +24,12 @@
 
 	const { market, positions, resolvedForMarket = [] }: Props = $props();
 
-	const { totalVolume, yesVolume, noVolume, expiryDate, token } = $derived(market);
+	const { totalVolume, expiryDate, token } = $derived(market);
 
-	// Liquidity proxy = the smaller of the two book sides — that's the
-	// depth a counter-trade can hit before pushing the other side. The
-	// satellite doesn't expose a separate liquidity field today; until
-	// it does we surface `min(yesVolume, noVolume)` under the `vol`
-	// and `liq` labels.
-	const liquidity = $derived(yesVolume < noVolume ? yesVolume : noVolume);
+	// Liquidity = value resting at the top of the book (`marketBookLiquidity`),
+	// reflecting the live maker quotes rather than a volume proxy. ZERO only
+	// when neither side has a resting level, which reads as the "be first" cue.
+	const liquidity = $derived(marketBookLiquidity(market));
 
 	const userActivePosition = $derived(
 		positions.find((p) => p.marketId === market.id && p.netQty !== ZERO)

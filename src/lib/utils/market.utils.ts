@@ -138,6 +138,53 @@ export const calculateProbability = ({
 };
 
 /**
+ * Resting book liquidity for a market, expressed in payout-token base units
+ * (so it formats with the same `token.decimals` / symbol as volume).
+ *
+ * It's the value resting at the top of the book — `bestBidQty · bestBid +
+ * bestAskQty · bestAsk` — i.e. how much a counter-trade can hit at the best
+ * price before walking the book. The market maker quotes a single thin level
+ * per side, so the best level is effectively the whole book today; deeper
+ * levels aren't carried on the `Market` view model. It sums whichever sides
+ * have a resting level and returns {@link ZERO} only when neither does (the
+ * cold-start "be first" state).
+ *
+ * Quantities stay `bigint` and only the 0..1 price is taken through a float —
+ * scaled to base units first, then multiplied by the (exact) quantity — so a
+ * large resting size is never rounded through `Number`'s safe-integer range, as
+ * `Number(qty) * price` would.
+ */
+export const marketBookLiquidity = (
+	market: Pick<Market, 'bestBid' | 'bestAsk' | 'bestBidQty' | 'bestAskQty' | 'token'>
+): bigint => {
+	const { bestBid, bestAsk, bestBidQty, bestAskQty, token } = market;
+
+	const levelValue = ({
+		qty,
+		price
+	}: {
+		qty: bigint | undefined;
+		price: number | undefined;
+	}): bigint => {
+		if (isNullish(qty) || isNullish(price) || price <= 0) {
+			return ZERO;
+		}
+
+		// Per-contract value in token base units: a 0..1 price scaled to the
+		// token's precision. The large `qty · value` product then stays exact in
+		// bigint.
+		const valueBaseUnits = BigInt(Math.round(price * 10 ** token.decimals));
+
+		return qty * valueBaseUnits;
+	};
+
+	return (
+		levelValue({ qty: bestBidQty, price: bestBid }) +
+		levelValue({ qty: bestAskQty, price: bestAsk })
+	);
+};
+
+/**
  * Execution price (0..1) of *buying* `action` now. A buy lifts the book, so it
  * pays the ask — best ask for YES, `1 − bestBid` for NO — not the consensus
  * mid (used only when that side is empty; LIMIT uses `limitPrice`; floored at
