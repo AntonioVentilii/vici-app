@@ -84,14 +84,16 @@ export const assertSetLeagueStats = ({
 	}
 
 	for (const [tag, bucket] of Object.entries(proposedDoc.categories ?? {})) {
-		if (nonNullish(bucket)) {
-			// Keys are bounded to the known market tags — the collection is
-			// member-writable, so an unconstrained key set would let any member
-			// bloat the doc with arbitrary categories.
-			if (!isMarketTag(tag)) {
-				throw new Error(`league_stats category key "${tag}" is not a known market tag.`);
-			}
+		// Keys are bounded to the known market tags — the collection is
+		// member-writable, so an unconstrained key set would let any member
+		// bloat the doc with arbitrary categories. Validate the key on every
+		// entry, including nullish buckets, so a `null` value can't smuggle an
+		// arbitrary key past the constraint.
+		if (!isMarketTag(tag)) {
+			throw new Error(`league_stats category key "${tag}" is not a known market tag.`);
+		}
 
+		if (nonNullish(bucket)) {
 			if (bucket.wins > bucket.calls) {
 				throw new Error(
 					`league_stats category "${tag}" wins (${bucket.wins}) cannot exceed calls (${bucket.calls}).`
