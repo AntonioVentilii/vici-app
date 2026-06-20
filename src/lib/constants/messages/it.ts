@@ -410,7 +410,6 @@ export const itMessages = {
 	'menagerie.raven.oracle': 'Controcorrente',
 	'menagerie.raven.rule': 'Vinci 3 · 10 · 25 chiamate con consenso sotto il 30%.',
 	'menagerie.reveal.aria': '{name} sbloccato',
-	'menagerie.reveal.cta': 'Aggiungi alla collezione',
 	'menagerie.reveal.dismiss': 'Ignora',
 	'menagerie.reveal.hint': 'Tocca ovunque per continuare',
 	'menagerie.reveal.legendary': 'LEGGENDARIO · SBLOCCATO',

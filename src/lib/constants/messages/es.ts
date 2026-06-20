@@ -410,7 +410,6 @@ export const esMessages = {
 	'menagerie.raven.oracle': 'A contracorriente',
 	'menagerie.raven.rule': 'Gana 3 · 10 · 25 jugadas con consenso por debajo del 30%.',
 	'menagerie.reveal.aria': '{name} desbloqueado',
-	'menagerie.reveal.cta': 'Añadir a la colección',
 	'menagerie.reveal.dismiss': 'Descartar',
 	'menagerie.reveal.hint': 'Toca en cualquier sitio para continuar',
 	'menagerie.reveal.legendary': 'LEGENDARIO · DESBLOQUEADO',

@@ -409,7 +409,6 @@ export const frMessages = {
 	'menagerie.raven.oracle': 'À contre-courant',
 	'menagerie.raven.rule': 'Gagne 3 · 10 · 25 pronostics avec un consensus sous 30%.',
 	'menagerie.reveal.aria': '{name} débloqué',
-	'menagerie.reveal.cta': 'Ajouter à la collection',
 	'menagerie.reveal.dismiss': 'Ignorer',
 	'menagerie.reveal.hint': 'Touche n’importe où pour continuer',
 	'menagerie.reveal.legendary': 'LÉGENDAIRE · DÉBLOQUÉ',

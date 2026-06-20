@@ -417,7 +417,6 @@ export const deMessages = {
 	'menagerie.raven.oracle': 'Gegen den Strom',
 	'menagerie.raven.rule': 'Gewinne 3 · 10 · 25 Calls mit Konsens unter 30%.',
 	'menagerie.reveal.aria': '{name} freigeschaltet',
-	'menagerie.reveal.cta': 'Zur Sammlung hinzufügen',
 	'menagerie.reveal.dismiss': 'Schließen',
 	'menagerie.reveal.hint': 'Tippe irgendwo, um fortzufahren',
 	'menagerie.reveal.legendary': 'LEGENDÄR · FREIGESCHALTET',
