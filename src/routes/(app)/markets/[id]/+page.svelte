@@ -70,6 +70,12 @@
 
 	let positions = $state<Position[]>([]);
 
+	// Whether the viewer's positions for the current market have been read at
+	// least once. Gates the MY CALL tile's loading pulse so it doesn't flash an
+	// empty `—` before the (signed-in) position read lands. Reset on a
+	// foreground market change, set once the read resolves.
+	let positionsLoaded = $state(false);
+
 	// Creator/admin-authored metadata translations for this market (one per
 	// `live` locale), read in bulk once per market. Empty until the read
 	// resolves and for markets with no translations at all.
@@ -132,6 +138,9 @@
 	const fetchMarket = async ({ id, silent = false }: { id: MarketId; silent?: boolean }) => {
 		if (!silent) {
 			loading = true;
+			// Re-arm the MY CALL loading pulse for the new market until its
+			// position read lands (the silent poll keeps the prior value).
+			positionsLoaded = false;
 			// Drop any history from the previously-viewed market so the
 			// chart falls back to its seed shape until the new series
 			// resolves, rather than briefly plotting stale prices. The
@@ -178,10 +187,25 @@
 					console.error('market detail: certified update failed', error);
 				}
 			}),
-			getPositionsForMarket(id)
+			// Fail open: a positions-read error must not reject the whole load or
+			// strand the MY CALL shimmer (positionsLoaded never set) — fall back to
+			// an empty set so the tile resolves to "—".
+			getPositionsForMarket(id).catch((error: unknown) => {
+				console.error('market detail: positions read failed', error);
+
+				return [] as Position[];
+			})
 		]);
 
+		// Drop a late response from a previously-viewed market: a fast navigation
+		// can resolve an older market's positions after the current one's, which
+		// would otherwise clobber the live set (and its loaded/shimmer state).
+		if ($pageMarketId !== id) {
+			return;
+		}
+
 		positions = positionsRes;
+		positionsLoaded = true;
 	};
 
 	// Read this market's translations once per market and snap the view back to
@@ -498,6 +522,11 @@
 
 	const wonThisMarket = $derived(resolvedForMarket.some((r) => r.result === 'won'));
 
+	// MY CALL pulses only for a signed-in viewer whose position read for this
+	// market hasn't landed yet — signed-out visitors have no call to wait for,
+	// so they read `—` immediately rather than a perpetual shimmer.
+	const myCallLoading = $derived($userSignedIn && !positionsLoaded);
+
 	const canEditMetadata = $derived(
 		nonNullish(market) && ($userIsAdmin || market.creator === $authPrincipal)
 	);
@@ -739,7 +768,7 @@
 			{yesPercent}
 		/>
 
-		<MarketDetailStatsGrid {market} {positions} {resolvedForMarket} />
+		<MarketDetailStatsGrid {market} {myCallLoading} {positions} {resolvedForMarket} />
 
 		{#if isColdStart}
 			<!-- Cold-start cue — a fresh market with no real volume yet.
@@ -751,6 +780,17 @@
 					{t({ locale: $localeStore, key: 'market.detail.coldstart.body' })}
 				</p>
 			</section>
+		{:else if isLive}
+			<!-- Maker-liquidity disclosure — once a live market has a line, say
+			     where it comes from: a live order book that VICI's market maker
+			     seeds with resting liquidity. Keeps a thin market from reading
+			     as a crowd of phantom predictors. Gated to live markets — the
+			     book is no longer the price source once resolved/expired — and
+			     mutually exclusive with the cold-start cue (which itself only
+			     fires for live markets). -->
+			<p class="market-detail-maker-note">
+				{t({ locale: $localeStore, key: 'market.detail.maker.disclosure' })}
+			</p>
 		{/if}
 
 		<MarketDetailResolutionCard {market} resolution={displayResolution} />
@@ -966,6 +1006,16 @@
 	.market-detail-coldstart-line b {
 		color: var(--text-base);
 		font-weight: 700;
+	}
+
+	/* Maker-liquidity disclosure — a quiet caption, not a stat. Sits under
+	   the stats grid to answer "how is this priced" without competing with
+	   the numbers above it. */
+	.market-detail-maker-note {
+		margin: 0 1.25rem 0.5rem;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		line-height: 1.45;
 	}
 
 	/* No-longer-trading footer — quiet centred note that stands in for the

@@ -1463,6 +1463,8 @@ export const ptMessages = {
 	'market.detail.followed_lean.label': 'Previsores que segues',
 	'market.detail.head_suffix': 'Mercados Sociais',
 	'market.detail.locked_in': 'Confirmado.',
+	'market.detail.maker.disclosure':
+		'Os preços vêm de um livro de ordens ao vivo. O criador de mercado da VICI fornece liquidez, para que a linha se mova desde a primeira previsão.',
 	'market.detail.not_found.cta': 'Voltar aos mercados',
 	'market.detail.not_found.sub': 'O mercado que procuras está oculto ou não existe.',
 	'market.detail.not_found.title': '404 - Mercado não encontrado',
