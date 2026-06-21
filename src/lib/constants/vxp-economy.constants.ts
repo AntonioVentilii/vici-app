@@ -90,6 +90,29 @@ export const VXP_FLOW_MILESTONES: Readonly<Record<number, number>> = Object.free
 export const VXP_FLOW_OVERTIME_BONUS = 25;
 
 /**
+ * Rolling wall-clock window for the overtime anti-farming cap.
+ *
+ * `recordFlowSwipe` only checks that the client's `dayKey` is a well-formed
+ * `YYYY-MM-DD` — not that it is actually today — so a client could replay
+ * many distinct day keys in minutes and trip `capReached` for each. This
+ * window (and {@link VXP_FLOW_OVERTIME_ROLLING_CAP}) bound how many overtime
+ * mints a caller can earn per stretch of *real* time, counted off the
+ * store-stamped `created_at` of their `flow_overtime` award docs (which the
+ * caller cannot forge). Tunable.
+ */
+export const VXP_FLOW_OVERTIME_ROLLING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Maximum `flow_overtime` mints a caller can earn within
+ * {@link VXP_FLOW_OVERTIME_ROLLING_WINDOW_MS}. Set just above the natural
+ * once-per-calendar-day rate (with day-boundary / timezone slack) so a
+ * legitimate daily player is never blocked, while a client replaying many
+ * forged day keys in a short window is. Tunable — confirm the value with
+ * the economy owner before relying on it.
+ */
+export const VXP_FLOW_OVERTIME_ROLLING_CAP = 8;
+
+/**
  * Calibration reward (20 VXP), in **base units**. Paid once per finalised
  * Vici binary market a recovering user calls correctly. Small and fixed —
  * it is a recovery nudge that rewards reading a market right, not a payout
