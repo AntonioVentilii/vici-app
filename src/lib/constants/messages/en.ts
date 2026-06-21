@@ -1440,6 +1440,8 @@ export const enMessages = {
 	'market.detail.followed_lean.label': 'Predictors you follow',
 	'market.detail.head_suffix': 'Social Markets',
 	'market.detail.locked_in': 'Locked in.',
+	'market.detail.maker.disclosure':
+		'Prices come from a live order book. VICI’s market maker seeds it with resting liquidity, so the line moves from the first call.',
 	'market.detail.not_found.cta': 'Return to Markets',
 	'market.detail.not_found.sub': 'The market you are seeking is either hidden or does not exist.',
 	'market.detail.not_found.title': '404 - Market Not Found',
