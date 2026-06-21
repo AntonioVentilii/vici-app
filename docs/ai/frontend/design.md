@@ -312,19 +312,19 @@ counter (`+{xp} VXP this session`) reflects **only** the engine's genuine
 grants below, so a routine daily-ten session shows `+0`.
 
 **Deflation-safe VXP economy** — dopamine is not currency. Routine
-swipes, the daily ten, and the low lifetime milestones (1 / 10 / 25)
+swipes, the daily ten, and the moment-only lifetime marks (1 / 25)
 mint **nothing**. Real VXP is minted only at:
 
 - the **overtime finish** (`+25`, repeatable — the only repeatable mint), and
-- rare **lifetime-volume milestones**, in call-units (×50), each firing once ever:
+- rare **lifetime-volume milestones** at the 10 / 100 / 500 / 1000-call
+  marks, each firing once ever:
 
 | Lifetime call | Bonus VXP | Character | Extra        |
 | ------------- | --------- | --------- | ------------ |
 | 1             | 0         | Vici      | FIRST CALL   |
-| 10 / 25       | 0         | Oracle    | badge moment |
-| 50            | +50       | Oracle    |              |
+| 10            | +50       | Oracle    |              |
+| 25            | 0         | Oracle    | moment only  |
 | 100           | +100      | Oracle    | CENTURION    |
-| 250           | +150      | Oracle    |              |
 | 500           | +250      | Oracle    |              |
 | 1000          | +500      | Oracle    | custom title |
 
@@ -343,7 +343,7 @@ which key and every line still resolves through `t()`. Beats also carry
 **Within-day rhythm** beats (`r3` / `r5` / `r8`) fire on **jittered**
 positions inside a window (2–4, 4–6, 7–9), re-rolled each local day so
 the cadence is never memorised; they carry no VXP. **Overtime rhythm**
-adds a Trickster beat at call 11 and an Oracle beat at call 13. The
+adds a Trickster beat at call 11 and a Trickster beat at call 13. The
 daily session is hard-capped at `DAILY_HARD_CAP = 15`.
 
 The engine's beat cadence runs off a **per-session counter**, not the
