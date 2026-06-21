@@ -318,6 +318,21 @@ require routing orders through the satellite or an engine-side limit, a
 separate larger change. Decision record:
 [`specs/2026-06-15-fix-flow-daily-cap-server-authoritative.md`](./spec-driven-development/specs/2026-06-15-fix-flow-daily-cap-server-authoritative.md).
 
+### Flow earn surfaces — milestone and overtime VXP are credited for real
+
+Two Flow grants now credit real VXP, not just a display number. Crossing a
+lifetime call-count milestone (10 / 100 / 500 / 1000 → 50 / 100 / 250 / 500
+VXP) pays once each ever; reaching the daily hard cap ("overtime") pays 25
+VXP once per local day. Both mint through the existing `vxp_awards`
+pending→paid path: the milestone from a `profiles` hook off the lifetime
+call count, the overtime inline in `recordFlowSwipe` (its counter write
+fires no hook). Counts are client-trusted — the same model as the streak
+and Worlds-podium awards — so the overtime mint carries a rolling-window cap
+to bound farming. Earlier these grants were display-only by design (the
+"deflation-safe economy pass" deliberately withheld the credit); this is the
+deferred real-credit path. Decision record:
+[`specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md`](./spec-driven-development/specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md).
+
 ### Onboarding — picks persist across every sign-in provider
 
 A new user's onboarding picks — backed team/country, first call, handle,

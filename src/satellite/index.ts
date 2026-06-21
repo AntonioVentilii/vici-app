@@ -149,6 +149,7 @@ import { onProfileSetForAchievementAward } from '$satellite/services/vxp-achieve
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimCalibrationRewardFn } from '$satellite/services/vxp-calibration.services';
 import { onProfileSetForComebackRestore } from '$satellite/services/vxp-comeback-awards.services';
+import { onProfileSetForFlowMilestone } from '$satellite/services/vxp-flow-awards.services';
 import {
 	onLeagueSetForFounderVxpPayout,
 	settleFounderAwardsFn
@@ -336,7 +337,7 @@ export const recordFlowSwipe = defineUpdate({
 		dailyGoalDate: j.string(),
 		capReached: j.boolean()
 	}),
-	handler: ({ dayKey }) => recordFlowSwipeFn({ dayKey })
+	handler: async ({ dayKey }) => await recordFlowSwipeFn({ dayKey })
 });
 
 export const getMarketMetadata = defineQuery({
@@ -1269,6 +1270,7 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onProfileSetForVxpOnboarding(context);
 	onProfileSetForReferralCode(context);
 	await onProfileSetForStreakAward(context);
+	await onProfileSetForFlowMilestone(context);
 	await onProfileSetForAchievementAward(context);
 	await onProfileSetForComebackRestore(context);
 	onProfileSetForAffiliationStats(context);
