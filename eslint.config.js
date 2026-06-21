@@ -13,7 +13,11 @@ export default ts.config(
 			'dist/',
 			'static/',
 			'src/declarations/',
-			'.claude/worktrees/'
+			'.claude/worktrees/',
+			// Spec asset folders carry throwaway design-source references
+			// (e.g. a handover `motion-engine.js`) that aren't part of the TS
+			// project; they're deleted post-merge. Not lint targets.
+			'docs/ai/spec-driven-development/specs/'
 		]
 	},
 
