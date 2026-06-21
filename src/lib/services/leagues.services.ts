@@ -876,7 +876,7 @@ const readLeagueStatsBucket = async ({
 		key: leagueStatsKey({ leagueId })
 	});
 
-	return leagueStatsBucket(doc?.data, scope);
+	return leagueStatsBucket({ doc: doc?.data, scope });
 };
 
 /**

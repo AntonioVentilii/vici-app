@@ -56,10 +56,13 @@ export const EMPTY_LEAGUE_STATS_BUCKET: CategoryStatsBucket = { calls: 0, wins: 
  * category's bucket (zero when the league has never called in it).
  * `undefined` doc (no stats yet) → a zero bucket.
  */
-export const leagueStatsBucket = (
-	doc: LeagueStatsDoc | undefined,
-	scope: 'all' | MarketTag
-): CategoryStatsBucket => {
+export const leagueStatsBucket = ({
+	doc,
+	scope
+}: {
+	doc: LeagueStatsDoc | undefined;
+	scope: 'all' | MarketTag;
+}): CategoryStatsBucket => {
 	if (isNullish(doc)) {
 		return { ...EMPTY_LEAGUE_STATS_BUCKET };
 	}

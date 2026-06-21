@@ -84,25 +84,25 @@ export const assertSetLeagueStats = ({
 	}
 
 	for (const [tag, bucket] of Object.entries(proposedDoc.categories ?? {})) {
-		if (isNullish(bucket)) {
-			continue;
-		}
-
 		// Keys are bounded to the known market tags — the collection is
 		// member-writable, so an unconstrained key set would let any member
-		// bloat the doc with arbitrary categories.
+		// bloat the doc with arbitrary categories. Validate the key on every
+		// entry, including nullish buckets, so a `null` value can't smuggle an
+		// arbitrary key past the constraint.
 		if (!isMarketTag(tag)) {
 			throw new Error(`league_stats category key "${tag}" is not a known market tag.`);
 		}
 
-		if (bucket.wins > bucket.calls) {
-			throw new Error(
-				`league_stats category "${tag}" wins (${bucket.wins}) cannot exceed calls (${bucket.calls}).`
-			);
-		}
+		if (nonNullish(bucket)) {
+			if (bucket.wins > bucket.calls) {
+				throw new Error(
+					`league_stats category "${tag}" wins (${bucket.wins}) cannot exceed calls (${bucket.calls}).`
+				);
+			}
 
-		if (bucket.calls < 0 || bucket.wins < 0) {
-			throw new Error(`league_stats category "${tag}" counters must be non-negative.`);
+			if (bucket.calls < 0 || bucket.wins < 0) {
+				throw new Error(`league_stats category "${tag}" counters must be non-negative.`);
+			}
 		}
 	}
 
@@ -123,18 +123,16 @@ export const assertSetLeagueStats = ({
 		}
 
 		for (const [tag, currentBucket] of Object.entries(currentDoc.categories ?? {})) {
-			if (isNullish(currentBucket)) {
-				continue;
-			}
+			if (nonNullish(currentBucket)) {
+				const proposedBucket = proposedDoc.categories?.[tag as MarketTag];
 
-			const proposedBucket = proposedDoc.categories?.[tag as MarketTag];
-
-			if (
-				isNullish(proposedBucket) ||
-				proposedBucket.calls < currentBucket.calls ||
-				proposedBucket.wins < currentBucket.wins
-			) {
-				throw new Error(`league_stats category "${tag}" counters cannot decrease.`);
+				if (
+					isNullish(proposedBucket) ||
+					proposedBucket.calls < currentBucket.calls ||
+					proposedBucket.wins < currentBucket.wins
+				) {
+					throw new Error(`league_stats category "${tag}" counters cannot decrease.`);
+				}
 			}
 		}
 	}
@@ -367,23 +365,21 @@ export const onUserStatsSetForLeagueStats = (ctx: OnSetDocContext): void => {
 	for (const tag of MARKET_TAGS) {
 		const afterBucket = afterStats.categoryStats[tag];
 
-		if (isNullish(afterBucket)) {
-			continue;
-		}
+		if (nonNullish(afterBucket)) {
+			const beforeBucket = beforeStats?.categoryStats[tag];
+			const deltaCalls = Math.max(0, afterBucket.calls - (beforeBucket?.calls ?? 0));
+			// Clamp wins to calls: a re-aggregation can shift bucket composition
+			// so raw `Δwins > Δcalls`, which the forward-only assert (wins ≤
+			// calls) would reject and fail the whole hook write.
+			const deltaWins = Math.min(
+				deltaCalls,
+				Math.max(0, afterBucket.wins - (beforeBucket?.wins ?? 0))
+			);
 
-		const beforeBucket = beforeStats?.categoryStats[tag];
-		const deltaCalls = Math.max(0, afterBucket.calls - (beforeBucket?.calls ?? 0));
-		// Clamp wins to calls: a re-aggregation can shift bucket composition
-		// so raw `Δwins > Δcalls`, which the forward-only assert (wins ≤
-		// calls) would reject and fail the whole hook write.
-		const deltaWins = Math.min(
-			deltaCalls,
-			Math.max(0, afterBucket.wins - (beforeBucket?.wins ?? 0))
-		);
-
-		if (deltaCalls > 0 || deltaWins > 0) {
-			deltas[tag] = { calls: deltaCalls, wins: deltaWins };
-			hasDelta = true;
+			if (deltaCalls > 0 || deltaWins > 0) {
+				deltas[tag] = { calls: deltaCalls, wins: deltaWins };
+				hasDelta = true;
+			}
 		}
 	}
 
@@ -452,15 +448,13 @@ const incrementLeagueStatsCategories = ({
 	const categories: Partial<Record<MarketTag, CategoryStatsBucket>> = { ...baseDoc.categories };
 
 	for (const [tag, delta] of Object.entries(deltas)) {
-		if (isNullish(delta)) {
-			continue;
+		if (nonNullish(delta)) {
+			const current = categories[tag as MarketTag] ?? { calls: 0, wins: 0 };
+			categories[tag as MarketTag] = {
+				calls: current.calls + delta.calls,
+				wins: current.wins + delta.wins
+			};
 		}
-
-		const current = categories[tag as MarketTag] ?? { calls: 0, wins: 0 };
-		categories[tag as MarketTag] = {
-			calls: current.calls + delta.calls,
-			wins: current.wins + delta.wins
-		};
 	}
 
 	const next: LeagueStatsDoc = {
