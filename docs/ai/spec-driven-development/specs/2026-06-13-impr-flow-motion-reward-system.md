@@ -21,7 +21,7 @@ feature: the engine, beat host, and celebration sequencing already live
 in the tree. The spec exists to (a) freeze the design source as the
 reference to build against and (b) drive a small set of concrete
 changes captured under [Scope](#scope) and
-[Open decisions](#open-decisions).
+[Decisions](#decisions).
 
 ## Context
 
@@ -87,7 +87,7 @@ against `motion-engine.utils.ts`:
 1. **Overtime-rhythm character at call 13.** The design source assigns
    the call-13 overtime beat to `oracle`; the shipped `OT_RHYTHM[13]`
    uses `trickster`. Pick one and align both the engine and design.md
-   §7.3. (See [Open decisions](#open-decisions).)
+   §7.3. (See [Decisions](#decisions).)
 2. **Economy description vs. table.** The design source's header comment
    describes VXP as minted "from 50 up (×50)", but its own `VOLUME` table
    mints from the 10-call mark (`10 → +50`). The shipped engine already
