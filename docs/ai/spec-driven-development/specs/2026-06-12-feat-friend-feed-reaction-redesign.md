@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: In progress (PR pending — branch `feat/friend-feed-reaction-redesign`)
+Status: Implemented (#825)
 
 ## Goal
 
