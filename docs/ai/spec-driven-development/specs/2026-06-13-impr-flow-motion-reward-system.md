@@ -69,14 +69,12 @@ touches or references:
   with the added `NONE` floor.
 
 Canonical product rules for all of the above live in
-[`docs/ai/frontend/design.md`](../../frontend/design.md) §7 (7.3 economy
-
-- beats, 7.4 Flame stages, 7.5 accuracy gate, 7.7 character-beat priority
-  resolver, 7.9 haptics). Per
-  [AGENTS.md §2.5](../../../AGENTS.md), the spec narrative describes
-  behaviour and points at design.md §7; it does not carry the design
-  source's own versioning or section numbering into the tree as product
-  truth.
+[`docs/ai/frontend/design.md`](../../frontend/design.md) §7 — 7.3 economy
+and beats, 7.4 Flame stages, 7.5 accuracy gate, 7.7 character-beat priority
+resolver, 7.9 haptics. Per [AGENTS.md §2.5](../../../AGENTS.md), the spec
+narrative describes behaviour and points at design.md §7; it does not carry
+the design source's own versioning or section numbering into the tree as
+product truth.
 
 ## Scope
 
