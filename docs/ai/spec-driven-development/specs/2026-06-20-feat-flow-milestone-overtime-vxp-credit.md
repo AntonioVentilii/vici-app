@@ -9,8 +9,8 @@ Status: In progress (#956)
 
 Credit two already-designed Flow earn surfaces to the user's real VXP
 balance: crossing a lifetime call-count milestone (10/100/500/1000 calls →
-50/100/250/500 VXP, once each ever) and finishing a UTC day in overtime
-(15+ calls → 25 VXP, repeatable daily). Today these grants are computed and
+50/100/250/500 VXP, once each ever) and finishing a local day in overtime
+(reaching the Flow daily hard cap → 25 VXP, repeatable daily). Today these grants are computed and
 shown in the Flow UI but **never credited** — they are display-only. This
 turns the scaffolding into live awards through the existing server-fired
 payout path.
@@ -33,8 +33,9 @@ Already in place:
   union (`src/lib/types/vxp-award.ts`) and its Zod mirror
   (`src/lib/schema/vxp-award.schema.ts`). The doc comment already fixes the
   `awardKey` shapes: `flow_milestone` = the crossed threshold as text
-  (`'10' | '100' | '500' | '1000'`); `flow_overtime` = the UTC day bucket
-  (`'<YYYY-MM-DD>'`).
+  (`'10' | '100' | '500' | '1000'`); `flow_overtime` = the Flow
+  daily-counter local-day key (`'<YYYY-MM-DD>'`, the `dayKey`
+  `recordFlowSwipe` uses).
 - Amounts: `VXP_FLOW_MILESTONES` and `VXP_FLOW_OVERTIME_BONUS` in
   `src/lib/constants/vxp-economy.constants.ts` (whole-VXP integers, server
   converts to base units — same convention as `VXP_STREAK_BONUSES`).
