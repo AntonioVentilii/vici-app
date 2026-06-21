@@ -312,7 +312,7 @@ counter (`+{xp} VXP this session`) reflects **only** the engine's genuine
 grants below, so a routine daily-ten session shows `+0`.
 
 **Deflation-safe VXP economy** — dopamine is not currency. Routine
-swipes, the daily ten, and the low lifetime milestones (1 / 10 / 25)
+swipes, the daily ten, and the moment-only lifetime marks (1 / 25)
 mint **nothing**. Real VXP is minted only at:
 
 - the **overtime finish** (`+25`, repeatable — the only repeatable mint), and

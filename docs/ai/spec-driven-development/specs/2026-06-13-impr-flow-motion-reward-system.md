@@ -7,21 +7,20 @@ Status: In progress (#958)
 
 ## Goal
 
-Adopt the attached motion & reward design source as the single
-normative reference for Flow's beat selection and VXP economy, and
-reconcile the shipped engine to it. The user-visible outcome is a Flow
-deck whose celebratory beats, cadence, and reward grants match the
-signed-off design exactly — no beat fires twice back to back, the
-economy stays deflation-safe, and a freshly-crossed Menagerie tier
-always sequences after the character beat rather than colliding with
-it.
+Reconcile Flow's beat selection and VXP economy against the Flow Motion
+design source, landing a single agreed truth across the shipped engine and
+`design.md` §7. The user-visible outcome is a Flow deck whose celebratory
+beats, cadence, and reward grants behave consistently with the documented
+design — no beat fires twice back to back, the economy stays
+deflation-safe, and a freshly-crossed Menagerie tier always sequences after
+the character beat rather than colliding with it.
 
-This is a refinement of an already-shipped layer, not a net-new
-feature: the engine, beat host, and celebration sequencing already live
-in the tree. The spec exists to (a) freeze the design source as the
-reference to build against and (b) drive a small set of concrete
-changes captured under [Scope](#scope) and
-[Decisions](#decisions).
+This is a refinement of an already-shipped layer, not a net-new feature:
+the engine, beat host, and celebration sequencing already live in the tree.
+The spec exists to (a) capture the design source as the reference and
+(b) record a small set of concrete reconciliation decisions captured under
+[Scope](#scope) and [Decisions](#decisions). Where the source and the
+shipped code disagree, the shipped code is canonical.
 
 ## Context
 
@@ -78,11 +77,10 @@ product truth.
 
 ## Scope
 
-The reference to build against is the design source in the
-[asset folder](#design-artifacts-frontend). Where the source and the
-shipped engine disagree, this spec is the place to decide which wins and
-record it. The concrete reconciliation items found by diffing the source
-against `motion-engine.utils.ts`:
+The reference is the Flow Motion [design source](#design-source). Where
+the source and the shipped engine disagree, this spec decides which wins
+and records it (shipped code is canonical). The concrete reconciliation
+items found by diffing the source against `motion-engine.utils.ts`:
 
 1. **Overtime-rhythm character at call 13.** The design source assigns
    the call-13 overtime beat to `oracle`; the shipped `OT_RHYTHM[13]`
@@ -122,25 +120,21 @@ and stays as-is unless an open decision below changes it.
 - Any change to the streak-tier thresholds (`tierForStreak`) or the
   underlying `streak.utils` ladder.
 
-## Design artifacts (frontend)
+## Design source
 
-Normative reference for beat selection, cadence, priority, and reward
-values. Deleted post-merge; git history retains them.
+The design reference is **Doc C ("Flow Motion") of the VICI System Design
+handover** — a self-contained HTML spec plus a pure-JS reference engine
+(`motion-engine.js`) that documents which beat fires and when. Those files
+are **not committed here**: they contradict shipped reality in a couple of
+places (the call-13 character and the volume-ladder framing — see
+[Decisions](#decisions)) and predate this repo's terminology conventions,
+so committing them as repo truth would mislead. They live in the original
+handover and in the closed #867 PR's history for reference.
 
-- [`./2026-06-13-impr-flow-motion-reward-system/flow-motion-system.html`](./2026-06-13-impr-flow-motion-reward-system/flow-motion-system.html)
-  — the self-contained spec with the interactive cadence simulator (drag
-  the deck; toggle New / Returning / Lapsed; finish 10, push to 15; cross
-  a tier to watch the beat → trophy sequencing). The priority table, the
-  simulator timings, and the sequencing contract are the normative
-  behaviour.
-- [`./2026-06-13-impr-flow-motion-reward-system/motion-engine.js`](./2026-06-13-impr-flow-motion-reward-system/motion-engine.js)
-  — the authoritative reference engine for **which** beat fires. Pure JS,
-  no deps; the shipped `motion-engine.utils.ts` is the TypeScript +
-  i18n-key port of this. **Where the reference and the shipped engine
-  disagree on a number, this spec decides the winner explicitly rather
-  than re-deriving it.**
-- [`./2026-06-13-impr-flow-motion-reward-system/README.md`](./2026-06-13-impr-flow-motion-reward-system/README.md)
-  — handover notes for the two files above.
+**Canonical, where they differ: the shipped TypeScript engine**
+(`motion-engine.utils.ts`) and `design.md` §7. This spec records each
+divergence and its resolution under [Decisions](#decisions); the design
+source informs the decision but never overrides the shipped code.
 
 ## Technical requirements (satellite / backend)
 
