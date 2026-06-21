@@ -232,6 +232,7 @@ const STORE_OWNED_PREFERENCE_KEYS = [
  * stable JSON compare keeps the diff semantic — the leaf shapes are small
  * and JSON-safe with deterministic key order from `hydrateShape`.
  */
+// eslint-disable-next-line local-rules/prefer-object-params -- equality predicate; a/b read best positionally
 const leafEquals = (a: unknown, b: unknown): boolean =>
 	a === b || JSON.stringify(a) === JSON.stringify(b);
 
