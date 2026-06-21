@@ -1,7 +1,9 @@
 import { VXP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { Collection } from '$lib/constants/collections.constants';
+import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import { VXP_STREAK_BONUSES } from '$lib/constants/vxp-economy.constants';
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
+import { parseToken } from '$lib/utils/parse.utils';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
 import { transferWithBadFeeRetry } from '$satellite/utils/vxp-payout.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -124,7 +126,14 @@ const payStreakMilestone = async ({
 	recipient: string;
 	milestone: number;
 }): Promise<void> => {
-	const amount = BigInt(VXP_STREAK_BONUSES[milestone]);
+	// `VXP_STREAK_BONUSES` is whole VXP and the ledger works in base units, so
+	// size via `parseToken` — a raw `BigInt(50)` would transfer 50 base units
+	// (0.0050 VXP), under-paying by `10 ** VXP_TOKEN.decimals` (mirrors the
+	// Worlds-podium award's `parseToken` sizing).
+	const amount = parseToken({
+		value: VXP_STREAK_BONUSES[milestone].toString(),
+		unitName: VXP_TOKEN.decimals
+	});
 	const awardKey = streakAwardKey(milestone);
 	const earnedAtMs = Date.now();
 
