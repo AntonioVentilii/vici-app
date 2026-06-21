@@ -9,6 +9,7 @@ import {
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
 import { visibilityFromProfile } from '$lib/utils/visibility.utils';
+import { mintFlowOvertime } from '$satellite/services/vxp-flow-awards.services';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
@@ -229,7 +230,11 @@ export interface RecordFlowSwipeResult {
  * switches. A caller with no profile yet (not onboarded) is a no-op that
  * reports a 1-of-cap day so the FE can still gate the session.
  */
-export const recordFlowSwipeFn = ({ dayKey }: { dayKey: string }): RecordFlowSwipeResult => {
+export const recordFlowSwipeFn = async ({
+	dayKey
+}: {
+	dayKey: string;
+}): Promise<RecordFlowSwipeResult> => {
 	if (!isWellFormedDayKey(dayKey)) {
 		throw new Error('dayKey must be a well-formed YYYY-MM-DD local-day key.');
 	}
@@ -273,7 +278,17 @@ export const recordFlowSwipeFn = ({ dayKey }: { dayKey: string }): RecordFlowSwi
 		}
 	});
 
-	return { dailyGoalDone, dailyGoalDate: dayKey, capReached: dailyGoalDone >= DAILY_HARD_CAP };
+	const capReached = dailyGoalDone >= DAILY_HARD_CAP;
+
+	// Overtime VXP is minted here, inline: the counter write above uses
+	// `setDocStore`, which fires no `onSetDoc` hook, so an award hook would
+	// never see it. `mintFlowOvertime` is idempotent per day and never
+	// throws, so a payout hiccup can't corrupt the swipe-count result.
+	if (capReached) {
+		await mintFlowOvertime({ caller: callerBytes, recipient: callerText, dayKey });
+	}
+
+	return { dailyGoalDone, dailyGoalDate: dayKey, capReached };
 };
 
 /**
