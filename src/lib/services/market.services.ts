@@ -622,6 +622,11 @@ const scaleVolumeToTokenBase = ({
  * and is rescaled to each market's token precision. Fails open: any error
  * leaves the markets' existing `totalVolume` untouched, so the list still
  * renders (cards fall back to the "New" cue).
+ *
+ * No-op for the anonymous identity: `list_series_traded_volumes` is guarded by
+ * `caller_is_not_anonymous`, so a signed-out call can only reject — short-circuit
+ * it so a logged-out visitor (e.g. the public homepage feed) paints instantly on
+ * the seeded volume rather than waiting on a round-trip that can't succeed.
  */
 const enrichMarketsWithVolume = async ({
 	markets,
@@ -632,7 +637,7 @@ const enrichMarketsWithVolume = async ({
 	identity: Identity;
 	certified: boolean;
 }): Promise<Market[]> => {
-	if (markets.length === 0) {
+	if (markets.length === 0 || identity.getPrincipal().isAnonymous()) {
 		return markets;
 	}
 
