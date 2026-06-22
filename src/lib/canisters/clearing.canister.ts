@@ -395,6 +395,23 @@ export class ClearingCanister extends Canister<ClearingService> {
 		return candles;
 	};
 
+	/**
+	 * Market-wide traded volume for a set of series in one call — the notional
+	 * that changed hands (Σ qty·price) in USD base units, plus each series'
+	 * executed-trade count. Lets the list/cards label a page of markets without
+	 * a per-card read; unknown or untraded ids come back zeroed.
+	 */
+	listSeriesTradedVolumes = async ({
+		seriesIds,
+		...queryParams
+	}: {
+		seriesIds: string[];
+	} & QueryParams): Promise<ClearingDid.SeriesTradedVolume[]> => {
+		const { list_series_traded_volumes } = this.caller(queryParams);
+
+		return await list_series_traded_volumes({ series_ids: seriesIds });
+	};
+
 	mintCompleteSet = async ({
 		seriesId,
 		qty,

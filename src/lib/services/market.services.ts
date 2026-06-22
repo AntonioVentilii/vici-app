@@ -1,5 +1,9 @@
 import type { RegistryDid } from '$declarations';
-import { getSettlementStatus, listOrders as listOrdersApi } from '$lib/api/clearing.api';
+import {
+	getSettlementStatus,
+	listOrders as listOrdersApi,
+	listSeriesTradedVolumes as listSeriesTradedVolumesApi
+} from '$lib/api/clearing.api';
 import { addSeries, forkSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	DAY_IN_MS,
@@ -8,6 +12,7 @@ import {
 	PRICE_DECIMALS,
 	RESOLUTION_CLAUSE_MAX_LENGTH,
 	STRIKE,
+	USD_DECIMALS,
 	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
 import { CURRENT_FEATURED_EVENT } from '$lib/constants/featured-event.constants';
@@ -585,6 +590,84 @@ export const getMarketsLite = async (domain: RegistryDid.BalanceDomain): Promise
 // list can span the whole catalog, so an unbounded `Promise.all` would open a
 // request per open market and saturate the browser's per-host connection pool
 // during the cold-load burst — the very contention this path exists to avoid.
+/**
+ * Rescales an engine traded-volume figure — whole payout-token notional in
+ * `USD_DECIMALS` base units — to a market's own token precision, so it formats
+ * like the rest of the UI's `totalVolume` (and matches the detail page's
+ * volume). Identity for the common 4-decimal token; only ICP-style 8-decimal
+ * markets actually shift.
+ */
+const scaleVolumeToTokenBase = ({
+	usdBaseVolume,
+	tokenDecimals
+}: {
+	usdBaseVolume: bigint;
+	tokenDecimals: number;
+}): bigint => {
+	const diff = tokenDecimals - USD_DECIMALS;
+
+	if (diff === 0) {
+		return usdBaseVolume;
+	}
+
+	return diff > 0
+		? usdBaseVolume * BigInt(10) ** BigInt(diff)
+		: usdBaseVolume / BigInt(10) ** BigInt(-diff);
+};
+
+/**
+ * Fills in each market's `totalVolume` from the engine's market-wide traded
+ * volume (Σ qty·price), read for the whole set in a single batch call rather
+ * than a per-market round-trip. The figure returns in `USD_DECIMALS` base units
+ * and is rescaled to each market's token precision. Fails open: any error
+ * leaves the markets' existing `totalVolume` untouched, so the list still
+ * renders (cards fall back to the "New" cue).
+ *
+ * No-op for the anonymous identity: `list_series_traded_volumes` is guarded by
+ * `caller_is_not_anonymous`, so a signed-out call can only reject — short-circuit
+ * it so a logged-out visitor (e.g. the public homepage feed) paints instantly on
+ * the seeded volume rather than waiting on a round-trip that can't succeed.
+ */
+const enrichMarketsWithVolume = async ({
+	markets,
+	identity,
+	certified
+}: {
+	markets: Market[];
+	identity: Identity;
+	certified: boolean;
+}): Promise<Market[]> => {
+	if (markets.length === 0 || identity.getPrincipal().isAnonymous()) {
+		return markets;
+	}
+
+	try {
+		const volumes = await listSeriesTradedVolumesApi({
+			identity,
+			certified,
+			seriesIds: markets.map(({ id }) => id)
+		});
+
+		const volumeById = new Map(volumes.map(({ series_id, volume }) => [series_id, volume]));
+
+		return markets.map((market) => {
+			const usdBaseVolume = volumeById.get(market.id);
+
+			return isNullish(usdBaseVolume)
+				? market
+				: {
+						...market,
+						totalVolume: scaleVolumeToTokenBase({
+							usdBaseVolume,
+							tokenDecimals: market.token.decimals
+						})
+					};
+		});
+	} catch {
+		return markets;
+	}
+};
+
 const MARKETS_ENRICH_BATCH_SIZE = 8;
 
 /**
@@ -668,7 +751,10 @@ export const loadMarketsProgressive = async ({
 				bestBid: prior.bestBid,
 				bestAsk: prior.bestAsk,
 				bestBidQty: prior.bestBidQty,
-				bestAskQty: prior.bestAskQty
+				bestAskQty: prior.bestAskQty,
+				// Carry the last-known volume so a refresh keeps the figure (and the
+				// volume-sorted order) until the fresh batch read overwrites it.
+				totalVolume: prior.totalVolume
 			};
 		}
 
@@ -682,15 +768,25 @@ export const loadMarketsProgressive = async ({
 			: { ...market, yesProbability: cachedYes, noProbability: 1 - cachedYes };
 	});
 
-	onUpdate(seeded);
+	// Phase 1.5 — one batch read fills in real traded volume before first paint,
+	// so the volume-sorted list lands in its final order instead of reshuffling
+	// when volume arrives. Fails open (keeps the seeded / last-known volume).
+	const withVolume = await enrichMarketsWithVolume({ markets: seeded, identity, certified: false });
+
+	if (isStale?.()) {
+		return;
+	}
+
+	onUpdate(withVolume);
 
 	// Phase 2 — background book enrichment for every non-resolved market (open
 	// *and* expired-but-unresolved both carry a live/last book the list prices
 	// off). Resolved markets are skipped: they're already pinned to their
-	// outcome above.
-	const enriched = [...seeded];
-	const indexById = new Map(seeded.map((market, index) => [market.id, index]));
-	const pending = seeded.filter((market) => market.status !== 'Resolved');
+	// outcome above. Built on the volume-enriched set, whose `totalVolume` the
+	// book enrichment preserves (it only overlays price/book fields).
+	const enriched = [...withVolume];
+	const indexById = new Map(withVolume.map((market, index) => [market.id, index]));
+	const pending = withVolume.filter((market) => market.status !== 'Resolved');
 
 	for (let start = 0; start < pending.length; start += MARKETS_ENRICH_BATCH_SIZE) {
 		if (isStale?.()) {
