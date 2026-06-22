@@ -80,6 +80,13 @@
 			return;
 		}
 
+		// Don't persist the tab while a deep-link is forcing Friends — the
+		// forced switch is transient, so writing it would clobber the user's
+		// real last-opened preference just because they followed a link.
+		if (nonNullish(focusRequestKey)) {
+			return;
+		}
+
 		try {
 			localStorage.setItem(STORAGE_KEY, activeTab);
 		} catch {
