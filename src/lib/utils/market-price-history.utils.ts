@@ -1,5 +1,5 @@
 import type { ClearingDid } from '$declarations';
-import { DAY_IN_NANOSECONDS, MILLISECOND_IN_NANOSECONDS } from '$lib/constants/app.constants';
+import { DAY_IN_NANOSECONDS, MILLISECOND_IN_NANOSECONDS, ZERO } from '$lib/constants/app.constants';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 
 /**
@@ -112,3 +112,35 @@ export const deriveMarketPriceSeries = ({
 
 	return { yes, xs };
 };
+
+/**
+ * Traded volume for a series as payout-token base units (so it formats with
+ * the same `token.decimals` / symbol as the rest of the stats grid).
+ *
+ * "Volume" in a prediction market is the notional that changed hands, so this
+ * sums each executed trade's `qty · price` over the market-wide trade tape
+ * ({@link ClearingDid.SeriesTradePoint}). The math stays in `bigint`: `qty` and
+ * `price.decimal.value` are both integers, so each trade's notional is
+ * `qty · value` rescaled from the price's precision to the token's by the
+ * decimal delta — exact when the token is at least as precise as the price (the
+ * usual case), and never routed through a lossy/oversized JS float. An untraded
+ * series sums to {@link ZERO} — the volume tile's cold-start "New" state.
+ */
+export const tradeHistoryNotional = ({
+	trades,
+	decimals
+}: {
+	trades: ClearingDid.SeriesTradePoint[];
+	decimals: number;
+}): bigint =>
+	trades.reduce((sum, { qty, price }) => {
+		// `qty · value` is the notional in the price's own precision; shift it to
+		// the token's base units by the decimal delta. A negative delta (price
+		// finer than the token) truncates once here, which is the only rounding.
+		const base = qty * price.decimal.value;
+		const delta = decimals - price.decimal.decimals;
+		const scaled =
+			delta >= 0 ? base * BigInt(10) ** BigInt(delta) : base / BigInt(10) ** BigInt(-delta);
+
+		return sum + scaled;
+	}, ZERO);
