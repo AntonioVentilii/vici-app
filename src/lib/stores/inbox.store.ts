@@ -148,11 +148,13 @@ const friendRequestInboxStore: Readable<InboxNotification[]> = derived(
 				}),
 				when: t({ locale: $locale, key: 'inbox.pending' }),
 				unread: true,
-				// Friends now only live inside the Arena tab strip (Tier C-27).
-				// The Arena shell restores the last-opened tab from
-				// `vici.arena-tab`, which the FriendsTab UI keeps on
-				// `'friends'` after the user accepts/rejects a request.
-				href: AppPath.Arena
+				// Friends live inside the Arena tab strip. The `request` param
+				// forces the Friends tab and scrolls the matching incoming row
+				// into view (see `ArenaPage` / `FriendsTab`), so a tap lands on
+				// the Accept affordance instead of a bare tab the recipient must
+				// hunt through. The relation id contains `#`, so it is
+				// percent-encoded into the query value.
+				href: `${AppPath.Arena}?request=${encodeURIComponent(doc.key)}`
 			};
 		});
 	}
