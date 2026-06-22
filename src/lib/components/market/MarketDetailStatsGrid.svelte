@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
@@ -27,11 +27,23 @@
 		 * read resolves the real call (or genuine "no call") shows.
 		 */
 		myCallLoading?: boolean;
+		/**
+		 * Market-wide traded volume in payout-token base units, or `undefined`
+		 * while the trade-history read is still draining. Drives a pulse in the
+		 * VOLUME tile on first load; `ZERO` reads as the cold-start "New" state.
+		 */
+		volume?: bigint;
 	}
 
-	const { market, positions, resolvedForMarket = [], myCallLoading = false }: Props = $props();
+	const {
+		market,
+		positions,
+		resolvedForMarket = [],
+		myCallLoading = false,
+		volume
+	}: Props = $props();
 
-	const { totalVolume, expiryDate, token } = $derived(market);
+	const { expiryDate, token } = $derived(market);
 
 	// Liquidity = value resting at the top of the book (`marketBookLiquidity`),
 	// reflecting the live maker quotes rather than a volume proxy. ZERO only
@@ -64,12 +76,13 @@
 
 	const myCall = $derived(userActivePosition?.outcomeId ?? resolvedMyCall);
 
-	// Cold-start: a market with no real volume yet reads "New" instead of
-	// "0 VXP", and the matching depth tile reads "Be first". Both use our
-	// real volume fields — never a synthetic crowd. The "New" / "Be first"
-	// copy is suppressed (suffix dropped, tile muted) so the grid frames
-	// the empty market as an opportunity.
-	const freshVolume = $derived(totalVolume === ZERO);
+	// Cold-start: an untraded market reads "New" instead of "0 VXP", and an
+	// empty book reads "Be first". Both use real values (traded notional, book
+	// depth) — never a synthetic crowd. The copy is suppressed (suffix dropped,
+	// tile muted) so the grid frames the empty market as an opportunity. Volume
+	// is `undefined` until its read drains, which holds the tile in a pulse.
+	const volumeLoading = $derived(isNullish(volume));
+	const freshVolume = $derived(nonNullish(volume) && volume === ZERO);
 	const freshLiquidity = $derived(liquidity === ZERO);
 
 	// Hold the MY CALL tile in a loading state until the position read lands,
@@ -82,10 +95,10 @@
 			labelKey: 'market.detail.stats.volume' as const,
 			value: freshVolume
 				? t({ locale: $localeStore, key: 'market.detail.stats.new' })
-				: formatToken({ value: totalVolume, unitName: token.decimals }),
+				: formatToken({ value: volume ?? ZERO, unitName: token.decimals }),
 			suffix: freshVolume ? '' : token.symbol,
 			mute: freshVolume,
-			loading: false
+			loading: volumeLoading
 		},
 		{
 			labelKey: 'market.detail.stats.liquidity' as const,

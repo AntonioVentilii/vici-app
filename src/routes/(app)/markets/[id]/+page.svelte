@@ -43,7 +43,7 @@
 	import { loadMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import { getMarketTopPredictors } from '$lib/services/top-predictors.services';
-	import { loadMarketPriceCandles } from '$lib/services/trade.services';
+	import { getSeriesTradeVolume, loadMarketPriceCandles } from '$lib/services/trade.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketLanguagePreference } from '$lib/stores/market-language.store';
@@ -125,6 +125,15 @@
 	let priceHistoryByPeriod = $state<Partial<Record<PriceHistoryPeriod, MarketPriceSeries>>>({});
 	const chartPriceHistory = $derived(priceHistoryByPeriod[chartPeriod]);
 
+	// Market-wide traded volume (payout-token base units), aggregated from the
+	// executed-trade tape. `undefined` while it drains so the VOLUME tile pulses
+	// on first load; `ZERO` once read for an untraded market (cold-start "New").
+	// Rides behind the first paint like the other secondary reads and skips the
+	// 30s consensus poll. `volumeMarketId` guards the fetch effect against the
+	// poll / certified update re-running it.
+	let marketVolume = $state<bigint | undefined>(undefined);
+	let volumeMarketId = $state<MarketId | undefined>(undefined);
+
 	let loading = $state(true);
 
 	let selectedSide = $state<CallSide | undefined>();
@@ -151,6 +160,10 @@
 			// market id re-arms the fetch effect for the new market.
 			topPredictors = undefined;
 			topPredictorsMarketId = undefined;
+
+			// Re-arm the volume read for the new market (pulse until it drains).
+			marketVolume = undefined;
+			volumeMarketId = undefined;
 
 			// Re-arm the viewer-signals fetch for this foreground load (it
 			// fires once, on the first `onLoad`).
@@ -332,6 +345,41 @@
 		}
 	};
 
+	// Drain the market's traded-volume tape once the market (and its token
+	// precision) is known. Viewer-independent (works signed-out) and rides
+	// behind the first paint; the resolved-market guard keeps the 30s poll and
+	// certified update from re-draining every run.
+	$effect(() => {
+		const id = market?.id;
+		const decimals = market?.token.decimals;
+
+		if (isNullish(id) || isNullish(decimals) || volumeMarketId === id) {
+			return;
+		}
+
+		volumeMarketId = id;
+		void fetchVolume({ id, decimals });
+	});
+
+	// Fails open: any error leaves the volume at ZERO (the cold-start "New"
+	// state) rather than blocking the page, and a late response from a
+	// previously-viewed market is dropped.
+	const fetchVolume = async ({ id, decimals }: { id: MarketId; decimals: number }) => {
+		try {
+			const volume = await getSeriesTradeVolume({ seriesId: id, decimals });
+
+			if (market?.id !== id) {
+				return;
+			}
+
+			marketVolume = volume;
+		} catch {
+			if (market?.id === id) {
+				marketVolume = ZERO;
+			}
+		}
+	};
+
 	// Viewer-relative signals are a secondary, signed-in-only fetch
 	// (trade history + the activity of people the viewer follows). It
 	// rides on top of the market load rather than blocking the first
@@ -415,6 +463,10 @@
 			// case their fresh call belongs in the top-predictors list —
 			// re-arm the fetch effect rather than waiting for a navigation.
 			topPredictorsMarketId = undefined;
+
+			// The viewer's trade adds to volume — re-arm the drain to refresh it
+			// in place (the existing value stays put, so the tile doesn't pulse).
+			volumeMarketId = undefined;
 		}
 	};
 
@@ -501,10 +553,11 @@
 			: undefined
 	);
 
-	// True cold-start: a live market with no real volume yet. Surfaces the
-	// "New / be first" cue and the muted stats, using our real volume
-	// field — never a synthetic crowd.
-	const isColdStart = $derived(isLive && nonNullish(market) && market.totalVolume === ZERO);
+	// True cold-start: a live market nobody has traded yet. Keyed off the real
+	// traded volume (Σ qty·price), so it surfaces the "New / be first" cue only
+	// once the drain confirms zero — never while it's still loading (the banner
+	// would otherwise flash on every market) and never off a synthetic crowd.
+	const isColdStart = $derived(isLive && marketVolume === ZERO);
 
 	// Resolved entries from the user's `Settled` event stream that match
 	// this market. Used to keep the resolution UX (MY CALL stat,
@@ -768,7 +821,13 @@
 			{yesPercent}
 		/>
 
-		<MarketDetailStatsGrid {market} {myCallLoading} {positions} {resolvedForMarket} />
+		<MarketDetailStatsGrid
+			{market}
+			{myCallLoading}
+			{positions}
+			{resolvedForMarket}
+			volume={marketVolume}
+		/>
 
 		{#if isColdStart}
 			<!-- Cold-start cue — a fresh market with no real volume yet.
