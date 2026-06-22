@@ -694,8 +694,7 @@
 	letter-spacing: -0.005em;
 	color: var(--accent);
 }
-.flow-probs-payout::after {
-	content: ' VXP';
+.flow-probs-payout-unit {
 	font-weight: 500;
 	font-size: 9.5px;
 	letter-spacing: 0.08em;
