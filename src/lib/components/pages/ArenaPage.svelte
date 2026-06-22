@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
@@ -47,7 +48,7 @@
 		}
 
 		// The deep-link param wins over the last-opened tab.
-		if (focusRequestKey !== undefined) {
+		if (nonNullish(focusRequestKey)) {
 			activeTab = 'friends';
 
 			return;
@@ -69,7 +70,7 @@
 	// Catch a deep-link that arrives via client-side navigation (tapping the
 	// inbox toast while already on /arena), where `onMount` won't re-run.
 	$effect(() => {
-		if (focusRequestKey !== undefined) {
+		if (nonNullish(focusRequestKey)) {
 			activeTab = 'friends';
 		}
 	});
