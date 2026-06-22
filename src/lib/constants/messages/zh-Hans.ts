@@ -1387,6 +1387,8 @@ export const zhHansMessages = {
 	'market.detail.followed_lean.label': '你关注的预测者',
 	'market.detail.head_suffix': '社交市场',
 	'market.detail.locked_in': '已锁定。',
+	'market.detail.maker.disclosure':
+		'价格来自实时订单簿。VICI 的做市商提供挂单流动性，因此价格线从第一次预测起就会变动。',
 	'market.detail.not_found.cta': '返回市场列表',
 	'market.detail.not_found.sub': '你要找的市场已隐藏或不存在。',
 	'market.detail.not_found.title': '404 - 未找到市场',

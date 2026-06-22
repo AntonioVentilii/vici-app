@@ -21,8 +21,8 @@ import type { Principal } from '@icp-sdk/core/principal';
  *  - `flow_milestone` — user's lifetime call count crossed a volume
  *                      milestone (10 / 100 / 500 / 1000). Once per
  *                      threshold ever.
- *  - `flow_overtime` — user reached 15+ calls in a UTC day (overtime
- *                      finish). Once per UTC day.
+ *  - `flow_overtime` — user reached the Flow daily hard cap (overtime
+ *                      finish). Once per local day; bounded by a rolling wall-clock cap.
  *  - `league_founder` — user founded a league. One reward per league they
  *                      own (keyed by league id), capped per account.
  */
@@ -66,7 +66,8 @@ export interface VxpAwardDoc {
 	 *  - `referral`      — the referee principal text.
 	 *  - `worlds_podium` — `'<YYYY-MM>_gold' | '<YYYY-MM>_silver' | '<YYYY-MM>_bronze'`.
 	 *  - `flow_milestone` — the crossed threshold as text: `'10' | '100' | '500' | '1000'`.
-	 *  - `flow_overtime` — the UTC day bucket: `'<YYYY-MM-DD>'`.
+	 *  - `flow_overtime` — the Flow daily-counter day key
+	 *                     `'<YYYY-MM-DD>'` (the client local day `recordFlowSwipe` uses).
 	 *  - `league_founder` — the founded league's id (one per league owned).
 	 */
 	awardKey: string;
