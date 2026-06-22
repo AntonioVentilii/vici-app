@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.8](https://github.com/AntonioVentilii/vici-app/compare/v0.2.7...v0.2.8) (2026-06-22)
+
+
+### Bug Fixes
+
+* **flow:** render the landing payout VXP unit in markup, not a global ::after ([#963](https://github.com/AntonioVentilii/vici-app/issues/963)) ([d8d2be2](https://github.com/AntonioVentilii/vici-app/commit/d8d2be225eff614053a6f9f87d2ac26decafb61d))
+* **inbox:** stop seeding fake notifications for new users ([#964](https://github.com/AntonioVentilii/vici-app/issues/964)) ([98cd87b](https://github.com/AntonioVentilii/vici-app/commit/98cd87b73df0e0eafdf6a8fa2b258d50bd69ff72))
+
 ## [0.2.7](https://github.com/AntonioVentilii/vici-app/compare/v0.2.6...v0.2.7) (2026-06-22)
 
 
