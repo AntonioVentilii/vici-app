@@ -8,8 +8,7 @@ import {
 import {
 	INBOX_DISMISSED_STORAGE_KEY,
 	INBOX_READ_STORAGE_KEY,
-	INBOX_SETTLED_READ_STORAGE_KEY,
-	INBOX_STORAGE_KEY
+	INBOX_SETTLED_READ_STORAGE_KEY
 } from '$lib/constants/inbox.constants';
 import { AppPath } from '$lib/constants/routes.constants';
 import { marketById } from '$lib/derived/market-by-id.derived';
@@ -23,7 +22,6 @@ import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import { leagueBattlesStore } from '$lib/stores/leagues.store';
 import { localeStore } from '$lib/stores/locale.store';
 import { profilesStore } from '$lib/stores/profiles.store';
-import { initStorageStore } from '$lib/stores/storage.store';
 import { userStore } from '$lib/stores/user.store';
 import type { ResolutionItem, ResolutionRevealData } from '$lib/types/flow';
 import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox';
@@ -43,80 +41,6 @@ import { get, set as setStorage } from '$lib/utils/storage.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
-
-// The seed used to include a mock `resolve` card; that's now sourced from
-// real Settled events via `settledInboxStore`, so it's been removed here.
-// The remaining placeholders are kept because their backing systems
-// (streaks, level XP, follow alerts) aren't wired to live data yet — once
-// they are, drop them the same way.
-const seedInbox = (): InboxNotification[] => [
-	{
-		id: 'n1',
-		kind: 'streak',
-		title: 'Streak protected',
-		body: 'You kept your daily flame alive. One more call tomorrow.',
-		when: '2h ago',
-		unread: true
-	},
-	{
-		id: 'n3',
-		kind: 'social',
-		title: 'Friend activity',
-		body: '@oracle_nina called NO on the same market.',
-		when: 'Yesterday',
-		unread: false
-	},
-	{
-		id: 'n4',
-		kind: 'level',
-		title: 'Level up',
-		body: 'You reached level 4. +250 session VXP unlocked.',
-		when: '3d ago',
-		unread: false
-	},
-	{
-		id: 'n5',
-		kind: 'challenge',
-		title: 'Challenge invite',
-		body: 'A friend invited you to a head-to-head Flow duel.',
-		when: '4d ago',
-		unread: false
-	},
-	{
-		id: 'n6',
-		kind: 'market',
-		title: 'Market alert',
-		body: 'YES probability moved 12 pts on a market you follow.',
-		when: '5d ago',
-		unread: false
-	}
-];
-
-const baseInboxStore = initStorageStore<InboxNotification[]>({
-	key: INBOX_STORAGE_KEY,
-	defaultValue: seedInbox()
-});
-
-export const inboxStore = {
-	...baseInboxStore,
-	update: (updater: (items: InboxNotification[]) => InboxNotification[]) => {
-		baseInboxStore.update((current) => {
-			const next = updater(current);
-			baseInboxStore.set({ key: INBOX_STORAGE_KEY, value: next });
-
-			return next;
-		});
-	}
-};
-
-/**
- * Marks the persisted seed/history inbox items as read. The combined
- * `markAllInboxRead` further below also clears the per-event Settled
- * read-state — this internal helper just handles the seed layer.
- */
-const markAllSeedInboxRead = (): void => {
-	inboxStore.update((items) => items.map((item) => ({ ...item, unread: false })));
-};
 
 /**
  * Turns the viewer's pending friend requests into inbox cards. They are
@@ -529,10 +453,9 @@ const inboxDismissedStore = writable<Set<string>>(loadStringSet(INBOX_DISMISSED_
 
 /**
  * The inbox surface (Notifications page, bell badge) reads from this combined
- * view. Order: live actionable items (friend requests), then real
- * settled-event notifications, then likes received on your calls, then the
- * persisted local seed. Real event cards sit above the seeds so freshly-
- * arrived items land at the top.
+ * view. Order: live actionable items (friend requests), then battle responses,
+ * then real settled-event notifications, then likes received on your calls.
+ * Every card is derived from live data — there is no seeded/mock layer.
  *
  * Dismissed cards are filtered out, and the per-id read overlay is applied
  * on top of each item's own `unread` so a card tapped read in place stays
@@ -544,12 +467,11 @@ export const combinedInboxStore: Readable<InboxNotification[]> = derived(
 		battleInboxStore,
 		settledInboxStore,
 		likesReceivedInboxStore,
-		inboxStore,
 		inboxReadStore,
 		inboxDismissedStore
 	],
-	([$requests, $battles, $settled, $likesReceived, $inbox, $read, $dismissed]) =>
-		[...$requests, ...$battles, ...$settled, ...$likesReceived, ...$inbox]
+	([$requests, $battles, $settled, $likesReceived, $read, $dismissed]) =>
+		[...$requests, ...$battles, ...$settled, ...$likesReceived]
 			.filter((item) => !$dismissed.has(item.id))
 			.map((item) => (item.unread && $read.has(item.id) ? { ...item, unread: false } : item))
 );
@@ -683,10 +605,9 @@ export const initInboxToasts = (): (() => void) => {
 
 /**
  * Marks every currently-visible settled-event card as read by adding
- * its `event_id` to the persisted per-event read set. Paired with
- * `markAllSeedInboxRead` (which clears the seed/history layer) — see
- * the `markAllInboxRead` public entry point further below for the
- * combined behavior.
+ * its `event_id` to the persisted per-event read set. See the
+ * `markAllInboxRead` public entry point further below, which also overlays
+ * a per-id read marker on the remaining synthetic cards.
  */
 const markAllSettledRead = (): void => {
 	const visible = getStore(settledInboxStore);
@@ -791,14 +712,13 @@ export const dismissInboxNotification = (id: string): void => {
 };
 
 /**
- * Public "mark all read" entry point. Clears the seed-store layer and the
- * per-event Settled read-state, and overlays a read marker on every other
- * currently-visible card (synthetic friend requests) so the badge fully
- * clears. Callers (NotificationsPage, bell action) should use this — never
- * the layer-specific helpers directly.
+ * Public "mark all read" entry point. Clears the per-event Settled read-state
+ * and overlays a read marker on every other currently-visible card (synthetic
+ * friend requests, battle responses, likes) so the badge fully clears. Callers
+ * (NotificationsPage, bell action) should use this — never the layer-specific
+ * helpers directly.
  */
 export const markAllInboxRead = (): void => {
-	markAllSeedInboxRead();
 	markAllSettledRead();
 
 	const unreadIds = getStore(combinedInboxStore)

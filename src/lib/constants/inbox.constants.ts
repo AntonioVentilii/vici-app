@@ -3,12 +3,16 @@
 // without importing `inbox.store` — that module starts a long-lived toast
 // subscription at import, which we don't want on the signed-out/marketing cold
 // path. `inbox.store` reads/writes these; the reconcile only deletes them.
+// Legacy: once held a seeded/mock notification list. The inbox is now fully
+// derived from live data, so nothing reads or writes this key — the identity
+// reconcile still deletes it to purge stale seed data from existing devices.
 export const INBOX_STORAGE_KEY = 'vici.inbox.v1';
 export const INBOX_SETTLED_READ_STORAGE_KEY = 'vici.inbox.resolves.read.v1';
 /**
  * Per-id read overlay for inbox cards that aren't backed by the settled
- * read-set (synthetic friend requests, seeds). Tapping a card's unread dot
- * marks it read in place; the marker is keyed by the notification `id`.
+ * read-set (synthetic friend requests, battle responses, likes). Tapping a
+ * card's unread dot marks it read in place; the marker is keyed by the
+ * notification `id`.
  */
 export const INBOX_READ_STORAGE_KEY = 'vici.inbox.read.v1';
 /**
