@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.7](https://github.com/AntonioVentilii/vici-app/compare/v0.2.6...v0.2.7) (2026-06-22)
+
+
+### Features
+
+* **arena:** deep-link friend-request notification to the Accept control ([#961](https://github.com/AntonioVentilii/vici-app/issues/961)) ([9d30e15](https://github.com/AntonioVentilii/vici-app/commit/9d30e15e0e5f57184fa86d22667450babe217692))
+
 ## [0.2.6](https://github.com/AntonioVentilii/vici-app/compare/v0.2.5...v0.2.6) (2026-06-22)
 
 
