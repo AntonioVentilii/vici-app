@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.2.6](https://github.com/AntonioVentilii/vici-app/compare/v0.2.5...v0.2.6) (2026-06-22)
+
+
+### Features
+
+* **market-detail:** show real traded volume instead of "New" ([#955](https://github.com/AntonioVentilii/vici-app/issues/955)) ([5f462f9](https://github.com/AntonioVentilii/vici-app/commit/5f462f9cb63595932724206eb77df5b4ff8b77fa))
+* **market-list:** show real traded volume on cards ([#954](https://github.com/AntonioVentilii/vici-app/issues/954)) ([91989f9](https://github.com/AntonioVentilii/vici-app/commit/91989f90cec85f1744f8e7bb783c6d37379b8b95))
+* **markets:** disclose maker-seeded order-book liquidity on market detail ([#947](https://github.com/AntonioVentilii/vici-app/issues/947)) ([0bf7c7f](https://github.com/AntonioVentilii/vici-app/commit/0bf7c7f57aebb8e4b2260a414effbbf62f40855c))
+* **vxp:** credit real VXP for flow milestones and overtime ([#956](https://github.com/AntonioVentilii/vici-app/issues/956)) ([91f3aad](https://github.com/AntonioVentilii/vici-app/commit/91f3aad6d92cd0924e309c12af14b3307bbc6330))
+
+
+### Bug Fixes
+
+* **i18n:** natural pt-BR market wording (clean sheet, contra, ganhar de) ([#937](https://github.com/AntonioVentilii/vici-app/issues/937)) ([a7905ff](https://github.com/AntonioVentilii/vici-app/commit/a7905ff86fd0ff57148b8ba90462221fe887ee32))
+* **i18n:** use "ganhar" over "vencer" in pt-BR market translations ([#935](https://github.com/AntonioVentilii/vici-app/issues/935)) ([e851ef8](https://github.com/AntonioVentilii/vici-app/commit/e851ef8d801292b972089c30ebb5859e083aede6))
+* **market-detail:** pulse MY CALL while the position read is in flight ([#952](https://github.com/AntonioVentilii/vici-app/issues/952)) ([3bdf0d2](https://github.com/AntonioVentilii/vici-app/commit/3bdf0d22141e938ded0629257397ea8d3f7c6ae5))
+* **market-detail:** show real book liquidity instead of zero ([#951](https://github.com/AntonioVentilii/vici-app/issues/951)) ([17a4d92](https://github.com/AntonioVentilii/vici-app/commit/17a4d928e62d7c1319e145711d068a6fa865e03b))
+* **menagerie:** drop misleading reveal CTA, make tap-anywhere the sole affordance ([#948](https://github.com/AntonioVentilii/vici-app/issues/948)) ([cc383bc](https://github.com/AntonioVentilii/vici-app/commit/cc383bc404b906772c6aca1f3f5c58cbf59760dd))
+* **vxp:** pay streak awards in base units, not raw whole-VXP ints ([#957](https://github.com/AntonioVentilii/vici-app/issues/957)) ([79f908c](https://github.com/AntonioVentilii/vici-app/commit/79f908c822c9c71d046c0cd4000e5ce9248930cc))
+
+
+### Documentation
+
+* **flow:** reconcile Flow Motion (Doc C) spec + align design.md to the shipped engine ([#958](https://github.com/AntonioVentilii/vici-app/issues/958)) ([9192e87](https://github.com/AntonioVentilii/vici-app/commit/9192e87e222578f7feedc8ea5abc9350435d48bd))
+
+
+### Miscellaneous Chores
+
+* **lint:** treat eslint warnings as errors and fix outstanding warnings ([#950](https://github.com/AntonioVentilii/vici-app/issues/950)) ([2d2c73b](https://github.com/AntonioVentilii/vici-app/commit/2d2c73b3b1a5b6dcaa6508695b263c03f4a7dedb))
+* **npm-deps-dev:** bump @sveltejs/kit from 2.63.0 to 2.65.0 ([#946](https://github.com/AntonioVentilii/vici-app/issues/946)) ([69b8e1f](https://github.com/AntonioVentilii/vici-app/commit/69b8e1fb825b102a02c92a9fed65839ca5ef190e))
+* **npm-deps-dev:** bump @vitest/eslint-plugin from 1.6.19 to 1.6.20 ([#938](https://github.com/AntonioVentilii/vici-app/issues/938)) ([bd41a90](https://github.com/AntonioVentilii/vici-app/commit/bd41a9060a6c4a6bfb26955521f0ab1faa4facae))
+* **npm-deps-dev:** bump postcss-selector-parser from 7.1.1 to 7.1.4 ([#943](https://github.com/AntonioVentilii/vici-app/issues/943)) ([e51e3a6](https://github.com/AntonioVentilii/vici-app/commit/e51e3a61bc93f5c0fb971cc6ca8693211b6a53df))
+* **npm-deps-dev:** bump prettier from 3.8.3 to 3.8.4 ([#939](https://github.com/AntonioVentilii/vici-app/issues/939)) ([4552298](https://github.com/AntonioVentilii/vici-app/commit/45522982b85a35206adadfbc190d7bddc36a1256))
+* **npm-deps-dev:** bump side-channel from 1.1.0 to 1.1.1 ([#940](https://github.com/AntonioVentilii/vici-app/issues/940)) ([5aa9bf7](https://github.com/AntonioVentilii/vici-app/commit/5aa9bf7bb069a195effa754cecaf7cdad682c3cc))
+* **npm-deps-dev:** bump svelte from 5.56.2 to 5.56.3 ([#941](https://github.com/AntonioVentilii/vici-app/issues/941)) ([8d65bc1](https://github.com/AntonioVentilii/vici-app/commit/8d65bc103108fcc542f0697d36134060ebe66b0f))
+* **npm-deps-dev:** bump which-typed-array from 1.1.20 to 1.1.22 ([#944](https://github.com/AntonioVentilii/vici-app/issues/944)) ([cd86dc0](https://github.com/AntonioVentilii/vici-app/commit/cd86dc0cfdc48e6dc83c66ea34d0f217a98a7a80))
+* **npm-deps:** bump @lucide/svelte from 1.17.0 to 1.18.0 ([#942](https://github.com/AntonioVentilii/vici-app/issues/942)) ([66aecc8](https://github.com/AntonioVentilii/vici-app/commit/66aecc8276fa3bc238002100ad2fabf768505aa2))
+* **npm-deps:** bump acorn from 8.16.0 to 8.17.0 ([#945](https://github.com/AntonioVentilii/vici-app/issues/945)) ([4d11786](https://github.com/AntonioVentilii/vici-app/commit/4d11786733aed3390f1ed91ff9493fd761cf0aaf))
+* **spec:** mark friend-feed reaction-redesign Implemented + drop merged asset ([#959](https://github.com/AntonioVentilii/vici-app/issues/959)) ([97a1b7b](https://github.com/AntonioVentilii/vici-app/commit/97a1b7bca7ab65f83fec60809fd3ddeb9978ba4f))
+* Update ICDC declarations ([ed0d9c5](https://github.com/AntonioVentilii/vici-app/commit/ed0d9c5c2931b8c0ff365cdb6e3ce82328e3be3a))
+
+
+### Code Refactoring
+
+* **leagues:** unify league challenge into the create-a-battle wizard ([#949](https://github.com/AntonioVentilii/vici-app/issues/949)) ([b24f042](https://github.com/AntonioVentilii/vici-app/commit/b24f0422254ebc7113b4854a559aa4ba42a3a6bd))
+
 ## [0.2.5](https://github.com/AntonioVentilii/vici-app/compare/v0.2.4...v0.2.5) (2026-06-18)
 
 
