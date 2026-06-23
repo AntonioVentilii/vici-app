@@ -174,13 +174,14 @@
 		$leagueDirectoryStore.get(id)?.name ??
 		shortLeagueId(id);
 
-	// "Day X of Y" window line — day 1 starts at kickoff; the total floors
-	// to at least one day. Matches the league detail + battle detail copy.
+	// "Day X of Y" window line. Mirrors `BattleDetailPage` exactly (total
+	// = ceil of the span, day = floor of the elapsed + 1, both clamped) so
+	// the inbox row and the detail page it links to never disagree.
 	const battleWindowLine = (battle: BattleDoc): string => {
-		const total = Math.max(1, Math.round((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
+		const total = Math.max(1, Math.ceil((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
 		const day = Math.max(
 			1,
-			Math.min(total, Math.ceil((Date.now() - battle.kickoffMs) / DAY_IN_MS))
+			Math.min(total, Math.floor((Date.now() - battle.kickoffMs) / DAY_IN_MS) + 1)
 		);
 
 		return t({ locale: $localeStore, key: 'battle.detail.day_of', params: { day, total } });
@@ -497,7 +498,10 @@
 		     surface a user reaches for after accepting a challenge; each
 		     row deep-links to the detail page with the running standings. -->
 		{#if activeBattles.length > 0}
-			<section class="battles-section" aria-label="Live battles">
+			<section
+				class="battles-section"
+				aria-label={t({ locale: $localeStore, key: 'battles.section.live' })}
+			>
 				<header class="battles-section-head">
 					<span class="battles-eyebrow allcaps">
 						{t({ locale: $localeStore, key: 'battles.section.live' })}
