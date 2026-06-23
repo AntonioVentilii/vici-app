@@ -139,6 +139,7 @@ export const idlFactory = ({ IDL }) => {
 				name: IDL.Variant({
 					delete_confirmed: IDL.Null,
 					school_picked: IDL.Null,
+					battle_viewed: IDL.Null,
 					transactions_viewed: IDL.Null,
 					resolution_disputed: IDL.Null,
 					streak_milestone: IDL.Null,
@@ -1128,6 +1129,7 @@ export const idlFactory = ({ IDL }) => {
 				name: IDL.Variant({
 					delete_confirmed: IDL.Null,
 					school_picked: IDL.Null,
+					battle_viewed: IDL.Null,
 					transactions_viewed: IDL.Null,
 					resolution_disputed: IDL.Null,
 					streak_milestone: IDL.Null,

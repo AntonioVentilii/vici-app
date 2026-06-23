@@ -496,6 +496,12 @@
 		void goto(resolve(AppPath.Flow));
 	};
 
+	// Open the battle detail page — the running standings + face-off for a
+	// live battle live there, not on this card.
+	const goToBattle = (battleId: string) => {
+		void goto(`${resolve(AppPath.Arena)}/battles/${battleId}?from=league`);
+	};
+
 	const memberHandle = (principal: string): string => {
 		const profile = $profilesStore.get(principal);
 
@@ -1470,6 +1476,16 @@
 							: t({ locale: $localeStore, key: 'leagues.battle.action.retract' })}
 					</button>
 				{/if}
+
+				{#if battle.state === 'in_flight' || battle.state === 'accepted'}
+					<button
+						class="league-detail-battle-view allcaps"
+						onclick={() => goToBattle(battle.id)}
+						type="button"
+					>
+						{t({ locale: $localeStore, key: 'battles.live.cta' })} →
+					</button>
+				{/if}
 			</div>
 		{/snippet}
 
@@ -2311,6 +2327,23 @@
 	.league-detail-battle-action:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	/* "View →" link to the battle detail page — text affordance, not a
+	   filled action, so it reads as secondary to the owner CTAs above. */
+	.league-detail-battle-view {
+		appearance: none;
+		align-self: flex-start;
+		margin-top: 0.4rem;
+		padding: 0;
+		font-family: var(--font-mono, var(--font-sans));
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		color: var(--laurel);
+		background: none;
+		border: none;
+		cursor: pointer;
 	}
 
 	/* Accept + Decline sit side by side on an incoming request. */

@@ -142,6 +142,8 @@ export type AnalyticsEventName =
 	| 'battle_expired'
 	/** A battle resolved. */
 	| 'battle_resolved'
+	/** A battle detail surface was viewed (live standings / face-off). */
+	| 'battle_viewed'
 	/** A comment was posted. */
 	| 'comment_posted'
 	/** A chat message was sent. */

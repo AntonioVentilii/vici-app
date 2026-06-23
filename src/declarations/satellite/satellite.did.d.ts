@@ -144,6 +144,7 @@ export interface AppGetAnalyticsSummaryResult {
 		name:
 			| { delete_confirmed: null }
 			| { school_picked: null }
+			| { battle_viewed: null }
 			| { transactions_viewed: null }
 			| { resolution_disputed: null }
 			| { streak_milestone: null }
@@ -962,6 +963,7 @@ export interface AppTrackEventsArgs {
 		name:
 			| { delete_confirmed: null }
 			| { school_picked: null }
+			| { battle_viewed: null }
 			| { transactions_viewed: null }
 			| { resolution_disputed: null }
 			| { streak_milestone: null }

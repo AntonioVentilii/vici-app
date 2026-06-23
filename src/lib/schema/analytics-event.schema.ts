@@ -66,6 +66,7 @@ export const AnalyticsEventNameSchema = j.enum([
 	'battle_declined',
 	'battle_expired',
 	'battle_resolved',
+	'battle_viewed',
 	'comment_posted',
 	'chat_sent',
 	// Worlds

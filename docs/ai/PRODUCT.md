@@ -263,6 +263,18 @@ declined via an inbox notification derived from the battle's own state.
 (Duels — principal-vs-principal — keep the older **proposed → accepted →
 in_flight → resolved** manual-score path and aren't user-creatable yet.)
 
+**Live battles are discoverable, and you can see who's winning before
+they resolve.** Every battle under way across your leagues appears in a
+**Live battles** list in the Arena → Battles tab, and the live cards on a
+league's page link there too; each row opens the battle detail page. That
+page shows **provisional standings** while a battle is `in_flight` — each
+side's running window accuracy (`Δwins / Δcalls` against the kickoff
+baseline), with the current leader highlighted — computed read-only on
+the same arithmetic resolution uses, so it never alters the battle or
+triggers an early resolve. It's labelled provisional and keeps moving as
+each side predicts, until the window closes and the write-once resolved
+score takes over.
+
 **Who can challenge whom is governed by league privacy.** Only **OPEN**
 leagues are discoverable in challenge search and challengeable by
 outsiders; a league you are **already a member of** is always

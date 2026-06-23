@@ -1153,3 +1153,71 @@ export const resolveBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 
 	return next;
 };
+
+/** Running standings for an in-flight battle, before it resolves. */
+export interface BattleLiveScore {
+	/** Side A accuracy (0–100) over the window so far. */
+	scoreA: number;
+	/** Side B accuracy (0–100) over the window so far. */
+	scoreB: number;
+	/** Side A window call count so far — the accuracy tie-break. */
+	callsA: number;
+	/** Side B window call count so far. */
+	callsB: number;
+	/** Who's ahead right now, by the same rule resolution uses. */
+	leader: ReturnType<typeof deriveBattleWinner>;
+}
+
+/**
+ * Project the **current** standings of an in-flight league battle —
+ * "who's winning" while the window is still open. Runs the identical
+ * `league_stats − baseline` accuracy arithmetic as {@link resolveBattle},
+ * but is strictly **read-only**: it never writes the doc, so viewing a
+ * battle can't resolve it (that stays the lazy auto-resolve path). The
+ * standing is provisional and moves as each side keeps predicting.
+ *
+ * Returns `null` for anything that can't be scored live — a duel (no
+ * `league_stats` to delta), a non-`in_flight` battle, or a legacy row
+ * missing its kickoff baselines. Callers fall back to their existing
+ * render.
+ */
+export const readBattleLiveScore = async ({
+	battle
+}: {
+	battle: BattleDoc;
+}): Promise<BattleLiveScore | null> => {
+	if (
+		battle.state !== 'in_flight' ||
+		battle.kind !== 'league' ||
+		isNullish(battle.baselineA) ||
+		isNullish(battle.baselineB)
+	) {
+		return null;
+	}
+
+	const scope: BattleScope = battle.scope ?? BATTLE_SCOPE_DEFAULT;
+	const [statsA, statsB] = await Promise.all([
+		readLeagueStatsBucket({ leagueId: battle.sideA, scope }),
+		readLeagueStatsBucket({ leagueId: battle.sideB, scope })
+	]);
+
+	const deltaA = {
+		calls: Math.max(0, statsA.calls - battle.baselineA.calls),
+		wins: Math.max(0, statsA.wins - battle.baselineA.wins)
+	};
+	const deltaB = {
+		calls: Math.max(0, statsB.calls - battle.baselineB.calls),
+		wins: Math.max(0, statsB.wins - battle.baselineB.wins)
+	};
+
+	const scoreA = battleAccuracyPct(deltaA);
+	const scoreB = battleAccuracyPct(deltaB);
+
+	return {
+		scoreA,
+		scoreB,
+		callsA: deltaA.calls,
+		callsB: deltaB.calls,
+		leader: deriveBattleWinner({ scoreA, scoreB, callsA: deltaA.calls, callsB: deltaB.calls })
+	};
+};
