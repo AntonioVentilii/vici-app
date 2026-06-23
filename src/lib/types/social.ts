@@ -10,3 +10,36 @@ export interface Activity {
 	details?: string;
 	timestamp: number;
 }
+
+/**
+ * A single like on a friend-feed activity. One doc per `(activity, liker)` in the
+ * `activity_reactions` collection, keyed `${actor}#${timestamp}#${type}#${liker}` — the liked
+ * activity's doc key (see `logActivity`) plus the liker. `activityTitle` / `marketId` are
+ * denormalized copies of the liked activity's fields, written so the like-received inbox card can
+ * render without re-fetching the activity; spec A (counts + persistence) doesn't read them.
+ */
+export interface ActivityReaction {
+	activityKey: string;
+	liker: PrincipalText;
+	timestamp: number;
+	activityTitle: string;
+	marketId?: string;
+}
+
+/**
+ * Upper bound on the denormalized `activityTitle` an `activity_reactions` doc may carry — enforced
+ * by `assertSetActivityReaction` so a liker can't bloat the doc with an oversized title.
+ */
+export const ACTIVITY_REACTION_TITLE_MAX_LENGTH = 500;
+
+/**
+ * Per-activity like-count rollup doc (collection `activity_reaction_counts`), keyed by the activity
+ * doc key (`${author}#${timestamp}#${type}` = a reaction's `activityKey`). Maintained server-side by
+ * the reaction hooks; read by the feed to render the like count in O(1) instead of tallying the
+ * reaction page. `count` is floored at 0.
+ */
+export interface ActivityReactionCount {
+	activityKey: string;
+	count: number;
+	updatedAtMs: number;
+}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -18,12 +18,15 @@
 	import MarketDetailWhyNow from '$lib/components/market/MarketDetailWhyNow.svelte';
 	import MarketMetadataForm from '$lib/components/market/MarketMetadataForm.svelte';
 	import MarketResolutionInterface from '$lib/components/market/MarketResolutionInterface.svelte';
+	import MarketTranslationToggle from '$lib/components/market/MarketTranslationToggle.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import TradeModal from '$lib/components/market/TradeModal.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { MARKET_DETAIL_DIRECT_TRADE_ENABLED } from '$lib/constants/feature-flags.constants';
+	import { SUPPORTED_LOCALES } from '$lib/constants/locale.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
@@ -36,13 +39,21 @@
 	} from '$lib/derived/user.derived';
 	import { track } from '$lib/services/analytics.services';
 	import { getUserMarketSignals } from '$lib/services/market-signals.services';
-	import { getMarket } from '$lib/services/market.services';
+	import { listMarketTranslations } from '$lib/services/market-translation.services';
+	import { loadMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
-	import { loadMarketPriceCandles } from '$lib/services/trade.services';
+	import { getMarketTopPredictors } from '$lib/services/top-predictors.services';
+	import { getSeriesTradeVolume, loadMarketPriceCandles } from '$lib/services/trade.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
 	import type { CallSide, Market, MarketId } from '$lib/types/market';
-	import type { FollowedLeanSignal, PriorCallSignal } from '$lib/types/market-signals';
+	import type {
+		FollowedLeanSignal,
+		PriorCallSignal,
+		TopPredictorSignal
+	} from '$lib/types/market-signals';
+	import type { MarketTranslation } from '$lib/types/market-translation';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
 	import type {
@@ -50,6 +61,7 @@
 		PriceHistoryPeriod
 	} from '$lib/utils/market-price-history.utils';
 	import { categoryLabel } from '$lib/utils/market-tags.utils';
+	import { resolveMarketTranslation } from '$lib/utils/market-translation.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
@@ -58,6 +70,30 @@
 
 	let positions = $state<Position[]>([]);
 
+	// Whether the viewer's positions for the current market have been read at
+	// least once. Gates the MY CALL tile's loading pulse so it doesn't flash an
+	// empty `—` before the (signed-in) position read lands. Reset on a
+	// foreground market change, set once the read resolves.
+	let positionsLoaded = $state(false);
+
+	// Creator/admin-authored metadata translations for this market (one per
+	// `live` locale), read in bulk once per market. Empty until the read
+	// resolves and for markets with no translations at all.
+	let marketTranslations = $state<MarketTranslation[]>([]);
+	// Market id whose translations were read **successfully** — set only after a
+	// resolved response so a transient failure retries on the next market write
+	// (poll / certified update / re-navigation) instead of disabling for good.
+	let translationsFetchedForId = $state<MarketId | undefined>(undefined);
+	// In-flight market id — a plain (non-reactive) guard that dedupes the
+	// query→certified double load without re-triggering the fetch effect.
+	let translationsLoadingId: MarketId | undefined = undefined;
+
+	// Whether the reader has flipped the metadata back to the original
+	// (on-chain) language. Seeds from the global market-language preference and
+	// snaps back to that default on a market change (see the fetch effect
+	// below); a per-market flip stays local and doesn't change the preference.
+	let showOriginal = $state($marketLanguagePreference === 'original');
+
 	// Viewer-relative market signals (the prior call they hold here, the
 	// lean of the people they follow). Sparse by construction — absent
 	// when signed-out or when no signal exists for this market — so the
@@ -65,6 +101,14 @@
 	// invented data.
 	let followedLean = $state<FollowedLeanSignal | undefined>();
 	let priorCall = $state<PriorCallSignal | undefined>();
+
+	// Leaderboard-ranked predictors holding a live position on this market,
+	// with the side they took. Public data (same list for every visitor),
+	// resolved against the cached global leaderboard once it and the market
+	// are both known. `undefined` while unresolved so the section can tell
+	// "still loading" apart from "nobody's here".
+	let topPredictors = $state<TopPredictorSignal[] | undefined>();
+	let topPredictorsMarketId = $state<MarketId | undefined>();
 
 	// Chart period chip selection. Drives which window of market-wide price
 	// history the chart fetches and plots (see priceHistoryByPeriod).
@@ -81,37 +125,140 @@
 	let priceHistoryByPeriod = $state<Partial<Record<PriceHistoryPeriod, MarketPriceSeries>>>({});
 	const chartPriceHistory = $derived(priceHistoryByPeriod[chartPeriod]);
 
+	// Market-wide traded volume (payout-token base units), aggregated from the
+	// executed-trade tape. `undefined` while it drains so the VOLUME tile pulses
+	// on first load; `ZERO` once read for an untraded market (cold-start "New").
+	// Rides behind the first paint like the other secondary reads and skips the
+	// 30s consensus poll. `volumeMarketId` guards the fetch effect against the
+	// poll / certified update re-running it.
+	let marketVolume = $state<bigint | undefined>(undefined);
+	let volumeMarketId = $state<MarketId | undefined>(undefined);
+
 	let loading = $state(true);
 
 	let selectedSide = $state<CallSide | undefined>();
 
 	let lockedToastOpen = $state(false);
 
+	// Market id whose viewer signals we've already pulled on the foreground
+	// paint — keeps the certified update's second `onLoad` from re-fetching.
+	let signalsFetchedForId: MarketId | undefined;
+
 	const fetchMarket = async ({ id, silent = false }: { id: MarketId; silent?: boolean }) => {
 		if (!silent) {
 			loading = true;
+			// Re-arm the MY CALL loading pulse for the new market until its
+			// position read lands (the silent poll keeps the prior value).
+			positionsLoaded = false;
 			// Drop any history from the previously-viewed market so the
 			// chart falls back to its seed shape until the new series
 			// resolves, rather than briefly plotting stale prices. The
 			// per-period fetch effect repopulates the active period.
 			priceHistoryByPeriod = {};
+
+			// Same for the top-predictors list — clearing the resolved
+			// market id re-arms the fetch effect for the new market.
+			topPredictors = undefined;
+			topPredictorsMarketId = undefined;
+
+			// Re-arm the volume read for the new market (pulse until it drains).
+			marketVolume = undefined;
+			volumeMarketId = undefined;
+
+			// Re-arm the viewer-signals fetch for this foreground load (it
+			// fires once, on the first `onLoad`).
+			signalsFetchedForId = undefined;
 		}
 
-		const [marketRes, positionsRes] = await Promise.all([getMarket(id), getPositionsForMarket(id)]);
+		// Query-then-update: `loadMarket` fires `onLoad` twice — first with the
+		// fast uncertified query (drives the first paint, replacing the
+		// skeleton), then with the certified update which upgrades the view in
+		// place. We clear `loading` and fetch the viewer signals on the FIRST
+		// arrival only, so a foreground load paints from the query and the
+		// later certified result silently refreshes.
+		const [, positionsRes] = await Promise.all([
+			loadMarket({
+				marketId: id,
+				onLoad: ({ response }) => {
+					market = response;
 
-		market = marketRes;
+					if (!silent) {
+						loading = false;
+
+						// Signals only change with the viewer's own activity, not
+						// with the 30s consensus poll — fetch them on the first
+						// foreground paint and skip the silent refresh so we don't
+						// re-pull trade history + friend activity every tick. Guard
+						// against the certified update re-firing them.
+						if (signalsFetchedForId !== id) {
+							signalsFetchedForId = id;
+							void fetchSignals(response);
+						}
+					}
+				},
+				onUpdateError: (error) => {
+					console.error('market detail: certified update failed', error);
+				}
+			}),
+			// Fail open: a positions-read error must not reject the whole load or
+			// strand the MY CALL shimmer (positionsLoaded never set) — fall back to
+			// an empty set so the tile resolves to "—".
+			getPositionsForMarket(id).catch((error: unknown) => {
+				console.error('market detail: positions read failed', error);
+
+				return [] as Position[];
+			})
+		]);
+
+		// Drop a late response from a previously-viewed market: a fast navigation
+		// can resolve an older market's positions after the current one's, which
+		// would otherwise clobber the live set (and its loaded/shimmer state).
+		if ($pageMarketId !== id) {
+			return;
+		}
+
 		positions = positionsRes;
+		positionsLoaded = true;
+	};
 
-		if (!silent) {
-			loading = false;
+	// Read this market's translations once per market and snap the view back to
+	// the translated default on a market change. One bulk call (not a per-locale
+	// round-trip) returns every stored locale; `resolveMarketTranslation` then
+	// picks the best match for the active locale via the fallback chain.
+	$effect(() => {
+		const id = market?.id;
+
+		if (isNullish(id) || translationsFetchedForId === id || translationsLoadingId === id) {
+			return;
 		}
 
-		// Signals only change with the viewer's own activity, not with
-		// the 30s consensus poll — fetch them on the foreground load and
-		// skip the silent refresh so we don't re-pull trade history +
-		// friend activity every tick.
-		if (!silent) {
-			void fetchSignals(marketRes);
+		translationsLoadingId = id;
+		showOriginal = $marketLanguagePreference === 'original';
+		marketTranslations = [];
+
+		void loadTranslations(id);
+	});
+
+	// Fails open: any error simply leaves `marketTranslations` empty, so the
+	// page shows the original metadata and no toggle — never a broken state.
+	// `translationsFetchedForId` is set only on success, so a failed read is
+	// retried the next time this market is loaded rather than disabled for good.
+	const loadTranslations = async (id: MarketId) => {
+		try {
+			const items = await listMarketTranslations(id);
+
+			// Guard against a late response from a previously-viewed market.
+			if (market?.id === id) {
+				marketTranslations = items;
+			}
+
+			translationsFetchedForId = id;
+		} catch (err) {
+			console.warn('market detail: translations load failed', err);
+		} finally {
+			if (translationsLoadingId === id) {
+				translationsLoadingId = undefined;
+			}
 		}
 	};
 
@@ -160,6 +307,76 @@
 			});
 		} catch {
 			// Leave the period uncached → chart falls back to its seed shape.
+		}
+	};
+
+	// Resolve the top-predictors list once the market and the cached global
+	// leaderboard are both known. Like the price history this is
+	// viewer-independent (works signed-out) and rides behind the first paint;
+	// the resolved-market guard keeps the 30s poll and unrelated leaderboard
+	// ticks from re-probing every run.
+	$effect(() => {
+		const id = market?.id;
+		const candidates = $leaderboard;
+
+		if (isNullish(id) || candidates.length === 0 || topPredictorsMarketId === id) {
+			return;
+		}
+
+		topPredictorsMarketId = id;
+		void fetchTopPredictors({ id, candidates: candidates.map(({ owner }) => owner) });
+	});
+
+	// Fails open: an error leaves the list empty rather than blocking the
+	// page, and a late response from a previously-viewed market is dropped.
+	const fetchTopPredictors = async ({ id, candidates }: { id: MarketId; candidates: string[] }) => {
+		try {
+			const signals = await getMarketTopPredictors({ marketId: id, candidates });
+
+			if (market?.id !== id) {
+				return;
+			}
+
+			topPredictors = signals;
+		} catch {
+			if (market?.id === id) {
+				topPredictors = [];
+			}
+		}
+	};
+
+	// Drain the market's traded-volume tape once the market (and its token
+	// precision) is known. Viewer-independent (works signed-out) and rides
+	// behind the first paint; the resolved-market guard keeps the 30s poll and
+	// certified update from re-draining every run.
+	$effect(() => {
+		const id = market?.id;
+		const decimals = market?.token.decimals;
+
+		if (isNullish(id) || isNullish(decimals) || volumeMarketId === id) {
+			return;
+		}
+
+		volumeMarketId = id;
+		void fetchVolume({ id, decimals });
+	});
+
+	// Fails open: any error leaves the volume at ZERO (the cold-start "New"
+	// state) rather than blocking the page, and a late response from a
+	// previously-viewed market is dropped.
+	const fetchVolume = async ({ id, decimals }: { id: MarketId; decimals: number }) => {
+		try {
+			const volume = await getSeriesTradeVolume({ seriesId: id, decimals });
+
+			if (market?.id !== id) {
+				return;
+			}
+
+			marketVolume = volume;
+		} catch {
+			if (market?.id === id) {
+				marketVolume = ZERO;
+			}
 		}
 	};
 
@@ -241,6 +458,15 @@
 			// period (other periods refetch lazily when reselected).
 			void fetchSignals(market);
 			priceHistoryByPeriod = {};
+
+			// The viewer may themselves rank on the leaderboard, in which
+			// case their fresh call belongs in the top-predictors list —
+			// re-arm the fetch effect rather than waiting for a navigation.
+			topPredictorsMarketId = undefined;
+
+			// The viewer's trade adds to volume — re-arm the drain to refresh it
+			// in place (the existing value stays put, so the tile doesn't pulse).
+			volumeMarketId = undefined;
 		}
 	};
 
@@ -253,8 +479,59 @@
 	const contextLine = $derived(metadata?.subtitle?.trim() ?? '');
 	const whyNow = $derived(metadata?.whyNow);
 
+	// Best translation for the reader's locale (resolved through the fallback
+	// chain), or `undefined` when none exists — which is what gates the toggle.
+	const activeTranslation = $derived(
+		resolveMarketTranslation({ translations: marketTranslations, locale: $localeStore })
+	);
+
+	// Native name of the translated language, for the "View in {language}"
+	// control. Falls back to the bare locale id if it's somehow not in the list.
+	const translatedLanguageLabel = $derived(
+		nonNullish(activeTranslation)
+			? (SUPPORTED_LOCALES.find(({ id }) => id === activeTranslation.locale)?.label ??
+					activeTranslation.locale)
+			: ''
+	);
+
+	// Show the original (on-chain) text when the reader has flipped the toggle
+	// or when there's no translation to show. Each field falls back to the
+	// original whenever the translated value is missing/blank — translations
+	// are user-authored, so a stray empty field must never blank out the title.
+	const showTranslated = $derived(nonNullish(activeTranslation) && !showOriginal);
+	const translatedTitle = $derived(activeTranslation?.translation.title ?? '');
+	const translatedResolution = $derived(activeTranslation?.translation.resolution ?? '');
+	const displayTitle = $derived(
+		showTranslated && notEmptyString(translatedTitle.trim())
+			? translatedTitle
+			: (market?.title ?? '')
+	);
+	const displayResolution = $derived(
+		showTranslated && notEmptyString(translatedResolution.trim())
+			? translatedResolution
+			: market?.resolution
+	);
+
+	const onToggleTranslation = () => {
+		showOriginal = !showOriginal;
+
+		if (nonNullish(market)) {
+			track({
+				name: 'market_translation_toggled',
+				marketId: market.id,
+				source: 'detail',
+				label: showOriginal ? 'original' : 'translated'
+			});
+		}
+	};
+
+	// `yesProbability` is optional — `undefined` while the book hasn't been
+	// read (or read empty). Fall back to 0 only for the percent math so we
+	// never multiply `undefined` into a NaN; the prob hero renders an odds
+	// skeleton (not a 0/100 split) whenever `oddsKnown` is false.
+	const oddsKnown = $derived(nonNullish(market?.yesProbability));
 	const yesPercent = $derived(
-		nonNullish(market) ? Math.min(100, Math.max(0, Math.round(market.yesProbability * 100))) : 0
+		oddsKnown ? Math.min(100, Math.max(0, Math.round((market?.yesProbability ?? 0) * 100))) : 0
 	);
 	const noPercent = $derived(100 - yesPercent);
 
@@ -276,10 +553,11 @@
 			: undefined
 	);
 
-	// True cold-start: a live market with no real volume yet. Surfaces the
-	// "New / be first" cue and the muted stats, using our real volume
-	// field — never a synthetic crowd.
-	const isColdStart = $derived(isLive && nonNullish(market) && market.totalVolume === ZERO);
+	// True cold-start: a live market nobody has traded yet. Keyed off the real
+	// traded volume (Σ qty·price), so it surfaces the "New / be first" cue only
+	// once the drain confirms zero — never while it's still loading (the banner
+	// would otherwise flash on every market) and never off a synthetic crowd.
+	const isColdStart = $derived(isLive && marketVolume === ZERO);
 
 	// Resolved entries from the user's `Settled` event stream that match
 	// this market. Used to keep the resolution UX (MY CALL stat,
@@ -296,6 +574,11 @@
 	});
 
 	const wonThisMarket = $derived(resolvedForMarket.some((r) => r.result === 'won'));
+
+	// MY CALL pulses only for a signed-in viewer whose position read for this
+	// market hasn't landed yet — signed-out visitors have no call to wait for,
+	// so they read `—` immediately rather than a perpetual shimmer.
+	const myCallLoading = $derived($userSignedIn && !positionsLoaded);
 
 	const canEditMetadata = $derived(
 		nonNullish(market) && ($userIsAdmin || market.creator === $authPrincipal)
@@ -470,7 +753,15 @@
 				{/if}
 			</div>
 
-			<h1 class="market-detail-title">{market.title}</h1>
+			<h1 class="market-detail-title">{displayTitle}</h1>
+
+			{#if nonNullish(activeTranslation)}
+				<MarketTranslationToggle
+					onToggle={onToggleTranslation}
+					{showOriginal}
+					{translatedLanguageLabel}
+				/>
+			{/if}
 
 			{#if contextLine !== ''}
 				<p class="market-detail-context">{contextLine}</p>
@@ -512,7 +803,14 @@
 			</section>
 		{/if}
 
-		<MarketDetailProbHero {noPercent} resolved={isResolved} {resolvedOutcome} {yesPercent} />
+		<MarketDetailProbHero
+			known={oddsKnown}
+			{noPercent}
+			priceLoaded={market.priceLoaded}
+			resolved={isResolved}
+			{resolvedOutcome}
+			{yesPercent}
+		/>
 
 		<MarketDetailChartCard
 			marketId={market.id}
@@ -523,7 +821,13 @@
 			{yesPercent}
 		/>
 
-		<MarketDetailStatsGrid {market} {positions} {resolvedForMarket} />
+		<MarketDetailStatsGrid
+			{market}
+			{myCallLoading}
+			{positions}
+			{resolvedForMarket}
+			volume={marketVolume}
+		/>
 
 		{#if isColdStart}
 			<!-- Cold-start cue — a fresh market with no real volume yet.
@@ -535,11 +839,27 @@
 					{t({ locale: $localeStore, key: 'market.detail.coldstart.body' })}
 				</p>
 			</section>
+		{:else if isLive}
+			<!-- Maker-liquidity disclosure — once a live market has a line, say
+			     where it comes from: a live order book that VICI's market maker
+			     seeds with resting liquidity. Keeps a thin market from reading
+			     as a crowd of phantom predictors. Gated to live markets — the
+			     book is no longer the price source once resolved/expired — and
+			     mutually exclusive with the cold-start cue (which itself only
+			     fires for live markets). -->
+			<p class="market-detail-maker-note">
+				{t({ locale: $localeStore, key: 'market.detail.maker.disclosure' })}
+			</p>
 		{/if}
 
-		<MarketDetailResolutionCard {market} />
+		<MarketDetailResolutionCard {market} resolution={displayResolution} />
 
-		<MarketDetailTopPredictors {followedLean} {market} />
+		{#if !isColdStart}
+			<!-- Hidden while the cold-start banner is up — a market with no
+			     volume has no predictors, so an empty section under the
+			     banner would only echo it. -->
+			<MarketDetailTopPredictors {followedLean} {topPredictors} />
+		{/if}
 
 		{#if showAdminActions}
 			<section
@@ -591,6 +911,7 @@
 
 		{#if MARKET_DETAIL_DIRECT_TRADE_ENABLED && nonNullish(selectedSide)}
 			<TradeModal
+				{displayTitle}
 				{market}
 				onClose={() => (selectedSide = undefined)}
 				{onPredictionPlaced}
@@ -744,6 +1065,16 @@
 	.market-detail-coldstart-line b {
 		color: var(--text-base);
 		font-weight: 700;
+	}
+
+	/* Maker-liquidity disclosure — a quiet caption, not a stat. Sits under
+	   the stats grid to answer "how is this priced" without competing with
+	   the numbers above it. */
+	.market-detail-maker-note {
+		margin: 0 1.25rem 0.5rem;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		line-height: 1.45;
 	}
 
 	/* No-longer-trading footer — quiet centred note that stands in for the

@@ -11,20 +11,28 @@
  */
 export enum TestId {
 	AppMain = 'app-main',
-	SignInButton = 'sign-in-button',
 	SignInDev = 'sign-in-dev',
+	// The signed-in account control in the app chrome — the desktop nav
+	// profile handle and the mobile pillnav profile tab both carry it, so
+	// `[data-tid="user-menu"]:visible` resolves to whichever one the current
+	// viewport renders.
 	UserMenu = 'user-menu',
+	// Settings sign-out: the reveal button, then the destructive confirm.
+	SignOutButton = 'sign-out-button',
 	Logout = 'logout',
 	MarketFeed = 'market-feed',
 	MarketCard = 'market-card',
 	MarketCardSkeleton = 'market-card-skeleton',
 	MarketTimeRemaining = 'market-time-remaining',
 	PrincipalDisplay = 'principal-display',
+	// Onboarding (the `/signup` 3-beat flow): the outer wrapper, Beat 1.a's
+	// "skip team" link, Beat 1.b's swipeable first-call card, Beat 2's pool
+	// handle suggestions + "pick later" skip, and the shared primary CTA
+	// (Beat 2 claim / Beat 3 finish).
 	OnboardingFlow = 'onboarding-flow',
-	OnboardingFirstCallCard = 'onboarding-first-call-card',
-	OnboardingPracticeCard = 'onboarding-practice-card',
-	OnboardingPrimary = 'onboarding-primary',
-	OnboardingInterest = 'onboarding-interest',
-	OnboardingHandleInput = 'onboarding-handle-input',
-	OnboardingEmailInput = 'onboarding-email-input'
+	OnboardingTeamSkip = 'onboarding-team-skip',
+	OnboardingCard = 'onboarding-card',
+	OnboardingHandleSuggestion = 'onboarding-handle-suggestion',
+	OnboardingHandleSkip = 'onboarding-handle-skip',
+	OnboardingPrimary = 'onboarding-primary'
 }

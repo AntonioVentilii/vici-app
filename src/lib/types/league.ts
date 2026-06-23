@@ -43,10 +43,11 @@ export interface LeagueDoc {
 	 *
 	 * - {@link LeaguePrivacy.PRIVATE} — hidden; reachable only by invite
 	 *   code, never surfaced in any public list or recommendation.
-	 * - {@link LeaguePrivacy.INVITE} — joinable via invite code but NOT
-	 *   publicly listed; still recommendable to a member's friends.
-	 * - {@link LeaguePrivacy.OPEN} — publicly listed + joinable; surfaced
-	 *   in challenge pools and friend recommendations to anyone.
+	 * - {@link LeaguePrivacy.INVITE} — NOT publicly listed; still
+	 *   recommendable to a member's friends. Reachable by invite code.
+	 * - {@link LeaguePrivacy.OPEN} — publicly listed; surfaced in challenge
+	 *   pools and friend recommendations to anyone. Still joined by invite
+	 *   code (privacy gates discovery, not the join).
 	 *
 	 * Absent on legacy rows written before this field shipped — callers
 	 * treat absent as {@link LeaguePrivacy.OPEN} (the legacy

@@ -1,15 +1,23 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
+	import MarketTranslationToggle from '$lib/components/market/MarketTranslationToggle.svelte';
 	import ProbBar from '$lib/components/ui/ProbBar.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
+	import { track } from '$lib/services/analytics.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
+	import { marketTranslations } from '$lib/stores/market-translations.store';
 	import type { Market } from '$lib/types/market';
 	import { formatToken, probabilityToPercent } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { categoryLabel } from '$lib/utils/market-tags.utils';
+	import { marketDisplayText, translatedLanguageLabel } from '$lib/utils/market-translation.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	/**
@@ -26,7 +34,31 @@
 
 	const { market, tag }: Props = $props();
 
-	const yes = $derived(probabilityToPercent(market.yesProbability));
+	const translation = $derived($marketTranslations.get(market.id));
+
+	// Writable `$derived`: re-seeds from the global preference, flippable per
+	// row without changing the default.
+	let showOriginal = $derived($marketLanguagePreference === 'original');
+
+	const display = $derived(marketDisplayText({ market, translation, showOriginal }));
+
+	const onToggleTranslation = () => {
+		showOriginal = !showOriginal;
+		track({
+			name: 'market_translation_toggled',
+			marketId: market.id,
+			source: 'card',
+			label: showOriginal ? 'original' : 'translated'
+		});
+	};
+
+	// When the YES probability is unknown we render a skeleton in place of
+	// the percentage; the bar falls back to an empty track (0) rather than a
+	// misleading 50% fill.
+	const hasProbability = $derived(!isNullish(market.yesProbability));
+	const yes = $derived(
+		isNullish(market.yesProbability) ? 0 : probabilityToPercent(market.yesProbability)
+	);
 	// Cold-start: a market with no real volume yet reads "New" instead of
 	// "0 vol" — framing the empty market as an opportunity, never a synthetic
 	// crowd. Uses our real volume field only.
@@ -42,7 +74,7 @@
 	const onClick = () => goto(resolve(`${AppPath.Markets}/${market.id}`));
 </script>
 
-<button class="card-inline" onclick={onClick} type="button">
+<button class="card-inline" data-tid={TestId.MarketCard} onclick={onClick} type="button">
 	<div class="row between">
 		{#if tag}
 			<span style:color={tagColor(tag)} class="tag"
@@ -58,14 +90,30 @@
 		>
 	</div>
 	<div style="margin-top: 8px; font-weight: 600; line-height: 1.35;" class="t-body">
-		{market.title}
+		{display.title}
 	</div>
+	{#if nonNullish(translation)}
+		<div style="margin-top: 4px;">
+			<MarketTranslationToggle
+				onToggle={onToggleTranslation}
+				{showOriginal}
+				translatedLanguageLabel={translatedLanguageLabel(translation.locale)}
+				variant="compact"
+			/>
+		</div>
+	{/if}
 	<div style="margin-top: 12px; gap: 12px;" class="row between">
 		<div style="flex: 1;">
 			<ProbBar {yes} />
 		</div>
-		<span style:color={yes >= 50 ? 'var(--yes)' : 'var(--no)'} class="num t-body fw-600"
-			>{yes}%</span
-		>
+		{#if hasProbability}
+			<span style:color={yes >= 50 ? 'var(--yes)' : 'var(--no)'} class="num t-body fw-600"
+				>{yes}%</span
+			>
+		{:else}
+			<span class="num t-body fw-600"
+				><MarketOddsSkeleton variant={market.priceLoaded ? 'empty' : 'loading'} /></span
+			>
+		{/if}
 	</div>
 </button>

@@ -10,6 +10,23 @@ export const Collection = {
 	MARKET_TRANSLATIONS: collections.MARKET_TRANSLATIONS,
 	ACTIVITIES: collections.ACTIVITIES,
 	/**
+	 * Per-liker reactions on friend-feed activities. One doc per `(activity, liker)`, keyed
+	 * `${actor}#${timestamp}#${type}#${liker}` (the liked activity's doc key plus the liker). Public
+	 * read/write; `assertSetActivityReaction` binds `data.liker` to the caller and the key shape, so a
+	 * client can neither forge a like as another principal nor write a malformed key. Counts + the
+	 * caller's own likes are read back on feed load (count-on-read); a rollup counter is the deferred
+	 * scale follow-up. Carries denormalized `activityTitle` / `marketId` for the like-received inbox card.
+	 */
+	ACTIVITY_REACTIONS: collections.ACTIVITY_REACTIONS,
+	/**
+	 * Per-activity like-count rollup. One doc per activity, keyed by the activity doc key
+	 * (`${author}#${timestamp}#${type}` = a reaction's `activityKey`), holding the running like
+	 * `count`. Public read; controllers write — only the satellite `onSetDoc`/`onDeleteDoc` hooks on
+	 * {@link Collection.ACTIVITY_REACTIONS} write it (as admin), so a client can't forge a count. The
+	 * admin `recomputeActivityReactionCounts` endpoint re-derives exact counts from the reaction docs.
+	 */
+	ACTIVITY_REACTION_COUNTS: collections.ACTIVITY_REACTION_COUNTS,
+	/**
 	 * Server-driven VXP new-user ladder state (owed vs paid); written from satellite hooks.
 	 */
 	VXP_ONBOARDING: collections.VXP_ONBOARDING,

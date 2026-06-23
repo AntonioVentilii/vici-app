@@ -10,26 +10,34 @@
 		Trash2
 	} from '@lucide/svelte/icons';
 	import { onMount } from 'svelte';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
-	import ChallengeLeagueModal from '$lib/components/leagues/ChallengeLeagueModal.svelte';
+	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
 	import LeaguePrivacyModal from '$lib/components/leagues/LeaguePrivacyModal.svelte';
-	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
+	import LeagueRoleBadge from '$lib/components/leagues/LeagueRoleBadge.svelte';
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { LeaguePrivacy } from '$lib/enums/league';
+	import { track } from '$lib/services/analytics.services';
 	import {
 		acceptBattle,
+		buildLeagueShareUrl,
+		declineBattle,
 		kickoffBattle,
 		leaveLeague,
 		loadLeaguesByIds,
+		maybeExpireBattle,
+		resolveBattle,
 		retractBattle,
 		updateLeague,
 		validateLeagueDraft
@@ -47,7 +55,11 @@
 	} from '$lib/stores/leagues.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
-	import type { BattleDoc, BattleState } from '$lib/types/battle';
+	import {
+		BATTLE_MAX_CONCURRENT_IN_FLIGHT,
+		type BattleDoc,
+		type BattleState
+	} from '$lib/types/battle';
 	import {
 		leagueEmblem,
 		leaguePrivacy,
@@ -55,7 +67,6 @@
 		LEAGUE_NAME_MIN_LENGTH
 	} from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
-	import type { StandingsWindow } from '$lib/types/standings';
 	import {
 		formatDate,
 		formatLocalePercent,
@@ -63,6 +74,7 @@
 		shortenPrincipal
 	} from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { leagueRankOf, rankLeagueMembers } from '$lib/utils/league-rank.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
@@ -325,12 +337,6 @@
 		}
 	};
 
-	// The caller's standing within the league, ranked by net realized P&L over
-	// the active window (clearing canister `list_leaderboard`, filtered to this
-	// league's roster). `undefined` until it loads or when the caller has no
-	// settled position in the window.
-	let standingRank = $state<number | undefined>(undefined);
-
 	// Caller's weekly rank-trend within the league — the sign of their
 	// week-over-week movement, mapped onto the card convention (negative =
 	// climbed, shown as ▲). Sourced from the weekly window's `rankDelta`
@@ -338,27 +344,6 @@
 	// "this week" copy stays accurate even on the All-time tab. `0` =
 	// no comparable prior week (newcomer / no settled position) → "even".
 	let standingTrend = $state(0);
-
-	$effect(() => {
-		const owner = selfPrincipal;
-		const window: StandingsWindow = leaderboardTab === 'week' ? 'week' : 'all';
-		const roster = members.map((m) => m.member);
-
-		if (isNullish(owner) || roster.length === 0) {
-			standingRank = undefined;
-
-			return;
-		}
-
-		getLeagueStandings({ window, members: roster })
-			.then((result) => {
-				standingRank = findOwnStanding({ result, owner })?.rank;
-			})
-			.catch((err: unknown) => {
-				console.error(err);
-				standingRank = undefined;
-			});
-	});
 
 	$effect(() => {
 		const owner = selfPrincipal;
@@ -404,22 +389,13 @@
 	});
 
 	// 1-indexed position of the caller for the head card's `N°{NN}` corner
-	// badge. Prefers the clearing standings rank; falls back to the roster
-	// order (the leaderboard render order) while standings load or when the
-	// caller has no settled position yet, so the badge is never blank.
-	const yourRank = $derived.by(() => {
-		if (nonNullish(standingRank)) {
-			return standingRank;
-		}
-
-		if (isNullish(selfPrincipal)) {
-			return 1;
-		}
-
-		const idx = sortedMembers.findIndex((m) => m.member === selfPrincipal);
-
-		return idx === -1 ? 1 : idx + 1;
-	});
+	// badge and the `#N` rank block. It is the caller's index in the same
+	// accuracy-ranked roster the leaderboard list renders, so the badge, the
+	// rank block, and the list all show one number. Defaults to 1 only when
+	// the caller isn't in the (still-hydrating) roster, so it's never blank.
+	const yourRank = $derived.by(
+		() => leagueRankOf({ sorted: sortedMembers, principal: selfPrincipal }) ?? 1
+	);
 
 	// Maps the three-way privacy onto its chip label key. A league with an
 	// absent field resolves to `open` via `leaguePrivacy`.
@@ -472,13 +448,23 @@
 		}
 
 		try {
-			const url = `${window.location.origin}/league/${league.inviteCode}`;
+			const { url, withReferral } = await buildLeagueShareUrl({
+				inviteCode: league.inviteCode
+			});
 			const shareText = t({
 				locale: $localeStore,
 				key: 'leagues.share_text'
 			});
 			await navigator.clipboard.writeText(`${shareText} ${url}`);
 			copied = true;
+
+			track({
+				name: 'league_invite_sent',
+				source: 'leagues',
+				leagueId: league.id,
+				ok: withReferral
+			});
+
 			setTimeout(() => {
 				copied = false;
 			}, 1600);
@@ -508,6 +494,12 @@
 
 	const handlePredict = () => {
 		void goto(resolve(AppPath.Flow));
+	};
+
+	// Open the battle detail page — the running standings + face-off for a
+	// live battle live there, not on this card.
+	const goToBattle = (battleId: string) => {
+		void goto(`${resolve(AppPath.Arena)}/battles/${battleId}?from=league`);
 	};
 
 	const memberHandle = (principal: string): string => {
@@ -545,78 +537,65 @@
 	const formatAccuracy = (principal: string): string =>
 		formatLocalePercent({ value: memberAccuracy(principal) / 100, locale: $localeStore });
 
-	// Sort the roster so the caller sits on top, then owners, admins,
-	// members. Within each band we preserve join order (oldest first)
-	// — the satellite already sorts join asc so we just leave members
-	// alone after the role pass.
-	const sortedMembers = $derived.by(() => {
-		const roleWeight: Record<LeagueMemberRole, number> = {
-			owner: 0,
-			admin: 1,
-			member: 2
-		};
+	// The roster ranked by accuracy — the figure each row surfaces — so the
+	// leaderboard reads top-down by performance, like the global one, and the
+	// hero rank badge (which indexes into this same order) agrees with it.
+	const sortedMembers = $derived(
+		rankLeagueMembers({ members, accuracyOf: memberAccuracy, streakOf: memberStreak })
+	);
 
-		return [...members].sort((a, b) => {
-			if (nonNullish(selfPrincipal)) {
-				if (a.member === selfPrincipal && b.member !== selfPrincipal) {
-					return -1;
-				}
+	// The backend allows any number of concurrent battles per league, so
+	// the section renders lists, not a single slot. Three buckets:
+	//   - incomingRequests — proposals THIS league must accept or decline
+	//   - liveBattles      — accepted / in_flight match-ups under way
+	//   - outgoingProposals — proposals we sent, awaiting the opponent
+	const incomingRequests = $derived(
+		battles
+			.filter((b) => b.state === 'proposed' && b.sideB === leagueId)
+			.sort((a, b) => (a.respondByMs ?? a.kickoffMs) - (b.respondByMs ?? b.kickoffMs))
+	);
+	const liveBattles = $derived(
+		battles
+			.filter((b) => b.state === 'in_flight' || b.state === 'accepted')
+			.sort((a, b) => a.settleMs - b.settleMs)
+	);
+	const outgoingProposals = $derived(
+		battles
+			.filter((b) => b.state === 'proposed' && b.sideA === leagueId)
+			.sort((a, b) => a.kickoffMs - b.kickoffMs)
+	);
+	const hasAnyBattle = $derived(
+		incomingRequests.length > 0 || liveBattles.length > 0 || outgoingProposals.length > 0
+	);
+	const inFlightCount = $derived(battles.filter((b) => b.state === 'in_flight').length);
 
-				if (b.member === selfPrincipal && a.member !== selfPrincipal) {
-					return 1;
-				}
-			}
+	const opponentIdOf = (battle: BattleDoc): string =>
+		battle.sideA === leagueId ? battle.sideB : battle.sideA;
 
-			const weightDelta = roleWeight[a.role] - roleWeight[b.role];
+	// A proposed battle where THIS league is the challenged side (`sideB`):
+	// we *received* the challenge and are expected to respond. Drives the
+	// recipient-facing copy and the accept/decline affordances.
+	const isIncomingProposed = (battle: BattleDoc): boolean =>
+		battle.state === 'proposed' && battle.sideB === leagueId;
 
-			if (weightDelta !== 0) {
-				return weightDelta;
-			}
-
-			return a.joinedAtMs - b.joinedAtMs;
-		});
-	});
-
-	// Active battle (in_flight first, else accepted / proposed).
-	// Resolved battles are excluded — the active card only shows a live
-	// or near-live match-up.
-	const activeBattle = $derived.by(() => {
-		const live = battles.find((b) => b.state === 'in_flight');
-
-		if (live) {
-			return live;
-		}
-
-		return battles.find((b) => b.state === 'accepted' || b.state === 'proposed');
-	});
-
-	const activeBattleOpponentId = $derived.by((): string | undefined => {
-		if (!activeBattle) {
-			return;
-		}
-
-		return activeBattle.sideA === leagueId ? activeBattle.sideB : activeBattle.sideA;
-	});
-
-	const activeBattleStateLabelKey = $derived.by((): MessageKey | undefined => {
-		if (!activeBattle) {
-			return;
-		}
-
-		switch (activeBattle.state) {
+	const stateLabelKeyOf = (battle: BattleDoc): MessageKey => {
+		switch (battle.state) {
 			case 'proposed':
-				return 'leagues.battle.state.proposed';
+				return isIncomingProposed(battle)
+					? 'leagues.battle.state.incoming'
+					: 'leagues.battle.state.proposed';
 			case 'accepted':
 				return 'leagues.battle.state.accepted';
 			case 'in_flight':
 				return 'leagues.battle.state.in_flight';
 			case 'resolved':
-				// `activeBattle` filter excludes resolved battles, so this
-				// branch is unreachable today; the case exists for
-				// exhaustiveness.
 				return 'leagues.battle.state.resolved';
+			case 'declined':
+				return 'leagues.battle.state.declined';
+			case 'expired':
+				return 'leagues.battle.state.expired';
 		}
-	});
+	};
 
 	// A battle stores only the opponent's league id; resolve it to the
 	// current name (own memberships → directory cache → shortened id).
@@ -634,30 +613,26 @@
 		}
 	});
 
-	// Meta line under the active battle headline:
-	//   Proposed         → "Awaiting acceptance from {opponent}".
+	// Meta line under a battle headline:
+	//   Proposed         → "Awaiting acceptance from {opponent}" /
+	//                       "{opponent} challenged your league".
 	//   Accepted /
 	//   in-flight        → "Day {day} of {days} · accuracy face-off".
-	const activeBattleMetaLine = $derived.by((): string | undefined => {
-		if (!activeBattle || !activeBattleOpponentId) {
-			return;
-		}
-
-		if (activeBattle.state === 'proposed') {
+	const metaLineOf = (battle: BattleDoc): string => {
+		if (battle.state === 'proposed') {
 			return t({
 				locale: $localeStore,
-				key: 'leagues.detail.battle_meta_awaiting',
-				params: { opponent: leagueName(activeBattleOpponentId) }
+				key: isIncomingProposed(battle)
+					? 'leagues.detail.battle_meta_incoming'
+					: 'leagues.detail.battle_meta_awaiting',
+				params: { opponent: leagueName(opponentIdOf(battle)) }
 			});
 		}
 
-		const totalDays = Math.max(
-			1,
-			Math.round((activeBattle.settleMs - activeBattle.kickoffMs) / DAY_IN_MS)
-		);
+		const totalDays = Math.max(1, Math.round((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
 		const elapsedDays = Math.max(
 			1,
-			Math.min(totalDays, Math.ceil((Date.now() - activeBattle.kickoffMs) / DAY_IN_MS))
+			Math.min(totalDays, Math.ceil((Date.now() - battle.kickoffMs) / DAY_IN_MS))
 		);
 
 		return t({
@@ -665,14 +640,26 @@
 			key: 'leagues.detail.battle_meta_day_of',
 			params: { day: elapsedDays, days: totalDays }
 		});
-	});
+	};
 
 	// Per-battle transition affordances. Owner-only.
 	let actingBattleId = $state<string | null>(null);
-	let resolveBattleTarget = $state<BattleDoc | null>(null);
+	// Battle id → count of lazy auto-resolve attempts. We retry a transient
+	// failure on the next effect pass (there's no manual button to fall back
+	// on) but cap it so a persistently failing write doesn't hammer the
+	// backend on every re-render. Expiry stays a one-shot Set.
+	const autoResolveAttempts = new SvelteMap<string, number>();
+	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
+	const autoExpireAttempted = new SvelteSet<string>();
+
+	// The challenged side's owner can respond to a proposal. Accept is
+	// additionally blocked at the far concurrency rail (a safety bound, not
+	// a product limit — see BATTLE_MAX_CONCURRENT_IN_FLIGHT).
+	const canRespondToBattle = (battle: BattleDoc): boolean =>
+		myRole === 'owner' && battle.state === 'proposed' && battle.sideB === leagueId;
 
 	const canAcceptBattle = (battle: BattleDoc): boolean =>
-		myRole === 'owner' && battle.state === 'proposed' && battle.sideB === leagueId;
+		canRespondToBattle(battle) && inFlightCount < BATTLE_MAX_CONCURRENT_IN_FLIGHT;
 
 	const canKickoffBattle = (battle: BattleDoc): boolean =>
 		myRole === 'owner' &&
@@ -680,11 +667,19 @@
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.kickoffMs;
 
-	const canResolveBattle = (battle: BattleDoc): boolean =>
-		myRole === 'owner' &&
+	// A settled in-flight battle is shown as "finalizing" to everyone — the
+	// resolution is silent, so there is no button to press. Membership only
+	// decides who actually triggers the trustless write (below); the label
+	// is purely informational.
+	const isBattleFinalizing = (battle: BattleDoc): boolean =>
 		battle.state === 'in_flight' &&
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.settleMs;
+
+	// Any member of this league can trigger the write — the satellite
+	// re-derives the scores, so the writer's identity can't skew them.
+	const canResolveBattle = (battle: BattleDoc): boolean =>
+		nonNullish(myRole) && isBattleFinalizing(battle);
 
 	const canRetractBattle = (battle: BattleDoc): boolean =>
 		battle.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal;
@@ -743,10 +738,133 @@
 		}
 	};
 
-	const handleResolveBattleDone = () => {
-		resolveBattleTarget = null;
-		void refreshMyLeagues();
+	const handleDeclineBattle = async (battle: BattleDoc) => {
+		if (nonNullish(actingBattleId)) {
+			return;
+		}
+
+		actingBattleId = battle.id;
+
+		try {
+			await declineBattle({ battle });
+			track({ name: 'battle_declined', battleId: battle.id, leagueId });
+			await refreshMyLeagues();
+		} catch (err) {
+			console.error('LeagueDetailPage: declineBattle failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			actingBattleId = null;
+		}
 	};
+
+	// Lazily expire a stale proposal (Juno has no scheduler). Background
+	// sweep — failures stay silent rather than flashing the error banner.
+	const handleExpireBattle = async (battle: BattleDoc) => {
+		if (nonNullish(actingBattleId)) {
+			return;
+		}
+
+		actingBattleId = battle.id;
+
+		try {
+			const expired = await maybeExpireBattle({ battle });
+
+			if (expired.state === 'expired') {
+				track({ name: 'battle_expired', battleId: battle.id, leagueId });
+			}
+
+			await refreshMyLeagues();
+		} catch (err) {
+			console.error('LeagueDetailPage: maybeExpireBattle failed', err);
+		} finally {
+			actingBattleId = null;
+		}
+	};
+
+	// Resolve in one tap — scores are each league's window accuracy,
+	// computed by the service and re-verified by the satellite assert.
+	const handleResolveBattle = async ({
+		battle,
+		source
+	}: {
+		battle: BattleDoc;
+		source: 'auto' | 'nudge';
+	}) => {
+		if (nonNullish(actingBattleId)) {
+			return;
+		}
+
+		actingBattleId = battle.id;
+
+		try {
+			const resolved = await resolveBattle({ battle });
+
+			const ourLetter = resolved.sideA === leagueId ? 'A' : 'B';
+			const isVoid =
+				resolved.winner === 'draw' && (resolved.callsA ?? 0) === 0 && (resolved.callsB ?? 0) === 0;
+
+			track({
+				name: 'battle_resolved',
+				battleId: resolved.id,
+				leagueId,
+				source,
+				label: isVoid
+					? 'void'
+					: resolved.winner === 'draw'
+						? 'draw'
+						: resolved.winner === ourLetter
+							? 'win'
+							: 'loss',
+				value: Math.max(resolved.scoreA ?? 0, resolved.scoreB ?? 0)
+			});
+
+			await refreshMyLeagues();
+		} catch (err) {
+			console.error('LeagueDetailPage: resolveBattle failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			actingBattleId = null;
+		}
+	};
+
+	// Lazy maintenance (Juno has no scheduler): a settled battle resolves
+	// the first time any member of either side opens the league, and stale
+	// proposals expire the first time an owner does. One write per pass —
+	// the effect re-runs after the refresh and picks up the next candidate.
+	$effect(() => {
+		if (isNullish(myRole) || nonNullish(actingBattleId)) {
+			return;
+		}
+
+		const toResolve = battles.find(
+			(b) => canResolveBattle(b) && (autoResolveAttempts.get(b.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
+		);
+
+		if (nonNullish(toResolve)) {
+			autoResolveAttempts.set(toResolve.id, (autoResolveAttempts.get(toResolve.id) ?? 0) + 1);
+			void handleResolveBattle({ battle: toResolve, source: 'auto' });
+
+			return;
+		}
+
+		// Expiry stays owner-only — the satellite gate for proposed->expired
+		// is still isSideOwner, so a non-owner attempt would be rejected.
+		if (myRole !== 'owner') {
+			return;
+		}
+
+		const toExpire = battles.find(
+			(b) =>
+				b.state === 'proposed' &&
+				Date.now() >= (b.respondByMs ?? b.kickoffMs) &&
+				!autoExpireAttempted.has(b.id)
+		);
+
+		if (nonNullish(toExpire)) {
+			autoExpireAttempted.add(toExpire.id);
+			void handleExpireBattle(toExpire);
+		}
+	});
 
 	// Recent activity feed. Built from the battle list — newest first by
 	// kickoff (in_flight) or settle (resolved). We cap at 6 rows so the
@@ -761,32 +879,41 @@
 	}
 
 	const activity = $derived.by((): ActivityRow[] => {
+		const verbKeys: Record<BattleState, MessageKey> = {
+			proposed: 'leagues.detail.activity_verb_proposed',
+			accepted: 'leagues.detail.activity_verb_accepted',
+			in_flight: 'leagues.detail.activity_verb_in_flight',
+			resolved: 'leagues.detail.activity_verb_resolved',
+			declined: 'leagues.detail.activity_verb_declined',
+			expired: 'leagues.detail.activity_verb_expired'
+		};
+		const stateKeys: Record<BattleState, MessageKey> = {
+			proposed: 'leagues.battle.state.proposed',
+			accepted: 'leagues.battle.state.accepted',
+			in_flight: 'leagues.battle.state.in_flight',
+			resolved: 'leagues.battle.state.resolved',
+			declined: 'leagues.battle.state.declined',
+			expired: 'leagues.battle.state.expired'
+		};
+
 		const rows: ActivityRow[] = battles.map((b) => {
 			const opponentId = b.sideA === leagueId ? b.sideB : b.sideA;
-			const ts = b.state === 'resolved' ? b.settleMs : b.kickoffMs;
-			const verbKey: MessageKey =
+			// Newest-first sort key: when the row's defining moment happened.
+			const ts =
 				b.state === 'resolved'
-					? 'leagues.detail.activity_verb_resolved'
-					: b.state === 'in_flight'
-						? 'leagues.detail.activity_verb_in_flight'
-						: b.state === 'accepted'
-							? 'leagues.detail.activity_verb_accepted'
-							: 'leagues.detail.activity_verb_proposed';
-			const stateKey: MessageKey =
-				b.state === 'proposed'
-					? 'leagues.battle.state.proposed'
-					: b.state === 'accepted'
-						? 'leagues.battle.state.accepted'
-						: b.state === 'in_flight'
-							? 'leagues.battle.state.in_flight'
-							: 'leagues.battle.state.resolved';
+					? (b.resolvedAtMs ?? b.settleMs)
+					: b.state === 'declined'
+						? (b.respondedAtMs ?? b.kickoffMs)
+						: b.state === 'expired'
+							? (b.respondByMs ?? b.kickoffMs)
+							: b.kickoffMs;
 
 			return {
 				battleId: b.id,
 				opponentId,
-				stateKey,
+				stateKey: stateKeys[b.state],
 				ts,
-				verbKey,
+				verbKey: verbKeys[b.state],
 				state: b.state
 			};
 		});
@@ -794,11 +921,11 @@
 		return rows.sort((a, b) => b.ts - a.ts).slice(0, 6);
 	});
 
-	// Leaderboard rows. Without per-member accuracy on the satellite,
-	// the "This week" and "All time" tabs both render the same roster
-	// projection — caller-handles + role chip — top-6, with a sticky
-	// YOU row at the bottom. The tab is wired so future per-period
-	// stats can drop in without a structural refactor.
+	// Leaderboard rows — the accuracy-ranked roster, top-6, with a sticky
+	// YOU row at the bottom for callers who fall outside it. The "This week"
+	// and "All time" tabs still render the same lifetime-accuracy projection;
+	// the tab is wired so per-window member stats can replace the sort key
+	// without a structural refactor once the clearing canister exposes them.
 	const leaderboardTop = $derived(sortedMembers.slice(0, 6));
 
 	const youMember = $derived.by((): LeagueMemberDoc | undefined => {
@@ -1185,7 +1312,13 @@
 									owner={member.member}
 									self={member.member === selfPrincipal}
 								/>
-								<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
+								<span class="league-detail-lb-id">
+									<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
+									<LeagueRoleBadge role={member.role} />
+									{#if isYou}
+										<YouBadge size="xs" />
+									{/if}
+								</span>
 								<span class="league-detail-lb-streak num allcaps">
 									{t({
 										locale: $localeStore,
@@ -1220,8 +1353,10 @@
 							owner={youMember.member}
 							self={youMember.member === selfPrincipal}
 						/>
-						<span class="league-detail-lb-name">
-							{t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
+						<span class="league-detail-lb-id">
+							<span class="league-detail-lb-name">{memberHandle(youMember.member)}</span>
+							<LeagueRoleBadge role={youMember.role} />
+							<YouBadge size="xs" />
 						</span>
 						<span class="league-detail-lb-streak num allcaps">
 							{t({
@@ -1260,81 +1395,130 @@
 			{/if}
 		</section>
 
-		<!-- ─── Battle section · secondary to standings, so it sits below
-		     the leaderboard. Active card OR challenge-another-league CTA. ─── -->
+		<!-- ─── Battle section · secondary to standings, so it sits below the
+		     leaderboard. Incoming requests, live match-ups, and the proposals
+		     we've sent — the backend allows any number of battles at once. ─── -->
+		{#snippet battleCard(battle: BattleDoc)}
+			<div class="league-detail-battle-card" data-state={battle.state}>
+				<div class="league-detail-battle-tags">
+					<span class="league-detail-battle-tag allcaps" data-state={battle.state}>
+						{t({ locale: $localeStore, key: stateLabelKeyOf(battle) })}
+					</span>
+				</div>
+				<div class="league-detail-battle-headline">
+					<span>{league.name}</span>
+					<span class="serif-italic league-detail-battle-vs">vs</span>
+					<span>{leagueName(opponentIdOf(battle))}</span>
+				</div>
+				<p class="league-detail-battle-meta num">{metaLineOf(battle)}</p>
+
+				{#if isIncomingProposed(battle)}
+					{#if canRespondToBattle(battle)}
+						<div class="league-detail-battle-actions">
+							<button
+								class="league-detail-battle-action is-primary"
+								disabled={nonNullish(actingBattleId) || !canAcceptBattle(battle)}
+								onclick={() => handleAcceptBattle(battle)}
+								type="button"
+							>
+								{actingBattleId === battle.id
+									? t({ locale: $localeStore, key: 'leagues.battle.action.accepting' })
+									: t({ locale: $localeStore, key: 'leagues.battle.action.accept' })}
+							</button>
+							<button
+								class="league-detail-battle-action is-danger"
+								disabled={nonNullish(actingBattleId)}
+								onclick={() => handleDeclineBattle(battle)}
+								type="button"
+							>
+								{actingBattleId === battle.id
+									? t({ locale: $localeStore, key: 'leagues.battle.action.declining' })
+									: t({ locale: $localeStore, key: 'leagues.battle.action.decline' })}
+							</button>
+						</div>
+						{#if !canAcceptBattle(battle)}
+							<p class="league-detail-battle-hint num">
+								{t({ locale: $localeStore, key: 'leagues.battle.cap_reached' })}
+							</p>
+						{/if}
+					{:else}
+						<p class="league-detail-battle-hint num">
+							{t({ locale: $localeStore, key: 'leagues.detail.battle_owner_accepts' })}
+						</p>
+					{/if}
+				{:else if canKickoffBattle(battle)}
+					<button
+						class="league-detail-battle-action is-primary"
+						disabled={nonNullish(actingBattleId)}
+						onclick={() => handleKickoffBattle(battle)}
+						type="button"
+					>
+						{actingBattleId === battle.id
+							? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
+							: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
+					</button>
+				{:else if isBattleFinalizing(battle)}
+					<p class="league-detail-battle-finalizing num" aria-live="polite" role="status">
+						<LoadingSpinner size="xs" />
+						<span>{t({ locale: $localeStore, key: 'leagues.battle.action.finalizing' })}</span>
+					</p>
+				{/if}
+
+				{#if canRetractBattle(battle)}
+					<button
+						class="league-detail-battle-action is-danger"
+						disabled={nonNullish(actingBattleId)}
+						onclick={() => handleRetractBattle(battle)}
+						type="button"
+					>
+						{actingBattleId === battle.id
+							? t({ locale: $localeStore, key: 'leagues.battle.action.retracting' })
+							: t({ locale: $localeStore, key: 'leagues.battle.action.retract' })}
+					</button>
+				{/if}
+
+				{#if battle.state === 'in_flight' || battle.state === 'accepted'}
+					<button
+						class="league-detail-battle-view allcaps"
+						onclick={() => goToBattle(battle.id)}
+						type="button"
+					>
+						{t({ locale: $localeStore, key: 'battles.live.cta' })} →
+					</button>
+				{/if}
+			</div>
+		{/snippet}
+
 		<section class="league-detail-section">
 			<div class="league-detail-section-head">
 				<span class="eyebrow league-detail-section-title">
 					{t({ locale: $localeStore, key: 'leagues.detail.battle_eyebrow' })}
 				</span>
-				{#if canChallenge && !activeBattle}
+				{#if canChallenge}
 					<span class="num league-detail-section-side">
 						{t({ locale: $localeStore, key: 'leagues.detail.battle_admin_chip' })}
 					</span>
 				{/if}
 			</div>
 
-			{#if activeBattle && activeBattleStateLabelKey && activeBattleOpponentId}
-				<div class="league-detail-battle-card" data-state={activeBattle.state}>
-					<div class="league-detail-battle-tags">
-						<span class="league-detail-battle-tag allcaps" data-state={activeBattle.state}>
-							{t({ locale: $localeStore, key: activeBattleStateLabelKey })}
-						</span>
-					</div>
-					<div class="league-detail-battle-headline">
-						<span>{league.name}</span>
-						<span class="serif-italic league-detail-battle-vs">vs</span>
-						<span>{leagueName(activeBattleOpponentId)}</span>
-					</div>
-					{#if activeBattleMetaLine}
-						<p class="league-detail-battle-meta num">{activeBattleMetaLine}</p>
-					{/if}
+			{#if incomingRequests.length > 0}
+				<p class="eyebrow league-detail-battle-group-label">
+					{t({ locale: $localeStore, key: 'leagues.detail.battle_requests_label' })}
+				</p>
+				{#each incomingRequests as battle (battle.id)}
+					{@render battleCard(battle)}
+				{/each}
+			{/if}
 
-					{#if canAcceptBattle(activeBattle)}
-						<button
-							class="league-detail-battle-action is-primary"
-							disabled={actingBattleId === activeBattle.id}
-							onclick={() => handleAcceptBattle(activeBattle)}
-							type="button"
-						>
-							{actingBattleId === activeBattle.id
-								? t({ locale: $localeStore, key: 'leagues.battle.action.accepting' })
-								: t({ locale: $localeStore, key: 'leagues.battle.action.accept' })}
-						</button>
-					{:else if canKickoffBattle(activeBattle)}
-						<button
-							class="league-detail-battle-action is-primary"
-							disabled={actingBattleId === activeBattle.id}
-							onclick={() => handleKickoffBattle(activeBattle)}
-							type="button"
-						>
-							{actingBattleId === activeBattle.id
-								? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
-								: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
-						</button>
-					{:else if canResolveBattle(activeBattle)}
-						<button
-							class="league-detail-battle-action is-primary"
-							onclick={() => (resolveBattleTarget = activeBattle ?? null)}
-							type="button"
-						>
-							{t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
-						</button>
-					{/if}
-					{#if canRetractBattle(activeBattle)}
-						<button
-							class="league-detail-battle-action is-danger"
-							disabled={actingBattleId === activeBattle.id}
-							onclick={() => handleRetractBattle(activeBattle)}
-							type="button"
-						>
-							{actingBattleId === activeBattle.id
-								? t({ locale: $localeStore, key: 'leagues.battle.action.retracting' })
-								: t({ locale: $localeStore, key: 'leagues.battle.action.retract' })}
-						</button>
-					{/if}
-				</div>
-			{:else}
+			{#each liveBattles as battle (battle.id)}
+				{@render battleCard(battle)}
+			{/each}
+
+			{#each outgoingProposals as battle (battle.id)}
+				{@render battleCard(battle)}
+			{/each}
+
+			{#if !hasAnyBattle}
 				<div class="league-detail-battle-empty">
 					<p class="serif-italic league-detail-battle-empty-lede">
 						{t({ locale: $localeStore, key: 'leagues.detail.battle_empty_lede' })}
@@ -1342,17 +1526,18 @@
 					<p class="league-detail-battle-empty-sub">
 						{t({ locale: $localeStore, key: 'leagues.detail.battle_empty_sub' })}
 					</p>
-					{#if canChallenge}
-						<button
-							class="league-detail-battle-empty-cta"
-							onclick={() => (challengeOpen = true)}
-							type="button"
-						>
-							<span>{t({ locale: $localeStore, key: 'leagues.detail.battle_challenge_cta' })}</span>
-							<ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
-						</button>
-					{/if}
 				</div>
+			{/if}
+
+			{#if canChallenge}
+				<button
+					class="league-detail-battle-empty-cta"
+					onclick={() => (challengeOpen = true)}
+					type="button"
+				>
+					<span>{t({ locale: $localeStore, key: 'leagues.detail.battle_challenge_cta' })}</span>
+					<ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
+				</button>
 			{/if}
 		</section>
 
@@ -1410,8 +1595,8 @@
 </div>
 
 {#if nonNullish(league) && canChallenge}
-	<ChallengeLeagueModal
-		fromLeague={league}
+	<CreateBoutModal
+		fromLeagueId={league.id}
 		isOpen={challengeOpen}
 		onClose={() => (challengeOpen = false)}
 		onProposed={handleBattleProposed}
@@ -1439,14 +1624,6 @@
 	/>
 {/if}
 
-<ResolveBattleModal
-	battle={resolveBattleTarget}
-	isOpen={nonNullish(resolveBattleTarget)}
-	onClose={() => (resolveBattleTarget = null)}
-	onResolved={handleResolveBattleDone}
-	ourLeagueId={leagueId}
-/>
-
 <!-- ─── Member detail sheet · avatar + accuracy / streak stats ─── -->
 <BottomSheet isOpen={nonNullish(openMember)} onClose={() => (openMember = null)}>
 	{#if openMember}
@@ -1461,7 +1638,13 @@
 					self={openMember.member === selfPrincipal}
 				/>
 				<div class="league-detail-member-sheet-id">
-					<span class="league-detail-member-sheet-name">{memberHandle(openMember.member)}</span>
+					<span class="league-detail-member-sheet-name-row">
+						<span class="league-detail-member-sheet-name">{memberHandle(openMember.member)}</span>
+						<LeagueRoleBadge expanded role={openMember.role} />
+						{#if openMember.member === selfPrincipal}
+							<YouBadge size="xs" />
+						{/if}
+					</span>
 					<span class="num league-detail-member-sheet-rank">
 						{t({
 							locale: $localeStore,
@@ -2100,6 +2283,23 @@
 		color: var(--text-muted);
 	}
 
+	.league-detail-battle-hint {
+		margin-top: 0.15rem;
+		font-size: var(--t-10);
+		color: var(--text-muted);
+		opacity: 0.85;
+	}
+
+	.league-detail-battle-finalizing {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.35rem;
+		font-size: var(--t-11);
+		font-weight: 700;
+		color: var(--text-muted);
+	}
+
 	.league-detail-battle-action {
 		appearance: none;
 		align-self: flex-start;
@@ -2127,6 +2327,45 @@
 	.league-detail-battle-action:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	/* "View →" link to the battle detail page — text affordance, not a
+	   filled action, so it reads as secondary to the owner CTAs above. */
+	.league-detail-battle-view {
+		appearance: none;
+		align-self: flex-start;
+		margin-top: 0.4rem;
+		padding: 0;
+		font-family: var(--font-mono, var(--font-sans));
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		color: var(--laurel);
+		background: none;
+		border: none;
+		cursor: pointer;
+	}
+
+	/* Accept + Decline sit side by side on an incoming request. */
+	.league-detail-battle-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-top: 0.25rem;
+	}
+
+	.league-detail-battle-actions .league-detail-battle-action {
+		margin-top: 0;
+	}
+
+	.league-detail-battle-group-label {
+		margin: 0.15rem 0 -0.15rem;
+		color: var(--text-muted);
+	}
+
+	.league-detail-battle-tag[data-state='declined'] {
+		color: var(--no);
+		background: color-mix(in srgb, var(--no) 16%, transparent);
 	}
 
 	.league-detail-battle-empty {
@@ -2289,10 +2528,20 @@
 		flex-shrink: 0;
 	}
 
+	/* Name cell — handle + role / YOU chips on one line. The handle
+	   ellipsizes (min-width:0) while the chips keep their intrinsic width. */
+	.league-detail-lb-id {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		min-width: 0;
+	}
+
 	.league-detail-lb-name {
 		font-size: var(--t-12);
 		font-weight: 500;
 		color: var(--text-base);
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -2398,11 +2647,19 @@
 		min-width: 0;
 	}
 
+	.league-detail-member-sheet-name-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		min-width: 0;
+	}
+
 	.league-detail-member-sheet-name {
 		font-family: var(--font-display);
 		font-size: var(--t-16);
 		font-weight: 700;
 		color: var(--text-base);
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;

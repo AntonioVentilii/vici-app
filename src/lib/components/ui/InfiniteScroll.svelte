@@ -38,7 +38,7 @@
 	<div class="flex h-10 w-full items-center justify-center">
 		<div bind:this={sentinel} class="h-1 w-full"></div>
 		{#if loading}
-			<LoadingSpinner center={false} size="sm" />
+			<LoadingSpinner size="sm" />
 		{/if}
 	</div>
 {/if}

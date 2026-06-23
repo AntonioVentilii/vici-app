@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 5f33984c5260ed1fd3326e04f7204c26567ff6e4 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit 48d16d5cf97cc97b7443a60ee2b77d85049be00b for file 'src/clearing/clearing.did'
 
 // Outcome of a position transfer acceptance.
 type AcceptPositionTransferResult = variant {
@@ -545,6 +545,18 @@ type ListSeriesTradeHistoryParams = record {
 	// Maximum number of trades to return. `None` returns all remaining trades.
 	limit : opt nat64
 };
+// Input parameters for
+// [`list_series_traded_volumes`](super::list_series_traded_volumes).
+//
+// Totals each series' market-wide traded volume in one call so a front end can
+// label a page of market cards without a per-card round-trip. Unknown or
+// untraded ids simply total zero. Callers should request a bounded page of
+// series (the set they render): the read sums each series' trade tape, so the
+// work scales with the trades on the requested series.
+type ListSeriesTradedVolumesParams = record {
+	// The series to total. Results are returned one per id, in this order.
+	series_ids : vec text
+};
 // Input parameters for [`list_settled_series`](super::list_settled_series).
 //
 // A series is considered settled the moment a settlement plan is opened for it
@@ -881,6 +893,20 @@ type SeriesTradePoint = record {
 	event_id : nat64;
 	// Execution price of the trade.
 	price : Price
+};
+// One series' cumulative market-wide traded volume.
+//
+// `volume` is the traded *notional* — the sum over executed trades of
+// `qty · price`, the value that changed hands — in USD base units (the
+// `USD_DECIMALS` scale), not a contract count. `trade_count` is the number of
+// executed trades. An untraded or unknown series totals zero on both.
+type SeriesTradedVolume = record {
+	// The series these totals are for (echoes the requested id).
+	series_id : text;
+	// Cumulative traded notional (sum of `qty · price`) in USD base units.
+	volume : int;
+	// Number of executed trades on the series.
+	trade_count : nat64
 };
 // Input parameters for initiating a series settlement.
 type SettleSeriesParams = record {
@@ -1398,6 +1424,22 @@ service : (Config) -> {
 	// trade. Mirrors the pagination contract of `list_settled_series`.
 	list_series_trade_history : (ListSeriesTradeHistoryParams) -> (
 		SeriesTradeHistoryPage
+	) query;
+	// Returns each requested series' cumulative market-wide traded volume — the
+	// notional that changed hands (sum of `qty · price`) in USD base units — plus
+	// its executed-trade count, one entry per requested id in request order.
+	//
+	// Lets a front end label a page of market cards in a single call instead of a
+	// per-card read. An unknown or untraded series totals zero. Reads the
+	// `SERIES_TRADED_VOLUME` aggregate that [`index_executed_trade`] maintains
+	// alongside the trade index, so the work is `O(#series_ids)` lookups — bounded
+	// regardless of how many trades a series has accumulated, rather than scanning
+	// each series' tape. Guarded by `caller_is_not_anonymous`, matching the other
+	// series-scoped reads.
+	//
+	// [`index_executed_trade`]: crate::memory::index_executed_trade
+	list_series_traded_volumes : (ListSeriesTradedVolumesParams) -> (
+		vec SeriesTradedVolume
 	) query;
 	// Lists the ids of series that have been settled (resolved), with stable
 	// cursor pagination.

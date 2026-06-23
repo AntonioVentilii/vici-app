@@ -1,14 +1,17 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
 	import type { Outcome } from '$lib/types/market';
 	import { formatProbability } from '$lib/utils/format.utils';
 
 	interface Props {
-		yesProbability: number;
-		noProbability: number;
+		yesProbability: number | undefined;
+		noProbability: number | undefined;
+		priceLoaded?: boolean;
 		winningOutcome?: Outcome;
 	}
 
-	const { yesProbability, noProbability, winningOutcome }: Props = $props();
+	const { yesProbability, noProbability, priceLoaded, winningOutcome }: Props = $props();
 
 	const yesWon = $derived(winningOutcome === 'YES');
 	const noWon = $derived(winningOutcome === 'NO');
@@ -35,7 +38,13 @@
 			? 'text-muted-foreground line-through'
 			: 'text-no'}"
 	>
-		{isResolved ? (noWon ? '100%' : '0%') : formatProbability(noProbability)}
+		{#if isResolved}
+			{noWon ? '100%' : '0%'}
+		{:else if isNullish(noProbability)}
+			<MarketOddsSkeleton variant={priceLoaded ? 'empty' : 'loading'} />
+		{:else}
+			{formatProbability(noProbability)}
+		{/if}
 	</div>
 </div>
 
@@ -59,6 +68,12 @@
 			? 'text-muted-foreground line-through'
 			: 'text-yes'}"
 	>
-		{isResolved ? (yesWon ? '100%' : '0%') : formatProbability(yesProbability)}
+		{#if isResolved}
+			{yesWon ? '100%' : '0%'}
+		{:else if isNullish(yesProbability)}
+			<MarketOddsSkeleton variant={priceLoaded ? 'empty' : 'loading'} />
+		{:else}
+			{formatProbability(yesProbability)}
+		{/if}
 	</div>
 </div>

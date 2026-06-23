@@ -1,6 +1,8 @@
 # VXP economy — award code
 
-The behaviour-level map (earn surfaces, no sinks, lifecycle) is in
+The governing rules (earn surfaces, caps, gates, anti-farming posture,
+and the doc-drives-code reconciliation protocol) are in
+[`economy.md`](../economy.md); the behaviour-level map is in
 [`PRODUCT.md`](../PRODUCT.md#vxp-economy). This page is the
 implementation side: the invariants every award change must respect,
 and the checklist for adding a new award type.

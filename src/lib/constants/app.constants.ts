@@ -48,6 +48,20 @@ export const II_MAX_TIME_TO_LIVE_NS = WEEK_IN_NANOSECONDS;
 
 export const WALLET_PAGINATION = 10n;
 
+/** Rows per page on the `/dash/transactions` history table. */
+export const TRANSACTION_HISTORY_PAGE_SIZE = 10;
+
+/**
+ * Ledger-walk bounds for the transaction-history page. The page needs the
+ * user's full VXP ledger trail to label bonuses and compute running
+ * balances, so it pages the ICRC index to exhaustion — these cap a
+ * pathological account at `PAGE_SIZE × MAX_PAGES` transactions, after which
+ * the page renders a "history starts here" footer instead of fanning out
+ * unbounded query calls.
+ */
+export const TRANSACTION_HISTORY_LEDGER_PAGE_SIZE = 100n;
+export const TRANSACTION_HISTORY_MAX_LEDGER_PAGES = 20;
+
 /**
  * How often the prediction interface and depth panel re-fetch the
  * order book while a market is open. 5 s is the eyeballed sweet spot

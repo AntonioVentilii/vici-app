@@ -7,6 +7,7 @@
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { track } from '$lib/services/analytics.services';
 	import {
 		listChallengeableLeagues,
 		listMyLeagues,
@@ -27,15 +28,17 @@
 
 	/**
 	 * Create-a-battle wizard — the multi-step "start a battle" sheet
-	 * reachable from the Battles surface.
+	 * reachable from the Battles surface and from a league's own detail
+	 * page (where `fromLeagueId` pins the challenger side).
 	 *
 	 * Steps (steps the caller sees collapse when the data is
 	 * unambiguous):
 	 *
 	 *  1. Pick your league — only the leagues the caller owns can send a
 	 *     challenge (the satellite assert hard-rejects non-owners). Auto-
-	 *     skipped when the caller owns exactly one league; the empty
-	 *     state routes to Leagues when they own none.
+	 *     skipped when the caller owns exactly one league or when
+	 *     `fromLeagueId` pins the challenger; the empty state routes to
+	 *     Leagues when they own none.
 	 *  2. Opponent — a searchable list of challengeable leagues
 	 *     (`listChallengeableLeagues`): public leagues plus the caller's
 	 *     own memberships, minus the leagues the caller owns. The caller
@@ -52,11 +55,17 @@
 	 */
 	interface Props {
 		isOpen: boolean;
+		/**
+		 * When set, pins the challenger side to this league and collapses
+		 * the pick-your-league step — used by the league-detail entry point,
+		 * where the caller is already acting on a specific league they own.
+		 */
+		fromLeagueId?: string;
 		onClose: () => void;
 		onProposed?: (battle: BattleDoc) => void;
 	}
 
-	const { isOpen, onClose, onProposed }: Props = $props();
+	const { isOpen, fromLeagueId, onClose, onProposed }: Props = $props();
 
 	const DURATIONS = [7, 14, 30] as const;
 	type Duration = (typeof DURATIONS)[number];
@@ -103,6 +112,23 @@
 
 	const trashTalkRemaining = $derived(BATTLE_TRASH_TALK_MAX_LENGTH - trashTalk.length);
 
+	// True once the load resolves a pinned `fromLeagueId` to a league the
+	// caller actually owns — collapses the pick-your-league step.
+	const isPinned = $derived(
+		nonNullish(fromLeagueId) && ownedLeagues.some((owned) => owned.league.id === fromLeagueId)
+	);
+
+	// The challenger side after a load: a pinned league (league-detail
+	// entry) wins; otherwise auto-select when the caller owns exactly one
+	// league, else leave the picker open.
+	const pickDefaultFromLeague = (): LeagueDoc | undefined => {
+		const pinned = nonNullish(fromLeagueId)
+			? ownedLeagues.find((owned) => owned.league.id === fromLeagueId)
+			: undefined;
+
+		return pinned?.league ?? (ownedLeagues.length === 1 ? ownedLeagues[0].league : undefined);
+	};
+
 	const canSend = $derived(
 		!submitting && nonNullish(fromLeague) && nonNullish(opponent) && opponent.id !== fromLeague.id
 	);
@@ -121,9 +147,7 @@
 			ownedLeagues = mine.filter((m) => m.role === 'owner');
 			challengeable = opponents;
 
-			// Auto-select when the caller owns exactly one league — the
-			// pick-your-league step collapses.
-			fromLeague = ownedLeagues.length === 1 ? ownedLeagues[0].league : undefined;
+			fromLeague = pickDefaultFromLeague();
 			loadState = 'ready';
 		} catch (err) {
 			console.error('CreateBoutModal: load failed', err);
@@ -141,7 +165,7 @@
 	});
 
 	const reset = () => {
-		fromLeague = ownedLeagues.length === 1 ? ownedLeagues[0].league : undefined;
+		fromLeague = pickDefaultFromLeague();
 		opponent = undefined;
 		opponentSearch = '';
 		scope = 'all';
@@ -190,17 +214,20 @@
 		submitError = null;
 
 		try {
-			const kickoffMs = Date.now() + DAY_IN_MS;
-			const settleMs = kickoffMs + duration * DAY_IN_MS;
-
 			const battle = await proposeBattle({
 				sideA: fromLeague.id,
 				sideB: opponent.id,
-				kickoffMs,
-				settleMs,
+				durationMs: duration * DAY_IN_MS,
 				scope,
 				wager,
 				trashTalk
+			});
+
+			track({
+				name: 'battle_proposed',
+				battleId: battle.id,
+				leagueId: fromLeague.id,
+				label: scope
 			});
 
 			onProposed?.(battle);
@@ -288,7 +315,7 @@
 		{:else}
 			<form id="create-bout-form" class="create-bout-form" onsubmit={handleSubmit}>
 				<!-- Step 1 · Your league (the challenger side) -->
-				{#if ownedLeagues.length > 1}
+				{#if ownedLeagues.length > 1 && !isPinned}
 					<fieldset class="create-bout-field">
 						<legend class="allcaps create-bout-label">
 							{t({ locale: $localeStore, key: 'battles.create.label_your_league' })}

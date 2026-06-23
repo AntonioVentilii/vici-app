@@ -14,9 +14,11 @@
 		market: Market;
 		category: FlowArtCategory;
 		priorCall?: PriorCallSignal;
+		/** Translated title for the active locale; defaults to the original. */
+		displayTitle?: string;
 	}
 
-	const { market, category, priorCall }: Props = $props();
+	const { market, category, priorCall, displayTitle }: Props = $props();
 
 	// FlowCard back is a full / detail surface — render the localized
 	// category label ("World Cup") rather than the raw `wc` id. CSS
@@ -61,6 +63,7 @@
 		{#if shareOpen}
 			<SharePopover
 				{category}
+				{displayTitle}
 				{market}
 				onClose={() => (shareOpen = false)}
 				{onCopied}

@@ -6,7 +6,7 @@
 	 * pre-formatted from the host; referral totals come from the real referral
 	 * list (credited redemptions summed over the tiered reward curve).
 	 */
-	import { Gift } from '@lucide/svelte/icons';
+	import { ChevronRight, Gift, History } from '@lucide/svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
@@ -27,6 +27,8 @@
 		referralVxpDisplay: string;
 		/** Number of credited referrals behind that VXP. */
 		referralCount: number;
+		/** Referral list not fetched yet — pulse a placeholder instead of "0". */
+		referralsLoading: boolean;
 	}
 
 	let {
@@ -36,7 +38,8 @@
 		lifetimeDisplay,
 		inPlayDisplay,
 		referralVxpDisplay,
-		referralCount
+		referralCount,
+		referralsLoading
 	}: Props = $props();
 
 	const openInvite = (): void => {
@@ -62,23 +65,42 @@
 		</div>
 		<div class="db-hd-row">
 			<span class="db-hd-k">{t({ locale: $localeStore, key: 'dash.build.sheet_referrals' })}</span>
-			<span class="db-hd-v num">
-				{referralVxpDisplay}
-				<em>
-					{t({
-						locale: $localeStore,
-						key:
-							referralCount === 1
-								? 'dash.build.sheet_referrals_one'
-								: 'dash.build.sheet_referrals_many',
-						params: { count: referralCount }
-					})}
-				</em>
-			</span>
+			{#if referralsLoading}
+				<span class="db-hd-v db-hd-ph" aria-hidden="true">
+					<span class="db-hd-ph-bar"></span>
+					<span class="db-hd-ph-bar db-hd-ph-bar-sm"></span>
+				</span>
+			{:else}
+				<span class="db-hd-v num">
+					{referralVxpDisplay}
+					<em>
+						{t({
+							locale: $localeStore,
+							key:
+								referralCount === 1
+									? 'dash.build.sheet_referrals_one'
+									: 'dash.build.sheet_referrals_many',
+							params: { count: referralCount }
+						})}
+					</em>
+				</span>
+			{/if}
 		</div>
 		<button class="db-hd-cta" onclick={openInvite} type="button">
 			<Gift aria-hidden="true" size={15} strokeWidth={1.8} />
 			{t({ locale: $localeStore, key: 'dash.build.sheet_invite_cta' })}
 		</button>
+		<a
+			class="db-hd-link"
+			href={`${resolve(AppPath.DashTransactions)}?source=sheet`}
+			onclick={onClose}
+		>
+			<History aria-hidden="true" size={16} strokeWidth={1.8} />
+			<span class="db-hd-link-t">
+				<span>{t({ locale: $localeStore, key: 'dash.build.sheet_history' })}</span>
+				<em>{t({ locale: $localeStore, key: 'dash.build.sheet_history_sub' })}</em>
+			</span>
+			<ChevronRight aria-hidden="true" size={16} strokeWidth={1.8} />
+		</a>
 	</div>
 </BottomSheet>

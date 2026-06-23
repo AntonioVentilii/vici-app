@@ -10,6 +10,7 @@
 		Globe,
 		Info,
 		Key,
+		Languages,
 		LineChart,
 		Lock,
 		Mail,
@@ -38,9 +39,11 @@
 	import { Collection } from '$lib/constants/collections.constants';
 	import { LOCALE_REGISTRY } from '$lib/constants/locale.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { upsertProfile } from '$lib/services/profile.services';
+	import { persistPreferences } from '$lib/services/profile.services';
 	import { localeStore, setLocale } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { theme } from '$lib/stores/theme.store';
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';
@@ -195,9 +198,10 @@
 	// `preferences.sharing.profileVisibility`; the top-level
 	// `profile.visibility` enum is mirrored on every write because that is
 	// the field the satellite wire format reads for leaderboard / search
-	// filtering. Both land in a single `upsertProfile` (not via the
-	// preferences store) so the two fields can't clobber each other across
-	// two racing writes to the same doc.
+	// filtering. Both go through the serialized patch queue
+	// (`persistPreferences`) as a leaf-level `sharing` patch so this can't
+	// revert a sibling preference (e.g. the onboarding-picked favourite
+	// team) written concurrently to the same doc.
 	const persistVisibility = async (value: SettingsVisibility) => {
 		const principal = $authPrincipal;
 
@@ -205,17 +209,27 @@
 			return;
 		}
 
-		const data: UserProfile = {
-			...profile,
-			visibility: visibilityToProfile(value),
-			preferences: {
-				...profile.preferences,
-				sharing: { ...profile.preferences.sharing, profileVisibility: value }
-			}
-		};
+		userStore.update((s) =>
+			nonNullish(s.profile)
+				? {
+						...s,
+						profile: {
+							...s.profile,
+							visibility: visibilityToProfile(value),
+							preferences: {
+								...s.profile.preferences,
+								sharing: { ...s.profile.preferences.sharing, profileVisibility: value }
+							}
+						}
+					}
+				: s
+		);
 
-		userStore.update((s) => ({ ...s, profile: data }));
-		await upsertProfile({ key: principal, data });
+		await persistPreferences({
+			principal,
+			preferences: { sharing: { ...profile.preferences.sharing, profileVisibility: value } },
+			visibility: visibilityToProfile(value)
+		});
 	};
 
 	const doSignOut = async () => {
@@ -353,6 +367,14 @@
 					</span>
 				{/snippet}
 			</SetRow>
+
+			<SetToggle
+				checked={$marketLanguagePreference === 'translated'}
+				icon={Languages}
+				label={t({ locale: $localeStore, key: 'settings.market_language' })}
+				onchange={(value) => marketLanguagePreference.set(value ? 'translated' : 'original')}
+				sub={t({ locale: $localeStore, key: 'settings.market_language.sub' })}
+			/>
 
 			<SetToggle
 				checked={$preferencesStore.hapticsEnabled}
@@ -524,7 +546,12 @@
 
 		<div class="settings-destructive">
 			{#if !confirmingSignOut}
-				<Button class="settings-signout" onclick={() => (confirmingSignOut = true)} variant="ghost">
+				<Button
+					class="settings-signout"
+					data-tid={TestId.SignOutButton}
+					onclick={() => (confirmingSignOut = true)}
+					variant="ghost"
+				>
 					{t({ locale: $localeStore, key: 'settings.sign_out' })}
 				</Button>
 			{:else}
@@ -534,7 +561,12 @@
 						<Button onclick={() => (confirmingSignOut = false)} variant="ghost">
 							{t({ locale: $localeStore, key: 'settings.sign_out.cancel' })}
 						</Button>
-						<Button onclick={doSignOut} status={signOutStatus} variant="primary">
+						<Button
+							data-tid={TestId.Logout}
+							onclick={doSignOut}
+							status={signOutStatus}
+							variant="primary"
+						>
 							{t({ locale: $localeStore, key: 'settings.sign_out' })}
 						</Button>
 					</div>

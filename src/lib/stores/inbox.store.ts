@@ -1,10 +1,14 @@
 import { browser } from '$app/environment';
-import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+import {
+	DAY_IN_MS,
+	MILLISECOND_IN_NANOSECONDS,
+	USD_DECIMALS,
+	ZERO
+} from '$lib/constants/app.constants';
 import {
 	INBOX_DISMISSED_STORAGE_KEY,
 	INBOX_READ_STORAGE_KEY,
-	INBOX_SETTLED_READ_STORAGE_KEY,
-	INBOX_STORAGE_KEY
+	INBOX_SETTLED_READ_STORAGE_KEY
 } from '$lib/constants/inbox.constants';
 import { AppPath } from '$lib/constants/routes.constants';
 import { marketById } from '$lib/derived/market-by-id.derived';
@@ -12,101 +16,31 @@ import {
 	resolvedPositions,
 	resolvedPositionsNotInitialized
 } from '$lib/derived/resolved-positions.derived';
+import { receivedReactionsStore } from '$lib/stores/activity-reactions.store';
 import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/friends.store';
+import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
+import { leagueBattlesStore } from '$lib/stores/leagues.store';
 import { localeStore } from '$lib/stores/locale.store';
 import { profilesStore } from '$lib/stores/profiles.store';
-import { initStorageStore } from '$lib/stores/storage.store';
 import { userStore } from '$lib/stores/user.store';
 import type { ResolutionItem, ResolutionRevealData } from '$lib/types/flow';
 import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox';
 import type { Market } from '$lib/types/market';
 import type { ResolvedPosition } from '$lib/types/position';
 import type { Relation } from '$lib/types/relation';
+import type { ActivityReaction } from '$lib/types/social';
 import {
 	decimalFixedValueToNumber,
 	formatRelativeAgoFromNs,
-	shortenWithMiddleEllipsis
+	shortenWithMiddleEllipsis,
+	shortLeagueId
 } from '$lib/utils/format.utils';
 import { t } from '$lib/utils/i18n.utils';
 import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 import { get, set as setStorage } from '$lib/utils/storage.utils';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
-
-// The seed used to include a mock `resolve` card; that's now sourced from
-// real Settled events via `settledInboxStore`, so it's been removed here.
-// The remaining placeholders are kept because their backing systems
-// (streaks, level XP, follow alerts) aren't wired to live data yet — once
-// they are, drop them the same way.
-const seedInbox = (): InboxNotification[] => [
-	{
-		id: 'n1',
-		kind: 'streak',
-		title: 'Streak protected',
-		body: 'You kept your daily flame alive. One more call tomorrow.',
-		when: '2h ago',
-		unread: true
-	},
-	{
-		id: 'n3',
-		kind: 'social',
-		title: 'Friend activity',
-		body: '@oracle_nina called NO on the same market.',
-		when: 'Yesterday',
-		unread: false
-	},
-	{
-		id: 'n4',
-		kind: 'level',
-		title: 'Level up',
-		body: 'You reached level 4. +250 session VXP unlocked.',
-		when: '3d ago',
-		unread: false
-	},
-	{
-		id: 'n5',
-		kind: 'challenge',
-		title: 'Challenge invite',
-		body: 'A friend invited you to a head-to-head Flow duel.',
-		when: '4d ago',
-		unread: false
-	},
-	{
-		id: 'n6',
-		kind: 'market',
-		title: 'Market alert',
-		body: 'YES probability moved 12 pts on a market you follow.',
-		when: '5d ago',
-		unread: false
-	}
-];
-
-const baseInboxStore = initStorageStore<InboxNotification[]>({
-	key: INBOX_STORAGE_KEY,
-	defaultValue: seedInbox()
-});
-
-export const inboxStore = {
-	...baseInboxStore,
-	update: (updater: (items: InboxNotification[]) => InboxNotification[]) => {
-		baseInboxStore.update((current) => {
-			const next = updater(current);
-			baseInboxStore.set({ key: INBOX_STORAGE_KEY, value: next });
-
-			return next;
-		});
-	}
-};
-
-/**
- * Marks the persisted seed/history inbox items as read. The combined
- * `markAllInboxRead` further below also clears the per-event Settled
- * read-state — this internal helper just handles the seed layer.
- */
-const markAllSeedInboxRead = (): void => {
-	inboxStore.update((items) => items.map((item) => ({ ...item, unread: false })));
-};
 
 /**
  * Turns the viewer's pending friend requests into inbox cards. They are
@@ -138,13 +72,77 @@ const friendRequestInboxStore: Readable<InboxNotification[]> = derived(
 				}),
 				when: t({ locale: $locale, key: 'inbox.pending' }),
 				unread: true,
-				// Friends now only live inside the Arena tab strip (Tier C-27).
-				// The Arena shell restores the last-opened tab from
-				// `vici.arena-tab`, which the FriendsTab UI keeps on
-				// `'friends'` after the user accepts/rejects a request.
-				href: AppPath.Arena
+				// Friends live inside the Arena tab strip. The `request` param
+				// forces the Friends tab and scrolls the matching incoming row
+				// into view (see `ArenaPage` / `FriendsTab`), so a tap lands on
+				// the Accept affordance instead of a bare tab the recipient must
+				// hunt through. The relation id contains `#`, so it is
+				// percent-encoded into the query value.
+				href: `${AppPath.Arena}?request=${encodeURIComponent(doc.key)}`
 			};
 		});
+	}
+);
+
+// ── Battle response notifications ───────────────────────────────────────────
+// Juno docs aren't pushed live across users, so a league owner whose
+// challenge the opponent just accepted or declined wouldn't otherwise know.
+// We derive a card from the battles the viewer *proposed* that have left the
+// `proposed` state recently — the proposer's league is always `sideA`. The
+// card ages out of the window so it can't linger forever; resolution has its
+// own surface (the league detail), so resolved battles don't notify here.
+
+const BATTLE_NOTIFICATION_WINDOW_MS = 3 * DAY_IN_MS;
+
+const battleInboxStore: Readable<InboxNotification[]> = derived(
+	[leagueBattlesStore, leagueDirectoryStore, userStore, localeStore],
+	([$battles, $directory, $user, $locale]) => {
+		const viewer = $user.user?.owner;
+
+		if (isNullish(viewer)) {
+			return [];
+		}
+
+		const now = Date.now();
+		// A battle between two leagues the viewer owns appears in both
+		// per-league lists, so dedupe by id (Map keeps the last seen).
+		const proposed = [...$battles.values()]
+			.flat()
+			.filter(
+				(battle) =>
+					battle.proposer === viewer &&
+					(battle.state === 'in_flight' || battle.state === 'declined')
+			);
+		const matched = [...new Map(proposed.map((battle) => [battle.id, battle])).values()]
+			.map((battle) => ({ battle, respondedAtMs: battle.respondedAtMs ?? battle.kickoffMs }))
+			.filter(({ respondedAtMs }) => now - respondedAtMs <= BATTLE_NOTIFICATION_WINDOW_MS);
+
+		return matched
+			.sort((a, b) => b.respondedAtMs - a.respondedAtMs)
+			.map(({ battle, respondedAtMs }) => {
+				const accepted = battle.state === 'in_flight';
+				const opponent = $directory.get(battle.sideB)?.name ?? shortLeagueId(battle.sideB);
+
+				return {
+					id: `battle-${battle.state}-${battle.id}`,
+					kind: accepted ? ('battle_accepted' as const) : ('battle_declined' as const),
+					title: t({
+						locale: $locale,
+						key: accepted ? 'inbox.battle_accepted.title' : 'inbox.battle_declined.title'
+					}),
+					body: t({
+						locale: $locale,
+						key: accepted ? 'inbox.battle_accepted.body' : 'inbox.battle_declined.body',
+						params: { opponent }
+					}),
+					when: formatRelativeAgoFromNs({
+						timestampNs: BigInt(Math.round(respondedAtMs)) * MILLISECOND_IN_NANOSECONDS,
+						locale: $locale
+					}),
+					unread: true,
+					href: `${AppPath.Arena}/leagues/${battle.sideA}`
+				};
+			});
 	}
 );
 
@@ -230,6 +228,86 @@ const settledInboxStore: Readable<InboxNotification[]> = derived(
 				mid: entry.marketId
 			};
 		})
+);
+
+// ── Likes received on your own calls ────────────────────────────────────────
+
+/**
+ * Likes other users left on the viewer's OWN friend-feed calls, as inbox cards. Synthetic — derived
+ * live from `receivedReactionsStore` (a key-prefix read scoped to the viewer), not persisted — so a
+ * card disappears automatically when its reaction doc is deleted (an unlike), with no history store
+ * to retain it. Self-likes are excluded. Mirrors {@link friendRequestInboxStore}; the per-id read
+ * overlay in {@link combinedInboxStore} drives the read/unread state.
+ *
+ * Aggregated: all likes on one call collapse into a SINGLE card ("{user} and N more liked your
+ * call"), keyed by the activity (not per-liker), so a burst of likes is one inbox entry and one
+ * toast — not N. The card carries the most-recent liker's name + timestamp; marking it read marks
+ * the whole burst. The stable per-activity id means a later like on an already-read call updates the
+ * count in place without re-pinging.
+ */
+const likesReceivedInboxStore: Readable<InboxNotification[]> = derived(
+	[receivedReactionsStore, profilesStore, userStore, localeStore],
+	([$received, $profiles, $user, $locale]) => {
+		const viewer = $user.user?.owner;
+
+		if (isNullish($received) || isNullish(viewer)) {
+			return [];
+		}
+
+		// Group likes by the call they're on. The read is author-scoped already; guard against a stale
+		// page from a previous principal, and never notify the viewer about liking their own call.
+		const byActivity = new Map<string, ActivityReaction[]>();
+
+		for (const reaction of $received) {
+			if (reaction.activityKey.startsWith(`${viewer}#`) && reaction.liker !== viewer) {
+				const likes = byActivity.get(reaction.activityKey) ?? [];
+				likes.push(reaction);
+				byActivity.set(reaction.activityKey, likes);
+			}
+		}
+
+		return Array.from(byActivity.values(), (likes): InboxNotification => {
+			// Most-recent like fronts the card (name + timestamp + denormalized title / market).
+			// Single pass for the latest reaction — no sort allocation; the count is the rest.
+			// `likes` is non-empty (a group exists only because a reaction was pushed into it).
+			const latest = likes.reduce((max, reaction) =>
+				reaction.timestamp > max.timestamp ? reaction : max
+			);
+			const restCount = likes.length - 1;
+			const profile = $profiles.get(latest.liker);
+			const displayName = profile?.nickname?.trim()
+				? `@${profile.nickname.trim()}`
+				: shortenWithMiddleEllipsis({ text: latest.liker, splitLength: 6 });
+
+			return {
+				// Keyed by the activity (not the liker) so the burst is one card and the read overlay
+				// sticks across refreshes as the count grows.
+				id: `like-received-${latest.activityKey}`,
+				kind: 'social',
+				title:
+					restCount === 0
+						? t({
+								locale: $locale,
+								key: 'inbox.like_received.title',
+								params: { user: displayName }
+							})
+						: t({
+								locale: $locale,
+								key: 'inbox.like_received.title_multi',
+								params: { user: displayName, count: restCount }
+							}),
+				// The denormalized call title (spec A wrote it onto the reaction doc).
+				body: latest.activityTitle,
+				when: formatRelativeAgoFromNs({
+					timestampNs: BigInt(latest.timestamp) * MILLISECOND_IN_NANOSECONDS,
+					locale: $locale
+				}),
+				unread: true,
+				// Deep-link to the liked call's market via the kind router; falls back to Arena.
+				...(nonNullish(latest.marketId) && latest.marketId !== '' ? { mid: latest.marketId } : {})
+			};
+		});
+	}
 );
 
 // ── "While you were away" resolution digest ─────────────────────────────────
@@ -377,18 +455,25 @@ const inboxDismissedStore = writable<Set<string>>(loadStringSet(INBOX_DISMISSED_
 
 /**
  * The inbox surface (Notifications page, bell badge) reads from this combined
- * view. Order: live actionable items (friend requests), then real
- * settled-event notifications, then the persisted local seed. Settled cards
- * sit above the seeds so a freshly-resolved market lands at the top.
+ * view. Order: live actionable items (friend requests), then battle responses,
+ * then real settled-event notifications, then likes received on your calls.
+ * Every card is derived from live data — there is no seeded/mock layer.
  *
  * Dismissed cards are filtered out, and the per-id read overlay is applied
  * on top of each item's own `unread` so a card tapped read in place stays
  * read across reloads.
  */
 export const combinedInboxStore: Readable<InboxNotification[]> = derived(
-	[friendRequestInboxStore, settledInboxStore, inboxStore, inboxReadStore, inboxDismissedStore],
-	([$requests, $settled, $inbox, $read, $dismissed]) =>
-		[...$requests, ...$settled, ...$inbox]
+	[
+		friendRequestInboxStore,
+		battleInboxStore,
+		settledInboxStore,
+		likesReceivedInboxStore,
+		inboxReadStore,
+		inboxDismissedStore
+	],
+	([$requests, $battles, $settled, $likesReceived, $read, $dismissed]) =>
+		[...$requests, ...$battles, ...$settled, ...$likesReceived]
 			.filter((item) => !$dismissed.has(item.id))
 			.map((item) => (item.unread && $read.has(item.id) ? { ...item, unread: false } : item))
 );
@@ -451,10 +536,14 @@ export const clearInboxToast = (): void => {
  *   clearing-canister trade history fetch completes (even if empty).
  * - `friendsRelationsLoadedStore` starts `false`, flips `true` once the
  *   first `refreshFriendRelations()` call completes.
+ * - `receivedReactionsStore` starts `undefined`, becomes an array once the
+ *   first received-reactions load completes (even if empty) — so a cold-start
+ *   backlog of likes on the viewer's calls is absorbed into the baseline
+ *   instead of replaying as arrival toasts.
  */
 const sourcesHydrated: Readable<boolean> = derived(
-	[resolvedPositionsNotInitialized, friendsRelationsLoadedStore],
-	([$notInit, $friendsLoaded]) => !$notInit && $friendsLoaded
+	[resolvedPositionsNotInitialized, friendsRelationsLoadedStore, receivedReactionsStore],
+	([$notInit, $friendsLoaded, $received]) => !$notInit && $friendsLoaded && nonNullish($received)
 );
 
 /**
@@ -518,10 +607,9 @@ export const initInboxToasts = (): (() => void) => {
 
 /**
  * Marks every currently-visible settled-event card as read by adding
- * its `event_id` to the persisted per-event read set. Paired with
- * `markAllSeedInboxRead` (which clears the seed/history layer) — see
- * the `markAllInboxRead` public entry point further below for the
- * combined behavior.
+ * its `event_id` to the persisted per-event read set. See the
+ * `markAllInboxRead` public entry point further below, which also overlays
+ * a per-id read marker on the remaining synthetic cards.
  */
 const markAllSettledRead = (): void => {
 	const visible = getStore(settledInboxStore);
@@ -626,14 +714,13 @@ export const dismissInboxNotification = (id: string): void => {
 };
 
 /**
- * Public "mark all read" entry point. Clears the seed-store layer and the
- * per-event Settled read-state, and overlays a read marker on every other
- * currently-visible card (synthetic friend requests) so the badge fully
- * clears. Callers (NotificationsPage, bell action) should use this — never
- * the layer-specific helpers directly.
+ * Public "mark all read" entry point. Clears the per-event Settled read-state
+ * and overlays a read marker on every other currently-visible card (synthetic
+ * friend requests, battle responses, likes) so the badge fully clears. Callers
+ * (NotificationsPage, bell action) should use this — never the layer-specific
+ * helpers directly.
  */
 export const markAllInboxRead = (): void => {
-	markAllSeedInboxRead();
 	markAllSettledRead();
 
 	const unreadIds = getStore(combinedInboxStore)

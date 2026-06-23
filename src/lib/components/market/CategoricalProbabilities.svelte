@@ -6,11 +6,20 @@
 	interface Props {
 		outcomes: NonNullable<Market['outcomes']>;
 		winningOutcomeId?: string;
+		/**
+		 * Translated outcome titles keyed by outcome id. Any id absent here
+		 * falls back to the on-chain title, so callers without an active market
+		 * translation can omit this entirely.
+		 */
+		translatedTitles?: Record<string, string>;
 	}
 
 	type MarketOutcome = NonNullable<Market['outcomes']>[number];
 
-	const { outcomes, winningOutcomeId }: Props = $props();
+	const { outcomes, winningOutcomeId, translatedTitles }: Props = $props();
+
+	const titleFor = (outcome: MarketOutcome): string =>
+		translatedTitles?.[outcome.id] ?? outcome.title;
 
 	const isResolved = $derived(nonNullish(winningOutcomeId));
 
@@ -61,7 +70,7 @@
 								? 'text-foreground line-through'
 								: 'text-foreground'}"
 					>
-						{outcome.title}{#if isWinner}
+						{titleFor(outcome)}{#if isWinner}
 							✓{/if}
 					</span>
 					<span class="text-foreground num font-bold">

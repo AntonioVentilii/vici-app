@@ -8,6 +8,7 @@
 		notificationKindConfig
 	} from '$lib/constants/notification-kind.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { track } from '$lib/services/analytics.services';
 	import { clearInboxToast, initInboxToasts, latestInboxToast } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -91,6 +92,7 @@
 			return;
 		}
 
+		track({ name: 'notification_opened', label: toast.kind });
 		void goto(notificationDestination({ kind: toast.kind, mid: toast.mid, href: toast.href }));
 	};
 

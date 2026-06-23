@@ -1,46 +1,17 @@
-import type { RegistryDid } from '$declarations';
-import { REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { normalizeMarketTags } from '$lib/constants/market-tags.constants';
 import type { MarketMetadata, MarketMetadataInput } from '$lib/types/market-metadata';
-import { isAdmin } from '$satellite/services/_authz';
-import { candidMethod } from '$satellite/utils/candid.utils';
+import { isAdmin, isCreatorOrAdmin } from '$satellite/services/_authz';
 import { isNullish } from '@dfinity/utils';
-import { call, msgCaller, time } from '@junobuild/functions/ic-cdk';
+import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobuild/functions/sdk';
 
 const callerText = (): string => msgCaller().toText();
 
-const getSeriesCreator = async (seriesId: string): Promise<string | undefined> => {
-	const { argTypes, result: resultType } = candidMethod({
-		canister: 'registry',
-		method: 'get_series'
-	});
-	const result = await call<[] | [RegistryDid.Series]>({
-		canisterId: REGISTRY_CANISTER_ID,
-		method: 'get_series',
-		args: [[argTypes[0], seriesId]],
-		result: resultType
-	});
-
-	return result[0]?.creator.toText();
-};
-
 const assertCanWriteMarketMetadata = async ({ seriesId }: { seriesId: string }): Promise<void> => {
-	const caller = msgCaller();
-	const text = caller.toText();
-
-	if (isAdmin({ caller })) {
-		return;
+	if (!(await isCreatorOrAdmin({ caller: msgCaller(), seriesId }))) {
+		throw new Error('Only the market creator or an admin can edit market metadata.');
 	}
-
-	const creator = await getSeriesCreator(seriesId);
-
-	if (creator === text) {
-		return;
-	}
-
-	throw new Error('Only the market creator or an admin can edit market metadata.');
 };
 
 export const getMarketMetadata = ({

@@ -22,10 +22,16 @@
 		todayDelta: number | null;
 		/** Figures not loaded yet — render pulsing placeholders instead of 0. */
 		loading: boolean;
+		/**
+		 * `user_stats` (which backs TODAY) not fetched yet — pulse its placeholder
+		 * instead of the static em-dash a loaded-but-quiet window shows.
+		 */
+		todayLoading: boolean;
 		onOpen: () => void;
 	}
 
-	let { holdingsDisplay, inPlayDisplay, todayDelta, loading, onOpen }: Props = $props();
+	let { holdingsDisplay, inPlayDisplay, todayDelta, loading, todayLoading, onOpen }: Props =
+		$props();
 
 	const todayPositive = $derived(nonNullish(todayDelta) && todayDelta >= 0);
 </script>
@@ -52,10 +58,11 @@
 			<div class="db-kk">{t({ locale: $localeStore, key: 'dash.build.today' })}</div>
 			<div
 				class="db-vv num"
+				class:db-ph={todayLoading}
 				class:down={nonNullish(todayDelta) && !todayPositive}
 				class:up={todayPositive}
 			>
-				{#if isNullish(todayDelta)}
+				{#if todayLoading || isNullish(todayDelta)}
 					{t({ locale: $localeStore, key: 'dash.rank.placeholder' })}
 				{:else}
 					{t({

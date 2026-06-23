@@ -144,6 +144,8 @@ export interface AppGetAnalyticsSummaryResult {
 		name:
 			| { delete_confirmed: null }
 			| { school_picked: null }
+			| { battle_viewed: null }
+			| { transactions_viewed: null }
 			| { resolution_disputed: null }
 			| { streak_milestone: null }
 			| { school_verify_email_submitted: null }
@@ -152,14 +154,18 @@ export interface AppGetAnalyticsSummaryResult {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }
 			| { delete_succeeded: null }
+			| { friend_feed_reaction: null }
 			| { referral_link_copied: null }
+			| { market_translation_toggled: null }
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
 			| { signed_up: null }
@@ -172,6 +178,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { provider_linked: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
+			| { battle_declined: null }
 			| { vxp_awarded: null }
 			| { league_joined: null }
 			| { exit_signal: null }
@@ -191,6 +198,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { league_created: null }
 			| { onboarding_step: null }
 			| { market_viewed: null }
+			| { battle_expired: null }
 			| { delete_flow_opened: null }
 			| { affiliation_set: null }
 			| { session_started: null }
@@ -613,17 +621,28 @@ export interface AppListLeagueBattlesResult {
 	items: Array<{
 		id: string;
 		trash_talk: [] | [string];
+		respond_by_ms: [] | [number];
+		responded_at_ms: [] | [number];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
+		calls_a: [] | [number];
+		calls_b: [] | [number];
 		score_a: [] | [number];
 		score_b: [] | [number];
 		scope: [] | [string];
-		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
+		state:
+			| { resolved: null }
+			| { expired: null }
+			| { proposed: null }
+			| { in_flight: null }
+			| { accepted: null }
+			| { declined: null };
 		side_a: string;
 		side_b: string;
 		proposer: string;
 		kickoff_ms: number;
 		wager: [] | [number];
+		resolved_at_ms: [] | [number];
 		settle_ms: number;
 	}>;
 }
@@ -640,6 +659,22 @@ export interface AppListLeagueMembersResult {
 }
 export interface AppListMarketTranslationsArgs {
 	series_id: string;
+}
+export interface AppListMarketTranslationsForLocalesArgs {
+	locales: Array<string>;
+	series_ids: Array<string>;
+}
+export interface AppListMarketTranslationsForLocalesResult {
+	items: Array<{
+		title: string;
+		updated_at: number;
+		updated_by: string;
+		series_id: string;
+		locale: string;
+		description: string;
+		resolution: string;
+		outcomes: Array<{ id: string; title: string }>;
+	}>;
 }
 export interface AppListMarketTranslationsResult {
 	items: Array<{
@@ -681,17 +716,28 @@ export interface AppListMyBattlesResult {
 	items: Array<{
 		id: string;
 		trash_talk: [] | [string];
+		respond_by_ms: [] | [number];
+		responded_at_ms: [] | [number];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
+		calls_a: [] | [number];
+		calls_b: [] | [number];
 		score_a: [] | [number];
 		score_b: [] | [number];
 		scope: [] | [string];
-		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
+		state:
+			| { resolved: null }
+			| { expired: null }
+			| { proposed: null }
+			| { in_flight: null }
+			| { accepted: null }
+			| { declined: null };
 		side_a: string;
 		side_b: string;
 		proposer: string;
 		kickoff_ms: number;
 		wager: [] | [number];
+		resolved_at_ms: [] | [number];
 		settle_ms: number;
 	}>;
 }
@@ -800,6 +846,17 @@ export interface AppLookupReferralCodeArgs {
 export interface AppLookupReferralCodeResult {
 	owner: [] | [string];
 }
+export interface AppRecomputeActivityReactionCountsResult {
+	recomputed: number;
+}
+export interface AppRecordFlowSwipeArgs {
+	day_key: string;
+}
+export interface AppRecordFlowSwipeResult {
+	daily_goal_date: string;
+	daily_goal_done: number;
+	cap_reached: boolean;
+}
 export interface AppRecoverMyAccountResult {
 	ok: boolean;
 	recovered: [] | [boolean];
@@ -906,6 +963,8 @@ export interface AppTrackEventsArgs {
 		name:
 			| { delete_confirmed: null }
 			| { school_picked: null }
+			| { battle_viewed: null }
+			| { transactions_viewed: null }
 			| { resolution_disputed: null }
 			| { streak_milestone: null }
 			| { school_verify_email_submitted: null }
@@ -914,14 +973,18 @@ export interface AppTrackEventsArgs {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }
 			| { delete_succeeded: null }
+			| { friend_feed_reaction: null }
 			| { referral_link_copied: null }
+			| { market_translation_toggled: null }
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
 			| { signed_up: null }
@@ -934,6 +997,7 @@ export interface AppTrackEventsArgs {
 			| { provider_linked: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
+			| { battle_declined: null }
 			| { vxp_awarded: null }
 			| { league_joined: null }
 			| { exit_signal: null }
@@ -953,6 +1017,7 @@ export interface AppTrackEventsArgs {
 			| { league_created: null }
 			| { onboarding_step: null }
 			| { market_viewed: null }
+			| { battle_expired: null }
 			| { delete_flow_opened: null }
 			| { affiliation_set: null }
 			| { session_started: null }
@@ -1161,6 +1226,10 @@ export interface _SERVICE {
 		[AppListMarketTranslationsArgs],
 		AppListMarketTranslationsResult
 	>;
+	app_list_market_translations_for_locales: ActorMethod<
+		[AppListMarketTranslationsForLocalesArgs],
+		AppListMarketTranslationsForLocalesResult
+	>;
 	app_list_my_affiliations: ActorMethod<[], AppListMyAffiliationsResult>;
 	app_list_my_battles: ActorMethod<[], AppListMyBattlesResult>;
 	app_list_my_blocking_leagues: ActorMethod<[], AppListMyBlockingLeaguesResult>;
@@ -1177,6 +1246,8 @@ export interface _SERVICE {
 		AppLookupLeagueByInviteResult
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
+	app_recompute_activity_reaction_counts: ActorMethod<[], AppRecomputeActivityReactionCountsResult>;
+	app_record_flow_swipe: ActorMethod<[AppRecordFlowSwipeArgs], AppRecordFlowSwipeResult>;
 	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;
 	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;

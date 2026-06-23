@@ -5,11 +5,13 @@
 
 	interface Props {
 		market: Market;
+		/** Translated resolution for the active locale; defaults to the original. */
+		displayResolution?: string;
 	}
 
-	const { market }: Props = $props();
+	const { market, displayResolution }: Props = $props();
 
-	const resolutionCondition = $derived(market.resolution?.trim() ?? '');
+	const resolutionCondition = $derived((displayResolution ?? market.resolution)?.trim() ?? '');
 	let rulesOpen = $state(false);
 </script>
 

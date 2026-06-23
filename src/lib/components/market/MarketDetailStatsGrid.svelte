@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { formatLongDate, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { marketBookLiquidity } from '$lib/utils/market.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	interface Props {
@@ -19,18 +20,35 @@
 		 * to thread it through.
 		 */
 		resolvedForMarket?: ResolvedPosition[];
+		/**
+		 * `true` while the viewer's positions for this market are still being
+		 * read (signed-in only). Drives a pulse in the MY CALL tile so it
+		 * doesn't flash an empty `—` before the position read lands. Once the
+		 * read resolves the real call (or genuine "no call") shows.
+		 */
+		myCallLoading?: boolean;
+		/**
+		 * Market-wide traded volume in payout-token base units, or `undefined`
+		 * while the trade-history read is still draining. Drives a pulse in the
+		 * VOLUME tile on first load; `ZERO` reads as the cold-start "New" state.
+		 */
+		volume?: bigint;
 	}
 
-	const { market, positions, resolvedForMarket = [] }: Props = $props();
+	const {
+		market,
+		positions,
+		resolvedForMarket = [],
+		myCallLoading = false,
+		volume
+	}: Props = $props();
 
-	const { totalVolume, yesVolume, noVolume, expiryDate, token } = $derived(market);
+	const { expiryDate, token } = $derived(market);
 
-	// Liquidity proxy = the smaller of the two book sides — that's the
-	// depth a counter-trade can hit before pushing the other side. The
-	// satellite doesn't expose a separate liquidity field today; until
-	// it does we surface `min(yesVolume, noVolume)` under the `vol`
-	// and `liq` labels.
-	const liquidity = $derived(yesVolume < noVolume ? yesVolume : noVolume);
+	// Liquidity = value resting at the top of the book (`marketBookLiquidity`),
+	// reflecting the live maker quotes rather than a volume proxy. ZERO only
+	// when neither side has a resting level, which reads as the "be first" cue.
+	const liquidity = $derived(marketBookLiquidity(market));
 
 	const userActivePosition = $derived(
 		positions.find((p) => p.marketId === market.id && p.netQty !== ZERO)
@@ -58,22 +76,29 @@
 
 	const myCall = $derived(userActivePosition?.outcomeId ?? resolvedMyCall);
 
-	// Cold-start: a market with no real volume yet reads "New" instead of
-	// "0 VXP", and the matching depth tile reads "Be first". Both use our
-	// real volume fields — never a synthetic crowd. The "New" / "Be first"
-	// copy is suppressed (suffix dropped, tile muted) so the grid frames
-	// the empty market as an opportunity.
-	const freshVolume = $derived(totalVolume === ZERO);
+	// Cold-start: an untraded market reads "New" instead of "0 VXP", and an
+	// empty book reads "Be first". Both use real values (traded notional, book
+	// depth) — never a synthetic crowd. The copy is suppressed (suffix dropped,
+	// tile muted) so the grid frames the empty market as an opportunity. Volume
+	// is `undefined` until its read drains, which holds the tile in a pulse.
+	const volumeLoading = $derived(isNullish(volume));
+	const freshVolume = $derived(nonNullish(volume) && volume === ZERO);
 	const freshLiquidity = $derived(liquidity === ZERO);
+
+	// Hold the MY CALL tile in a loading state until the position read lands,
+	// but only when there's nothing to show yet — a known call (live or from
+	// the resolved fallback) renders immediately.
+	const myCallPending = $derived(myCallLoading && isNullish(myCall));
 
 	const stats = $derived([
 		{
 			labelKey: 'market.detail.stats.volume' as const,
 			value: freshVolume
 				? t({ locale: $localeStore, key: 'market.detail.stats.new' })
-				: formatToken({ value: totalVolume, unitName: token.decimals }),
+				: formatToken({ value: volume ?? ZERO, unitName: token.decimals }),
 			suffix: freshVolume ? '' : token.symbol,
-			mute: freshVolume
+			mute: freshVolume,
+			loading: volumeLoading
 		},
 		{
 			labelKey: 'market.detail.stats.liquidity' as const,
@@ -81,13 +106,15 @@
 				? t({ locale: $localeStore, key: 'market.detail.stats.be_first' })
 				: formatToken({ value: liquidity, unitName: token.decimals }),
 			suffix: freshLiquidity ? '' : token.symbol,
-			mute: freshLiquidity
+			mute: freshLiquidity,
+			loading: false
 		},
 		{
 			labelKey: 'market.detail.stats.closes' as const,
 			value: formatLongDate({ date: expiryDate, locale: $localeStore }),
 			suffix: '',
-			mute: false
+			mute: false,
+			loading: false
 		},
 		{
 			labelKey: 'market.detail.stats.my_call' as const,
@@ -98,7 +125,8 @@
 						? t({ locale: $localeStore, key: 'outcome.no' })
 						: (myCall ?? '—'),
 			suffix: '',
-			mute: isNullish(myCall)
+			mute: isNullish(myCall),
+			loading: myCallPending
 		}
 	]);
 </script>
@@ -109,14 +137,18 @@
      instead of an empty space. -->
 <div class="market-stats-grid">
 	{#each stats as stat (stat.labelKey)}
-		<div class="market-stats-cell">
+		<div class="market-stats-cell" aria-busy={stat.loading}>
 			<span class="market-stats-eyebrow">
 				{t({ locale: $localeStore, key: stat.labelKey })}
 			</span>
 			<div class="market-stats-value-row">
-				<span class="num market-stats-value" class:is-mute={stat.mute}>{stat.value}</span>
-				{#if stat.suffix !== ''}
-					<span class="market-stats-suffix">{stat.suffix}</span>
+				{#if stat.loading}
+					<span class="market-stats-skeleton" aria-hidden="true"></span>
+				{:else}
+					<span class="num market-stats-value" class:is-mute={stat.mute}>{stat.value}</span>
+					{#if stat.suffix !== ''}
+						<span class="market-stats-suffix">{stat.suffix}</span>
+					{/if}
 				{/if}
 			</div>
 		</div>
@@ -170,6 +202,34 @@
 
 	.market-stats-value.is-mute {
 		color: var(--text-muted);
+	}
+
+	/* Tile-level loading pulse — mirrors the market-detail skeleton's block
+	   so a tile still resolving (e.g. MY CALL waiting on the position read)
+	   shows a shimmer instead of a placeholder value. */
+	.market-stats-skeleton {
+		display: block;
+		width: 2.75rem;
+		height: 1rem;
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--text-muted) 16%, transparent);
+		animation: market-stats-pulse 1.4s ease-in-out infinite;
+	}
+
+	@keyframes market-stats-pulse {
+		0%,
+		100% {
+			opacity: 0.55;
+		}
+		50% {
+			opacity: 0.9;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.market-stats-skeleton {
+			animation: none;
+		}
 	}
 
 	.market-stats-suffix {

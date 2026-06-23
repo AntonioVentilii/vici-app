@@ -91,7 +91,7 @@
 		aria-live="polite"
 		role="status"
 	>
-		<LoadingSpinner center={false} size="lg" />
+		<LoadingSpinner size="lg" />
 	</div>
 {:else}
 	<Authn>

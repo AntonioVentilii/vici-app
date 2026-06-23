@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { DAY_IN_MS, ZERO } from '$lib/constants/app.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
@@ -66,7 +68,9 @@
 
 	// Synthetic `Market` the card binds to. Built off the featured-event
 	// fixture (onboarding runs pre-auth, before any market hydrates).
-	const market = $derived(buildOnboardingFirstCallMarket({ event, participant: picked }));
+	const market = $derived(
+		buildOnboardingFirstCallMarket({ event, participant: picked, locale: $localeStore })
+	);
 
 	// Resolved artwork category + accent. The featured event is the WC
 	// tentpole, so the band uses the WC visual language and laurel-gold
@@ -75,7 +79,13 @@
 	const artCategory = $derived(resolveFlowArtCategory({ categoryId: 'wc', seed: market.id }));
 	const accent = $derived(tagColor('wc'));
 
-	const yesPct = $derived(Math.round(market.yesProbability * 100));
+	// The onboarding card binds to a synthetic fixture that always carries a
+	// probability, so `hasProbability` is true in practice — the guard is here
+	// for type-safety now that `yesProbability` is optional on `Market`.
+	const hasProbability = $derived(!isNullish(market.yesProbability));
+	const yesPct = $derived(
+		isNullish(market.yesProbability) ? 0 : Math.round(market.yesProbability * 100)
+	);
 	const noPct = $derived(100 - yesPct);
 
 	// Footer volume line — formatted volume when the market has any, else
@@ -248,6 +258,7 @@
 				style:opacity={committed ? 0 : 1}
 				class="ob-card"
 				class:committed={nonNullish(committed)}
+				data-tid={TestId.OnboardingCard}
 				onmousedown={onPointerDown}
 				onmouseleave={onPointerUp}
 				onmousemove={onPointerMove}
@@ -304,13 +315,21 @@
 							<span class="ob-prob-eyebrow no">
 								{t({ locale: $localeStore, key: 'flow.action.no' })}
 							</span>
-							<span class="ob-prob-num">{noPct}%</span>
+							<span class="ob-prob-num">
+								{#if hasProbability}{noPct}%{:else}<MarketOddsSkeleton
+										variant={market.priceLoaded ? 'empty' : 'loading'}
+									/>{/if}
+							</span>
 						</div>
 						<div class="ob-prob yes">
 							<span class="ob-prob-eyebrow yes">
 								{t({ locale: $localeStore, key: 'flow.action.yes' })}
 							</span>
-							<span class="ob-prob-num">{yesPct}%</span>
+							<span class="ob-prob-num">
+								{#if hasProbability}{yesPct}%{:else}<MarketOddsSkeleton
+										variant={market.priceLoaded ? 'empty' : 'loading'}
+									/>{/if}
+							</span>
 						</div>
 					</div>
 					<div class="ob-foot">

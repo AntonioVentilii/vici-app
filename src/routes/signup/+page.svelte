@@ -6,14 +6,11 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import OnboardingFlow from '$lib/components/onboarding/OnboardingFlow.svelte';
-	import {
-		nicknameUniqueKey,
-		PENDING_ONBOARDING_STORAGE_KEY
-	} from '$lib/constants/profile.constants';
+	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
-	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
+	import { applyOnboardingPicks, checkNicknameAvailability } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -115,14 +112,21 @@
 		// see `SignInProviderStack`) must survive this rebuild so the drain
 		// persists it onto the profile.
 		const existingEmail = typeof existing.email === 'string' ? existing.email : undefined;
+		// A league invite stashed by `/league/[code]` (the signed-out invite
+		// landing routes here through onboarding) must ALSO survive this
+		// rebuild — otherwise the drain never auto-joins the league and the
+		// invitee lands friended (from the referral) but not a member.
+		const existingLeagueInvite =
+			typeof existing.leagueInvite === 'string' ? existing.leagueInvite : undefined;
 
 		// Skip the write if the user bailed before making any pick **and** there's no
-		// stashed referral code or email to carry forward — nothing to hand off.
+		// stashed referral code, league invite, or email to carry forward — nothing to hand off.
 		if (
 			isNullish(result.handle) &&
 			isNullish(result.participantId) &&
 			isNullish(result.side) &&
 			isNullish(existingReferralCode) &&
+			isNullish(existingLeagueInvite) &&
 			isNullish(existingEmail)
 		) {
 			return;
@@ -138,6 +142,7 @@
 					interests: [],
 					completedAt: new Date().toISOString(),
 					...(nonNullish(existingReferralCode) && { referralCode: existingReferralCode }),
+					...(nonNullish(existingLeagueInvite) && { leagueInvite: existingLeagueInvite }),
 					...(nonNullish(existingEmail) && { email: existingEmail })
 				})
 			);
@@ -165,7 +170,18 @@
 
 		const currentProfile = $userStore.profile;
 
+		// The dev / Internet Identity providers resolve `signIn()`
+		// synchronously, so `SignInProviderStack` fires `onSuccess` while
+		// `$userSignedIn` has already flipped true but `onAuthStateChange`
+		// hasn't landed the profile yet — there's nothing to upsert the picks
+		// onto. Rather than drop them, hand off via the same pre-auth stash the
+		// signed-out path uses and route into the app, where the `(app)` layout
+		// drain applies handle/team/side (and stamps `onboardingCompleted`)
+		// once the profile hydrates.
 		if (!currentProfile) {
+			handleCompletePreAuth(result);
+			void goto(resolve(AppPath.Flow), { replaceState: true });
+
 			return;
 		}
 
@@ -174,18 +190,13 @@
 		const sidePreference = result.side ?? '';
 		const participantPreference = result.participantId ?? '';
 
-		const baseUpdated = {
-			...currentProfile,
-			preferences: {
-				...currentProfile.preferences,
-				favoriteParticipantId: participantPreference,
-				favoriteSide: sidePreference,
-				onboardingCompleted: true
-			}
-		};
-
 		try {
-			let nextProfile = baseUpdated;
+			// Probe the picked handle first. Any unavailable reason — `'taken'`, or the
+			// `'too_short'` / `'required'` cases a tolerated legacy payload can still produce —
+			// skips the nickname update so team/side/completion (the picks that matter) still
+			// persist; only the collision case is worth a toast. The user can rename later.
+			let setHandle = false;
+			let handleCollision = false;
 
 			if (nonNullish(result.handle)) {
 				const probe = await checkNicknameAvailability({
@@ -193,52 +204,41 @@
 					principal: currentProfile.owner
 				});
 
-				if (!probe.available) {
-					// Any unavailable reason — `'taken'`, or the `'too_short'` /
-					// `'required'` cases that a tolerated legacy payload can still
-					// produce — must SKIP the nickname update. Keeping the
-					// bootstrapped nickname lets the upsert below persist
-					// team/side/completion (the picks that matter), instead of the
-					// satellite rejecting the whole atomic write. Only the
-					// collision case is worth a toast; the user can rename later.
-					if (probe.reason === 'taken') {
-						notificationsStore.add({
-							title: t({
-								locale: $localeStore,
-								key: 'onboarding.handoff.collision_title'
-							}),
-							message: t({
-								locale: $localeStore,
-								key: 'onboarding.handoff.collision',
-								params: { handle: result.handle }
-							}),
-							type: 'error'
-						});
-					}
-				} else {
-					// Stamp the handle-change time so the set-profile assertion
-					// accepts the write. The satellite requires `handleLastChangeMs`
-					// ≈ now whenever the (normalized) nickname differs from the
-					// stored doc, and rejects a moved stamp when it is unchanged —
-					// so stamp only on a real change. A brand-new user's
-					// bootstrapped nickname (their OAuth display name / shortened
-					// principal) almost always differs from the handle they pick,
-					// which is exactly the case that was failing.
-					const handleChanged =
-						nicknameUniqueKey(result.handle) !== nicknameUniqueKey(currentProfile.nickname ?? '');
-
-					nextProfile = {
-						...baseUpdated,
-						nickname: result.handle,
-						...(handleChanged && { handleLastChangeMs: Date.now() })
-					};
+				if (probe.available) {
+					setHandle = true;
+				} else if (probe.reason === 'taken') {
+					handleCollision = true;
 				}
 			}
 
-			await upsertProfile({
-				key: nextProfile.owner,
-				data: nextProfile
+			// Field-level patch (NOT a full-snapshot write): `calculateAndSyncStats` writes this
+			// same doc concurrently on this finishing login, so a stale full snapshot would lose
+			// the optimistic-version race and throw — silently dropping these picks. A handle
+			// claimed in the TOCTOU window after the probe is dropped (the rest still persists),
+			// reported via `handleApplied`.
+			const { profile: nextProfile, handleApplied } = await applyOnboardingPicks({
+				principal: currentProfile.owner,
+				handle: result.handle,
+				setHandle,
+				favoriteParticipantId: participantPreference,
+				favoriteSide: sidePreference
 			});
+
+			if (setHandle && !handleApplied) {
+				handleCollision = true;
+			}
+
+			if (handleCollision && nonNullish(result.handle)) {
+				notificationsStore.add({
+					title: t({ locale: $localeStore, key: 'onboarding.handoff.collision_title' }),
+					message: t({
+						locale: $localeStore,
+						key: 'onboarding.handoff.collision',
+						params: { handle: result.handle }
+					}),
+					type: 'error'
+				});
+			}
 
 			// Bake the new profile into the store so the (app) layout's
 			// redirect effect sees `onboardingCompleted: true` immediately
@@ -247,32 +247,16 @@
 
 			void goto(resolve(AppPath.Flow), { replaceState: true });
 		} catch (err: unknown) {
-			const message = err instanceof Error ? err.message : '';
-
-			// Surface the real failure — the generic toast below otherwise
-			// swallows it, which is what made this class of bug invisible.
+			// A handle collision is handled inside `applyOnboardingPicks` (it retries without the
+			// handle), so anything reaching here is a genuine failure to persist. Surface it — the
+			// generic toast otherwise swallows it, which is what made this class of bug invisible.
 			console.error('Onboarding handoff (authenticated) failed:', err);
 
-			if (message.includes('already taken')) {
-				notificationsStore.add({
-					title: t({
-						locale: $localeStore,
-						key: 'onboarding.handoff.collision_title'
-					}),
-					message: t({
-						locale: $localeStore,
-						key: 'onboarding.handoff.collision',
-						params: { handle: result.handle ?? '' }
-					}),
-					type: 'error'
-				});
-			} else {
-				notificationsStore.add({
-					title: t({ locale: $localeStore, key: 'onboarding.handoff.failed_title' }),
-					message: t({ locale: $localeStore, key: 'onboarding.handoff.failed' }),
-					type: 'error'
-				});
-			}
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'onboarding.handoff.failed_title' }),
+				message: t({ locale: $localeStore, key: 'onboarding.handoff.failed' }),
+				type: 'error'
+			});
 		} finally {
 			applyingAuthenticatedHandoff = false;
 		}
@@ -293,4 +277,9 @@
 	};
 </script>
 
-<OnboardingFlow {authenticated} {initialParticipantId} onComplete={handleComplete} />
+<OnboardingFlow
+	{authenticated}
+	{initialParticipantId}
+	onComplete={handleComplete}
+	onPicksReady={handleCompletePreAuth}
+/>

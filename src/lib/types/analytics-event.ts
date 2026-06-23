@@ -66,6 +66,11 @@ export type AnalyticsEventName =
 	| 'watchlist_removed'
 	/** The order book was opened for a market. */
 	| 'orderbook_viewed'
+	/**
+	 * The market-detail metadata language was toggled; `label` carries the
+	 * target view (`original | translated`).
+	 */
+	| 'market_translation_toggled'
 	// ── Trading ───────────────────────────────────────────────────────
 	/** A position was taken (cockpit's `position_taken`). */
 	| 'position_taken'
@@ -102,6 +107,13 @@ export type AnalyticsEventName =
 	| 'streak_milestone'
 	/** The recovery faucet was claimed. */
 	| 'faucet_claimed'
+	/**
+	 * The transaction-history page was opened; `source` carries the entry
+	 * point (`dash_sheet | direct`), `count` the rows loaded.
+	 */
+	| 'transactions_viewed'
+	/** A transaction-history filter chip was applied (`label` = filter). */
+	| 'transactions_filtered'
 	// ── Social & leagues ──────────────────────────────────────────────
 	/**
 	 * An add-friend attempt ran; `label` carries the outcome
@@ -109,6 +121,11 @@ export type AnalyticsEventName =
 	 * rejected_cooldown | not_found | self | error`), `source` the surface.
 	 */
 	| 'friend_request_sent'
+	/**
+	 * A like on a friend-feed activity was toggled; `label` is the action
+	 * (`like | unlike`), `source` the surface (`arena`).
+	 */
+	| 'friend_feed_reaction'
 	/** A league was created. */
 	| 'league_created'
 	/** A user joined a league. */
@@ -119,8 +136,14 @@ export type AnalyticsEventName =
 	| 'battle_proposed'
 	/** A battle was accepted. */
 	| 'battle_accepted'
+	/** A battle proposal was declined by the challenged side. */
+	| 'battle_declined'
+	/** A battle proposal lapsed unanswered past its respond-by deadline. */
+	| 'battle_expired'
 	/** A battle resolved. */
 	| 'battle_resolved'
+	/** A battle detail surface was viewed (live standings / face-off). */
+	| 'battle_viewed'
 	/** A comment was posted. */
 	| 'comment_posted'
 	/** A chat message was sent. */
@@ -148,6 +171,14 @@ export type AnalyticsEventName =
 	| 'delete_succeeded'
 	/** An exit-signal reason was captured (pairs with the existing `exit_signals` collection). */
 	| 'exit_signal'
+	// ── Notifications ─────────────────────────────────────────────────
+	/**
+	 * An inbox notification was opened — tapped on the Notifications page or
+	 * its arrival toast. `label` carries the notification `kind`
+	 * (`resolve | streak | social | challenge | level | market | friend_request`),
+	 * so engagement can be sliced by notification type.
+	 */
+	| 'notification_opened'
 	// ── Health ────────────────────────────────────────────────────────
 	/** A client-side error surfaced (no PII — message is omitted/coarse). */
 	| 'app_error'

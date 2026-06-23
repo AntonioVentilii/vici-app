@@ -3,20 +3,27 @@ import {
 	getPositions as getPositionsApi,
 	getSeriesPriceHistory as getSeriesPriceHistoryApi,
 	getTradeHistory as getTradeHistoryApi,
+	listSeriesTradeHistory as listSeriesTradeHistoryApi,
 	mintCompleteSet as mintCompleteSetApi,
 	redeemCompleteSet as redeemCompleteSetApi
 } from '$lib/api/clearing.api';
-import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
+import { ZERO } from '$lib/constants/app.constants';
+import {
+	getIdentity,
+	getIdentityOrAnonymous,
+	safeGetIdentityOnce
+} from '$lib/services/identity.services';
 import { fetchMarketsLite } from '$lib/services/market.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
 import {
 	deriveMarketPriceSeries,
 	priceHistoryQueryWindow,
+	tradeHistoryNotional,
 	type MarketPriceSeries,
 	type PriceHistoryPeriod
 } from '$lib/utils/market-price-history.utils';
-import { isNullish } from '@dfinity/utils';
+import { fromNullable, isNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
 /**
@@ -200,6 +207,61 @@ export const loadMarketPriceCandles = ({
 		},
 		onUpdateError
 	});
+};
+
+// Page size for the traded-volume drain. `list_series_trade_history` returns
+// *all* remaining trades when `limit` is omitted, which can blow past the IC
+// message-size cap (and balloon client allocations) on a busy series — so cap
+// each page and follow `next_cursor`.
+const TRADE_HISTORY_PAGE_SIZE = BigInt(1000);
+
+/**
+ * Market-wide traded volume for one series, in payout-token base units.
+ *
+ * "Volume" on a market is the notional that changed hands, so this drains the
+ * executed-trade tape (`list_series_trade_history` — every participant's
+ * fills, not the caller's) a bounded page at a time and aggregates `Σ qty·price`
+ * via {@link tradeHistoryNotional}, folding each page in and discarding it so
+ * neither the response nor the running set is unbounded. Following `next_cursor`
+ * to exhaustion keeps the total exact rather than a windowed sample. The detail
+ * page calls this once on the foreground load (not the 30s consensus poll).
+ * `decimals` is the payout token's precision so the result formats like the
+ * other token stats. Read under the anonymous identity when signed-out, so a
+ * public visitor sees the same figure.
+ */
+export const getSeriesTradeVolume = async ({
+	seriesId,
+	decimals
+}: {
+	seriesId: string;
+	decimals: number;
+}): Promise<bigint> => {
+	const identity = await getIdentityOrAnonymous();
+
+	let volume = ZERO;
+	let startAfter: bigint | undefined;
+
+	for (;;) {
+		const { items, next_cursor } = await listSeriesTradeHistoryApi({
+			identity,
+			seriesId,
+			startAfter,
+			limit: TRADE_HISTORY_PAGE_SIZE,
+			certified: false
+		});
+
+		volume += tradeHistoryNotional({ trades: items, decimals });
+
+		const cursor = fromNullable(next_cursor);
+
+		if (isNullish(cursor)) {
+			break;
+		}
+
+		startAfter = cursor;
+	}
+
+	return volume;
 };
 
 /**

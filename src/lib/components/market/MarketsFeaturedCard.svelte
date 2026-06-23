@@ -1,15 +1,22 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
+	import MarketTranslationToggle from '$lib/components/market/MarketTranslationToggle.svelte';
 	import ProbBar from '$lib/components/ui/ProbBar.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { track } from '$lib/services/analytics.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
+	import { marketTranslations } from '$lib/stores/market-translations.store';
 	import type { Market } from '$lib/types/market';
 	import { formatVolume } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { categoryLabel } from '$lib/utils/market-tags.utils';
+	import { marketDisplayText, translatedLanguageLabel } from '$lib/utils/market-translation.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	/**
@@ -25,7 +32,31 @@
 
 	const { market, tag }: Props = $props();
 
-	const yes = $derived(Math.round(market.yesProbability * 100));
+	const translation = $derived($marketTranslations.get(market.id));
+
+	// Writable `$derived`: re-seeds from the global preference, flippable per
+	// card without changing the default.
+	let showOriginal = $derived($marketLanguagePreference === 'original');
+
+	const display = $derived(marketDisplayText({ market, translation, showOriginal }));
+
+	const onToggleTranslation = () => {
+		showOriginal = !showOriginal;
+		track({
+			name: 'market_translation_toggled',
+			marketId: market.id,
+			source: 'card',
+			label: showOriginal ? 'original' : 'translated'
+		});
+	};
+
+	// When the YES probability is unknown we render a skeleton in place of
+	// the percentage; the bar falls back to an empty track (0) rather than a
+	// misleading 50% fill.
+	const hasProbability = $derived(!isNullish(market.yesProbability));
+	const yes = $derived(
+		isNullish(market.yesProbability) ? 0 : Math.round(market.yesProbability * 100)
+	);
 	// Cold-start: a market with no real volume yet reads "New" instead of
 	// "0 VXP" — framing the empty market as an opportunity, never a synthetic
 	// crowd. Uses our real volume field only.
@@ -69,10 +100,26 @@
 	<div
 		style="margin-top: 12px; font-size: 15px; font-weight: 600; line-height: 1.3; min-height: 58px;"
 	>
-		{market.title}
+		{display.title}
 	</div>
+	{#if nonNullish(translation)}
+		<div style="margin-top: 4px;">
+			<MarketTranslationToggle
+				onToggle={onToggleTranslation}
+				{showOriginal}
+				translatedLanguageLabel={translatedLanguageLabel(translation.locale)}
+				variant="compact"
+			/>
+		</div>
+	{/if}
 	<div style="margin-top: 14px;" class="row between">
-		<span style:color="var(--yes)" style:font-weight="600" class="num yes t-h4">{yes}%</span>
+		{#if hasProbability}
+			<span style:color="var(--yes)" style:font-weight="600" class="num yes t-h4">{yes}%</span>
+		{:else}
+			<span style:font-weight="600" class="num t-h4"
+				><MarketOddsSkeleton variant={market.priceLoaded ? 'empty' : 'loading'} /></span
+			>
+		{/if}
 		<span style="gap: 4px;" class="row">
 			<span class="tag yes">{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
 			<span class="tag no">{t({ locale: $localeStore, key: 'outcome.no' })}</span>

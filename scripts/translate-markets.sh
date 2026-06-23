@@ -31,9 +31,10 @@
 #   ./scripts/translate-markets.sh <markets-json-file> [--local|--staging|--production]
 #   npm run translate:markets -- scripts/data/markets.deck-2026.json --production
 #
-# Auth: runs as the current dfx identity, which must be a satellite ADMIN — see
-# assertAdmin in src/satellite/services/market-translation.services.ts (unlike
-# tags, translations are admin-only, not creator-writable).
+# Auth: runs as the current dfx identity, which must be the markets' CREATOR
+# (the identity that ran deploy-markets.sh) or a satellite ADMIN — see
+# assertCanWriteMarketTranslation in
+# src/satellite/services/market-translation.services.ts.
 #
 # Locales are validated satellite-side against SUPPORTED_LOCALES; an unsupported
 # locale FAILs the upsert (counted, non-fatal). Matching is BY TITLE.

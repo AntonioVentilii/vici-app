@@ -50,13 +50,17 @@
 	} from '$lib/derived/vxp-holdings.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
-	import { listMyReferrals } from '$lib/services/referral.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { friendsListStore } from '$lib/stores/friends.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketsStore } from '$lib/stores/markets.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
+	import {
+		myReferralsLoadedStore,
+		myReferralsStore,
+		refreshMyReferrals
+	} from '$lib/stores/referrals.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
@@ -78,7 +82,17 @@
 	const streak = $derived(profile?.dailyStreak ?? 0);
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
-	let referralCount = $state(0);
+
+	// Credited referrals back the stack-sheet referral figure. A row counts once its
+	// `referrerPayout.status` has left `none` (owed / processing / paid — anything in
+	// flight still consumes a slot), matching the satellite's `countReferrerCredits`
+	// rule and the Arena invite hero. Filtering on `paid` alone hid redemptions whose
+	// payout was still in flight (or stuck retrying), reading as "0 friends" while
+	// Arena already showed the credit.
+	const referralsLoaded = $derived($myReferralsLoadedStore);
+	const referralCount = $derived(
+		$myReferralsStore.filter(({ referrerPayout }) => referrerPayout.status !== 'none').length
+	);
 
 	// ─── Holdings (playground / VXP domain) ────────────────────────────
 	const holdingsDisplay = $derived(
@@ -122,12 +136,22 @@
 	};
 
 	// Day-0/1 market context — "{category} · {pct}% YES" from live consensus.
-	const crowdContextOf = (market: Market): string =>
-		t({
+	// When the probability is still unknown (book not yet read or empty; see
+	// `Market.yesProbability`) we drop the "{pct}% YES" clause and show the
+	// bare category rather than a fabricated "0% YES" / "NaN%".
+	const crowdContextOf = (market: Market): string => {
+		const { yesProbability } = market;
+
+		if (isNullish(yesProbability)) {
+			return categoryOf(market);
+		}
+
+		return t({
 			locale: $localeStore,
 			key: 'dash.build.zero_crowd_ctx',
-			params: { category: categoryOf(market), pct: probabilityToPercent(market.yesProbability) }
+			params: { category: categoryOf(market), pct: probabilityToPercent(yesProbability) }
 		});
+	};
 
 	// ─── Positions / orders ────────────────────────────────────────────
 	// The clearing canister deletes positions on settlement, so anything in
@@ -245,6 +269,11 @@
 
 	// ─── Stack: today's delta + breakdown sheet ────────────────────────
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
+
+	// `user_stats` is fetched after mount, so the TODAY figure pulses a
+	// placeholder until the doc lands — distinct from a loaded-but-quiet window,
+	// which reads a real `0` rather than skeleton.
+	const todayLoading = $derived(isNullish(userStats));
 
 	// Net VXP across the recent settlement window: wins add their payout, losses
 	// have no payout (the stake is already gone), so a quiet/loss-only window
@@ -372,20 +401,11 @@
 			console.error('DashPage: failed to load user_stats', err);
 		}
 
-		try {
-			// Credited referrals back the stack-sheet referral figure. A row counts once its
-			// `referrerPayout.status` has left `none` (owed / processing / paid — anything in
-			// flight still consumes a slot), matching the satellite's `countReferrerCredits`
-			// rule and the Arena invite hero. Filtering on `paid` alone hid redemptions whose
-			// payout was still in flight (or stuck retrying), reading as "0 friends" while
-			// Arena already showed the credit.
-			const referrals = await listMyReferrals();
-			referralCount = referrals.filter(
-				({ referrerPayout }) => referrerPayout.status !== 'none'
-			).length;
-		} catch (err) {
-			console.error('DashPage: failed to load referrals', err);
-		}
+		// Stale-while-revalidate: the shared store keeps the last list across
+		// navigation, so a revisit shows the cached count immediately while this
+		// background refresh reconciles any newly credited redemptions. The store
+		// fails open internally, so no defensive wrapping is needed here.
+		void refreshMyReferrals();
 	});
 </script>
 
@@ -438,6 +458,7 @@
 				loading={$vxpHoldingsNotInitialized}
 				onOpen={() => (sheetOpen = true)}
 				{todayDelta}
+				{todayLoading}
 			/>
 
 			<!-- ZONE 3 · CALLS -->
@@ -456,6 +477,7 @@
 	onClose={() => (sheetOpen = false)}
 	{referralCount}
 	{referralVxpDisplay}
+	referralsLoading={!referralsLoaded}
 />
 
 {#if revealOpen}

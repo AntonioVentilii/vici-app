@@ -37,6 +37,12 @@ const resolvedPositionValue = ({
  * For resolved markets we use the final outcome (full `netQty` if won, zero
  * if lost) so the portfolio reflects the settled value rather than
  * pre-resolution midpoints.
+ *
+ * Returns `undefined` when the value cannot be computed — no market, or an
+ * open binary market whose implied probability is still unknown (the book
+ * hasn't been read, or read empty; see {@link Market.yesProbability}). The
+ * caller must treat `undefined` as "value unknown" and render a placeholder
+ * rather than substituting a fabricated `0`/50%.
  */
 export const calculatePositionValue = ({
 	position,
@@ -44,9 +50,9 @@ export const calculatePositionValue = ({
 }: {
 	position: Position;
 	market?: Market;
-}): bigint => {
+}): bigint | undefined => {
 	if (isNullish(market)) {
-		return ZERO;
+		return;
 	}
 
 	if (market.status === 'Resolved') {
@@ -64,21 +70,37 @@ export const calculatePositionValue = ({
 				: market.noProbability
 			: 1 / (market.outcomes?.length ?? 1);
 
+	// Unknown implied probability (binary market, book not yet read or empty).
+	// Bail out instead of coercing `undefined` through `Number` into a NaN /
+	// fabricated value — the caller surfaces a "value unknown" placeholder.
+	if (isNullish(prob)) {
+		return;
+	}
+
 	return BigInt(Math.floor(Number(position.netQty) * prob));
 };
 
+/**
+ * Unrealized P&L for a position, in VXP units. Returns `undefined` when the
+ * underlying value is unknown (see {@link calculatePositionValue}) so the
+ * caller can render a placeholder rather than a misleading `0`.
+ */
 export const calculatePositionPnL = ({
 	position,
 	market
 }: {
 	position: Position;
 	market?: Market;
-}): number => {
+}): number | undefined => {
 	if (isNullish(market)) {
-		return 0;
+		return;
 	}
 
 	const currentValue = calculatePositionValue({ position, market });
+
+	if (isNullish(currentValue)) {
+		return;
+	}
 
 	// lockedCollateral is clearing USD (`USD_DECIMALS`). currentValue uses token decimals.
 	const valNum = decimalFixedValueToNumber({

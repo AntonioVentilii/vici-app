@@ -139,6 +139,8 @@ export const idlFactory = ({ IDL }) => {
 				name: IDL.Variant({
 					delete_confirmed: IDL.Null,
 					school_picked: IDL.Null,
+					battle_viewed: IDL.Null,
+					transactions_viewed: IDL.Null,
 					resolution_disputed: IDL.Null,
 					streak_milestone: IDL.Null,
 					school_verify_email_submitted: IDL.Null,
@@ -147,14 +149,18 @@ export const idlFactory = ({ IDL }) => {
 					flow_card_expanded: IDL.Null,
 					affiliation_removed: IDL.Null,
 					league_invite_sent: IDL.Null,
+					notification_opened: IDL.Null,
 					position_taken: IDL.Null,
 					flow_abandoned: IDL.Null,
 					watchlist_removed: IDL.Null,
 					delete_succeeded: IDL.Null,
+					friend_feed_reaction: IDL.Null,
 					referral_link_copied: IDL.Null,
+					market_translation_toggled: IDL.Null,
 					comment_posted: IDL.Null,
 					flow_swipe: IDL.Null,
 					referral_converted: IDL.Null,
+					transactions_filtered: IDL.Null,
 					school_verify_code_submitted: IDL.Null,
 					signed_in: IDL.Null,
 					signed_up: IDL.Null,
@@ -167,6 +173,7 @@ export const idlFactory = ({ IDL }) => {
 					provider_linked: IDL.Null,
 					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
+					battle_declined: IDL.Null,
 					vxp_awarded: IDL.Null,
 					league_joined: IDL.Null,
 					exit_signal: IDL.Null,
@@ -186,6 +193,7 @@ export const idlFactory = ({ IDL }) => {
 					league_created: IDL.Null,
 					onboarding_step: IDL.Null,
 					market_viewed: IDL.Null,
+					battle_expired: IDL.Null,
 					delete_flow_opened: IDL.Null,
 					affiliation_set: IDL.Null,
 					session_started: IDL.Null,
@@ -728,22 +736,29 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				id: IDL.Text,
 				trash_talk: IDL.Opt(IDL.Text),
+				respond_by_ms: IDL.Opt(IDL.Float64),
+				responded_at_ms: IDL.Opt(IDL.Float64),
 				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
 				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
+				calls_a: IDL.Opt(IDL.Float64),
+				calls_b: IDL.Opt(IDL.Float64),
 				score_a: IDL.Opt(IDL.Float64),
 				score_b: IDL.Opt(IDL.Float64),
 				scope: IDL.Opt(IDL.Text),
 				state: IDL.Variant({
 					resolved: IDL.Null,
+					expired: IDL.Null,
 					proposed: IDL.Null,
 					in_flight: IDL.Null,
-					accepted: IDL.Null
+					accepted: IDL.Null,
+					declined: IDL.Null
 				}),
 				side_a: IDL.Text,
 				side_b: IDL.Text,
 				proposer: IDL.Text,
 				kickoff_ms: IDL.Float64,
 				wager: IDL.Opt(IDL.Float64),
+				resolved_at_ms: IDL.Opt(IDL.Float64),
 				settle_ms: IDL.Float64
 			})
 		)
@@ -765,6 +780,24 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AppListMarketTranslationsArgs = IDL.Record({ series_id: IDL.Text });
 	const AppListMarketTranslationsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				title: IDL.Text,
+				updated_at: IDL.Float64,
+				updated_by: IDL.Text,
+				series_id: IDL.Text,
+				locale: IDL.Text,
+				description: IDL.Text,
+				resolution: IDL.Text,
+				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+			})
+		)
+	});
+	const AppListMarketTranslationsForLocalesArgs = IDL.Record({
+		locales: IDL.Vec(IDL.Text),
+		series_ids: IDL.Vec(IDL.Text)
+	});
+	const AppListMarketTranslationsForLocalesResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
 				title: IDL.Text,
@@ -803,22 +836,29 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				id: IDL.Text,
 				trash_talk: IDL.Opt(IDL.Text),
+				respond_by_ms: IDL.Opt(IDL.Float64),
+				responded_at_ms: IDL.Opt(IDL.Float64),
 				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
 				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
+				calls_a: IDL.Opt(IDL.Float64),
+				calls_b: IDL.Opt(IDL.Float64),
 				score_a: IDL.Opt(IDL.Float64),
 				score_b: IDL.Opt(IDL.Float64),
 				scope: IDL.Opt(IDL.Text),
 				state: IDL.Variant({
 					resolved: IDL.Null,
+					expired: IDL.Null,
 					proposed: IDL.Null,
 					in_flight: IDL.Null,
-					accepted: IDL.Null
+					accepted: IDL.Null,
+					declined: IDL.Null
 				}),
 				side_a: IDL.Text,
 				side_b: IDL.Text,
 				proposer: IDL.Text,
 				kickoff_ms: IDL.Float64,
 				wager: IDL.Opt(IDL.Float64),
+				resolved_at_ms: IDL.Opt(IDL.Float64),
 				settle_ms: IDL.Float64
 			})
 		)
@@ -968,6 +1008,15 @@ export const idlFactory = ({ IDL }) => {
 	const AppLookupReferralCodeResult = IDL.Record({
 		owner: IDL.Opt(IDL.Text)
 	});
+	const AppRecomputeActivityReactionCountsResult = IDL.Record({
+		recomputed: IDL.Float64
+	});
+	const AppRecordFlowSwipeArgs = IDL.Record({ day_key: IDL.Text });
+	const AppRecordFlowSwipeResult = IDL.Record({
+		daily_goal_date: IDL.Text,
+		daily_goal_done: IDL.Float64,
+		cap_reached: IDL.Bool
+	});
 	const AppRecoverMyAccountResult = IDL.Record({
 		ok: IDL.Bool,
 		recovered: IDL.Opt(IDL.Bool),
@@ -1080,6 +1129,8 @@ export const idlFactory = ({ IDL }) => {
 				name: IDL.Variant({
 					delete_confirmed: IDL.Null,
 					school_picked: IDL.Null,
+					battle_viewed: IDL.Null,
+					transactions_viewed: IDL.Null,
 					resolution_disputed: IDL.Null,
 					streak_milestone: IDL.Null,
 					school_verify_email_submitted: IDL.Null,
@@ -1088,14 +1139,18 @@ export const idlFactory = ({ IDL }) => {
 					flow_card_expanded: IDL.Null,
 					affiliation_removed: IDL.Null,
 					league_invite_sent: IDL.Null,
+					notification_opened: IDL.Null,
 					position_taken: IDL.Null,
 					flow_abandoned: IDL.Null,
 					watchlist_removed: IDL.Null,
 					delete_succeeded: IDL.Null,
+					friend_feed_reaction: IDL.Null,
 					referral_link_copied: IDL.Null,
+					market_translation_toggled: IDL.Null,
 					comment_posted: IDL.Null,
 					flow_swipe: IDL.Null,
 					referral_converted: IDL.Null,
+					transactions_filtered: IDL.Null,
 					school_verify_code_submitted: IDL.Null,
 					signed_in: IDL.Null,
 					signed_up: IDL.Null,
@@ -1108,6 +1163,7 @@ export const idlFactory = ({ IDL }) => {
 					provider_linked: IDL.Null,
 					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
+					battle_declined: IDL.Null,
 					vxp_awarded: IDL.Null,
 					league_joined: IDL.Null,
 					exit_signal: IDL.Null,
@@ -1127,6 +1183,7 @@ export const idlFactory = ({ IDL }) => {
 					league_created: IDL.Null,
 					onboarding_step: IDL.Null,
 					market_viewed: IDL.Null,
+					battle_expired: IDL.Null,
 					delete_flow_opened: IDL.Null,
 					affiliation_set: IDL.Null,
 					session_started: IDL.Null,
@@ -1366,6 +1423,11 @@ export const idlFactory = ({ IDL }) => {
 			[AppListMarketTranslationsResult],
 			['query']
 		),
+		app_list_market_translations_for_locales: IDL.Func(
+			[AppListMarketTranslationsForLocalesArgs],
+			[AppListMarketTranslationsForLocalesResult],
+			['query']
+		),
 		app_list_my_affiliations: IDL.Func([], [AppListMyAffiliationsResult], ['query']),
 		app_list_my_battles: IDL.Func([], [AppListMyBattlesResult], ['query']),
 		app_list_my_blocking_leagues: IDL.Func([], [AppListMyBlockingLeaguesResult], ['query']),
@@ -1392,6 +1454,12 @@ export const idlFactory = ({ IDL }) => {
 			[AppLookupReferralCodeResult],
 			['query']
 		),
+		app_recompute_activity_reaction_counts: IDL.Func(
+			[],
+			[AppRecomputeActivityReactionCountsResult],
+			[]
+		),
+		app_record_flow_swipe: IDL.Func([AppRecordFlowSwipeArgs], [AppRecordFlowSwipeResult], []),
 		app_recover_my_account: IDL.Func([], [AppRecoverMyAccountResult], []),
 		app_redeem_referral_code: IDL.Func([AppRedeemReferralCodeArgs], [], []),
 		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),

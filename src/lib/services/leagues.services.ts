@@ -1,12 +1,19 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
+import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
+import { authPrincipal } from '$lib/derived/user.derived';
 import { LeaguePrivacy } from '$lib/enums/league';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getMyReferralCode } from '$lib/services/referral.services';
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import {
+	BATTLE_RESPOND_BY_MS,
+	BATTLE_SCOPE_DEFAULT,
 	BATTLE_TRASH_TALK_MAX_LENGTH,
 	BATTLE_WAGER_MAX,
 	BATTLE_WAGER_MIN,
+	battleAccuracyPct,
+	deriveBattleWinner,
 	isBattleScope,
 	type BattleDoc,
 	type BattleScope
@@ -23,8 +30,10 @@ import {
 	type LeagueMemberDoc,
 	type LeagueMemberRole
 } from '$lib/types/league-member';
-import { nonNullish } from '@dfinity/utils';
+import { leagueStatsBucket, leagueStatsKey, type LeagueStatsDoc } from '$lib/types/league-stats';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
+import type { PrincipalText } from '@junobuild/schema';
 import { get } from 'svelte/store';
 
 /**
@@ -508,6 +517,63 @@ export const updateLeague = async ({
 	return next;
 };
 
+// Cache for the caller's own referral code — the same value for a given identity,
+// so resolve it once and reuse across every league-share build. Keyed to the
+// signed-in principal so an in-session account switch (sign-out → sign-in without
+// a reload) never reuses the previous user's code. Only a positive result is
+// cached; a missing code (not yet assigned / backfilled later) stays retryable.
+let cachedReferral: { owner: PrincipalText; code: string } | undefined;
+
+const resolveMyReferralCode = async (): Promise<string | undefined> => {
+	const owner = get(authPrincipal);
+
+	if (isNullish(owner)) {
+		return;
+	}
+
+	if (cachedReferral?.owner === owner) {
+		return cachedReferral.code;
+	}
+
+	try {
+		const code = await getMyReferralCode();
+
+		if (nonNullish(code)) {
+			cachedReferral = { owner, code };
+		}
+
+		return code;
+	} catch {
+		// Best-effort: a failed lookup falls through to `undefined`, yielding a
+		// plain (no-`?ref=`) share link.
+	}
+};
+
+/**
+ * Builds the canonical league-invite URL (`{origin}/league/{code}`), appending
+ * the sharer's referral code as `?ref={code}` so the invite also implies a friend
+ * invite (auto-friendship on join, plus the new-user bonus for fresh sign-ups —
+ * the landing route + onboarding drain redeem the `?ref=` exactly like a plain
+ * friend invite). The param is appended only when a real referral code resolves;
+ * with none available the plain link is returned (a handle would fail
+ * `REFERRAL_CODE_REGEX` on the consuming side and be dropped, so it is never
+ * substituted). `withReferral` lets the caller annotate analytics.
+ */
+export const buildLeagueShareUrl = async ({
+	inviteCode
+}: {
+	inviteCode: string;
+}): Promise<{ url: string; withReferral: boolean }> => {
+	const base = `${window.location.origin}/league/${inviteCode}`;
+	const referralCode = await resolveMyReferralCode();
+
+	if (nonNullish(referralCode) && REFERRAL_CODE_REGEX.test(referralCode)) {
+		return { url: `${base}?ref=${referralCode}`, withReferral: true };
+	}
+
+	return { url: base, withReferral: false };
+};
+
 /**
  * Join a league via its 6-char invite code. Looks the league up,
  * then writes a `LeagueMemberDoc` for the caller. Returns the
@@ -635,12 +701,17 @@ const projectBattleWire = (b: {
 	state: BattleDoc['state'];
 	kickoffMs: number;
 	settleMs: number;
+	respondByMs?: number;
+	respondedAtMs?: number;
 	scope?: string;
 	wager?: number;
 	trashTalk?: string;
 	scoreA?: number;
 	scoreB?: number;
+	callsA?: number;
+	callsB?: number;
 	winner?: BattleDoc['winner'];
+	resolvedAtMs?: number;
 }): BattleDoc => ({
 	id: b.id,
 	kind: b.kind,
@@ -650,6 +721,8 @@ const projectBattleWire = (b: {
 	state: b.state,
 	kickoffMs: b.kickoffMs,
 	settleMs: b.settleMs,
+	respondByMs: b.respondByMs,
+	respondedAtMs: b.respondedAtMs,
 	// Re-narrow the loose wire string back to the typed union; drop
 	// anything outside the closed scope set (legacy / unknown).
 	scope: nonNullish(b.scope) && isBattleScope(b.scope) ? b.scope : undefined,
@@ -657,7 +730,10 @@ const projectBattleWire = (b: {
 	trashTalk: b.trashTalk,
 	scoreA: b.scoreA,
 	scoreB: b.scoreB,
-	winner: b.winner
+	callsA: b.callsA,
+	callsB: b.callsB,
+	winner: b.winner,
+	resolvedAtMs: b.resolvedAtMs
 });
 
 /**
@@ -702,26 +778,31 @@ export const getMyBattleStats = async (): Promise<{ boutsWon: number }> =>
  * (sideB) league doesn't need to exist on the satellite for the
  * proposal to land — accept goes through a separate assert pass
  * under the opponent owner's caller identity.
+ *
+ * The competition window starts when the opponent **accepts**, so the
+ * proposer only chooses a `durationMs` (the window length). We persist a
+ * provisional window (`kickoffMs = now`, `settleMs = now + durationMs`)
+ * whose length encodes the duration; accept resets `kickoffMs` to its own
+ * "now" and preserves that length. `respondByMs` bounds how long the
+ * proposal waits before it lapses to `expired`.
  */
 export const proposeBattle = async ({
 	sideA,
 	sideB,
-	kickoffMs,
-	settleMs,
+	durationMs,
 	scope,
 	wager,
 	trashTalk
 }: {
 	sideA: string;
 	sideB: string;
-	kickoffMs: number;
-	settleMs: number;
+	durationMs: number;
 	scope?: BattleScope;
 	wager?: number;
 	trashTalk?: string;
 }): Promise<BattleDoc> => {
-	if (kickoffMs >= settleMs) {
-		throw new Error('Kickoff must be strictly before settle.');
+	if (!Number.isFinite(durationMs) || durationMs <= 0) {
+		throw new Error('Battle duration must be a positive number of milliseconds.');
 	}
 
 	if (nonNullish(scope) && !isBattleScope(scope)) {
@@ -745,7 +826,8 @@ export const proposeBattle = async ({
 
 	const identity = await safeGetIdentityOnce();
 	const proposerPrincipal = identity.getPrincipal().toText();
-	const battleId = `${sideA}--vs--${sideB}-${Date.now().toString(36)}`;
+	const now = Date.now();
+	const battleId = `${sideA}--vs--${sideB}-${now.toString(36)}`;
 
 	const battle: BattleDoc = {
 		id: battleId,
@@ -754,8 +836,11 @@ export const proposeBattle = async ({
 		sideB,
 		proposer: proposerPrincipal,
 		state: 'proposed',
-		kickoffMs,
-		settleMs,
+		// Provisional window — reset to the accept moment on accept. Its
+		// length is the chosen duration the accept preserves.
+		kickoffMs: now,
+		settleMs: now + durationMs,
+		respondByMs: now + BATTLE_RESPOND_BY_MS,
 		// Persist scope only when narrowed (omit the 'all' default so legacy
 		// reads and the default render path stay identical).
 		...(nonNullish(scope) && scope !== 'all' ? { scope } : {}),
@@ -776,24 +861,190 @@ export const proposeBattle = async ({
 };
 
 /**
+ * Read a league's `(calls, wins)` bucket for a battle scope from the
+ * public `league_stats` doc. Missing doc / category → a zero bucket.
+ */
+const readLeagueStatsBucket = async ({
+	leagueId,
+	scope
+}: {
+	leagueId: string;
+	scope: BattleScope;
+}): Promise<{ calls: number; wins: number }> => {
+	const doc = await getDoc<LeagueStatsDoc>({
+		collection: Collection.LEAGUE_STATS,
+		key: leagueStatsKey({ leagueId })
+	});
+
+	return leagueStatsBucket({ doc: doc?.data, scope });
+};
+
+/**
  * Battle state transitions — thin write helpers. The satellite assert
  * (BE-6) enforces the forward-only state machine + per-transition
- * authorisation; the FE just packages the doc + signs the call.
- *
- * All three read the existing doc first so we round-trip the
- * server's `version` token, which Juno's optimistic-concurrency guard
- * requires on every update of an existing doc.
+ * authorisation; the FE just packages the doc + signs the call. Each
+ * reads the existing doc first to round-trip the server's `version`
+ * token, which Juno's optimistic-concurrency guard requires.
+ */
+
+/**
+ * Accept a battle proposal. For a **league** battle this fuses the
+ * kickoff: the window starts now (`kickoffMs = now`, the proposed
+ * duration preserved as `settleMs - kickoffMs`), each side's current
+ * `league_stats` bucket is stamped as the baseline the window delta is
+ * measured against, and the state goes straight to `in_flight`. Duels
+ * (no `league_stats` to delta) just move to `accepted` and kick off
+ * separately. `respondedAtMs` records when the challenged side answered.
  */
 export const acceptBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
-	const next: BattleDoc = { ...battle, state: 'accepted' };
-	await writeBattleTransition({ battle, next });
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		throw new Error('Battle no longer exists.');
+	}
+
+	const current = existing.data;
+
+	if (current.kind !== 'league') {
+		const acceptedDuel: BattleDoc = { ...current, state: 'accepted' };
+
+		await setDoc<BattleDoc>({
+			collection: Collection.BATTLES,
+			doc: { key: battle.id, data: acceptedDuel, version: existing.version }
+		});
+
+		return acceptedDuel;
+	}
+
+	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
+	const durationMs = current.settleMs - current.kickoffMs;
+	const kickoffMs = Date.now();
+
+	const next: BattleDoc = {
+		...current,
+		state: 'in_flight',
+		kickoffMs,
+		settleMs: kickoffMs + durationMs,
+		respondedAtMs: kickoffMs,
+		baselineA: await readLeagueStatsBucket({ leagueId: current.sideA, scope }),
+		baselineB: await readLeagueStatsBucket({ leagueId: current.sideB, scope })
+	};
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
 
 	return next;
 };
 
+/**
+ * Decline a battle proposal (`proposed → declined`). Only the challenged
+ * side's owner can call this; the satellite assert hard-rejects anyone
+ * else and any battle past `proposed`. `respondedAtMs` records when.
+ */
+export const declineBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		throw new Error('Battle no longer exists.');
+	}
+
+	if (existing.data.state !== 'proposed') {
+		throw new Error('Only proposed battles can be declined.');
+	}
+
+	const next: BattleDoc = { ...existing.data, state: 'declined', respondedAtMs: Date.now() };
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
+
+	return next;
+};
+
+/**
+ * Lazily expire a `proposed` battle whose respond-by deadline has passed
+ * (`proposed → expired`). Idempotent: a battle that is no longer
+ * `proposed`, or not yet past its deadline, is returned unchanged with no
+ * write. Mirrors the lazy auto-resolve path — Juno has no scheduler, so a
+ * stale proposal is swept the first time a side owner reads it. Legacy
+ * rows without `respondByMs` fall back to `kickoffMs`.
+ */
+export const maybeExpireBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		return battle;
+	}
+
+	const current = existing.data;
+
+	if (current.state !== 'proposed') {
+		return current;
+	}
+
+	const respondByMs = current.respondByMs ?? current.kickoffMs;
+
+	if (Date.now() < respondByMs) {
+		return current;
+	}
+
+	const next: BattleDoc = { ...current, state: 'expired' };
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
+
+	return next;
+};
+
+/**
+ * Kick a battle off (`accepted → in_flight`). For league battles this
+ * stamps each side's current `league_stats` bucket as the baseline the
+ * window delta is measured against; the satellite assert re-reads
+ * `league_stats` and rejects a baseline that doesn't match. The next
+ * doc is built from the freshly-read raw doc so no field is lost to a
+ * stale wire projection.
+ */
 export const kickoffBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
-	const next: BattleDoc = { ...battle, state: 'in_flight' };
-	await writeBattleTransition({ battle, next });
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		throw new Error('Battle no longer exists.');
+	}
+
+	const current = existing.data;
+	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
+
+	const next: BattleDoc =
+		current.kind === 'league'
+			? {
+					...current,
+					state: 'in_flight',
+					baselineA: await readLeagueStatsBucket({ leagueId: current.sideA, scope }),
+					baselineB: await readLeagueStatsBucket({ leagueId: current.sideB, scope })
+				}
+			: { ...current, state: 'in_flight' };
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
 
 	return next;
 };
@@ -827,29 +1078,16 @@ export const retractBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 	});
 };
 
-export const resolveBattle = async ({
-	battle,
-	scoreA,
-	scoreB
-}: {
-	battle: BattleDoc;
-	scoreA: number;
-	scoreB: number;
-}): Promise<BattleDoc> => {
-	const winner = scoreA > scoreB ? 'A' : scoreA < scoreB ? 'B' : 'draw';
-	const next: BattleDoc = { ...battle, state: 'resolved', scoreA, scoreB, winner };
-	await writeBattleTransition({ battle, next });
-
-	return next;
-};
-
-const writeBattleTransition = async ({
-	battle,
-	next
-}: {
-	battle: BattleDoc;
-	next: BattleDoc;
-}): Promise<void> => {
+/**
+ * Resolve a league battle (`in_flight → resolved`). Takes no scores:
+ * each side's score is its prediction accuracy over the window,
+ * computed from the delta between the current `league_stats` bucket and
+ * the baseline stamped at kickoff. The satellite assert re-derives the
+ * same figures from `league_stats` and rejects any mismatch, so the
+ * result can't be falsified. Idempotent at the call site: an
+ * already-resolved battle is returned unchanged without a write.
+ */
+export const resolveBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
 	const existing = await getDoc<BattleDoc>({
 		collection: Collection.BATTLES,
 		key: battle.id
@@ -859,12 +1097,127 @@ const writeBattleTransition = async ({
 		throw new Error('Battle no longer exists.');
 	}
 
+	const current = existing.data;
+
+	if (current.state === 'resolved') {
+		return current;
+	}
+
+	if (current.kind !== 'league') {
+		throw new Error('Only league battles resolve from league accuracy.');
+	}
+
+	if (isNullish(current.baselineA) || isNullish(current.baselineB)) {
+		throw new Error('Battle is missing its kickoff baselines.');
+	}
+
+	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
+	const [statsA, statsB] = await Promise.all([
+		readLeagueStatsBucket({ leagueId: current.sideA, scope }),
+		readLeagueStatsBucket({ leagueId: current.sideB, scope })
+	]);
+
+	const deltaA = {
+		calls: Math.max(0, statsA.calls - current.baselineA.calls),
+		wins: Math.max(0, statsA.wins - current.baselineA.wins)
+	};
+	const deltaB = {
+		calls: Math.max(0, statsB.calls - current.baselineB.calls),
+		wins: Math.max(0, statsB.wins - current.baselineB.wins)
+	};
+
+	const scoreA = battleAccuracyPct(deltaA);
+	const scoreB = battleAccuracyPct(deltaB);
+	const winner = deriveBattleWinner({
+		scoreA,
+		scoreB,
+		callsA: deltaA.calls,
+		callsB: deltaB.calls
+	});
+
+	const next: BattleDoc = {
+		...current,
+		state: 'resolved',
+		scoreA,
+		scoreB,
+		callsA: deltaA.calls,
+		callsB: deltaB.calls,
+		winner,
+		resolvedAtMs: Date.now()
+	};
+
 	await setDoc<BattleDoc>({
 		collection: Collection.BATTLES,
-		doc: {
-			key: battle.id,
-			data: next,
-			version: existing.version
-		}
+		doc: { key: battle.id, data: next, version: existing.version }
 	});
+
+	return next;
+};
+
+/** Running standings for an in-flight battle, before it resolves. */
+export interface BattleLiveScore {
+	/** Side A accuracy (0–100) over the window so far. */
+	scoreA: number;
+	/** Side B accuracy (0–100) over the window so far. */
+	scoreB: number;
+	/** Side A window call count so far — the accuracy tie-break. */
+	callsA: number;
+	/** Side B window call count so far. */
+	callsB: number;
+	/** Who's ahead right now, by the same rule resolution uses. */
+	leader: ReturnType<typeof deriveBattleWinner>;
+}
+
+/**
+ * Project the **current** standings of an in-flight league battle —
+ * "who's winning" while the window is still open. Runs the identical
+ * `league_stats − baseline` accuracy arithmetic as {@link resolveBattle},
+ * but is strictly **read-only**: it never writes the doc, so viewing a
+ * battle can't resolve it (that stays the lazy auto-resolve path). The
+ * standing is provisional and moves as each side keeps predicting.
+ *
+ * Returns `null` for anything that can't be scored live — a duel (no
+ * `league_stats` to delta), a non-`in_flight` battle, or a legacy row
+ * missing its kickoff baselines. Callers fall back to their existing
+ * render.
+ */
+export const readBattleLiveScore = async ({
+	battle
+}: {
+	battle: BattleDoc;
+}): Promise<BattleLiveScore | null> => {
+	if (
+		battle.state !== 'in_flight' ||
+		battle.kind !== 'league' ||
+		isNullish(battle.baselineA) ||
+		isNullish(battle.baselineB)
+	) {
+		return null;
+	}
+
+	const scope: BattleScope = battle.scope ?? BATTLE_SCOPE_DEFAULT;
+	const [statsA, statsB] = await Promise.all([
+		readLeagueStatsBucket({ leagueId: battle.sideA, scope }),
+		readLeagueStatsBucket({ leagueId: battle.sideB, scope })
+	]);
+
+	const deltaA = {
+		calls: Math.max(0, statsA.calls - battle.baselineA.calls),
+		wins: Math.max(0, statsA.wins - battle.baselineA.wins)
+	};
+	const deltaB = {
+		calls: Math.max(0, statsB.calls - battle.baselineB.calls),
+		wins: Math.max(0, statsB.wins - battle.baselineB.wins)
+	};
+
+	const scoreA = battleAccuracyPct(deltaA);
+	const scoreB = battleAccuracyPct(deltaB);
+
+	return {
+		scoreA,
+		scoreB,
+		callsA: deltaA.calls,
+		callsB: deltaB.calls,
+		leader: deriveBattleWinner({ scoreA, scoreB, callsA: deltaA.calls, callsB: deltaB.calls })
+	};
 };

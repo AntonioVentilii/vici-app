@@ -340,12 +340,16 @@
 									<div class="flow-probs-action-row">
 										<div class="flow-probs-action no">
 											<span class="flow-probs-arrow">←</span>
-											<span class="flow-probs-payout">+{winNo}</span>
+											<span class="flow-probs-payout"
+												>+{winNo}<span class="flow-probs-payout-unit">VXP</span></span
+											>
 											<span class="flow-probs-role">{tt('welcome.hero.favorite')}</span>
 										</div>
 										<div class="flow-probs-action yes">
 											<span class="flow-probs-role">{tt('welcome.hero.long_shot')}</span>
-											<span class="flow-probs-payout">+{winYes}</span>
+											<span class="flow-probs-payout"
+												>+{winYes}<span class="flow-probs-payout-unit">VXP</span></span
+											>
 											<span class="flow-probs-arrow">→</span>
 										</div>
 									</div>
