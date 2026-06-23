@@ -4,6 +4,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
@@ -17,8 +18,10 @@
 		listMyBattles,
 		listMyLeagues,
 		loadLeaguesByIds,
+		readBattleLiveScore,
 		resolveBattle,
 		retractBattle,
+		type BattleLiveScore,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
 	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
@@ -51,12 +54,26 @@
 	let loadState: 'loading' | 'ready' | 'not_found' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	let actingBattleId = $state<string | null>(null);
+	// Provisional standings while the battle is in flight — null until the
+	// read returns, or for any battle that can't be scored live (duel,
+	// non-in_flight, legacy row missing baselines).
+	let liveScore = $state<BattleLiveScore | null>(null);
+	// Fire `battle_viewed` exactly once per mount, on the first `ready`.
+	let viewedTracked = false;
 	// Battle id → count of lazy auto-resolve attempts. We retry a transient
 	// failure on the next effect pass (there's no manual button to fall back
 	// on) but cap it so a persistently failing write doesn't hammer the
 	// backend on every re-render.
 	const autoResolveAttempts = new SvelteMap<string, number>();
 	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
+
+	// Where the viewer arrived from, for the `battle_viewed` funnel. A
+	// bounded vocabulary — anything unrecognised falls back to deep_link.
+	const viewSource = $derived.by((): 'inbox' | 'league' | 'deep_link' => {
+		const from = page.url.searchParams.get('from');
+
+		return from === 'inbox' || from === 'league' ? from : 'deep_link';
+	});
 
 	const load = async () => {
 		try {
@@ -68,7 +85,24 @@
 			battles = battleList;
 			memberships = mineList;
 			selfPrincipal = identity.getPrincipal().toText();
-			loadState = battles.some((b) => b.id === battleId) ? 'ready' : 'not_found';
+			const found = battles.find((b) => b.id === battleId);
+			loadState = nonNullish(found) ? 'ready' : 'not_found';
+
+			if (nonNullish(found) && !viewedTracked) {
+				viewedTracked = true;
+				track({ name: 'battle_viewed', battleId, label: found.state, source: viewSource });
+			}
+
+			// Provisional standings — read-only; resolution stays the lazy
+			// auto-resolve path. A failure degrades silently to the "—" render.
+			if (nonNullish(found)) {
+				try {
+					liveScore = await readBattleLiveScore({ battle: found });
+				} catch (err) {
+					console.error('BattleDetailPage: live score read failed', err);
+					liveScore = null;
+				}
+			}
 		} catch (err) {
 			console.error('BattleDetailPage: load failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
@@ -180,6 +214,42 @@
 	const isFinalizing = $derived(
 		nonNullish(battle) && battle.state === 'in_flight' && Date.now() >= battle.settleMs
 	);
+
+	// Provisional standings are available — show running accuracy + a
+	// "leading" highlight in place of the pre-resolve "—".
+	const isLive = $derived(
+		nonNullish(battle) && battle.state === 'in_flight' && nonNullish(liveScore)
+	);
+
+	// Score text for a side: the resolved doc score once resolved, the live
+	// projection while in flight, else the pre-resolve placeholder.
+	const scoreText = (side: 'A' | 'B'): string => {
+		if (nonNullish(battle) && battle.state === 'resolved') {
+			const pct = side === 'A' ? battle.scoreA : battle.scoreB;
+
+			return nonNullish(pct)
+				? t({ locale: $localeStore, key: 'leagues.battle.score_pct', params: { pct } })
+				: '—';
+		}
+
+		if (isLive && nonNullish(liveScore)) {
+			const pct = side === 'A' ? liveScore.scoreA : liveScore.scoreB;
+
+			return t({ locale: $localeStore, key: 'leagues.battle.score_pct', params: { pct } });
+		}
+
+		return '—';
+	};
+
+	// Whether a side is ahead — the resolved winner once resolved, the live
+	// leader while in flight. A draw highlights neither side.
+	const isLeading = (side: 'A' | 'B'): boolean => {
+		if (nonNullish(battle) && battle.state === 'resolved') {
+			return battle.winner === side;
+		}
+
+		return isLive && liveScore?.leader === side;
+	};
 
 	// The side whose league the viewer belongs to (any role). Resolution is
 	// open to members, not just owners — the satellite re-derives the scores,
@@ -409,21 +479,13 @@
 				<div
 					style:--team-accent={sideAccent(battle.sideA)}
 					class="battle-detail-team"
-					class:is-leading={battle.state === 'resolved' && battle.winner === 'A'}
+					class:is-leading={isLeading('A')}
 				>
 					<span class="battle-detail-emblem" aria-hidden="true">
 						{sideLabel(battle.sideA).charAt(0)}
 					</span>
 					<span class="battle-detail-team-name">{sideLabel(battle.sideA)}</span>
-					<span class="battle-detail-score num">
-						{battle.state === 'resolved' && nonNullish(battle.scoreA)
-							? t({
-									locale: $localeStore,
-									key: 'leagues.battle.score_pct',
-									params: { pct: battle.scoreA }
-								})
-							: '—'}
-					</span>
+					<span class="battle-detail-score num">{scoreText('A')}</span>
 				</div>
 
 				<span class="battle-detail-vs serif-italic">vs</span>
@@ -431,23 +493,21 @@
 				<div
 					style:--team-accent={sideAccent(battle.sideB)}
 					class="battle-detail-team"
-					class:is-leading={battle.state === 'resolved' && battle.winner === 'B'}
+					class:is-leading={isLeading('B')}
 				>
 					<span class="battle-detail-emblem" aria-hidden="true">
 						{sideLabel(battle.sideB).charAt(0)}
 					</span>
 					<span class="battle-detail-team-name">{sideLabel(battle.sideB)}</span>
-					<span class="battle-detail-score num">
-						{battle.state === 'resolved' && nonNullish(battle.scoreB)
-							? t({
-									locale: $localeStore,
-									key: 'leagues.battle.score_pct',
-									params: { pct: battle.scoreB }
-								})
-							: '—'}
-					</span>
+					<span class="battle-detail-score num">{scoreText('B')}</span>
 				</div>
 			</div>
+
+			{#if isLive}
+				<p class="allcaps battle-detail-live-note">
+					{t({ locale: $localeStore, key: 'battle.detail.live_provisional' })}
+				</p>
+			{/if}
 
 			{#if battle.state === 'resolved' && battle.winner === 'draw'}
 				<p class="allcaps battle-detail-winner">
@@ -719,6 +779,14 @@
 		letter-spacing: var(--tracking-allcaps);
 		text-align: center;
 		color: var(--text-muted);
+	}
+
+	.battle-detail-live-note {
+		margin: 0;
+		font-size: var(--t-10);
+		letter-spacing: var(--tracking-allcaps);
+		text-align: center;
+		color: var(--laurel);
 	}
 
 	.battle-detail-pending-foot {
