@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.9](https://github.com/AntonioVentilii/vici-app/compare/v0.2.8...v0.2.9) (2026-06-23)
+
+
+### Features
+
+* **arena:** surface live battles and show who's winning ([#967](https://github.com/AntonioVentilii/vici-app/issues/967)) ([524deb9](https://github.com/AntonioVentilii/vici-app/commit/524deb96b7700246a80a1e7d0cd83e78046465a2))
+
 ## [0.2.8](https://github.com/AntonioVentilii/vici-app/compare/v0.2.7...v0.2.8) (2026-06-22)
 
 
