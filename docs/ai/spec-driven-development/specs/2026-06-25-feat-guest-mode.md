@@ -9,26 +9,29 @@ Status: Draft
 
 A signed-out visitor who takes the "Skip — preview first, sign-up
 later" path out of onboarding can predict immediately — no account, no
-balance, no wall — and keep predicting freely. Their picks are held
-locally as zero-stake "shadow" positions. Loss-aversion, not a gate,
-drives conversion: a celebratory "save your pick" sheet after the first
-pick, a gentle reminder every fifth pick, and a standing inline "Sign up
-to save your pick" CTA on Flow whenever the guest has at least one pick.
-On sign-up the guest becomes a member, the existing 1,500 VXP starter
-grant lands, and their held picks are **retro-staked** at their locked
-entry price (clamped to the grant) so the picks they made as a guest
-become real positions — they finish in Flow as a member with no work
-lost.
+balance, no wall — and keep previewing freely. Their picks are a
+throwaway, in-session preview: they are held only in localStorage to
+power the in-session nudges, and they are **discarded on conversion**.
+The hook is **"start for real + claim VXP"**, not pick preservation:
+loss-aversion is driven by the offer to start a real account and claim
+the existing 1,500 VXP starter grant, not by saving demo picks. On
+sign-up the guest becomes a member, the existing 1,500 VXP onboarding
+grant lands, and they start with an **empty portfolio** — the preview
+picks are cleared, never turned into positions.
+
+This is a **demo-drop** funnel, not a retro-stake one (see Decisions).
+That decision **shrinks this spec to pure-frontend** — no satellite
+endpoint, no candid/declarations regen, no new economic action on
+convert — which lowers risk and keeps the whole thing to one PR.
 
 ## Context
 
-This is the highest-blast-radius spec of the V1.8 port: it touches the
-identity/auth gate (signed-out users currently cannot predict at all),
-the prediction submit path (real orders go FE→engine and require an
-authenticated identity), the VXP/holdings derived stores (a guest has no
-ledger balance), and introduces **retro-stake math** that converts
-zero-stake shadow picks into real engine positions on conversion. It
-**layers on top of** Onboarding V3
+This spec touches the identity/auth gate (signed-out users currently
+cannot predict at all), the prediction submit path (real orders go
+FE→engine and require an authenticated identity), and the VXP/holdings
+derived stores (a guest has no ledger balance). Guest picks are pure
+client-side preview state — there is **no new economic action on
+convert** (no retro-stake math). It **layers on top of** Onboarding V3
 (`specs/2026-06-25-feat-onboarding-v3.md`) — the "Skip — preview first,
 sign-up later" button is wired there and hands off here. The sign-in
 re-skin is a separate spec.
@@ -52,8 +55,8 @@ Current state — **there is no guest mode today**:
   caller is not authenticated. Real orders go FE→engine
   (`docs/engine-integration.md`); the engine is agnostic and requires a
   real principal. **A guest therefore cannot place a real order** — this
-  is the architectural reason guest picks must live client-side until
-  conversion.
+  is the architectural reason guest picks live client-side only and are
+  never written as positions.
 
 Identity / auth state:
 
@@ -79,8 +82,8 @@ VXP / holdings derived stores (a guest has none):
   `vxpBacked` (~199), `vxpHoldingsTotal` (~203),
   `vxpHoldingsNotInitialized` (~189). These read the ledger for the
   signed-in principal; for a guest they are simply empty / not
-  initialized, which is why guest picks must be stake-0 and the
-  conversion grant is what first populates a real balance.
+  initialized. The conversion grant is what first populates a real
+  balance, and the portfolio starts empty (no preview picks carried in).
 
 The starter grant (already exists — convert reuses it, does not add it):
 
@@ -92,11 +95,11 @@ The starter grant (already exists — convert reuses it, does not add it):
   new member — amount from `newUserVxpAmountMilestone1BaseUnits()` /
   `NEW_USER_VXP_TOTAL_BASE_UNITS`
   (`src/lib/constants/vxp-onboarding.constants.ts`). **Conversion does
-  not introduce a new mint** — it routes a guest through the normal
-  new-member creation, so the existing grant lands. The genuinely new
-  economic action is the **retro-stake** (below).
+  not introduce a new mint** and adds **no new economic action** — it
+  routes a guest through the normal new-member creation, so the existing
+  grant lands and the portfolio starts empty.
 
-Pre-auth pick persistence (the mechanism to reuse, not reinvent):
+Pre-auth handoff (the mechanism to reuse, not reinvent):
 
 - Governed by
   `specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`
@@ -107,11 +110,11 @@ Pre-auth pick persistence (the mechanism to reuse, not reinvent):
   merge-safe (preserves referral / league / email). Drain effect in
   `src/routes/(app)/+layout.svelte` (~222) runs `drainPendingOnboarding`
   (`src/lib/services/onboarding-handoff.services.ts` ~406) on the
-  new-user branch, applying picks via `applyOnboardingPicks`
-  (`src/lib/services/profile.services.ts` ~442). Guest picks follow this
-  stash → drain-on-first-authenticated-layout shape; they do **not**
-  invent a new persistence path. (See Pending decisions for the exact
-  storage-key / store split.)
+  new-user branch. Guest mode reuses this pipeline **only for the
+  handle/identity handoff** — it does **not** carry guest picks or
+  stakes across conversion. The guest preview picks are cleared at
+  convert, not drained into positions. (See Pending decisions for the
+  exact storage-key / store split.)
 
 Overlay-collision gating (so the save sheet never stacks on a reveal):
 
@@ -147,57 +150,56 @@ Reusable UI / services (per `docs/ai/frontend/reusability.md`):
   `kind:'soft'` (celebratory first-pick ask) and `kind:'remind'` (the
   every-5th nudge). Pluralised body via `gs.picks_one` / `gs.picks_many`.
   Sign-up calls `window.__viciConvertGuest({ authMethod, email })`.
+  **Copy is re-pointed for demo-drop** — see Scope §4: the framing is
+  "start for real + claim VXP", never "save your pick".
 - `app.jsx` — the guest logic: `onPredict` (~597) forces `stake=0,
 bonus=0` for every guest pick and drives the cadence off a
   session-scoped `guestPicksRef` (~362, 1st-celebrate / every-5th-remind,
   **not** lifetime `me.calls`); the soft/remind sheet setters (~722–727);
   the render gate `guestSave && !menagerieReveal && !beatActive` (~832);
   the standing inline CTA `me.guest && me.calls >= 1 && route==='flow'`
-  (~819); `convertGuest` (~286).
+  (~819); `convertGuest` (~286). The handover `convertGuest` is the
+  **demo-drop** variant (`recentCalls.filter(c => !c.demo)` — picks
+  reset to a clean Day 0), which is the design this spec ports.
 - CHANGELOG: V1.8.7 (guest infra + save-sheet birth), V1.8.35 (sequence
   the sheet **after** the Hatchling reveal — the collision gate),
   V1.8.36–37 (gate-once / save-framing copy — superseded by .38), V1.8.38
-  (Model B: remove the hard block, keep predicting freely), V1.8.39
-  (audit fixes — **retro-stake on convert**, pluralised copy, `'hard'` →
-  `'remind'`, session-scoped cadence). The CTO header domain-1 scopes the
-  guest funnel to this spec.
-
-> **Prototype divergence to record (Open question 1).** The handover
-> `app.jsx` `convertGuest` (~286) is the **demo-drop** variant — it
-> filters out guest picks (`recentCalls.filter(c => !c.demo)`) and resets
-> to a clean Day 0, treating guest play as throwaway practice. The
-> CHANGELOG's later entries (V1.8.38–39) and the CTO header describe the
-> **retro-stake** variant — guest picks become real positions at convert.
-> These contradict. This spec ports the **retro-stake** intent (the
-> brief's source of truth and the more recent CHANGELOG state); the
-> code-vs-changelog conflict is flagged below.
+  (Model B: remove the hard block, keep previewing freely). Some later
+  CHANGELOG entries describe a retro-stake-on-convert variant; this spec
+  **does not** port that — the product decision is demo-drop (see
+  Decisions). The CTO header domain-1 scopes the guest funnel to this
+  spec.
 
 ### Reusability
 
 Guest mode is a re-composition over existing infrastructure, not new
-infra: the pre-auth stash/drain pipeline, `BottomSheet`,
+infra: the pre-auth handle/identity handoff, `BottomSheet`,
 `SignInProviderStack`, `notificationsStore`, the celebration/beat gate
 stores, and the existing onboarding grant. The genuinely new code is (a)
 a small guest-session store, (b) the guest-pick branch in the Flow
-commit, (c) the save-sheet component + cadence, and (d) the retro-stake
-reconciliation on convert.
+commit (records an in-session preview pick, never a position), and (c)
+the save-sheet component + cadence. There is **no** retro-stake
+reconciliation — convert clears the preview and routes through the
+normal new-member path.
 
 ## Scope
 
 Guest predicting + the convert funnel only. The Skip entry point is
-Onboarding V3's; the sign-in re-skin is a separate spec.
+Onboarding V3's; the sign-in re-skin is a separate spec. Because there
+is no retro-stake, this spec is **pure-frontend** (no satellite
+endpoint) and stays one PR.
 
 ### 1. Guest session state
 
 A small client-only guest store (e.g.
 `src/lib/stores/guest.store.ts`) holding `{ isGuest, handle,
 sessionPickCount }`, hydrated from / persisted to localStorage alongside
-the picks stash. `isGuest` is set when the V3 Skip path completes (an
-auto-assigned or claimed handle, no auth). `sessionPickCount` is
-**session-scoped** and drives the cadence (mirrors the prototype's
-`guestPicksRef`, deliberately **not** a lifetime count) so a returning
-guest cannot misfire the first-pick celebration. Cleared on conversion
-and on a real sign-out.
+the in-session preview picks. `isGuest` is set when the V3 Skip path
+completes (an auto-assigned or claimed handle, no auth).
+`sessionPickCount` is **session-scoped** and drives the cadence (mirrors
+the prototype's `guestPicksRef`, deliberately **not** a lifetime count)
+so a returning guest cannot misfire the first-pick celebration. Cleared
+on conversion and on a real sign-out.
 
 A `guestMode` derived (`src/lib/derived/`) exposes `isGuest` for surfaces
 to gate on — analogous to the prototype's `__viciIsGuest`.
@@ -213,45 +215,54 @@ to gate on — analogous to the prototype's `__viciIsGuest`.
 - **Predict control** (`TradeModal.svelte` / `FlowMode.svelte` commit):
   for a guest, render the predict control (not `SignInActions`) and route
   the commit through a **guest-pick branch** that does **not** call
-  `placeOrder` / `safeGetIdentityOnce`. The guest pick is recorded as a
-  zero-stake shadow position in the picks stash; no engine call, no
-  balance check. (Stake-0 picks also cannot move engine prices — there is
-  an existing `stake>0` guard prototype-side — so free guest play cannot
-  pollute markets. Confirm the app's order path has the equivalent
-  property: a guest pick never reaches the engine at all here, which is
-  strictly safer.)
+  `placeOrder` / `safeGetIdentityOnce`. The guest pick is recorded as an
+  in-session preview pick (no stake) in localStorage; no engine call, no
+  balance check. (Guest picks never reach the engine at all here, so free
+  guest play cannot move market prices — strictly safer than the
+  prototype's `stake>0` guard.)
 - Every guest pick is free; there is **no hard block** at the 2nd pick or
   ever (Model B, V1.8.38). The funnel is nudges + a standing CTA.
 
-### 3. Guest picks persistence (reuse the pre-auth stash pipeline)
+### 3. Guest picks persistence (in-session preview only)
 
-- A guest pick is appended to a pre-auth stash following the
-  `PENDING_ONBOARDING_STORAGE_KEY` pattern. Each entry captures what
-  retro-stake needs: `{ marketId, outcome/side, entryPrice, ts }` —
-  `entryPrice` is the locked fill price at pick time (the prototype's
-  `entry`), the source of truth for retro-stake.
-- Whether guest picks share the onboarding stash (extend
-  `PendingOnboarding` with a `guestPicks[]` field) or live under a
-  sibling key (e.g. `'vici:pending-guest-picks'`) is a Pending decision —
-  but the **drain trigger and the new-user reconciliation point are the
-  same** `(app)/+layout.svelte` effect that already drains onboarding, so
-  there is one place where a freshly-created member reconciles everything
-  stashed pre-auth.
+- A guest pick is appended to an in-session preview list in localStorage,
+  capturing only what the nudges need: `{ marketId, outcome/side, ts }`
+  (no `entryPrice`, no stake — there is nothing to reconcile at convert).
+  Its sole purpose is to power the cadence and the "you've made N
+  predictions" nudge copy.
+- The preview picks are **cleared on conversion** and are **never written
+  as positions**. The reused pre-auth handoff pipeline carries only the
+  handle/identity handoff (referral / league / email via the existing
+  merge-safe writer), **not** picks or stakes.
+- Whether the preview picks live under the onboarding store or a sibling
+  localStorage key (e.g. `'vici:guest-preview-picks'`) is a Pending
+  decision — but either way they are session preview state that is
+  cleared at convert, not drained into the new member's portfolio.
 
 ### 4. The save sheet + cadence
 
 New `src/lib/components/guest/GuestSaveSheet.svelte` built on
 `BottomSheet`, mounted once at the app shell beside the other overlays.
 
-- **Soft** (after pick 1): celebratory, fully dismissible — "Nice call —
-  save your pick & claim 1,500 VXP." Dismiss = keep previewing.
-- **Remind** (every 5th pick thereafter): the gentle "Sign up to save
-  your N picks and 1,500 VXP" nudge; body **pluralises** on the
-  session pick count (`gs.picks_one` / `gs.picks_many`). Soft (pick 1) is
-  always singular.
+**Copy framing (CRITICAL).** The copy must **not** promise saving picks
+— the preview picks are discarded on convert. Re-point every surface
+from "save your pick" to a **"create your account / claim 1,500 VXP /
+start predicting for real"** framing. The picks are referenced only as
+in-session social proof ("you've made N predictions"), never as
+something that carries over.
+
+- **Soft** (after pick 1): celebratory, fully dismissible —
+  "Enjoying the preview? Sign up to start for real and claim your 1,500
+  VXP." Dismiss = keep previewing.
+- **Remind** (every 5th pick thereafter): the same "start for real +
+  claim 1,500 VXP" nudge, optionally referencing the in-session count as
+  social proof ("you've made N predictions"); pluralise that count on
+  `gs.picks_one` / `gs.picks_many`. It must not imply the N picks are
+  saved.
 - **Standing inline CTA**: a calm pill on Flow whenever the guest has ≥1
   pick (`isGuest && sessionPickCount >= 1 && route === Flow`), opening the
-  sheet on tap. Never blocks a card.
+  sheet on tap. Framed "Sign up to start for real" / "Claim your 1,500
+  VXP" — never "save your pick". Never blocks a card.
 - **All dismissible; none blocks.** The 1,500 VXP figure comes from
   `newUserVxpAmountMilestone1BaseUnits()` via `formatVxpBalance`, not a
   hardcoded literal.
@@ -266,35 +277,30 @@ handle={guestHandle}` so conversion runs through the real provider
   stack (redirect-safe). The prototype's bespoke Google/email buttons are
   reference copy only.
 
-### 5. Conversion + retro-stake (the new economic action)
+> The exact final wording of the soft sheet, the remind nudge, and the
+> inline CTA is a **pending copy decision** (see Pending decisions). The
+> direction is fixed: account/claim-VXP/start-for-real framing, no
+> gambling vocabulary, "prediction" never "bet", no emoji, and no promise
+> that preview picks are saved.
 
-On a successful sign-up from the guest funnel:
+### 5. Conversion (create profile + clear the guest session)
+
+On a successful sign-up from the guest funnel — **no new economic
+action**:
 
 - The new member profile is created → the **existing**
   `onProfileSetForVxpOnboarding` grant fires (1,500 VXP). No new mint
-  surface, no convert-specific grant code.
-- The drain (new-user branch, `(app)/+layout.svelte` →
-  `onboarding-handoff.services.ts`) reconciles the stashed guest picks:
-  for each open zero-stake shadow pick, **retro-stake** at its locked
-  `entryPrice`, recomputing `shares` / `toWin` / `costBasis` so the pick
-  becomes a real position. The default per-pick stake and the **clamp so
-  the total retro-stake never exceeds the granted pack** (leftover stays
-  spendable) are economy parameters — sourced from a constants file, not
-  hardcoded (the prototype used "default 100 each, clamped to the grant";
-  the app must pick a constant-backed value — see Pending decisions and
-  the Technical-requirements section).
+  surface, no convert-specific grant code, no retro-stake.
+- The in-session guest preview picks are **discarded**: the guest store
+  and the preview-picks localStorage are **cleared**. None of them
+  becomes a position; the new member's portfolio **starts empty**.
+- The pre-auth handoff drain (new-user branch, `(app)/+layout.svelte` →
+  `onboarding-handoff.services.ts`) carries only the existing onboarding
+  handoff (handle / referral / league / email) — there is no pick
+  reconciliation step.
 - After conversion: `notificationsStore.add(...)` toasts "1,500 VXP
-  added"; the guest store is cleared; the user lands in Flow as a member
-  with their picks now real.
-
-> **How retro-stake creates real positions.** A real position requires a
-> cleared engine order. Whether retro-stake (a) replays each pick as a
-> real `placeOrder` against the engine at convert time (at current book,
-> not the stale entry — a divergence), or (b) the pick is reconstructed
-> as a position record only, is an **open question with backend
-> implications** (Open question 2 + Technical requirements). The
-> prototype recomputes the numbers client-side because its engine is
-> simulated; the app's engine is real and authoritative.
+  added"; the user lands in Flow as a member with a fresh 1,500 VXP and
+  an empty portfolio, ready to make their first real prediction.
 
 ### Out of scope
 
@@ -308,16 +314,18 @@ On a successful sign-up from the guest funnel:
 - **Anti-farm gating of the onboarding grant (#543).** Conversion routes
   a guest through new-member creation, so it inherits the existing
   onboarding-grant threat model and any future #543 hardening — it does
-  not change it here. But guest mode **widens the new-account mint
-  surface** (a brand-new account can now be created with picks already in
-  hand); this is flagged in Technical requirements and as a pending
-  decision, not solved here.
+  not change it here. Guest mode **widens the new-account mint surface**
+  (a brand-new account can now be created after a frictionless preview);
+  demo-drop deliberately keeps that surface no wider than the existing
+  grant (no extra mint via retro-stake), but #543 is flagged, not solved
+  here.
 - **Changing any economy amount or the grant size** — those are the
   signed-off constants.
 - **Server-authoritative guest-pick storage.** Guest picks are
-  client-only until conversion (no satellite doc for a session with no
-  principal); a cleared browser loses unsaved guest picks, which is the
-  intended loss-aversion pressure, not a bug.
+  client-only, in-session preview state (no satellite doc for a session
+  with no principal) and are discarded at convert; a cleared browser
+  simply loses the preview, which is harmless because nothing was ever a
+  position.
 
 ## Linked issues
 
@@ -327,8 +335,8 @@ Searched the repo's open issues (`guest`, `convert`, `sign up`,
 not the client activity log) is adjacent — it bounds the new-account
 mint that conversion exercises. It is explicitly **out of scope** here
 (no closing keyword); reference it as **Part of the same threat surface**
-under Technical requirements. No issue tracks guest mode itself — new
-feature, no closing keyword.
+in Dependencies. No issue tracks guest mode itself — new feature, no
+closing keyword.
 
 ## Analytics
 
@@ -351,69 +359,15 @@ regen** is required — preferred over minting new names.
   call this out so the implementer does both halves.
 - **Conversion** → `signed_up` (~27) with `source: 'guest_convert'` and
   `label` = the finishing provider, so the guest→member funnel is
-  separable from a cold signup. `onboarding_completed` still fires once
-  via the drain (per the persist spec), so conversion is not double-
-  counted as a fresh onboarding.
+  separable from a cold signup. No "retro-staked count" prop is needed
+  (picks are discarded). `onboarding_completed` still fires once via the
+  drain (per the persist spec), so conversion is not double-counted as a
+  fresh onboarding.
 
 Behavioural only — bounded vocab, no PII / free-text. Whether
 `guest_save_prompted` is worth a new name vs. folding into an existing
 event is a Pending decision (it gates whether the union/Zod edit
 happens).
-
-## Technical requirements (satellite / backend)
-
-Guest predicting is **pure-frontend** (no satellite write for a session
-with no principal). The satellite/backend surface is touched only at
-**conversion**, and only through existing paths — but the numbers must be
-stated because retro-stake exercises the economy:
-
-- **Performance / call frequency.** Conversion creates one new profile
-  (existing path) and reconciles N stashed picks once. N is bounded by a
-  single guest session's picks — small (single digits to low tens). If
-  retro-stake replays picks as real engine orders (Open question 2), that
-  is N order placements at convert time, sequential, one-off per
-  conversion — not a per-swipe cost. No new hook fires per guest pick
-  (there is no guest write).
-- **Memory & storage.** No new collection for guest sessions (client
-  localStorage only). At conversion the only new docs are whatever the
-  retro-staked positions/orders already produce through the normal trade
-  path. The onboarding grant writes its existing `vxp_awards` doc — no
-  new award type.
-- **Scalability.** Guest sessions cost the satellite nothing (no writes).
-  Conversions scale as new-member signups already do. The retro-stake
-  loop is per-user, bounded by one session's picks — no N+1 fan-out
-  across users.
-- **Upgrade & compatibility.** If retro-stake is purely FE
-  reconciliation through existing `placeOrder` / engine APIs, **no `.did`
-  / bindings regeneration and no breaking change**. If it needs a new
-  satellite endpoint to atomically grant-then-retro-stake (Open question
-  2 / Pending decision), that is a candid-surface change requiring
-  `npm run juno:functions:build` + committed regenerated bindings, and
-  must be re-scoped — flagged, not assumed.
-- **Security / anti-farm.** Conversion is a **new-account mint** (the
-  1,500 VXP grant). Guest mode lowers the cost of reaching that mint (no
-  upfront friction), so it sits squarely on the **#543** surface. The
-  existing defense is Internet-Identity-gated sign-up (a real per-account
-  cost); retro-stake must not let a guest mint **more** than the grant —
-  the **clamp (total retro-stake ≤ grant)** is the structural bound and
-  must be enforced server-side if retro-stake mints/positions are
-  authoritative, not only in the FE preview (per `docs/ai/economy.md`
-  principle 3: client previews, server is authoritative). Propose, per the
-  economy doc's anti-farm posture, that retro-stake gate on the clamp and
-  not exceed the grant under any client manipulation.
-- **Parameters.** The per-pick default retro-stake and the grant-clamp
-  ceiling are economy values — they belong in
-  `src/lib/constants/vxp-economy.constants.ts` (or
-  `vxp-onboarding.constants.ts`), cited not restated, per
-  `docs/ai/economy.md` (it never restates a number). The grant amount is
-  already `newUserVxpAmountMilestone1BaseUnits()` /
-  `NEW_USER_VXP_TOTAL_BASE_UNITS`.
-
-> This section stays **mandatory and unresolved** until Open question 2
-> and the retro-stake authority decision land: a `Draft` that proposes a
-> server-authoritative retro-stake is not buildable until the backend
-> shape is confirmed (and may need an icdc-core-side change — separate
-> repo, separate PR, per `docs/ai/backend/README.md`).
 
 ## Implementation outline
 
@@ -426,42 +380,41 @@ handle, sessionPickCount }`, localStorage-backed) + a `guestMode`
    to `/signin`. Keep the plain signed-out redirect intact.
 3. **Predict control** — `TradeModal.svelte` / `FlowMode.svelte`: for a
    guest, render the predict control and branch the commit into a
-   guest-pick path that records a zero-stake shadow pick to the stash —
-   never calls `placeOrder` / `safeGetIdentityOnce`. Increment
-   `sessionPickCount`.
-4. **Picks stash** — extend the pre-auth stash (shared key vs sibling
-   key per Pending decision) with `guestPicks[] = { marketId,
-side/outcome, entryPrice, ts }`, written through a merge-safe writer
-   in the `handleCompletePreAuth` family so referral/league/email survive.
+   guest-pick path that records an in-session preview pick — never calls
+   `placeOrder` / `safeGetIdentityOnce`. Increment `sessionPickCount`.
+4. **Preview picks** — record `{ marketId, side/outcome, ts }` to an
+   in-session localStorage list (shared key vs sibling key per Pending
+   decision) purely to power the cadence/nudge copy. No `entryPrice`, no
+   stake — nothing to reconcile.
 5. **Save sheet** — `src/lib/components/guest/GuestSaveSheet.svelte` on
-   `BottomSheet`; soft / remind / inline variants; pluralised copy; the
-   `!reveal && !beatActive` collision gate; `SignInProviderStack
-mode="signup"` CTAs; VXP figure from
-   `newUserVxpAmountMilestone1BaseUnits()`. Mount once at the app shell.
+   `BottomSheet`; soft / remind / inline variants; pluralised
+   social-proof count; the `!reveal && !beatActive` collision gate;
+   `SignInProviderStack mode="signup"` CTAs; VXP figure from
+   `newUserVxpAmountMilestone1BaseUnits()`. Copy framed "start for real +
+   claim 1,500 VXP", never "save your pick". Mount once at the app shell.
    Cadence: soft on pick 1, remind every 5th, standing inline CTA while
    `sessionPickCount >= 1` on Flow.
-6. **Convert + retro-stake** — in the drain's new-user branch
-   (`onboarding-handoff.services.ts` + `(app)/+layout.svelte`), after the
-   profile is created and the grant fires: reconcile each stashed guest
-   pick into a real position by retro-staking at its locked `entryPrice`,
-   clamped so the total ≤ grant (constant-backed). Toast "1,500 VXP
-   added" via `notificationsStore`; clear the guest store. (The exact
-   retro-stake mechanism — replay as real orders vs reconstruct positions
-   — is Open question 2; the loop and clamp are the same either way.)
-7. **i18n** — 18 `gs.*` keys ported into the app's namespace (not the
+6. **Convert** — on a successful sign-up from the funnel: the profile is
+   created and the existing grant fires; clear the guest store and the
+   preview-picks localStorage so the portfolio starts empty. Toast "1,500
+   VXP added" via `notificationsStore`. No pick reconciliation — the
+   pre-auth handoff carries only handle/identity.
+7. **i18n** — the `gs.*` keys ported into the app's namespace (not the
    prototype's bare `gs.*`; see Decisions) across all six locales
-   (en/it/fr/de/es/pt-BR) in `src/lib/constants/messages/*.ts`. Run
-   `npm run quality` to catch missing-locale gaps.
-8. **Analytics** — `position_taken` (`source: 'guest_flow'`),
-   `signed_up` (`source: 'guest_convert'`, `label` = provider), and (if
-   approved) `guest_save_prompted` in **both** the TS union and Zod
-   mirror; capture via `track()`.
-9. **PRODUCT.md** — document the guest funnel (free predicting, no wall,
-   loss-aversion conversion, retro-stake, the client-only picks
-   limitation, and the #543 new-account-mint note) in the same PR.
-10. `npm run quality` + `npm run check` (and, only if a satellite
-    endpoint is added, `npm run juno:functions:build` + committed
-    regenerated bindings).
+   (en/it/fr/de/es/pt-BR) in `src/lib/constants/messages/*.ts`, with the
+   demo-drop copy framing. Run `npm run quality` to catch missing-locale
+   gaps.
+8. **Analytics** — `position_taken` (`source: 'guest_flow'`), `signed_up`
+   (`source: 'guest_convert'`, `label` = provider), and (if approved)
+   `guest_save_prompted` in **both** the TS union and Zod mirror; capture
+   via `track()`.
+9. **PRODUCT.md** — document the guest funnel (free previewing, no wall,
+   loss-aversion conversion via the start-for-real + claim-VXP offer,
+   preview picks discarded on convert / portfolio starts empty, the
+   client-only preview limitation, and the #543 new-account-mint note) in
+   the same PR.
+10. `npm run quality` + `npm run check`. (Pure-frontend — no satellite
+    build / bindings regen.)
 
 ## Acceptance criteria
 
@@ -470,63 +423,44 @@ mode="signup"` CTAs; VXP figure from
       predict control shows, not a sign-in prompt.
 - [ ] A guest can keep predicting indefinitely; no pick is ever blocked
       (no hard gate at the 2nd pick or any later pick).
-- [ ] Guest picks are recorded as zero-stake shadow picks and never reach
-      the engine (no `placeOrder` / identity call) — free guest play
-      cannot move market prices.
-- [ ] After pick 1 the **soft** save sheet shows (celebratory,
-      dismissible); every 5th pick after shows the **remind** sheet with
-      correctly **pluralised** copy; a standing inline "Sign up to save
-      your pick" CTA shows on Flow whenever the guest has ≥1 pick. All
-      dismissible; none blocks a card.
+- [ ] Guest picks are recorded as in-session preview picks and never
+      reach the engine (no `placeOrder` / identity call) — free guest
+      play cannot move market prices.
+- [ ] After pick 1 the **soft** sheet shows (celebratory, dismissible);
+      every 5th pick after shows the **remind** sheet with correctly
+      **pluralised** social-proof copy; a standing inline CTA shows on
+      Flow whenever the guest has ≥1 pick. All dismissible; none blocks a
+      card.
+- [ ] No funnel copy promises saving picks — every surface is framed
+      "create your account / claim 1,500 VXP / start predicting for
+      real".
 - [ ] The save sheet never stacks on a menagerie reveal or a Flow beat —
       it waits until `!reveal && !beatActive`, then renders.
 - [ ] The cadence uses a **session-scoped** pick count, so a returning
       guest does not re-fire the first-pick celebration.
 - [ ] On sign-up from the funnel the guest becomes a member, the existing
-      1,500 VXP grant lands, and every held pick is **retro-staked** at
-      its locked entry price (clamped so the total ≤ grant; leftover stays
-      spendable) — the picks become real positions, nothing is lost.
+      1,500 VXP grant lands via the existing onboarding path, the guest
+      session and preview-picks localStorage are **cleared**, no pick is
+      staked, and the new member's portfolio **starts empty**.
 - [ ] A "1,500 VXP added" toast shows on conversion; the guest session
       state is cleared.
-- [ ] All 18 `gs.*` keys resolve in en/it/fr/de/es/pt-BR; no gambling
+- [ ] All `gs.*` keys resolve in en/it/fr/de/es/pt-BR; no gambling
       vocabulary, no "bet", no emoji (lucide icons only).
 - [ ] Analytics fire: guest pick emits `position_taken` with
       `source: 'guest_flow'`, conversion emits `signed_up` with
       `source: 'guest_convert'`; any new event name lands in both the TS
       union and the Zod mirror.
-- [ ] `npm run quality` and `npm run check` pass (plus regenerated
-      bindings if a satellite endpoint is added).
+- [ ] `npm run quality` and `npm run check` pass.
 
 ## Open questions
 
-- **1 — Which `convertGuest` is the intended design: demo-drop or
-  retro-stake?** The handover `app.jsx` `convertGuest` (~286) drops guest
-  picks as throwaway practice; CHANGELOG V1.8.38–39 and the CTO header
-  describe retro-staking them into real positions. This spec ports
-  retro-stake (the brief's stated source of truth and the more recent
-  CHANGELOG state), but the code and the changelog literally disagree —
-  confirm retro-stake is the intent before building, since it is the bulk
-  of the new work.
-- **2 — How does retro-stake create a _real_ position against the
-  authoritative engine?** A real position needs a cleared engine order
-  (`placeOrder` → engine). Options: (a) at convert, replay each held pick
-  as a real order — but at the **current** book, not the stale guest-time
-  `entryPrice`, so the locked price the guest saw may not be honourable;
-  (b) honour the guest's locked `entryPrice`, which the agnostic engine
-  cannot do without a special path; (c) reconstruct a position record
-  without a real clearing trade, which diverges from "every position is a
-  cleared engine trade." The prototype recomputes client-side because its
-  engine is simulated; the app's engine is real
-  (`docs/engine-integration.md`). This likely needs **backend input** and
-  may touch icdc-core (separate repo / PR). Resolve before the retro-stake
-  scope is buildable.
-- **3 — Does the existing onboarding-grant hook fire correctly for a
+- **1 — Does the existing onboarding-grant hook fire correctly for a
   converted guest, and exactly once?** Confirm `onProfileSetForVxpOnboarding`
   treats a converted-guest profile creation identically to a cold signup
   (it should, since convert creates a normal new profile), and that the
   #926 persist-spec drain reconciliation and the grant do not race or
   double-fire.
-- **4 — Where exactly does the route gate let a guest through?** Confirm
+- **2 — Where exactly does the route gate let a guest through?** Confirm
   the minimal allowed-route set (Flow only, or also market detail /
   results) against what the guest funnel actually needs, and that
   `userSignedOutResolved` consumers elsewhere don't misread a guest
@@ -534,20 +468,21 @@ mode="signup"` CTAs; VXP figure from
 
 ## Pending decisions
 
-- **Guest-picks storage: extend the onboarding stash vs a sibling key.**
-  Share `PENDING_ONBOARDING_STORAGE_KEY` (add a `guestPicks[]` field, one
-  drain) or use a sibling `'vici:pending-guest-picks'` key (separate
-  slot, drained in the same effect). Both reconcile at the same new-user
-  drain point; pick the one that keeps the merge-safe writer simplest and
-  doesn't bloat the onboarding payload. Owner: FE architecture.
-- **Retro-stake economics: per-pick default stake + grant-clamp rule.**
-  The prototype used "default 100 each, clamped so the total ≤ grant,
-  leftover spendable." The app must back these with constants in
-  `vxp-economy.constants.ts` and decide the clamp policy (proportional
-  scale-down vs first-N-fit) and whether unstaked overflow picks are
-  dropped or left as zero-stake. Owner: economy. (Gated by Open
-  question 2 — if retro-stake replays real orders at the live book, "stake
-  at locked entry" may not be expressible.)
+- **Guest preview-picks storage: extend the onboarding store vs a sibling
+  key.** Hold the in-session preview picks under
+  `PENDING_ONBOARDING_STORAGE_KEY` (add a `guestPreviewPicks[]` field) or
+  a sibling `'vici:guest-preview-picks'` key. Either way they are
+  session-only preview state cleared at convert (never drained into
+  positions); pick the one that keeps the merge-safe handoff writer
+  simplest and doesn't bloat the onboarding payload. Owner: FE
+  architecture.
+- **Nudge cadence.** Soft on pick 1 + remind every 5th is the prototype's
+  cadence; confirm the every-5th interval and whether the inline CTA
+  threshold stays at ≥1 pick. Owner: product.
+- **Final copy for the save sheet, remind nudge, and inline CTA.** The
+  framing is fixed (account / claim 1,500 VXP / start for real; no
+  "save your pick"; no gambling vocab; "prediction" never "bet"; no
+  emoji), but the exact wording is pending. Owner: product / content.
 - **Whether `guest_save_prompted` is a new analytics event.** Folding the
   prompt-shown signal into an existing event avoids a union/Zod edit and a
   potential analytics-wire regen; a dedicated name gives a cleaner funnel.
@@ -555,38 +490,48 @@ mode="signup"` CTAs; VXP figure from
   product analytics.
 - **Guest-allowed route set.** Flow only (tightest) vs Flow + market
   detail + results (richer preview). Owner: product. (Tied to Open
-  question 4.)
-- **Server-side enforcement of the retro-stake clamp.** Per
-  `docs/ai/economy.md` principle 3, if retro-stake mints/positions are
-  authoritative the clamp must hold server-side, not only in the FE
-  preview — which may require a satellite endpoint (re-scoping the spec
-  to touch the candid surface). Decide once Open question 2 resolves.
-  Owner: economy + backend.
+  question 2.)
 
 ## Decisions
 
-- **Keep the app's i18n namespace.** The 18 `gs.*` keys land under the
-  app's `app`/`onboarding`-style namespace convention, not the
-  prototype's bare scattered `gs.*` prefix — per the project's namespace
-  rule and the brief. Exact prefix mirrors how V3 mapped `obv3.*` →
-  `onboarding.v3.*`.
+- **Demo-drop, not retro-stake.** When a guest converts, their guest
+  preview-predictions are **discarded**, not turned into real positions.
+  The converted user starts with the existing 1,500 VXP onboarding grant
+  and an **empty portfolio**. Rationale:
+  - Guest/demo picks are **low-intent** — users often tap randomly while
+    previewing and don't care about the outcome yet — so preserving them
+    has little value.
+  - Retro-staking at a locked entry price is an **EV exploit**
+    (look-ahead: convert only once the market has moved your way) and
+    widens the new-account-mint abuse surface tracked in **#543**.
+  - Honoring a locked entry price would require a **new icdc-core /
+    satellite endpoint** (atomic grant-then-stake, with candid regen).
+    Demo-drop removes that dependency entirely, keeping the spec
+    pure-frontend and one PR.
+  - Rejected alternatives: **(B) retro-stake at the locked entry price**
+    and **(C) retro-stake at the conversion price**. Both add
+    cost/abuse-surface for marginal benefit given the low-intent demo
+    picks, so neither is taken.
+- **Keep the app's i18n namespace.** The `gs.*` keys land under the app's
+  `app`/`onboarding`-style namespace convention, not the prototype's bare
+  scattered `gs.*` prefix — per the project's namespace rule and the
+  brief. Exact prefix mirrors how V3 mapped `obv3.*` → `onboarding.v3.*`.
 - **No emoji.** lucide icons only; the prototype's inline SVGs / stray
   emoji do not transfer (the save sheet uses lucide equivalents and
   `CountryFlag.svelte` where flags are needed).
 - **Model B, not a wall (V1.8.38).** A guest predicts freely with no hard
-  block; conversion is driven by loss-aversion (save-your-pick) not a
-  gate. The earlier hard-gate variants (V1.8.36–37) are superseded and
-  are **not** ported.
-- **Reuse the pre-auth stash/drain pipeline, not a new mechanism.** Guest
-  picks follow the `PENDING_ONBOARDING_STORAGE_KEY` stash → first-
-  authenticated-layout drain shape already governed by the #926 persist
-  spec, reconciling at the same new-user branch — one place where a fresh
-  member absorbs everything stashed pre-auth.
+  block; conversion is driven by loss-aversion (the offer to start for
+  real and claim 1,500 VXP) not a gate. The earlier hard-gate variants
+  (V1.8.36–37) are superseded and are **not** ported.
+- **Reuse the pre-auth handoff pipeline for handle/identity only.** Guest
+  conversion reuses the `PENDING_ONBOARDING_STORAGE_KEY` stash →
+  first-authenticated-layout drain shape already governed by the #926
+  persist spec for the handle / referral / league / email handoff — it
+  does **not** carry picks or stakes.
 - **Reuse the existing onboarding grant for the 1,500 VXP, not a
   convert-specific mint.** Conversion creates a normal new member, so
   `onProfileSetForVxpOnboarding` fires the grant as-is — conversion adds
-  no new mint surface (only the retro-stake action, bounded by the
-  grant-clamp).
+  no new mint surface and no new economic action.
 - **Reuse `BottomSheet` + `SignInProviderStack`, not the prototype's
   bespoke sheet/auth.** The save sheet is `BottomSheet` and its sign-up
   CTAs are the real provider stack (redirect-safe), so there is one
@@ -604,10 +549,11 @@ mode="signup"` CTAs; VXP figure from
 - **Onboarding picks persist across providers
   (`specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`,
   In progress #926).** Guest mode reuses its stash-before-auth + the
-  new-user drain branch for guest-pick reconciliation; Open question 3
+  new-user drain branch for the handle/identity handoff; Open question 1
   and the storage-key decision bind to #926 as merged.
 - **Anti-farm gating (#543, open).** Conversion exercises the new-account
-  mint #543 hardens; guest mode widens that surface but does not solve it
-  here — Part of #543's threat scope, tracked there.
+  mint #543 hardens; guest mode lowers the friction to reach it but
+  demo-drop keeps the mint no wider than the existing grant (no extra
+  retro-stake mint) — Part of #543's threat scope, tracked there.
 - **Sign-in re-skin (separate spec).** The save sheet links into
   sign-up; the `/signin` re-skin is its own work.
