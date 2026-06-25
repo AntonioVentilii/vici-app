@@ -490,10 +490,10 @@ mode="signup"` CTAs; VXP figure from
       state is cleared.
 - [ ] All 18 `gs.*` keys resolve in en/it/fr/de/es/pt-BR; no gambling
       vocabulary, no "bet", no emoji (lucide icons only).
-- [ ] Analytics fire: guest pick (`position_taken`, `source:
-    'guest_flow'`) and conversion (`signed_up`, `source:
-    'guest_convert'`); any new event name lands in both the TS union and
-      the Zod mirror.
+- [ ] Analytics fire: guest pick emits `position_taken` with
+      `source: 'guest_flow'`, conversion emits `signed_up` with
+      `source: 'guest_convert'`; any new event name lands in both the TS
+      union and the Zod mirror.
 - [ ] `npm run quality` and `npm run check` pass (plus regenerated
       bindings if a satellite endpoint is added).
 
