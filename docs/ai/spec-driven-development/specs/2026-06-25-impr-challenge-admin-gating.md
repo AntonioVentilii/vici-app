@@ -1,4 +1,4 @@
-# Spec: Challenge admin-gating — a league admin (not only the owner) can initiate and respond to battles
+# Spec: Challenge admin-gating — a league admin (not only the owner) can initiate and respond to battles, plus an owner-driven promote-to-admin control
 
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
@@ -15,6 +15,13 @@ even though the `LeagueMemberRole` model already carries a distinct
 (plain members) keep no challenge powers and now see an explicit reason
 — "Only a league owner or admin can start a battle." — instead of an
 unexplained absent CTA.
+
+So the new authority is actually reachable, this spec **also ships the
+owner-only promote-to-admin / demote-to-member control** in the league
+members UI — without it, admin-gating would be inert because no FE path
+currently creates an `admin` row (the satellite already permits the
+write; only the UI is missing). The two pieces are one feature: the
+gating predicate and the means to grant the role it gates on.
 
 ## Context
 
@@ -71,18 +78,31 @@ Reuse (per `docs/ai/frontend/reusability.md` and existing code):
 'admin'`.
 - The member assert (`src/satellite/services/league-member.services.ts`)
   already lets the **owner** promote a member to `admin` (role change
-  requires the league owner, lines ~133–135) and validates the `admin`
-  role — so the `admin` role is a real, reachable state in the data model
-  even though no FE promotion UI ships yet (see Open questions).
+  requires the league owner, lines ~132–136: `currentDoc.role !==
+proposedDoc.role && !callerIsOwner` is the only role-change gate) and
+  validates the `admin` role — so the `admin` role is a real, reachable
+  state in the data model, and the promote-to-admin write this spec adds
+  is **plain FE wiring (a `setDoc` to `LEAGUE_MEMBERS`), no assert
+  change**. Verified: `role: 'admin'` is set nowhere in
+  `src/lib/components` or the league services today, so no promote UI
+  ships yet — this spec adds it.
 - Battle analytics taxonomy (`src/lib/types/analytics-event.ts` ~135–140)
   already has `battle_proposed` / `battle_accepted` / `battle_declined`
   and a `leagueId` prop.
 
 ## Scope
 
-Widen the "can act as this league in a battle" authority from
-**owner-only** to **owner-or-admin**, on both the frontend gates and the
-satellite assert, keeping the trustless resolution model untouched.
+Two coupled changes:
+
+1. Widen the "can act as this league in a battle" authority from
+   **owner-only** to **owner-or-admin**, on both the frontend gates and
+   the satellite assert, keeping the trustless resolution model
+   untouched.
+2. Add an **owner-only promote-to-admin / demote-to-member control** in
+   the league members UI so the role the gate keys on is reachable from
+   the app. This is FE-only: the `league_members` assert already gates
+   role changes on the league owner, so the owner can already write
+   `role: 'admin'` (and back to `'member'`) — only the UI is new.
 
 **Satellite (`assertSetBattle`).** Introduce a single membership-role
 helper — `isOwnerOrAdminOfLeague(leagueId)` — that returns true when the
@@ -136,16 +156,27 @@ opponent nor admin gets a delete path").
   owner can accept this challenge.") is reworded to "Only a league owner
   or admin can accept this challenge." (key kept, value updated).
 
+**Promote-to-admin / demote-to-member control.** The member detail
+bottom-sheet in `LeagueDetailPage.svelte` (the `openMember` sheet, ~1636)
+already shows a tapped member's role badge and stats; it is the natural
+home for the action — it sits next to the existing owner-only affordances
+and avoids a new surface. Render the control **only when `myRole ===
+'owner'`** and the opened member is **not** the owner and **not** the
+caller. For an `openMember.role === 'member'` show "Make admin"; for
+`'admin'` show "Remove admin" (demote to `'member'`). Wire it to a new
+thin service helper in `src/lib/services/leagues.services.ts` —
+`setMemberRole({ leagueId, memberPrincipal, role })` — that re-reads the
+member doc and writes it back via `@junobuild/core` `setDoc<LeagueMemberDoc>`
+with the new `role` and the existing immutable identity fields
+(`leagueId`, `member`, `joinedAtMs` unchanged), mirroring the `joinLeague`
+write shape (~618–629). On success reload the roster (the existing
+post-write reload path, e.g. the one `onTransferDone` uses, ~434) so the
+badge and battle gates re-derive. The satellite assert is the
+authority — a non-owner caller is rejected server-side regardless of the
+UI guard.
+
 ### Out of scope
 
-- **A FE path to promote a member to `admin`.** The assert already
-  permits owner-driven promotion, and this spec makes the `admin` role
-  _meaningful_ for battles, but it does **not** add the promote/demote UI
-  (see Open questions — without it, admin-gating only benefits leagues
-  whose admins were seeded another way). If the product owner wants the
-  promotion UI in the same release, it is a **separate** spec/PR (the
-  member-role write surface is its own reviewable unit) — flagged, not
-  silently folded in.
 - **Transfer / privacy / rename / image** affordances — stay owner-only
   (`canTransfer`, `canEditPrivacy`, `canRename`, `canEditImage`
   unchanged). This spec is battle-authority only.
@@ -193,6 +224,19 @@ still needs no schema edit). Capture stays via `track` in
 
 This change touches `src/satellite/services/battle.services.ts` and reads
 the `league_members` collection during the battle assert.
+
+**Promote-to-admin write — no satellite change.** The promote/demote
+control writes the **existing** `LEAGUE_MEMBERS` doc with a changed
+`role` field. The collection rule (`LEAGUE_MEMBERS`,
+`collections.constants.ts` ~59–65) is untouched, and `assertSetLeagueMember`
+already permits exactly this write: role transitions on an existing row
+are owner-gated (lines ~132–136), identity fields stay immutable. **No
+Candid / `satellite_extension.did` change** — it is a plain document
+field write through `@junobuild/core` `setDoc`, not a new endpoint or
+shape. Confirmed: the only role-change gate in the assert is
+`currentDoc.role !== proposedDoc.role && !callerIsOwner`, which this UI
+satisfies by construction (owner-only control) and which the satellite
+re-enforces.
 
 - **Performance.** The creation, accept, decline, and expire branches
   currently call `isOwnerOfLeague`, which is **one** `getDocStore`
@@ -253,24 +297,47 @@ the `league_members` collection during the battle assert.
 3. **FE create-battle modal** (`CreateBoutModal.svelte`): filter
    `ownedLeagues` to `owner || admin`; update the doc comments and the
    no-leagues empty-state copy.
-4. **i18n** (`src/lib/constants/messages/*.ts`): add
+4. **FE promote/demote control**
+   (`LeagueDetailPage.svelte` member sheet + `leagues.services.ts`): add
+   the `setMemberRole` service helper (re-read + `setDoc` with new
+   `role`, identity fields preserved); render the owner-only
+   "Make admin" / "Remove admin" action in the `openMember` sheet for a
+   non-owner, non-self member; reload the roster on success. No assert
+   edit. New i18n keys for the two action labels (item 5).
+5. **i18n** (`src/lib/constants/messages/*.ts`): add
    `leagues.detail.battle_admin_only`; reword
    `leagues.detail.battle_owner_accepts`; reword the
-   `battles.create.empty_*` "must own" copy. en is the source; the other
+   `battles.create.empty_*` "must own" copy; add the promote/demote
+   action labels (e.g. `leagues.detail.member_make_admin` /
+   `leagues.detail.member_remove_admin`). en is the source; the other
    catalogs follow the project's i18n flow (per
    `docs/ai/frontend/i18n.md`); pt-BR mirrors EN per the porting
    convention.
-5. **Analytics (pending-decision-gated)**: if the role `label` is
+6. **Analytics (pending-decision-gated)**: if the role `label` is
    approved, set `label: myRole` in the `acceptBattle` / `declineBattle`
    `track` calls in `LeagueDetailPage`. No taxonomy edit.
-6. **PRODUCT.md**: update the Battles section
+7. **PRODUCT.md**: update the Battles section
    (`docs/ai/PRODUCT.md` ~246–286) — "the owner of one league proposes;
    the challenged league's owner accepts or declines" becomes "a league
-   **owner or admin** proposes / accepts / declines"; keep the rest
+   **owner or admin** proposes / accepts / declines"; note the owner can
+   promote a member to admin from the members list. Keep the rest
    (privacy, trustless resolution) unchanged. Same PR as the behaviour
    change.
-7. **Gates**: `npm run quality`, `npm run check`, and
+8. **Gates**: `npm run quality`, `npm run check`, and
    `npm run juno:functions:build` (commit only if it regenerates).
+
+### PR scope
+
+**Recommendation: one reviewable PR.** The two pieces are a single
+feature and share the same files (`LeagueDetailPage.svelte`,
+`leagues.services.ts`, the i18n catalogs). The promote/demote control is
+small (one service helper + one owner-only action in an existing sheet)
+and adds **no** backend change — the only assert edit in the PR is the
+battle-gating widen. Splitting would ship the gating inert in PR 1 (the
+caveat this decision exists to remove), so they belong together. If
+review load is a concern, land the satellite battle-gating commit first
+and the FE control commit second **within the same PR** for a clean
+read, not as separate PRs.
 
 ## Acceptance criteria
 
@@ -287,6 +354,14 @@ the `league_members` collection during the battle assert.
       is rejected.
 - [ ] A **non-member** principal's battle command write is rejected by
       the assert (no `admin` row, not the owner).
+- [ ] The **owner** sees a "Make admin" action on a plain member in the
+      member sheet and a "Remove admin" action on an admin; tapping it
+      writes the role and the badge updates after reload.
+- [ ] A member **promoted to admin** can then open the challenge sheet,
+      propose a battle, and accept / decline an incoming challenge.
+- [ ] A **non-owner** (admin or member) sees no promote/demote control;
+      a direct role-change `setDoc` by a non-owner is rejected by the
+      assert.
 - [ ] `CreateBoutModal` lists leagues where the caller is owner **or**
       admin as the challenger side; member-only leagues are excluded.
 - [ ] The lazy-expire sweep fires for an admin (not only the owner).
@@ -298,15 +373,24 @@ the `league_members` collection during the battle assert.
 
 ## Open questions
 
-- **Is there any shipped path to promote a member to `admin` today?** The
-  satellite assert permits owner-driven promotion and the role renders in
-  the UI, but no FE promote/demote control was found
-  (`role: 'admin'` is set nowhere in `src/lib/components` or the league
-  services). If none ships, admin-gating is **latent** — correct and
-  testable, but only exercisable once an `admin` row exists (seeded
-  manually or by a future spec). Confirm with the product owner whether
-  the promotion UI must ship alongside this (→ separate spec, see Out of
-  scope) or whether latent admin-gating is acceptable for this release.
+- **Is `'admin'` distinct from the league `owner` field?** Yes — `owner`
+  is a property of the `LeagueDoc` (one principal), while `admin` is a
+  `role` value on a `LEAGUE_MEMBERS` row. The owner also has an
+  `owner`-role membership row. Promotion only ever toggles `member ↔
+admin`; the assert reserves the `owner` role for the league's owner
+  principal and rejects minting a second one. (Stated so the author does
+  not conflate the two when wiring the control.)
+- **Demote rules.** Demote is the inverse write (`admin → member`), same
+  owner-only gate. Open: should an admin be auto-demoted on ownership
+  transfer? Today `transferLeagueOwnership` already flips the old owner to
+  `admin`; no further demote cascade is in scope here. Confirm no other
+  demote trigger is expected.
+- **Who may promote — owner only, or admins too?** This spec ships
+  **owner-only** promotion (matches the satellite gate:
+  `role` changes require `callerIsOwner`). Whether an admin should be
+  able to promote other admins is deferred — it would require widening
+  the `league_members` assert (a real backend change, unlike this
+  FE-only control) and is a separate decision.
 - **Duel battles** — confirmed they use bare-principal auth and no FE
   path creates them; no admin concept applies. (Verified in
   `assertSetBattle`; listed for completeness.)
@@ -319,15 +403,17 @@ the `league_members` collection during the battle assert.
   setting it. Default: **include** — it is the only way the split is
   visible in product analysis, and it reuses an existing bounded field
   with no schema change. Owner: product/analytics.
-- **Ship the admin-promotion UI in this release or defer it.** If
-  deferred, this spec ships latent admin-gating (see Open questions). If
-  bundled, it is a **separate** spec/PR per the one-spec-one-PR rule, not
-  folded here. Owner: product.
 
 ## Decisions
 
 Handed to the author for this port (with the why):
 
+- **Ship the promote-to-admin UI alongside the gating**
+  (owner decision, 2026-06-25). Gating is useless without a way to create
+  admins: with no shipped promote path, the widened authority would never
+  be exercisable. Because the write is FE-only (the `league_members`
+  assert already gates role changes on the owner), it folds cleanly into
+  the same reviewable unit rather than a separate spec.
 - **Keep the app i18n namespace** (`leagues.*`), not the prototype's
   scattered `lg.*` / `bt.*` keys — the app's catalog convention wins
   (per the shared port brief and `docs/ai/frontend/i18n.md`).
