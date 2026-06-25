@@ -252,22 +252,6 @@ league.id, label: privacy })`. No taxonomy change.
 
 ## Pending decisions
 
-- **Default tier on the create sheet.** The app currently defaults to
-  `LeaguePrivacy.INVITE` (`CreateLeagueModal.svelte` 54, 120 — a
-  deliberate choice per the field's JSDoc in `league.ts` 146–153). The
-  prototype defaults to **Open**. This spec does **not** silently
-  change it. Two valid options:
-  - **Keep Invite** (status quo): the safest default for a small new
-    cohort — not publicly listed, but still recommendable to friends
-    and joinable by code. No code change.
-  - **Switch to Open**: matches the prototype and maximises
-    discoverability + battle eligibility from creation, at the cost of
-    making a brand-new league publicly listed by default. One-line
-    change to the `privacy` `$state` init and `reset()`.
-    Owner to decide before flipping to `In progress`. (Recommendation:
-    keep **Invite** — it preserves the deliberate privacy-by-default
-    posture and the Open default can be reached in two taps; record the
-    outcome under Decisions.)
 - **Instrument `league_created` now, or stay presentation-only?** The
   event and props already exist and are unfired, so adding it is
   low-cost and high-value (visibility distribution). Default
@@ -287,6 +271,14 @@ league.id, label: privacy })`. No taxonomy change.
 
 ## Decisions
 
+- **Default tier on the create sheet = Open** (owner decision,
+  2026-06-25). Overrides the spec's initial recommendation to keep
+  Invite. New leagues are publicly listed and battle-eligible from
+  creation (prototype parity); owners can tighten to Invite/Private in
+  two taps. Implementation: set the `privacy` `$state` init and
+  `reset()` in `CreateLeagueModal.svelte` to `LeaguePrivacy.OPEN` (the
+  `league.ts` JSDoc note about an Invite default is now stale — update
+  it in the same PR).
 - **Keep the three-tier visibility model — do NOT adopt the
   prototype's 2-tier collapse.** Handed down at spec creation
   (2026-06-25). The prototype's V1.8.46 simplified Open / Invite /
