@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.10](https://github.com/AntonioVentilii/vici-app/compare/v0.2.9...v0.2.10) (2026-06-25)
+
+
+### Bug Fixes
+
+* **flow:** make WC artwork team-led ([#973](https://github.com/AntonioVentilii/vici-app/issues/973)) ([dedd6a2](https://github.com/AntonioVentilii/vici-app/commit/dedd6a258821e37a6d97fdf783e427c4261a7d10))
+* **flow:** use catalogued WC artwork ([#972](https://github.com/AntonioVentilii/vici-app/issues/972)) ([897f5fe](https://github.com/AntonioVentilii/vici-app/commit/897f5fe49a4688318aeb43af50720c06370a9a17))
+
+
+### Miscellaneous Chores
+
+* **npm-deps-dev:** bump the lint-kit group across 1 directory with 4 updates ([#960](https://github.com/AntonioVentilii/vici-app/issues/960)) ([7d8cf42](https://github.com/AntonioVentilii/vici-app/commit/7d8cf4228b11652103e40633cdf02e3181131254))
+
+
+### Tests
+
+* **admin:** add data-tid hooks to the resolutions page ([#974](https://github.com/AntonioVentilii/vici-app/issues/974)) ([1d8fa23](https://github.com/AntonioVentilii/vici-app/commit/1d8fa2379c1af69ac311dc5b8503f9b660743ea0))
+
 ## [0.2.9](https://github.com/AntonioVentilii/vici-app/compare/v0.2.8...v0.2.9) (2026-06-23)
 
 
