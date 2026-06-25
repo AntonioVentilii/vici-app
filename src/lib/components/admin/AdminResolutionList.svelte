@@ -256,7 +256,11 @@
 	bind:show={showConfirm}
 >
 	{#if nonNullish(confirmTarget)}
-		<div class="space-y-4" data-tid={TestId.AdminResolutionConfirmDialog}>
+		<div
+			class="space-y-4"
+			data-market-id={confirmTarget.marketId}
+			data-tid={TestId.AdminResolutionConfirmDialog}
+		>
 			<div class="space-y-1">
 				<p class="text-muted-foreground eyebrow-xs">
 					{t({ locale: $localeStore, key: 'admin.resolution.confirm.market_label' })}
