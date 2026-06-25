@@ -311,18 +311,6 @@ most worth showing across themes.
 
 ## Pending decisions
 
-- **Replace the sign-in path outright, or gate behind the V3 flow?**
-  In the prototype the V3 sign-up was flag-gated; sign-in had no such
-  flag. In the app, `SignInScreen` is **already** the only sign-in
-  shell for both modes, so the re-skin necessarily applies to the live
-  `/signin` (and the modal). Recommendation: re-skin the current
-  sign-in outright — there is no second "V3 sign-in path" to gate, and
-  forking one would violate the single-shell reuse rule. Owner to
-  confirm there is no desire to keep the old look behind a flag.
-- **Keep the Apple code path dormant behind the flag, or delete it?**
-  Recommendation: flag-off only (reversible, low-risk); defer hard
-  removal of `onApple` / `apple-signin.services` / Apple icon + keys to
-  a separate cleanup if Apple is confirmed permanently gone.
 - **Analytics breadth.** Ship `signed_in` (recommended). Decide whether
   to also fire `provider_linked` (link-vs-authenticate split — likely
   redundant with `signed_in`'s `label`) and whether to wire the
@@ -338,6 +326,16 @@ most worth showing across themes.
 
 Recorded from the planning handoff (the calls already made):
 
+- **Re-skin the live `/signin` outright — no flag gate** (owner
+  decision, 2026-06-25). `SignInScreen` is already the only sign-in
+  shell for both the page and the modal, so the V3 look applies
+  everywhere; there is no second path to gate and forking one would
+  violate the single-shell reuse rule.
+- **Drop Apple by flag-off, keep the code dormant** (owner decision,
+  2026-06-25). Set the Apple provider flag off; leave `onApple` /
+  `apple-signin.services` / the Apple icon + keys in place (reversible).
+  Hard removal is a separate later cleanup only if Apple is confirmed
+  permanently gone.
 - **Keep the app's `signin.*` i18n namespace** — do not adopt the
   prototype's scattered key names. New/changed copy lands under the
   existing `signin.*` keys.
