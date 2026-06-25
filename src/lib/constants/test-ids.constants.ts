@@ -34,5 +34,19 @@ export enum TestId {
 	OnboardingCard = 'onboarding-card',
 	OnboardingHandleSuggestion = 'onboarding-handle-suggestion',
 	OnboardingHandleSkip = 'onboarding-handle-skip',
-	OnboardingPrimary = 'onboarding-primary'
+	OnboardingPrimary = 'onboarding-primary',
+	// Admin resolutions page (`/admin/resolutions`): the pending-list and
+	// history sections, the list's search input, each pending market card
+	// (also tagged with `data-market-id` so a specific market is
+	// addressable), its YES / NO resolve buttons, and the confirm dialog
+	// with its cancel / confirm controls.
+	AdminResolutionList = 'admin-resolution-list',
+	AdminResolutionHistory = 'admin-resolution-history',
+	AdminResolutionSearch = 'admin-resolution-search',
+	AdminResolutionCard = 'admin-resolution-card',
+	AdminResolutionResolveYes = 'admin-resolution-resolve-yes',
+	AdminResolutionResolveNo = 'admin-resolution-resolve-no',
+	AdminResolutionConfirmDialog = 'admin-resolution-confirm-dialog',
+	AdminResolutionConfirmCancel = 'admin-resolution-confirm-cancel',
+	AdminResolutionConfirmCta = 'admin-resolution-confirm-cta'
 }
