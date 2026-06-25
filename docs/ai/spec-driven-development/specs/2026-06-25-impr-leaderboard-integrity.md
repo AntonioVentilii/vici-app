@@ -75,7 +75,7 @@ ranking idiom; the two stay conceptually aligned.
      (0–1), not the rounded integer `accuracy`, so the shrinkage
      doesn't compress on the rounding.
    - Partition rows into **qualified** (`settledCount >=
-     LEADERBOARD_QUALIFY_MIN`) and **provisional** (below the gate).
+LEADERBOARD_QUALIFY_MIN`) and **provisional** (below the gate).
    - Sort qualified by `rankScore` desc (tie-break: `settledCount`
      desc → `realizedPnl` desc → stable). Stamp `displayRank` over the
      qualified set only.
@@ -154,12 +154,12 @@ land in Provisional vs ranked, and is the gate set right?"
 Leaderboard page. Props (all from the existing bounded vocabulary —
 no new dimensions):
 
-| Prop    | Meaning                                                            |
-| ------- | ----------------------------------------------------------------- |
-| `label` | active window — `week` \| `month` \| `all`                        |
-| `count` | number of **ranked** (qualified) rows rendered                    |
+| Prop    | Meaning                                                             |
+| ------- | ------------------------------------------------------------------- |
+| `label` | active window — `week` \| `month` \| `all`                          |
+| `count` | number of **ranked** (qualified) rows rendered                      |
 | `ok`    | viewer is qualified/ranked (`true`) vs provisional/absent (`false`) |
-| `value` | viewer's `settledCount` (how far below/above the gate they sit)   |
+| `value` | viewer's `settledCount` (how far below/above the gate they sit)     |
 
 `ok` + `value` together answer whether the gate is stranding real
 viewers in Provisional. Behavioural only, bounded props, no PII.
@@ -213,8 +213,8 @@ the `AnalyticsEventNameSchema` enum
       rank) for a provisional predictor.
 - [ ] Changing "Leaderboard qualify (calls)" in the dev Tweaks panel
       re-ranks the board live (re-partitions ranked vs provisional).
-- [ ] New `leaderboard.*` keys exist in all 12 catalogs; `npm run
-      check:i18n` passes.
+- [ ] New `leaderboard.*` keys exist in all 12 catalogs; the i18n
+      parity check (`check:i18n`) passes.
 - [ ] `leaderboard_viewed` is in both the TS union and the Zod enum and
       fires once per window load.
 - [ ] `npm run quality` and `npm run check` pass.
@@ -223,8 +223,8 @@ the `AnalyticsEventNameSchema` enum
 
 ## Open questions
 
-- **Does the slice contain every below-gate predictor?** *Confirmed,
-  with a caveat.* `standings.services.ts` `toEntry` exposes
+- **Does the slice contain every below-gate predictor?** _Confirmed,
+  with a caveat._ `standings.services.ts` `toEntry` exposes
   `settledCount`/`winCount` for **all** entries, so per-row counts for
   the gate + shrinkage are present — the core question is **answered:
   yes**. Residual: the slice is the canister's P&L-ranked top-N
@@ -241,7 +241,7 @@ the `AnalyticsEventNameSchema` enum
 - **Row trust signal — replace VXP with calls, or show both?**
   Recommendation: **replace** the `{vxp} VXP` figure in the ranked-row
   meta with `{count} calls` (matching the prototype, which is the
-  source of truth; the task names calls as *the* trust signal).
+  source of truth; the task names calls as _the_ trust signal).
   Accuracy stays the right-hand score. The `realizedPnl` field remains
   on the model for other surfaces. A reviewer who wants to keep VXP
   visible can request a 3-part meta instead.
@@ -254,7 +254,7 @@ the `AnalyticsEventNameSchema` enum
   on reload.
 - **`StandingsRow` shape for the two partitions** — optional
   `displayRank` (provisional = `undefined`) vs a `kind:
-  'ranked' | 'provisional'` discriminator. Recommendation: optional
+'ranked' | 'provisional'` discriminator. Recommendation: optional
   `displayRank`, smallest change; finalise at build time.
 
 ## Decisions
