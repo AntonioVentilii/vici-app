@@ -336,7 +336,7 @@ safe), as the prototype does.
 - **`appinstalled` reliability.** Confirm marking installed on
   `appinstalled` (plus on `'accepted'`) is sufficient; iOS never fires
   `appinstalled`, so an iOS user who completes the manual steps is only
-  detected as standalone on the *next* launch — acceptable?
+  detected as standalone on the _next_ launch — acceptable?
 
 ## Pending decisions
 

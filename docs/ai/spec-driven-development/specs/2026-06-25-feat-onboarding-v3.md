@@ -28,7 +28,7 @@ intact and reachable behind the flag until V3 is verified in production.
 - Current flow + beats under `src/lib/components/onboarding/`:
   - `OnboardingFlow.svelte` — the `1a → 1b → 2 → 3` state machine.
   - `OnboardingBeat1.svelte` / `OnboardingBeat1Card.svelte` — team picker
-    + derived first call (V3 drops both).
+    - derived first call (V3 drops both).
   - `OnboardingBeat2.svelte` — handle picker. **Reuse target.** Holds the
     live-availability probe, the pool sampling, and the claim-time TOCTOU
     re-check we port into V3.
@@ -79,7 +79,7 @@ intact and reachable behind the flag until V3 is verified in production.
   availability + auto-suggested fallback → reward chip → lock cue → auth
   (`Continue with Google`, `Continue with email` → email→passkey
   sub-mode) → `Skip — preview first, sign-up later` → `Already a member?
-  Sign in` → legal fine print.
+Sign in` → legal fine print.
 - `onboarding-v3.css` — scoped under `.ob-v3`, theme-aware tokens
   (`--bg`, `--fg`, `--accent`, …), light/peach overrides for the Google
   pill. Two themes minimum (dark + light/peach).
@@ -255,7 +255,7 @@ All events behavioural, bounded vocab, no PII/free-text. Capture via
    - Reward chip from `newUserVxpAmountMilestone1BaseUnits()` +
      `$featuredEvent`; lucide `Gift`.
    - Mount `SignInProviderStack mode="signup" handle={handle}
-     onSuccess={...}`; lock-cue label above it.
+onSuccess={...}`; lock-cue label above it.
    - Claim-time re-check before handing the handle to the stash/complete
      path (Beat 2's TOCTOU guard).
    - Skip button → `onSkip`; "Already a member?" → `onSignIn`; legal
