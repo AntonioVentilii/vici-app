@@ -725,17 +725,19 @@
 		// market prices. The session-stake accounting and the funds gate are
 		// member-only (the guest has no balance), so they are bypassed here.
 		if ($guestMode) {
-			recordGuestPick({ marketId: currentMarket.id, side: action });
+			const guestPickNumber = recordGuestPick({ marketId: currentMarket.id, side: action });
 
 			// `position_taken` with `source: 'guest_flow'` separates guest
 			// activity from member activity without a new event; `count` is the
-			// session pick number (the preview pick just recorded).
+			// persisted session pick number (the cadence counter), so it stays
+			// consistent across a reload rather than tracking this sitting's
+			// in-memory `betsCount`.
 			track({
 				name: 'position_taken',
 				source: 'guest_flow',
 				marketId: currentMarket.id,
 				label: action,
-				count: betsCount + 1
+				count: guestPickNumber
 			});
 
 			betsCount += 1;
