@@ -125,8 +125,7 @@
 			class="border-border bg-background/50 focus:ring-primary/50 w-full resize-none rounded-xl border p-4 text-sm focus:ring-2 focus:outline-none"
 			placeholder={t({ locale: $localeStore, key: 'arena.discussion.input.placeholder' })}
 			rows="3"
-			bind:value={newComment}
-		></textarea>
+			bind:value={newComment}></textarea>
 		<div class="mt-3 flex justify-end">
 			<Button
 				onclick={handlePostComment}

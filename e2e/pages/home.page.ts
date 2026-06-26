@@ -32,7 +32,7 @@ export class HomePage {
 	readonly userMenu: Locator;
 	readonly signOutButton: Locator;
 	readonly logoutButton: Locator;
-	readonly onboardingFlow: Locator;
+	readonly onboarding: Locator;
 	readonly onboardingHandleInput: Locator;
 	readonly onboardingHandleSkip: Locator;
 	readonly onboardingPrimary: Locator;
@@ -48,7 +48,7 @@ export class HomePage {
 		this.userMenu = page.locator(`[data-tid="${TestId.UserMenu}"]:visible`);
 		this.signOutButton = page.getByTestId(TestId.SignOutButton);
 		this.logoutButton = page.getByTestId(TestId.Logout);
-		this.onboardingFlow = page.getByTestId(TestId.OnboardingFlow);
+		this.onboarding = page.getByTestId(TestId.Onboarding);
 		this.onboardingHandleInput = page.getByTestId(TestId.OnboardingHandleInput);
 		this.onboardingHandleSkip = page.getByTestId(TestId.OnboardingHandleSkip);
 		this.onboardingPrimary = page.getByTestId(TestId.OnboardingPrimary);
@@ -131,7 +131,7 @@ export class HomePage {
 	 * the auth path.
 	 */
 	async advanceOnboardingToAuth(): Promise<void> {
-		await this.onboardingFlow.waitFor({ state: 'visible' });
+		await this.onboarding.waitFor({ state: 'visible' });
 
 		await expect(this.signInDevButton).toBeEnabled();
 	}
