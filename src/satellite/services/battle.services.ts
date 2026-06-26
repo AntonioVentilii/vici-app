@@ -17,7 +17,7 @@ import {
 	type BattleWinner
 } from '$lib/types/battle';
 import { leaguePrivacy, type LeagueDoc } from '$lib/types/league';
-import { leagueMemberKey } from '$lib/types/league-member';
+import { leagueMemberKey, type LeagueMemberDoc } from '$lib/types/league-member';
 import { leagueStatsBucket, leagueStatsKey, type LeagueStatsDoc } from '$lib/types/league-stats';
 import type { CategoryStatsBucket } from '$lib/types/user-stats';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -69,7 +69,7 @@ const bucketsNullableEqual = (
  *  3. **State machine.** Forward-only per `BATTLE_TRANSITIONS`. New
  *     docs start at `proposed`. Each transition is gated by:
  *
- *       - `proposed`        — caller is the proposer (league.owner of
+ *       - `proposed`        — caller is the proposer (owner or admin of
  *                             sideA for kind='league', or sideA
  *                             principal for kind='duel'). For league
  *                             battles sideB must be challengeable —
@@ -78,15 +78,15 @@ const bucketsNullableEqual = (
  *       - `proposed → accepted` — caller is the *other* side's owner
  *                             (duel path; leagues fuse accept+kickoff).
  *       - `proposed → in_flight` — league accept fuses the kickoff:
- *                             the `sideB` owner accepts and the window
- *                             starts now (`kickoffMs ≈ now`, the
+ *                             a sideB owner or admin accepts and the
+ *                             window starts now (`kickoffMs ≈ now`, the
  *                             proposed duration preserved). Baselines
  *                             are stamped + re-validated exactly as the
  *                             `accepted → in_flight` kickoff does.
- *       - `proposed → declined` — the `sideB` owner declines; terminal.
- *       - `proposed → expired` — a side owner lazily expires a proposal
- *                             past `respondByMs` (fallback `kickoffMs`);
- *                             terminal.
+ *       - `proposed → declined` — a sideB owner or admin declines; terminal.
+ *       - `proposed → expired` — a side owner or admin lazily expires a
+ *                             proposal past `respondByMs` (fallback
+ *                             `kickoffMs`); terminal.
  *       - `accepted → in_flight` — either side's owner, once
  *                                  `now >= kickoffMs`. League battles
  *                                  stamp each side's `league_stats`
@@ -214,8 +214,37 @@ export const assertSetBattle = ({
 		}
 	};
 
+	// Owner-OR-admin authority over a league. The owner check runs first
+	// (one `LEAGUES` read); only on a miss do we point-read the caller's
+	// `league_members` row (exact key, O(1)) and accept an `admin` role.
+	// A non-member / plain member never passes.
+	const isOwnerOrAdminOfLeague = (leagueId: string): boolean => {
+		if (isOwnerOfLeague(leagueId)) {
+			return true;
+		}
+
+		const memberDoc = getDocStore({
+			collection: Collection.LEAGUE_MEMBERS,
+			key: leagueMemberKey({ leagueId, memberPrincipal: callerText }),
+			caller
+		});
+
+		if (isNullish(memberDoc)) {
+			return false;
+		}
+
+		try {
+			return decodeDocData<LeagueMemberDoc>(memberDoc.data).role === 'admin';
+		} catch {
+			return false;
+		}
+	};
+
+	// Battle command authority for a side. League battles widen to
+	// owner-or-admin (the delegated role can initiate and respond);
+	// duels stay a bare-principal compare.
 	const isSideOwner = (side: string): boolean =>
-		proposedDoc.kind === 'league' ? isOwnerOfLeague(side) : side === callerText;
+		proposedDoc.kind === 'league' ? isOwnerOrAdminOfLeague(side) : side === callerText;
 
 	const isMemberOfLeague = (leagueId: string): boolean =>
 		nonNullish(
@@ -298,7 +327,7 @@ export const assertSetBattle = ({
 
 		if (!isSideOwner(proposedDoc.sideA)) {
 			throw new Error(
-				'battles proposer must be the owner of sideA (league owner for kind="league", sideA principal for kind="duel").'
+				'battles proposer must be the owner or admin of sideA (league owner/admin for kind="league", sideA principal for kind="duel").'
 			);
 		}
 
@@ -412,7 +441,7 @@ export const assertSetBattle = ({
 		}
 
 		if (!isSideOwner(currentDoc.sideB)) {
-			throw new Error('battles accept requires sideB owner.');
+			throw new Error('battles accept requires a sideB owner or admin.');
 		}
 
 		if (hasResultFields) {
@@ -450,7 +479,9 @@ export const assertSetBattle = ({
 	} else if (transition === 'proposed->declined') {
 		// The challenged side declines the proposal.
 		if (!isSideOwner(currentDoc.sideB)) {
-			throw new Error('battles decline requires sideB owner.');
+			throw new Error(
+				'battles decline requires the sideB owner or admin (league) / principal (duel).'
+			);
 		}
 
 		if (hasResultFields || hasBaselineFields) {
@@ -462,11 +493,11 @@ export const assertSetBattle = ({
 		}
 	} else if (transition === 'proposed->expired') {
 		// Lazy expiry once the respond-by deadline passes — written by a
-		// side owner the first time they open the league/battle (Juno has
-		// no scheduler). Legacy rows without respondByMs fall back to
-		// kickoffMs.
+		// side owner or admin the first time they open the league/battle
+		// (Juno has no scheduler). Legacy rows without respondByMs fall
+		// back to kickoffMs.
 		if (!isSideOwner(currentDoc.sideA) && !isSideOwner(currentDoc.sideB)) {
-			throw new Error('battles expire requires sideA or sideB owner.');
+			throw new Error('battles expire requires a sideA or sideB owner or admin.');
 		}
 
 		const respondByMs = currentDoc.respondByMs ?? currentDoc.kickoffMs;

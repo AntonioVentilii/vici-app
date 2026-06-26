@@ -10,6 +10,7 @@
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import MenagerieCelebrationHost from '$lib/components/menagerie/MenagerieCelebrationHost.svelte';
+	import SurfaceTipHost from '$lib/components/onboarding/SurfaceTipHost.svelte';
 	import AccountReturnGate from '$lib/components/settings/AccountReturnGate.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -23,6 +24,7 @@
 		drainPendingOnboarding,
 		hasPendingOnboarding
 	} from '$lib/services/onboarding-handoff.services';
+	import { initA2hs } from '$lib/stores/a2hs.store';
 	import { initFlowPrewarm } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -60,6 +62,11 @@
 	// layout and keep natural body scroll.
 	onMount(() => {
 		document.documentElement.dataset.app = '1';
+
+		// Capture Chrome's `beforeinstallprompt` before any child mounts — the
+		// browser fires it once, early, on a cold load. Idempotent and
+		// browser-only (see `a2hs.store`).
+		initA2hs();
 
 		return () => {
 			delete document.documentElement.dataset.app;
@@ -391,6 +398,16 @@
 	-->
 	{#if $userSignedIn}
 		<MenagerieCelebrationHost />
+	{/if}
+
+	<!--
+		First-run surface tips — layer 2 of the tutorial system. The first time an
+		early user (`totalTrades < 5`) lands on Dash / Arena / Profile, a single
+		non-blocking tip slides in above the pillnav, shown at most once per
+		surface per device. Distinct from the in-flow `FlowCoach` (layer 1).
+	-->
+	{#if $userSignedIn}
+		<SurfaceTipHost />
 	{/if}
 
 	<!--
