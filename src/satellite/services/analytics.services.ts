@@ -308,12 +308,26 @@ export const getAnalyticsEventsFn = ({
 	}
 
 	const admin = adminCaller();
-	const { items } = listDocsStore({ collection: Collection.EVENTS, caller: admin, params: {} });
 
 	const afterNs = parseCursorNs(afterUpdatedAtNs);
 	const afterKeyText = afterKey?.trim() ?? '';
 	const safeLimit = Number.isFinite(limit) ? Math.floor(limit) : MAX_EXPORT_LIMIT;
 	const cap = Math.min(Math.max(1, safeLimit), MAX_EXPORT_LIMIT);
+
+	// Page at the DATASTORE — not in code. Listing the whole `events` collection
+	// blows the query instruction budget (IC0522) once it grows. The matcher keeps
+	// the cursor's own timestamp (`greater_than(afterNs - 1)`) so the keyset filter
+	// below can still drop already-seen keys; `order` + `paginate.limit` bound the
+	// canister's scan + response to a single page.
+	const { items } = listDocsStore({
+		collection: Collection.EVENTS,
+		caller: admin,
+		params: {
+			matcher: afterNs > ZERO ? { updated_at: { greater_than: afterNs - 1n } } : undefined,
+			order: { field: 'updated_at', desc: false },
+			paginate: { limit: BigInt(cap) }
+		}
+	});
 
 	const ordered = items
 		.filter(([key, doc]) => {
@@ -363,5 +377,7 @@ export const getAnalyticsEventsFn = ({
 		};
 	});
 
-	return { rows, hasMore: ordered.length > page.length };
+	// A full datastore page means there may be more. Compare to the FETCHED count,
+	// not `ordered` (the keyset filter may drop a few same-timestamp boundary dupes).
+	return { rows, hasMore: items.length >= cap };
 };
