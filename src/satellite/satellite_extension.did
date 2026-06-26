@@ -63,6 +63,10 @@ type AppListFriendRecommendedLeaguesResult = record { items : vec record { leagu
 
 type AppListFriendRequestsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
+type AppListFriendResolvedResultsArgs = record { friends : vec text };
+
+type AppListFriendResolvedResultsResult = record { items : vec record { owner : text; market_id : text; title : text; side : text; outcome : variant { win; loss }; net_vxp : float64; resolved_at_ms : float64 } };
+
 type AppListFriendsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
 type AppListLeaderboardResult = record { items : vec record { owner : text; nickname : text; avatar : text; avatar_parts : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; unlocked_achievements : vec text; contrarian_wins : float64; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
@@ -141,6 +145,8 @@ type AppFollowUserArgs = record { target : text };
 
 type AppHibernateMyAccountResult = record { ok : bool; reason : opt variant { no_profile; deleted } };
 
+type AppPruneResolvedResultsResult = record { pruned : float64 };
+
 type AppRecomputeActivityReactionCountsResult = record { recomputed : float64 };
 
 type AppRecordFlowSwipeArgs = record { day_key : text };
@@ -218,6 +224,7 @@ service : {
 	app_list_following : () -> (AppListFollowingResult) query;
 	app_list_friend_recommended_leagues : () -> (AppListFriendRecommendedLeaguesResult) query;
 	app_list_friend_requests : () -> (AppListFriendRequestsResult) query;
+	app_list_friend_resolved_results : (AppListFriendResolvedResultsArgs) -> (AppListFriendResolvedResultsResult) query;
 	app_list_friends : () -> (AppListFriendsResult) query;
 	app_list_leaderboard : () -> (AppListLeaderboardResult) query;
 	app_list_league_battles : (AppListLeagueBattlesArgs) -> (AppListLeagueBattlesResult) query;
@@ -244,6 +251,7 @@ service : {
 	app_delete_my_account : (AppDeleteMyAccountArgs) -> (AppDeleteMyAccountResult);
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_hibernate_my_account : () -> (AppHibernateMyAccountResult);
+	app_prune_resolved_results : () -> (AppPruneResolvedResultsResult);
 	app_recompute_activity_reaction_counts : () -> (AppRecomputeActivityReactionCountsResult);
 	app_record_flow_swipe : (AppRecordFlowSwipeArgs) -> (AppRecordFlowSwipeResult);
 	app_recover_my_account : () -> (AppRecoverMyAccountResult);

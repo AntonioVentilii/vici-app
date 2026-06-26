@@ -101,6 +101,27 @@ liker. See
 [`specs/2026-06-14-feat-like-received-notifications.md`](./spec-driven-development/specs/2026-06-14-feat-like-received-notifications.md)
 (the like-received notification).
 
+### Friend-readable resolved results — the per-participant outcome feed
+
+When a market resolves, the satellite records one **per-participant**
+result row in the `resolved_results` collection — that participant's
+outcome (win / loss), the side they held, their signed net VXP, and the
+resolution time, keyed `${owner}#${marketId}`. The rows are written
+server-side from the clearing settlement plan at resolution time
+(controllers-write, mirroring `activity_reaction_counts`), so a user
+cannot forge a win for themselves or a friend. The collection is
+public-read and consumed friend-scoped — a single owner-prefix scan over
+a caller's friend set, never one call per friend — and is the data source
+for the friend results digest. There is **no source for a friend's
+per-call outcome otherwise**: clearing trade-history is caller-scoped, and
+the single settlement activity row is the resolver's market-level result,
+not a per-participant one. Rows past the retention horizon
+(`RESOLVED_RESULTS_RETENTION_MS`, a calendar month plus a grace margin)
+are pruned by a controllers-only cleanup. The collection has no
+user-visible surface on its own; the digest that renders it ships
+separately. See
+[`specs/2026-06-25-feat-resolved-results-collection.md`](./spec-driven-development/specs/2026-06-25-feat-resolved-results-collection.md).
+
 ### Market odds — skeleton while the book loads
 
 A market's YES/NO odds are the live order-book mid. Until that book has

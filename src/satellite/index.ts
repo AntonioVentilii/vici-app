@@ -26,6 +26,10 @@ import {
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema, FriendRequestOutcomeSchema } from '$lib/schema/relation.schema';
 import {
+	ListFriendResolvedResultsArgsSchema,
+	ResolvedResultSchema
+} from '$lib/schema/resolved-result.schema';
+import {
 	deleteMyAccountFn,
 	hibernateMyAccountFn,
 	listMyBlockingLeaguesFn,
@@ -130,6 +134,11 @@ import {
 	rejectFriendRequest as rejectFriendRequestFn,
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
+import {
+	listFriendResolvedResultsFn,
+	onActivitySetForResolvedResults,
+	pruneResolvedResultsFn
+} from '$satellite/services/resolved-results.services';
 import { assertSetRole } from '$satellite/services/roles.services';
 import { submitSchoolFn, verifySchoolCodeFn } from '$satellite/services/school.services';
 import {
@@ -1007,6 +1016,32 @@ export const recomputeActivityReactionCounts = defineUpdate({
 	handler: () => recomputeActivityReactionCountsFn()
 });
 
+// Friend-scoped bulk read for the resolved-results digest (the consumer that
+// renders these rows ships separately). Returns the supplied friend set's
+// resolved-result rows over the active retention window in ONE bounded
+// owner-prefix scan — never one call per friend. Public read; the FE scopes the
+// `friends` set to the caller's confirmed friends.
+export const listFriendResolvedResults = defineQuery({
+	args: ListFriendResolvedResultsArgsSchema,
+	result: j.strictObject({
+		items: j.array(ResolvedResultSchema)
+	}),
+	handler: ({ friends }) => ({
+		items: listFriendResolvedResultsFn({ friends })
+	})
+});
+
+// Retention cleanup for `resolved_results` — prunes rows older than the
+// configured horizon. Admin-gated; Juno has no scheduler so this is triggered
+// externally (admin/cron), mirroring `sweepExpiredDeletions`. `pruned` is the
+// number of rows removed.
+export const pruneResolvedResults = defineUpdate({
+	result: j.strictObject({
+		pruned: j.number()
+	}),
+	handler: () => pruneResolvedResultsFn()
+});
+
 // Monthly tournament — Proposal 3. The draw is fire-and-forget on
 // every Tournament-page mount: idempotent via doc-key collision on
 // the month anchor (a second call returns `already_drawn` cleanly).
@@ -1278,11 +1313,14 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 };
 
 // A trade activity drives both the new-user onboarding milestones and the referral first-prediction
-// payout. Onboarding runs first; referral settlement is best-effort (it logs and swallows its own
-// errors) so it can't disrupt the onboarding payout.
+// payout; a settlement activity fans out the per-participant `resolved_results` rows. Onboarding
+// runs first; the others are best-effort (each logs and swallows its own errors) so they can't
+// disrupt the onboarding payout. Each sub-hook self-filters on the activity type, so the composition
+// stays a single dispatch entry.
 const onActivitySetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onTradeActivityForVxpOnboarding(context);
 	await onTradeActivityForReferral(context);
+	await onActivitySetForResolvedResults(context);
 };
 
 export const onSetDoc = defineHook<OnSetDoc>({
