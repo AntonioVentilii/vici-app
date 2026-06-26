@@ -45,12 +45,11 @@
 		page.url.searchParams.get('onboarded') === '1' || hasPendingOnboarding
 	);
 
-	const eyebrowKey = $derived<MessageKey>(
-		onboardingComplete
-			? 'signin.eyebrow.onboarded'
-			: isSignUp
-				? 'signin.eyebrow.signup'
-				: 'signin.eyebrow.signin'
+	// The signin hero ("Welcome back.") already carries the welcome beat in its
+	// accent word, so the eyebrow would only echo it — drop it on the signin
+	// path. Signup/onboarded keep their distinct eyebrows.
+	const eyebrowKey = $derived<MessageKey | null>(
+		onboardingComplete ? 'signin.eyebrow.onboarded' : isSignUp ? 'signin.eyebrow.signup' : null
 	);
 	const titleKey = $derived<MessageKey>(
 		onboardingComplete
@@ -58,6 +57,16 @@
 			: isSignUp
 				? 'signin.title.signup'
 				: 'signin.title.signin'
+	);
+	// The accent word that fills the title's `{brand}` slot, per mode: signup /
+	// onboarded keep the "VICI." brand accent, signin reads "back." so the hero
+	// mirrors V3's serif-italic-accent headline (`Claim your *handle.*`).
+	const titleAccentKey = $derived<MessageKey>(
+		onboardingComplete
+			? 'signin.title.accent.onboarded'
+			: isSignUp
+				? 'signin.title.accent.signup'
+				: 'signin.title.accent.signin'
 	);
 	const subcopyKey = $derived<MessageKey>(
 		onboardingComplete
@@ -73,6 +82,7 @@
 		isSignUp ? 'signin.footer.cta.signin' : 'signin.footer.cta.signup'
 	);
 	const titleTemplate = $derived(t({ locale: $localeStore, key: titleKey }));
+	const titleAccent = $derived(t({ locale: $localeStore, key: titleAccentKey }));
 	const titleParts = $derived.by(() => {
 		const brandIndex = titleTemplate.indexOf(BRAND_PLACEHOLDER);
 
@@ -96,29 +106,22 @@
 
 <div class="signin-wrap">
 	<div class="signin-card">
-		<div class="signin-head">
-			<span class="signin-wordmark" aria-label="VICI">
-				<span class="signin-wordmark-letters">VICI</span>
-			</span>
-			<p class="signin-eyebrow">{t({ locale: $localeStore, key: eyebrowKey })}</p>
-			<h1 class="signin-title">
-				{titleParts.before}<span class="serif-italic acc">VICI.</span>{titleParts.after}
-			</h1>
-			<p class="signin-sub">{t({ locale: $localeStore, key: subcopyKey })}</p>
-			<div class="signin-proof">
-				<span>
-					<b class="num">{t({ locale: $localeStore, key: 'signin.proof.predictors_count' })}</b>
-					{t({ locale: $localeStore, key: 'signin.proof.predictors_label' })}
+		<div class="signin-cluster">
+			<div class="signin-head">
+				<span class="signin-wordmark" aria-label="VICI">
+					<span class="signin-wordmark-letters">VICI</span>
 				</span>
-				<span class="dim">·</span>
-				<span>
-					<b class="num">{t({ locale: $localeStore, key: 'signin.proof.calls_count' })}</b>
-					{t({ locale: $localeStore, key: 'signin.proof.calls_label' })}
-				</span>
+				{#if nonNullish(eyebrowKey)}
+					<p class="signin-eyebrow">{t({ locale: $localeStore, key: eyebrowKey })}</p>
+				{/if}
+				<h1 class="signin-title">
+					{titleParts.before}<span class="serif-italic acc">{titleAccent}</span>{titleParts.after}
+				</h1>
+				<p class="signin-sub">{t({ locale: $localeStore, key: subcopyKey })}</p>
 			</div>
-		</div>
 
-		<SignInProviderStack {mode} {onSuccess} />
+			<SignInProviderStack {mode} {onSuccess} />
+		</div>
 
 		<div class="signin-foot">
 			<span class="mute">{t({ locale: $localeStore, key: footerPromptKey })}</span>
