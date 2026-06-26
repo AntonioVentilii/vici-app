@@ -2239,6 +2239,7 @@ export const enMessages = {
 	'arena.friends.feed.resolved_one': '{count} call resolved',
 	'arena.friends.feed.standout': 'incl. “{question}”',
 	'arena.friends.global.eyebrow': 'Global ranking',
+	'arena.friends.global.provisional': 'Provisional',
 	'arena.friends.global.unranked': 'Unranked',
 	'arena.friends.invite.cap_reached': 'Reward cap reached.',
 	'arena.friends.invite.cap_remaining': '{remaining} rewarded invites left',

@@ -21,7 +21,7 @@
 	} from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-	import { leaderboard } from '$lib/derived/leaderboard.derived';
+	import { ownGlobalStanding } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { track } from '$lib/services/analytics.services';
 	import { getMyReferralCode } from '$lib/services/referral.services';
@@ -634,12 +634,13 @@
 	};
 
 	// ── Global ranking link ─────────────────────────────────────────
-	const globalLeaderboard = $derived<UserProfile[]>($leaderboard);
-	const myRank = $derived.by(() => {
-		const idx = globalLeaderboard.findIndex((entry) => entry.owner === userPrincipal);
-
-		return idx === -1 ? undefined : idx + 1;
-	});
+	// The viewer's own position on the global board, read from the same
+	// confidence-adjusted standings the Leaderboard renders (`ownGlobalStanding`
+	// → the all-time `globalStandingsRows` partition), NOT the satellite points
+	// ranking. The two surfaces must agree: a viewer below the qualify gate is
+	// `provisional` here exactly as they are there, never a phantom points #1.
+	// The 'all' slice is hydrated on mount above.
+	const ownStanding = ownGlobalStanding('all');
 
 	const goToLeaderboard = () => {
 		// Leaderboard lives at /arena/leaderboard; this keeps the user inside
@@ -1320,9 +1321,13 @@
 			</span>
 			<span class="global-link-value num">
 				<span class="global-link-rank">
-					{nonNullish(myRank)
-						? `#${myRank}`
-						: t({ locale: $localeStore, key: 'arena.friends.global.unranked' })}
+					{#if nonNullish($ownStanding?.displayRank)}
+						#{$ownStanding.displayRank}
+					{:else if $ownStanding?.provisional}
+						{t({ locale: $localeStore, key: 'arena.friends.global.provisional' })}
+					{:else}
+						{t({ locale: $localeStore, key: 'arena.friends.global.unranked' })}
+					{/if}
 				</span>
 				<!-- Rank delta (↑/↓ N this week) deferred until the satellite
 				     ships a `previousRank` snapshot. -->

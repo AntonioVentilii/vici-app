@@ -2149,6 +2149,7 @@ export const ptBRMessages = {
 	'arena.friends.feed.resolved_one': '{count} previsão resolvida',
 	'arena.friends.feed.standout': 'incl. «{question}»',
 	'arena.friends.global.eyebrow': 'Ranking global',
+	'arena.friends.global.provisional': 'Provisório',
 	'arena.friends.global.unranked': 'Sem classificação',
 	'arena.friends.invite.cap_reached': 'Limite de recompensas atingido.',
 	'arena.friends.invite.cap_remaining': '{remaining} convites com recompensa restantes',

@@ -2255,6 +2255,7 @@ export const esMessages = {
 	'arena.friends.feed.resolved_one': '{count} predicción resuelta',
 	'arena.friends.feed.standout': 'incl. «{question}»',
 	'arena.friends.global.eyebrow': 'Ranking global',
+	'arena.friends.global.provisional': 'Provisional',
 	'arena.friends.global.unranked': 'Sin clasificar',
 	'arena.friends.invite.cap_reached': 'Has alcanzado el límite de recompensas.',
 	'arena.friends.invite.cap_remaining': '{remaining} invitaciones con recompensa restantes',
