@@ -94,6 +94,14 @@ const bucketsNullableEqual = (
  *                                  baseline; the assert re-reads
  *                                  `league_stats` and rejects a
  *                                  baseline that doesn't match.
+ *       - `in_flight → in_flight` (restart) — a legacy league battle
+ *                                  with no baselines (#912) can't be
+ *                                  scored or resolved; any member of
+ *                                  either side re-opens its window from
+ *                                  now, the original duration preserved,
+ *                                  stamping a fresh `league_stats`
+ *                                  baseline the assert re-reads. Only
+ *                                  valid while the row lacks baselines.
  *       - `in_flight → resolved` — either side's owner, once
  *                                  `now >= settleMs`. League scores are
  *                                  the window accuracy (`Δwins/Δcalls`)
@@ -372,12 +380,28 @@ export const assertSetBattle = ({
 	// `kickoffMs` / `settleMs` exactly as proposed.
 	const isAcceptKickoff = currentDoc.state === 'proposed' && proposedDoc.state === 'in_flight';
 
+	// A league battle accepted before kickoff baselines existed (#912) carries
+	// no snapshot to score against, so it can neither show live standings nor
+	// resolve — it hangs in `in_flight` forever. A re-kick restarts its window
+	// from now with a fresh baseline, leaving every identity field (proposer,
+	// scope, wager, original duration) intact. Only valid while the row still
+	// lacks baselines; once stamped it rejoins the normal scoring path.
+	const isRekick =
+		currentDoc.state === 'in_flight' &&
+		proposedDoc.state === 'in_flight' &&
+		currentDoc.kind === 'league' &&
+		isNullish(currentDoc.baselineA) &&
+		isNullish(currentDoc.baselineB) &&
+		nonNullish(proposedDoc.baselineA) &&
+		nonNullish(proposedDoc.baselineB);
+
 	if (
 		!isAcceptKickoff &&
+		!isRekick &&
 		(currentDoc.kickoffMs !== proposedDoc.kickoffMs || currentDoc.settleMs !== proposedDoc.settleMs)
 	) {
 		throw new Error(
-			'battles kickoffMs / settleMs may only change when a league proposal is accepted.'
+			'battles kickoffMs / settleMs may only change when a league proposal is accepted or a baseline-less battle is restarted.'
 		);
 	}
 
@@ -399,7 +423,7 @@ export const assertSetBattle = ({
 	// accept-fuses-kickoff `proposed → in_flight` (same `isAcceptKickoff`
 	// transition that opens the window). Outside those, baselines may not
 	// appear or change.
-	const stampsBaseline = currentDoc.state === 'accepted' || isAcceptKickoff;
+	const stampsBaseline = currentDoc.state === 'accepted' || isAcceptKickoff || isRekick;
 
 	if (
 		!stampsBaseline &&
@@ -619,6 +643,43 @@ export const assertSetBattle = ({
 					`battles winner must match score arithmetic (expected ${derivedWinner}, got ${proposedDoc.winner ?? 'undefined'}).`
 				);
 			}
+		}
+	} else if (isRekick) {
+		// Restart a baseline-less legacy battle's window. Trustless: the assert
+		// re-reads `league_stats` for the new baseline below, so the writer
+		// can't fake it — we therefore let any member of either side trigger it,
+		// the same liveness model resolution uses (a settled battle finalizes
+		// the first time any member opens it; a legacy one heals the same way).
+		if (!isMemberOfLeague(currentDoc.sideA) && !isMemberOfLeague(currentDoc.sideB)) {
+			throw new Error('battles restart requires a sideA or sideB member.');
+		}
+
+		if (hasResultFields) {
+			throw new Error('battles restart must not carry scoreA / scoreB / callsA / callsB / winner.');
+		}
+
+		if (isNullish(proposedDoc.baselineA) || isNullish(proposedDoc.baselineB)) {
+			throw new Error('battles restart requires baselineA and baselineB.');
+		}
+
+		// The window reopens at now, the original duration preserved.
+		if (Math.abs(proposedDoc.kickoffMs - nowMs) > BATTLE_ACCEPT_CLOCK_TOLERANCE_MS) {
+			throw new Error('battles restart must set kickoffMs to ~now.');
+		}
+
+		const durationMs = currentDoc.settleMs - currentDoc.kickoffMs;
+
+		if (proposedDoc.settleMs !== proposedDoc.kickoffMs + durationMs) {
+			throw new Error('battles restart must preserve the original window length.');
+		}
+
+		// Re-read each side's `league_stats` bucket so the fresh baseline can't
+		// be faked — identical to the kickoff snapshot check.
+		if (
+			!bucketsEqual(proposedDoc.baselineA, readLeagueStatsBucket(currentDoc.sideA)) ||
+			!bucketsEqual(proposedDoc.baselineB, readLeagueStatsBucket(currentDoc.sideB))
+		) {
+			throw new Error('battles restart baselines must equal the current league_stats snapshot.');
 		}
 	} else if (currentDoc.state === proposedDoc.state) {
 		// Same-state writes (e.g. fix a typo before accept) require
