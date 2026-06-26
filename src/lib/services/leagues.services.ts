@@ -1136,14 +1136,22 @@ export const restartLegacyBattle = async ({
 
 	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
 	const durationMs = current.settleMs - current.kickoffMs;
+
+	// Snapshot both sides concurrently so neither bucket goes stale waiting on
+	// the other — the assert rejects a baseline that no longer equals the live
+	// league_stats, so a tighter read window means fewer retries.
+	const [baselineA, baselineB] = await Promise.all([
+		readLeagueStatsBucket({ leagueId: current.sideA, scope }),
+		readLeagueStatsBucket({ leagueId: current.sideB, scope })
+	]);
 	const kickoffMs = Date.now();
 
 	const next: BattleDoc = {
 		...current,
 		kickoffMs,
 		settleMs: kickoffMs + durationMs,
-		baselineA: await readLeagueStatsBucket({ leagueId: current.sideA, scope }),
-		baselineB: await readLeagueStatsBucket({ leagueId: current.sideB, scope })
+		baselineA,
+		baselineB
 	};
 
 	await setDoc<BattleDoc>({
