@@ -10,6 +10,7 @@
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import MenagerieCelebrationHost from '$lib/components/menagerie/MenagerieCelebrationHost.svelte';
+	import SurfaceTipHost from '$lib/components/onboarding/SurfaceTipHost.svelte';
 	import AccountReturnGate from '$lib/components/settings/AccountReturnGate.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -391,6 +392,16 @@
 	-->
 	{#if $userSignedIn}
 		<MenagerieCelebrationHost />
+	{/if}
+
+	<!--
+		First-run surface tips — layer 2 of the tutorial system. The first time an
+		early user (`totalTrades < 5`) lands on Dash / Arena / Profile, a single
+		non-blocking tip slides in above the pillnav, shown at most once per
+		surface per device. Distinct from the in-flow `FlowCoach` (layer 1).
+	-->
+	{#if $userSignedIn}
+		<SurfaceTipHost />
 	{/if}
 
 	<!--

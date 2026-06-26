@@ -243,6 +243,16 @@ export const frMessages = {
 	'flow.coach.hint_idle.txt': 'à toi ',
 	'flow.coach.hint_idle.acc': '⚡',
 	'flow.coach.aria': 'Instructions des gestes',
+	'tip.dash.title': 'Votre historique',
+	'tip.dash.body':
+		'Précision, série et classement progressent à chaque prédiction. Revenez voir votre tendance.',
+	'tip.arena.title': 'Là où vous vous affrontez',
+	'tip.arena.body':
+		'Arena, ce sont les ligues, les amis et les classements Worlds — voyez votre rang face aux autres.',
+	'tip.profile.title': 'Votre identité est ici',
+	'tip.profile.body':
+		'Votre handle, votre Menagerie et votre équipe. Choisissez une équipe quand vous voulez pour entrer dans la course Worlds.',
+	'tip.dismiss.aria': 'Masquer le conseil',
 	'tournament.back': 'Retour au social',
 	'tournament.bracket_eyebrow': 'TABLEAU',
 	'tournament.bracket_pending': "Aucun tableau n'a encore été tiré pour ce mois-ci.",

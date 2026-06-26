@@ -244,6 +244,16 @@ export const esMessages = {
 	'flow.coach.hint_idle.txt': 'tu turno ',
 	'flow.coach.hint_idle.acc': '⚡',
 	'flow.coach.aria': 'Instrucciones de gestos',
+	'tip.dash.title': 'Tu historial',
+	'tip.dash.body':
+		'Precisión, racha y posición crecen con cada predicción. Vuelve para ver tu tendencia.',
+	'tip.arena.title': 'Donde compites',
+	'tip.arena.body':
+		'Arena son ligas, amigos y clasificaciones de Worlds — mira cómo te posicionas frente a los demás.',
+	'tip.profile.title': 'Aquí vive tu identidad',
+	'tip.profile.body':
+		'Tu handle, tu Menagerie y tu equipo. Elige un equipo cuando quieras para entrar en la carrera Worlds.',
+	'tip.dismiss.aria': 'Descartar el consejo',
 	'tournament.back': 'Volver a social',
 	'tournament.bracket_eyebrow': 'CUADRO',
 	'tournament.bracket_pending': 'Aún no se ha sorteado ningún cuadro para este mes.',

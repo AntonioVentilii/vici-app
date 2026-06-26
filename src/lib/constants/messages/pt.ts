@@ -248,6 +248,16 @@ export const ptMessages = {
 	'flow.coach.hint_idle.txt': 'é a tua vez ',
 	'flow.coach.hint_idle.acc': '⚡',
 	'flow.coach.aria': 'Instruções de gestos',
+	'tip.dash.title': 'O teu histórico',
+	'tip.dash.body':
+		'Precisão, sequência e classificação crescem a cada previsão. Volta para ver a tua tendência.',
+	'tip.arena.title': 'Onde te enfrentas',
+	'tip.arena.body':
+		'A Arena são ligas, amigos e classificações Worlds — vê como te posicionas face aos outros.',
+	'tip.profile.title': 'A tua identidade vive aqui',
+	'tip.profile.body':
+		'O teu handle, o teu Menagerie e a tua equipa. Escolhe uma equipa quando quiseres para entrar na corrida Worlds.',
+	'tip.dismiss.aria': 'Dispensar a dica',
 	'tournament.back': 'Voltar ao social',
 	'tournament.bracket_eyebrow': 'CHAVEAMENTO',
 	'tournament.bracket_pending': 'Ainda não foi sorteado nenhum chaveamento para este mês.',

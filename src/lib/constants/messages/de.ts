@@ -251,6 +251,16 @@ export const deMessages = {
 	'flow.coach.hint_idle.txt': 'dein Zug ',
 	'flow.coach.hint_idle.acc': '⚡',
 	'flow.coach.aria': 'Gestenanleitung',
+	'tip.dash.title': 'Dein Verlauf',
+	'tip.dash.body':
+		'Trefferquote, Serie und Rang wachsen mit jeder Vorhersage. Schau wieder rein, um deinen Trend zu sehen.',
+	'tip.arena.title': 'Hier trittst du an',
+	'tip.arena.body':
+		'Arena sind Ligen, Freunde und Worlds-Ranglisten — sieh, wie du im Vergleich zu allen stehst.',
+	'tip.profile.title': 'Hier lebt deine Identität',
+	'tip.profile.body':
+		'Dein Handle, dein Menagerie und dein Team. Wähl jederzeit ein Team, um beim Worlds-Rennen mitzumachen.',
+	'tip.dismiss.aria': 'Hinweis ausblenden',
 	'tournament.back': 'Zurück zu Social',
 	'tournament.bracket_eyebrow': 'TABELLE',
 	'tournament.bracket_pending': 'Für diesen Monat wurde noch keine Tabelle ausgelost.',

@@ -241,6 +241,16 @@ export const enMessages = {
 	'flow.coach.hint_idle.txt': 'your turn ',
 	'flow.coach.hint_idle.acc': '⚡',
 	'flow.coach.aria': 'Gesture instructions',
+	'tip.dash.title': 'This is your record',
+	'tip.dash.body':
+		"Accuracy, streak and rank build with every prediction you make. Check back to see how you're trending.",
+	'tip.arena.title': 'Where you face off',
+	'tip.arena.body':
+		'Arena is leagues, friends and Worlds leaderboards — see how you rank against everyone else.',
+	'tip.profile.title': 'Your identity lives here',
+	'tip.profile.body':
+		'Your handle, your Menagerie, and your team. Pick a team anytime to join the Worlds race.',
+	'tip.dismiss.aria': 'Dismiss tip',
 	'tournament.back': 'Back to social',
 	'tournament.bracket_eyebrow': 'BRACKET',
 	'tournament.bracket_pending': 'No tournament has been drawn for this month yet.',
