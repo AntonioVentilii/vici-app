@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.8.1](https://github.com/AntonioVentilii/vici-app/compare/v1.8.0...v1.8.1) (2026-06-26)
+
+
+### Features
+
+* **arena:** battle proposer handle + settling state (resolution spec) ([#1003](https://github.com/AntonioVentilii/vici-app/issues/1003)) ([ee041f3](https://github.com/AntonioVentilii/vici-app/commit/ee041f39b3bb817d32374a805696958a5fcc6619))
+
+
+### Bug Fixes
+
+* **analytics:** paginate getAnalyticsEvents at the datastore (IC0522) ([#1001](https://github.com/AntonioVentilii/vici-app/issues/1001)) ([4bba1d7](https://github.com/AntonioVentilii/vici-app/commit/4bba1d7e262c2394cbe3cc90dfaaae19eb4a0144))
+* **onboarding:** remove double @ in handle input placeholder ([#1009](https://github.com/AntonioVentilii/vici-app/issues/1009)) ([ec2d213](https://github.com/AntonioVentilii/vici-app/commit/ec2d2139b611e611337a34ced9cdbe06671c9596))
+* **pwa:** capture beforeinstallprompt early so the install row shows ([#1005](https://github.com/AntonioVentilii/vici-app/issues/1005)) ([8f2ca2c](https://github.com/AntonioVentilii/vici-app/commit/8f2ca2cb2e030a95036216f8fd471844929fbe8a))
+
+
+### Miscellaneous Chores
+
+* **release:** force v1.8.1 patch ([#1010](https://github.com/AntonioVentilii/vici-app/issues/1010)) ([0c802e8](https://github.com/AntonioVentilii/vici-app/commit/0c802e8e3ac7f7432f4cc473b4d38cef0bd56878))
+
 ## [1.8.0](https://github.com/AntonioVentilii/vici-app/compare/v0.3.0...v1.8.0) (2026-06-26)
 
 
