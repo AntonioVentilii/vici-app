@@ -657,6 +657,22 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListFriendResolvedResultsArgs = IDL.Record({
+		friends: IDL.Vec(IDL.Text)
+	});
+	const AppListFriendResolvedResultsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				title: IDL.Text,
+				owner: IDL.Text,
+				market_id: IDL.Text,
+				net_vxp: IDL.Float64,
+				side: IDL.Text,
+				outcome: IDL.Variant({ win: IDL.Null, loss: IDL.Null }),
+				resolved_at_ms: IDL.Float64
+			})
+		)
+	});
 	const AppListFriendsResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
@@ -1008,6 +1024,7 @@ export const idlFactory = ({ IDL }) => {
 	const AppLookupReferralCodeResult = IDL.Record({
 		owner: IDL.Opt(IDL.Text)
 	});
+	const AppPruneResolvedResultsResult = IDL.Record({ pruned: IDL.Float64 });
 	const AppRecomputeActivityReactionCountsResult = IDL.Record({
 		recomputed: IDL.Float64
 	});
@@ -1406,6 +1423,11 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),
+		app_list_friend_resolved_results: IDL.Func(
+			[AppListFriendResolvedResultsArgs],
+			[AppListFriendResolvedResultsResult],
+			['query']
+		),
 		app_list_friends: IDL.Func([], [AppListFriendsResult], ['query']),
 		app_list_leaderboard: IDL.Func([], [AppListLeaderboardResult], ['query']),
 		app_list_league_battles: IDL.Func(
@@ -1454,6 +1476,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppLookupReferralCodeResult],
 			['query']
 		),
+		app_prune_resolved_results: IDL.Func([], [AppPruneResolvedResultsResult], []),
 		app_recompute_activity_reaction_counts: IDL.Func(
 			[],
 			[AppRecomputeActivityReactionCountsResult],

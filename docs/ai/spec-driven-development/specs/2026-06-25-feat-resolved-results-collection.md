@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: In progress (#988)
 
 ## Goal
 
@@ -12,10 +12,9 @@ Add a new satellite datastore collection, `resolved_results`, holding
 `(owner, market)` resolved call carrying that participant's outcome
 (win/loss), side, and net VXP. The rows are written at resolution time
 by the controllers-only resolution path and bulk-read friend-scoped by
-the consumer (the Arena Friends digest, Spec B). This is a purely
-additive backend collection: it has **no visible UI** on its own — the
-rows are written and readable, but nothing renders them until Spec B
-ships.
+the Arena Friends results digest. This is a purely additive backend
+collection: it has **no visible UI** on its own — the rows are written
+and readable, but nothing renders them yet.
 
 The collection exists because there is **no friend-readable
 per-participant resolved-result source today**. Clearing trade-history
@@ -29,13 +28,11 @@ per-call result. `resolved_results` is that source.
 
 ## Context
 
-**Why this is split out of the Arena results digest.** This spec was
-split from
-[`2026-06-25-feat-arena-results-digest.md`](./2026-06-25-feat-arena-results-digest.md)
-(Spec B) at the data-source / consumer boundary — see Decisions. Spec B
-is the FE consumer (the Friends "Recent results" digest); this spec
-(Spec A) is the additive backend it reads. Spec A is purely additive
-backend with no FE coupling and **merges first**; Spec B depends on it.
+**The boundary.** `resolved_results` is the additive backend data
+source; the Arena Friends results digest is the FE consumer that reads
+it. The two are independent — this collection writes and exposes the
+rows, the digest is the only place they become visible — so the backend
+has no FE coupling and stands on its own.
 
 **The data shape that does NOT carry what the consumer needs (the gap
 this fills).**
@@ -120,17 +117,16 @@ sync.
 3. **Resolution-time write.** Write one row per **participant per
    resolved market** at resolution, via the `adminCaller()` +
    `setDocStore` controllers-write pattern (mirror
-   `activity_reaction_counts`). Which path writes it is a Pending
-   decision (piggyback on the existing `SETTLEMENT` signal via a
-   satellite hook, vs a dedicated controllers-only resolution endpoint
-   — see Open questions and Pending decisions); the write itself is in
-   scope either way.
+   `activity_reaction_counts`). The write fires from a satellite
+   `onSetDoc` hook on the `SETTLEMENT` activity and derives every
+   participant's outcome + net VXP from the clearing settlement plan
+   server-side (see Decisions).
 
 4. **Friend-scoped bulk read.** A friend-scoped read that, given a set
    of friend principals, returns their resolved-result rows over the
    active window in **one** bounded `listDocs` over the friend set —
    **not** one call per friend. Owner-prefix keying keeps it a single
-   batched read. This is the surface Spec B consumes.
+   batched read. This is the surface the results digest consumes.
 
 5. **Retention / pruning.** A periodic controllers-only cleanup that
    prunes rows older than the digest's max `StandingsWindow` horizon,
@@ -143,14 +139,13 @@ sync.
 
 ### Out of scope
 
-- **All FE rendering / the digest UI** — the `FriendsTab.svelte`
-  rewrite, the `FriendDigest` model, the standout-selection client
-  logic, copy/i18n, the reaction, and the digest analytics all live in
-  Spec B
-  ([`2026-06-25-feat-arena-results-digest.md`](./2026-06-25-feat-arena-results-digest.md)).
+- **All FE rendering / the digest UI** — the `FriendsTab.svelte` work,
+  the `FriendDigest` model, the standout-selection client logic,
+  copy/i18n, the reaction, and the digest analytics all belong to the
+  results digest, not this collection.
 - **The W–L / net-VXP aggregate** — that is the existing
   `getLeagueStandings` clearing query (no backend change) and is
-  consumed directly by Spec B; it is not part of this collection.
+  consumed directly by the digest; it is not part of this collection.
 - **Removing or altering the `activities` collection** — untouched; it
   still powers market "Recent trades", VXP onboarding counts, etc.
 - **Any clearing / `../icdc-core/` change** — this lives entirely in the
@@ -172,7 +167,7 @@ not this collection. No closing keyword.
 nothing to instrument here — no event is emitted by the write path, the
 read path, or the pruning. The digest-engagement analytics
 (`friend_digest_opened`, the reused `friend_feed_reaction`) belong to
-the consumer and live in Spec B.
+the results digest, not this collection.
 
 ## Technical requirements (satellite / backend — mandatory)
 
@@ -188,10 +183,10 @@ friend-scoped. Doc shape, one per `(owner, market)` resolved call:
 ```
 
 Key `${owner}#${marketId}` so the per-owner read is a bounded
-owner-prefix scan, never N+1. (The consumer selects a per-friend
-standout client-side from these rows by largest `|netVxp|`, tie-break
-most recent `resolvedAtMs` — that selection rule is recorded here for
-context but lives in Spec B.)
+owner-prefix scan, never N+1. (The digest selects a per-friend standout
+client-side from these rows by largest `|netVxp|`, tie-break most recent
+`resolvedAtMs` — that selection rule is recorded here for context but
+lives in the consumer.)
 
 ### Performance
 
@@ -253,8 +248,8 @@ context but lives in Spec B.)
   [`src/lib/constants/`](../../../../src/lib/constants/) (the time
   windows live in `app.constants.ts`), never a literal — a copied
   horizon goes stale silently. The digest `StandingsWindow` that bounds
-  the read window is owned by Spec B but constrains the TTL here (the
-  cleanup horizon should not be shorter than the chosen digest window).
+  the read window constrains the TTL here (the cleanup horizon should not
+  be shorter than the active digest window).
 
 ## Implementation outline
 
@@ -263,8 +258,11 @@ context but lives in Spec B.)
    `memory: 'stable'`, mirroring `activity_reaction_counts`.
 2. Write a row per participant at the resolution path via the
    `adminCaller()` + `setDocStore` controllers-write pattern (mirror
-   `activity_reaction_counts`), keyed `${owner}#${marketId}`. Resolve
-   the write-path piggyback decision (Pending decisions) first.
+   `activity_reaction_counts`), keyed `${owner}#${marketId}`. The write
+   fires from a satellite `onSetDoc` hook on the `SETTLEMENT` activity
+   (a client `setDoc`, so the hook genuinely fires), and derives every
+   participant's `{ side, outcome, netVxp }` server-side from the
+   clearing `get_settlement_plan` positions (see Open questions).
 3. Add the friend-scoped bulk read — one bounded `listDocs` over the
    friend set, owner-prefix keyed, no N+1.
 4. Add the periodic controllers-only retention cleanup keyed on
@@ -294,74 +292,66 @@ context but lives in Spec B.)
       controllers-only cleanup keyed on `resolvedAtMs`; the TTL is a
       named constant under `src/lib/constants/`, not a literal.
 - [ ] The collection has **no** user-visible surface in this PR (nothing
-      renders the rows yet — that is Spec B).
+      renders the rows yet — that is the results digest).
 - [ ] `npm run quality` and `npm run check` pass, plus
       `npm run juno:functions:build` with the regenerated `satellite.did`
       / `satellite_extension.did` / `api-schemas.ts` committed.
 
 ## Open questions
 
-- **Does the resolution path expose the full participant set + per-user
-  net VXP at write time?** The `resolved_results` write needs, per
-  resolved market, every participant's `{ side, outcome, netVxp }`.
-  Confirm the resolution/settlement path (`settleMarket` →
-  `settleSeriesApi`, then the satellite write) can enumerate
-  participants and their realized per-user net without a clearing
-  round-trip — or whether it must read that back from clearing before
-  writing the rows.
 - **Maximum participants per market vs. the per-resolution instruction
-  budget.** The write fan-out is O(participants); confirm the realistic
-  max market size and whether resolution already batches, to size
-  whether the write must page (Scalability).
-- **Does any friend-readable `list_*_for(principal)`-style clearing read
-  already exist** (`../icdc-core/`) that would let us skip this
-  collection entirely? The chosen design assumes not; verify against the
-  clearing Candid surface before building.
-- **Which `StandingsWindow` bounds the read window and the TTL** —
-  `'week'` vs `'month'` (vs `'all'`). This is owned by Spec B's digest
-  window decision but constrains the retention horizon here; confirm the
-  bound before sizing the TTL constant.
+  budget.** The write fan-out is O(participants); the realistic max
+  market size and whether clearing already batches settlement page the
+  write if a single market's participant count can exceed the per-call
+  budget (Scalability). Current markets are well under that bound, so the
+  single-pass fan-out ships; paging is the watch item if a market grows
+  pathologically large.
 
 ## Pending decisions
 
 - **Which `StandingsWindow` bounds the read / retention** — `'week'` vs
-  `'month'` (vs `'all'`). Owned by Spec B's digest-window decision; the
-  TTL here should not be shorter than the chosen window. Recorded here
-  because it sizes this collection's retention constant.
-- **Retention / TTL for `resolved_results`.** The feed grows unbounded
-  without a cap (Memory & storage). The cleanup horizon should not be
-  shorter than the chosen digest window, but how much beyond it (e.g.
-  exactly the window, or window + a grace margin) and the cleanup
-  cadence are an owner/architecture call. Lands as a named constant
-  under `src/lib/constants/`.
-- **Where the `resolved_results` write piggybacks.** Settlement today is
-  FE-initiated (`settleMarket` → `settleSeriesApi` → `logActivity`),
-  **not** a satellite hook. Options: (a) write the rows from a satellite
-  hook that fires on the existing `SETTLEMENT` activity set (reuses the
-  resolution signal, controllers-write via `adminCaller()` like
-  `activity_reaction_counts`); (b) add a dedicated controllers-only
-  resolution endpoint the FE calls right after `settleSeriesApi`.
-  Recommendation: (a) if the participant set + per-user net are
-  derivable server-side at hook time (Open questions); else (b).
-  Owner/architecture to confirm.
+  `'month'` (vs `'all'`). The retention TTL must not be shorter than the
+  active digest window; until the digest fixes its window, the TTL is
+  sized to the longest bounded window (`'month'`) plus a grace margin, so
+  a later choice of `'week'` or `'month'` stays within the horizon.
 
 ## Decisions
 
-- **Split this collection out of the Arena results digest (owner,
-  2026-06-25).** The `resolved_results` backend and the FriendsTab
-  digest that consumes it were originally one spec
-  ([`2026-06-25-feat-arena-results-digest.md`](./2026-06-25-feat-arena-results-digest.md)).
-  The owner split it at the data-source / consumer boundary: this spec
-  (A) is the purely additive backend with no FE coupling and merges
-  first; Spec B is the FE consumer. The boundary is clean — A writes and
-  exposes the rows, B is the only place they become visible. Per the
-  workflow's
-  [one-spec-one-PR rule](./../workflow.md#non-negotiables), spec'd work
-  that cannot fit one reviewable PR is split at the spec level first.
+- **The write fires from a satellite hook on the `SETTLEMENT` activity
+  (2026-06-25).** Settlement is FE-initiated (`settleMarket` →
+  `settleSeriesApi` → `logActivity`), and `logActivity` is a client
+  `setDoc` to `activities`, so an `onSetDoc` hook on that collection
+  genuinely fires (a serverless `setDocStore` would not). The hook
+  (`onActivitySetForResolvedResults`) writes the rows controllers-write
+  via `adminCaller()` + `setDocStore`, mirroring
+  `activity_reaction_counts` — no dedicated resolution endpoint is
+  needed.
+- **Per-participant outcome + net VXP are derived server-side from the
+  clearing settlement plan (2026-06-25).** Clearing's
+  `get_settlement_plan(series_id)` returns `positions: vec
+SettlementPosition { user, net_qty, outcome_id, cashflow_usd }` and is
+  **not** caller-scoped, so the hook enumerates every participant and
+  their realized signed `cashflow_usd` (the net VXP, in `USD_DECIMALS`)
+  directly — no client input, so a result cannot be forged. `outcome`
+  is the sign of `cashflow_usd`; `side` is the settlement `outcome_id`,
+  or `YES`/`NO` from the sign of `net_qty` for a binary position. (The
+  caller-scoped `get_trade_history` could not enumerate another
+  principal's history; the settlement plan is the surface that can.) No
+  friend-readable per-principal clearing read exists that would let the
+  collection be skipped — clearing trade-history is caller-scoped — so
+  this collection is the source.
+- **Retention TTL — month plus grace (2026-06-25).** The feed grows
+  unbounded without a cap (Memory & storage), so the controllers-only
+  cleanup (`pruneResolvedResults`) prunes rows whose `resolvedAtMs` is
+  older than `RESOLVED_RESULTS_RETENTION_MS` (45 days — a calendar month
+  plus a ~2-week grace margin) in `src/lib/constants/app.constants.ts`,
+  never a literal. The horizon stays at least the active digest window so
+  a slightly delayed prune never drops a row the digest still needs.
 - **Standout selection rule: largest |net VXP|, tie-break most recent
   (owner default, 2026-06-25).** Among a friend's resolved-result rows
-  in the window, the consumer's standout is the call with the greatest
+  in the window, the digest's standout is the call with the greatest
   absolute net VXP (their most consequential result, win or loss); ties
-  break to the most recent `resolvedAtMs`. The selection runs in Spec B,
-  but it is the reason this collection carries signed `netVxp` and
-  `resolvedAtMs` per row — recorded here so the doc shape is justified.
+  break to the most recent `resolvedAtMs`. The selection runs in the
+  consumer, but it is the reason this collection carries signed `netVxp`
+  and `resolvedAtMs` per row — recorded here so the doc shape is
+  justified.
