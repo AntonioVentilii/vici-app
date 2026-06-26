@@ -97,6 +97,129 @@ const getAffiliationStats = async (
 	return AppGetAffiliationStatsResultSchema.parse(result);
 };
 
+const AppGetAnalyticsEventsArgsSchema = j.strictObject({
+	afterUpdatedAtNs: j.optional(j.string()),
+	afterKey: j.optional(j.string()),
+	limit: j.number()
+});
+const AppGetAnalyticsEventsResultSchema = j.strictObject({
+	rows: j.array(
+		j.strictObject({
+			key: j.string(),
+			createdAtNs: j.string(),
+			updatedAtNs: j.string(),
+			version: j.optional(j.string()),
+			ownerText: j.optional(j.string()),
+			name: j.enum([
+				'session_started',
+				'signed_up',
+				'signed_in',
+				'signed_out',
+				'provider_linked',
+				'onboarding_started',
+				'onboarding_step',
+				'handle_checked',
+				'onboarding_completed',
+				'flow_session_started',
+				'flow_swipe',
+				'flow_card_expanded',
+				'flow_completed',
+				'flow_abandoned',
+				'sound_toggled',
+				'market_viewed',
+				'market_searched',
+				'market_shared',
+				'watchlist_added',
+				'watchlist_removed',
+				'orderbook_viewed',
+				'market_translation_toggled',
+				'position_taken',
+				'position_closed',
+				'prediction_created',
+				'order_placed',
+				'order_cancelled',
+				'resolution_proposed',
+				'resolution_confirmed',
+				'resolution_disputed',
+				'payout_settled',
+				'referral_sent',
+				'referral_link_copied',
+				'referral_redeemed',
+				'referral_converted',
+				'vxp_awarded',
+				'streak_milestone',
+				'faucet_claimed',
+				'transactions_viewed',
+				'transactions_filtered',
+				'friend_request_sent',
+				'friend_feed_reaction',
+				'league_created',
+				'league_joined',
+				'league_invite_sent',
+				'battle_proposed',
+				'battle_accepted',
+				'battle_declined',
+				'battle_expired',
+				'battle_resolved',
+				'battle_viewed',
+				'comment_posted',
+				'chat_sent',
+				'leaderboard_viewed',
+				'affiliation_set',
+				'affiliation_removed',
+				'school_picker_opened',
+				'school_picked',
+				'school_verify_email_submitted',
+				'school_verify_code_submitted',
+				'delete_flow_opened',
+				'delete_confirmed',
+				'delete_succeeded',
+				'exit_signal',
+				'notification_opened',
+				'pwa_install_prompted',
+				'pwa_install_accepted',
+				'pwa_install_dismissed',
+				'app_error',
+				'perf_metric'
+			]),
+			tsMs: j.number(),
+			sessionId: j.string(),
+			principalText: j.optional(j.string()),
+			path: j.optional(j.string()),
+			marketId: j.optional(j.string()),
+			seriesId: j.optional(j.string()),
+			leagueId: j.optional(j.string()),
+			battleId: j.optional(j.string()),
+			source: j.optional(j.string()),
+			label: j.optional(j.string()),
+			step: j.optional(j.number()),
+			value: j.optional(j.number()),
+			count: j.optional(j.number()),
+			durationMs: j.optional(j.number()),
+			ok: j.optional(j.boolean())
+		})
+	),
+	hasMore: j.boolean()
+});
+
+const getAnalyticsEvents = async (
+	args: j.infer<typeof AppGetAnalyticsEventsArgsSchema>
+): Promise<j.infer<typeof AppGetAnalyticsEventsResultSchema>> => {
+	const parsedArgs = AppGetAnalyticsEventsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetAnalyticsEventsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_analytics_events']>[0];
+
+	const { app_get_analytics_events } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_analytics_events(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetAnalyticsEventsResultSchema, value: idlResult });
+	return AppGetAnalyticsEventsResultSchema.parse(result);
+};
+
 const AppGetAnalyticsSummaryArgsSchema = j.strictObject({ days: j.number() });
 const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 	rows: j.array(
@@ -2123,6 +2246,7 @@ export const functions = {
 	checkFriendship,
 	checkNicknameAvailability,
 	getAffiliationStats,
+	getAnalyticsEvents,
 	getAnalyticsSummary,
 	getCurrentTournament,
 	getMarketMetadata,
