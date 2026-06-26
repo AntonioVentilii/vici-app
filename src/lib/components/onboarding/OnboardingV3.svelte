@@ -336,7 +336,7 @@
 			<div class="ob2-beat ob-v3-beat">
 				<span class="ob-v3-brand">{t({ locale: $localeStore, key: 'onboarding.v3.brand' })}</span>
 
-				<h1 class="ob2-h1">
+				<h1 id="onboarding-handle-heading" class="ob2-h1">
 					{t({ locale: $localeStore, key: 'onboarding.v3.h1_pre' })}
 					<span class="serif-italic acc">
 						{t({ locale: $localeStore, key: 'onboarding.v3.h1_accent' })}
@@ -348,6 +348,7 @@
 					<span class="ob2-at-large">@</span>
 					<input
 						class="ob2-custom-input"
+						aria-labelledby="onboarding-handle-heading"
 						autocapitalize="off"
 						autocomplete="off"
 						data-tid={TestId.OnboardingHandleInput}
