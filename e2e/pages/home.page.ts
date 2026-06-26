@@ -209,7 +209,8 @@ export class HomePage {
 						`First attempt: ${(firstError as Error).message}. ` +
 						`Second attempt (after page reload): ${(secondError as Error).message}. ` +
 						`This typically indicates the Vite-↔-PocketIC proxy has entered a ` +
-						`sticky error state — see docs/ai/frontend/testing.md.`
+						`sticky error state — see docs/ai/frontend/testing.md.`,
+					{ cause: secondError }
 				);
 			}
 		}
