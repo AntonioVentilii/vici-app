@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: In progress (#978)
 
 ## Goal
 
@@ -31,25 +31,20 @@ The install **chrome** already exists and is out of scope:
   `data-ios`, `data-ios-bottom-bar`, and reading PWA-standalone state
   (`src/app.html:97-128`).
 
-What is **missing** and this spec adds (Svelte 5 runes, ported from the
-React prototype — behaviour + copy, not code):
+What is **missing** and this spec adds (Svelte 5 runes — behaviour +
+copy):
 
-- **Install engine.** Prototype `a2hs.js` (`window.viciA2HS`): captures
-  `beforeinstallprompt`/`appinstalled`, platform + standalone detection,
-  session counting, `canInstall()`, `shouldAutoPrompt(calls)`,
-  `nativePrompt()`, and localStorage/sessionStorage persistence.
-- **Install sheet.** Prototype `a2hs-sheet.jsx`: Android one-tap CTA vs
-  iOS two-step Share/Add instructions, dismiss = cool-off.
-- **Settings row.** Prototype pkg 3 / `set.add_home*`: a Preferences row
-  gated on `canInstall()`.
-- **FlowEnd nudge.** Prototype V1.8.34 (`a2hs.summary_cta`): an install
-  row on the summary, shown only when `canInstall()`.
-- **i18n.** Prototype's `a2hs.*` + `set.add_home*` keys.
-
-Prototype source of truth (read-only, not in-repo):
-`scratchpad/proto/VICI-V1.8-Handover/` — `a2hs.js`, `a2hs-sheet.jsx`,
-`manifest.json`, `App.html`, and CHANGELOG `V1.8.29`–`V1.8.34` plus the
-CTO-header domain 2 ("PWA / Add-to-Home-Screen").
+- **Install engine.** Captures `beforeinstallprompt` / `appinstalled`,
+  platform + standalone detection, session counting, `canInstall`,
+  `shouldAutoPrompt(calls)`, `nativePrompt()`, and
+  localStorage/sessionStorage persistence — as a typed Svelte module +
+  store, not a `window` global.
+- **Install sheet.** Android one-tap CTA vs iOS two-step Share/Add
+  instructions; dismiss = cool-off.
+- **Settings row.** A Preferences row gated on `canInstall`.
+- **FlowEnd nudge.** An install row on the summary, shown only when
+  `canInstall`.
+- **i18n.** New `a2hs.*` + `settings.add_home*` keys.
 
 App-side files this spec touches or reuses:
 
@@ -81,7 +76,7 @@ App-side files this spec touches or reuses:
   (`src/lib/components/market/FlowMode.svelte:876`). The day's milestone
   state is already modelled by `FlowEnd`'s `canExtend` (10th-call) and
   `overtime` (15th-call) props — these are the exact "10th / 15th" beats
-  the prototype's trigger rules target (V1.8.34).
+  the trigger rules target.
 
 Reusability (catalog = `docs/ai/frontend/reusability.md`):
 
@@ -103,7 +98,7 @@ Reusability (catalog = `docs/ai/frontend/reusability.md`):
 ## Scope
 
 - **Install engine** `src/lib/stores/a2hs.store.ts` (Svelte runes
-  module + readable store), porting `a2hs.js`:
+  module + readable store):
   - On module init (browser only): add `beforeinstallprompt` (preventing
     the mini-infobar and stashing the event) and `appinstalled`
     listeners; bump the session counter once per tab-session.
@@ -150,26 +145,21 @@ Reusability (catalog = `docs/ai/frontend/reusability.md`):
 
 - Manifest, icons, favicons, `apple-touch-icon`, iOS meta, and the
   pre-paint standalone/iOS bootstrap in `src/app.html` — **already done**.
-- The prototype's **auto-popup** bottom sheet over the next Flow card
-  (the `onPredict` ~1.3s slide-over): explicitly removed by the prototype
-  itself in V1.8.34 in favour of the FlowEnd row. We ship the FlowEnd row
-  only; no mid-flow interruption.
-- The prototype's **Tweaks → preview iOS/Android** dev panel
-  (`forcePlatform`, `__viciPreviewA2HS`) — a prototype-only dev affordance
-  with no app equivalent. Deferred (note under Open questions if a debug
-  hook is wanted).
+- An **auto-popup** bottom sheet over the next Flow card (a mid-flow
+  slide-over): explicitly out — the calm FlowEnd row replaces it, so there
+  is no mid-flow interruption.
+- A **preview iOS/Android** developer panel (a forced-platform debug
+  affordance) — no app equivalent. Deferred (note under Open questions if a
+  debug hook is wanted).
 - A custom **service worker** / offline caching. `display: standalone`
   install does not require one; offline support is a separate effort.
-- Desktop install (the engine treats desktop as never-prompt, matching
-  the prototype).
+- Desktop install (the engine treats desktop as never-prompt).
 
 ## Linked issues
 
-GitHub MCP issue tools were available but no issue search was run as part
-of authoring (Draft). Before flipping to `In progress`, search open
-issues for: `PWA`, `install`, `add to home screen`, `A2HS`, `standalone`,
-`manifest`, `home screen`. No related issue is currently known — state
-"no related issue" or link one in the implementation PR.
+No related issue is currently known. Candidate search terms for the
+implementation PR: `PWA`, `install`, `add to home screen`, `A2HS`,
+`standalone`, `manifest`, `home screen`.
 
 ## Analytics
 
@@ -242,8 +232,7 @@ funnel.
 
 ### Trigger thresholds (concrete)
 
-Ported verbatim from `a2hs.js` `shouldAutoPrompt`; surface as named
-constants in `a2hs.store.ts`:
+Surfaced as named constants in `a2hs.store.ts`:
 
 - `A2HS_PRIMARY_CALLS = 15` — primary window: lifetime calls ≥ 15.
 - `A2HS_FALLBACK_CALLS = 10` — fallback window: `sessionCount ≥ 2` **and**
@@ -262,7 +251,7 @@ always-available Settings row.
 
 ### Persistence keys (concrete)
 
-Ported from `a2hs.js` `KEYS`. localStorage:
+localStorage:
 
 - `vici.a2hs.sessions` — distinct-visit counter (int).
 - `vici.a2hs.dismissed` — last-dismissal timestamp (ms; drives cool-off).
@@ -277,7 +266,7 @@ sessionStorage (per tab-session):
 
 Reuse `$lib/utils/storage.utils` (`set`/`get`/`has`) where it fits; wrap
 raw `sessionStorage` access in try/catch (private-mode / blocked-storage
-safe), as the prototype does.
+safe).
 
 ## Acceptance criteria
 
@@ -295,9 +284,9 @@ safe), as the prototype does.
 - [ ] The trigger rules hold: primary at lifetime calls ≥ 15, fallback at
       ≥ 10 on a 2nd+ session, never when installed/standalone, at most
       once per session, and not within the 14-day cool-off after dismiss.
-- [ ] The engine is a Svelte module + store (no `window.viciA2HS`
-      global) and is initialised in the `(app)` layout so
-      `beforeinstallprompt` is captured before child mount.
+- [ ] The engine is a Svelte module + store (no `window` global) and is
+      initialised in the `(app)` layout so `beforeinstallprompt` is
+      captured before child mount.
 - [ ] New `a2hs.*` / `settings.add_home*` keys exist in **every** catalog
       under `src/lib/constants/messages/`; `npm run quality` passes the
       i18n check.
@@ -316,11 +305,10 @@ safe), as the prototype does.
   `display-mode: standalone`) and stamps `data-ios` /
   `data-ios-bottom-bar`. The engine needs the same facts. Does it read the
   already-stamped `data-ios` / a standalone flag from the DOM (single
-  source), or re-derive independently (prototype parity, but two
-  detectors that can diverge)? Prefer a single source — confirm whether
-  `app.html` should also expose the standalone result (it currently only
-  branches `data-ios-bottom-bar` on it, doesn't persist "standalone"
-  itself).
+  source), or re-derive independently (two detectors that can diverge)?
+  Prefer a single source — confirm whether `app.html` should also expose
+  the standalone result (it currently only branches `data-ios-bottom-bar`
+  on it, doesn't persist "standalone" itself).
 - **`beforeinstallprompt` timing under SvelteKit.** Confirm that wiring
   the listener from the `(app)` layout `onMount` (or a module side-effect
   imported there) is early enough to catch Chrome's event on a cold load,
@@ -358,24 +346,22 @@ safe), as the prototype does.
 
 ## Decisions
 
-- **Svelte module + store, not a `window` global.** The prototype exposes
-  `window.viciA2HS`; the app ports it to `src/lib/stores/a2hs.store.ts` so
-  consumers import typed state and the gating is reactive — aligning with
-  the codebase's store/derived conventions and avoiding an untyped global.
+- **Svelte module + store, not a `window` global.** The engine lives in
+  `src/lib/stores/a2hs.store.ts` so consumers import typed state and the
+  gating is reactive — aligning with the codebase's store/derived
+  conventions and avoiding an untyped global.
 - **Initialise the engine early in the `(app)` layout.** So
   `beforeinstallprompt` is captured before any child component mounts
   (the browser fires it once, early); a lazily-imported engine would miss
   it.
-- **Surfaces are a Settings row + a FlowEnd row, gated on `canInstall()`
-  — never an auto-popup.** This follows the prototype's own final state
-  (V1.8.34 removed the mid-flow auto-sheet). The FlowEnd row inherits the
-  10th/15th-call milestone timing for free because FlowEnd only renders at
-  those beats.
+- **Surfaces are a Settings row + a FlowEnd row, gated on `canInstall`
+  — never an auto-popup.** The FlowEnd row inherits the 10th/15th-call
+  milestone timing for free because FlowEnd only renders at those beats.
 - **Reuse `BottomSheet` (+ `SheetFooter`, `SetRow`, `Button`,
   `notificationsStore`).** No new sheet/row primitive; the install sheet
   is one more `BottomSheet` host like `LocaleSheet` / `DeleteAccountFlow`.
-- **Port behaviour + UI + copy, not code.** React → Svelte 5 runes;
-  prototype `a2tr()` English fallbacks become real keys in every catalog;
-  prototype emoji/inline SVG glyphs become lucide icons.
+- **Behaviour + UI + copy in Svelte 5 runes.** English copy lands as real
+  keys in every catalog; all glyphs are lucide icons (no emoji, no inline
+  SVG).
 - **Manifest/icons are done — scope is engine + sheet + Settings row +
   FlowEnd nudge + i18n only.**

@@ -21,6 +21,7 @@
 	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
 	import XpToast from '$lib/components/market/XpToast.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
+	import A2hsSheet from '$lib/components/pwa/A2hsSheet.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -35,6 +36,7 @@
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { persistDailyStreak, recordFlowSwipe } from '$lib/services/profile.services';
 	import { loadMarketPriceCandles } from '$lib/services/trade.services';
+	import { canInstall, shouldAutoPrompt } from '$lib/stores/a2hs.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { setFlowBeatActive } from '$lib/stores/flow-beat.store';
@@ -189,6 +191,17 @@
 	// first call. A failed call subtracts itself back out.
 	let sessionCommittedUsd = $state(ZERO);
 	let completed = $state(false);
+
+	// Install nudge on the summary. The FlowEnd row shows only when the app
+	// can be installed AND the trigger thresholds hold for the user's lifetime
+	// call count (`totalTrades`) — primary at >= 15, fallback at >= 10 on a
+	// 2nd+ session, never in cool-off / installed / already-shown. `a2hsSheetOpen`
+	// owns the shared install sheet, opened from the row.
+	let a2hsSheetOpen = $state(false);
+	const a2hsCanInstall = $derived(
+		$canInstall && shouldAutoPrompt($userStore.profile?.totalTrades ?? 0)
+	);
+
 	// `nowMs` tracks the shared one-minute heartbeat while the session is in
 	// flight (minute precision is plenty for a day rollover), but freezes once
 	// `completed` flips true so the FlowEnd takeover's Push-to-15 eligibility
@@ -1236,14 +1249,18 @@
 	{:else if completed}
 		<FlowEnd
 			{canExtend}
+			canInstall={a2hsCanInstall}
 			comeback={isComeback}
 			onClose={handleClose}
 			onExtend={handleExtend}
+			onInstallPrompt={() => (a2hsSheetOpen = true)}
 			overtime={overtimeSession}
 			pending={betsCount}
 			staked={sessionStaked}
 			streak={dailyStreak}
 		/>
+
+		<A2hsSheet isOpen={a2hsSheetOpen} onClose={() => (a2hsSheetOpen = false)} source="flow_end" />
 	{:else if entered}
 		<!-- Persistent Flow header: VICI wordmark + deck-scope chip +
 		     bolt streak chip on the left; bell on the right. Secondary

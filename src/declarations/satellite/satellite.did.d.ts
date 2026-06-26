@@ -155,6 +155,9 @@ export interface AppGetAnalyticsSummaryResult {
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
 			| { notification_opened: null }
+			| { pwa_install_prompted: null }
+			| { pwa_install_accepted: null }
+			| { pwa_install_dismissed: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }
@@ -974,6 +977,9 @@ export interface AppTrackEventsArgs {
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
 			| { notification_opened: null }
+			| { pwa_install_prompted: null }
+			| { pwa_install_accepted: null }
+			| { pwa_install_dismissed: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }
