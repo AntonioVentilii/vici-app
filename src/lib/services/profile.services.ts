@@ -709,48 +709,49 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	const sanitizedSeed = sanitizeNickname(seedSource);
 	const nickname = sanitizedSeed.length >= MIN_NICKNAME_LENGTH ? sanitizedSeed : principal;
 
-	const data: UserProfile = {
-		...profileDoc.data,
+	// First-touch bootstrap. Seed the nickname (and provider email when present)
+	// through the SAME serialized `patchProfile` queue that `calculateAndSyncStats`
+	// — awaited right after sign-in on this finishing login — and the onboarding
+	// drain use. A direct full-snapshot `upsertProfile` here is NOT serialized
+	// against that concurrent stats write, so its read-then-write loses the
+	// optimistic-version race and throws ("set doc version"), stranding the user
+	// on signup even though auth already succeeded (a refresh then shows them
+	// signed in). Going through the queue orders the create against the stats
+	// write instead, so whichever runs first, the other reads its version.
+	//
+	// The default nickname is the user's shortened principal, which can collide
+	// with another provider's shortened principal — fall back to the unshortened
+	// principal so the assertion cannot veto this implicit write. The user can
+	// change it later from the profile dashboard.
+	const seedPatch: ProfilePatch = {
 		nickname,
-		// Seed the provider email on first touch; the pending-onboarding drain
-		// in `(app)/+layout.svelte` preserves it (it only sets `email` when its
-		// own payload carries one — the email-passkey flow).
 		...(providerEmail.length > 0 && { email: providerEmail })
 	};
 
-	// First-touch bootstrap. The default nickname is the user's
-	// shortened principal, which can occasionally collide with another
-	// shortened principal from a different identity provider — fall
-	// back to the unshortened principal so the assertion cannot veto
-	// this implicit write. The user can then change it from the
-	// profile dashboard.
-	//
 	// Record the bootstrap BEFORE the write awaits. A fresh sign-in can fire a
-	// second `onAuthStateChange` pass whose profile read resolves after this
-	// `upsertProfile` creates the doc but before control returns here; if the
-	// mark lagged behind the await, that pass would see the doc as pre-existing
-	// while `wasBootstrappedThisSession` was still false, misclassify a brand-new
-	// user as returning, and drop their onboarding handle. Marking up front is
-	// safe: a throwing upsert errors the caller out, and a principal with no doc
-	// reads as `existed: false` (the new-user path) on any retry.
+	// second `onAuthStateChange` pass whose profile read resolves after the
+	// create lands but before control returns here; if the mark lagged behind the
+	// await, that pass would see the doc as pre-existing while
+	// `wasBootstrappedThisSession` was still false, misclassify a brand-new user
+	// as returning, and drop their onboarding handle. Marking up front is safe: a
+	// throwing write errors the caller out, and a principal with no doc reads as
+	// `existed: false` (the new-user path) on any retry.
 	bootstrappedThisSession.add(principal);
 
 	try {
-		await upsertProfile({ ...profileDoc, data });
+		return { profile: await patchProfile({ principal, patch: seedPatch }), existed: false };
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : '';
 
 		if (message.includes('already taken')) {
-			const fallback: UserProfile = { ...data, nickname: principal };
-			await upsertProfile({ ...profileDoc, data: fallback });
-
-			return { profile: fallback, existed: false };
+			return {
+				profile: await patchProfile({ principal, patch: { ...seedPatch, nickname: principal } }),
+				existed: false
+			};
 		}
 
 		throw err;
 	}
-
-	return { profile: data, existed: false };
 };
 
 /**
