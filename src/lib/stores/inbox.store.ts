@@ -7,10 +7,15 @@ import {
 } from '$lib/constants/app.constants';
 import {
 	INBOX_DISMISSED_STORAGE_KEY,
+	INBOX_MARKET_ALERTS_STORAGE_KEY,
+	INBOX_MARKET_BASELINE_STORAGE_KEY,
 	INBOX_PROGRESS_STORAGE_KEY,
 	INBOX_READ_STORAGE_KEY,
 	INBOX_SETTLED_READ_STORAGE_KEY,
-	INBOX_STORAGE_KEY
+	INBOX_STORAGE_KEY,
+	MARKET_ALERT_MAX,
+	MARKET_ALERT_WINDOW_MS,
+	MARKET_MOVE_THRESHOLD
 } from '$lib/constants/inbox.constants';
 import type { AppLocale } from '$lib/constants/locale.constants';
 import { AppPath } from '$lib/constants/routes.constants';
@@ -30,7 +35,7 @@ import { initStorageStore } from '$lib/stores/storage.store';
 import { userStore } from '$lib/stores/user.store';
 import type { ResolutionItem, ResolutionRevealData } from '$lib/types/flow';
 import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox';
-import type { Market } from '$lib/types/market';
+import type { Market, MarketId } from '$lib/types/market';
 import type { ResolvedPosition } from '$lib/types/position';
 import type { Relation } from '$lib/types/relation';
 import type { ActivityReaction } from '$lib/types/social';
@@ -719,12 +724,200 @@ export const initInboxProgress = (): (() => void) => {
 	});
 };
 
+// ── Saved-market move notifications ─────────────────────────────────────────
+// A market the viewer SAVED (the heart toggle — `preferences.savedMarketIds`)
+// whose YES probability shifts by at least `MARKET_MOVE_THRESHOLD` since they
+// last saw it surfaces a move alert, gated by `preferences.notify.marketAlerts`.
+// Unlike the monotonic streak/level markers, a move is a transient event with
+// no re-derivable source, so we persist both a per-market baseline (the
+// last-shown probability) and a capped, windowed list of fired alerts.
+// `initMarketMoveAlerts` (mounted by `NotifToastHost`) snapshots saved-market
+// probabilities, seeds baselines, detects threshold crossings, appends alerts,
+// and prunes baselines for markets no longer saved; `marketMoveInboxStore`
+// derives the cards (read/dismiss handled by the generic per-id overlay).
+
+interface MarketBaseline {
+	yes: number;
+	at_ms: number;
+}
+
+interface MarketMoveAlert {
+	marketId: MarketId;
+	deltaPts: number;
+	direction: 'up' | 'down';
+	at_ms: number;
+}
+
+const loadMarketBaselines = (): Record<string, MarketBaseline> => {
+	const raw = get<Record<string, MarketBaseline>>({ key: INBOX_MARKET_BASELINE_STORAGE_KEY });
+
+	return nonNullish(raw) && typeof raw === 'object' ? raw : {};
+};
+
+const loadMarketAlerts = (): MarketMoveAlert[] => {
+	const raw = get<MarketMoveAlert[]>({ key: INBOX_MARKET_ALERTS_STORAGE_KEY });
+
+	return Array.isArray(raw) ? raw : [];
+};
+
+const marketBaselineStore = writable<Record<string, MarketBaseline>>(loadMarketBaselines());
+const marketAlertsStore = writable<MarketMoveAlert[]>(loadMarketAlerts());
+
+/**
+ * Saved-market move cards, derived from the persisted alert list joined to the
+ * live catalog for the market title. Alerts whose market vanished, resolved,
+ * or aged out of the window are dropped. `unread` defaults true; the per-id
+ * read overlay in `combinedInboxStore` applies the read/dismiss state.
+ */
+const marketMoveInboxStore: Readable<InboxNotification[]> = derived(
+	[marketAlertsStore, marketById, localeStore],
+	([$alerts, $marketById, $locale]) => {
+		const now = Date.now();
+
+		return $alerts.flatMap((alert): InboxNotification[] => {
+			const market = $marketById.get(alert.marketId);
+
+			if (
+				now - alert.at_ms > MARKET_ALERT_WINDOW_MS ||
+				isNullish(market) ||
+				market.status !== 'Open'
+			) {
+				return [];
+			}
+
+			return [
+				{
+					id: `market-move-${alert.marketId}-${alert.at_ms}`,
+					kind: 'market' as const,
+					title: t({ locale: $locale, key: 'inbox.market.title' }),
+					body: t({
+						locale: $locale,
+						key: alert.direction === 'up' ? 'inbox.market.body.up' : 'inbox.market.body.down',
+						params: { pts: alert.deltaPts, market: market.title }
+					}),
+					when: formatRelativeAgoFromNs({
+						timestampNs: BigInt(Math.round(alert.at_ms)) * MILLISECOND_IN_NANOSECONDS,
+						locale: $locale
+					}),
+					unread: true,
+					mid: alert.marketId
+				}
+			];
+		});
+	}
+);
+
+/**
+ * Snapshots the YES probability of every saved, open market; seeds a baseline
+ * on first observation (no alert), and when the probability has moved at least
+ * `MARKET_MOVE_THRESHOLD` since the baseline, advances the baseline and — when
+ * `notify.marketAlerts` is on — records a move alert. Baselines for markets no
+ * longer saved are pruned. The baseline advances on a qualifying move even
+ * when alerts are off, so toggling them back on never replays a stale move.
+ * Mounted from `NotifToastHost`; returns a teardown.
+ */
+export const initMarketMoveAlerts = (): (() => void) => {
+	if (!browser) {
+		return () => undefined;
+	}
+
+	return derived([marketById, preferencesStore], ([$marketById, $prefs]) => ({
+		markets: $marketById,
+		savedSet: new Set<string>($prefs.savedMarketIds),
+		enabled: $prefs.notify.marketAlerts
+	})).subscribe(({ markets, savedSet, enabled }) => {
+		const now = Date.now();
+		const newAlerts: MarketMoveAlert[] = [];
+
+		marketBaselineStore.update((current) => {
+			let changed = false;
+			const next: Record<string, MarketBaseline> = {};
+
+			// Carry forward only still-saved baselines (prune the rest so a
+			// re-saved market re-seeds rather than firing off a stale delta).
+			for (const [id, baseline] of Object.entries(current)) {
+				if (savedSet.has(id)) {
+					next[id] = baseline;
+				} else {
+					changed = true;
+				}
+			}
+
+			for (const market of markets.values()) {
+				const yes = market.yesProbability;
+
+				// Only saved, open markets with a loaded probability; resolved /
+				// expired markets settle through the `resolve` card instead. The
+				// guard is inlined (not hoisted to a boolean) so `nonNullish`
+				// narrows `yes` to a number inside the block.
+				if (
+					savedSet.has(market.id) &&
+					market.status === 'Open' &&
+					market.priceLoaded === true &&
+					nonNullish(yes)
+				) {
+					const baseline = next[market.id];
+
+					if (isNullish(baseline)) {
+						// First observation — seed, no alert.
+						next[market.id] = { yes, at_ms: now };
+						changed = true;
+					} else if (Math.abs(yes - baseline.yes) >= MARKET_MOVE_THRESHOLD) {
+						if (enabled) {
+							newAlerts.push({
+								marketId: market.id,
+								deltaPts: Math.round(Math.abs(yes - baseline.yes) * 100),
+								direction: yes >= baseline.yes ? 'up' : 'down',
+								at_ms: now
+							});
+						}
+
+						// Advance the baseline regardless of `enabled` so the same move
+						// doesn't re-fire and a later toggle-on doesn't replay it.
+						next[market.id] = { yes, at_ms: now };
+						changed = true;
+					}
+				}
+			}
+
+			if (!changed) {
+				return current;
+			}
+
+			setStorage({ key: INBOX_MARKET_BASELINE_STORAGE_KEY, value: next });
+
+			return next;
+		});
+
+		if (newAlerts.length === 0) {
+			return;
+		}
+
+		marketAlertsStore.update((current) => {
+			// One live alert per market — a fresh move supersedes an older,
+			// un-aged one — then window-prune and cap to the most recent.
+			const superseded = new Set(newAlerts.map((alert) => alert.marketId));
+			const kept = current.filter(
+				(alert) => !superseded.has(alert.marketId) && now - alert.at_ms <= MARKET_ALERT_WINDOW_MS
+			);
+			const next = [...kept, ...newAlerts]
+				.sort((a, b) => b.at_ms - a.at_ms)
+				.slice(0, MARKET_ALERT_MAX);
+
+			setStorage({ key: INBOX_MARKET_ALERTS_STORAGE_KEY, value: next });
+
+			return next;
+		});
+	});
+};
+
 /**
  * The inbox surface (Notifications page, bell badge) reads from this combined
  * view. Order: live actionable items (friend requests, battle responses),
  * then real settled-event notifications, then likes received on your calls,
- * then streak / level milestones, then the persisted local seed. Real event
- * cards sit above the seeds so freshly-arrived items land at the top.
+ * then saved-market move alerts, then streak / level milestones, then the
+ * persisted local seed. Real event cards sit above the seeds so
+ * freshly-arrived items land at the top.
  *
  * Dismissed cards are filtered out, and the per-id read overlay is applied
  * on top of each item's own `unread` so a card tapped read in place stays
@@ -736,14 +929,35 @@ export const combinedInboxStore: Readable<InboxNotification[]> = derived(
 		battleInboxStore,
 		settledInboxStore,
 		likesReceivedInboxStore,
+		marketMoveInboxStore,
 		streakInboxStore,
 		levelInboxStore,
 		inboxStore,
 		inboxReadStore,
 		inboxDismissedStore
 	],
-	([$requests, $battles, $settled, $likesReceived, $streak, $level, $inbox, $read, $dismissed]) =>
-		[...$requests, ...$battles, ...$settled, ...$likesReceived, ...$streak, ...$level, ...$inbox]
+	([
+		$requests,
+		$battles,
+		$settled,
+		$likesReceived,
+		$marketMoves,
+		$streak,
+		$level,
+		$inbox,
+		$read,
+		$dismissed
+	]) =>
+		[
+			...$requests,
+			...$battles,
+			...$settled,
+			...$likesReceived,
+			...$marketMoves,
+			...$streak,
+			...$level,
+			...$inbox
+		]
 			.filter((item) => !$dismissed.has(item.id))
 			.map((item) => (item.unread && $read.has(item.id) ? { ...item, unread: false } : item))
 );
