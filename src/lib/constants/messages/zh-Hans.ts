@@ -1259,6 +1259,8 @@ export const zhHansMessages = {
 	'inbox.battle_accepted.body': '{opponent} 接受了你的对战。开始吧。',
 	'inbox.battle_declined.title': '挑战已拒绝',
 	'inbox.battle_declined.body': '{opponent} 拒绝了你的对战。',
+	'inbox.battle_incoming.title': '新的联赛挑战',
+	'inbox.battle_incoming.body': '{opponent} 向你的联赛发起了为期 {days} 天的准确率对决。',
 	'leagues.battle.action.retracting': '撤回中…',
 	'leagues.battle.action.starting': '开始中…',
 	'leagues.battle.propose.opponent_resolved': '对手',

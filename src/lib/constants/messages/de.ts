@@ -1337,6 +1337,9 @@ export const deMessages = {
 	'inbox.battle_accepted.body': '{opponent} hat dein Duell angenommen. Los geht es.',
 	'inbox.battle_declined.title': 'Herausforderung abgelehnt',
 	'inbox.battle_declined.body': '{opponent} hat dein Duell abgelehnt.',
+	'inbox.battle_incoming.title': 'Neue Liga-Herausforderung',
+	'inbox.battle_incoming.body':
+		'{opponent} hat deine Liga zu einem {days}-tägigen Treffsicherheitsduell herausgefordert.',
 	'leagues.battle.action.retracting': 'Ziehe zurück…',
 	'leagues.battle.action.starting': 'Starte…',
 	'leagues.battle.propose.opponent_resolved': 'Gegner',
