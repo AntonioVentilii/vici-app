@@ -96,7 +96,7 @@ export const deMessages = {
 	'battles.create.cancel': 'Abbrechen',
 	'battles.create.change': 'Ändern',
 	'battles.create.empty_body':
-		'Gründe zuerst eine Liga. Du musst eine Liga besitzen, um eine Herausforderung zu senden.',
+		'Gründe zuerst eine Liga. Du musst eine Liga besitzen oder verwalten, um eine Herausforderung zu senden.',
 	'battles.create.empty_cta': 'Zu den Ligen',
 	'battles.create.empty_lede': '„Battles sind Liga gegen Liga.“',
 	'battles.create.label_duration': 'Dauer',
@@ -1367,6 +1367,8 @@ export const deMessages = {
 	'leagues.detail.activity_verb_resolved': 'Battle abgeschlossen vs {opponent}',
 	'leagues.detail.back': 'Zurück zu Social',
 	'leagues.detail.battle_admin_chip': 'Admin · du',
+	'leagues.detail.battle_admin_only':
+		'Nur ein Eigentümer oder Admin der Liga kann einen Battle starten.',
 	'leagues.detail.battle_challenge_cta': 'Eine andere Liga herausfordern',
 	'leagues.detail.battle_empty_lede': 'Kein aktiver Battle.',
 	'leagues.detail.battle_empty_sub':
@@ -1377,13 +1379,15 @@ export const deMessages = {
 	'leagues.detail.battle_meta_incoming':
 		'{opponent} hat deine Liga herausgefordert – unten annehmen',
 	'leagues.detail.battle_owner_accepts':
-		'Nur der Eigentümer der Liga kann diese Herausforderung annehmen.',
+		'Nur ein Eigentümer oder Admin der Liga kann diese Herausforderung annehmen.',
 	'leagues.detail.invite_copied': 'Kopiert',
 	'leagues.detail.invite_label': 'Einladung',
 	'leagues.detail.lb_streak': '{count} in Folge',
 	'leagues.detail.lb_tab_all': 'Allzeit',
 	'leagues.detail.lb_tab_week': 'Diese Woche',
 	'leagues.detail.leaderboard_eyebrow': 'Rangliste',
+	'leagues.detail.member_make_admin': 'Zum Admin machen',
+	'leagues.detail.member_remove_admin': 'Admin entfernen',
 	'leagues.detail.member_sheet_rank': 'Rang #{rank} · {league}',
 	'leagues.detail.member_stat_accuracy': 'Genauigkeit',
 	'leagues.detail.member_stat_streak': 'Serie',
