@@ -144,11 +144,12 @@ export const LEAGUE_NAME_MAX_LENGTH = 40;
 export const LEAGUE_DESCRIPTION_MAX_LENGTH = 240;
 
 /**
- * Default privacy for a newly created league + the fallback for legacy
- * rows that predate the field. The create surface defaults to
- * {@link LeaguePrivacy.INVITE} (matching the design), but a row with no
- * stored value reads as {@link LeaguePrivacy.OPEN} — that is what the
- * legacy `private === false/undefined` meant (publicly listed).
+ * Fallback privacy for legacy rows that predate the `privacy` field —
+ * NOT the default applied to newly created leagues (that default lives
+ * on the create surface and the `createLeague` service, which both pick
+ * {@link LeaguePrivacy.OPEN}). A legacy row with no stored value reads
+ * as {@link LeaguePrivacy.OPEN}, matching what the old
+ * `private === false/undefined` meant (publicly listed).
  */
 export const LEAGUE_PRIVACY_LEGACY_FALLBACK = LeaguePrivacy.OPEN;
 
