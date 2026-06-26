@@ -90,7 +90,7 @@
 	// Info / legal docs (`/info/[slug]`) sit inside the (app) shell so
 	// signed-in users get the navpill while reading them, but they
 	// must also stay reachable from pre-auth surfaces (the signup
-	// terms / privacy links in `OnboardingBeat3`). Treat them as a
+	// terms / privacy links in onboarding). Treat them as a
 	// public route alongside the markets exemption above.
 	const isPublicInfoRoute = $derived(page.url.pathname.startsWith('/info/'));
 
