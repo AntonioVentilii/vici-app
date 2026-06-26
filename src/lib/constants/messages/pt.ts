@@ -2245,6 +2245,8 @@ export const ptMessages = {
 	'arena.friends.feed.empty_b': 'A construir o histórico em silêncio.',
 	'arena.friends.feed.eyebrow': 'Resultados recentes',
 	'arena.friends.feed.like': 'Gosto',
+	'arena.friends.feed.record_lost': 'D{count}',
+	'arena.friends.feed.record_won': 'V{count}',
 	'arena.friends.feed.resolved_many': '{count} previsões resolvidas',
 	'arena.friends.feed.resolved_one': '{count} previsão resolvida',
 	'arena.friends.feed.standout': 'incl. «{question}»',

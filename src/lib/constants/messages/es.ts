@@ -2249,6 +2249,8 @@ export const esMessages = {
 	'arena.friends.feed.empty_b': 'Construyendo el historial en silencio.',
 	'arena.friends.feed.eyebrow': 'Resultados recientes',
 	'arena.friends.feed.like': 'Me gusta',
+	'arena.friends.feed.record_lost': 'P{count}',
+	'arena.friends.feed.record_won': 'G{count}',
 	'arena.friends.feed.resolved_many': '{count} predicciones resueltas',
 	'arena.friends.feed.resolved_one': '{count} predicción resuelta',
 	'arena.friends.feed.standout': 'incl. «{question}»',

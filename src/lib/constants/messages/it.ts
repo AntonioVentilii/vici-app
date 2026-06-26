@@ -2240,6 +2240,8 @@ export const itMessages = {
 	'arena.friends.feed.empty_b': 'Lo storico cresce in silenzio.',
 	'arena.friends.feed.eyebrow': 'Risultati recenti',
 	'arena.friends.feed.like': 'Mi piace',
+	'arena.friends.feed.record_lost': 'S{count}',
+	'arena.friends.feed.record_won': 'V{count}',
 	'arena.friends.feed.resolved_many': '{count} previsioni risolte',
 	'arena.friends.feed.resolved_one': '{count} previsione risolta',
 	'arena.friends.feed.standout': 'incl. «{question}»',
