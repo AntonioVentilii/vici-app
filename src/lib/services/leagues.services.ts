@@ -1098,6 +1098,63 @@ export const kickoffBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 };
 
 /**
+ * Restart a legacy league battle whose kickoff predates the baseline
+ * snapshot (#912). Such a row carries no `baselineA` / `baselineB`, so it
+ * can neither show live standings nor resolve — it hangs in `in_flight`
+ * forever. This re-opens the window from now, stamping each side's current
+ * `league_stats` bucket as the fresh baseline and preserving the original
+ * duration; every identity field (proposer, scope, wager) is untouched. The
+ * satellite assert re-reads `league_stats` and rejects a baseline that
+ * doesn't match. A no-op (returns the row unchanged, no write) for anything
+ * already scorable — a duel, a non-`in_flight` battle, or a row that already
+ * carries baselines.
+ */
+export const restartLegacyBattle = async ({
+	battle
+}: {
+	battle: BattleDoc;
+}): Promise<BattleDoc> => {
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
+	});
+
+	if (!existing) {
+		throw new Error('Battle no longer exists.');
+	}
+
+	const current = existing.data;
+
+	if (
+		current.kind !== 'league' ||
+		current.state !== 'in_flight' ||
+		nonNullish(current.baselineA) ||
+		nonNullish(current.baselineB)
+	) {
+		return current;
+	}
+
+	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
+	const durationMs = current.settleMs - current.kickoffMs;
+	const kickoffMs = Date.now();
+
+	const next: BattleDoc = {
+		...current,
+		kickoffMs,
+		settleMs: kickoffMs + durationMs,
+		baselineA: await readLeagueStatsBucket({ leagueId: current.sideA, scope }),
+		baselineB: await readLeagueStatsBucket({ leagueId: current.sideB, scope })
+	};
+
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battle.id, data: next, version: existing.version }
+	});
+
+	return next;
+};
+
+/**
  * Retract a `proposed`-state battle. Only the original proposer can
  * call this; the satellite assert hard-rejects anyone else and any
  * battle past `proposed`.
