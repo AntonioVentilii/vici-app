@@ -724,6 +724,17 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	// back to the unshortened principal so the assertion cannot veto
 	// this implicit write. The user can then change it from the
 	// profile dashboard.
+	//
+	// Record the bootstrap BEFORE the write awaits. A fresh sign-in can fire a
+	// second `onAuthStateChange` pass whose profile read resolves after this
+	// `upsertProfile` creates the doc but before control returns here; if the
+	// mark lagged behind the await, that pass would see the doc as pre-existing
+	// while `wasBootstrappedThisSession` was still false, misclassify a brand-new
+	// user as returning, and drop their onboarding handle. Marking up front is
+	// safe: a throwing upsert errors the caller out, and a principal with no doc
+	// reads as `existed: false` (the new-user path) on any retry.
+	bootstrappedThisSession.add(principal);
+
 	try {
 		await upsertProfile({ ...profileDoc, data });
 	} catch (err: unknown) {
@@ -733,15 +744,11 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 			const fallback: UserProfile = { ...data, nickname: principal };
 			await upsertProfile({ ...profileDoc, data: fallback });
 
-			bootstrappedThisSession.add(principal);
-
 			return { profile: fallback, existed: false };
 		}
 
 		throw err;
 	}
-
-	bootstrappedThisSession.add(principal);
 
 	return { profile: data, existed: false };
 };

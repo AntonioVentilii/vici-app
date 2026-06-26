@@ -23,6 +23,7 @@
 		drainPendingOnboarding,
 		hasPendingOnboarding
 	} from '$lib/services/onboarding-handoff.services';
+	import { initA2hs } from '$lib/stores/a2hs.store';
 	import { initFlowPrewarm } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -60,6 +61,11 @@
 	// layout and keep natural body scroll.
 	onMount(() => {
 		document.documentElement.dataset.app = '1';
+
+		// Capture Chrome's `beforeinstallprompt` before any child mounts — the
+		// browser fires it once, early, on a cold load. Idempotent and
+		// browser-only (see `a2hs.store`).
+		initA2hs();
 
 		return () => {
 			delete document.documentElement.dataset.app;
