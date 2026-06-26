@@ -710,6 +710,10 @@
 				friendResolvedResults = resolved;
 			} catch (err: unknown) {
 				console.error('FriendsTab: failed to hydrate results digest', err);
+				// Release the guard so a later store refresh can retry — a transient
+				// read failure shouldn't permanently strand the digest on empty rows
+				// for this friend set.
+				hydratedFriendKey = undefined;
 			}
 		})();
 	});
