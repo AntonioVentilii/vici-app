@@ -13,26 +13,21 @@ bar explaining what that surface is for. One tip at a time, dismissible,
 shown at most once per surface per device. Nothing fires up front — a tip
 only appears when the user actually navigates to that surface
 (progressive disclosure, not an up-front tour). This is layer 2 of the
-V1.8 first-run tutorial system; layer 1 (the in-flow gesture coach,
+first-run tutorial system; layer 1 (the in-flow gesture coach,
 `FlowCoach`) already ships. The Profile tip does double duty: it nudges
-the team pick that V3 onboarding defers out of the signup flow.
+the team pick that onboarding defers out of the signup flow.
 
 ## Context
 
-Prototype (source of truth):
-
-- `…/proto/VICI-V1.8-Handover/surface-tips.jsx` — the React
-  `SurfaceTip` component (route → tip lookup, 420 ms enter delay,
-  dismiss-marks-seen-forever, self-gates on route + seen-state).
-- `…/proto/VICI-V1.8-Handover/tour.js` — `window.viciTour` seen-state
-  engine; keys `tipDash` / `tipWorlds` / `tipProfile` under a
-  `vici.tour-*` prefix, layered over the existing `vici.coach-*`
-  convention.
-- `…/proto/VICI-V1.8-Handover/i18n.js` — `tip.dash.*` / `tip.arena.*` /
-  `tip.profile.*` copy (en/it/es/de/fr authored; pt-BR falls back to en).
-- `…/proto/VICI-V1.8-Handover/CHANGELOG.md` entry **V1.8.8** ("First-run
-  tutorial system"), bullet 2e — defines the gating (new/guest, calls < 5)
-  and the one-at-a-time, above-the-tab-bar placement.
+The intended behaviour: a `SurfaceTip` component does a route → tip
+lookup, enters after a short settle delay (~420 ms), marks itself seen
+forever on dismiss, and self-gates on route + seen-state. Seen-state is
+per-surface (Dash / Arena / Profile), persisted under the app's
+`vici.tip-*-seen` flags alongside the existing `vici.coach-*`
+convention. Copy lives in the app's `tip.dash.*` / `tip.arena.*` /
+`tip.profile.*` i18n keys (English authored; other locales follow the
+repo's new-key approach). Gating: new/guest users with calls < 5, one
+tip at a time, placed just above the tab bar.
 
 App side (real paths to touch / reuse):
 
@@ -72,7 +67,7 @@ App side (real paths to touch / reuse):
 - Gating signal (calls < 5): the lifetime call count is
   `UserProfile.totalTrades` (`src/lib/schema/profile.schema.ts`), read
   from `$userStore.profile`. Guest detection: see Open questions — guest
-  mode (S2) is not yet in the app, so v1 gates on `totalTrades` only.
+  mode is not yet in the app, so v1 gates on `totalTrades` only.
 - i18n catalogs: `src/lib/constants/messages/*` (12 locales: `de`, `en`,
   `es`, `es-419`, `es-AR`, `es-MX`, `fr`, `it`, `ja`, `pt`, `pt-BR`,
   `zh-Hans`). New keys must land in every catalog or the i18n lint fails
@@ -85,16 +80,16 @@ App side (real paths to touch / reuse):
 Reusability: this is a new shell overlay + copy + per-surface seen flags.
 Reuse the `FlowCoach` seen-flag idiom, the `MobileNav` `isActive`
 aliasing, the `MenagerieCelebrationHost` mount/host shape, and the
-existing lucide `X` icon for dismiss — do **not** port the prototype's
-inline SVG, its `window.viciTour` global, or its scattered emoji.
+existing lucide `X` icon for dismiss — do **not** introduce a new inline
+SVG, a global seen-state engine, or any emoji.
 
 ## Scope
 
 - New component `src/lib/components/onboarding/SurfaceTip.svelte` — a
   small non-blocking card pinned just above the floating pillnav. Slides
-  in after a short settle delay (prototype: ~420 ms), `role="status"`,
-  a lucide `X` dismiss button (`aria-label` from i18n), and a leading
-  accent dot. Never traps focus, never blocks interaction below it.
+  in after a short settle delay (~420 ms), `role="status"`, a lucide `X`
+  dismiss button (`aria-label` from i18n), and a leading accent dot.
+  Never traps focus, never blocks interaction below it.
 - New `src/lib/components/onboarding/SurfaceTipHost.svelte` mounted once in
   `src/routes/(app)/+layout.svelte` beside `<MobileNav>`, gated on
   `$userSignedIn`. It maps the current route to its surface tip (Dash /
@@ -107,38 +102,35 @@ inline SVG, its `window.viciTour` global, or its scattered emoji.
   added to `ONBOARDING_SEEN_KEYS` so `clearOnboardingSeenFlags()` (and the
   identity-change reconcile) sweep them too.
 - New i18n keys in the app's `tip.*`/onboarding namespace across all 12
-  catalogs (English authored, ported from the prototype copy; other
-  locales follow the repo's existing approach for new keys): one
-  `title` + `body` per surface, plus a shared dismiss `aria` label.
+  catalogs (English authored; other locales follow the repo's existing
+  approach for new keys): one `title` + `body` per surface, plus a
+  shared dismiss `aria` label.
 - Gating: a tip shows only when the surface's seen flag is unset **and**
-  the user is early (`totalTrades < 5`, mirroring the prototype's
-  "calls < 5"), so an established user is never interrupted. Dismiss (or
-  the first auto-seen on a qualifying view — see Pending decisions) marks
-  the surface seen forever on that device.
-- Behaviour parity with the prototype: one tip at a time, fires only on
-  actual navigation to the surface, resets its local enter/dismiss state
-  on route change, renders nothing on surfaces without a tip or already
-  seen.
+  the user is early (`totalTrades < 5`), so an established user is never
+  interrupted. Dismiss (or the first auto-seen on a qualifying view —
+  see Pending decisions) marks the surface seen forever on that device.
+- Intended behaviour: one tip at a time, fires only on actual navigation
+  to the surface, resets its local enter/dismiss state on route change,
+  renders nothing on surfaces without a tip or already seen.
 
 ### Out of scope
 
-- The other V1.8.8 tutorial pieces: the `tour.js` engine port as a
-  generic `viciTour` replacement (the app already has per-flag seen
-  state — we extend it, we don't add a global engine), the getting-started
-  checklist (`GettingStarted` in `dash-build.jsx`), and the Tweaks
-  "Replay tutorial" reset action. The "reset" path already exists as
+- The other first-run tutorial pieces: a generic global seen-state engine
+  (the app already has per-flag seen state — we extend it, we don't add a
+  global engine), the getting-started checklist, and the Tweaks "Replay
+  tutorial" reset action. The "reset" path already exists as
   `clearOnboardingSeenFlags()`; wiring a user-facing replay control is a
   fast-follow, not this spec.
-- Guest mode (S2) — not yet in the app. The "gate to new **and guest**
-  users" clause degrades to "gate to new users" (`totalTrades < 5`) until
-  S2 lands; revisit then (see Open questions).
+- Guest mode — not yet in the app. The "gate to new **and guest** users"
+  clause degrades to "gate to new users" (`totalTrades < 5`) until guest
+  mode lands; revisit then (see Open questions).
 - The Profile team-pick affordance itself — the Profile tip only _nudges_
   toward picking a team (copy); the Affiliations picker is existing
   surface, untouched here.
 - Desktop chrome. The tip is anchored to the mobile floating pillnav; the
   desktop top-nav (`DesktopAppNav`) is out of scope for v1 (see Pending
   decisions on desktop placement).
-- Any new surfaces beyond Dash / Arena / Profile (the prototype enumerates
+- Any new surfaces beyond Dash / Arena / Profile (the design enumerates
   exactly these three — see Decisions).
 
 ## Linked issues
@@ -183,8 +175,7 @@ recommended default precisely to avoid that cost — see Pending decisions.
    identity-scoped reconcile sweep them.
 2. Add the `tip.*` i18n keys to `src/lib/constants/messages/en.ts`
    (titles, bodies, dismiss `aria`), then mirror into the other 11
-   catalogs. English/it/es/de/fr from the prototype copy; remaining
-   locales per the repo's new-key approach.
+   catalogs per the repo's new-key approach.
 3. Build `src/lib/components/onboarding/SurfaceTip.svelte`: props
    `{ title, body, onDismiss }`; `role="status"`; lucide `X` dismiss
    button; accent dot; slide-in transition that respects
@@ -234,33 +225,33 @@ recommended default precisely to avoid that cost — see Pending decisions.
 
 ## Open questions
 
-- **Guest gating.** The prototype gates to "new **or** guest" users; the
-  app has no guest mode yet (S2). Confirm v1 gates on `totalTrades < 5`
-  only, and that the gate should be revisited (add a guest predicate) when
-  S2 lands. Until then there is no guest path to interrupt.
+- **Guest gating.** The design gates to "new **or** guest" users; the
+  app has no guest mode yet. Confirm v1 gates on `totalTrades < 5` only,
+  and that the gate should be revisited (add a guest predicate) when
+  guest mode lands. Until then there is no guest path to interrupt.
 - **`totalTrades` is the right early-user signal.** Confirm
   `UserProfile.totalTrades` is the lifetime call count that maps to the
-  prototype's "calls < 5" (it reads as such in
+  "calls < 5" gate (it reads as such in
   `src/lib/schema/profile.schema.ts`), and that it's populated on
   `$userStore.profile` early enough that a brand-new user's first surface
   visit still satisfies `< 5` (it should: a new profile defaults to 0).
 - **Profile aliasing breadth.** `MobileNav` aliases `/wallet`,
   `/settings`, `/notifications`, `/profile/album` all to the Profile tab.
   Confirm the Profile tip should fire on the _first_ of any of these (the
-  prototype keys off `route==='profile'` only). Recommended: fire on the
+  design keys off the Profile surface only). Recommended: fire on the
   canonical `/profile` route only, to avoid a "your identity lives here"
   tip popping on the Settings screen.
 
 ## Pending decisions
 
-- **Auto-seen on view vs. seen-on-dismiss.** The prototype marks a tip
-  seen only on explicit dismiss (`markSeen` in `close`), so an un-dismissed
-  tip can reappear next session until acknowledged. Decide whether to keep
-  that (re-show until dismissed) or mark seen as soon as it's shown (show
-  exactly once, even if ignored). Recommended: **seen-on-show** — these are
-  low-stakes, non-blocking nudges; re-showing an ignored tip every session
-  is more annoying than a single missed read. Affects which event
-  (`shown` vs `dismiss`) writes the flag.
+- **Auto-seen on view vs. seen-on-dismiss.** One option marks a tip seen
+  only on explicit dismiss, so an un-dismissed tip can reappear next
+  session until acknowledged. Decide whether to keep that (re-show until
+  dismissed) or mark seen as soon as it's shown (show exactly once, even
+  if ignored). Recommended: **seen-on-show** — these are low-stakes,
+  non-blocking nudges; re-showing an ignored tip every session is more
+  annoying than a single missed read. Affects which event (`shown` vs
+  `dismiss`) writes the flag.
 - **Analytics event naming.** Reuse `onboarding_step` (no regen, the
   recommended default) vs. mint dedicated `surface_tip_shown` /
   `surface_tip_dismissed` names (clearer funnels, but needs the dual-source
@@ -268,18 +259,16 @@ recommended default precisely to avoid that cost — see Pending decisions.
 - **Desktop placement.** v1 anchors to the mobile pillnav only. Decide
   whether a desktop equivalent (anchored to `DesktopAppNav`) ships now or
   as a fast-follow. Recommended: **fast-follow** — the first-run tutorial
-  system is mobile-first and the pillnav is the anchor the prototype
-  assumes.
+  system is mobile-first and the pillnav is the intended anchor.
 
 ## Decisions
 
-- **Surfaces and copy (from the prototype, the enumerated set).** Exactly
-  three surfaces get a first-visit tip — Dash, Arena, Profile — porting
-  the prototype's `tip.*` copy into the app's `tip.*` keys (English):
+- **Surfaces and copy (the enumerated set).** Exactly three surfaces get
+  a first-visit tip — Dash, Arena, Profile — with copy in the app's
+  `tip.*` keys (English):
   - **Dash** — title: "This is your record"; body: "Accuracy, streak and
     rank build with every prediction you make. Check back to see how
-    you're trending." (prototype said "call"; app terminology is
-    "prediction").
+    you're trending."
   - **Arena** — title: "Where you face off"; body: "Arena is leagues,
     friends and Worlds leaderboards — see how you rank against everyone
     else."
@@ -287,16 +276,13 @@ recommended default precisely to avoid that cost — see Pending decisions.
     your Menagerie, and your team. Pick a team anytime to join the Worlds
     race." (this is the deferred-team-pick nudge.)
 - **Keep the app i18n namespace and terminology.** Use the app's `tip.*`
-  keys, not the prototype's `window.viciTour`-coupled lookup; always
-  "prediction", never "bet"/"call" in user-facing copy. (Handed down in
-  the port plan and the brief.)
+  keys; always "prediction", never "bet"/"call" in user-facing copy.
 - **No emoji, lucide icons.** Dismiss uses the lucide `X`; the leading
-  accent dot is a styled element, not an emoji glyph. The prototype's
-  inline SVG and any stray emoji do not transfer.
+  accent dot is a styled element, not an emoji glyph.
 - **Persistence via per-surface seen flags, reusing the existing pattern.**
   Three `vici.tip-*-seen` keys added to `onboarding-flags.utils.ts` and to
   `ONBOARDING_SEEN_KEYS`, using the `FlowCoach` `localStorage` idiom —
   identity-scoped, swept by `clearOnboardingSeenFlags()` and the principal
-  reconcile. No new global tour engine (`tour.js` is not ported as-is).
+  reconcile. No new global seen-state engine.
 - **Reuse `onboarding_step` for analytics by default** — avoids a taxonomy
   regen; see Pending decisions for the dedicated-name alternative.
