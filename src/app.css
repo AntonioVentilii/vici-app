@@ -2179,10 +2179,18 @@ a.title-action::after {
 	width: 100%;
 	margin: 0 auto;
 }
+/* Brand → hero → auth read as one top-anchored cluster; the foot + legal sit
+   at the bottom of the frame. `margin-top: auto` on the foot pushes the gap
+   between the two units rather than centering the cluster (full centering
+   stranded the brand). */
+.signin-cluster {
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+}
 .signin-head {
 	text-align: left;
 	padding-top: 12px;
-	margin-bottom: 28px;
 }
 .signin-wordmark {
 	display: inline-flex;
@@ -2549,10 +2557,12 @@ a.title-action::after {
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-base);
+	/* `background` is deliberately NOT transitioned: a runtime theme switch
+	   (dark ↔ light ↔ peach) would otherwise animate a pill through a cream
+	   mid-state (the theme-switch flash). Border/opacity/transform still ease. */
 	transition:
 		opacity 200ms var(--ease-vici),
 		border-color 200ms var(--ease-vici),
-		background 200ms var(--ease-vici),
 		transform 80ms var(--ease-vici);
 	position: relative;
 }
@@ -2592,8 +2602,8 @@ a.title-action::after {
 	border-color: #ffffff;
 }
 /* Secondary providers (email, Internet Identity, Passkey, dev) share a
-   faint translucent pill — lighter than the solid Apple pill — so Apple
-   (black) and Google (cream) read as the primary pair. */
+   faint translucent pill — lighter than the solid dark Google pill, so the
+   dark Google pill + the lighter email pill read as the primary pair. */
 .signin-provider-btn.is-onboarding.ob-faint {
 	background: color-mix(in srgb, var(--text-base) 6%, transparent);
 	border-color: var(--border-base);
@@ -2653,27 +2663,6 @@ a.title-action::after {
 	.signin-provider-btn.is-onboarding.ob-cream .signin-spinner {
 		border-top-color: var(--ink);
 	}
-}
-
-/* Proof line --------------------------------------------------- */
-.signin-proof {
-	display: flex;
-	gap: 8px;
-	justify-content: center;
-	align-items: baseline;
-	margin-top: 10px;
-	font-family: var(--font-mono);
-	font-size: 10px;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: var(--text-muted);
-}
-.signin-proof b {
-	color: var(--text-base);
-	font-weight: 700;
-}
-.signin-proof .dim {
-	color: var(--fg-faint);
 }
 
 /* Inline email form -------------------------------------------- */
@@ -3532,7 +3521,11 @@ a.title-action::after {
 }
 /* Footer / cross-link ------------------------------------------ */
 .signin-foot {
-	margin-top: 26px;
+	/* Anchor to the bottom of the frame: the hairline reads as the
+	   task/footer separator below the top-anchored hero+auth cluster. */
+	margin-top: auto;
+	padding-top: 26px;
+	border-top: 1px solid var(--border-base);
 	display: flex;
 	align-items: center;
 	justify-content: center;

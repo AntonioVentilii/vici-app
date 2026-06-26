@@ -361,3 +361,23 @@ dropped, and a genuine returning user's profile is never clobbered. The
 flow emits the `onboarding_completed` analytics event with the finishing
 provider and whether a team was persisted. Decision record:
 [`specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`](./spec-driven-development/specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md).
+
+### Sign-in — one V3 visual family, Google + passkey-backed email
+
+The returning-user sign-in (`/signin` and every "sign in to continue"
+modal) shares the V3 onboarding visual system: brand pinned top, a
+`Welcome back.` hero (sans phrase + one serif-italic accent word, mirroring
+the sign-up `Claim your handle.` headline), the auth cluster directly
+below, and the "create account" cross-link + legal anchored to the bottom
+of the frame behind a hairline divider. The only primary providers are a
+**dark Google pill** and a lighter **email pill**; the email path opens an
+inline input and runs a device-passkey (WebAuthn) ceremony — there is no
+magic link and no "we sent you a link" state. **Apple is no longer
+offered**: returning V3 users never created an account with it, so it was
+removed from the provider stack (the code stays dormant behind a flag).
+Internet Identity, standalone passkey, and the dev shortcut remain
+production-/dev-gated as before. A successful sign-in emits the `signed_in`
+analytics event with `source = signin_screen` and a `label` of the chosen
+provider (`google | email | passkey | ii | dev`); the email address is
+never sent. Decision record:
+[`specs/2026-06-25-impr-signin-v3-reskin.md`](./spec-driven-development/specs/2026-06-25-impr-signin-v3-reskin.md).
