@@ -354,11 +354,7 @@
 						maxlength={MAX_NICKNAME_LENGTH}
 						onblur={onCommitHandle}
 						oninput={onInput}
-						placeholder={t({
-							locale: $localeStore,
-							key: 'onboarding.v3.handle_placeholder',
-							params: { handle: suggestion }
-						})}
+						placeholder={suggestion}
 						spellcheck="false"
 						type="text"
 						value={cleaned}
