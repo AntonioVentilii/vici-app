@@ -1,9 +1,9 @@
-# Spec: Guest mode — "Model B" predict-then-convert funnel
+# Spec: Guest mode — predict-then-convert funnel
 
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: In progress (#980)
 
 ## Goal
 
@@ -19,8 +19,10 @@ sign-up the guest becomes a member, the existing 1,500 VXP onboarding
 grant lands, and they start with an **empty portfolio** — the preview
 picks are cleared, never turned into positions.
 
-This is a **demo-drop** funnel, not a retro-stake one (see Decisions).
-That decision **shrinks this spec to pure-frontend** — no satellite
+This is a **demo-drop** funnel, not a retro-stake one (see Decisions). A
+guest predicts freely with no hard block; conversion is driven by
+loss-aversion, not a gate. That decision **shrinks this spec to
+pure-frontend** — no satellite
 endpoint, no candid/declarations regen, no new economic action on
 convert — which lowers risk and keeps the whole thing to one PR.
 
@@ -67,7 +69,7 @@ authBusy, profileExisted }`); `user` is the Juno session (undefined
   `userNotSignedIn` (~12), `userSignedOutResolved` (~20, `!authBusy &&
 !user`), `authPrincipal` (~25).
 
-The prediction entry path (the prototype's `onPredict`):
+The prediction entry path:
 
 - `src/lib/components/market/FlowMode.svelte` — the swipe deck; commits a
   prediction via `flowTradeService.executeTrade`
@@ -124,51 +126,39 @@ Overlay-collision gating (so the save sheet never stacks on a reveal):
   (writable<boolean>), `setFlowBeatActive`.
 - `src/lib/components/menagerie/MenagerieCelebrationHost.svelte` (~118)
   gates the reveal on `reveal && !beatActive` — the **exact pattern**
-  the guest save-sheet must adopt (prototype V1.8.35: render only when
-  `!menagerieReveal && !beatActive`).
+  the guest save-sheet must adopt (render only when no reveal and no Flow
+  beat are on screen).
 
 Reusable UI / services (per `docs/ai/frontend/reusability.md`):
 
 - `src/lib/components/ui/BottomSheet.svelte` — `BottomSheet` (`isOpen`,
   `onClose`, `footer`, `desktopCentered`, `labelledBy`). The save sheet
-  builds on this, the app analogue of the prototype's `Sheet`. The
-  prototype's `GuestSaveSheet` (`guest-save-sheet.jsx`) is the reference
-  for copy and structure only.
+  builds on this.
 - `src/lib/components/authn/SignInProviderStack.svelte` —
   `SignInProviderStack` (`mode="signup"`, `handle`, `onSuccess`). The
-  save sheet's sign-up CTAs **reuse this stack** rather than the
-  prototype's two-button Google/email subset. Conversion runs through the
-  same provider machinery (redirect-safe stashing included).
+  save sheet's sign-up CTAs **reuse this stack** so conversion runs through
+  the same provider machinery (redirect-safe stashing included).
 - `src/lib/stores/notification.store.ts` — `notificationsStore.add(...)`
   for the "1,500 VXP added" toast.
 
-### Prototype side (React, source of truth — port behaviour/UI/copy, not code)
+### Behaviour summary
 
-`/tmp/.../proto/VICI-V1.8-Handover/`:
+The guest funnel is a single component pair over existing infrastructure:
 
-- `guest-save-sheet.jsx` — `GuestSaveSheet`: two roles, one component.
-  `kind:'soft'` (celebratory first-pick ask) and `kind:'remind'` (the
-  every-5th nudge). Pluralised body via `gs.picks_one` / `gs.picks_many`.
-  Sign-up calls `window.__viciConvertGuest({ authMethod, email })`.
-  **Copy is re-pointed for demo-drop** — see Scope §4: the framing is
-  "start for real + claim VXP", never "save your pick".
-- `app.jsx` — the guest logic: `onPredict` (~597) forces `stake=0,
-bonus=0` for every guest pick and drives the cadence off a
-  session-scoped `guestPicksRef` (~362, 1st-celebrate / every-5th-remind,
-  **not** lifetime `me.calls`); the soft/remind sheet setters (~722–727);
-  the render gate `guestSave && !menagerieReveal && !beatActive` (~832);
-  the standing inline CTA `me.guest && me.calls >= 1 && route==='flow'`
-  (~819); `convertGuest` (~286). The handover `convertGuest` is the
-  **demo-drop** variant (`recentCalls.filter(c => !c.demo)` — picks
-  reset to a clean Day 0), which is the design this spec ports.
-- CHANGELOG: V1.8.7 (guest infra + save-sheet birth), V1.8.35 (sequence
-  the sheet **after** the Hatchling reveal — the collision gate),
-  V1.8.36–37 (gate-once / save-framing copy — superseded by .38), V1.8.38
-  (Model B: remove the hard block, keep previewing freely). Some later
-  CHANGELOG entries describe a retro-stake-on-convert variant; this spec
-  **does not** port that — the product decision is demo-drop (see
-  Decisions). The CTO header domain-1 scopes the guest funnel to this
-  spec.
+- The save sheet has two roles in one component — a `soft` celebratory
+  first-pick ask and a `remind` every-5th-pick nudge — with a body that
+  pluralises the in-session count via `guest.picks_one` /
+  `guest.picks_many`. The framing is "start for real + claim VXP", never
+  "save your pick".
+- Every guest pick forces no stake and drives the cadence off a
+  session-scoped pick count (first-celebrate / every-5th-remind), **not** a
+  lifetime call count, so a returning guest never re-fires the first-pick
+  celebration. The sheet renders only when no reveal and no Flow beat are
+  on screen. A standing inline CTA shows on Flow whenever the guest has at
+  least one pick.
+- Conversion is the **demo-drop** variant: the preview picks reset to a
+  clean Day 0 (discarded), the existing onboarding grant lands, and the
+  portfolio starts empty.
 
 ### Reusability
 
@@ -194,15 +184,15 @@ endpoint) and stays one PR.
 A small client-only guest store (e.g.
 `src/lib/stores/guest.store.ts`) holding `{ isGuest, handle,
 sessionPickCount }`, hydrated from / persisted to localStorage alongside
-the in-session preview picks. `isGuest` is set when the V3 Skip path
-completes (an auto-assigned or claimed handle, no auth).
-`sessionPickCount` is **session-scoped** and drives the cadence (mirrors
-the prototype's `guestPicksRef`, deliberately **not** a lifetime count)
-so a returning guest cannot misfire the first-pick celebration. Cleared
-on conversion and on a real sign-out.
+the in-session preview picks. `isGuest` is set when the onboarding Skip
+path completes (an auto-assigned or claimed handle, no auth).
+`sessionPickCount` is **session-scoped** and drives the cadence
+(deliberately **not** a lifetime count) so a returning guest cannot
+misfire the first-pick celebration. Cleared on conversion and on a real
+sign-out.
 
 A `guestMode` derived (`src/lib/derived/`) exposes `isGuest` for surfaces
-to gate on — analogous to the prototype's `__viciIsGuest`.
+to gate on.
 
 ### 2. Let a guest reach Flow and predict
 
@@ -218,10 +208,9 @@ to gate on — analogous to the prototype's `__viciIsGuest`.
   `placeOrder` / `safeGetIdentityOnce`. The guest pick is recorded as an
   in-session preview pick (no stake) in localStorage; no engine call, no
   balance check. (Guest picks never reach the engine at all here, so free
-  guest play cannot move market prices — strictly safer than the
-  prototype's `stake>0` guard.)
+  guest play cannot move market prices.)
 - Every guest pick is free; there is **no hard block** at the 2nd pick or
-  ever (Model B, V1.8.38). The funnel is nudges + a standing CTA.
+  ever. The funnel is nudges + a standing CTA.
 
 ### 3. Guest picks persistence (in-session preview only)
 
@@ -257,7 +246,7 @@ something that carries over.
 - **Remind** (every 5th pick thereafter): the same "start for real +
   claim 1,500 VXP" nudge, optionally referencing the in-session count as
   social proof ("you've made N predictions"); pluralise that count on
-  `gs.picks_one` / `gs.picks_many`. It must not imply the N picks are
+  `guest.picks_one` / `guest.picks_many`. It must not imply the N picks are
   saved.
 - **Standing inline CTA**: a calm pill on Flow whenever the guest has ≥1
   pick (`isGuest && sessionPickCount >= 1 && route === Flow`), opening the
@@ -266,16 +255,15 @@ something that carries over.
 - **All dismissible; none blocks.** The 1,500 VXP figure comes from
   `newUserVxpAmountMilestone1BaseUnits()` via `formatVxpBalance`, not a
   hardcoded literal.
-- **Collision gate (V1.8.35):** the sheet renders only when no reveal /
-  beat is active — read `menagerieCelebrationStore.current` +
-  `flowBeatActiveStore` and gate on `!reveal && !beatActive`, the same
-  pattern `MenagerieCelebrationHost` uses. The earned celebration
-  (Hatchling/menagerie reveal) plays uninterrupted; the ask renders the
-  moment the reveal clears. No timing hacks.
+- **Collision gate:** the sheet renders only when no reveal / beat is
+  active — read `menagerieCelebrationStore.current` + `flowBeatActiveStore`
+  and gate on `!reveal && !beatActive`, the same pattern
+  `MenagerieCelebrationHost` uses. The earned menagerie reveal plays
+  uninterrupted; the ask renders the moment the reveal clears. No timing
+  hacks.
 - **Sign-up CTAs** mount `SignInProviderStack mode="signup"
 handle={guestHandle}` so conversion runs through the real provider
-  stack (redirect-safe). The prototype's bespoke Google/email buttons are
-  reference copy only.
+  stack (redirect-safe).
 
 > The exact final wording of the soft sheet, the remind nudge, and the
 > inline CTA is a **pending copy decision** (see Pending decisions). The
@@ -304,13 +292,13 @@ action**:
 
 ### Out of scope
 
-- **The V3 onboarding screen and the Skip button itself** — owned by
+- **The onboarding screen and the Skip button itself** — owned by
   `specs/2026-06-25-feat-onboarding-v3.md`. This spec consumes the Skip
   hand-off, it does not build the screen.
-- **The sign-in re-skin** (`/signin`, V1.8.24–28) — separate spec.
-- **A2HS install nudge** (V1.8.34) — separate spec; the prototype notes
-  the A2HS auto-prompt is **members-only because guests convert first**,
-  so the two funnels are deliberately sequenced but built separately.
+- **The sign-in re-skin** (`/signin`) — separate spec.
+- **A2HS install nudge** — separate spec; the A2HS auto-prompt is
+  **members-only because guests convert first**, so the two funnels are
+  deliberately sequenced but built separately.
 - **Anti-farm gating of the onboarding grant (#543).** Conversion routes
   a guest through new-member creation, so it inherits the existing
   onboarding-grant threat model and any future #543 hardening — it does
@@ -351,30 +339,27 @@ regen** is required — preferred over minting new names.
   (`src/lib/types/analytics-event.ts` ~76) with `source: 'guest_flow'`
   and `count` = the session pick number. Distinguishes guest activity
   from member activity by `source` without a new event.
-- **Save sheet shown** → reuse a generic surface event; if none fits
-  cleanly, the minimal addition is **one** new event
-  `guest_save_prompted` carrying `label: 'soft' | 'remind' | 'inline'`
-  and `count` (session pick number). Adding it means landing the name in
-  **both** the TS union and the Zod mirror, with capture via `track()` —
-  call this out so the implementer does both halves.
-- **Conversion** → `signed_up` (~27) with `source: 'guest_convert'` and
-  `label` = the finishing provider, so the guest→member funnel is
-  separable from a cold signup. No "retro-staked count" prop is needed
-  (picks are discarded). `onboarding_completed` still fires once via the
-  drain (per the persist spec), so conversion is not double-counted as a
-  fresh onboarding.
+- **Save sheet shown** → reuse `onboarding_step` with `source:
+'guest_flow'`, `label: 'soft' | 'remind' | 'inline'`, and `count` (the
+  session pick number). Folding the prompt-shown signal into an existing
+  event keeps the funnel measurable **without** minting a new name — so
+  there is no TS-union / Zod-mirror edit and no analytics-wire regen.
+- **Conversion** → `signed_up` (~27) with `source: 'guest_convert'`, so the
+  guest→member funnel is separable from a cold signup. No "retro-staked
+  count" prop is needed (picks are discarded). `onboarding_completed` still
+  fires once via the drain (per the persist spec), so conversion is not
+  double-counted as a fresh onboarding.
 
-Behavioural only — bounded vocab, no PII / free-text. Whether
-`guest_save_prompted` is worth a new name vs. folding into an existing
-event is a Pending decision (it gates whether the union/Zod edit
-happens).
+Behavioural only — bounded vocab, no PII / free-text. The prompt-shown
+signal reuses `onboarding_step` rather than a dedicated name, so no
+satellite analytics-wire regen is required.
 
 ## Implementation outline
 
 1. **Guest store** — `src/lib/stores/guest.store.ts` (`{ isGuest,
 handle, sessionPickCount }`, localStorage-backed) + a `guestMode`
-   derived under `src/lib/derived/`. Set on V3 Skip completion; cleared
-   on convert / sign-out.
+   derived under `src/lib/derived/`. Set on onboarding Skip completion;
+   cleared on convert / sign-out.
 2. **Route gate** — `(app)/+layout.svelte`: let an active guest session
    reach the guest-allowed routes (Flow at minimum) instead of bouncing
    to `/signin`. Keep the plain signed-out redirect intact.
@@ -399,15 +384,14 @@ handle, sessionPickCount }`, localStorage-backed) + a `guestMode`
    preview-picks localStorage so the portfolio starts empty. Toast "1,500
    VXP added" via `notificationsStore`. No pick reconciliation — the
    pre-auth handoff carries only handle/identity.
-7. **i18n** — the `gs.*` keys ported into the app's namespace (not the
-   prototype's bare `gs.*`; see Decisions) across all six locales
-   (en/it/fr/de/es/pt-BR) in `src/lib/constants/messages/*.ts`, with the
-   demo-drop copy framing. Run `npm run quality` to catch missing-locale
-   gaps.
+7. **i18n** — the `guest.*` keys under the app's namespace (see Decisions)
+   across all live locales (en/it/es/de/fr/pt/zh-Hans) in
+   `src/lib/constants/messages/*.ts`, with the demo-drop copy framing. Run
+   `npm run quality` to catch missing-locale gaps.
 8. **Analytics** — `position_taken` (`source: 'guest_flow'`), `signed_up`
-   (`source: 'guest_convert'`, `label` = provider), and (if approved)
-   `guest_save_prompted` in **both** the TS union and Zod mirror; capture
-   via `track()`.
+   (`source: 'guest_convert'`), and the conversion-ask shown reusing
+   `onboarding_step` (`source: 'guest_flow'`, `label` = surface) — no new
+   event name, so no analytics-wire regen; capture via `track()`.
 9. **PRODUCT.md** — document the guest funnel (free previewing, no wall,
    loss-aversion conversion via the start-for-real + claim-VXP offer,
    preview picks discarded on convert / portfolio starts empty, the
@@ -444,12 +428,12 @@ handle, sessionPickCount }`, localStorage-backed) + a `guestMode`
       staked, and the new member's portfolio **starts empty**.
 - [ ] A "1,500 VXP added" toast shows on conversion; the guest session
       state is cleared.
-- [ ] All `gs.*` keys resolve in en/it/fr/de/es/pt-BR; no gambling
+- [ ] All `guest.*` keys resolve in en/it/es/de/fr/pt/zh-Hans; no gambling
       vocabulary, no "bet", no emoji (lucide icons only).
 - [ ] Analytics fire: guest pick emits `position_taken` with
-      `source: 'guest_flow'`, conversion emits `signed_up` with
-      `source: 'guest_convert'`; any new event name lands in both the TS
-      union and the Zod mirror.
+      `source: 'guest_flow'`, the conversion ask emits `onboarding_step`
+      with `source: 'guest_flow'`, and conversion emits `signed_up` with
+      `source: 'guest_convert'` — all existing event names, no wire regen.
 - [ ] `npm run quality` and `npm run check` pass.
 
 ## Open questions
@@ -468,29 +452,23 @@ handle, sessionPickCount }`, localStorage-backed) + a `guestMode`
 
 ## Pending decisions
 
-- **Guest preview-picks storage: extend the onboarding store vs a sibling
-  key.** Hold the in-session preview picks under
-  `PENDING_ONBOARDING_STORAGE_KEY` (add a `guestPreviewPicks[]` field) or
-  a sibling `'vici:guest-preview-picks'` key. Either way they are
-  session-only preview state cleared at convert (never drained into
-  positions); pick the one that keeps the merge-safe handoff writer
-  simplest and doesn't bloat the onboarding payload. Owner: FE
-  architecture.
-- **Nudge cadence.** Soft on pick 1 + remind every 5th is the prototype's
-  cadence; confirm the every-5th interval and whether the inline CTA
-  threshold stays at ≥1 pick. Owner: product.
-- **Final copy for the save sheet, remind nudge, and inline CTA.** The
-  framing is fixed (account / claim 1,500 VXP / start for real; no
-  "save your pick"; no gambling vocab; "prediction" never "bet"; no
-  emoji), but the exact wording is pending. Owner: product / content.
-- **Whether `guest_save_prompted` is a new analytics event.** Folding the
-  prompt-shown signal into an existing event avoids a union/Zod edit and a
-  potential analytics-wire regen; a dedicated name gives a cleaner funnel.
-  Decide before instrumenting (it gates the dual-source edit). Owner:
-  product analytics.
-- **Guest-allowed route set.** Flow only (tightest) vs Flow + market
-  detail + results (richer preview). Owner: product. (Tied to Open
-  question 2.)
+- **Guest preview-picks storage.** Resolved: a **sibling guest store**
+  (`src/lib/stores/guest.store.ts`, `localStorage` key
+  `'vici:guest-session'`) holds `{ isGuest, handle, sessionPickCount,
+previewPicks[] }`, separate from `PENDING_ONBOARDING_STORAGE_KEY`. This
+  keeps the merge-safe handoff writer untouched and the onboarding payload
+  unbloated; the guest store is cleared wholesale at convert.
+- **Nudge cadence.** Resolved: soft on pick 1, remind every 5th pick after,
+  standing inline CTA while `sessionPickCount >= 1` on Flow.
+- **Final copy for the save sheet, remind nudge, and inline CTA.** Resolved
+  in the `guest.*` catalog keys; framing is account / claim 1,500 VXP /
+  start for real, no "save your pick", no gambling vocab, no emoji.
+- **Analytics: dedicated prompt-shown event vs. fold-in.** Resolved: fold
+  the prompt-shown signal into `onboarding_step` (`source: 'guest_flow'`,
+  `label` = surface), so no new event name and no analytics-wire regen.
+- **Guest-allowed route set.** Resolved: **Flow only** (tightest) — all the
+  preview funnel needs. A plain signed-out visitor stays bounced to
+  `/signin` everywhere.
 
 ## Decisions
 
@@ -512,17 +490,13 @@ handle, sessionPickCount }`, localStorage-backed) + a `guestMode`
     and **(C) retro-stake at the conversion price**. Both add
     cost/abuse-surface for marginal benefit given the low-intent demo
     picks, so neither is taken.
-- **Keep the app's i18n namespace.** The `gs.*` keys land under the app's
-  `app`/`onboarding`-style namespace convention, not the prototype's bare
-  scattered `gs.*` prefix — per the project's namespace rule and the
-  brief. Exact prefix mirrors how V3 mapped `obv3.*` → `onboarding.v3.*`.
-- **No emoji.** lucide icons only; the prototype's inline SVGs / stray
-  emoji do not transfer (the save sheet uses lucide equivalents and
-  `CountryFlag.svelte` where flags are needed).
-- **Model B, not a wall (V1.8.38).** A guest predicts freely with no hard
-  block; conversion is driven by loss-aversion (the offer to start for
-  real and claim 1,500 VXP) not a gate. The earlier hard-gate variants
-  (V1.8.36–37) are superseded and are **not** ported.
+- **The app's i18n namespace.** The funnel keys land under a `guest.*`
+  namespace per the project's namespace rule, mirroring how the one-screen
+  onboarding keys live under `onboarding.v3.*`.
+- **No emoji.** lucide icons only.
+- **No hard wall.** A guest predicts freely with no hard block; conversion
+  is driven by loss-aversion (the offer to start for real and claim 1,500
+  VXP), not a gate.
 - **Reuse the pre-auth handoff pipeline for handle/identity only.** Guest
   conversion reuses the `PENDING_ONBOARDING_STORAGE_KEY` stash →
   first-authenticated-layout drain shape already governed by the #926
@@ -532,13 +506,12 @@ handle, sessionPickCount }`, localStorage-backed) + a `guestMode`
   convert-specific mint.** Conversion creates a normal new member, so
   `onProfileSetForVxpOnboarding` fires the grant as-is — conversion adds
   no new mint surface and no new economic action.
-- **Reuse `BottomSheet` + `SignInProviderStack`, not the prototype's
-  bespoke sheet/auth.** The save sheet is `BottomSheet` and its sign-up
-  CTAs are the real provider stack (redirect-safe), so there is one
-  source of truth for sheets and for auth.
-- **Session-scoped cadence (V1.8.39 #4).** First-celebrate / every-5th-
-  remind keys off a session pick count, not a lifetime call count, so a
-  returning guest never misfires the first-pick celebration.
+- **Reuse `BottomSheet` + `SignInProviderStack`.** The save sheet is
+  `BottomSheet` and its sign-up CTAs are the real provider stack
+  (redirect-safe), so there is one source of truth for sheets and for auth.
+- **Session-scoped cadence.** First-celebrate / every-5th-remind keys off a
+  session pick count, not a lifetime call count, so a returning guest never
+  misfires the first-pick celebration.
 
 ## Dependencies
 
