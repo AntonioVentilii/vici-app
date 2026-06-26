@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.3.0](https://github.com/AntonioVentilii/vici-app/compare/v0.2.10...v0.3.0) (2026-06-26)
+
+
+### Features
+
+* **analytics:** admin-gated getAnalyticsEvents export query for the cockpit ([#993](https://github.com/AntonioVentilii/vici-app/issues/993)) ([c1af2b1](https://github.com/AntonioVentilii/vici-app/commit/c1af2b10b4e346c7c33751695d2588d38cadcbcf))
+* **arena:** battle opponent notification (S10) ([#986](https://github.com/AntonioVentilii/vici-app/issues/986)) ([4c3ad2f](https://github.com/AntonioVentilii/vici-app/commit/4c3ad2f4ff995e6b78e144612e30eef1e64a4599))
+* **arena:** Recent results friend digest (S7-B) ([#981](https://github.com/AntonioVentilii/vici-app/issues/981)) ([2f2b72e](https://github.com/AntonioVentilii/vici-app/commit/2f2b72e12dbb27fbb504ad4de2384b96c1587449))
+* **arena:** resolved_results collection (S7-A) ([#988](https://github.com/AntonioVentilii/vici-app/issues/988)) ([6d9371c](https://github.com/AntonioVentilii/vici-app/commit/6d9371c5015d09f8cc2a6c47b5b9f1edb11cc6b4))
+* **auth:** sign-in V3 re-skin + passkey-first (S3) ([#982](https://github.com/AntonioVentilii/vici-app/issues/982)) ([b74ed01](https://github.com/AntonioVentilii/vici-app/commit/b74ed017814fce119658c790bad4f706a16e18d9))
+* **dash:** two-bucket holdings sheet (S11) ([#987](https://github.com/AntonioVentilii/vici-app/issues/987)) ([ca97638](https://github.com/AntonioVentilii/vici-app/commit/ca976386c835b2c0928087c339963718fdba90e6))
+* **leagues:** challenge admin-gating + promote-to-admin (S9) ([#985](https://github.com/AntonioVentilii/vici-app/issues/985)) ([3313fa5](https://github.com/AntonioVentilii/vici-app/commit/3313fa5a4cf87fc1fe27a8a85a176dd6a7a16bc1))
+* **leagues:** visibility cards, default Open (S8) ([#984](https://github.com/AntonioVentilii/vici-app/issues/984)) ([601402c](https://github.com/AntonioVentilii/vici-app/commit/601402cfba4a47bd29662c87c60c83efc0ff13d8))
+* **onboarding:** first-visit surface tips (S4) ([#983](https://github.com/AntonioVentilii/vici-app/issues/983)) ([2b3ffc0](https://github.com/AntonioVentilii/vici-app/commit/2b3ffc02c480d2b73325e8e8bde33b56b45cea3c))
+* **onboarding:** guest mode preview + convert (S2) ([#980](https://github.com/AntonioVentilii/vici-app/issues/980)) ([8c8d640](https://github.com/AntonioVentilii/vici-app/commit/8c8d6401608312ea34c940b1ed3f219453852a00))
+* **onboarding:** one-step handle screen (S1) ([#979](https://github.com/AntonioVentilii/vici-app/issues/979)) ([3484dce](https://github.com/AntonioVentilii/vici-app/commit/3484dce044eb1dd6d849a4c0751c9de1b23f1d18))
+* **pwa:** add-to-home-screen install (S5) ([#978](https://github.com/AntonioVentilii/vici-app/issues/978)) ([0352584](https://github.com/AntonioVentilii/vici-app/commit/035258419ea0397a14d8a1a9e10ddd6588274762))
+
+
+### Bug Fixes
+
+* **leaderboard:** qualify gate + Bayesian-shrinkage ranking ([#976](https://github.com/AntonioVentilii/vici-app/issues/976)) ([767912d](https://github.com/AntonioVentilii/vici-app/commit/767912dcc199a1e72478299375555711d89d074b))
+* **onboarding:** close profile-bootstrap race that drops the handle ([#990](https://github.com/AntonioVentilii/vici-app/issues/990)) ([b240cc0](https://github.com/AntonioVentilii/vici-app/commit/b240cc097cdd4c82a79b9308c25503c873ace744))
+
+
+### Documentation
+
+* **specs:** flip merged V1.8 specs to Implemented ([#991](https://github.com/AntonioVentilii/vici-app/issues/991)) ([f490810](https://github.com/AntonioVentilii/vici-app/commit/f49081039a7bce43a9ac3b95bdcd6e1f3ab4163e))
+
+
+### Miscellaneous Chores
+
+* **release:** force next release to v0.3.0 ([#996](https://github.com/AntonioVentilii/vici-app/issues/996)) ([01fd3dd](https://github.com/AntonioVentilii/vici-app/commit/01fd3ddf9f249fbc1fc4391e1e5ce9b66800d46c))
+* **release:** pin next release to v0.3.0 ([#994](https://github.com/AntonioVentilii/vici-app/issues/994)) ([ee9f638](https://github.com/AntonioVentilii/vici-app/commit/ee9f638a548c9e62894647472b5e8f2b856c1e2a))
+* **release:** v0.3.0 ([#992](https://github.com/AntonioVentilii/vici-app/issues/992)) ([6e304ac](https://github.com/AntonioVentilii/vici-app/commit/6e304acf52ad6daa3f1912bbc5cb4c73fae6e7ac))
+
 ## [0.2.10](https://github.com/AntonioVentilii/vici-app/compare/v0.2.9...v0.2.10) (2026-06-25)
 
 
