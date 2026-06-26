@@ -186,6 +186,7 @@ export const idlFactory = ({ IDL }) => {
 					battle_proposed: IDL.Null,
 					perf_metric: IDL.Null,
 					provider_linked: IDL.Null,
+					friend_digest_opened: IDL.Null,
 					leaderboard_viewed: IDL.Null,
 					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
