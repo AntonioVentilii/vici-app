@@ -1328,6 +1328,9 @@ export const ptMessages = {
 	'inbox.battle_accepted.body': '{opponent} aceitou a tua batalha. A começar.',
 	'inbox.battle_declined.title': 'Desafio recusado',
 	'inbox.battle_declined.body': '{opponent} recusou a tua batalha.',
+	'inbox.battle_incoming.title': 'Novo desafio de liga',
+	'inbox.battle_incoming.body':
+		'{opponent} desafiou a tua liga para um duelo de precisão de {days} dias.',
 	'leagues.battle.action.retracting': 'A retirar…',
 	'leagues.battle.action.starting': 'A iniciar…',
 	'leagues.battle.propose.opponent_resolved': 'Adversário',

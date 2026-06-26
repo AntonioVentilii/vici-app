@@ -1327,6 +1327,9 @@ export const esMessages = {
 	'inbox.battle_accepted.body': '{opponent} aceptó tu batalla. A jugar.',
 	'inbox.battle_declined.title': 'Desafío rechazado',
 	'inbox.battle_declined.body': '{opponent} rechazó tu batalla.',
+	'inbox.battle_incoming.title': 'Nuevo desafío de liga',
+	'inbox.battle_incoming.body':
+		'{opponent} desafió a tu liga a un duelo de precisión de {days} días.',
 	'leagues.battle.action.retracting': 'Retirando…',
 	'leagues.battle.action.starting': 'Empezando…',
 	'leagues.battle.propose.opponent_resolved': 'Rival',
