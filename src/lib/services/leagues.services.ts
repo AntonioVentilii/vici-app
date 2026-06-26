@@ -351,7 +351,7 @@ export const createLeague = async ({
 	description,
 	accentColor,
 	emblem,
-	privacy = LeaguePrivacy.INVITE,
+	privacy = LeaguePrivacy.OPEN,
 	inviteCode
 }: {
 	name: string;
@@ -365,8 +365,10 @@ export const createLeague = async ({
 	 *  everywhere the league is rendered. */
 	emblem?: string;
 	/** Three-way visibility the owner picked in the create sheet.
-	 *  Defaults to Invite-only (the design default); persisted on the
-	 *  league doc and surfaced as the detail header's privacy chip. */
+	 *  Defaults to {@link LeaguePrivacy.OPEN} (the create surface's
+	 *  default — new leagues are publicly listed and battle-eligible);
+	 *  persisted on the league doc and surfaced as the detail header's
+	 *  privacy chip. */
 	privacy?: LeaguePrivacy;
 	/** Pre-generated 6-char invite code. The create sheet surfaces the
 	 *  code to the owner before submit (so they can share it), so it

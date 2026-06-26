@@ -133,11 +133,13 @@
 			</div>
 		{:else}
 			<header class="league-form-head">
-				<h2>{t({ locale: $localeStore, key: 'leagues.privacy.title' })}</h2>
+				<h2 id="league-privacy-title">
+					{t({ locale: $localeStore, key: 'leagues.privacy.title' })}
+				</h2>
 				<p>{t({ locale: $localeStore, key: 'leagues.privacy.sub' })}</p>
 			</header>
 
-			<ul class="league-privacy-list" role="radiogroup">
+			<ul class="league-privacy-list" aria-labelledby="league-privacy-title" role="radiogroup">
 				{#each OPTIONS as option (option)}
 					<li>
 						<button

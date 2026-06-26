@@ -237,10 +237,10 @@
 		</label>
 
 		<fieldset class="league-field">
-			<legend class="league-field-label allcaps">
+			<legend id="league-privacy-label" class="league-field-label allcaps">
 				{t({ locale: $localeStore, key: 'leagues.create.label_privacy' })}
 			</legend>
-			<div class="league-vis-list" role="radiogroup">
+			<div class="league-vis-list" aria-labelledby="league-privacy-label" role="radiogroup">
 				{#each PRIVACIES as option (option)}
 					<button
 						class="league-vis-card"
