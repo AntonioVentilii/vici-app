@@ -392,3 +392,30 @@ dropped, and a genuine returning user's profile is never clobbered. The
 flow emits the `onboarding_completed` analytics event with the finishing
 provider and whether a team was persisted. Decision record:
 [`specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`](./spec-driven-development/specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md).
+
+### Add to Home Screen — install VICI as an app
+
+A mobile user can add VICI to their home screen so it launches
+full-screen, like a native app. The ask appears in two calm,
+non-interruptive places and **never** as an auto-popup over Flow: a
+permanent **Settings → Preferences** row and a contextual **install row on
+the end-of-session summary** (`FlowEnd`). The install sheet adapts to the
+platform: on Android/Chrome it captures the browser's `beforeinstallprompt`
+(suppressing the mini-infobar) and a single CTA replays it as the native
+one-tap install dialog; on iOS — where no install API exists — it shows the
+two manual steps (tap Share, then choose Add to Home Screen). Once
+installed (the native accept, the `appinstalled` event, or a later launch
+detected as standalone) every prompt is suppressed.
+
+Both surfaces are gated on `canInstall` (mobile, not already installed, not
+already running standalone), so they are hidden on desktop and inside an
+installed PWA. The Settings row is always available when `canInstall`
+holds; the FlowEnd row additionally honours trigger thresholds — it appears
+at a lifetime call count of 15 or more, or 10 or more on a second-or-later
+visit — and respects a 14-day cool-off after a dismissal plus a
+once-per-session guard. The install funnel is instrumented with
+`pwa_install_prompted` / `_accepted` / `_dismissed`, carrying the
+originating surface and the platform. The manifest, icons, iOS meta, and
+the pre-paint standalone/iOS detection in `app.html` were already shipped;
+this layer adds only the install behaviour. Decision record:
+[`specs/2026-06-25-feat-pwa-install.md`](./spec-driven-development/specs/2026-06-25-feat-pwa-install.md).

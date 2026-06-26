@@ -169,6 +169,9 @@ const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 				'delete_succeeded',
 				'exit_signal',
 				'notification_opened',
+				'pwa_install_prompted',
+				'pwa_install_accepted',
+				'pwa_install_dismissed',
 				'app_error',
 				'perf_metric'
 			]),
@@ -1831,6 +1834,9 @@ const AppTrackEventsArgsSchema = j.strictObject({
 				'delete_succeeded',
 				'exit_signal',
 				'notification_opened',
+				'pwa_install_prompted',
+				'pwa_install_accepted',
+				'pwa_install_dismissed',
 				'app_error',
 				'perf_metric'
 			]),
