@@ -149,6 +149,7 @@ export const idlFactory = ({ IDL }) => {
 					flow_card_expanded: IDL.Null,
 					affiliation_removed: IDL.Null,
 					league_invite_sent: IDL.Null,
+					pwa_install_prompted: IDL.Null,
 					notification_opened: IDL.Null,
 					position_taken: IDL.Null,
 					flow_abandoned: IDL.Null,
@@ -160,6 +161,7 @@ export const idlFactory = ({ IDL }) => {
 					comment_posted: IDL.Null,
 					flow_swipe: IDL.Null,
 					referral_converted: IDL.Null,
+					pwa_install_dismissed: IDL.Null,
 					transactions_filtered: IDL.Null,
 					school_verify_code_submitted: IDL.Null,
 					signed_in: IDL.Null,
@@ -171,6 +173,7 @@ export const idlFactory = ({ IDL }) => {
 					battle_proposed: IDL.Null,
 					perf_metric: IDL.Null,
 					provider_linked: IDL.Null,
+					leaderboard_viewed: IDL.Null,
 					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
 					battle_declined: IDL.Null,
@@ -200,6 +203,7 @@ export const idlFactory = ({ IDL }) => {
 					referral_redeemed: IDL.Null,
 					prediction_created: IDL.Null,
 					faucet_claimed: IDL.Null,
+					pwa_install_accepted: IDL.Null,
 					chat_sent: IDL.Null,
 					orderbook_viewed: IDL.Null,
 					signed_out: IDL.Null
@@ -657,6 +661,22 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListFriendResolvedResultsArgs = IDL.Record({
+		friends: IDL.Vec(IDL.Text)
+	});
+	const AppListFriendResolvedResultsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				title: IDL.Text,
+				owner: IDL.Text,
+				market_id: IDL.Text,
+				net_vxp: IDL.Float64,
+				side: IDL.Text,
+				outcome: IDL.Variant({ win: IDL.Null, loss: IDL.Null }),
+				resolved_at_ms: IDL.Float64
+			})
+		)
+	});
 	const AppListFriendsResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
@@ -1008,6 +1028,7 @@ export const idlFactory = ({ IDL }) => {
 	const AppLookupReferralCodeResult = IDL.Record({
 		owner: IDL.Opt(IDL.Text)
 	});
+	const AppPruneResolvedResultsResult = IDL.Record({ pruned: IDL.Float64 });
 	const AppRecomputeActivityReactionCountsResult = IDL.Record({
 		recomputed: IDL.Float64
 	});
@@ -1139,6 +1160,7 @@ export const idlFactory = ({ IDL }) => {
 					flow_card_expanded: IDL.Null,
 					affiliation_removed: IDL.Null,
 					league_invite_sent: IDL.Null,
+					pwa_install_prompted: IDL.Null,
 					notification_opened: IDL.Null,
 					position_taken: IDL.Null,
 					flow_abandoned: IDL.Null,
@@ -1150,6 +1172,7 @@ export const idlFactory = ({ IDL }) => {
 					comment_posted: IDL.Null,
 					flow_swipe: IDL.Null,
 					referral_converted: IDL.Null,
+					pwa_install_dismissed: IDL.Null,
 					transactions_filtered: IDL.Null,
 					school_verify_code_submitted: IDL.Null,
 					signed_in: IDL.Null,
@@ -1161,6 +1184,7 @@ export const idlFactory = ({ IDL }) => {
 					battle_proposed: IDL.Null,
 					perf_metric: IDL.Null,
 					provider_linked: IDL.Null,
+					leaderboard_viewed: IDL.Null,
 					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
 					battle_declined: IDL.Null,
@@ -1190,6 +1214,7 @@ export const idlFactory = ({ IDL }) => {
 					referral_redeemed: IDL.Null,
 					prediction_created: IDL.Null,
 					faucet_claimed: IDL.Null,
+					pwa_install_accepted: IDL.Null,
 					chat_sent: IDL.Null,
 					orderbook_viewed: IDL.Null,
 					signed_out: IDL.Null
@@ -1406,6 +1431,11 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),
+		app_list_friend_resolved_results: IDL.Func(
+			[AppListFriendResolvedResultsArgs],
+			[AppListFriendResolvedResultsResult],
+			['query']
+		),
 		app_list_friends: IDL.Func([], [AppListFriendsResult], ['query']),
 		app_list_leaderboard: IDL.Func([], [AppListLeaderboardResult], ['query']),
 		app_list_league_battles: IDL.Func(
@@ -1454,6 +1484,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppLookupReferralCodeResult],
 			['query']
 		),
+		app_prune_resolved_results: IDL.Func([], [AppPruneResolvedResultsResult], []),
 		app_recompute_activity_reaction_counts: IDL.Func(
 			[],
 			[AppRecomputeActivityReactionCountsResult],
