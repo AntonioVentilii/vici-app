@@ -188,3 +188,50 @@ export const AnalyticsSummarySchema = j.strictObject({
 		})
 	)
 });
+
+/** Args for `getAnalyticsEvents` — keyset cursor + page size for the cockpit's
+ * warehouse ingest. `afterUpdatedAtNs` is the EXCLUSIVE lower bound (the last
+ * synced doc's `updated_at`, as text — nat64 exceeds JS safe-int); absent/empty
+ * starts from the beginning. */
+export const GetAnalyticsEventsArgsSchema = j.strictObject({
+	afterUpdatedAtNs: j.optional(j.string()),
+	limit: j.number()
+});
+
+/**
+ * One exported event row: the `events` doc envelope (key + ns timestamps +
+ * version + owner) plus the FLATTENED behavioural payload. Flattened — not a
+ * nested `props` — because the Sputnik codegen rejects a nested optional object
+ * inside an array element (same constraint as `TrackEventInputSchema`).
+ *
+ * Field names avoid the codegen-reserved `principal`/`variant`: identity is
+ * `principalText`, the dimension stays `label`, and `owner` → `ownerText`.
+ */
+export const AnalyticsEventExportRowSchema = j.strictObject({
+	key: j.string(),
+	createdAtNs: j.string(),
+	updatedAtNs: j.string(),
+	version: j.optional(j.string()),
+	ownerText: j.optional(PrincipalTextSchema),
+	name: AnalyticsEventNameSchema,
+	tsMs: j.number(),
+	sessionId: j.string(),
+	principalText: j.optional(PrincipalTextSchema),
+	path: j.optional(j.string()),
+	marketId: j.optional(j.string()),
+	seriesId: j.optional(j.string()),
+	leagueId: j.optional(j.string()),
+	battleId: j.optional(j.string()),
+	source: j.optional(j.string()),
+	label: j.optional(j.string()),
+	step: j.optional(j.number()),
+	value: j.optional(j.number()),
+	count: j.optional(j.number()),
+	durationMs: j.optional(j.number()),
+	ok: j.optional(j.boolean())
+});
+
+export const GetAnalyticsEventsResultSchema = j.strictObject({
+	rows: j.array(AnalyticsEventExportRowSchema),
+	hasMore: j.boolean()
+});
