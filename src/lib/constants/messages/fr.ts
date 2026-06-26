@@ -792,7 +792,7 @@ export const frMessages = {
 	'dash.build.see_all_resolved': 'Voir les {count} réglés ↓',
 	'dash.build.session_delta_neg': '▼ {value} pts',
 	'dash.build.session_delta_pos': '▲ +{value} pts',
-	'dash.build.sheet_avail_sub': 'Prêt à miser sur des prédictions',
+	'dash.build.sheet_avail_sub': 'Prêt à utiliser sur des prédictions',
 	'dash.build.sheet_history': 'Historique des transactions',
 	'dash.build.sheet_history_sub': 'Bonus, prédictions, paiements',
 	'dash.build.sheet_inplay_sub_many': 'En jeu sur {count} prédictions ouvertes',

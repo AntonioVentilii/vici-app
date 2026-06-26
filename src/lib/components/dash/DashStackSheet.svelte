@@ -75,20 +75,28 @@
 			return;
 		}
 
+		let alive = true;
+
 		void (async () => {
 			try {
-				inviteCode = await getMyReferralCode();
+				const code = await getMyReferralCode();
+
+				if (alive) {
+					inviteCode = code;
+				}
 			} catch {
-				inviteCode = undefined;
+				// Guard on `alive` so a late rejection after unmount can't reset
+				// state on a destroyed component.
+				if (alive) {
+					inviteCode = undefined;
+				}
 			}
 		})();
-	});
 
-	const inviteUrl = $derived(
-		nonNullish(inviteCode) && typeof window !== 'undefined'
-			? `${window.location.origin}/i/${inviteCode}`
-			: undefined
-	);
+		return () => {
+			alive = false;
+		};
+	});
 
 	const triggerCopyFeedback = (): void => {
 		copied = true;
@@ -102,12 +110,8 @@
 		}, 1800);
 	};
 
-	const copyInvite = async (): Promise<void> => {
-		if (!inviteUrl) {
-			return;
-		}
-
-		const ok = await writeToClipboard(inviteUrl);
+	const copyInvite = async (url: string): Promise<void> => {
+		const ok = await writeToClipboard(url);
 
 		if (ok) {
 			triggerCopyFeedback();
@@ -115,16 +119,37 @@
 		}
 	};
 
+	// Resolve the referral code on-demand: the lazy `$effect` may not have
+	// resolved yet when the first tap lands, so fetch here too rather than
+	// no-op. Mirrors the lazy load and shares the same cached service call.
+	const resolveInviteCode = async (): Promise<string | undefined> => {
+		if (nonNullish(inviteCode)) {
+			return inviteCode;
+		}
+
+		try {
+			inviteCode = await getMyReferralCode();
+		} catch {
+			inviteCode = undefined;
+		}
+
+		return inviteCode;
+	};
+
 	const shareInvite = async (): Promise<void> => {
-		if (!inviteUrl || !inviteCode) {
+		const code = await resolveInviteCode();
+
+		if (!code || typeof window === 'undefined') {
 			return;
 		}
+
+		const url = `${window.location.origin}/i/${code}`;
 
 		const shareText = t({
 			locale: $localeStore,
 			key: 'profile.dashboard.referrals.share_text',
 			params: {
-				code: inviteCode,
+				code,
 				amount: formatVxpBalance({ value: REFERRAL_VXP_BONUS_BASE_UNITS })
 			}
 		});
@@ -132,7 +157,7 @@
 
 		if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
 			try {
-				await navigator.share({ title: shareTitle, text: shareText, url: inviteUrl });
+				await navigator.share({ title: shareTitle, text: shareText, url });
 
 				return;
 			} catch (err: unknown) {
@@ -144,7 +169,7 @@
 			}
 		}
 
-		await copyInvite();
+		await copyInvite(url);
 	};
 </script>
 
