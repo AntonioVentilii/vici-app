@@ -32,9 +32,13 @@
 		// manager. Absent → a plain `VICI` label. The user can rename it
 		// afterwards from their authenticator.
 		handle?: string | null;
+		// External gate — when true every provider is inert. The one-screen
+		// onboarding sets this until a valid handle is claimed, so auth can't
+		// start before there's a name to attach to the account.
+		disabled?: boolean;
 	}
 
-	const { onSuccess, mode = 'signin', handle = null }: Props = $props();
+	const { onSuccess, mode = 'signin', handle = null, disabled = false }: Props = $props();
 
 	const isSignUp = $derived(mode === 'signup');
 
@@ -75,7 +79,10 @@
 
 	const productionAvailable = $derived(isProd() && isNotSkylab());
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
+	// A provider can't be started while another is resolving, or while the
+	// host has gated the stack (`disabled`).
 	const isBusy = $derived(nonNullish(signingIn));
+	const blocked = $derived(isBusy || disabled);
 	// When the email row is expanded the other providers dim to 0.4.
 	const isFaded = $derived(emailOpen && isNullish(signingIn));
 
@@ -336,7 +343,7 @@
 			class:is-faded={isFaded}
 			class:is-loading={signingIn === 'apple'}
 			aria-busy={signingIn === 'apple'}
-			disabled={isBusy}
+			disabled={blocked}
 			onclick={onApple}
 			type="button"
 		>
@@ -361,7 +368,7 @@
 			class:is-faded={isFaded}
 			class:is-loading={signingIn === 'google'}
 			aria-busy={signingIn === 'google'}
-			disabled={isBusy}
+			disabled={blocked}
 			onclick={onGoogle}
 			type="button"
 		>
@@ -386,7 +393,7 @@
 			<button
 				class="signin-provider-btn email is-onboarding ob-faint"
 				class:is-faded={isFaded}
-				disabled={isBusy}
+				disabled={blocked}
 				onclick={onEmailOpen}
 				type="button"
 			>
@@ -410,7 +417,7 @@
 						autocapitalize="off"
 						autocomplete="email webauthn"
 						autofocus
-						disabled={isBusy || !productionAvailable}
+						disabled={blocked || !productionAvailable}
 						inputmode="email"
 						placeholder={t({ locale: $localeStore, key: 'signin.email.placeholder' })}
 						spellcheck="false"
@@ -420,7 +427,7 @@
 				</div>
 				<button
 					class="signin-email-submit"
-					disabled={!emailValid || isBusy || !productionAvailable}
+					disabled={!emailValid || blocked || !productionAvailable}
 					type="submit"
 				>
 					{signingIn === 'email'
@@ -445,7 +452,7 @@
 			class:is-faded={isFaded}
 			class:is-loading={signingIn === 'ii'}
 			aria-busy={signingIn === 'ii'}
-			disabled={isBusy || !productionAvailable}
+			disabled={blocked || !productionAvailable}
 			onclick={onIi}
 			type="button"
 		>
@@ -470,7 +477,7 @@
 			class:is-faded={isFaded}
 			class:is-loading={signingIn === 'passkey'}
 			aria-busy={signingIn === 'passkey'}
-			disabled={isBusy || !productionAvailable}
+			disabled={blocked || !productionAvailable}
 			onclick={onPasskey}
 			type="button"
 		>
@@ -498,7 +505,7 @@
 			class:is-loading={signingIn === 'dev'}
 			aria-busy={signingIn === 'dev'}
 			data-tid={TestId.SignInDev}
-			disabled={isBusy}
+			disabled={blocked}
 			onclick={onDev}
 			type="button"
 		>
