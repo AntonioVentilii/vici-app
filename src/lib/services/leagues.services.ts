@@ -690,6 +690,52 @@ export const transferLeagueOwnership = ({
 }): Promise<TransferLeagueOwnershipResult> =>
 	functions.transferLeagueOwnership({ leagueId, newOwnerPrincipal });
 
+/**
+ * Set a member's role inside a league — the owner-driven promote
+ * (`member → admin`) / demote (`admin → member`) control. Re-reads the
+ * existing membership row to round-trip the server's `version` token and
+ * to carry the immutable identity fields (`leagueId`, `member`,
+ * `joinedAtMs`) verbatim, then writes back the same row with the new
+ * `role`.
+ *
+ * Owner-gated server-side: the `league_members` assert rejects a
+ * role-change write from any caller that isn't the league owner, so the
+ * owner-only UI guard is a convenience, not the authority. `'owner'` is
+ * never a target here — promotion only ever toggles `member ↔ admin`; the
+ * owner role is reserved for the league's owner principal.
+ */
+export const setMemberRole = async ({
+	leagueId,
+	memberPrincipal,
+	role
+}: {
+	leagueId: string;
+	memberPrincipal: string;
+	role: Extract<LeagueMemberRole, 'admin' | 'member'>;
+}): Promise<void> => {
+	const key = leagueMemberKey({ leagueId, memberPrincipal });
+
+	const existing = await getDoc<LeagueMemberDoc>({
+		collection: Collection.LEAGUE_MEMBERS,
+		key
+	});
+
+	if (!existing) {
+		throw new Error('Member is no longer in this league.');
+	}
+
+	const next: LeagueMemberDoc = { ...existing.data, role };
+
+	await setDoc<LeagueMemberDoc>({
+		collection: Collection.LEAGUE_MEMBERS,
+		doc: {
+			key,
+			data: next,
+			version: existing.version
+		}
+	});
+};
+
 // ─── Battles ───────────────────────────────────────────────────────────────
 
 const projectBattleWire = (b: {

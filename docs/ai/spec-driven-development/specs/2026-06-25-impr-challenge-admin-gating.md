@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: In progress (#985)
 
 ## Goal
 
@@ -25,20 +25,14 @@ gating predicate and the means to grant the role it gates on.
 
 ## Context
 
-The prototype (source of truth, V1.8.48 — `CHANGELOG.md`) replaced its
-"first member in the array" heuristic with real role gating via
-`window.VICI_isLeagueAdmin(league, me)` (in
-`proto/VICI-V1.8-Handover/app.jsx`), used by `CreateBoutModal`,
-`LeagueDetailScreen`, and `LeagueBoutSection` so "the challenge CTA shows
-only to admins; others see 'Only the league admin can start a battle.'"
-(`proto/.../screens.jsx`, `LeagueBoutSection`). The prototype's data
-model has a **single** `adminId` per league — effectively the owner — so
-in proto terms "admin" and "owner" collapse. **The app's model is
-richer**: `LeagueMemberRole = 'owner' | 'admin' | 'member'`
+Battle authority is a delegated role, not just an ownership property. The
+app's membership model already carries the distinction:
+`LeagueMemberRole = 'owner' | 'admin' | 'member'`
 (`src/lib/types/league-member.ts`), with `owner` unique and `admin` a
-day-2 delegated role. Porting the _behaviour_ here means letting the
-app's `admin` role do what the proto's lone `adminId` did — initiate and
-respond to battles — **in addition to** the owner.
+day-2 delegated role. The design lets the `admin` role do what the owner
+does for battles — initiate and respond — **in addition to** the owner,
+while a plain member sees an explicit "Only a league owner or admin can
+start a battle." in place of a silently absent CTA.
 
 Current app state (gates everything on `owner`):
 
@@ -147,9 +141,8 @@ opponent nor admin gets a delete path").
   "you must own or admin a league").
 - **Gating copy.** Replace the silent absence of the challenge CTA for
   non-admins with an explicit line. Reuse the app i18n namespace
-  (`leagues.*`); do **not** import the prototype's wording verbatim — the
-  app supports multiple admins + an owner, so the copy is "owner or
-  admin", not "the league admin". New key
+  (`leagues.*`). The app supports multiple admins plus an owner, so the
+  copy is "owner or admin", not "the league admin". New key
   `leagues.detail.battle_admin_only` = "Only a league owner or admin can
   start a battle." rendered in the battle section when `!isLeagueAdmin`.
   The existing `leagues.detail.battle_owner_accepts` ("Only the league
@@ -406,7 +399,7 @@ admin`; the assert reserves the `owner` role for the league's owner
 
 ## Decisions
 
-Handed to the author for this port (with the why):
+Recorded for the author (with the why):
 
 - **Ship the promote-to-admin UI alongside the gating**
   (owner decision, 2026-06-25). Gating is useless without a way to create
@@ -414,15 +407,12 @@ Handed to the author for this port (with the why):
   be exercisable. Because the write is FE-only (the `league_members`
   assert already gates role changes on the owner), it folds cleanly into
   the same reviewable unit rather than a separate spec.
-- **Keep the app i18n namespace** (`leagues.*`), not the prototype's
-  scattered `lg.*` / `bt.*` keys — the app's catalog convention wins
-  (per the shared port brief and `docs/ai/frontend/i18n.md`).
-- **No emoji** — the app uses lucide icons; the prototype's stray emoji
-  do not transfer.
-- **Port behaviour, not code** — the prototype is React on a single-
-  `adminId` model; the app is Svelte 5 runes on a three-value
-  `LeagueMemberRole`. "Admin" here means the app's delegated `admin`
-  role **in addition to** the owner, not a rename of the owner.
+- **Keep the app i18n namespace** (`leagues.*`) — the app's catalog
+  convention wins (per `docs/ai/frontend/i18n.md`).
+- **No emoji** — the app uses lucide icons.
+- **`admin` is delegated authority, not a rename of the owner** — on the
+  app's three-value `LeagueMemberRole`, "admin" means the delegated
+  `admin` role acting **in addition to** the owner.
 - **Gate on both FE and satellite** — chosen because the satellite assert
   independently enforces owner-only (`isOwnerOfLeague`), so an FE-only
   change would leave admin writes rejected by the backend. The auth
