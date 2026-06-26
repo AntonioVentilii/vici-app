@@ -1274,6 +1274,9 @@ export const enMessages = {
 	'inbox.battle_accepted.body': '{opponent} accepted your battle. Game on.',
 	'inbox.battle_declined.title': 'Challenge declined',
 	'inbox.battle_declined.body': '{opponent} declined your battle.',
+	'inbox.battle_incoming.title': 'New league challenge',
+	'inbox.battle_incoming.body':
+		'{opponent} challenged your league to a {days}-day accuracy face-off.',
 	'leagues.battle.action.retracting': 'Retracting…',
 	'leagues.battle.action.starting': 'Starting…',
 	'leagues.battle.propose.opponent_resolved': 'Opponent',

@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: In progress (#986)
 
 ## Goal
 
@@ -119,13 +119,12 @@ leagueDirectoryStore, userStore, localeStore]`. For each league the
 5. **i18n** (`src/lib/constants/messages/*.ts`, all locales): add
    `inbox.battle_incoming.title` and `inbox.battle_incoming.body` to
    **every** catalog under `src/lib/constants/messages/` (per AGENTS.md
-   §3 — never just `en.ts`). Copy ports the prototype's intent in the
-   app's namespace:
+   §3 — never just `en.ts`). Copy lives in the app's `inbox.*` namespace:
    - title — "New league challenge"
    - body — "{opponent} challenged your league to a {days}-day accuracy
      face-off."
-     (Drop the prototype's "Tap to respond." tail — the card is tappable
-     and the other inbox bodies don't narrate the tap.)
+     (No "Tap to respond." tail — the card is tappable and the other
+     inbox bodies don't narrate the tap.)
 6. **Analytics** — see the Analytics section.
 
 ### Out of scope
@@ -137,7 +136,7 @@ leagueDirectoryStore, userStore, localeStore]`. For each league the
   notification at proposal time so it arrives without the recipient
   re-reading) is a deliberate non-goal here — see Pending decisions for
   the build-vs-defer call and its sizing. No notifications collection,
-  no satellite write.
+  no satellite write. Delivery is same-session client-only.
 - **Duels** (`kind='duel'`). No FE path creates duels and they have no
   challenged-league admin; the filter is `kind='league'` only.
 - **Changing the proposer-side cards** (`battle_accepted` /
@@ -235,11 +234,10 @@ here.
 - **Recipient identity = league owner only?** The codebase models the
   admin as `league.owner` (the satellite assert authorizes accept by
   `sideB` owner; `BattlesInboxPage` filters `role === 'owner'`). The
-  prototype says "opponent league's admin." Confirm the app has no
-  separate `adminId` distinct from `owner` for leagues — if owner is the
-  admin (as the code indicates), filter on `role === 'owner'`. (Strongly
-  expected to be owner; verify there is no admin-role split before
-  build.)
+  challenged league's admin is its owner. Confirm the app has no separate
+  `adminId` distinct from `owner` for leagues — if owner is the admin (as
+  the code indicates), filter on `role === 'owner'`. (Strongly expected to
+  be owner; verify there is no admin-role split before build.)
 
 ## Pending decisions
 
@@ -258,8 +256,8 @@ here.
     delivery is "next read", not push — the card appears when the
     recipient's client next loads their leagues' battles, not the instant
     the challenge is sent. Acceptable: it is identical to how every other
-    inbox card already behaves, and the prototype itself was same-session
-    client-only.
+    inbox card already behaves, and same-session client-only delivery is
+    the established behaviour for this surface.
 
   - **(b) Server-authoritative notification.** Write a notification doc
     at proposal time so it arrives without the recipient re-reading.
@@ -307,16 +305,15 @@ here.
 Handed to this spec at authoring (2026-06-25):
 
 - **Namespace:** keep the app's `inbox.*` i18n namespace
-  (`inbox.battle_incoming.title` / `.body`), **not** the prototype's
-  scattered `bt.notif_title` / `bt.notif_body`.
+  (`inbox.battle_incoming.title` / `.body`), consistent with the other
+  inbox keys.
 - **No emoji.** The card uses the lucide `Swords` icon via the kind
-  config, matching the existing battle cards; the prototype's stray
-  emoji do not transfer.
-- **Port behaviour + copy, not code.** The prototype is React with a
-  `window.VICI_NOTIF.add` runtime store fired synchronously on send; the
-  app derives the card from persisted battle state instead — the same
-  user-visible outcome (an incoming-challenge notification deep-linking
-  to the bout) through the app's client-derived inbox architecture.
+  config, matching the existing battle cards.
+- **Derive from persisted state.** The card is derived from the
+  persisted `proposed` battle state, not fired imperatively on send — the
+  same user-visible outcome (an incoming-challenge notification
+  deep-linking to the bout) through the app's client-derived inbox
+  architecture.
 - **Recipient delivery model:** client-side derive (option (a)) — see
   Pending decisions for the build-vs-defer rationale and the sizing of
   the server-authoritative alternative.

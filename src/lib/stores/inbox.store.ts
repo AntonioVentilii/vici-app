@@ -19,7 +19,7 @@ import {
 import { receivedReactionsStore } from '$lib/stores/activity-reactions.store';
 import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/friends.store';
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
-import { leagueBattlesStore } from '$lib/stores/leagues.store';
+import { leagueBattlesStore, leaguesLoadedStore, myLeaguesStore } from '$lib/stores/leagues.store';
 import { localeStore } from '$lib/stores/locale.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { userStore } from '$lib/stores/user.store';
@@ -141,6 +141,70 @@ const battleInboxStore: Readable<InboxNotification[]> = derived(
 					}),
 					unread: true,
 					href: `${AppPath.Arena}/leagues/${battle.sideA}`
+				};
+			});
+	}
+);
+
+// ── Incoming-challenge notifications ────────────────────────────────────────
+// The mirror of `battleInboxStore` for the *recipient*: a league owner whose
+// league has just been challenged. The challenged league is always `sideB`,
+// and the recipient already reads the `proposed` battle via
+// `leagueBattlesStore` (the satellite returns battles referencing the league
+// as either side). We derive one card per `proposed`, `kind='league'` battle
+// where the viewer owns `sideB`. The card ages out of the same 3-day window
+// and drops automatically once the proposal leaves `proposed` (accepted /
+// declined / expired), since the filter no longer matches.
+
+const battleIncomingInboxStore: Readable<InboxNotification[]> = derived(
+	[leagueBattlesStore, myLeaguesStore, leagueDirectoryStore, userStore, localeStore],
+	([$battles, $myLeagues, $directory, $user, $locale]) => {
+		const viewer = $user.user?.owner;
+
+		if (isNullish(viewer)) {
+			return [];
+		}
+
+		const now = Date.now();
+		const ownedLeagueIds = new Set(
+			$myLeagues.filter((m) => m.role === 'owner').map((m) => m.league.id)
+		);
+
+		const incoming = [...$battles.values()]
+			.flat()
+			.filter(
+				(battle) =>
+					battle.kind === 'league' &&
+					battle.state === 'proposed' &&
+					ownedLeagueIds.has(battle.sideB)
+			);
+		// A challenge can surface under more than one per-league list, so dedupe
+		// by battle id (Map keeps the last seen), mirroring `battleInboxStore`.
+		const matched = [...new Map(incoming.map((battle) => [battle.id, battle])).values()].filter(
+			(battle) => now - battle.kickoffMs <= BATTLE_NOTIFICATION_WINDOW_MS
+		);
+
+		return matched
+			.sort((a, b) => b.kickoffMs - a.kickoffMs)
+			.map((battle) => {
+				const opponent = $directory.get(battle.sideA)?.name ?? shortLeagueId(battle.sideA);
+				const days = Math.max(1, Math.ceil((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
+
+				return {
+					id: `battle-proposed-${battle.id}`,
+					kind: 'battle_incoming' as const,
+					title: t({ locale: $locale, key: 'inbox.battle_incoming.title' }),
+					body: t({
+						locale: $locale,
+						key: 'inbox.battle_incoming.body',
+						params: { opponent, days }
+					}),
+					when: formatRelativeAgoFromNs({
+						timestampNs: BigInt(Math.round(battle.kickoffMs)) * MILLISECOND_IN_NANOSECONDS,
+						locale: $locale
+					}),
+					unread: true,
+					href: `${AppPath.Arena}/leagues/${battle.sideB}`
 				};
 			});
 	}
@@ -455,9 +519,10 @@ const inboxDismissedStore = writable<Set<string>>(loadStringSet(INBOX_DISMISSED_
 
 /**
  * The inbox surface (Notifications page, bell badge) reads from this combined
- * view. Order: live actionable items (friend requests), then battle responses,
- * then real settled-event notifications, then likes received on your calls.
- * Every card is derived from live data — there is no seeded/mock layer.
+ * view. Order: live actionable items (friend requests), then incoming league
+ * challenges, then battle responses, then real settled-event notifications,
+ * then likes received on your calls. Every card is derived from live data —
+ * there is no seeded/mock layer.
  *
  * Dismissed cards are filtered out, and the per-id read overlay is applied
  * on top of each item's own `unread` so a card tapped read in place stays
@@ -466,14 +531,15 @@ const inboxDismissedStore = writable<Set<string>>(loadStringSet(INBOX_DISMISSED_
 export const combinedInboxStore: Readable<InboxNotification[]> = derived(
 	[
 		friendRequestInboxStore,
+		battleIncomingInboxStore,
 		battleInboxStore,
 		settledInboxStore,
 		likesReceivedInboxStore,
 		inboxReadStore,
 		inboxDismissedStore
 	],
-	([$requests, $battles, $settled, $likesReceived, $read, $dismissed]) =>
-		[...$requests, ...$battles, ...$settled, ...$likesReceived]
+	([$requests, $battleIncoming, $battles, $settled, $likesReceived, $read, $dismissed]) =>
+		[...$requests, ...$battleIncoming, ...$battles, ...$settled, ...$likesReceived]
 			.filter((item) => !$dismissed.has(item.id))
 			.map((item) => (item.unread && $read.has(item.id) ? { ...item, unread: false } : item))
 );
@@ -540,10 +606,20 @@ export const clearInboxToast = (): void => {
  *   first received-reactions load completes (even if empty) — so a cold-start
  *   backlog of likes on the viewer's calls is absorbed into the baseline
  *   instead of replaying as arrival toasts.
+ * - `leaguesLoadedStore` starts `false`, flips `true` once the first
+ *   `refreshMyLeagues()` completes — so a cold-start backlog of pending
+ *   incoming challenges (`battleIncomingInboxStore`) is absorbed into the
+ *   baseline rather than replaying as arrival toasts.
  */
 const sourcesHydrated: Readable<boolean> = derived(
-	[resolvedPositionsNotInitialized, friendsRelationsLoadedStore, receivedReactionsStore],
-	([$notInit, $friendsLoaded, $received]) => !$notInit && $friendsLoaded && nonNullish($received)
+	[
+		resolvedPositionsNotInitialized,
+		friendsRelationsLoadedStore,
+		receivedReactionsStore,
+		leaguesLoadedStore
+	],
+	([$notInit, $friendsLoaded, $received, $leaguesLoaded]) =>
+		!$notInit && $friendsLoaded && nonNullish($received) && $leaguesLoaded
 );
 
 /**

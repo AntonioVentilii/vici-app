@@ -6,6 +6,7 @@ export type InboxNotificationKind =
 	| 'level'
 	| 'market'
 	| 'friend_request'
+	| 'battle_incoming'
 	| 'battle_accepted'
 	| 'battle_declined';
 
