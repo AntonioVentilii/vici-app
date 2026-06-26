@@ -201,6 +201,7 @@ export const idlFactory = ({ IDL }) => {
 					prediction_created: IDL.Null,
 					faucet_claimed: IDL.Null,
 					chat_sent: IDL.Null,
+					leaderboard_viewed: IDL.Null,
 					orderbook_viewed: IDL.Null,
 					signed_out: IDL.Null
 				}),
@@ -1191,6 +1192,7 @@ export const idlFactory = ({ IDL }) => {
 					prediction_created: IDL.Null,
 					faucet_claimed: IDL.Null,
 					chat_sent: IDL.Null,
+					leaderboard_viewed: IDL.Null,
 					orderbook_viewed: IDL.Null,
 					signed_out: IDL.Null
 				}),

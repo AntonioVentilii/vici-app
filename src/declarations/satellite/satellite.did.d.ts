@@ -206,6 +206,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { prediction_created: null }
 			| { faucet_claimed: null }
 			| { chat_sent: null }
+			| { leaderboard_viewed: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
 		count: number;
@@ -1025,6 +1026,7 @@ export interface AppTrackEventsArgs {
 			| { prediction_created: null }
 			| { faucet_claimed: null }
 			| { chat_sent: null }
+			| { leaderboard_viewed: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
 		path: [] | [string];

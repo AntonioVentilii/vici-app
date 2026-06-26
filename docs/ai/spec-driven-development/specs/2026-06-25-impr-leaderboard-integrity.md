@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: Implemented (#976)
 
 ## Goal
 
@@ -236,27 +236,6 @@ the `AnalyticsEventNameSchema` enum
   `globalStandingsRows`), not a regression — flagged so it's a
   conscious carry-forward, not a silent gap.
 
-## Pending decisions
-
-- **Row trust signal — replace VXP with calls, or show both?**
-  Recommendation: **replace** the `{vxp} VXP` figure in the ranked-row
-  meta with `{count} calls` (matching the prototype, which is the
-  source of truth; the task names calls as _the_ trust signal).
-  Accuracy stays the right-hand score. The `realizedPnl` field remains
-  on the model for other surfaces. A reviewer who wants to keep VXP
-  visible can request a 3-part meta instead.
-- **Tweak persistence — dev-only ephemeral vs persisted preference?**
-  Recommendation: **dev-only ephemeral** `writable` gated by `isDev()`
-  (mirrors the prototype's `window.__viciTweaks.lbQualifyMin` and the
-  `isDev()`-only TweaksPanel). It is a product-tuning knob, not a
-  per-user cross-device setting, so it does **not** go through
-  `preferencesStore` (unlike `worldCupMode`). Reverts to the constant
-  on reload.
-- **`StandingsRow` shape for the two partitions** — optional
-  `displayRank` (provisional = `undefined`) vs a `kind:
-'ranked' | 'provisional'` discriminator. Recommendation: optional
-  `displayRank`, smallest change; finalise at build time.
-
 ## Decisions
 
 - **Full prototype model adopted** (gate + shrinkage + Provisional +
@@ -272,3 +251,33 @@ the `AnalyticsEventNameSchema` enum
 - **Shrinkage uses the precise `winCount / settledCount` ratio**, not
   the rounded integer `accuracy`, to avoid tie compression at the
   decision boundary.
+- **Row trust signal — replace VXP with calls** (resolved). The
+  ranked-row meta shows `{count} calls · {n}d streak`; the `{vxp} VXP`
+  figure is dropped from the row (the prototype is the source of truth
+  and calls is the named trust signal). `realizedPnl` stays on the
+  model for the P&L-ranked Dash surfaces.
+- **Tweak persistence — dev-only ephemeral** (resolved). The
+  `leaderboardQualifyMin` writable lives in `tweaks.store.ts`, seeded
+  from `LEADERBOARD_QUALIFY_MIN` and only ever written by the
+  `isDev()`-gated TweaksPanel; it reverts to the constant on reload and
+  never touches `preferencesStore`.
+- **`StandingsRow` shape — optional `displayRank`** (resolved).
+  Provisional rows carry `displayRank: undefined`; the derived store
+  returns `{ ranked, provisional }` (`PartitionedStandings`).
+
+## Divergence from spec (as built)
+
+- **Generated satellite bindings touched.** Adding `leaderboard_viewed`
+  to the analytics enum propagates through the satellite API surface:
+  the new name had to land in the generated `satellite_extension.did`
+  and `src/declarations/satellite/{satellite.did.d.ts,
+satellite.api.ts, satellite.factory.did.js}` for `functions.trackEvents`
+  to type-check. The `juno` CLI is not available in this environment, so
+  these were updated to the generator's deterministic output (the name
+  inserted in schema order, after `chat_sent`). CI's `satellite-schema`
+  job regenerates and verifies parity; the maintainer can re-run
+  `npm run juno:functions:build` + `npm run did` to confirm an identical
+  diff.
+- **`leaderboard.row.vxp` removed.** Rows now show the call count instead
+  of the VXP swing, so the now-dead key was dropped from the 8 catalogs
+  that carried it (7 live + `pt-BR`). No other consumer referenced it.
