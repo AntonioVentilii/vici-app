@@ -366,6 +366,13 @@
 		return rows.sort((a, b) => b.accuracy - a.accuracy);
 	});
 
+	// Viewer's standing within the ranked set: one above every friend
+	// with a strictly higher accuracy. Same `accuracyOf` source as the
+	// friend rows, so the comparison is apples-to-apples.
+	const myFriendRank = $derived(
+		rankedFriends.filter(({ accuracy }) => accuracy > myAccuracy).length + 1
+	);
+
 	let showAllRanked = $state(false);
 	const visibleRanked = $derived(showAllRanked ? rankedFriends : rankedFriends.slice(0, 10));
 	const hiddenRankedCount = $derived(Math.max(0, rankedFriends.length - visibleRanked.length));
@@ -1180,7 +1187,7 @@
 							displayName={myProfile?.nickname ??
 								t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
 							nickname={myProfile?.nickname}
-							numLabel={t({ locale: $localeStore, key: 'arena.friends.ranked.you' })}
+							numLabel={String(myFriendRank).padStart(2, '0')}
 							owner={userPrincipal}
 							variant="you"
 							vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
