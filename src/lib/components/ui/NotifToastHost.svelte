@@ -12,6 +12,7 @@
 	import {
 		clearInboxToast,
 		initInboxProgress,
+		initMarketMoveAlerts,
 		initInboxToasts,
 		latestInboxToast
 	} from '$lib/stores/inbox.store';
@@ -80,16 +81,19 @@
 		return clearTimers;
 	});
 
-	// Start the arrival-toast diff and the streak/level progress-marker
-	// maintenance on mount, unsubscribe both on destroy, so they only run
-	// while the host is rendered (not at module scope).
+	// Start the arrival-toast diff, the streak/level progress-marker
+	// maintenance, and the saved-market move detector on mount; unsubscribe
+	// all on destroy, so they only run while the host is rendered (not at
+	// module scope).
 	onMount(() => {
 		const stopToasts = initInboxToasts();
 		const stopProgress = initInboxProgress();
+		const stopMarketMoves = initMarketMoveAlerts();
 
 		return () => {
 			stopToasts();
 			stopProgress();
+			stopMarketMoves();
 		};
 	});
 

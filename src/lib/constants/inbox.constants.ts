@@ -28,3 +28,27 @@ export const INBOX_DISMISSED_STORAGE_KEY = 'vici.inbox.dismissed.v1';
  * milestone first appeared, for the card's relative-time label.
  */
 export const INBOX_PROGRESS_STORAGE_KEY = 'vici.inbox.progress.v1';
+/**
+ * Per-market baseline of the YES probability the viewer was last shown, for
+ * the saved-market move alerts. `{ [marketId]: { yes: number; at_ms: number } }`.
+ * Seeded on first observation (no alert), advanced when an alert fires, and
+ * pruned for markets no longer saved / no longer open.
+ */
+export const INBOX_MARKET_BASELINE_STORAGE_KEY = 'vici.inbox.market-baseline.v1';
+/**
+ * Persisted, capped, windowed list of fired market-move alert cards. A move is
+ * a transient event between two reads with no re-derivable source (unlike the
+ * monotonic streak/level fields), so the fired alert is stored rather than
+ * recomputed; the per-id read overlay + dismissed set + the window keep it
+ * bounded.
+ */
+export const INBOX_MARKET_ALERTS_STORAGE_KEY = 'vici.inbox.market-alerts.v1';
+/**
+ * Minimum absolute YES-probability shift (in 0–1 units) on a saved market that
+ * fires a move alert. `0.1` = 10 percentage points. Tunable without a spec.
+ */
+export const MARKET_MOVE_THRESHOLD = 0.1;
+/** How long a fired market-move alert stays in the inbox before it ages out. */
+export const MARKET_ALERT_WINDOW_MS = 5 * 24 * 60 * 60 * 1000;
+/** Cap on retained market-move alerts (most-recent kept) to bound storage. */
+export const MARKET_ALERT_MAX = 30;

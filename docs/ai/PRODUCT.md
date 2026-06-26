@@ -155,6 +155,18 @@ re-climbing a broken streak re-notifies. The streak card respects your
 streak-reminder preference. See
 [`specs/2026-06-23-feat-streak-level-inbox-notifications.md`](./spec-driven-development/specs/2026-06-23-feat-streak-level-inbox-notifications.md).
 
+### Saved-market move alerts
+
+Save a market (the heart toggle) and you get an inbox card when its YES
+probability shifts materially — at least 10 points — since you last saw it:
+"YES climbed 12 pts on '<market>'", deep-linking to the market. Detection is
+client-side over the markets you've saved and the catalog already loaded, so
+it's a best-effort engagement nudge, not a server-pushed guarantee; the first
+read of a saved market just sets the baseline (no card), and only a later move
+fires. Alerts respect your market-alerts preference, only fire on open markets,
+and age out after a few days. See
+[`specs/2026-06-23-feat-market-move-inbox-notifications.md`](./spec-driven-development/specs/2026-06-23-feat-market-move-inbox-notifications.md).
+
 ### Market odds — skeleton while the book loads
 
 A market's YES/NO odds are the live order-book mid. Until that book has
