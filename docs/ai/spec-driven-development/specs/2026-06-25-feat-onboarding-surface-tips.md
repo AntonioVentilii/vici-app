@@ -21,7 +21,8 @@ the team pick that onboarding defers out of the signup flow.
 
 The intended behaviour: a `SurfaceTip` component does a route → tip
 lookup, enters after a short settle delay (~420 ms), marks itself seen
-forever on dismiss, and self-gates on route + seen-state. Seen-state is
+on show (so it appears exactly once per device, even if ignored), and
+self-gates on route + seen-state. Seen-state is
 per-surface (Dash / Arena / Profile), persisted under the app's
 `vici.tip-*-seen` flags alongside the existing `vici.coach-*`
 convention. Copy lives in the app's `tip.dash.*` / `tip.arena.*` /
@@ -107,8 +108,8 @@ SVG, a global seen-state engine, or any emoji.
   shared dismiss `aria` label.
 - Gating: a tip shows only when the surface's seen flag is unset **and**
   the user is early (`totalTrades < 5`), so an established user is never
-  interrupted. Dismiss (or the first auto-seen on a qualifying view —
-  see Pending decisions) marks the surface seen forever on that device.
+  interrupted. The surface is marked seen as soon as the tip is shown
+  (seen-on-show), so it appears exactly once per device even if ignored.
 - Intended behaviour: one tip at a time, fires only on actual navigation
   to the surface, resets its local enter/dismiss state on route change,
   renders nothing on surfaces without a tip or already seen.
@@ -188,11 +189,14 @@ recommended default precisely to avoid that cost — see Pending decisions.
      reusability doc if so);
    - map surface → `{ seenKey, titleKey, bodyKey }`;
    - gate: render nothing unless `browser`, the seen flag is unset, and
-     `($userStore.profile?.totalTrades ?? 0) < 5`;
+     the user is early — `nonNullish($userStore.profile)` **and**
+     `$userStore.profile.totalTrades < 5`. Require an actually-hydrated
+     profile so an established user can't slip through the
+     auth-hydration window (`undefined` profile) and get a tip shown;
    - on a qualifying surface, after the settle delay show the `SurfaceTip`,
-     fire the `onboarding_step` shown event once;
-   - on dismiss, write the seen flag (FlowCoach idiom), fire the dismiss
-     event, hide;
+     write the seen flag (FlowCoach idiom) and fire the `onboarding_step`
+     shown event once — seen-on-show;
+   - on dismiss, fire the dismiss event and hide;
    - reset local enter/dismiss state on route change.
 5. Mount `<SurfaceTipHost />` in `src/routes/(app)/+layout.svelte` beside
    `<MobileNav>`, inside the `{#if $userSignedIn}` block.
@@ -209,8 +213,9 @@ recommended default precisely to avoid that cost — see Pending decisions.
 - [ ] The tip never blocks interaction with the content or the tab bar
       below it; it is dismissible via its `X` button and is `role="status"`
       (non-modal).
-- [ ] Dismissing a tip marks that surface seen forever on the device; it
-      does not reappear on later visits in the same or a new session.
+- [ ] Showing a tip marks that surface seen on the device (seen-on-show);
+      it does not reappear on later visits in the same or a new session,
+      whether or not it was dismissed.
 - [ ] An established user (`totalTrades >= 5`) never sees any surface tip.
 - [ ] `clearOnboardingSeenFlags()` and an identity (principal) change both
       clear the three new tip flags, so a fresh account re-sees the tips.
@@ -244,14 +249,6 @@ recommended default precisely to avoid that cost — see Pending decisions.
 
 ## Pending decisions
 
-- **Auto-seen on view vs. seen-on-dismiss.** One option marks a tip seen
-  only on explicit dismiss, so an un-dismissed tip can reappear next
-  session until acknowledged. Decide whether to keep that (re-show until
-  dismissed) or mark seen as soon as it's shown (show exactly once, even
-  if ignored). Recommended: **seen-on-show** — these are low-stakes,
-  non-blocking nudges; re-showing an ignored tip every session is more
-  annoying than a single missed read. Affects which event (`shown` vs
-  `dismiss`) writes the flag.
 - **Analytics event naming.** Reuse `onboarding_step` (no regen, the
   recommended default) vs. mint dedicated `surface_tip_shown` /
   `surface_tip_dismissed` names (clearer funnels, but needs the dual-source
@@ -286,3 +283,8 @@ recommended default precisely to avoid that cost — see Pending decisions.
   reconcile. No new global seen-state engine.
 - **Reuse `onboarding_step` for analytics by default** — avoids a taxonomy
   regen; see Pending decisions for the dedicated-name alternative.
+- **Seen-on-show, not seen-on-dismiss.** A surface is marked seen as soon
+  as its tip is shown, so it appears exactly once per device even if
+  ignored — these are low-stakes, non-blocking nudges, and re-showing an
+  ignored tip every session is more annoying than a single missed read.
+  The `shown` event writes the seen flag; `dismiss` only fires analytics.

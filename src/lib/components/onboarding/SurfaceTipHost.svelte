@@ -102,7 +102,13 @@
 		}
 	};
 
-	const isEarlyUser = $derived(($userStore.profile?.totalTrades ?? 0) < 5);
+	// Only an actually-hydrated profile can qualify. During the auth-hydration
+	// window (`userSignedIn === true` but `profile` still `undefined`) we must
+	// not treat the user as early — an established user would otherwise slip
+	// through the `?? 0` gate and get a tip shown + seen flag written.
+	const isEarlyUser = $derived(
+		nonNullish($userStore.profile) && $userStore.profile.totalTrades < 5
+	);
 
 	const config = $derived(surfaceForPath(page.url.pathname));
 
