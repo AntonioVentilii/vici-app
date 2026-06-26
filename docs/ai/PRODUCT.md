@@ -344,7 +344,12 @@ Every leaderboard row — podium tile and list row — shows the predictor's
 1-based position in the shrinkage order, not the clearing canister's
 net-P&L rank (the Dash "Top X%" rank tile still reads the P&L rank — a
 known, deliberate inconsistency until accuracy ranking moves into the
-canister). Decision record:
+canister). The Arena Friends "Global ranking" card reads the viewer's own
+all-time position from this same partition (`ownGlobalStanding`), so it
+shows the shrinkage rank — or **Provisional** when the viewer is below the
+gate — and can never disagree with the board it links into (it previously
+showed the satellite points rank, which could read a phantom #1). Decision
+record:
 [`specs/2026-06-25-impr-leaderboard-integrity.md`](./spec-driven-development/specs/2026-06-25-impr-leaderboard-integrity.md).
 
 ### Battles — accuracy face-offs that resolve themselves

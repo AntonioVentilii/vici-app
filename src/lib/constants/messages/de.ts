@@ -2269,6 +2269,7 @@ export const deMessages = {
 	'arena.friends.feed.resolved_one': '{count} Vorhersage aufgelöst',
 	'arena.friends.feed.standout': 'inkl. „{question}“',
 	'arena.friends.global.eyebrow': 'Globales Ranking',
+	'arena.friends.global.provisional': 'Vorläufig',
 	'arena.friends.global.unranked': 'Unplatziert',
 	'arena.friends.invite.cap_reached': 'Belohnungslimit erreicht.',
 	'arena.friends.invite.cap_remaining': '{remaining} belohnte Einladungen übrig',

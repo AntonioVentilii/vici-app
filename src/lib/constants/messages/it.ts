@@ -2244,6 +2244,7 @@ export const itMessages = {
 	'arena.friends.feed.resolved_one': '{count} previsione risolta',
 	'arena.friends.feed.standout': 'incl. «{question}»',
 	'arena.friends.global.eyebrow': 'Classifica globale',
+	'arena.friends.global.provisional': 'Provvisorio',
 	'arena.friends.global.unranked': 'Non classificato',
 	'arena.friends.invite.cap_reached': 'Limite delle ricompense raggiunto.',
 	'arena.friends.invite.cap_remaining': '{remaining} inviti con ricompensa rimasti',
