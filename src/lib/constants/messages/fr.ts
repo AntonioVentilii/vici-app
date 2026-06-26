@@ -1343,6 +1343,9 @@ export const frMessages = {
 	'inbox.battle_accepted.body': '{opponent} a accepté votre bataille. Que ça commence.',
 	'inbox.battle_declined.title': 'Défi refusé',
 	'inbox.battle_declined.body': '{opponent} a refusé votre bataille.',
+	'inbox.battle_incoming.title': 'Nouveau défi de ligue',
+	'inbox.battle_incoming.body':
+		'{opponent} a défié votre ligue dans un duel de précision de {days} jours.',
 	'leagues.battle.action.retracting': 'Retrait…',
 	'leagues.battle.action.starting': 'Démarrage…',
 	'leagues.battle.propose.opponent_resolved': 'Adversaire',
