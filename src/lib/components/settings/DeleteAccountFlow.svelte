@@ -234,7 +234,7 @@
 
 			const hydrated = await Promise.all(
 				owned.map(async ({ league }) => {
-					let members: LeagueMemberDoc[] = [];
+					let members: LeagueMemberDoc[];
 
 					try {
 						members = await listLeagueMembers({ leagueId: league.id });
