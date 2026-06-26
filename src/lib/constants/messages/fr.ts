@@ -90,7 +90,7 @@ export const frMessages = {
 	'battles.create.cancel': 'Annuler',
 	'battles.create.change': 'Changer',
 	'battles.create.empty_body':
-		'Crée d’abord une ligue. Tu dois posséder une ligue pour envoyer un défi.',
+		'Crée d’abord une ligue. Tu dois posséder ou administrer une ligue pour envoyer un défi.',
 	'battles.create.empty_cta': 'Voir les Ligues',
 	'battles.create.empty_lede': '« Les battles, c’est ligue contre ligue. »',
 	'battles.create.label_duration': 'Durée',
@@ -1373,6 +1373,8 @@ export const frMessages = {
 	'leagues.detail.activity_verb_resolved': 'Duel terminé vs {opponent}',
 	'leagues.detail.back': 'Retour au social',
 	'leagues.detail.battle_admin_chip': 'Admin · toi',
+	'leagues.detail.battle_admin_only':
+		'Seul un propriétaire ou un admin de la ligue peut lancer un duel.',
 	'leagues.detail.battle_challenge_cta': 'Défier une autre ligue',
 	'leagues.detail.battle_empty_lede': 'Aucun duel actif.',
 	'leagues.detail.battle_empty_sub':
@@ -1381,13 +1383,16 @@ export const frMessages = {
 	'leagues.detail.battle_meta_awaiting': "En attente d'acceptation de {opponent}",
 	'leagues.detail.battle_meta_day_of': 'Jour {day} sur {days} · duel de précision',
 	'leagues.detail.battle_meta_incoming': '{opponent} a défié ta ligue — accepte ci-dessous',
-	'leagues.detail.battle_owner_accepts': 'Seul le propriétaire de la ligue peut accepter ce défi.',
+	'leagues.detail.battle_owner_accepts':
+		'Seul un propriétaire ou un admin de la ligue peut accepter ce défi.',
 	'leagues.detail.invite_copied': 'Copié',
 	'leagues.detail.invite_label': 'Invitation',
 	'leagues.detail.lb_streak': '{count} d’affilée',
 	'leagues.detail.lb_tab_all': 'Tout le temps',
 	'leagues.detail.lb_tab_week': 'Cette semaine',
 	'leagues.detail.leaderboard_eyebrow': 'Classement',
+	'leagues.detail.member_make_admin': 'Nommer admin',
+	'leagues.detail.member_remove_admin': 'Retirer admin',
 	'leagues.detail.member_sheet_rank': 'Rang #{rank} · {league}',
 	'leagues.detail.member_stat_accuracy': 'Précision',
 	'leagues.detail.member_stat_streak': 'Série',
