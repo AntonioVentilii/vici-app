@@ -272,8 +272,10 @@ let initialized = false;
 
 /**
  * Wire the install listeners and seed persisted state. Idempotent and
- * browser-only. Called early from the `(app)` layout so Chrome's
- * `beforeinstallprompt` (fired once, early) is captured before child mount.
+ * browser-only. Chrome fires `beforeinstallprompt` once, early in page load —
+ * before this runs — so the actual capture happens in an inline `app.html`
+ * listener; here we adopt that pre-captured event (and keep a listener for any
+ * later re-fire). Do not remove the `app.html` listener as "redundant".
  */
 export const initA2hs = (): void => {
 	if (!browser || initialized) {
@@ -287,6 +289,23 @@ export const initA2hs = (): void => {
 	}
 
 	countSession();
+
+	// Adopt the event the early `app.html` listener captured before this store
+	// initialised: `beforeinstallprompt` fires once during initial load, well
+	// before the app layout calls `initA2hs`, so a listener registered only here
+	// misses it and `canInstall` never flips true. Keep listening below for any
+	// later re-fire.
+	const earlyHolder = window as unknown as {
+		__viciDeferredInstallPrompt?: BeforeInstallPromptEvent;
+	};
+	const earlyPrompt = earlyHolder.__viciDeferredInstallPrompt;
+
+	if (nonNullish(earlyPrompt)) {
+		state.update((s) => ({ ...s, deferredPrompt: earlyPrompt }));
+		// The store now owns the single-use event; drop the global so a stale
+		// reference doesn't linger for the tab's lifetime.
+		delete earlyHolder.__viciDeferredInstallPrompt;
+	}
 
 	window.addEventListener('beforeinstallprompt', (event: Event) => {
 		// Suppress Chrome's mini-infobar; we drive the install from our own UI.
