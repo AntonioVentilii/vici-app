@@ -274,18 +274,31 @@ interface AnalyticsEventExportRow {
 	ok?: boolean;
 }
 
+/** Parse the exclusive `updated_at` cursor. Tolerates absent/whitespace/
+ * non-numeric input by restarting from the beginning rather than throwing a
+ * low-signal BigInt error on a malformed cursor. */
+const parseCursorNs = (raw?: string): bigint => {
+	const trimmed = raw?.trim() ?? '';
+
+	return /^\d+$/.test(trimmed) ? BigInt(trimmed) : -1n;
+};
+
 /**
  * Admin-gated raw-event export for the cockpit warehouse. Returns the next page
- * of `events` ordered by `(updated_at, key)` strictly after `afterUpdatedAtNs`,
- * flattened. The cockpit applies its own keyset cursor + idempotent upsert, so a
- * page boundary that repeats a same-`updated_at` row is safe. "List then process
- * in code" mirrors `getAnalyticsSummaryFn`.
+ * of `events` ordered by `(updated_at, key)`, flattened, strictly after the
+ * `(afterUpdatedAtNs, afterKey)` keyset cursor. The `key` tie-breaker is what
+ * makes a page boundary that splits a group of same-`updated_at` docs safe — the
+ * next call resumes mid-group instead of skipping the rest. The cockpit advances
+ * the cursor from the last returned row's `(updatedAtNs, key)`. "List then
+ * process in code" mirrors `getAnalyticsSummaryFn`.
  */
 export const getAnalyticsEventsFn = ({
 	afterUpdatedAtNs,
+	afterKey,
 	limit
 }: {
 	afterUpdatedAtNs?: string;
+	afterKey?: string;
 	limit: number;
 }): { rows: AnalyticsEventExportRow[]; hasMore: boolean } => {
 	const caller = msgCaller();
@@ -297,12 +310,17 @@ export const getAnalyticsEventsFn = ({
 	const admin = adminCaller();
 	const { items } = listDocsStore({ collection: Collection.EVENTS, caller: admin, params: {} });
 
-	const after =
-		isNullish(afterUpdatedAtNs) || afterUpdatedAtNs === '' ? -1n : BigInt(afterUpdatedAtNs);
-	const cap = Math.min(Math.max(1, Math.floor(limit)), MAX_EXPORT_LIMIT);
+	const afterNs = parseCursorNs(afterUpdatedAtNs);
+	const afterKeyText = afterKey?.trim() ?? '';
+	const safeLimit = Number.isFinite(limit) ? Math.floor(limit) : MAX_EXPORT_LIMIT;
+	const cap = Math.min(Math.max(1, safeLimit), MAX_EXPORT_LIMIT);
 
 	const ordered = items
-		.filter(([, doc]) => (doc.updated_at ?? ZERO) > after)
+		.filter(([key, doc]) => {
+			const u = doc.updated_at ?? ZERO;
+
+			return u === afterNs ? key > afterKeyText : u > afterNs;
+		})
 		.sort(([ak, ad], [bk, bd]) => {
 			const au = ad.updated_at ?? ZERO;
 			const bu = bd.updated_at ?? ZERO;

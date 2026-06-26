@@ -99,6 +99,7 @@ const getAffiliationStats = async (
 
 const AppGetAnalyticsEventsArgsSchema = j.strictObject({
 	afterUpdatedAtNs: j.optional(j.string()),
+	afterKey: j.optional(j.string()),
 	limit: j.number()
 });
 const AppGetAnalyticsEventsResultSchema = j.strictObject({

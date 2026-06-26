@@ -133,7 +133,8 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AppGetAnalyticsEventsArgs = IDL.Record({
 		after_updated_at_ns: IDL.Opt(IDL.Text),
-		limit: IDL.Float64
+		limit: IDL.Float64,
+		after_key: IDL.Opt(IDL.Text)
 	});
 	const AppGetAnalyticsEventsResult = IDL.Record({
 		rows: IDL.Vec(

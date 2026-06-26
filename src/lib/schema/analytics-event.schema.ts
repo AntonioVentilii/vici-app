@@ -190,11 +190,14 @@ export const AnalyticsSummarySchema = j.strictObject({
 });
 
 /** Args for `getAnalyticsEvents` — keyset cursor + page size for the cockpit's
- * warehouse ingest. `afterUpdatedAtNs` is the EXCLUSIVE lower bound (the last
- * synced doc's `updated_at`, as text — nat64 exceeds JS safe-int); absent/empty
- * starts from the beginning. */
+ * warehouse ingest. The cursor is the `(updated_at, key)` pair of the last
+ * synced doc: `afterUpdatedAtNs` is the EXCLUSIVE `updated_at` lower bound (as
+ * text — nat64 exceeds JS safe-int) and `afterKey` breaks ties between docs that
+ * share that `updated_at`. Both absent/empty starts from the beginning. The
+ * cockpit advances the cursor from the last returned row's `(updatedAtNs, key)`. */
 export const GetAnalyticsEventsArgsSchema = j.strictObject({
 	afterUpdatedAtNs: j.optional(j.string()),
+	afterKey: j.optional(j.string()),
 	limit: j.number()
 });
 

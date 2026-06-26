@@ -138,6 +138,7 @@ export interface AppGetAffiliationStatsResult {
 export interface AppGetAnalyticsEventsArgs {
 	after_updated_at_ns: [] | [string];
 	limit: number;
+	after_key: [] | [string];
 }
 export interface AppGetAnalyticsEventsResult {
 	rows: Array<{
