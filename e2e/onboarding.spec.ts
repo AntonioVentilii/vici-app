@@ -25,7 +25,7 @@ test.describe('pre-sign-in onboarding', () => {
 
 		await page.goto('/signup');
 
-		await expect(home.onboardingFlow).toBeVisible();
+		await expect(home.onboarding).toBeVisible();
 
 		// Type a unique handle (collision-proof across runs) and let the live
 		// availability probe clear it — the dev provider button stays disabled

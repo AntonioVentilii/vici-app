@@ -2,7 +2,7 @@ import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
 
 /**
  * Static demo markets shared by the public `/welcome` landing grid and
- * the pre-sign-in `OnboardingFlow`. Both surfaces render hand-curated
+ * the pre-sign-in onboarding. Both surfaces render hand-curated
  * "what the live deck feels like" cards; centralising the fixture
  * keeps IDs, categories, and yes-probabilities in lock-step so a tweak
  * here updates both surfaces.
