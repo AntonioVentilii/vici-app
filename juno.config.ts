@@ -21,6 +21,7 @@ enum JunoDatastoreCollection {
 	ACTIVITIES = 'activities',
 	ACTIVITY_REACTIONS = 'activity_reactions',
 	ACTIVITY_REACTION_COUNTS = 'activity_reaction_counts',
+	RESOLVED_RESULTS = 'resolved_results',
 	VXP_ONBOARDING = 'vxp_onboarding',
 	VXP_AWARDS = 'vxp_awards',
 	REFERRAL_CODES = 'referral_codes',
@@ -162,6 +163,18 @@ export default defineConfig(({ mode }) => ({
 				// counts from `activity_reactions` on demand.
 				{
 					collection: JunoDatastoreCollection.ACTIVITY_REACTION_COUNTS,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
+				},
+				// Per-participant resolved-result rows for the friend-readable
+				// results feed. Public read (the friend-scoped digest reads
+				// them); controllers write so only the satellite resolution hook
+				// (writing as admin, derived from the clearing settlement plan)
+				// can record a result — a client can't forge a win. Rows past the
+				// retention horizon are pruned by the controllers-only cleanup.
+				{
+					collection: JunoDatastoreCollection.RESOLVED_RESULTS,
 					memory: 'stable',
 					read: 'public',
 					write: 'controllers'
