@@ -27,6 +27,16 @@ export const Collection = {
 	 */
 	ACTIVITY_REACTION_COUNTS: collections.ACTIVITY_REACTION_COUNTS,
 	/**
+	 * Per-participant resolved-result rows for the friend-readable results feed. One doc per
+	 * `(owner, market)` resolved call, keyed `${owner}#${marketId}`, holding that participant's
+	 * outcome (win/loss), side, signed net VXP, and the resolution time. Public read; controllers
+	 * write — only the satellite resolution hook writes it (as admin, derived from the clearing
+	 * settlement plan), so a user cannot forge a win for themselves or a friend. Bulk-read
+	 * friend-scoped by the digest consumer over an owner-prefix scan; rows past the retention horizon
+	 * are pruned by the controllers-only cleanup.
+	 */
+	RESOLVED_RESULTS: collections.RESOLVED_RESULTS,
+	/**
 	 * Server-driven VXP new-user ladder state (owed vs paid); written from satellite hooks.
 	 */
 	VXP_ONBOARDING: collections.VXP_ONBOARDING,

@@ -15,7 +15,7 @@ type AppGetAffiliationStatsResult = record { stats : opt record { affiliation_id
 
 type AppGetAnalyticsSummaryArgs = record { days : float64 };
 
-type AppGetAnalyticsSummaryResult = record { rows : vec record { day : float64; start : float64; name : variant { session_started; signed_up; signed_in; signed_out; provider_linked; onboarding_started; onboarding_step; handle_checked; onboarding_completed; flow_session_started; flow_swipe; flow_card_expanded; flow_completed; flow_abandoned; sound_toggled; market_viewed; market_searched; market_shared; watchlist_added; watchlist_removed; orderbook_viewed; market_translation_toggled; position_taken; position_closed; prediction_created; order_placed; order_cancelled; resolution_proposed; resolution_confirmed; resolution_disputed; payout_settled; referral_sent; referral_link_copied; referral_redeemed; referral_converted; vxp_awarded; streak_milestone; faucet_claimed; transactions_viewed; transactions_filtered; friend_request_sent; friend_feed_reaction; league_created; league_joined; league_invite_sent; battle_proposed; battle_accepted; battle_declined; battle_expired; battle_resolved; battle_viewed; comment_posted; chat_sent; affiliation_set; affiliation_removed; school_picker_opened; school_picked; school_verify_email_submitted; school_verify_code_submitted; delete_flow_opened; delete_confirmed; delete_succeeded; exit_signal; notification_opened; app_error; perf_metric }; count : float64 } };
+type AppGetAnalyticsSummaryResult = record { rows : vec record { day : float64; start : float64; name : variant { session_started; signed_up; signed_in; signed_out; provider_linked; onboarding_started; onboarding_step; handle_checked; onboarding_completed; flow_session_started; flow_swipe; flow_card_expanded; flow_completed; flow_abandoned; sound_toggled; market_viewed; market_searched; market_shared; watchlist_added; watchlist_removed; orderbook_viewed; market_translation_toggled; position_taken; position_closed; prediction_created; order_placed; order_cancelled; resolution_proposed; resolution_confirmed; resolution_disputed; payout_settled; referral_sent; referral_link_copied; referral_redeemed; referral_converted; vxp_awarded; streak_milestone; faucet_claimed; transactions_viewed; transactions_filtered; friend_request_sent; friend_feed_reaction; league_created; league_joined; league_invite_sent; battle_proposed; battle_accepted; battle_declined; battle_expired; battle_resolved; battle_viewed; comment_posted; chat_sent; leaderboard_viewed; affiliation_set; affiliation_removed; school_picker_opened; school_picked; school_verify_email_submitted; school_verify_code_submitted; delete_flow_opened; delete_confirmed; delete_succeeded; exit_signal; notification_opened; pwa_install_prompted; pwa_install_accepted; pwa_install_dismissed; app_error; perf_metric }; count : float64 } };
 
 type AppGetCurrentTournamentResult = record { tournament : opt record { id : text; month_start_ms : float64; month_end_ms : float64; bracket_size : float64; state : variant { in_flight; concluded }; seeded_league_ids : vec text; created_at_ms : float64 }; matches : vec record { tournament_id : text; round : variant { r1; quarter; semifinal; final }; index : float64; from_league_id : opt text; to_league_id : opt text; from_start_calls : opt float64; from_start_wins : opt float64; to_start_calls : opt float64; to_start_wins : opt float64; from_acc : opt float64; to_acc : opt float64; winner_league_id : opt text; start_ms : float64; end_ms : float64 } };
 
@@ -62,6 +62,10 @@ type AppListFollowingResult = record { items : vec record { category : variant {
 type AppListFriendRecommendedLeaguesResult = record { items : vec record { league : record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; emblem : opt text; privacy : variant { private; invite; open }; image_url : opt text }; member_count : float64; friend_members : vec text } };
 
 type AppListFriendRequestsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
+
+type AppListFriendResolvedResultsArgs = record { friends : vec text };
+
+type AppListFriendResolvedResultsResult = record { items : vec record { owner : text; market_id : text; title : text; side : text; outcome : variant { win; loss }; net_vxp : float64; resolved_at_ms : float64 } };
 
 type AppListFriendsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
@@ -141,6 +145,8 @@ type AppFollowUserArgs = record { target : text };
 
 type AppHibernateMyAccountResult = record { ok : bool; reason : opt variant { no_profile; deleted } };
 
+type AppPruneResolvedResultsResult = record { pruned : float64 };
+
 type AppRecomputeActivityReactionCountsResult = record { recomputed : float64 };
 
 type AppRecordFlowSwipeArgs = record { day_key : text };
@@ -173,7 +179,7 @@ type AppSubmitSchoolResult = record { submission_id : text };
 
 type AppSweepExpiredDeletionsResult = record { swept : float64 };
 
-type AppTrackEventsArgs = record { events : vec record { name : variant { session_started; signed_up; signed_in; signed_out; provider_linked; onboarding_started; onboarding_step; handle_checked; onboarding_completed; flow_session_started; flow_swipe; flow_card_expanded; flow_completed; flow_abandoned; sound_toggled; market_viewed; market_searched; market_shared; watchlist_added; watchlist_removed; orderbook_viewed; market_translation_toggled; position_taken; position_closed; prediction_created; order_placed; order_cancelled; resolution_proposed; resolution_confirmed; resolution_disputed; payout_settled; referral_sent; referral_link_copied; referral_redeemed; referral_converted; vxp_awarded; streak_milestone; faucet_claimed; transactions_viewed; transactions_filtered; friend_request_sent; friend_feed_reaction; league_created; league_joined; league_invite_sent; battle_proposed; battle_accepted; battle_declined; battle_expired; battle_resolved; battle_viewed; comment_posted; chat_sent; affiliation_set; affiliation_removed; school_picker_opened; school_picked; school_verify_email_submitted; school_verify_code_submitted; delete_flow_opened; delete_confirmed; delete_succeeded; exit_signal; notification_opened; app_error; perf_metric }; session_id : text; path : opt text; market_id : opt text; series_id : opt text; league_id : opt text; battle_id : opt text; source : opt text; label : opt text; step : opt float64; value : opt float64; count : opt float64; duration_ms : opt float64; ok : opt bool; occurred_at_ms : opt float64 } };
+type AppTrackEventsArgs = record { events : vec record { name : variant { session_started; signed_up; signed_in; signed_out; provider_linked; onboarding_started; onboarding_step; handle_checked; onboarding_completed; flow_session_started; flow_swipe; flow_card_expanded; flow_completed; flow_abandoned; sound_toggled; market_viewed; market_searched; market_shared; watchlist_added; watchlist_removed; orderbook_viewed; market_translation_toggled; position_taken; position_closed; prediction_created; order_placed; order_cancelled; resolution_proposed; resolution_confirmed; resolution_disputed; payout_settled; referral_sent; referral_link_copied; referral_redeemed; referral_converted; vxp_awarded; streak_milestone; faucet_claimed; transactions_viewed; transactions_filtered; friend_request_sent; friend_feed_reaction; league_created; league_joined; league_invite_sent; battle_proposed; battle_accepted; battle_declined; battle_expired; battle_resolved; battle_viewed; comment_posted; chat_sent; leaderboard_viewed; affiliation_set; affiliation_removed; school_picker_opened; school_picked; school_verify_email_submitted; school_verify_code_submitted; delete_flow_opened; delete_confirmed; delete_succeeded; exit_signal; notification_opened; pwa_install_prompted; pwa_install_accepted; pwa_install_dismissed; app_error; perf_metric }; session_id : text; path : opt text; market_id : opt text; series_id : opt text; league_id : opt text; battle_id : opt text; source : opt text; label : opt text; step : opt float64; value : opt float64; count : opt float64; duration_ms : opt float64; ok : opt bool; occurred_at_ms : opt float64 } };
 
 type AppTrackEventsResult = record { accepted : float64 };
 
@@ -218,6 +224,7 @@ service : {
 	app_list_following : () -> (AppListFollowingResult) query;
 	app_list_friend_recommended_leagues : () -> (AppListFriendRecommendedLeaguesResult) query;
 	app_list_friend_requests : () -> (AppListFriendRequestsResult) query;
+	app_list_friend_resolved_results : (AppListFriendResolvedResultsArgs) -> (AppListFriendResolvedResultsResult) query;
 	app_list_friends : () -> (AppListFriendsResult) query;
 	app_list_leaderboard : () -> (AppListLeaderboardResult) query;
 	app_list_league_battles : (AppListLeagueBattlesArgs) -> (AppListLeagueBattlesResult) query;
@@ -244,6 +251,7 @@ service : {
 	app_delete_my_account : (AppDeleteMyAccountArgs) -> (AppDeleteMyAccountResult);
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_hibernate_my_account : () -> (AppHibernateMyAccountResult);
+	app_prune_resolved_results : () -> (AppPruneResolvedResultsResult);
 	app_recompute_activity_reaction_counts : () -> (AppRecomputeActivityReactionCountsResult);
 	app_record_flow_swipe : (AppRecordFlowSwipeArgs) -> (AppRecordFlowSwipeResult);
 	app_recover_my_account : () -> (AppRecoverMyAccountResult);

@@ -101,6 +101,27 @@ liker. See
 [`specs/2026-06-14-feat-like-received-notifications.md`](./spec-driven-development/specs/2026-06-14-feat-like-received-notifications.md)
 (the like-received notification).
 
+### Friend-readable resolved results — the per-participant outcome feed
+
+When a market resolves, the satellite records one **per-participant**
+result row in the `resolved_results` collection — that participant's
+outcome (win / loss), the side they held, their signed net VXP, and the
+resolution time, keyed `${owner}#${marketId}`. The rows are written
+server-side from the clearing settlement plan at resolution time
+(controllers-write, mirroring `activity_reaction_counts`), so a user
+cannot forge a win for themselves or a friend. The collection is
+public-read and consumed friend-scoped — a single owner-prefix scan over
+a caller's friend set, never one call per friend — and is the data source
+for the friend results digest. There is **no source for a friend's
+per-call outcome otherwise**: clearing trade-history is caller-scoped, and
+the single settlement activity row is the resolver's market-level result,
+not a per-participant one. Rows past the retention horizon
+(`RESOLVED_RESULTS_RETENTION_MS`, a calendar month plus a grace margin)
+are pruned by a controllers-only cleanup. The collection has no
+user-visible surface on its own; the digest that renders it ships
+separately. See
+[`specs/2026-06-25-feat-resolved-results-collection.md`](./spec-driven-development/specs/2026-06-25-feat-resolved-results-collection.md).
+
 ### Market odds — skeleton while the book loads
 
 A market's YES/NO odds are the live order-book mid. Until that book has
@@ -243,6 +264,37 @@ the foot rather than riding join order or role to the top. Decision
 record:
 [`specs/2026-06-15-fix-league-rank-consistency.md`](./spec-driven-development/specs/2026-06-15-fix-league-rank-consistency.md).
 
+### Global leaderboard — qualify gate + confidence-adjusted ranking
+
+The global leaderboard (Arena → Leaderboard) does not rank on raw
+accuracy, which would let a one-and-done predictor (100% on a single
+call) sit above a proven 90%-of-50 record. Two guards apply, both over
+the same per-window slice the board already reads from the clearing
+canister:
+
+- **Qualify gate.** A predictor must have at least a minimum number of
+  **settled calls** to be ranked. Below it they are **provisional**:
+  excluded from the ranked podium/list and shown instead in a separate
+  **Provisional** section with `{done}/{min} to qualify` progress, so a
+  newcomer sees a path rather than a phantom #1. The threshold is a
+  named parameter (default 10, in
+  [`standings.constants.ts`](../../src/lib/constants/standings.constants.ts))
+  and is exposed live in the dev Tweaks panel so it can be tuned without
+  a deploy.
+- **Confidence-adjusted ranking.** Qualified predictors are ordered by a
+  **Bayesian-shrinkage score**, not raw accuracy: a win rate is blended
+  with a population prior weighted by sample size, so a thin-but-qualified
+  record decays toward the mean instead of topping the board. A 10/11
+  (≈91%) record therefore ranks below a 45/50 (90%) record.
+
+Every leaderboard row — podium tile and list row — shows the predictor's
+**call count** as the trust signal behind the score. Ranks are the
+1-based position in the shrinkage order, not the clearing canister's
+net-P&L rank (the Dash "Top X%" rank tile still reads the P&L rank — a
+known, deliberate inconsistency until accuracy ranking moves into the
+canister). Decision record:
+[`specs/2026-06-25-impr-leaderboard-integrity.md`](./spec-driven-development/specs/2026-06-25-impr-leaderboard-integrity.md).
+
 ### Battles — accuracy face-offs that resolve themselves
 
 A **battle** is a time-bound accuracy face-off between two leagues. The
@@ -380,3 +432,30 @@ re-sees the tips. Shown and dismissed both emit `onboarding_step`
 (`source: 'surface_tip' | 'surface_tip_dismiss'`, `label` = the surface).
 Decision record:
 [`specs/2026-06-25-feat-onboarding-surface-tips.md`](./spec-driven-development/specs/2026-06-25-feat-onboarding-surface-tips.md).
+
+### Add to Home Screen — install VICI as an app
+
+A mobile user can add VICI to their home screen so it launches
+full-screen, like a native app. The ask appears in two calm,
+non-interruptive places and **never** as an auto-popup over Flow: a
+permanent **Settings → Preferences** row and a contextual **install row on
+the end-of-session summary** (`FlowEnd`). The install sheet adapts to the
+platform: on Android/Chrome it captures the browser's `beforeinstallprompt`
+(suppressing the mini-infobar) and a single CTA replays it as the native
+one-tap install dialog; on iOS — where no install API exists — it shows the
+two manual steps (tap Share, then choose Add to Home Screen). Once
+installed (the native accept, the `appinstalled` event, or a later launch
+detected as standalone) every prompt is suppressed.
+
+Both surfaces are gated on `canInstall` (mobile, not already installed, not
+already running standalone), so they are hidden on desktop and inside an
+installed PWA. The Settings row is always available when `canInstall`
+holds; the FlowEnd row additionally honours trigger thresholds — it appears
+at a lifetime call count of 15 or more, or 10 or more on a second-or-later
+visit — and respects a 14-day cool-off after a dismissal plus a
+once-per-session guard. The install funnel is instrumented with
+`pwa_install_prompted` / `_accepted` / `_dismissed`, carrying the
+originating surface and the platform. The manifest, icons, iOS meta, and
+the pre-paint standalone/iOS detection in `app.html` were already shipped;
+this layer adds only the install behaviour. Decision record:
+[`specs/2026-06-25-feat-pwa-install.md`](./spec-driven-development/specs/2026-06-25-feat-pwa-install.md).
