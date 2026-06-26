@@ -12,7 +12,7 @@
 	import { startGuestSession } from '$lib/stores/guest.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
-	import { userStore } from '$lib/stores/user.store';
+	import { setAuthBusy, userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
 
 	// Signed-in routing: a brand-new authenticated user who landed on
@@ -251,7 +251,20 @@
 			return;
 		}
 
+		// A signed-out visitor who just authenticated via an in-page provider
+		// (passkey / passkey-backed email). `signUp()` has resolved, but Juno's
+		// `onAuthStateChange` hasn't hydrated the profile yet, so the
+		// `authenticated` derived hasn't flipped — without an explicit nav the
+		// page would sit on /signup until hydration swaps in the Finish button,
+		// forcing a second tap (and a second round of network calls). Stash the
+		// picks and route straight into the app, mirroring the redirect-provider
+		// (Google) callback: the (app) layout paints its auth-hydration loader,
+		// then drains the stash (claiming the handle) once the profile lands.
+		// `setAuthBusy(true)` marks the handshake in-flight so the (app) auth
+		// gate doesn't bounce to /signin during that window.
 		handleCompletePreAuth(result);
+		setAuthBusy(true);
+		void goto(resolve(AppPath.Flow), { replaceState: true });
 	};
 </script>
 
