@@ -14,6 +14,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { isDev, isNotSkylab, isProd } from '$lib/env/app.env';
+	import { track } from '$lib/services/analytics.services';
 	import { AppleSignInCancelledError, signInWithApple } from '$lib/services/apple-signin.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -48,7 +49,10 @@
 	type ProviderId = 'apple' | 'google' | 'email' | 'ii' | 'passkey' | 'dev';
 
 	// Per-provider visibility flags — show/hide the button entirely.
-	const APPLE_LOGIN_ENABLED = true;
+	// Apple is flag-off: returning V3 users never created an account with it,
+	// so offering it was misleading. `onApple` / `apple-signin.services` / the
+	// Apple icon + keys stay dormant behind this flag (reversible).
+	const APPLE_LOGIN_ENABLED = false;
 	const GOOGLE_LOGIN_ENABLED = true;
 	const EMAIL_LOGIN_ENABLED = true;
 	const INTERNET_IDENTITY_LOGIN_ENABLED = false;
@@ -126,6 +130,16 @@
 
 		try {
 			await run();
+
+			// Fire at the success boundary so the now-authenticated principal is
+			// stitched onto the event (identity is absent before sign-in). `email`
+			// resolves to a passkey ceremony but stays a distinct user-facing
+			// choice; the address itself is never a prop (no PII). The sign-up
+			// counterpart belongs to the out-of-scope onboarding funnel.
+			if (!isSignUp) {
+				track({ name: 'signed_in', source: 'signin_screen', label: id });
+			}
+
 			onSuccess?.();
 		} catch (err: unknown) {
 			console.error(`${id} sign-in failed`, err);
@@ -343,7 +357,7 @@
 	<!-- Google — live. -->
 	{#if GOOGLE_LOGIN_ENABLED}
 		<button
-			class="signin-provider-btn is-onboarding ob-cream"
+			class="signin-provider-btn is-onboarding ob-dark"
 			class:is-faded={isFaded}
 			class:is-loading={signingIn === 'google'}
 			aria-busy={signingIn === 'google'}
@@ -394,7 +408,7 @@
 						id="signin-email-input"
 						class="signin-email-input num"
 						autocapitalize="off"
-						autocomplete="email"
+						autocomplete="email webauthn"
 						autofocus
 						disabled={isBusy || !productionAvailable}
 						inputmode="email"
