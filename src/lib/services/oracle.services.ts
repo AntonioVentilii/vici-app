@@ -53,21 +53,22 @@ export const loadViciOracle = async ({
 };
 
 /**
- * An oracle settler paired with its handle for admin UIs. `handle` is the
- * profile nickname when the principal has a real profile, and `undefined`
- * when none exists — settlers can be granted by raw principal, so a handle
+ * An oracle settler paired with its nickname for admin UIs. Mirrors the
+ * `UserRoleEntry` shape so the settlers list can reuse the Roles list layout.
+ * `nickname` is set when the principal has a real profile, and `undefined`
+ * when none exists — settlers can be granted by raw principal, so the nickname
  * is best-effort enrichment, not a guarantee.
  */
 export interface OracleSettlerEntry {
 	principal: PrincipalText;
-	handle?: string;
+	nickname?: string;
 }
 
 /**
- * Resolves each settler principal to its handle via the satellite profile
+ * Resolves each settler principal to its nickname via the satellite profile
  * query, returning entries that carry both. Reads the raw satellite result
  * (not the `getProfile` shell, whose fallback nickname is a shortened
- * principal) so a missing profile yields `handle: undefined` rather than a
+ * principal) so a missing profile yields `nickname: undefined` rather than a
  * synthetic stand-in. Per-principal lookups are best-effort: a failed or
  * empty one degrades to the bare principal.
  */
@@ -76,9 +77,11 @@ export const resolveOracleSettlers = (principals: PrincipalText[]): Promise<Orac
 		principals.map(async (principal): Promise<OracleSettlerEntry> => {
 			try {
 				const { profile } = await functions.getProfile({ principalStr: principal });
-				const handle = profile?.nickname.trim();
+				const nickname = profile?.nickname.trim();
 
-				return nonNullish(handle) && handle.length > 0 ? { principal, handle } : { principal };
+				return nonNullish(nickname) && nickname.length > 0
+					? { principal, nickname }
+					: { principal };
 			} catch {
 				return { principal };
 			}

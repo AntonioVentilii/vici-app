@@ -217,12 +217,12 @@
 					{#each settlers as settler (settler.principal)}
 						<li class="px-6 py-4">
 							<div class="min-w-0">
-								{#if settler.handle}
+								{#if settler.nickname}
 									<span class="text-foreground block text-sm font-semibold">
-										{settler.handle}
+										{settler.nickname}
 									</span>
 								{/if}
-								<span class="text-muted-foreground text-sm" class:font-medium={!settler.handle}>
+								<span class="text-muted-foreground text-sm" class:font-medium={!settler.nickname}>
 									<CopyableAddress
 										address={settler.principal}
 										label={t({ locale: $localeStore, key: 'profile.dashboard.principal' })}
