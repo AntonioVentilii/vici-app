@@ -1324,6 +1324,9 @@ export const itMessages = {
 	'inbox.battle_accepted.body': '{opponent} ha accettato la tua battaglia. Si comincia.',
 	'inbox.battle_declined.title': 'Sfida rifiutata',
 	'inbox.battle_declined.body': '{opponent} ha rifiutato la tua battaglia.',
+	'inbox.battle_incoming.title': 'Nuova sfida tra leghe',
+	'inbox.battle_incoming.body':
+		'{opponent} ha sfidato la tua lega a una sfida di precisione di {days} giorni.',
 	'leagues.battle.action.retracting': 'Ritiro…',
 	'leagues.battle.action.starting': 'Inizio…',
 	'leagues.battle.propose.opponent_resolved': 'Avversario',

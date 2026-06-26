@@ -329,9 +329,14 @@ at once** (a far client-side rail of 100 simultaneous live battles
 guards against abuse); incoming challenges surface as a "Battle requests"
 list on the league page even while other battles are live, so a busy
 league can still accept or decline. Because Juno docs aren't pushed live
-across users, the proposer is told their challenge was accepted or
-declined via an inbox notification derived from the battle's own state.
-(Duels — principal-vs-principal — keep the older **proposed → accepted →
+across users, both sides of the battle are told what they'd otherwise miss
+via inbox notifications derived from the battle's own state: the challenged
+league's owner gets an **incoming-challenge** card ("{opponent} challenged
+your league to a {days}-day accuracy face-off") that deep-links to the
+league page where the Accept / Decline CTA lives, and the proposer is told
+their challenge was accepted or declined. The cards appear the next time
+the recipient's client reads their leagues' battles and age out of a 3-day
+window. (Duels — principal-vs-principal — keep the older **proposed → accepted →
 in_flight → resolved** manual-score path and aren't user-creatable yet.)
 
 **Live battles are discoverable, and you can see who's winning before
