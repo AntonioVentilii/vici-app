@@ -427,15 +427,38 @@ to bound farming. Earlier these grants were display-only by design (the
 deferred real-credit path. Decision record:
 [`specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md`](./spec-driven-development/specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md).
 
+### Onboarding — one screen: claim a handle and sign up
+
+The default new-user flow is a single screen (`OnboardingV3`, gated by
+`ONBOARDING_V3_ENABLED`, default on): the user claims a handle (live
+availability check with a Roman-pool suggestion as the empty-field
+placeholder) and signs up with any enabled provider on one surface,
+anchored by the "1,500 VXP starter pack" reward chip. Team selection is
+deferred to the post-signup Profile, so the onboarding handoff always
+carries a `null` team/side — the first prediction now happens free in the
+app. The screen also links to `/signin` ("Already a member?") and offers a
+"Skip — preview first, sign up later" escape into the signed-out Flow
+preview. The earlier multi-beat flow (team → first call → handle → auth)
+is kept in the tree behind the off path until the one-screen flow is
+verified in production; flipping the flag off restores it intact.
+
+The screen reuses, rather than re-implements, the handle machinery (live
+availability probe, session-taken cache, claim-time re-check), the
+provider stack, and the starter-VXP source; analytics reuse the existing
+taxonomy — `onboarding_started` and `handle_checked` fire with
+`label: 'v3'`, and `onboarding_completed` still fires once via the drain
+with `ok` (team-picked) `false`.
+
 ### Onboarding — picks persist across every sign-in provider
 
-A new user's onboarding picks — backed team/country, first call, handle,
-and the completion flag — land on the new profile no matter which sign-in
-provider finishes the 3-beat flow. The picks are stashed to local storage
-the moment the user reaches the auth step (Beat 3), **before** any
-provider runs, so a full-page OAuth redirect (Google) can't carry off the
-volatile in-flight state — the post-sign-in drain reads the stash and
-applies it. The "is this a brand-new account?" decision the drain uses to
+A new user's onboarding picks — handle and the completion flag (plus
+backed team/side when an older multi-beat path supplies them) — land on
+the new profile no matter which sign-in provider finishes the flow. The
+picks are stashed to local storage the moment an available handle is
+claimed (the auth gate), **before** any provider runs, so a full-page
+OAuth redirect (Google) can't carry off the volatile in-flight state —
+the post-sign-in drain reads the stash and applies it. The "is this a
+brand-new account?" decision the drain uses to
 avoid overwriting a returning user's saved profile is anchored to whether
 this browser session bootstrapped the profile, not a reactive flag a
 second auth pass could flip — so a genuine new user's picks are never
