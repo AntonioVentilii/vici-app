@@ -77,9 +77,10 @@
 
 	let custom = $state('');
 
-	// Sanitised view of the input — lowercased, out-of-charset characters
-	// stripped. The input renders this cleaned value, and it is what gets
-	// probed and claimed. An empty field falls back to the pool suggestion.
+	// Sanitised view of the input — NFC-normalised, out-of-charset characters
+	// stripped (case and accents are preserved; uniqueness folds them later).
+	// The input renders this cleaned value, and it is what gets probed and
+	// claimed. An empty field falls back to the pool suggestion.
 	const cleaned = $derived(sanitizeNickname(custom));
 	const selectedName = $derived(cleaned.length > 0 ? cleaned : suggestion);
 	// Whether the active selection is the pool placeholder (empty input). The
@@ -296,11 +297,19 @@
 		onComplete({ participantId: null, side: null, handle: selectedName });
 	};
 
-	// Stash the handle as soon as the user commits an available one (blur or
-	// the auth surface gaining interaction), so a Google redirect carries it
-	// through even though `onComplete` never fires for that provider.
+	// Write the pre-auth onboarding stash SYNCHRONOUSLY the moment an available
+	// handle is committed (input blur, or pointerdown on the auth surface), so
+	// a full-page redirect provider (Google) carries it through: the stash must
+	// already exist in `localStorage` before any provider handler can navigate
+	// away. A previous async re-check here could lose the race and never write.
+	// The post-sign-in drain re-probes the handle and resolves any TOCTOU
+	// collision, so no claim-time re-check is needed on this path.
 	const onCommitHandle = () => {
-		void stashHandle();
+		if (!availability.ok || selectedName.length === 0) {
+			return;
+		}
+
+		onPicksReady?.({ participantId: null, side: null, handle: selectedName });
 	};
 
 	const lockKey = $derived<MessageKey>(
@@ -425,7 +434,12 @@
 						</button>
 					{:else}
 						<div onpointerdowncapture={onCommitHandle}>
-							<SignInProviderStack handle={selectedName} mode="signup" onSuccess={onAuthSuccess} />
+							<SignInProviderStack
+								disabled={!availability.ok}
+								handle={selectedName}
+								mode="signup"
+								onSuccess={onAuthSuccess}
+							/>
 						</div>
 					{/if}
 				</div>
@@ -455,12 +469,14 @@
 					{t({ locale: $localeStore, key: 'onboarding.v3.skip' })}
 				</button>
 
-				<div class="ob-v3-signin">
-					{t({ locale: $localeStore, key: 'onboarding.v3.signin_prompt' })}
-					<button class="ob-v3-signin-link" onclick={onSignIn} type="button">
-						{t({ locale: $localeStore, key: 'onboarding.v3.signin_link' })}
-					</button>
-				</div>
+				{#if !authenticated}
+					<div class="ob-v3-signin">
+						{t({ locale: $localeStore, key: 'onboarding.v3.signin_prompt' })}
+						<button class="ob-v3-signin-link" onclick={onSignIn} type="button">
+							{t({ locale: $localeStore, key: 'onboarding.v3.signin_link' })}
+						</button>
+					</div>
+				{/if}
 
 				<div class="ob-v3-legal">
 					<span>{t({ locale: $localeStore, key: 'onboarding.v3.legal_currency' })}</span>
