@@ -2289,10 +2289,14 @@ export const esMessages = {
 	'arena.friends.error.send_failed_detail':
 		'No se pudo enviar la solicitud. Haz una captura y cuéntanoslo: {detail}',
 	'arena.friends.error.unfriend_failed': 'Error al eliminar amistad',
-	'arena.friends.feed.empty_a': 'Cuando tus amigos hagan una predicción, aparecerá aquí.',
+	'arena.friends.feed.empty_a':
+		'Cuando se resuelvan las predicciones de tus amigos, su historial aparecerá aquí.',
 	'arena.friends.feed.empty_b': 'Construyendo el historial en silencio.',
-	'arena.friends.feed.eyebrow': 'Actividad reciente',
+	'arena.friends.feed.eyebrow': 'Resultados recientes',
 	'arena.friends.feed.like': 'Me gusta',
+	'arena.friends.feed.resolved_many': '{count} predicciones resueltas',
+	'arena.friends.feed.resolved_one': '{count} predicción resuelta',
+	'arena.friends.feed.standout': 'incl. «{question}»',
 	'arena.friends.global.eyebrow': 'Ranking global',
 	'arena.friends.global.unranked': 'Sin clasificar',
 	'arena.friends.invite.cap_reached': 'Has alcanzado el límite de recompensas.',

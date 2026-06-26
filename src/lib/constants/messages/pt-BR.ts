@@ -2187,10 +2187,14 @@ export const ptBRMessages = {
 	'arena.friends.error.send_failed_detail':
 		'Não foi possível enviar o pedido. Tire um print e fale com a gente: {detail}',
 	'arena.friends.error.unfriend_failed': 'Falha ao desfazer amizade',
-	'arena.friends.feed.empty_a': 'Quando seus amigos previrem, aparecerá aqui.',
+	'arena.friends.feed.empty_a':
+		'Quando as previsões dos seus amigos forem resolvidas, o histórico aparece aqui.',
 	'arena.friends.feed.empty_b': 'Construindo o histórico em silêncio.',
-	'arena.friends.feed.eyebrow': 'Atividade recente',
+	'arena.friends.feed.eyebrow': 'Resultados recentes',
 	'arena.friends.feed.like': 'Curtir',
+	'arena.friends.feed.resolved_many': '{count} previsões resolvidas',
+	'arena.friends.feed.resolved_one': '{count} previsão resolvida',
+	'arena.friends.feed.standout': 'incl. «{question}»',
 	'arena.friends.global.eyebrow': 'Ranking global',
 	'arena.friends.global.unranked': 'Sem classificação',
 	'arena.friends.invite.cap_reached': 'Limite de recompensas atingido.',
