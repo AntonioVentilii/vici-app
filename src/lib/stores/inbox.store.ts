@@ -563,7 +563,13 @@ const inboxProgressStore = writable<InboxProgress>(loadInboxProgress());
 const updateInboxProgress = (updater: (current: InboxProgress) => InboxProgress): void => {
 	inboxProgressStore.update((current) => {
 		const next = updater(current);
-		setStorage({ key: INBOX_PROGRESS_STORAGE_KEY, value: next });
+
+		// `initInboxProgress` returns the same reference when nothing changed;
+		// skip the localStorage write in that case to avoid churning the key on
+		// every profile tick.
+		if (next !== current) {
+			setStorage({ key: INBOX_PROGRESS_STORAGE_KEY, value: next });
+		}
 
 		return next;
 	});
@@ -576,7 +582,9 @@ const updateInboxProgress = (updater: (current: InboxProgress) => InboxProgress)
  * card is fresh either way).
  */
 const milestoneWhen = ({ atMs, locale }: { atMs?: number; locale: AppLocale }): string =>
-	nonNullish(atMs)
+	// Guard `Number.isFinite` so a corrupt / hand-edited persisted stamp (NaN,
+	// Infinity) can't reach `BigInt(...)` and throw — fall back to "just now".
+	nonNullish(atMs) && Number.isFinite(atMs)
 		? formatRelativeAgoFromNs({
 				timestampNs: BigInt(Math.round(atMs)) * MILLISECOND_IN_NANOSECONDS,
 				locale
@@ -703,6 +711,14 @@ const acknowledgeStreak = (): void => {
  *   • lowers the streak marker when the run resets below it, so re-climbing
  *     re-notifies (the streak — unlike the monotonic level — breaks to SPARK).
  * The marker only moves *up* on acknowledge, which is what surfaces the card.
+ *
+ * On an owner change it reloads the marker from localStorage, which
+ * `reconcileIdentityScopedStorage` (run by `Authn` before the new profile is
+ * set) has already cleared on a real account switch — so the previous user's
+ * `seen*` markers can't suppress the next user's cards. (The other in-memory
+ * inbox stores only carry read-state and re-read on the next app load; this
+ * one gates card *visibility*, so it re-reads on the switch itself.)
+ *
  * Mounted from `NotifToastHost`'s `onMount` (beside `initInboxToasts`) so the
  * side-effect runs only while the shell is rendered; returns a teardown.
  */
@@ -711,7 +727,18 @@ export const initInboxProgress = (): (() => void) => {
 		return () => undefined;
 	}
 
-	return derived(userStore, ($user) => $user.profile).subscribe((profile) => {
+	let lastOwner: string | undefined;
+
+	return userStore.subscribe(($user) => {
+		const owner = $user.user?.owner;
+
+		if (owner !== lastOwner) {
+			lastOwner = owner;
+			inboxProgressStore.set(loadInboxProgress());
+		}
+
+		const { profile } = $user;
+
 		if (isNullish(profile)) {
 			return;
 		}

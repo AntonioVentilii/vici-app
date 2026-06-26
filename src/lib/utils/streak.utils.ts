@@ -29,9 +29,11 @@ export const stageForStreak = (days: number): FlameStage => {
 
 /**
  * Day-count thresholds at which the flame enters a new stage above SPARK —
- * the milestones worth celebrating. Mirrors the `stageForStreak` thresholds
- * (EMBER 3 / FLAME 7 / BLAZE 15 / INFERNO 30) and the
- * `streak_3 | streak_7 | streak_14 | streak_30` VXP award ladder. Ascending.
+ * the milestones worth celebrating. These are the `stageForStreak` stage
+ * thresholds (EMBER 3 / FLAME 7 / BLAZE 15 / INFERNO 30), so a milestone card
+ * lines up with a visible flame-stage change. (The `streak_N` VXP award ladder
+ * is close but not identical — its third tier is `streak_14`, not 15 — so the
+ * two are deliberately not coupled here.) Ascending.
  */
 export const STREAK_MILESTONES = [3, 7, 15, 30] as const;
 
