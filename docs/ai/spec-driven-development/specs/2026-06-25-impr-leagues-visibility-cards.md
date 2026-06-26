@@ -13,10 +13,9 @@ explain it inline. Today the create sheet renders three tight
 segmented buttons (`Private` / `Invite-only` / `Open`) with no
 explanation, so the owner has to already know what each means; the edit
 sheet already shows a label + description per row but as a plain list.
-This spec ports the prototype's `.league-vis-card` UI — radio dot,
-title, inline description — to the create sheet and aligns the edit
-sheet to the same card visual, **keeping the app's three visibility
-tiers** (the prototype's UI is adopted, its 2-tier model is not). Pure
+This spec introduces visibility cards — radio dot, title, inline
+description — on the create sheet and aligns the edit sheet to the same
+card visual, **keeping the app's three visibility tiers**. Pure
 frontend; no data-shape, satellite, or copy-meaning change.
 
 ## Context
@@ -37,8 +36,8 @@ middle tier is load-bearing, not cosmetic:
   `FriendRecommendedLeague` surfaces Open **and** Invite leagues to a
   member's friends; only Private is excluded.
 
-Collapsing to the prototype's two tiers would erase the Invite tier
-that both of these paths rely on. See **Decisions**.
+Collapsing to two tiers would erase the Invite tier that both of these
+paths rely on. See **Decisions**.
 
 The enum is
 [`src/lib/enums/league.ts`](../../../../src/lib/enums/league.ts)
@@ -48,28 +47,15 @@ The enum is
 
 - [`src/lib/components/leagues/CreateLeagueModal.svelte`](../../../../src/lib/components/leagues/CreateLeagueModal.svelte)
   — the create sheet. The privacy picker is the `.league-privacy-row`
-  fieldset (lines 233–250): a flex row of three `.league-privacy-btn`
-  segmented buttons rendering only `privacyLabel(option)`, no
-  description. `PRIVACIES` is ordered `[PRIVATE, INVITE, OPEN]` (line
-  48); `privacy` defaults to `LeaguePrivacy.INVITE` (lines 54, 120).
+  fieldset: a flex row of three `.league-privacy-btn` segmented buttons
+  rendering only `privacyLabel(option)`, no description. `PRIVACIES` is
+  ordered `[PRIVATE, INVITE, OPEN]`; `privacy` defaults to
+  `LeaguePrivacy.INVITE`.
 - [`src/lib/components/leagues/LeaguePrivacyModal.svelte`](../../../../src/lib/components/leagues/LeaguePrivacyModal.svelte)
   — the owner edit-privacy sheet. Already renders a `role="radiogroup"`
   list of `.league-privacy-row` buttons with `optionLabel` +
-  `optionDesc` (lines 140–156) and the loosen-to-Open confirm step
-  (40–46, 54–56, 96–101). Same three options, same order.
-
-**Prototype (UI source of truth only):**
-`/tmp/claude-0/-home-user-vici-app/aa6da7b5-7f1c-50be-8af4-82776f9f46b7/scratchpad/proto/VICI-V1.8-Handover/`
-
-- `screens.jsx` `CreateLeagueModal` (5516–5639): the visibility block
-  (5592–5605) maps options to `.league-vis-card` buttons, each a
-  `.league-vis-radio` dot + a column of `.league-vis-title` /
-  `.league-vis-sub`.
-- `app.css` (6004–6035): `.league-vis-card` / `.league-vis-card.active`
-  / `.league-vis-radio` / `.league-vis-title` / `.league-vis-sub` — the
-  card layout, the radio-dot active fill, and the accent active border.
-- `CHANGELOG.md` V1.8.46 (176–201): describes the card UI. **Its
-  2-tier model collapse does NOT transfer** (see Decisions).
+  `optionDesc` and the loosen-to-Open confirm step. Same three options,
+  same order.
 
 **i18n.** All required keys already exist in
 [`src/lib/constants/messages/en.ts`](../../../../src/lib/constants/messages/en.ts)
@@ -77,15 +63,14 @@ and the sibling catalogs, under the app's `leagues.*` namespace — no
 new keys needed:
 
 - Titles: `leagues.create.privacy_open` / `privacy_invite` /
-  `privacy_private` (1239–1241).
+  `privacy_private`.
 - Descriptions: `leagues.privacy.desc_open` / `desc_invite` /
-  `desc_private` (1247–1252) — already written for the edit sheet, now
-  reused by the create sheet too.
-- `leagues.create.label_privacy` (1235) for the fieldset legend.
+  `desc_private` — already written for the edit sheet, now reused by the
+  create sheet too.
+- `leagues.create.label_privacy` for the fieldset legend.
 
 The create sheet's current title-only render (`privacyLabel`) gains the
-description via the existing `desc_*` keys; nothing in the prototype's
-scattered `lg.*` namespace transfers.
+description via the existing `desc_*` keys.
 
 **Reuse first** (per
 [`reusability.md`](../../frontend/reusability.md)): the edit sheet
@@ -100,7 +85,7 @@ decisions); if one is later warranted it lands under
 ## Scope
 
 - **Create sheet privacy cards.** In `CreateLeagueModal.svelte`,
-  replace the `.league-privacy-row` segmented buttons (233–250) with a
+  replace the `.league-privacy-row` segmented buttons with a
   `role="radiogroup"` list of visibility cards mirroring the edit
   sheet: each option a `role="radio"` button carrying its title
   (`privacyLabel`) and inline description (a new local helper reading
@@ -148,10 +133,10 @@ privacy visibility`, `league create`, `league`.)
 ## Analytics
 
 `league_created` already exists in the taxonomy — in the TS union
-([`src/lib/types/analytics-event.ts`](../../../../src/lib/types/analytics-event.ts)
-line 130), the Zod mirror
-([`src/lib/schema/analytics-event.schema.ts`](../../../../src/lib/schema/analytics-event.schema.ts)
-line 61), and the generated `satellite_extension.did` — but a code
+([`src/lib/types/analytics-event.ts`](../../../../src/lib/types/analytics-event.ts)),
+the Zod mirror
+([`src/lib/schema/analytics-event.schema.ts`](../../../../src/lib/schema/analytics-event.schema.ts)),
+and the generated `satellite_extension.did` — but a code
 search shows it is **never fired** from app code (only present in
 declarations). This spec is a presentation refactor and does not by
 itself require new instrumentation; however, since the create flow is
@@ -176,10 +161,9 @@ visibility distribution the new cards drive.
 
 ## Design artifacts (frontend — optional)
 
-None. The card visual is fully specified by the prototype's
-`.league-vis-card` CSS (`app.css` 6004–6035) and the app's existing
+None. The card visual is fully specified by the app's existing
 `.league-privacy-row` description markup in `LeaguePrivacyModal.svelte`;
-the implementer ports against those rather than a fresh mock. The cards
+the implementer builds against that rather than a fresh mock. The cards
 use existing theme tokens (`--color-accent`, `--border-base`,
 `--bg-surface`, `--text-muted`), so they theme-swap with the rest of
 the app for free.
@@ -187,23 +171,22 @@ the app for free.
 ## Implementation outline
 
 1. **Create sheet markup** (`CreateLeagueModal.svelte`): replace the
-   `.league-privacy-row` fieldset body (237–249) with a
-   `role="radiogroup"` list of cards. Add a local `privacyDesc(value)`
-   helper alongside the existing `privacyLabel` (106–107), reading
-   `leagues.privacy.desc_${value}`. Each card: `role="radio"`,
-   `aria-checked={privacy === option}`, `onclick={() => (privacy =
-option)}`, a radio-dot span, and the title + description spans. Keep
-   `PRIVACIES` and the `privacy` state as-is.
-2. **Card styles**: port `.league-vis-card` / `.league-vis-radio` /
-   `.league-vis-title` / `.league-vis-sub` from the prototype's
-   `app.css` (6004–6035) into the component `<style>`, translated to the
-   app's tokens (`--color-accent` for active border/dot/title,
-   `--border-base`, `--bg-surface`, `--text-muted`). Remove the now-dead
-   `.league-privacy-row` / `.league-privacy-btn` rules (473–499).
+   `.league-privacy-row` fieldset body with a `role="radiogroup"` list
+   of cards. Add a local `privacyDesc(value)` helper alongside the
+   existing `privacyLabel`, reading `leagues.privacy.desc_${value}`.
+   Each card: `role="radio"`, `aria-checked={privacy === option}`,
+   `onclick={() => (privacy = option)}`, a radio-dot span, and the title
+   - description spans. Keep `PRIVACIES` and the `privacy` state as-is.
+2. **Card styles**: add the card rules (a `.league-vis-card` with a
+   radio-dot span, title, and sub-description) to the component
+   `<style>`, using the app's tokens (`--color-accent` for active
+   border/dot/title, `--border-base`, `--bg-surface`, `--text-muted`).
+   Remove the now-dead `.league-privacy-row` / `.league-privacy-btn`
+   rules.
 3. **Edit sheet alignment** (`LeaguePrivacyModal.svelte`): update the
-   existing `.league-privacy-row` list (140–156, styled 199–239) to the
-   same card visual (radio dot + accent active state) so the two
-   pickers match. Keep markup semantics (`radiogroup` / `radio` /
+   existing `.league-privacy-row` list to the same card visual (radio
+   dot + accent active state) so the two pickers match. Keep markup
+   semantics (`radiogroup` / `radio` /
    `aria-checked`) and **all** behaviour — the confirm step, `$effect`
    re-seed, `canSubmit` — unchanged.
 4. **Analytics** (pending decision permitting): in
@@ -274,17 +257,17 @@ league.id, label: privacy })`. No taxonomy change.
 - **Default tier on the create sheet = Open** (owner decision,
   2026-06-25). Overrides the spec's initial recommendation to keep
   Invite. New leagues are publicly listed and battle-eligible from
-  creation (prototype parity); owners can tighten to Invite/Private in
-  two taps. Implementation: set the `privacy` `$state` init and
-  `reset()` in `CreateLeagueModal.svelte` to `LeaguePrivacy.OPEN` (the
-  `league.ts` JSDoc note about an Invite default is now stale — update
-  it in the same PR).
-- **Keep the three-tier visibility model — do NOT adopt the
-  prototype's 2-tier collapse.** Handed down at spec creation
-  (2026-06-25). The prototype's V1.8.46 simplified Open / Invite /
-  Private down to Open / Private on the grounds that Invite and Private
-  were "nearly identical". In **this app** they are not: Invite has a
-  real, wired purpose distinct from both Open and Private —
+  creation; owners can tighten to Invite/Private in two taps.
+  Implementation: set the `privacy` `$state` init and `reset()` in
+  `CreateLeagueModal.svelte` to `LeaguePrivacy.OPEN` (the `league.ts`
+  JSDoc note about an Invite default is now stale — update it in the
+  same PR).
+- **Keep the three-tier visibility model — do NOT collapse to two
+  tiers.** Handed down at spec creation (2026-06-25). A two-tier model
+  would simplify Open / Invite / Private down to Open / Private on the
+  grounds that Invite and Private are "nearly identical". In **this
+  app** they are not: Invite has a real, wired purpose distinct from
+  both Open and Private —
   - battles gate to **Open only** (`battle.services.ts` `isLeagueOpen`),
     so Invite ≠ Open; and
   - Invite leagues **are** recommended to a member's friends
@@ -292,5 +275,5 @@ league.id, label: privacy })`. No taxonomy change.
     `isLeagueRecommendableToFriends`), so Invite ≠ Private.
     Collapsing would either leak Invite leagues into public battle pools
     (if merged into Open) or kill their friend-recommendation reach (if
-    merged into Private). We therefore port the prototype's **card UI
-    only** and keep all three tiers and their existing `leagues.*` copy.
+    merged into Private). We therefore change **only the card UI** and
+    keep all three tiers and their existing `leagues.*` copy.
