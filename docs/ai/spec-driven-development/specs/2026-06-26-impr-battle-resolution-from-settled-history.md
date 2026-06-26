@@ -240,33 +240,64 @@ principals are not logged as event props.
 
 ## Open questions
 
-- **Per-principal settled-call source.** `getUserTradeHistory` is
-  caller-scoped (own events only). Does icdc-core's clearing/registry
-  expose a query that returns, for an **arbitrary** principal, their
-  settled positions (win/loss + settle timestamp + series) in a domain?
-  If yes, use it. If no, derive from the market-wide fill tape
-  (`list_series_trade_history`) by netting each principal's position per
-  series against the series resolution — confirm the tape carries
-  per-fill principal + timestamp and that resolution outcome is readable
-  per series. This gates step 1 and the scalability story; may reshape
-  scope.
 - **"A call" definition.** Confirm a "settled call" for accuracy =
   one settled position per series per principal (matching how
   `calculateAndSyncStats` counts `isSettledEvent`), not per fill — so
-  multiple fills on one market count once.
+  multiple fills on one market count once. (Moot under leaderboard
+  option B below, which counts settlements server-side.)
+
+## Findings (gates the build)
+
+The per-principal settled-call source was investigated against the
+clearing canister's full query surface (`src/declarations/clearing/clearing.did`):
+
+- `get_trade_history () -> vec Event query` — **caller-scoped**, own
+  events only, no principal argument.
+- `list_leaderboard (ListLeaderboardParams) -> LeaderboardPage query` —
+  returns per-principal `win_count` / `settled_count` (i.e. exactly the
+  battle accuracy) with a `members: opt vec principal` filter (a league
+  set, capped 10k) — **but only over fixed calendar windows**
+  `LeaderboardWindow = { Week | Month | AllTime }`, not a rolling
+  `[kickoffMs, settleMs)` span.
+- `list_series_trade_history` — market-wide **fills** per series, not
+  per-principal settlements.
+
+**There is no query for an arbitrary principal's settled calls over an
+arbitrary window.** So the spec's chosen "settled-call history over the
+battle window" is not implementable on current APIs for the
+7/14/30-day rolling windows battles use today.
 
 ## Pending decisions
 
-None outstanding — the four product calls below are decided.
+The findings reopen the resolution-basis decision. Owner must pick:
+
+- **A — Add an icdc-core query.** Extend the clearing canister with a
+  per-member settled query over an arbitrary `[from, to]` window
+  (timestamps already exist on settlement events). Cross-repo backend
+  change (separate `icdc-core` PR, its own `AGENTS.md`), then wire here.
+  Implements the spec as written, trustless on the engine side.
+- **B — Calendar-align battle windows + `list_leaderboard`.** Make
+  battles run over an ISO week / calendar month so
+  `list_leaderboard(members, window)` resolves them exactly, live, and
+  trustlessly server-side — strictly better than baseline-delta, no
+  satellite trust regression. Product redesign of battle durations /
+  "accept starts the clock".
+- **C — Keep baseline-delta for new battles; void legacy.** Smallest:
+  current battles keep today's counter-delta; baseline-less legacy rows
+  resolve to a no-contest draw. The sync-timing correctness gap (#2)
+  stays. No engine change.
+
+Until this is decided the build cannot proceed; the four product calls
+below stand only for the parts they still touch (UI #4, proposer #5).
 
 ## Decisions
 
 - **Resolution basis = settled-call history** (over keeping counter-delta
-  - only voiding legacy). Chosen because it fixes the legacy stuck
-    battles **and** the documented sync-timing approximation in one path,
-    at the cost of trustless assert re-derivation. Owner accepted the
-    trustlessness regression (resolution becomes controller-trusted) in
-    session.
+  - only voiding legacy). Chosen in session to fix the legacy stuck
+    battles **and** the documented sync-timing approximation in one path.
+    **Reopened** by the Findings above: no API serves arbitrary-window
+    per-principal settlements, so realising this basis now requires
+    decision A or B under Pending decisions.
 - **Membership rule = member at call time** (`joinedAtMs <= call.ts`),
   over current-members or members-at-kickoff. Most faithful to "who was
   representing the league when the call settled."

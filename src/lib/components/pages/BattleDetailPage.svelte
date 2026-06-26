@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
@@ -24,8 +24,10 @@
 		type BattleLiveScore,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
+	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleDoc, BattleState } from '$lib/types/battle';
 	import { battleScopeLabel } from '$lib/utils/battle.utils';
 	import { formatDate, shortLeagueId } from '$lib/utils/format.utils';
@@ -137,13 +139,29 @@
 		$leagueDirectoryStore.get(sideId)?.accentColor ??
 		'var(--laurel)';
 
-	// Hydrate the directory so the opponent side resolves too.
+	// Hydrate the directory so the opponent side resolves too, and the
+	// proposer's profile so it renders as a handle, not a raw principal.
 	$effect(() => {
 		if (!battle) {
 			return;
 		}
 
 		void loadLeaguesByIds({ ids: [battle.sideA, battle.sideB] });
+		void loadProfilesByPrincipals({ principals: [battle.proposer] });
+	});
+
+	// Proposer handle (`@nickname`), falling back to the shortened principal
+	// until — or unless — a profile with a nickname is in the store.
+	const proposerLabel = $derived.by((): string => {
+		if (!battle) {
+			return '';
+		}
+
+		const nickname = $profilesStore.get(battle.proposer)?.nickname;
+
+		return notEmptyString(nickname)
+			? `@${nickname}`
+			: `${battle.proposer.slice(0, 5)}…${battle.proposer.slice(-5)}`;
 	});
 
 	const ownedSide = $derived.by((): string | undefined => {
@@ -456,7 +474,7 @@
 				<span class="allcaps battle-detail-eyebrow" data-state={battle.state}>
 					{t({ locale: $localeStore, key: stateLabelKey(battle.state) })}
 				</span>
-				{#if battle.state === 'in_flight'}
+				{#if battle.state === 'in_flight' && !isFinalizing}
 					<span class="num allcaps battle-detail-window">
 						{t({
 							locale: $localeStore,
@@ -550,7 +568,7 @@
 			<div class="battle-detail-meta-row">
 				<span class="eyebrow">{t({ locale: $localeStore, key: 'battle.detail.proposer' })}</span>
 				<span class="num battle-detail-meta-mono">
-					{battle.proposer.slice(0, 5)}…{battle.proposer.slice(-5)}
+					{proposerLabel}
 				</span>
 			</div>
 		</section>
