@@ -434,7 +434,16 @@ and winner from `league_stats` and rejects any write whose numbers don't
 match, so no owner can post a fabricated result. Because Juno has no
 scheduler, a settled battle resolves **lazily** — the first time a side
 owner opens the battle (or the league) after the window closes, with a
-one-tap "Resolve now" as a manual fallback. **Known limitations (by
+one-tap "Resolve now" as a manual fallback. **Legacy battles self-heal.**
+A league battle accepted before kickoff baselines existed carries no
+snapshot, so it can neither show live standings nor resolve — it would
+hang in flight forever. The first time a member of either side opens such
+a battle, its window **restarts** from now: a fresh `league_stats`
+baseline is stamped (re-read and re-validated by the assert, so it can't
+be faked) and the **original duration** is preserved, leaving proposer,
+scope, and wager untouched. The already-elapsed days are unrecoverable —
+no per-call history exists to reconstruct them — so a restart trades them
+for a real, scorable window going forward. **Known limitations (by
 design):** the snapshot delta measures kickoff → resolution rather than
 the exact window, so prompt (auto) resolution keeps it ≈ the intended
 window — the same approximation the monthly tournament already uses; and

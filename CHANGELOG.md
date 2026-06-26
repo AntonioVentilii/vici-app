@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.8.2](https://github.com/AntonioVentilii/vici-app/compare/v1.8.1...v1.8.2) (2026-06-26)
+
+
+### Features
+
+* **admin:** show settler handle alongside principal in Oracle Settlers ([#1021](https://github.com/AntonioVentilii/vici-app/issues/1021)) ([c6163ab](https://github.com/AntonioVentilii/vici-app/commit/c6163ab6046de158e7e07cb4523031557bd21919))
+* **inbox:** live streak and level milestone notifications ([#1006](https://github.com/AntonioVentilii/vici-app/issues/1006)) ([5ab9f8e](https://github.com/AntonioVentilii/vici-app/commit/5ab9f8e6584f4ba6cc3f4e048b71132bd1ff8edb))
+
+
+### Bug Fixes
+
+* **arena:** align Global ranking card with the leaderboard's accuracy rank ([#1018](https://github.com/AntonioVentilii/vici-app/issues/1018)) ([87cd24d](https://github.com/AntonioVentilii/vici-app/commit/87cd24dd335b8836082d07314e454d4dfad5be08))
+* **arena:** clarify friend results — passive "resolved" copy + W/L record ([#1016](https://github.com/AntonioVentilii/vici-app/issues/1016)) ([b122f1a](https://github.com/AntonioVentilii/vici-app/commit/b122f1a0472bf606b815993c10bb739a83e99de1))
+* **battle:** back nav returns to actual previous page ([#1015](https://github.com/AntonioVentilii/vici-app/issues/1015)) ([c385103](https://github.com/AntonioVentilii/vici-app/commit/c3851030f4994faa5b966cfd8a0b6a6fe2e05e00))
+* **battles:** restart baseline-less legacy battles so they show live results ([#1019](https://github.com/AntonioVentilii/vici-app/issues/1019)) ([5ebc9c9](https://github.com/AntonioVentilii/vici-app/commit/5ebc9c9aaab0b9fff233bfac334ac7102d554efd))
+* **lint:** resolve preserve-caught-error and no-useless-assignment errors ([#1013](https://github.com/AntonioVentilii/vici-app/issues/1013)) ([74ccbf5](https://github.com/AntonioVentilii/vici-app/commit/74ccbf5d589ae2b0a35cd296d01e16e6f505f5d8))
+* **signup:** route into app immediately after in-page passkey sign-up ([#1014](https://github.com/AntonioVentilii/vici-app/issues/1014)) ([beea2f1](https://github.com/AntonioVentilii/vici-app/commit/beea2f1fbe4972f852611d6bc580aa19758928df))
+
+
+### Miscellaneous Chores
+
+* npm install ([315e487](https://github.com/AntonioVentilii/vici-app/commit/315e4872b93f5730796998ef9e8f044445a8b84a))
+* **release:** force v1.8.2 patch ([#1023](https://github.com/AntonioVentilii/vici-app/issues/1023)) ([9edbef3](https://github.com/AntonioVentilii/vici-app/commit/9edbef34552cd1d694162de39a2030a0370eef6f))
+* **vxp:** one-time streak-underpayment backfill endpoint ([#1004](https://github.com/AntonioVentilii/vici-app/issues/1004)) ([7d6bc6e](https://github.com/AntonioVentilii/vici-app/commit/7d6bc6e61bcce1353361f4450b669c2b1fb0bdd0))
+
+
+### Code Refactoring
+
+* **onboarding:** collapse to a single unversioned onboarding ([#1011](https://github.com/AntonioVentilii/vici-app/issues/1011)) ([ac5c771](https://github.com/AntonioVentilii/vici-app/commit/ac5c771c2dcd946f06a6cf41e599d4caa1436b5a))
+
 ## [1.8.1](https://github.com/AntonioVentilii/vici-app/compare/v1.8.0...v1.8.1) (2026-06-26)
 
 
