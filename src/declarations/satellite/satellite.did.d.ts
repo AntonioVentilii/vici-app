@@ -154,10 +154,8 @@ export interface AppGetAnalyticsSummaryResult {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
-			| { notification_opened: null }
 			| { pwa_install_prompted: null }
-			| { pwa_install_accepted: null }
-			| { pwa_install_dismissed: null }
+			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }
@@ -168,6 +166,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { pwa_install_dismissed: null }
 			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
@@ -208,6 +207,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { referral_redeemed: null }
 			| { prediction_created: null }
 			| { faucet_claimed: null }
+			| { pwa_install_accepted: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
@@ -976,10 +976,8 @@ export interface AppTrackEventsArgs {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
-			| { notification_opened: null }
 			| { pwa_install_prompted: null }
-			| { pwa_install_accepted: null }
-			| { pwa_install_dismissed: null }
+			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
 			| { watchlist_removed: null }
@@ -990,6 +988,7 @@ export interface AppTrackEventsArgs {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { pwa_install_dismissed: null }
 			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
@@ -1030,6 +1029,7 @@ export interface AppTrackEventsArgs {
 			| { referral_redeemed: null }
 			| { prediction_created: null }
 			| { faucet_claimed: null }
+			| { pwa_install_accepted: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
