@@ -1092,6 +1092,9 @@ export const enMessages = {
 	'hero.title_b': 'who’s right.',
 	'inbox.friend_request.body': '{user} wants to connect.',
 	'inbox.friend_request.title': 'Friend request',
+	'inbox.just_now': 'Just now',
+	'inbox.level.body': 'You reached level {level}.',
+	'inbox.level.title': 'Level up',
 	'inbox.like_received.title': '{user} liked your call',
 	'inbox.like_received.title_multi': '{user} and {count} more liked your call',
 	'inbox.pending': 'Pending',
@@ -1101,6 +1104,8 @@ export const enMessages = {
 	'inbox.resolve.title.lost': 'Market lost',
 	'inbox.resolve.title.neutral': 'Market resolved',
 	'inbox.resolve.title.won': 'Market won',
+	'inbox.streak.body': '{count}-day streak — {stage}.',
+	'inbox.streak.title': 'Streak milestone',
 	'info.back': 'Back',
 	'info.back_to_settings': 'Back to settings',
 	'info.doc.contact.b0':

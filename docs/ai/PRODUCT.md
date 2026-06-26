@@ -144,6 +144,17 @@ a digest row has no `Activity` doc identity to bind a persisted like to).
 The eyebrow reads "Recent results". See
 [`specs/2026-06-25-feat-arena-results-digest.md`](./spec-driven-development/specs/2026-06-25-feat-arena-results-digest.md).
 
+### Streak and level milestones in the inbox
+
+When your daily flame reaches a new stage (3 / 7 / 15 / 30 days) or your
+profile level goes up, an unread inbox card tells you — the flame card
+deep-links to Flow, the level card to your profile. Both are derived live
+from your own profile, gated by a high-water marker so a returning user
+never sees a retroactive backlog (only a genuine new milestone fires) and
+re-climbing a broken streak re-notifies. The streak card respects your
+streak-reminder preference. See
+[`specs/2026-06-23-feat-streak-level-inbox-notifications.md`](./spec-driven-development/specs/2026-06-23-feat-streak-level-inbox-notifications.md).
+
 ### Market odds — skeleton while the book loads
 
 A market's YES/NO odds are the live order-book mid. Until that book has
