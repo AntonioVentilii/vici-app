@@ -1235,7 +1235,21 @@
 												params: { count: digest.total }
 											})}
 										</span>
-										<span class="num feed-record">· {digest.won}–{digest.lost}</span>
+										<span class="num feed-record"
+											>· <span class="feed-record-win"
+												>{t({
+													locale: $localeStore,
+													key: 'arena.friends.feed.record_won',
+													params: { count: digest.won }
+												})}</span
+											>–<span class="feed-record-loss"
+												>{t({
+													locale: $localeStore,
+													key: 'arena.friends.feed.record_lost',
+													params: { count: digest.lost }
+												})}</span
+											></span
+										>
 									</span>
 									<span class="feed-meta">
 										{#if nonNullish(digest.windowLabel)}
@@ -1943,10 +1957,20 @@
 	}
 
 	/* W–L tally — mono numerals, base weight so the record reads as the
-	   row's spine. */
+	   row's spine. Wins/losses carry the same yes/no color as the net
+	   figure plus a leading W/L glyph, so the split reads at a glance
+	   without leaning on color alone. */
 	.feed-record {
-		color: var(--text-base);
+		color: var(--text-muted);
 		font-weight: 700;
+	}
+
+	.feed-record-win {
+		color: var(--yes);
+	}
+
+	.feed-record-loss {
+		color: var(--no);
 	}
 
 	/* Window label + standout, on one wrapping meta line under the record. */
