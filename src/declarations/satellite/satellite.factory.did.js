@@ -9,7 +9,7 @@
 export const idlFactory = ({ IDL }) => {
 	const AppAcceptFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
 	const AppBackfillStreakUnderpaymentsArgs = IDL.Record({
-		dry_run: IDL.Bool
+		dry_run: IDL.Opt(IDL.Bool)
 	});
 	const AppBackfillStreakUnderpaymentsResult = IDL.Record({
 		total_shortfall_base_units: IDL.Text,

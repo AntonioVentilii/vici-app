@@ -1030,7 +1030,9 @@ export const sweepExpiredDeletions = defineUpdate({
 // One-time streak-underpayment backfill (#957 remediation). Admin-gated,
 // dryRun-default, idempotent. Remove in a follow-up PR after the prod run.
 export const backfillStreakUnderpayments = defineUpdate({
-	args: j.strictObject({ dryRun: j.boolean() }),
+	// `dryRun` is optional and defaults to `true` in the handler — omitting it
+	// is the safe report-only path; pass `false` to mint.
+	args: j.strictObject({ dryRun: j.optional(j.boolean()) }),
 	result: j.strictObject({
 		scanned: j.number(),
 		underpaid: j.number(),

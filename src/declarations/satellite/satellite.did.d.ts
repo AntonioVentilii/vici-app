@@ -13,7 +13,7 @@ export interface AppAcceptFriendRequestArgs {
 	relation_id: string;
 }
 export interface AppBackfillStreakUnderpaymentsArgs {
-	dry_run: boolean;
+	dry_run: [] | [boolean];
 }
 export interface AppBackfillStreakUnderpaymentsResult {
 	total_shortfall_base_units: string;

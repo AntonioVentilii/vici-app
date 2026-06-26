@@ -66,9 +66,131 @@ const correctBaseUnits = (milestone: number): bigint | null => {
 };
 
 /**
- * Admin-gated. `dryRun: true` (default) only reports; `dryRun: false`
- * mints shortfalls. Each `setDocStore` is signed with the recipient's own
- * principal as `caller` so the `vxp_awards` assert (recipient binds
+ * Remediates one award doc. Returns the shortfall it identified (added to
+ * the running total whether or not it was minted this run), or `ZERO` for
+ * docs that don't qualify. Mutates `report` counters. Uses early `return`
+ * rather than loop `continue` so the caller stays a flat `for…of`.
+ */
+const remediateAward = async ({
+	doc,
+	dryRun,
+	ledger,
+	report
+}: {
+	doc: VxpAwardDoc;
+	dryRun: boolean;
+	ledger: IcrcLedgerCanister;
+	report: StreakBackfillReport;
+}): Promise<bigint> => {
+	if (doc.awardType !== 'streak' || doc.status !== 'paid') {
+		return ZERO;
+	}
+
+	const m = doc.awardKey.match(MILESTONE_RE);
+
+	if (isNullish(m)) {
+		return ZERO; // a `_backfill` marker or an unexpected key
+	}
+
+	report.scanned += 1;
+
+	const correct = correctBaseUnits(Number(m[1]));
+
+	if (isNullish(correct)) {
+		return ZERO;
+	}
+
+	const shortfall = correct - BigInt(doc.amountBaseUnits);
+
+	if (shortfall <= ZERO) {
+		return ZERO; // already correct (post-fix payment)
+	}
+
+	report.underpaid += 1;
+
+	const backfillKey = `${doc.awardKey}_backfill`;
+	const recipientBytes = Principal.fromText(doc.recipient).toUint8Array();
+	const markerKey = vxpAwardKey({
+		recipient: doc.recipient,
+		awardType: 'streak',
+		awardKey: backfillKey
+	});
+
+	if (
+		nonNullish(
+			getDocStore({ collection: Collection.VXP_AWARDS, key: markerKey, caller: recipientBytes })
+		)
+	) {
+		report.alreadyBackfilled += 1;
+
+		return shortfall;
+	}
+
+	if (dryRun) {
+		return shortfall;
+	}
+
+	const pending: VxpAwardDoc = {
+		recipient: doc.recipient,
+		awardType: 'streak',
+		awardKey: backfillKey,
+		amountBaseUnits: shortfall.toString(),
+		status: 'pending',
+		earnedAtMs: doc.earnedAtMs
+	};
+	setDocStore({
+		caller: recipientBytes,
+		collection: Collection.VXP_AWARDS,
+		key: markerKey,
+		doc: { data: encodeDocData(pending) }
+	});
+
+	const result = await transferWithBadFeeRetry({
+		ledger,
+		toOwner: Principal.fromText(doc.recipient),
+		amount: shortfall,
+		memo: `vxp:streak:${backfillKey}`
+	});
+
+	const settled: VxpAwardDoc = result.ok
+		? { ...pending, status: 'paid', paidAtMs: Date.now(), blockIndex: result.blockIndex.toString() }
+		: { ...pending, status: 'failed', errorMessage: result.error };
+
+	// Version-lock the settled write against the version the datastore just
+	// assigned the pending doc (never a hard-coded literal).
+	const created = getDocStore({
+		collection: Collection.VXP_AWARDS,
+		key: markerKey,
+		caller: recipientBytes
+	});
+	setDocStore({
+		caller: recipientBytes,
+		collection: Collection.VXP_AWARDS,
+		key: markerKey,
+		doc: { data: encodeDocData(settled), version: created?.version }
+	});
+
+	if (result.ok) {
+		report.minted += 1;
+		logInfo({
+			message: 'streak_backfill_paid',
+			detail: { user: doc.recipient, awardKey: backfillKey, shortfall: shortfall.toString() }
+		});
+	} else {
+		report.failed += 1;
+		logError({
+			message: 'streak_backfill_failed',
+			detail: { user: doc.recipient, awardKey: backfillKey, error: result.error }
+		});
+	}
+
+	return shortfall;
+};
+
+/**
+ * Admin-gated. `dryRun` defaults to `true` (reports only, mints nothing);
+ * pass `false` to mint. Each `setDocStore` is signed with the recipient's
+ * own principal as `caller` so the `vxp_awards` assert (recipient binds
  * caller) accepts it — exactly how the streak hook writes its docs.
  */
 export const backfillStreakUnderpaymentsFn = async ({
@@ -112,108 +234,7 @@ export const backfillStreakUnderpaymentsFn = async ({
 
 	for (const [, item] of items) {
 		const doc = decodeDocData<VxpAwardDoc>(item.data);
-
-		if (doc.awardType !== 'streak' || doc.status !== 'paid') {
-			continue;
-		}
-
-		const m = doc.awardKey.match(MILESTONE_RE);
-
-		if (isNullish(m)) {
-			continue; // already a `_backfill` marker or an unexpected key
-		}
-
-		report.scanned += 1;
-
-		const correct = correctBaseUnits(Number(m[1]));
-
-		if (isNullish(correct)) {
-			continue;
-		}
-
-		const paid = BigInt(doc.amountBaseUnits);
-		const shortfall = correct - paid;
-
-		if (shortfall <= ZERO) {
-			continue; // already correct (post-fix payment)
-		}
-
-		report.underpaid += 1;
-		totalShortfall += shortfall;
-
-		const backfillKey = `${doc.awardKey}_backfill`;
-		const recipientBytes = Principal.fromText(doc.recipient).toUint8Array();
-		const markerKey = vxpAwardKey({
-			recipient: doc.recipient,
-			awardType: 'streak',
-			awardKey: backfillKey
-		});
-
-		const existing = getDocStore({
-			collection: Collection.VXP_AWARDS,
-			key: markerKey,
-			caller: recipientBytes
-		});
-
-		if (nonNullish(existing)) {
-			report.alreadyBackfilled += 1;
-			continue;
-		}
-
-		if (dryRun) {
-			continue;
-		}
-
-		const pending: VxpAwardDoc = {
-			recipient: doc.recipient,
-			awardType: 'streak',
-			awardKey: backfillKey,
-			amountBaseUnits: shortfall.toString(),
-			status: 'pending',
-			earnedAtMs: doc.earnedAtMs
-		};
-		setDocStore({
-			caller: recipientBytes,
-			collection: Collection.VXP_AWARDS,
-			key: markerKey,
-			doc: { data: encodeDocData(pending) }
-		});
-
-		const result = await transferWithBadFeeRetry({
-			ledger,
-			toOwner: Principal.fromText(doc.recipient),
-			amount: shortfall,
-			memo: `vxp:streak:${backfillKey}`
-		});
-
-		const settled: VxpAwardDoc = result.ok
-			? {
-					...pending,
-					status: 'paid',
-					paidAtMs: Date.now(),
-					blockIndex: result.blockIndex.toString()
-				}
-			: { ...pending, status: 'failed', errorMessage: result.error };
-		setDocStore({
-			caller: recipientBytes,
-			collection: Collection.VXP_AWARDS,
-			key: markerKey,
-			doc: { data: encodeDocData(settled), version: 1n }
-		});
-
-		if (result.ok) {
-			report.minted += 1;
-			logInfo({
-				message: 'streak_backfill_paid',
-				detail: { user: doc.recipient, awardKey: backfillKey, shortfall: shortfall.toString() }
-			});
-		} else {
-			report.failed += 1;
-			logError({
-				message: 'streak_backfill_failed',
-				detail: { user: doc.recipient, awardKey: backfillKey, error: result.error }
-			});
-		}
+		totalShortfall += await remediateAward({ doc, dryRun, ledger, report });
 	}
 
 	report.totalShortfallBaseUnits = totalShortfall.toString();

@@ -1492,7 +1492,9 @@ const acceptFriendRequest = async (
 	await app_accept_friend_request(idlArgs);
 };
 
-const AppBackfillStreakUnderpaymentsArgsSchema = j.strictObject({ dryRun: j.boolean() });
+const AppBackfillStreakUnderpaymentsArgsSchema = j.strictObject({
+	dryRun: j.optional(j.boolean())
+});
 const AppBackfillStreakUnderpaymentsResultSchema = j.strictObject({
 	scanned: j.number(),
 	underpaid: j.number(),
