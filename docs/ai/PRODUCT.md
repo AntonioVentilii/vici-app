@@ -449,15 +449,38 @@ to bound farming. Earlier these grants were display-only by design (the
 deferred real-credit path. Decision record:
 [`specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md`](./spec-driven-development/specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md).
 
+### Onboarding — one screen: claim a handle and sign up
+
+The default new-user flow is a single screen (`OnboardingV3`, gated by
+`ONBOARDING_V3_ENABLED`, default on): the user claims a handle (live
+availability check with a Roman-pool suggestion as the empty-field
+placeholder) and signs up with any enabled provider on one surface,
+anchored by the "1,500 VXP starter pack" reward chip. Team selection is
+deferred to the post-signup Profile, so the onboarding handoff always
+carries a `null` team/side — the first prediction now happens free in the
+app. The screen also links to `/signin` ("Already a member?") and offers a
+"Skip — preview first, sign up later" escape into the signed-out Flow
+preview. The earlier multi-beat flow (team → first call → handle → auth)
+is kept in the tree behind the off path until the one-screen flow is
+verified in production; flipping the flag off restores it intact.
+
+The screen reuses, rather than re-implements, the handle machinery (live
+availability probe, session-taken cache, claim-time re-check), the
+provider stack, and the starter-VXP source; analytics reuse the existing
+taxonomy — `onboarding_started` and `handle_checked` fire with
+`label: 'v3'`, and `onboarding_completed` still fires once via the drain
+with `ok` (team-picked) `false`.
+
 ### Onboarding — picks persist across every sign-in provider
 
-A new user's onboarding picks — backed team/country, first call, handle,
-and the completion flag — land on the new profile no matter which sign-in
-provider finishes the 3-beat flow. The picks are stashed to local storage
-the moment the user reaches the auth step (Beat 3), **before** any
-provider runs, so a full-page OAuth redirect (Google) can't carry off the
-volatile in-flight state — the post-sign-in drain reads the stash and
-applies it. The "is this a brand-new account?" decision the drain uses to
+A new user's onboarding picks — handle and the completion flag (plus
+backed team/side when an older multi-beat path supplies them) — land on
+the new profile no matter which sign-in provider finishes the flow. The
+picks are stashed to local storage the moment an available handle is
+claimed (the auth gate), **before** any provider runs, so a full-page
+OAuth redirect (Google) can't carry off the volatile in-flight state —
+the post-sign-in drain reads the stash and applies it. The "is this a
+brand-new account?" decision the drain uses to
 avoid overwriting a returning user's saved profile is anchored to whether
 this browser session bootstrapped the profile, not a reactive flag a
 second auth pass could flip — so a genuine new user's picks are never
@@ -465,6 +488,45 @@ dropped, and a genuine returning user's profile is never clobbered. The
 flow emits the `onboarding_completed` analytics event with the finishing
 provider and whether a team was persisted. Decision record:
 [`specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`](./spec-driven-development/specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md).
+
+### Onboarding — first-visit surface tips
+
+The first time an early user lands on Dash, Arena, or Profile, a single
+small, non-blocking tip slides in just above the floating tab bar
+explaining what that surface is for, then dismisses with its `X` button.
+Nothing fires up front: a tip only appears when the user actually
+navigates to that surface (progressive disclosure, not an up-front tour),
+one tip is ever on screen at a time, and each surface shows its tip at most
+once per device. The Profile tip does double duty — it nudges picking a
+team for the Worlds race. This is layer 2 of the first-run tutorial system,
+distinct from the in-flow gesture coach (`FlowCoach`, layer 1). Only early
+users see tips: an established user (`totalTrades >= 5`) is never
+interrupted. Seen-state is per-surface local storage (`vici.tip-*-seen`),
+identity-scoped like the coach flags, so a new account on the device
+re-sees the tips. Shown and dismissed both emit `onboarding_step`
+(`source: 'surface_tip' | 'surface_tip_dismiss'`, `label` = the surface).
+Decision record:
+[`specs/2026-06-25-feat-onboarding-surface-tips.md`](./spec-driven-development/specs/2026-06-25-feat-onboarding-surface-tips.md).
+
+### Sign-in — one V3 visual family, Google + passkey-backed email
+
+The returning-user sign-in (`/signin` and every "sign in to continue"
+modal) shares the V3 onboarding visual system: brand pinned top, a
+`Welcome back.` hero (sans phrase + one serif-italic accent word, mirroring
+the sign-up `Claim your handle.` headline), the auth cluster directly
+below, and the "create account" cross-link + legal anchored to the bottom
+of the frame behind a hairline divider. The only primary providers are a
+**dark Google pill** and a lighter **email pill**; the email path opens an
+inline input and runs a device-passkey (WebAuthn) ceremony — there is no
+magic link and no "we sent you a link" state. **Apple is no longer
+offered**: returning V3 users never created an account with it, so it was
+removed from the provider stack (the code stays dormant behind a flag).
+Internet Identity, standalone passkey, and the dev shortcut remain
+production-/dev-gated as before. A successful sign-in emits the `signed_in`
+analytics event with `source = signin_screen` and a `label` of the chosen
+provider (`google | email | passkey | ii | dev`); the email address is
+never sent. Decision record:
+[`specs/2026-06-25-impr-signin-v3-reskin.md`](./spec-driven-development/specs/2026-06-25-impr-signin-v3-reskin.md).
 
 ### Add to Home Screen — install VICI as an app
 

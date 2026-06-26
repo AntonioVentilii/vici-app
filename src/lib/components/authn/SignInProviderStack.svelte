@@ -14,6 +14,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { isDev, isNotSkylab, isProd } from '$lib/env/app.env';
+	import { track } from '$lib/services/analytics.services';
 	import { AppleSignInCancelledError, signInWithApple } from '$lib/services/apple-signin.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -31,9 +32,13 @@
 		// manager. Absent → a plain `VICI` label. The user can rename it
 		// afterwards from their authenticator.
 		handle?: string | null;
+		// External gate — when true every provider is inert. The one-screen
+		// onboarding sets this until a valid handle is claimed, so auth can't
+		// start before there's a name to attach to the account.
+		disabled?: boolean;
 	}
 
-	const { onSuccess, mode = 'signin', handle = null }: Props = $props();
+	const { onSuccess, mode = 'signin', handle = null, disabled = false }: Props = $props();
 
 	const isSignUp = $derived(mode === 'signup');
 
@@ -48,7 +53,10 @@
 	type ProviderId = 'apple' | 'google' | 'email' | 'ii' | 'passkey' | 'dev';
 
 	// Per-provider visibility flags — show/hide the button entirely.
-	const APPLE_LOGIN_ENABLED = true;
+	// Apple is flag-off: returning V3 users never created an account with it,
+	// so offering it was misleading. `onApple` / `apple-signin.services` / the
+	// Apple icon + keys stay dormant behind this flag (reversible).
+	const APPLE_LOGIN_ENABLED = false;
 	const GOOGLE_LOGIN_ENABLED = true;
 	const EMAIL_LOGIN_ENABLED = true;
 	const INTERNET_IDENTITY_LOGIN_ENABLED = false;
@@ -71,7 +79,10 @@
 
 	const productionAvailable = $derived(isProd() && isNotSkylab());
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
+	// A provider can't be started while another is resolving, or while the
+	// host has gated the stack (`disabled`).
 	const isBusy = $derived(nonNullish(signingIn));
+	const blocked = $derived(isBusy || disabled);
 	// When the email row is expanded the other providers dim to 0.4.
 	const isFaded = $derived(emailOpen && isNullish(signingIn));
 
@@ -126,6 +137,16 @@
 
 		try {
 			await run();
+
+			// Fire at the success boundary so the now-authenticated principal is
+			// stitched onto the event (identity is absent before sign-in). `email`
+			// resolves to a passkey ceremony but stays a distinct user-facing
+			// choice; the address itself is never a prop (no PII). The sign-up
+			// counterpart belongs to the out-of-scope onboarding funnel.
+			if (!isSignUp) {
+				track({ name: 'signed_in', source: 'signin_screen', label: id });
+			}
+
 			onSuccess?.();
 		} catch (err: unknown) {
 			console.error(`${id} sign-in failed`, err);
@@ -322,7 +343,7 @@
 			class:is-faded={isFaded}
 			class:is-loading={signingIn === 'apple'}
 			aria-busy={signingIn === 'apple'}
-			disabled={isBusy}
+			disabled={blocked}
 			onclick={onApple}
 			type="button"
 		>
@@ -343,11 +364,11 @@
 	<!-- Google — live. -->
 	{#if GOOGLE_LOGIN_ENABLED}
 		<button
-			class="signin-provider-btn is-onboarding ob-cream"
+			class="signin-provider-btn is-onboarding ob-dark"
 			class:is-faded={isFaded}
 			class:is-loading={signingIn === 'google'}
 			aria-busy={signingIn === 'google'}
-			disabled={isBusy}
+			disabled={blocked}
 			onclick={onGoogle}
 			type="button"
 		>
@@ -372,7 +393,7 @@
 			<button
 				class="signin-provider-btn email is-onboarding ob-faint"
 				class:is-faded={isFaded}
-				disabled={isBusy}
+				disabled={blocked}
 				onclick={onEmailOpen}
 				type="button"
 			>
@@ -394,9 +415,9 @@
 						id="signin-email-input"
 						class="signin-email-input num"
 						autocapitalize="off"
-						autocomplete="email"
+						autocomplete="email webauthn"
 						autofocus
-						disabled={isBusy || !productionAvailable}
+						disabled={blocked || !productionAvailable}
 						inputmode="email"
 						placeholder={t({ locale: $localeStore, key: 'signin.email.placeholder' })}
 						spellcheck="false"
@@ -406,7 +427,7 @@
 				</div>
 				<button
 					class="signin-email-submit"
-					disabled={!emailValid || isBusy || !productionAvailable}
+					disabled={!emailValid || blocked || !productionAvailable}
 					type="submit"
 				>
 					{signingIn === 'email'
@@ -431,7 +452,7 @@
 			class:is-faded={isFaded}
 			class:is-loading={signingIn === 'ii'}
 			aria-busy={signingIn === 'ii'}
-			disabled={isBusy || !productionAvailable}
+			disabled={blocked || !productionAvailable}
 			onclick={onIi}
 			type="button"
 		>
@@ -456,7 +477,7 @@
 			class:is-faded={isFaded}
 			class:is-loading={signingIn === 'passkey'}
 			aria-busy={signingIn === 'passkey'}
-			disabled={isBusy || !productionAvailable}
+			disabled={blocked || !productionAvailable}
 			onclick={onPasskey}
 			type="button"
 		>
@@ -484,7 +505,7 @@
 			class:is-loading={signingIn === 'dev'}
 			aria-busy={signingIn === 'dev'}
 			data-tid={TestId.SignInDev}
-			disabled={isBusy}
+			disabled={blocked}
 			onclick={onDev}
 			type="button"
 		>

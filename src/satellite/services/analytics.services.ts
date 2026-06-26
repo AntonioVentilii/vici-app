@@ -22,6 +22,7 @@
  * satellite.
  */
 
+import { ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	ANALYTICS_PROP_KEYS,
@@ -243,4 +244,124 @@ export const getAnalyticsSummaryFn = ({ days }: { days: number }): { rows: Summa
 	});
 
 	return { rows };
+};
+
+/** Page-size cap so one export call can't scan/return an unbounded set. */
+const MAX_EXPORT_LIMIT = 1000;
+
+/** One flat export row — mirrors AnalyticsEventExportRowSchema. */
+interface AnalyticsEventExportRow {
+	key: string;
+	createdAtNs: string;
+	updatedAtNs: string;
+	version?: string;
+	ownerText?: string;
+	name: AnalyticsEventName;
+	tsMs: number;
+	sessionId: string;
+	principalText?: string;
+	path?: string;
+	marketId?: string;
+	seriesId?: string;
+	leagueId?: string;
+	battleId?: string;
+	source?: string;
+	label?: string;
+	step?: number;
+	value?: number;
+	count?: number;
+	durationMs?: number;
+	ok?: boolean;
+}
+
+/** Parse the exclusive `updated_at` cursor. Tolerates absent/whitespace/
+ * non-numeric input by restarting from the beginning rather than throwing a
+ * low-signal BigInt error on a malformed cursor. */
+const parseCursorNs = (raw?: string): bigint => {
+	const trimmed = raw?.trim() ?? '';
+
+	return /^\d+$/.test(trimmed) ? BigInt(trimmed) : -1n;
+};
+
+/**
+ * Admin-gated raw-event export for the cockpit warehouse. Returns the next page
+ * of `events` ordered by `(updated_at, key)`, flattened, strictly after the
+ * `(afterUpdatedAtNs, afterKey)` keyset cursor. The `key` tie-breaker is what
+ * makes a page boundary that splits a group of same-`updated_at` docs safe — the
+ * next call resumes mid-group instead of skipping the rest. The cockpit advances
+ * the cursor from the last returned row's `(updatedAtNs, key)`. "List then
+ * process in code" mirrors `getAnalyticsSummaryFn`.
+ */
+export const getAnalyticsEventsFn = ({
+	afterUpdatedAtNs,
+	afterKey,
+	limit
+}: {
+	afterUpdatedAtNs?: string;
+	afterKey?: string;
+	limit: number;
+}): { rows: AnalyticsEventExportRow[]; hasMore: boolean } => {
+	const caller = msgCaller();
+
+	if (!isAdmin({ caller })) {
+		throw new Error('Analytics is restricted to admins.');
+	}
+
+	const admin = adminCaller();
+	const { items } = listDocsStore({ collection: Collection.EVENTS, caller: admin, params: {} });
+
+	const afterNs = parseCursorNs(afterUpdatedAtNs);
+	const afterKeyText = afterKey?.trim() ?? '';
+	const safeLimit = Number.isFinite(limit) ? Math.floor(limit) : MAX_EXPORT_LIMIT;
+	const cap = Math.min(Math.max(1, safeLimit), MAX_EXPORT_LIMIT);
+
+	const ordered = items
+		.filter(([key, doc]) => {
+			const u = doc.updated_at ?? ZERO;
+
+			return u === afterNs ? key > afterKeyText : u > afterNs;
+		})
+		.sort(([ak, ad], [bk, bd]) => {
+			const au = ad.updated_at ?? ZERO;
+			const bu = bd.updated_at ?? ZERO;
+
+			if (au !== bu) {
+				return au < bu ? -1 : 1;
+			}
+
+			return ak < bk ? -1 : ak > bk ? 1 : 0;
+		});
+
+	const page = ordered.slice(0, cap);
+
+	const rows = page.map(([key, doc]): AnalyticsEventExportRow => {
+		const data = decodeDocData<AnalyticsEventDoc>(doc.data);
+		const p = data.props ?? {};
+
+		return {
+			key,
+			createdAtNs: `${doc.created_at ?? ZERO}`,
+			updatedAtNs: `${doc.updated_at ?? ZERO}`,
+			version: isNullish(doc.version) ? undefined : `${doc.version}`,
+			ownerText: isNullish(doc.owner) ? undefined : Principal.fromUint8Array(doc.owner).toText(),
+			name: data.name,
+			tsMs: data.tsMs,
+			sessionId: data.sessionId,
+			principalText: data.principal,
+			path: data.path,
+			marketId: p.marketId,
+			seriesId: p.seriesId,
+			leagueId: p.leagueId,
+			battleId: p.battleId,
+			source: p.source,
+			label: p.label,
+			step: p.step,
+			value: p.value,
+			count: p.count,
+			durationMs: p.durationMs,
+			ok: p.ok
+		};
+	});
+
+	return { rows, hasMore: ordered.length > page.length };
 };
