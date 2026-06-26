@@ -2128,6 +2128,7 @@ export const zhHansMessages = {
 	'arena.friends.feed.resolved_one': '已结算 {count} 次预测',
 	'arena.friends.feed.standout': '含“{question}”',
 	'arena.friends.global.eyebrow': '全球排名',
+	'arena.friends.global.provisional': '临时',
 	'arena.friends.global.unranked': '未排名',
 	'arena.friends.invite.cap_reached': '奖励名额已用完。',
 	'arena.friends.invite.cap_remaining': '还剩 {remaining} 个有奖邀请',
