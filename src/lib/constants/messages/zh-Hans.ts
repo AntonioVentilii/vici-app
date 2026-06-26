@@ -2122,6 +2122,8 @@ export const zhHansMessages = {
 	'arena.friends.feed.empty_b': '战绩静静累积。',
 	'arena.friends.feed.eyebrow': '最近战绩',
 	'arena.friends.feed.like': '点赞',
+	'arena.friends.feed.record_lost': '负{count}',
+	'arena.friends.feed.record_won': '胜{count}',
 	'arena.friends.feed.resolved_many': '已结算 {count} 次预测',
 	'arena.friends.feed.resolved_one': '已结算 {count} 次预测',
 	'arena.friends.feed.standout': '含“{question}”',

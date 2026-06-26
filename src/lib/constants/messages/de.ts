@@ -2265,6 +2265,8 @@ export const deMessages = {
 	'arena.friends.feed.empty_b': 'Bau still und leise die Bilanz auf.',
 	'arena.friends.feed.eyebrow': 'Letzte Ergebnisse',
 	'arena.friends.feed.like': 'Gefällt mir',
+	'arena.friends.feed.record_lost': 'N{count}',
+	'arena.friends.feed.record_won': 'S{count}',
 	'arena.friends.feed.resolved_many': '{count} Vorhersagen aufgelöst',
 	'arena.friends.feed.resolved_one': '{count} Vorhersage aufgelöst',
 	'arena.friends.feed.standout': 'inkl. „{question}“',
