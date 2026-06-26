@@ -148,6 +148,14 @@ export type AnalyticsEventName =
 	| 'comment_posted'
 	/** A chat message was sent. */
 	| 'chat_sent'
+	/**
+	 * The global leaderboard was viewed (a window load or tab switch). `label`
+	 * carries the window (`week | month | all`), `count` the ranked rows shown,
+	 * `ok` whether the viewer is qualified/ranked (vs provisional/absent), and
+	 * `value` the viewer's own settled-call count — so the gate's effect on
+	 * real viewers is measurable.
+	 */
+	| 'leaderboard_viewed'
 	// ── Worlds (affiliations) ─────────────────────────────────────────
 	/** A school / country affiliation was set. */
 	| 'affiliation_set'
