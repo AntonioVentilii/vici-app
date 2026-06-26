@@ -8,7 +8,7 @@ import { leaderboardQualifyMin } from '$lib/stores/tweaks.store';
 import { userStore } from '$lib/stores/user.store';
 import type { UserProfile } from '$lib/types/profile';
 import type { StandingEntry, StandingsWindow } from '$lib/types/standings';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@junobuild/schema';
 import { derived, type Readable } from 'svelte/store';
 
@@ -221,3 +221,37 @@ export const globalStandingsRows = (
 			};
 		}
 	);
+
+/**
+ * The viewer's own standing in one window — the exact rank the leaderboard
+ * renders for their `You` row, surfaced for compact callers (the Arena "Global
+ * ranking" card) that show a single number instead of the full board, so the
+ * two surfaces can never disagree about the viewer's position.
+ *
+ * `displayRank` is the shrinkage-ordered position once the viewer has cleared
+ * the qualify gate; `provisional` is `true` when they're below it (unranked,
+ * `displayRank` left `undefined`). `undefined` while the window's slice hasn't
+ * loaded, or when the viewer isn't in the fetched slice at all — the same
+ * top-N limitation {@link globalStandingsRows} carries.
+ */
+export interface OwnStanding {
+	displayRank: number | undefined;
+	provisional: boolean;
+}
+
+export const ownGlobalStanding = (window: StandingsWindow): Readable<OwnStanding | undefined> =>
+	derived(globalStandingsRows(window), ($partition) => {
+		if (isNullish($partition)) {
+			return;
+		}
+
+		const ranked = $partition.ranked.find((row) => row.isSelf);
+
+		if (nonNullish(ranked)) {
+			return { displayRank: ranked.displayRank, provisional: false };
+		}
+
+		return $partition.provisional.some((row) => row.isSelf)
+			? { displayRank: undefined, provisional: true }
+			: undefined;
+	});
