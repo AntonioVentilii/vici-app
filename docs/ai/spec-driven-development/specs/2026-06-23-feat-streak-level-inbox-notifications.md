@@ -32,9 +32,10 @@ probability-delta signal. The two are independent; this one ships first.
 The inbox is a merge of _derived_ `Readable<InboxNotification[]>` sources
 in
 [`src/lib/stores/inbox.store.ts`](../../../../src/lib/stores/inbox.store.ts).
-The mock `seedInbox()` carrying `streak` / `level` / `market` placeholder
-cards is being removed; this spec replaces the `streak` and `level` ones
-with live producers. Patterns to mirror:
+The mock `seedInbox()` that once carried `streak` / `level` / `market`
+placeholder cards has **already been removed upstream** (the inbox is now
+fully live-derived, no seed layer), so this spec is purely additive — it
+adds the `streak` and `level` producers. Patterns to mirror:
 
 - **`friendRequestInboxStore`** (≈ line 127) — synthetic, non-persisted,
   derived from a live source + `userStore` + `localeStore`; the per-id
@@ -145,19 +146,18 @@ marker:
    `settled-` branch in `markInboxRead`), so acknowledging a card clears it
    durably rather than only overlaying a read flag a later identical id
    would re-surface.
-6. **Seed cleanup**: remove the `streak` + `level` mock entries from
-   `seedInbox()` (the `market` entry is removed by the sibling spec; if
-   that spec hasn't merged, remove it here too — see Out of scope).
-7. **i18n**: add `inbox.streak.*` (per-stage title + body with day count)
-   and `inbox.level.*` (title + body with level number) across all 13
-   catalogs; `npm run check:i18n`.
+6. **i18n**: add `inbox.streak.*` (per-stage title + body with day count)
+   and `inbox.level.*` (title + body with level number) across all live
+   catalogs; `npm run check:i18n`. (No seed cleanup — already removed
+   upstream.)
 
 ### Out of scope
 
-- **The `market` kind.** Owned by the sibling spec. The `market` mock seed
-  entry is removed by whichever of the two specs lands first; this spec
-  does not touch `InboxNotificationKind` or the kind config (the sibling
-  keeps `market`, so neither spec deletes it).
+- **The `market` kind.** Owned by the sibling spec. This spec does not
+  touch `InboxNotificationKind` or the kind config (the sibling keeps
+  `market`, so neither spec deletes it).
+- **The mock seed.** Already removed upstream; there is no seed layer left
+  to clean up here.
 - **`social` / `challenge` kinds.** `social` already has a live producer
   (`likesReceivedInboxStore`); `challenge` is untouched here.
 - **Push / OS notifications.** In-app inbox only.

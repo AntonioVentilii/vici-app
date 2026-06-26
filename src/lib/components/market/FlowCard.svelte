@@ -714,6 +714,7 @@
 							seed={market.id}
 							size={420}
 							state="neutral"
+							title={market.title}
 						/>
 					</div>
 

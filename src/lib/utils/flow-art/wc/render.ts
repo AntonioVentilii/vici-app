@@ -63,21 +63,8 @@ export const renderWC = ({ p, state, uid, seed, title }: RenderArgs): string => 
 	const generativeFallback = (h: WcHelpers, seedKey: string): string => {
 		const g = makeRng(`wc-fallback::${seedKey}`);
 
-		// National colour trios reused by the flag backdrops.
-		const trios = [
-			{ c1: '#FFD800', c2: '#0F8C3A', c3: '#0033A0' },
-			{ c1: '#C8102E', c2: '#F1BF00', c3: '#C8102E' },
-			{ c1: '#0055A4', c2: '#F2ECDC', c3: '#EF4135' },
-			{ c1: '#75AADB', c2: '#F2ECDC', c3: '#75AADB' },
-			{ c1: '#000000', c2: '#DD0000', c3: '#FFCE00' },
-			{ c1: '#046A38', c2: '#F2ECDC', c3: '#C8102E' }
-		];
-
 		const backdrops: Array<() => string> = [
 			() => h.bgPerspective(WC_SHIRT.cream),
-			() => h.bgFlagDiag(g.pick(trios)),
-			() => h.bgFlagHoriz(g.pick(trios)),
-			() => h.bgFlagVert(g.pick(trios)),
 			() => h.bgCircle({ color: WC_SHIRT.gold, cx: g.int(80, 200), cy: 50, r: g.int(48, 58) }),
 			() => h.bgSpotlight({ c1: WC_SHIRT.gold, c2: WC_SHIRT.cream }),
 			() => h.bgStands('#7E7A75'),

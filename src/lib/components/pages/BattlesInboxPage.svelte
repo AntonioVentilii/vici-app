@@ -15,7 +15,7 @@
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
 	import { daysToFinal } from '$lib/derived/featured-event.derived';
-	import { loadLeaguesByIds } from '$lib/services/leagues.services';
+	import { listMyBattles, loadLeaguesByIds } from '$lib/services/leagues.services';
 	import { getCurrentTournament } from '$lib/services/tournament.services';
 	import { listAffiliationStats } from '$lib/services/worlds.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
@@ -152,6 +152,55 @@
 		void goto(`${resolve(AppPath.Arena)}/leagues/${leagueId}`);
 	};
 
+	// ─── Live battles ───────────────────────────────────────────────
+	// Every battle under way across the leagues the caller belongs to —
+	// the surface a user looks for after accepting a challenge. Sourced
+	// from `listMyBattles` (one authoritative cross-league read, the same
+	// the detail page uses) rather than fanning out over the per-league
+	// store, then filtered to the live states. Each row deep-links to the
+	// battle detail page, where the running standings are shown.
+	let myBattles = $state<BattleDoc[]>([]);
+
+	const activeBattles = $derived(
+		myBattles
+			.filter((b) => b.state === 'in_flight' || b.state === 'accepted')
+			.sort((a, b) => a.settleMs - b.settleMs)
+	);
+
+	// Resolve either side's league id to a name (own memberships →
+	// directory cache → shortened id), mirroring `opponentName`.
+	const sideName = (id: string): string =>
+		$myLeaguesStore.find((m) => m.league.id === id)?.league.name ??
+		$leagueDirectoryStore.get(id)?.name ??
+		shortLeagueId(id);
+
+	// "Day X of Y" window line. Mirrors `BattleDetailPage` exactly (total
+	// = ceil of the span, day = floor of the elapsed + 1, both clamped) so
+	// the inbox row and the detail page it links to never disagree.
+	const battleWindowLine = (battle: BattleDoc): string => {
+		const total = Math.max(1, Math.ceil((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
+		const day = Math.max(
+			1,
+			Math.min(total, Math.floor((Date.now() - battle.kickoffMs) / DAY_IN_MS) + 1)
+		);
+
+		return t({ locale: $localeStore, key: 'battle.detail.day_of', params: { day, total } });
+	};
+
+	// Hydrate the directory for both sides of every live battle so each
+	// row reads names instead of shortened ids.
+	$effect(() => {
+		const sideIds = activeBattles.flatMap((b) => [b.sideA, b.sideB]);
+
+		if (sideIds.length > 0) {
+			void loadLeaguesByIds({ ids: sideIds });
+		}
+	});
+
+	const goToBattle = (battleId: string) => {
+		void goto(`${resolve(AppPath.Arena)}/battles/${battleId}?from=inbox`);
+	};
+
 	// ─── Worlds podium state ────────────────────────────────────────
 	// Caller's affiliations come from the shared cache (stale-while-
 	// revalidate); the public school/country stats stay a per-mount fetch.
@@ -177,14 +226,16 @@
 
 	const load = async () => {
 		try {
-			const [schools, countries, tour] = await Promise.all([
+			const [schools, countries, tour, battles] = await Promise.all([
 				listAffiliationStats({ kind: 'university' }),
 				listAffiliationStats({ kind: 'country' }),
-				getCurrentTournament()
+				getCurrentTournament(),
+				listMyBattles()
 			]);
 			uniStats = schools;
 			countryStats = countries;
 			({ tournament, matches } = tour);
+			myBattles = battles;
 			loadState = 'ready';
 		} catch (err) {
 			console.error('BattlesInboxPage: load failed', err);
@@ -442,6 +493,45 @@
 			{errorMessage ?? t({ locale: $localeStore, key: 'leagues.error.generic' })}
 		</p>
 	{:else}
+		<!-- ─── Live battles ──────────────────────────────────────
+		     Every battle under way across the caller's leagues. The
+		     surface a user reaches for after accepting a challenge; each
+		     row deep-links to the detail page with the running standings. -->
+		{#if activeBattles.length > 0}
+			<section
+				class="battles-section"
+				aria-label={t({ locale: $localeStore, key: 'battles.section.live' })}
+			>
+				<header class="battles-section-head">
+					<span class="battles-eyebrow allcaps">
+						{t({ locale: $localeStore, key: 'battles.section.live' })}
+					</span>
+					<span class="battles-section-head-meta num allcaps">{activeBattles.length}</span>
+				</header>
+
+				{#each activeBattles as battle (battle.id)}
+					<button class="battles-card" onclick={() => goToBattle(battle.id)} type="button">
+						<div class="battles-card-head">
+							<div class="battles-card-tags">
+								<span class="battles-tag is-live">
+									{t({ locale: $localeStore, key: 'worlds.event.tag_live' })}
+								</span>
+							</div>
+						</div>
+						<h3 class="battles-card-title">
+							{sideName(battle.sideA)}
+							<span class="serif-italic">vs</span>
+							{sideName(battle.sideB)}
+						</h3>
+						<p class="battles-card-meta">{battleWindowLine(battle)}</p>
+						<span class="battles-see-all allcaps">
+							{t({ locale: $localeStore, key: 'battles.live.cta' })} →
+						</span>
+					</button>
+				{/each}
+			</section>
+		{/if}
+
 		<!-- ─── Worlds Universities ─────────────────────────────── -->
 		<WorldsBattleCard
 			kind="university"

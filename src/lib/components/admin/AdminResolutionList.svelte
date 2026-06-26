@@ -3,6 +3,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId, Outcome } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
@@ -135,7 +136,10 @@
 	};
 </script>
 
-<div class="border-border bg-card rounded-3xl border p-4 sm:p-8">
+<div
+	class="border-border bg-card rounded-3xl border p-4 sm:p-8"
+	data-tid={TestId.AdminResolutionList}
+>
 	<h2 class="text-foreground mb-6 text-2xl font-bold">
 		{t({ locale: $localeStore, key: 'admin.resolution.title' })}
 	</h2>
@@ -153,6 +157,7 @@
 			class="bg-foreground/5 text-foreground ring-border focus:ring-primary placeholder:text-muted-foreground mb-6 w-full rounded-2xl border-none px-5 py-3 text-sm ring-1 ring-inset focus:ring-2"
 			aria-label={t({ locale: $localeStore, key: 'admin.resolution.search.label' })}
 			autocomplete="off"
+			data-tid={TestId.AdminResolutionSearch}
 			placeholder={t({ locale: $localeStore, key: 'admin.resolution.search.placeholder' })}
 			type="search"
 			bind:value={searchQuery}
@@ -175,6 +180,8 @@
 
 					<div
 						class="space-y-4 rounded-2xl border p-6 {getStatusStyles(status.color)} transition-all"
+						data-market-id={marketId}
+						data-tid={TestId.AdminResolutionCard}
 					>
 						<div class="flex flex-col items-start justify-between gap-2 sm:flex-row">
 							<div class="min-w-0 space-y-1">
@@ -218,6 +225,7 @@
 						<div class="flex gap-2">
 							<Button
 								class="border-success/20 bg-success/10 text-success hover:bg-success/15 flex-1 rounded-xl border py-2 text-xs font-bold"
+								data-tid={TestId.AdminResolutionResolveYes}
 								onclick={() => openConfirm({ marketId, title, outcome: 'YES' })}
 								size="sm"
 								status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
@@ -227,6 +235,7 @@
 							</Button>
 							<Button
 								class="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15 flex-1 rounded-xl border py-2 text-xs font-bold"
+								data-tid={TestId.AdminResolutionResolveNo}
 								onclick={() => openConfirm({ marketId, title, outcome: 'NO' })}
 								size="sm"
 								status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
@@ -247,7 +256,11 @@
 	bind:show={showConfirm}
 >
 	{#if nonNullish(confirmTarget)}
-		<div class="space-y-4">
+		<div
+			class="space-y-4"
+			data-market-id={confirmTarget.marketId}
+			data-tid={TestId.AdminResolutionConfirmDialog}
+		>
 			<div class="space-y-1">
 				<p class="text-muted-foreground eyebrow-xs">
 					{t({ locale: $localeStore, key: 'admin.resolution.confirm.market_label' })}
@@ -281,6 +294,7 @@
 			<div class="flex gap-2 pt-2">
 				<Button
 					class="flex-1"
+					data-tid={TestId.AdminResolutionConfirmCancel}
 					onclick={() => (showConfirm = false)}
 					size="md"
 					status={confirmBusy ? 'disabled' : 'enabled'}
@@ -290,6 +304,7 @@
 				</Button>
 				<Button
 					class="flex-1"
+					data-tid={TestId.AdminResolutionConfirmCta}
 					onclick={handleResolve}
 					size="md"
 					status={confirmBusy ? 'pending' : 'enabled'}
