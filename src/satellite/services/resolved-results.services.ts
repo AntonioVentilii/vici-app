@@ -41,6 +41,17 @@ const adminCaller = (): Uint8Array => {
 	return first;
 };
 
+const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
+const MIN_SAFE = BigInt(Number.MIN_SAFE_INTEGER);
+
+/**
+ * Whether a Candid `int` cashflow stays exact once narrowed to a JS `number`. Outside the
+ * safe-integer range the `Number(...)` conversion silently loses precision, which would corrupt the
+ * row's `netVxp` — such rows are dropped rather than written.
+ */
+const isSafeCashflow = (cashflowUsd: bigint): boolean =>
+	cashflowUsd <= MAX_SAFE && cashflowUsd >= MIN_SAFE;
+
 /** The doc key for a participant's row: `${owner}#${marketId}` (owner-prefix scannable). */
 const resolvedResultKey = ({ owner, marketId }: { owner: string; marketId: string }): string =>
 	`${owner}#${marketId}`;
@@ -191,7 +202,27 @@ export const onActivitySetForResolvedResults = async (ctx: OnSetDocContext): Pro
 		const resolvedAtMs = nowMs();
 		const admin = adminCaller();
 
-		for (const position of positions) {
+		// `cashflow_usd` is a Candid `int` (`bigint`); `netVxp` is a JS `number`.
+		// Past the safe-integer range the conversion silently loses precision, so
+		// drop such a row (logged) rather than record a corrupted `netVxp`.
+		const writable = positions.filter((position) => {
+			const safe = isSafeCashflow(position.cashflow_usd);
+
+			if (!safe) {
+				logError({
+					message: 'resolved_results_cashflow_unsafe',
+					detail: {
+						seriesId,
+						owner: position.user.toText(),
+						cashflowUsd: position.cashflow_usd.toString()
+					}
+				});
+			}
+
+			return safe;
+		});
+
+		for (const position of writable) {
 			const netVxp = Number(position.cashflow_usd);
 
 			writeResolvedResult({
@@ -210,7 +241,7 @@ export const onActivitySetForResolvedResults = async (ctx: OnSetDocContext): Pro
 
 		logInfo({
 			message: 'resolved_results_written',
-			detail: { seriesId, rows: positions.length }
+			detail: { seriesId, rows: writable.length }
 		});
 	} catch (err: unknown) {
 		logError({
@@ -238,7 +269,6 @@ export const listFriendResolvedResultsFn = ({
 		return [];
 	}
 
-	const admin = adminCaller();
 	const cutoffMs = nowMs() - RESOLVED_RESULTS_RETENTION_MS;
 
 	// One bounded scan anchored to the friend owner-prefixes (`(^a#|^b#|…)`),
@@ -246,9 +276,12 @@ export const listFriendResolvedResultsFn = ({
 	// authoritative filter; the matcher just keeps the read off unrelated rows.
 	const keyMatcher = `^(${[...friendSet].map((owner) => `${escapeRegex(owner)}#`).join('|')})`;
 
+	// Read as the actual caller (not as a controller) so the `resolved_results`
+	// datastore `read` rule stays the source of truth. The collection is public
+	// read, so the caller can read friends' rows over the owner-prefix scan.
 	const { items } = listDocsStore({
 		collection: Collection.RESOLVED_RESULTS,
-		caller: admin,
+		caller: msgCaller(),
 		params: { matcher: { key: keyMatcher } }
 	});
 
