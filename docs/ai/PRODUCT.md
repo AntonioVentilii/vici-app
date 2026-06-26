@@ -471,6 +471,50 @@ taxonomy — `onboarding_started` and `handle_checked` fire with
 `label: 'v3'`, and `onboarding_completed` still fires once via the drain
 with `ok` (team-picked) `false`.
 
+### Guest mode — preview Flow free, convert with a starter grant
+
+A visitor who takes the "Skip — preview first, sign up later" path out of
+onboarding becomes a **guest**: they reach Flow and predict immediately
+with no account, no balance, and no wall, and they keep previewing freely
+— there is no hard block at the second pick or ever. Guest picks are a
+throwaway, in-session preview: a guest pick never reaches the engine
+(`placeOrder` and the identity call are bypassed entirely), so free guest
+play can't move market prices. Each pick is recorded only as a client-side
+preview entry (`marketId` / `side` / `ts`, no stake) in `localStorage`,
+purely to power the conversion nudges.
+
+Conversion is driven by loss-aversion, not a gate: a soft sheet on the
+first pick and a remind sheet every fifth pick after offer to **create an
+account, claim the 1,500 VXP starter grant, and start predicting for
+real** — never to "save your pick". A standing inline pill on Flow opens
+the same ask whenever the guest has at least one pick. The remind nudge
+references the in-session count as social proof only ("you've made N
+predictions"), pluralised, and never implies those picks carry over. Every
+surface is dismissible and none blocks a card; the sheet waits until no
+menagerie reveal or Flow beat is on screen before it renders, the same
+collision gate the achievement host uses. The 1,500 VXP figure comes from
+the registration milestone grant, not a literal.
+
+On sign-up from the funnel the guest becomes a member through the **normal
+new-member path**: the existing `onProfileSetForVxpOnboarding` grant fires
+(no new mint, no retro-stake, no new economic action), the in-session
+preview picks are **discarded** — the portfolio starts empty — and the
+guest session and preview `localStorage` are cleared. The sign-up CTAs
+reuse the real provider stack (redirect-safe) labelled with the claimed
+guest handle, and the pre-auth handoff carries only the handle/identity,
+never picks or stakes. A "1,500 VXP added" toast confirms the grant.
+Because guest picks are client-only, a cleared browser simply loses the
+preview, which is harmless — nothing was ever a position. Analytics reuse
+existing names: a guest pick emits `position_taken` with
+`source: 'guest_flow'`, each conversion ask emits `onboarding_step` with
+`source: 'guest_flow'` and the surface as `label`, and conversion emits
+`signed_up` with `source: 'guest_convert'`. Conversion widens the
+new-account mint surface (a brand-new account can be created after a
+frictionless preview) but keeps it no wider than the existing grant; the
+anti-farm hardening tracked in #543 bounds that surface and is not changed
+here. Decision record:
+[`specs/2026-06-25-feat-guest-mode.md`](./spec-driven-development/specs/2026-06-25-feat-guest-mode.md).
+
 ### Onboarding — picks persist across every sign-in provider
 
 A new user's onboarding picks — handle and the completion flag (plus

@@ -1,5 +1,4 @@
-import { isNullish } from '@dfinity/utils';
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { TestId } from '../../src/lib/constants/test-ids.constants';
 
 /**
@@ -8,8 +7,8 @@ import { TestId } from '../../src/lib/constants/test-ids.constants';
  *
  * The (app) layout gates every route on a resolved session — anonymous
  * visits to `/app`, `/portfolio`, etc. redirect to `/signin`. Sign-in
- * itself routes a brand-new principal through the `/signup` onboarding
- * beats before the app shell, so the helpers below drive that flow
+ * itself routes a brand-new principal through the `/signup` one-screen
+ * onboarding before the app shell, so the helpers below drive that flow
  * end-to-end rather than expecting a bare sign-in to land in the app.
  *
  * Tests should prefer this object over reaching into selectors so that
@@ -34,8 +33,7 @@ export class HomePage {
 	readonly signOutButton: Locator;
 	readonly logoutButton: Locator;
 	readonly onboardingFlow: Locator;
-	readonly onboardingTeamSkip: Locator;
-	readonly onboardingCard: Locator;
+	readonly onboardingHandleInput: Locator;
 	readonly onboardingHandleSkip: Locator;
 	readonly onboardingPrimary: Locator;
 
@@ -51,8 +49,7 @@ export class HomePage {
 		this.signOutButton = page.getByTestId(TestId.SignOutButton);
 		this.logoutButton = page.getByTestId(TestId.Logout);
 		this.onboardingFlow = page.getByTestId(TestId.OnboardingFlow);
-		this.onboardingTeamSkip = page.getByTestId(TestId.OnboardingTeamSkip);
-		this.onboardingCard = page.getByTestId(TestId.OnboardingCard);
+		this.onboardingHandleInput = page.getByTestId(TestId.OnboardingHandleInput);
 		this.onboardingHandleSkip = page.getByTestId(TestId.OnboardingHandleSkip);
 		this.onboardingPrimary = page.getByTestId(TestId.OnboardingPrimary);
 	}
@@ -126,53 +123,17 @@ export class HomePage {
 	}
 
 	/**
-	 * Swipe the Beat 1.b first-call card to the right to commit a YES call.
-	 * The card has no button — the only way to advance is a pointer drag
-	 * past the component's 80px commit threshold — so we drive a mouse
-	 * gesture from the card centre well past it.
-	 */
-	async commitFirstCall(): Promise<void> {
-		await this.onboardingCard.waitFor({ state: 'visible' });
-
-		// Dismiss the one-time gesture coach (`FlowCoach`) up front. Its
-		// overlay is `pointer-events: none`, but its centred caption is
-		// `pointer-events: auto` and sits exactly over the card centre, so a
-		// centre-anchored pointer-down would land on the caption instead of
-		// the card. Escape dismisses it; it's a no-op once already gone.
-		await this.page.keyboard.press('Escape');
-
-		const box = await this.onboardingCard.boundingBox();
-
-		if (isNullish(box)) {
-			throw new Error('Onboarding first-call card has no bounding box to swipe.');
-		}
-
-		// Anchor the swipe in the lower third — clear of the (centred) coach
-		// caption and of any interactive target, on the card's plain body —
-		// then drag right well past the component's 80px commit threshold.
-		const startX = box.x + box.width / 2;
-		const startY = box.y + box.height * 0.72;
-
-		await this.page.mouse.move(startX, startY);
-		await this.page.mouse.down();
-		await this.page.mouse.move(startX + 220, startY, { steps: 12 });
-		await this.page.mouse.up();
-	}
-
-	/**
-	 * Walk the `/signup` onboarding beats up to (but not including) the auth
-	 * step, taking the fastest path: skip the team picker (Beat 1.a), swipe
-	 * the derived first-call card (Beat 1.b), then skip the handle picker
-	 * (Beat 2). Leaves the flow on Beat 3 with the provider stack mounted.
+	 * Bring the `/signup` one-screen onboarding to the point where auth can
+	 * start. The empty handle field auto-claims its pool suggestion, so the
+	 * provider stack ungates (the dev button becomes enabled) without any
+	 * interaction — leaving the flow ready for the dev sign-in click. The
+	 * "Skip" affordance is deliberately untouched: it starts guest mode, not
+	 * the auth path.
 	 */
 	async advanceOnboardingToAuth(): Promise<void> {
 		await this.onboardingFlow.waitFor({ state: 'visible' });
 
-		await this.onboardingTeamSkip.click();
-		await this.commitFirstCall();
-		await this.onboardingHandleSkip.click();
-
-		await this.signInDevButton.waitFor({ state: 'visible' });
+		await expect(this.signInDevButton).toBeEnabled();
 	}
 
 	/**
@@ -200,8 +161,8 @@ export class HomePage {
 	}
 
 	/**
-	 * High-level helper: opens `/signup`, walks the onboarding beats, signs
-	 * in via the dev mock identity at Beat 3, and lands on a fully-
+	 * High-level helper: opens `/signup`, brings the one-screen onboarding to
+	 * the auth step, signs in via the dev mock identity, and lands on a fully-
 	 * interactive signed-in shell (`/flow`). A fresh dev principal has no
 	 * profile, so this new-user path is the canonical way into the app — a
 	 * bare sign-in on `/signin` would itself bounce here.
@@ -224,7 +185,7 @@ export class HomePage {
 
 			await this.advanceOnboardingToAuth();
 
-			// Beat 3's dev provider drives the same `signIn({ dev: {} })` →
+			// The dev provider drives the same `signIn({ dev: {} })` →
 			// `onAuthStateChange` pipeline as the /signin gate; on success the
 			// onboarding handoff is drained and the app hard-loads `/flow`.
 			await this.signInDevButton.click();

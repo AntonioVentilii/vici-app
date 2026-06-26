@@ -53,8 +53,9 @@
 		}) => void;
 		// "Already a member? Sign in".
 		onSignIn: () => void;
-		// "Skip — preview first, sign up later".
-		onSkip: () => void;
+		// "Skip — preview first, sign up later". Carries the selected handle so
+		// the guest session (and the later conversion) keeps the chosen name.
+		onSkip: (handle: string | null) => void;
 		// True when the user is already signed in (post-signin onboarding path).
 		authenticated?: boolean;
 	}
@@ -315,6 +316,15 @@
 		canClaim ? 'onboarding.v3.lock_ready' : 'onboarding.v3.lock_blocked'
 	);
 
+	// Skip into guest preview. Stash the claimed handle through the same
+	// pre-auth pipeline a real sign-up uses, so a later conversion keeps the
+	// chosen name, then hand the handle to the host to open the guest session.
+	const onSkipPreview = () => {
+		const handle = availability.ok ? selectedName : null;
+		onCommitHandle();
+		onSkip(handle);
+	};
+
 	onMount(() => {
 		track({ name: 'onboarding_started', source: 'onboarding', label: 'v3' });
 	});
@@ -340,6 +350,7 @@
 						class="ob2-custom-input"
 						autocapitalize="off"
 						autocomplete="off"
+						data-tid={TestId.OnboardingHandleInput}
 						maxlength={MAX_NICKNAME_LENGTH}
 						onblur={onCommitHandle}
 						oninput={onInput}
@@ -452,7 +463,7 @@
 				<button
 					class="ob2-skip-link"
 					data-tid={TestId.OnboardingHandleSkip}
-					onclick={onSkip}
+					onclick={onSkipPreview}
 					type="button"
 				>
 					{t({ locale: $localeStore, key: 'onboarding.v3.skip' })}
