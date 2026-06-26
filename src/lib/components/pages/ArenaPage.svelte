@@ -94,7 +94,13 @@
 	});
 
 	// Same catch for a `?tab=` deep-link arriving via client-side navigation.
+	// A friend-request deep link still outranks it (matching onMount), so bail
+	// while one is forcing the Friends tab.
 	$effect(() => {
+		if (nonNullish(focusRequestKey)) {
+			return;
+		}
+
 		if (nonNullish(focusTabKey)) {
 			activeTab = focusTabKey;
 		}
