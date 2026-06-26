@@ -28,6 +28,7 @@
 	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
+	import { guestMode } from '$lib/derived/guest.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { minuteTick_ms } from '$lib/derived/time.derived';
 	import { vxpSpendable } from '$lib/derived/vxp-holdings.derived';
@@ -41,6 +42,7 @@
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { setFlowBeatActive } from '$lib/stores/flow-beat.store';
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
+	import { recordGuestPick } from '$lib/stores/guest.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketLanguagePreference } from '$lib/stores/market-language.store';
@@ -715,6 +717,37 @@
 
 		const stakeHuman = Number(tradeAmount) || 0;
 		const stakeUsd = stakeMarginUsd(currentMarket);
+
+		// Guest preview branch — a guest pick never reaches the engine. We
+		// record it as an in-session preview pick (marketId / side only, no
+		// stake) purely to power the conversion cadence, and skip `placeOrder`
+		// / the identity call entirely. Free guest play therefore can't move
+		// market prices. The session-stake accounting and the funds gate are
+		// member-only (the guest has no balance), so they are bypassed here.
+		if ($guestMode) {
+			const guestPickNumber = recordGuestPick({ marketId: currentMarket.id, side: action });
+
+			// `position_taken` with `source: 'guest_flow'` separates guest
+			// activity from member activity without a new event; `count` is the
+			// persisted session pick number (the cadence counter), so it stays
+			// consistent across a reload rather than tracking this sitting's
+			// in-memory `betsCount`.
+			track({
+				name: 'position_taken',
+				source: 'guest_flow',
+				marketId: currentMarket.id,
+				label: action,
+				count: guestPickNumber
+			});
+
+			betsCount += 1;
+			streak += 1;
+			flowTick();
+			finishCommitAdvance();
+
+			return;
+		}
+
 		sessionCommittedUsd += stakeUsd;
 
 		const executeTrade = async () => {

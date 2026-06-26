@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import GuestSaveHost from '$lib/components/guest/GuestSaveHost.svelte';
 	import DesktopAppNav from '$lib/components/layout/DesktopAppNav.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
@@ -17,8 +18,9 @@
 	import NotifToastHost from '$lib/components/ui/NotifToastHost.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
-	import { PublicPath } from '$lib/constants/routes.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
+	import { guestMode } from '$lib/derived/guest.derived';
 	import { authBusy, userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import {
 		drainPendingOnboarding,
@@ -91,6 +93,15 @@
 	// terms / privacy links in `OnboardingBeat3`). Treat them as a
 	// public route alongside the markets exemption above.
 	const isPublicInfoRoute = $derived(page.url.pathname.startsWith('/info/'));
+
+	// Guest preview surface — an active guest session (the onboarding Skip path)
+	// may reach Flow to predict freely with no account. Scoped to Flow: that is
+	// all the preview funnel needs, and it keeps a plain signed-out visitor (no
+	// guest session) bounced to /signin everywhere as before. A guest never has
+	// a real principal, so every auth-requiring path past Flow stays gated.
+	const isGuestAllowedRoute = $derived(
+		$guestMode && page.url.pathname.startsWith(resolve(AppPath.Flow))
+	);
 
 	// Auth-hydration window. After a provider resolves (notably the
 	// Internet Identity multi-account path), `goto(Flow)` can mount this
@@ -201,7 +212,7 @@
 			return;
 		}
 
-		if (isPublicMarketsRoute || isPublicInfoRoute) {
+		if (isPublicMarketsRoute || isPublicInfoRoute || isGuestAllowedRoute) {
 			return;
 		}
 
@@ -417,6 +428,14 @@
 		the top of the viewport, above the content.
 	-->
 	<NotifToastHost />
+
+	<!--
+		Guest conversion funnel. For a signed-out guest previewing Flow it
+		mounts the standing "start for real" inline CTA and the soft / remind
+		save sheet, gated so they never stack on a menagerie reveal or a Flow
+		beat. Inert (renders nothing) for members and plain signed-out visitors.
+	-->
+	<GuestSaveHost />
 
 	<!--
 		Recovery-on-return gate. Self-hides when the profile is active, so
