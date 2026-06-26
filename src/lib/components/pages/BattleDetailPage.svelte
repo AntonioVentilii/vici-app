@@ -2,7 +2,6 @@
 	import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
@@ -20,6 +19,7 @@
 		loadLeaguesByIds,
 		readBattleLiveScore,
 		resolveBattle,
+		restartLegacyBattle,
 		retractBattle,
 		type BattleLiveScore,
 		type LeagueWithRole
@@ -32,6 +32,7 @@
 	import { battleScopeLabel } from '$lib/utils/battle.utils';
 	import { formatDate, shortenPrincipal, shortLeagueId } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Battle detail — face-off view for a single battle. Shows sideA + sideB
@@ -68,6 +69,9 @@
 	// backend on every re-render.
 	const autoResolveAttempts = new SvelteMap<string, number>();
 	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
+	// Battle id → count of lazy auto-restart attempts for a baseline-less legacy
+	// row (#912). Same cap + retry rationale as the resolve counter above.
+	const autoRestartAttempts = new SvelteMap<string, number>();
 
 	// Where the viewer arrived from, for the `battle_viewed` funnel. A
 	// bounded vocabulary — anything unrecognised falls back to deep_link.
@@ -288,7 +292,21 @@
 	});
 
 	const canResolve = $derived(
-		battle?.state === 'in_flight' && nonNullish(resolverSide) && Date.now() >= battle.settleMs
+		battle?.state === 'in_flight' &&
+			nonNullish(resolverSide) &&
+			nonNullish(battle.baselineA) &&
+			nonNullish(battle.baselineB) &&
+			Date.now() >= battle.settleMs
+	);
+	// A legacy league battle accepted before baselines existed (#912): in
+	// flight but unscoreable. A member viewing it lazily restarts the window so
+	// it starts producing real standings instead of a frozen "—".
+	const needsRestart = $derived(
+		battle?.state === 'in_flight' &&
+			battle.kind === 'league' &&
+			nonNullish(resolverSide) &&
+			isNullish(battle.baselineA) &&
+			isNullish(battle.baselineB)
 	);
 	const canRetract = $derived(
 		battle?.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal
@@ -422,6 +440,24 @@
 		}
 	};
 
+	const handleRestart = async () => {
+		if (!battle || nonNullish(actingBattleId)) {
+			return;
+		}
+
+		const target = battle;
+		actingBattleId = target.id;
+
+		try {
+			await restartLegacyBattle({ battle: target });
+			await load();
+		} catch (err) {
+			console.error('BattleDetailPage: restartLegacyBattle failed', err);
+		} finally {
+			actingBattleId = null;
+		}
+	};
+
 	// Lazy auto-resolution: Juno has no scheduler, so a settled battle
 	// resolves the first time any member of either side opens it. The attempt
 	// counter guards against re-firing on every re-render while still letting
@@ -439,8 +475,27 @@
 		}
 	});
 
-	const backToInbox = () => {
-		void goto(`${resolve(AppPath.Arena)}/battles`);
+	// Lazy auto-restart: a legacy baseline-less battle heals the first time a
+	// member opens it, on the same scheduler-free liveness model as resolve.
+	// Silent and capped identically; on success the reload shows the fresh
+	// window and real standings.
+	$effect(() => {
+		if (
+			needsRestart &&
+			nonNullish(battle) &&
+			isNullish(actingBattleId) &&
+			(autoRestartAttempts.get(battle.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
+		) {
+			autoRestartAttempts.set(battle.id, (autoRestartAttempts.get(battle.id) ?? 0) + 1);
+			void handleRestart();
+		}
+	});
+
+	// Return to wherever the viewer came from in-app (league page, inbox).
+	// When they landed here cold — a deep link or fresh tab with no in-app
+	// history — `goBack` falls back to the Arena battles tab.
+	const handleBack = () => {
+		goBack(`${resolve(AppPath.Arena)}?tab=battles`);
 	};
 </script>
 
@@ -448,7 +503,7 @@
 	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'battle.detail.back' }),
-			onBack: backToInbox
+			onBack: handleBack
 		}}
 		title={t({ locale: $localeStore, key: 'battle.detail.title' })}
 	/>
