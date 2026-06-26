@@ -444,6 +444,25 @@ flow emits the `onboarding_completed` analytics event with the finishing
 provider and whether a team was persisted. Decision record:
 [`specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`](./spec-driven-development/specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md).
 
+### Onboarding — first-visit surface tips
+
+The first time an early user lands on Dash, Arena, or Profile, a single
+small, non-blocking tip slides in just above the floating tab bar
+explaining what that surface is for, then dismisses with its `X` button.
+Nothing fires up front: a tip only appears when the user actually
+navigates to that surface (progressive disclosure, not an up-front tour),
+one tip is ever on screen at a time, and each surface shows its tip at most
+once per device. The Profile tip does double duty — it nudges picking a
+team for the Worlds race. This is layer 2 of the first-run tutorial system,
+distinct from the in-flow gesture coach (`FlowCoach`, layer 1). Only early
+users see tips: an established user (`totalTrades >= 5`) is never
+interrupted. Seen-state is per-surface local storage (`vici.tip-*-seen`),
+identity-scoped like the coach flags, so a new account on the device
+re-sees the tips. Shown and dismissed both emit `onboarding_step`
+(`source: 'surface_tip' | 'surface_tip_dismiss'`, `label` = the surface).
+Decision record:
+[`specs/2026-06-25-feat-onboarding-surface-tips.md`](./spec-driven-development/specs/2026-06-25-feat-onboarding-surface-tips.md).
+
 ### Sign-in — one V3 visual family, Google + passkey-backed email
 
 The returning-user sign-in (`/signin` and every "sign in to continue"

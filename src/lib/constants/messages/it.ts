@@ -258,6 +258,16 @@ export const itMessages = {
 	'flow.coach.hint_idle.txt': 'tocca a te ',
 	'flow.coach.hint_idle.acc': '⚡',
 	'flow.coach.aria': 'Istruzioni gesti',
+	'tip.dash.title': 'Il tuo storico',
+	'tip.dash.body':
+		'Precisione, serie e posizione crescono a ogni previsione. Torna a vedere il tuo andamento.',
+	'tip.arena.title': 'Dove ti sfidi',
+	'tip.arena.body':
+		'Arena sono leghe, amici e classifiche Worlds — guarda come ti posizioni rispetto agli altri.',
+	'tip.profile.title': 'Qui vive la tua identità',
+	'tip.profile.body':
+		'Il tuo handle, il tuo Menagerie e la tua squadra. Scegli una squadra quando vuoi per entrare nella corsa Worlds.',
+	'tip.dismiss.aria': 'Ignora il suggerimento',
 	'tournament.back': 'Torna al social',
 	'tournament.bracket_eyebrow': 'TABELLONE',
 	'tournament.bracket_pending': 'Nessun tabellone è stato ancora sorteggiato per questo mese.',
