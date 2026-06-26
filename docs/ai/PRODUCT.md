@@ -316,10 +316,16 @@ canister). Decision record:
 
 ### Battles — accuracy face-offs that resolve themselves
 
-A **battle** is a time-bound accuracy face-off between two leagues. The
-owner of one league proposes; the challenged league's owner **accepts or
-declines**, and an unanswered proposal **expires** after a fixed
-respond-by window (3 days). For a league battle, **accepting starts the
+A **battle** is a time-bound accuracy face-off between two leagues. A
+league **owner or admin** proposes; an **owner or admin** of the
+challenged league **accepts or declines**, and an unanswered proposal
+**expires** after a fixed respond-by window (3 days). The `admin` role is
+a delegated battle authority — it can initiate and respond exactly as the
+owner does; a plain member sees "Only a league owner or admin can start a
+battle." and has no battle controls. An **owner** grants the role from
+the member sheet on the league page ("Make admin" / "Remove admin");
+promotion only toggles `member ↔ admin` and is owner-only, enforced
+server-side. For a league battle, **accepting starts the
 clock** — the proposer picks only a duration (7 / 14 / 30 days), and the
 N-day window runs from the moment of acceptance (accept fuses the old
 separate kickoff). The forward-only lifecycle is therefore **proposed →
@@ -355,8 +361,8 @@ score takes over.
 leagues are discoverable in challenge search and challengeable by
 outsiders; a league you are **already a member of** is always
 challengeable regardless of its privacy. INVITE and PRIVATE leagues
-never surface as opponents to non-members. You must own the side you
-challenge from. Privacy is **discovery-only**: changing a league's
+never surface as opponents to non-members. You must own or admin the side
+you challenge from. Privacy is **discovery-only**: changing a league's
 privacy after a battle exists never retracts or alters it — a battle's
 identity freezes at proposal and it runs to resolution; tightening
 privacy just removes the league from future challenge search.

@@ -34,11 +34,11 @@
 	 * Steps (steps the caller sees collapse when the data is
 	 * unambiguous):
 	 *
-	 *  1. Pick your league — only the leagues the caller owns can send a
-	 *     challenge (the satellite assert hard-rejects non-owners). Auto-
-	 *     skipped when the caller owns exactly one league or when
-	 *     `fromLeagueId` pins the challenger; the empty state routes to
-	 *     Leagues when they own none.
+	 *  1. Pick your league — only the leagues the caller owns or admins
+	 *     can send a challenge (the satellite assert hard-rejects everyone
+	 *     else). Auto-skipped when the caller owns/admins exactly one league
+	 *     or when `fromLeagueId` pins the challenger; the empty state routes
+	 *     to Leagues when they have none.
 	 *  2. Opponent — a searchable list of challengeable leagues
 	 *     (`listChallengeableLeagues`): public leagues plus the caller's
 	 *     own memberships, minus the leagues the caller owns. The caller
@@ -144,7 +144,7 @@
 
 		try {
 			const [mine, opponents] = await Promise.all([listMyLeagues(), listChallengeableLeagues()]);
-			ownedLeagues = mine.filter((m) => m.role === 'owner');
+			ownedLeagues = mine.filter((m) => m.role === 'owner' || m.role === 'admin');
 			challengeable = opponents;
 
 			fromLeague = pickDefaultFromLeague();
