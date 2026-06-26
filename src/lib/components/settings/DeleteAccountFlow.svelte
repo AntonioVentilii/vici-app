@@ -497,8 +497,7 @@
 					maxlength={EXIT_SIGNAL_NOTE_MAX_LENGTH}
 					placeholder={t({ locale: $localeStore, key: 'settings.delete.note_placeholder' })}
 					rows="3"
-					bind:value={note}
-				></textarea>
+					bind:value={note}></textarea>
 			{/if}
 
 			<div class="del-retain">

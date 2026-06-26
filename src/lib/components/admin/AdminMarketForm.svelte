@@ -212,8 +212,7 @@
 					key: 'admin.markets.form.field.resolution_placeholder'
 				})}
 				rows="4"
-				value={resolution}
-			></textarea>
+				value={resolution}></textarea>
 			<p class="text-muted-foreground text-[10px]">
 				{t({
 					locale: $localeStore,
@@ -239,8 +238,7 @@
 					key: 'admin.markets.form.field.description_placeholder'
 				})}
 				rows="4"
-				value={description}
-			></textarea>
+				value={description}></textarea>
 		</div>
 
 		<div class="space-y-2">
