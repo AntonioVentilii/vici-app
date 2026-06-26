@@ -157,6 +157,7 @@ const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 				'battle_viewed',
 				'comment_posted',
 				'chat_sent',
+				'leaderboard_viewed',
 				'affiliation_set',
 				'affiliation_removed',
 				'school_picker_opened',
@@ -168,6 +169,9 @@ const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 				'delete_succeeded',
 				'exit_signal',
 				'notification_opened',
+				'pwa_install_prompted',
+				'pwa_install_accepted',
+				'pwa_install_dismissed',
 				'app_error',
 				'perf_metric'
 			]),
@@ -766,6 +770,42 @@ const listFriendRequests = async (): Promise<j.infer<typeof AppListFriendRequest
 
 	const result = schemaFromIdl({ schema: AppListFriendRequestsResultSchema, value: idlResult });
 	return AppListFriendRequestsResultSchema.parse(result);
+};
+
+const AppListFriendResolvedResultsArgsSchema = j.strictObject({ friends: j.array(j.string()) });
+const AppListFriendResolvedResultsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			owner: j.string(),
+			marketId: j.string(),
+			title: j.string(),
+			side: j.string(),
+			outcome: j.enum(['win', 'loss']),
+			netVxp: j.number(),
+			resolvedAtMs: j.number()
+		})
+	)
+});
+
+const listFriendResolvedResults = async (
+	args: j.infer<typeof AppListFriendResolvedResultsArgsSchema>
+): Promise<j.infer<typeof AppListFriendResolvedResultsResultSchema>> => {
+	const parsedArgs = AppListFriendResolvedResultsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListFriendResolvedResultsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_friend_resolved_results']>[0];
+
+	const { app_list_friend_resolved_results } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_friend_resolved_results(idlArgs);
+
+	const result = schemaFromIdl({
+		schema: AppListFriendResolvedResultsResultSchema,
+		value: idlResult
+	});
+	return AppListFriendResolvedResultsResultSchema.parse(result);
 };
 
 const AppListFriendsResultSchema = j.strictObject({
@@ -1529,6 +1569,20 @@ const hibernateMyAccount = async (): Promise<j.infer<typeof AppHibernateMyAccoun
 	return AppHibernateMyAccountResultSchema.parse(result);
 };
 
+const AppPruneResolvedResultsResultSchema = j.strictObject({ pruned: j.number() });
+
+const pruneResolvedResults = async (): Promise<
+	j.infer<typeof AppPruneResolvedResultsResultSchema>
+> => {
+	const { app_prune_resolved_results } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_prune_resolved_results();
+
+	const result = schemaFromIdl({ schema: AppPruneResolvedResultsResultSchema, value: idlResult });
+	return AppPruneResolvedResultsResultSchema.parse(result);
+};
+
 const AppRecomputeActivityReactionCountsResultSchema = j.strictObject({ recomputed: j.number() });
 
 const recomputeActivityReactionCounts = async (): Promise<
@@ -1818,6 +1872,7 @@ const AppTrackEventsArgsSchema = j.strictObject({
 				'battle_viewed',
 				'comment_posted',
 				'chat_sent',
+				'leaderboard_viewed',
 				'affiliation_set',
 				'affiliation_removed',
 				'school_picker_opened',
@@ -1829,6 +1884,9 @@ const AppTrackEventsArgsSchema = j.strictObject({
 				'delete_succeeded',
 				'exit_signal',
 				'notification_opened',
+				'pwa_install_prompted',
+				'pwa_install_accepted',
+				'pwa_install_dismissed',
 				'app_error',
 				'perf_metric'
 			]),
@@ -2082,6 +2140,7 @@ export const functions = {
 	listFollowing,
 	listFriendRecommendedLeagues,
 	listFriendRequests,
+	listFriendResolvedResults,
 	listFriends,
 	listLeaderboard,
 	listLeagueBattles,
@@ -2108,6 +2167,7 @@ export const functions = {
 	deleteMyAccount,
 	followUser,
 	hibernateMyAccount,
+	pruneResolvedResults,
 	recomputeActivityReactionCounts,
 	recordFlowSwipe,
 	recoverMyAccount,
