@@ -11,20 +11,43 @@
  */
 export enum TestId {
 	AppMain = 'app-main',
-	SignInButton = 'sign-in-button',
 	SignInDev = 'sign-in-dev',
+	// The signed-in account control in the app chrome — the desktop nav
+	// profile handle and the mobile pillnav profile tab both carry it, so
+	// `[data-tid="user-menu"]:visible` resolves to whichever one the current
+	// viewport renders.
 	UserMenu = 'user-menu',
+	// Settings sign-out: the reveal button, then the destructive confirm.
+	SignOutButton = 'sign-out-button',
 	Logout = 'logout',
 	MarketFeed = 'market-feed',
 	MarketCard = 'market-card',
 	MarketCardSkeleton = 'market-card-skeleton',
 	MarketTimeRemaining = 'market-time-remaining',
 	PrincipalDisplay = 'principal-display',
+	// Onboarding (`/signup`): the outer wrapper shared by both surfaces; the
+	// one-screen flow's handle input + skip; and the multi-beat flow's team
+	// skip, first-call card, pool suggestions, and shared primary CTA (claim /
+	// finish), still reachable behind the flag-off path.
 	OnboardingFlow = 'onboarding-flow',
-	OnboardingFirstCallCard = 'onboarding-first-call-card',
-	OnboardingPracticeCard = 'onboarding-practice-card',
-	OnboardingPrimary = 'onboarding-primary',
-	OnboardingInterest = 'onboarding-interest',
+	OnboardingTeamSkip = 'onboarding-team-skip',
+	OnboardingCard = 'onboarding-card',
+	OnboardingHandleSuggestion = 'onboarding-handle-suggestion',
 	OnboardingHandleInput = 'onboarding-handle-input',
-	OnboardingEmailInput = 'onboarding-email-input'
+	OnboardingHandleSkip = 'onboarding-handle-skip',
+	OnboardingPrimary = 'onboarding-primary',
+	// Admin resolutions page (`/admin/resolutions`): the pending-list and
+	// history sections, the list's search input, each pending market card
+	// (also tagged with `data-market-id` so a specific market is
+	// addressable), its YES / NO resolve buttons, and the confirm dialog
+	// with its cancel / confirm controls.
+	AdminResolutionList = 'admin-resolution-list',
+	AdminResolutionHistory = 'admin-resolution-history',
+	AdminResolutionSearch = 'admin-resolution-search',
+	AdminResolutionCard = 'admin-resolution-card',
+	AdminResolutionResolveYes = 'admin-resolution-resolve-yes',
+	AdminResolutionResolveNo = 'admin-resolution-resolve-no',
+	AdminResolutionConfirmDialog = 'admin-resolution-confirm-dialog',
+	AdminResolutionConfirmCancel = 'admin-resolution-confirm-cancel',
+	AdminResolutionConfirmCta = 'admin-resolution-confirm-cta'
 }

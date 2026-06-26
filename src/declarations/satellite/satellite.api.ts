@@ -97,6 +97,130 @@ const getAffiliationStats = async (
 	return AppGetAffiliationStatsResultSchema.parse(result);
 };
 
+const AppGetAnalyticsEventsArgsSchema = j.strictObject({
+	afterUpdatedAtNs: j.optional(j.string()),
+	afterKey: j.optional(j.string()),
+	limit: j.number()
+});
+const AppGetAnalyticsEventsResultSchema = j.strictObject({
+	rows: j.array(
+		j.strictObject({
+			key: j.string(),
+			createdAtNs: j.string(),
+			updatedAtNs: j.string(),
+			version: j.optional(j.string()),
+			ownerText: j.optional(j.string()),
+			name: j.enum([
+				'session_started',
+				'signed_up',
+				'signed_in',
+				'signed_out',
+				'provider_linked',
+				'onboarding_started',
+				'onboarding_step',
+				'handle_checked',
+				'onboarding_completed',
+				'flow_session_started',
+				'flow_swipe',
+				'flow_card_expanded',
+				'flow_completed',
+				'flow_abandoned',
+				'sound_toggled',
+				'market_viewed',
+				'market_searched',
+				'market_shared',
+				'watchlist_added',
+				'watchlist_removed',
+				'orderbook_viewed',
+				'market_translation_toggled',
+				'position_taken',
+				'position_closed',
+				'prediction_created',
+				'order_placed',
+				'order_cancelled',
+				'resolution_proposed',
+				'resolution_confirmed',
+				'resolution_disputed',
+				'payout_settled',
+				'referral_sent',
+				'referral_link_copied',
+				'referral_redeemed',
+				'referral_converted',
+				'vxp_awarded',
+				'streak_milestone',
+				'faucet_claimed',
+				'transactions_viewed',
+				'transactions_filtered',
+				'friend_request_sent',
+				'friend_feed_reaction',
+				'friend_digest_opened',
+				'league_created',
+				'league_joined',
+				'league_invite_sent',
+				'battle_proposed',
+				'battle_accepted',
+				'battle_declined',
+				'battle_expired',
+				'battle_resolved',
+				'battle_viewed',
+				'comment_posted',
+				'chat_sent',
+				'leaderboard_viewed',
+				'affiliation_set',
+				'affiliation_removed',
+				'school_picker_opened',
+				'school_picked',
+				'school_verify_email_submitted',
+				'school_verify_code_submitted',
+				'delete_flow_opened',
+				'delete_confirmed',
+				'delete_succeeded',
+				'exit_signal',
+				'notification_opened',
+				'pwa_install_prompted',
+				'pwa_install_accepted',
+				'pwa_install_dismissed',
+				'app_error',
+				'perf_metric'
+			]),
+			tsMs: j.number(),
+			sessionId: j.string(),
+			principalText: j.optional(j.string()),
+			path: j.optional(j.string()),
+			marketId: j.optional(j.string()),
+			seriesId: j.optional(j.string()),
+			leagueId: j.optional(j.string()),
+			battleId: j.optional(j.string()),
+			source: j.optional(j.string()),
+			label: j.optional(j.string()),
+			step: j.optional(j.number()),
+			value: j.optional(j.number()),
+			count: j.optional(j.number()),
+			durationMs: j.optional(j.number()),
+			ok: j.optional(j.boolean())
+		})
+	),
+	hasMore: j.boolean()
+});
+
+const getAnalyticsEvents = async (
+	args: j.infer<typeof AppGetAnalyticsEventsArgsSchema>
+): Promise<j.infer<typeof AppGetAnalyticsEventsResultSchema>> => {
+	const parsedArgs = AppGetAnalyticsEventsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetAnalyticsEventsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_analytics_events']>[0];
+
+	const { app_get_analytics_events } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_analytics_events(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetAnalyticsEventsResultSchema, value: idlResult });
+	return AppGetAnalyticsEventsResultSchema.parse(result);
+};
+
 const AppGetAnalyticsSummaryArgsSchema = j.strictObject({ days: j.number() });
 const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 	rows: j.array(
@@ -125,6 +249,7 @@ const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 				'watchlist_added',
 				'watchlist_removed',
 				'orderbook_viewed',
+				'market_translation_toggled',
 				'position_taken',
 				'position_closed',
 				'prediction_created',
@@ -141,15 +266,23 @@ const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 				'vxp_awarded',
 				'streak_milestone',
 				'faucet_claimed',
+				'transactions_viewed',
+				'transactions_filtered',
 				'friend_request_sent',
+				'friend_feed_reaction',
+				'friend_digest_opened',
 				'league_created',
 				'league_joined',
 				'league_invite_sent',
 				'battle_proposed',
 				'battle_accepted',
+				'battle_declined',
+				'battle_expired',
 				'battle_resolved',
+				'battle_viewed',
 				'comment_posted',
 				'chat_sent',
+				'leaderboard_viewed',
 				'affiliation_set',
 				'affiliation_removed',
 				'school_picker_opened',
@@ -160,6 +293,10 @@ const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 				'delete_confirmed',
 				'delete_succeeded',
 				'exit_signal',
+				'notification_opened',
+				'pwa_install_prompted',
+				'pwa_install_accepted',
+				'pwa_install_dismissed',
 				'app_error',
 				'perf_metric'
 			]),
@@ -760,6 +897,42 @@ const listFriendRequests = async (): Promise<j.infer<typeof AppListFriendRequest
 	return AppListFriendRequestsResultSchema.parse(result);
 };
 
+const AppListFriendResolvedResultsArgsSchema = j.strictObject({ friends: j.array(j.string()) });
+const AppListFriendResolvedResultsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			owner: j.string(),
+			marketId: j.string(),
+			title: j.string(),
+			side: j.string(),
+			outcome: j.enum(['win', 'loss']),
+			netVxp: j.number(),
+			resolvedAtMs: j.number()
+		})
+	)
+});
+
+const listFriendResolvedResults = async (
+	args: j.infer<typeof AppListFriendResolvedResultsArgsSchema>
+): Promise<j.infer<typeof AppListFriendResolvedResultsResultSchema>> => {
+	const parsedArgs = AppListFriendResolvedResultsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListFriendResolvedResultsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_friend_resolved_results']>[0];
+
+	const { app_list_friend_resolved_results } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_friend_resolved_results(idlArgs);
+
+	const result = schemaFromIdl({
+		schema: AppListFriendResolvedResultsResultSchema,
+		value: idlResult
+	});
+	return AppListFriendResolvedResultsResultSchema.parse(result);
+};
+
 const AppListFriendsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
@@ -828,15 +1001,20 @@ const AppListLeagueBattlesResultSchema = j.strictObject({
 			sideA: j.string(),
 			sideB: j.string(),
 			proposer: j.string(),
-			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved', 'declined', 'expired']),
 			kickoffMs: j.number(),
 			settleMs: j.number(),
+			respondByMs: j.optional(j.number()),
+			respondedAtMs: j.optional(j.number()),
 			scope: j.optional(j.string()),
 			wager: j.optional(j.number()),
 			trashTalk: j.optional(j.string()),
 			scoreA: j.optional(j.number()),
 			scoreB: j.optional(j.number()),
-			winner: j.optional(j.enum(['A', 'B', 'draw']))
+			callsA: j.optional(j.number()),
+			callsB: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw'])),
+			resolvedAtMs: j.optional(j.number())
 		})
 	)
 });
@@ -923,6 +1101,45 @@ const listMarketTranslations = async (
 	return AppListMarketTranslationsResultSchema.parse(result);
 };
 
+const AppListMarketTranslationsForLocalesArgsSchema = j.strictObject({
+	seriesIds: j.array(j.string()),
+	locales: j.array(j.string())
+});
+const AppListMarketTranslationsForLocalesResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			seriesId: j.string(),
+			locale: j.string(),
+			title: j.string(),
+			description: j.string(),
+			resolution: j.string(),
+			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
+			updatedAt: j.number(),
+			updatedBy: j.string()
+		})
+	)
+});
+
+const listMarketTranslationsForLocales = async (
+	args: j.infer<typeof AppListMarketTranslationsForLocalesArgsSchema>
+): Promise<j.infer<typeof AppListMarketTranslationsForLocalesResultSchema>> => {
+	const parsedArgs = AppListMarketTranslationsForLocalesArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListMarketTranslationsForLocalesArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_market_translations_for_locales']>[0];
+
+	const { app_list_market_translations_for_locales } =
+		await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_list_market_translations_for_locales(idlArgs);
+
+	const result = schemaFromIdl({
+		schema: AppListMarketTranslationsForLocalesResultSchema,
+		value: idlResult
+	});
+	return AppListMarketTranslationsForLocalesResultSchema.parse(result);
+};
+
 const AppListMyAffiliationsResultSchema = j.strictObject({
 	university: j.optional(
 		j.strictObject({
@@ -962,15 +1179,20 @@ const AppListMyBattlesResultSchema = j.strictObject({
 			sideA: j.string(),
 			sideB: j.string(),
 			proposer: j.string(),
-			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved', 'declined', 'expired']),
 			kickoffMs: j.number(),
 			settleMs: j.number(),
+			respondByMs: j.optional(j.number()),
+			respondedAtMs: j.optional(j.number()),
 			scope: j.optional(j.string()),
 			wager: j.optional(j.number()),
 			trashTalk: j.optional(j.string()),
 			scoreA: j.optional(j.number()),
 			scoreB: j.optional(j.number()),
-			winner: j.optional(j.enum(['A', 'B', 'draw']))
+			callsA: j.optional(j.number()),
+			callsB: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw'])),
+			resolvedAtMs: j.optional(j.number())
 		})
 	)
 });
@@ -1472,6 +1694,59 @@ const hibernateMyAccount = async (): Promise<j.infer<typeof AppHibernateMyAccoun
 	return AppHibernateMyAccountResultSchema.parse(result);
 };
 
+const AppPruneResolvedResultsResultSchema = j.strictObject({ pruned: j.number() });
+
+const pruneResolvedResults = async (): Promise<
+	j.infer<typeof AppPruneResolvedResultsResultSchema>
+> => {
+	const { app_prune_resolved_results } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_prune_resolved_results();
+
+	const result = schemaFromIdl({ schema: AppPruneResolvedResultsResultSchema, value: idlResult });
+	return AppPruneResolvedResultsResultSchema.parse(result);
+};
+
+const AppRecomputeActivityReactionCountsResultSchema = j.strictObject({ recomputed: j.number() });
+
+const recomputeActivityReactionCounts = async (): Promise<
+	j.infer<typeof AppRecomputeActivityReactionCountsResultSchema>
+> => {
+	const { app_recompute_activity_reaction_counts } =
+		await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_recompute_activity_reaction_counts();
+
+	const result = schemaFromIdl({
+		schema: AppRecomputeActivityReactionCountsResultSchema,
+		value: idlResult
+	});
+	return AppRecomputeActivityReactionCountsResultSchema.parse(result);
+};
+
+const AppRecordFlowSwipeArgsSchema = j.strictObject({ dayKey: j.string() });
+const AppRecordFlowSwipeResultSchema = j.strictObject({
+	dailyGoalDone: j.number(),
+	dailyGoalDate: j.string(),
+	capReached: j.boolean()
+});
+
+const recordFlowSwipe = async (
+	args: j.infer<typeof AppRecordFlowSwipeArgsSchema>
+): Promise<j.infer<typeof AppRecordFlowSwipeResultSchema>> => {
+	const parsedArgs = AppRecordFlowSwipeArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppRecordFlowSwipeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_record_flow_swipe']>[0];
+
+	const { app_record_flow_swipe } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_record_flow_swipe(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppRecordFlowSwipeResultSchema, value: idlResult });
+	return AppRecordFlowSwipeResultSchema.parse(result);
+};
+
 const AppRecoverMyAccountResultSchema = j.strictObject({
 	ok: j.boolean(),
 	recovered: j.optional(j.boolean()),
@@ -1690,6 +1965,7 @@ const AppTrackEventsArgsSchema = j.strictObject({
 				'watchlist_added',
 				'watchlist_removed',
 				'orderbook_viewed',
+				'market_translation_toggled',
 				'position_taken',
 				'position_closed',
 				'prediction_created',
@@ -1706,15 +1982,23 @@ const AppTrackEventsArgsSchema = j.strictObject({
 				'vxp_awarded',
 				'streak_milestone',
 				'faucet_claimed',
+				'transactions_viewed',
+				'transactions_filtered',
 				'friend_request_sent',
+				'friend_feed_reaction',
+				'friend_digest_opened',
 				'league_created',
 				'league_joined',
 				'league_invite_sent',
 				'battle_proposed',
 				'battle_accepted',
+				'battle_declined',
+				'battle_expired',
 				'battle_resolved',
+				'battle_viewed',
 				'comment_posted',
 				'chat_sent',
+				'leaderboard_viewed',
 				'affiliation_set',
 				'affiliation_removed',
 				'school_picker_opened',
@@ -1725,6 +2009,10 @@ const AppTrackEventsArgsSchema = j.strictObject({
 				'delete_confirmed',
 				'delete_succeeded',
 				'exit_signal',
+				'notification_opened',
+				'pwa_install_prompted',
+				'pwa_install_accepted',
+				'pwa_install_dismissed',
 				'app_error',
 				'perf_metric'
 			]),
@@ -1961,6 +2249,7 @@ export const functions = {
 	checkFriendship,
 	checkNicknameAvailability,
 	getAffiliationStats,
+	getAnalyticsEvents,
 	getAnalyticsSummary,
 	getCurrentTournament,
 	getMarketMetadata,
@@ -1978,11 +2267,13 @@ export const functions = {
 	listFollowing,
 	listFriendRecommendedLeagues,
 	listFriendRequests,
+	listFriendResolvedResults,
 	listFriends,
 	listLeaderboard,
 	listLeagueBattles,
 	listLeagueMembers,
 	listMarketTranslations,
+	listMarketTranslationsForLocales,
 	listMyAffiliations,
 	listMyBattles,
 	listMyBlockingLeagues,
@@ -2003,6 +2294,9 @@ export const functions = {
 	deleteMyAccount,
 	followUser,
 	hibernateMyAccount,
+	pruneResolvedResults,
+	recomputeActivityReactionCounts,
+	recordFlowSwipe,
 	recoverMyAccount,
 	redeemReferralCode,
 	rejectFriendRequest,

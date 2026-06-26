@@ -1,11 +1,15 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { TestId } from '../../src/lib/constants/test-ids.constants';
 
 /**
- * Page object for the Vici home / markets feed and the public-layer
- * surfaces it routes through. The (app) layout gates every route on a
- * resolved session — anonymous visits to `/`, `/portfolio`, etc. now
- * redirect to `/signin`. The page object reflects that flow.
+ * Page object for the Vici signed-in surfaces and the auth / onboarding
+ * flow that reaches them.
+ *
+ * The (app) layout gates every route on a resolved session — anonymous
+ * visits to `/app`, `/portfolio`, etc. redirect to `/signin`. Sign-in
+ * itself routes a brand-new principal through the `/signup` one-screen
+ * onboarding before the app shell, so the helpers below drive that flow
+ * end-to-end rather than expecting a bare sign-in to land in the app.
  *
  * Tests should prefer this object over reaching into selectors so that
  * structural changes only have to be reflected in one place.
@@ -18,12 +22,20 @@ export class HomePage {
 	readonly marketCardSkeleton: Locator;
 	readonly marketTimeRemaining: Locator;
 	readonly signInDevButton: Locator;
+	/**
+	 * The signed-in account control. The desktop top-nav profile handle and
+	 * the mobile pillnav profile tab both carry `data-tid="user-menu"`, and
+	 * exactly one is visible per viewport (the other is `display:none` at
+	 * its breakpoint), so the `:visible` filter resolves to a single match
+	 * on both the `chromium` (desktop) and `Galaxy *` (mobile) projects.
+	 */
 	readonly userMenu: Locator;
+	readonly signOutButton: Locator;
 	readonly logoutButton: Locator;
 	readonly onboardingFlow: Locator;
-	readonly onboardingPrimary: Locator;
-	readonly onboardingInterest: Locator;
 	readonly onboardingHandleInput: Locator;
+	readonly onboardingHandleSkip: Locator;
+	readonly onboardingPrimary: Locator;
 
 	constructor(page: Page) {
 		this.page = page;
@@ -33,16 +45,26 @@ export class HomePage {
 		this.marketCardSkeleton = page.getByTestId(TestId.MarketCardSkeleton);
 		this.marketTimeRemaining = page.getByTestId(TestId.MarketTimeRemaining);
 		this.signInDevButton = page.getByTestId(TestId.SignInDev);
-		this.userMenu = page.getByTestId(TestId.UserMenu);
+		this.userMenu = page.locator(`[data-tid="${TestId.UserMenu}"]:visible`);
+		this.signOutButton = page.getByTestId(TestId.SignOutButton);
 		this.logoutButton = page.getByTestId(TestId.Logout);
 		this.onboardingFlow = page.getByTestId(TestId.OnboardingFlow);
-		this.onboardingPrimary = page.getByTestId(TestId.OnboardingPrimary);
-		this.onboardingInterest = page.getByTestId(TestId.OnboardingInterest);
 		this.onboardingHandleInput = page.getByTestId(TestId.OnboardingHandleInput);
+		this.onboardingHandleSkip = page.getByTestId(TestId.OnboardingHandleSkip);
+		this.onboardingPrimary = page.getByTestId(TestId.OnboardingPrimary);
 	}
 
 	async goto(): Promise<void> {
 		await this.page.goto('/');
+	}
+
+	/**
+	 * The markets board. The root landing (`/`) bounces a signed-in session
+	 * to `/flow`; the markets list lives on the canonical home surface at
+	 * `/app` (`AppPath.Home`), which is what the feed snapshots target.
+	 */
+	async gotoMarkets(): Promise<void> {
+		await this.page.goto('/app');
 	}
 
 	async gotoSignIn(): Promise<void> {
@@ -101,39 +123,57 @@ export class HomePage {
 	}
 
 	/**
-	 * Wait until the auth gate has settled — either we landed on a
-	 * gated route (signed-in path) or we got redirected to `/signin`
-	 * (signed-out path). Useful as the first await after a navigation
-	 * so subsequent assertions see a stable URL.
+	 * Bring the `/signup` one-screen onboarding to the point where auth can
+	 * start. The empty handle field auto-claims its pool suggestion, so the
+	 * provider stack ungates (the dev button becomes enabled) without any
+	 * interaction — leaving the flow ready for the dev sign-in click. The
+	 * "Skip" affordance is deliberately untouched: it starts guest mode, not
+	 * the auth path.
 	 */
-	async waitForAuthGate(): Promise<void> {
-		await this.page.waitForURL(/\/(signin|signup)?(?:\?.*)?$|\/[a-z]+/);
+	async advanceOnboardingToAuth(): Promise<void> {
+		await this.onboardingFlow.waitFor({ state: 'visible' });
+
+		await expect(this.signInDevButton).toBeEnabled();
 	}
 
 	/**
-	 * Phase 2 moved onboarding to `/signup` before authentication.
-	 * Signing in through `/signin` should therefore land directly in
-	 * the app shell. Keep this helper as a synchronization point for
-	 * specs that still call `signInAsDevUser()` — it waits for the
-	 * signed-in shell and profile hydration to settle.
+	 * Wait until the signed-in app shell has settled — the account control
+	 * is visible and the initial data fetches have gone idle. Useful as the
+	 * first await after a sign-in so subsequent assertions see a stable
+	 * shell rather than racing hydration.
 	 */
-	async completeOnboarding(): Promise<void> {
+	async waitForSignedInShell(): Promise<void> {
 		await this.userMenu.waitFor({ state: 'visible' });
-		await this.page.waitForLoadState('networkidle');
+
+		// Best-effort settle: the account control being visible already proves
+		// the signed-in shell mounted. `networkidle` is bounded and its
+		// timeout swallowed because the landing surface (`/flow`) runs
+		// background polling (order books) that can keep the network from ever
+		// going fully idle — without the bound this would hang the full
+		// `actionTimeout` on every sign-in.
+		try {
+			await this.page.waitForLoadState('networkidle', { timeout: 5_000 });
+		} catch (err) {
+			if (!(err instanceof Error) || err.name !== 'TimeoutError') {
+				throw err;
+			}
+		}
 	}
 
 	/**
-	 * High-level helper: navigates to `/signin`, signs in via the dev
-	 * mock identity, walks past the onboarding overlay, and lands on a
-	 * fully-interactive signed-in app shell at `/`.
+	 * High-level helper: opens `/signup`, brings the one-screen onboarding to
+	 * the auth step, signs in via the dev mock identity, and lands on a fully-
+	 * interactive signed-in shell (`/flow`). A fresh dev principal has no
+	 * profile, so this new-user path is the canonical way into the app — a
+	 * bare sign-in on `/signin` would itself bounce here.
 	 *
 	 * Wrapped in one auto-retry with a page reload between attempts. The
 	 * sign-in pipeline rides on `/api/v3|v4/canister/*` calls through the
 	 * Vite dev-server proxy, which has been observed to enter a sticky
 	 * `socket hang up` / `ECONNRESET` state mid-suite. Top-level Playwright
 	 * retries don't help — they share the same dev-server process and the
-	 * connection pool stays poisoned. A `page.reload()` opens a fresh
-	 * browser context against the proxy and is often enough to recover.
+	 * connection pool stays poisoned. A `page.reload()` re-runs app init
+	 * against the proxy and is often enough to shake it loose.
 	 *
 	 * If the second attempt also fails, throws with the underlying error
 	 * wrapped in context so it doesn't get swallowed into a generic
@@ -141,20 +181,25 @@ export class HomePage {
 	 */
 	async signInAsDevUser(): Promise<void> {
 		const attempt = async (): Promise<void> => {
-			// `signin` is the canonical entry — direct navigation avoids
-			// a redirect bounce when the test starts at a gated path.
-			if (!this.page.url().includes('/signin')) {
-				await this.gotoSignIn();
-			}
+			await this.page.goto('/signup');
 
+			await this.advanceOnboardingToAuth();
+
+			// The dev provider drives the same `signIn({ dev: {} })` →
+			// `onAuthStateChange` pipeline as the /signin gate; on success the
+			// onboarding handoff is drained and the app hard-loads `/flow`.
 			await this.signInDevButton.click();
-			await this.completeOnboarding();
+
+			await this.waitForSignedInShell();
 		};
 
 		try {
 			await attempt();
 		} catch (firstError: unknown) {
-			await this.page.reload({ waitUntil: 'networkidle' });
+			// `domcontentloaded`, not `networkidle`: the signed-in surfaces run
+			// background polling that can keep the network from ever going
+			// idle, which would hang the retry instead of recovering it.
+			await this.page.reload({ waitUntil: 'domcontentloaded' });
 
 			try {
 				await attempt();
@@ -170,8 +215,15 @@ export class HomePage {
 		}
 	}
 
+	/**
+	 * Sign out via the Settings page — the only sign-out surface in the
+	 * current app (the old account dropdown is gone). The reveal button
+	 * arms an in-page confirm; the destructive confirm calls `signOut()`,
+	 * after which the (app) gate routes back to `/signin`.
+	 */
 	async logout(): Promise<void> {
-		await this.userMenu.click();
+		await this.page.goto('/settings');
+		await this.signOutButton.click();
 		await this.logoutButton.click();
 	}
 }

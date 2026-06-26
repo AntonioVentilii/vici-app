@@ -63,8 +63,24 @@ export interface Market {
 	totalVolume: bigint;
 	yesVolume: bigint;
 	noVolume: bigint;
-	yesProbability: number;
-	noProbability: number;
+	/**
+	 * YES probability (0–1), derived from the live book mid. **Optional on
+	 * purpose:** `undefined` means "not known yet" — the order book hasn't been
+	 * read, or it was read and is empty. Consumers must render a loading
+	 * skeleton (when {@link priceLoaded} is falsy) or a no-liquidity dash
+	 * (when it's true) for `undefined`, never a 0.5 placeholder. Resolved
+	 * markets pin this to 1 or 0.
+	 */
+	yesProbability?: number;
+	/** NO probability (0–1) = `1 - yesProbability`. `undefined` mirrors {@link yesProbability}. */
+	noProbability?: number;
+	/**
+	 * `true` once an order-book read has completed for this market (regardless
+	 * of whether it had liquidity). Distinguishes *loading* (`false`/absent →
+	 * skeleton) from *loaded but no liquidity* (`true` with nullish
+	 * probability → dash). Resolved markets are `true`.
+	 */
+	priceLoaded?: boolean;
 	bestBid?: number;
 	bestAsk?: number;
 	bestBidQty?: bigint;

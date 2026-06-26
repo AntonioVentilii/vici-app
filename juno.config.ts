@@ -19,6 +19,9 @@ enum JunoDatastoreCollection {
 	MARKET_METADATA = 'market_metadata',
 	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
+	ACTIVITY_REACTIONS = 'activity_reactions',
+	ACTIVITY_REACTION_COUNTS = 'activity_reaction_counts',
+	RESOLVED_RESULTS = 'resolved_results',
 	VXP_ONBOARDING = 'vxp_onboarding',
 	VXP_AWARDS = 'vxp_awards',
 	REFERRAL_CODES = 'referral_codes',
@@ -140,6 +143,42 @@ export default defineConfig(({ mode }) => ({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				// Per-liker reaction docs for the friend activity feed (one doc
+				// per activity-per-liker). Public read so counts + my-likes
+				// hydrate on load; public write so a user persists their own
+				// like. `assertSetActivityReaction` binds each write to its
+				// caller (liker === caller, key shape), and Juno's owner-scoped
+				// delete keeps an unlike to the liker's own doc.
+				{
+					collection: JunoDatastoreCollection.ACTIVITY_REACTIONS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				// Per-activity like-count rollup. Public read (the feed renders
+				// counts); controllers write so only the satellite hooks
+				// (onActivityReactionSet / onActivityReactionDelete, writing as
+				// admin) can move a count — a client can't forge one. Maintained
+				// server-side; the admin recompute endpoint re-derives exact
+				// counts from `activity_reactions` on demand.
+				{
+					collection: JunoDatastoreCollection.ACTIVITY_REACTION_COUNTS,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
+				},
+				// Per-participant resolved-result rows for the friend-readable
+				// results feed. Public read (the friend-scoped digest reads
+				// them); controllers write so only the satellite resolution hook
+				// (writing as admin, derived from the clearing settlement plan)
+				// can record a result — a client can't forge a win. Rows past the
+				// retention horizon are pruned by the controllers-only cleanup.
+				{
+					collection: JunoDatastoreCollection.RESOLVED_RESULTS,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
 				},
 				{
 					collection: JunoDatastoreCollection.VXP_ONBOARDING,

@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: In progress (PR pending — branch `feat/friend-feed-reaction-redesign`)
+Status: Implemented (#825)
 
 ## Goal
 
@@ -93,9 +93,10 @@ Brand constraints
 
 ## Design artifacts (frontend)
 
-- [`./2026-06-12-feat-friend-feed-reaction-redesign/reactions-explorer.html`](./2026-06-12-feat-friend-feed-reaction-redesign/reactions-explorer.html)
-  — interactive explorer used to lock the reaction styling (icon,
-  colour token, size, stroke, animation, burst). Deleted post-merge.
+The interactive explorer used to lock the reaction styling (icon, colour
+token, size, stroke, animation, burst) lived at
+`2026-06-12-feat-friend-feed-reaction-redesign/reactions-explorer.html` and
+was removed in the post-merge cleanup; git history retains it.
 
 ## Technical requirements (satellite / backend)
 
@@ -142,4 +143,11 @@ the reaction stays local-only.
   spring/overshoot, per brand §8. Both are reduced-motion gated.
 - **Local-only reaction retained.** Persisting reactions needs a
   satellite model and fan-out; out of scope here to keep the redesign
-  shippable. Tracked as a follow-up.
+  shippable. Tracked as a follow-up (later shipped — likes persist with
+  counts, #891 / #897).
+- **Implementation deviated to `--color-primary` (code is canonical).**
+  This spec's liked-state styling specced `--laurel`, but the shipped
+  `FriendsTab.svelte` uses `--color-primary` (for contrast, per the code
+  comment there). As an `Implemented` record this spec defers to the code:
+  the `--laurel` references above are the original proposal, not shipped
+  truth — `FriendsTab.svelte` is authoritative.

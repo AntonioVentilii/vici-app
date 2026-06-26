@@ -1,5 +1,9 @@
 import type { RegistryDid } from '$declarations';
-import { getSettlementStatus, listOrders as listOrdersApi } from '$lib/api/clearing.api';
+import {
+	getSettlementStatus,
+	listOrders as listOrdersApi,
+	listSeriesTradedVolumes as listSeriesTradedVolumesApi
+} from '$lib/api/clearing.api';
 import { addSeries, forkSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	DAY_IN_MS,
@@ -8,6 +12,7 @@ import {
 	PRICE_DECIMALS,
 	RESOLUTION_CLAUSE_MAX_LENGTH,
 	STRIKE,
+	USD_DECIMALS,
 	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
 import { CURRENT_FEATURED_EVENT } from '$lib/constants/featured-event.constants';
@@ -233,8 +238,8 @@ const fetchMarkets = async ({
 	identity: Identity;
 	certified: boolean;
 	domain: RegistryDid.BalanceDomain;
-	// When `false`, skip the per-market `getOrderBook` round-trip and seed
-	// neutral 0.5 probabilities. Callers that only need the market *set*
+	// When `false`, skip the per-market `getOrderBook` round-trip and leave
+	// probability unknown (no placeholder). Callers that only need the market *set*
 	// (id / domain / status / outcome) for filtering — positions, trade
 	// history, the calibration deck — pass `false` to avoid an N-wide
 	// order-book fan-out they'd immediately discard (see {@link getMarketsLite}).
@@ -273,13 +278,12 @@ const fetchMarkets = async ({
 				: undefined;
 
 			// Lite mode: callers that only filter by the market set don't need
-			// book-derived prices. Seed the neutral 0.5 (matching
-			// `fetchOpenBinaryMarketsLite`) and skip the round-trip entirely.
+			// book-derived prices. Leave probability unknown (no 0.5 placeholder)
+			// and `priceLoaded` false so the UI shows a loading skeleton until a
+			// real book read fills it in.
 			if (!includeOrderBook) {
 				return mapMarketData({
 					series: s,
-					yesProbability: 0.5,
-					noProbability: 0.5,
 					status,
 					outcome
 				});
@@ -298,8 +302,7 @@ const fetchMarkets = async ({
 
 				return mapMarketData({
 					series: s,
-					yesProbability: 0.5,
-					noProbability: 0.5,
+					priceLoaded: true,
 					status,
 					outcome,
 					categoricalProbabilities
@@ -317,12 +320,14 @@ const fetchMarkets = async ({
 				outcome: 'YES'
 			});
 
-			const yesProb = midPrice ?? 0.5;
-
+			// `midPrice` is undefined for an empty book — keep it unknown (no 0.5
+			// placeholder); `priceLoaded: true` marks the book as read so the UI
+			// shows a no-liquidity dash rather than a perpetual skeleton.
 			return mapMarketData({
 				series: s,
-				yesProbability: yesProb,
-				noProbability: 1 - yesProb,
+				yesProbability: midPrice,
+				noProbability: nonNullish(midPrice) ? 1 - midPrice : undefined,
+				priceLoaded: true,
 				bestBid: bids[0]?.price,
 				bestAsk: asks[0]?.price,
 				bestBidQty: bids[0]?.totalQty,
@@ -353,10 +358,16 @@ const fetchMarkets = async ({
 					return;
 				}
 
+				const resolvedOutcome = resolutionMap[id]?.outcome;
+				const yesWon = resolvedOutcome === 'YES';
+
 				return mapMarketData({
 					series,
+					yesProbability: nonNullish(resolvedOutcome) ? (yesWon ? 1 : 0) : undefined,
+					noProbability: nonNullish(resolvedOutcome) ? (yesWon ? 0 : 1) : undefined,
+					priceLoaded: true,
 					status: 'Resolved',
-					outcome: resolutionMap[id]?.outcome
+					outcome: resolvedOutcome
 				});
 			})
 	);
@@ -437,14 +448,11 @@ const fetchOpenBinaryMarketsLite = async ({
 
 			return isBinary && !settledIds.has(s.series_id);
 		})
-		// Lite mapping: seed `yesProbability`/`noProbability` at 0.5 (vs
-		// `mapMarketData`'s default of 0) so a card that misses
-		// enrichment — e.g. its order-book fetch fails in
-		// `enrichMarketsWithOrderBook` — still renders the neutral
-		// consensus instead of 0%/100%.
-		.map((s) =>
-			mapMarketData({ series: s, status: 'Open', yesProbability: 0.5, noProbability: 0.5 })
-		)
+		// Lite mapping: leave probability unknown (`priceLoaded` false) so a card
+		// awaiting `enrichMarketsWithOrderBook` shows a loading skeleton instead
+		// of a 0.5 placeholder. The price cache may still seed a last-known value
+		// downstream (see `loadMarketsProgressive`).
+		.map((s) => mapMarketData({ series: s, status: 'Open' }))
 		.filter(nonNullish);
 
 	return filterByPlaygroundExpandedDomain({ items: markets, targetDomain: domain });
@@ -477,10 +485,10 @@ const enrichMarketsWithOrderBook = async ({
 				identity,
 				certified
 			}).catch((e: unknown) => {
-				// A single failed book read should not collapse the whole deck —
-				// fall back to the neutral 0.5 prob the lite mapper assigned and
-				// let the rest of the cards render. The failing market still
-				// shows with no liquidity indicator.
+				// A single failed book read should not collapse the whole deck — let
+				// the rest of the cards render. The failing market keeps its unknown
+				// probability but is marked `priceLoaded` below, so it shows a
+				// no-liquidity dash, never a 0.5 placeholder.
 				console.error('Failed to fetch order book for flow market', market.id, e);
 
 				return [] as Awaited<ReturnType<typeof getOrderBook>>;
@@ -491,21 +499,18 @@ const enrichMarketsWithOrderBook = async ({
 				outcome: 'YES'
 			});
 
-			const yesProb = midPrice ?? 0.5;
-
-			// Only a liquidity-backed mid goes to the persisted seed cache. The
-			// nullish check on `midPrice` can't express that: `calculateProbability`
-			// returns the neutral 0.5 (never nullish) for an empty book, and a
-			// failed fetch degrades to an empty book above — caching either would
-			// clobber a real last-known price with the placeholder.
-			if (bids.length > 0 || asks.length > 0) {
-				priced.push({ id: market.id, yesProbability: yesProb });
+			// `midPrice` is undefined for an empty/failed book — keep it unknown.
+			// Only a liquidity-backed mid goes to the persisted seed cache, so a
+			// placeholder never clobbers a real last-known price.
+			if (nonNullish(midPrice)) {
+				priced.push({ id: market.id, yesProbability: midPrice });
 			}
 
 			return {
 				...market,
-				yesProbability: yesProb,
-				noProbability: 1 - yesProb,
+				yesProbability: midPrice,
+				noProbability: nonNullish(midPrice) ? 1 - midPrice : undefined,
+				priceLoaded: true,
 				bestBid: bids[0]?.price,
 				bestAsk: asks[0]?.price,
 				bestBidQty: bids[0]?.totalQty,
@@ -585,6 +590,84 @@ export const getMarketsLite = async (domain: RegistryDid.BalanceDomain): Promise
 // list can span the whole catalog, so an unbounded `Promise.all` would open a
 // request per open market and saturate the browser's per-host connection pool
 // during the cold-load burst — the very contention this path exists to avoid.
+/**
+ * Rescales an engine traded-volume figure — whole payout-token notional in
+ * `USD_DECIMALS` base units — to a market's own token precision, so it formats
+ * like the rest of the UI's `totalVolume` (and matches the detail page's
+ * volume). Identity for the common 4-decimal token; only ICP-style 8-decimal
+ * markets actually shift.
+ */
+const scaleVolumeToTokenBase = ({
+	usdBaseVolume,
+	tokenDecimals
+}: {
+	usdBaseVolume: bigint;
+	tokenDecimals: number;
+}): bigint => {
+	const diff = tokenDecimals - USD_DECIMALS;
+
+	if (diff === 0) {
+		return usdBaseVolume;
+	}
+
+	return diff > 0
+		? usdBaseVolume * BigInt(10) ** BigInt(diff)
+		: usdBaseVolume / BigInt(10) ** BigInt(-diff);
+};
+
+/**
+ * Fills in each market's `totalVolume` from the engine's market-wide traded
+ * volume (Σ qty·price), read for the whole set in a single batch call rather
+ * than a per-market round-trip. The figure returns in `USD_DECIMALS` base units
+ * and is rescaled to each market's token precision. Fails open: any error
+ * leaves the markets' existing `totalVolume` untouched, so the list still
+ * renders (cards fall back to the "New" cue).
+ *
+ * No-op for the anonymous identity: `list_series_traded_volumes` is guarded by
+ * `caller_is_not_anonymous`, so a signed-out call can only reject — short-circuit
+ * it so a logged-out visitor (e.g. the public homepage feed) paints instantly on
+ * the seeded volume rather than waiting on a round-trip that can't succeed.
+ */
+const enrichMarketsWithVolume = async ({
+	markets,
+	identity,
+	certified
+}: {
+	markets: Market[];
+	identity: Identity;
+	certified: boolean;
+}): Promise<Market[]> => {
+	if (markets.length === 0 || identity.getPrincipal().isAnonymous()) {
+		return markets;
+	}
+
+	try {
+		const volumes = await listSeriesTradedVolumesApi({
+			identity,
+			certified,
+			seriesIds: markets.map(({ id }) => id)
+		});
+
+		const volumeById = new Map(volumes.map(({ series_id, volume }) => [series_id, volume]));
+
+		return markets.map((market) => {
+			const usdBaseVolume = volumeById.get(market.id);
+
+			return isNullish(usdBaseVolume)
+				? market
+				: {
+						...market,
+						totalVolume: scaleVolumeToTokenBase({
+							usdBaseVolume,
+							tokenDecimals: market.token.decimals
+						})
+					};
+		});
+	} catch {
+		return markets;
+	}
+};
+
 const MARKETS_ENRICH_BATCH_SIZE = 8;
 
 /**
@@ -636,21 +719,25 @@ export const loadMarketsProgressive = async ({
 
 	// Seed each row's book-derived fields before enrichment:
 	//  - a resolved market with a known outcome renders deterministically from
-	//    that outcome (YES won → 100/0, NO won → 0/100) — no order-book read,
-	//    and never the misleading neutral 0.5 the lite mapper would leave;
+	//    that outcome (YES won → 100/0, NO won → 0/100) — no order-book read;
 	//  - everything else overlays last-known prices from `previous` so a refresh
-	//    doesn't flash rows back to 0.5 while re-enrichment runs;
+	//    doesn't flash priced rows back to a skeleton while re-enrichment runs;
 	//  - with no in-memory prior (cold load, page refresh), the persisted
 	//    last-session price takes over — probability only, since stale bid/ask
-	//    depth must not masquerade as live liquidity — falling back to the lite
-	//    neutral seed for genuinely new markets.
+	//    depth must not masquerade as live liquidity — and a genuinely new market
+	//    keeps its unknown probability, rendering a skeleton until enrichment.
 	const priceById = new Map((previous ?? []).map((market) => [market.id, market]));
 	const cachedYesById = readCachedYesProbabilities();
 	const seeded = lite.map((market) => {
 		if (market.status === 'Resolved' && nonNullish(market.outcome)) {
 			const yesWon = market.outcome === 'YES';
 
-			return { ...market, yesProbability: yesWon ? 1 : 0, noProbability: yesWon ? 0 : 1 };
+			return {
+				...market,
+				yesProbability: yesWon ? 1 : 0,
+				noProbability: yesWon ? 0 : 1,
+				priceLoaded: true
+			};
 		}
 
 		const prior = priceById.get(market.id);
@@ -660,13 +747,20 @@ export const loadMarketsProgressive = async ({
 				...market,
 				yesProbability: prior.yesProbability,
 				noProbability: prior.noProbability,
+				priceLoaded: prior.priceLoaded,
 				bestBid: prior.bestBid,
 				bestAsk: prior.bestAsk,
 				bestBidQty: prior.bestBidQty,
-				bestAskQty: prior.bestAskQty
+				bestAskQty: prior.bestAskQty,
+				// Carry the last-known volume so a refresh keeps the figure (and the
+				// volume-sorted order) until the fresh batch read overwrites it.
+				totalVolume: prior.totalVolume
 			};
 		}
 
+		// A cached last-session price is enough to show a number immediately (no
+		// skeleton); enrichment upgrades it in place. With no cache the row keeps
+		// its unknown probability and renders a skeleton until enrichment lands.
 		const cachedYes = cachedYesById.get(market.id);
 
 		return isNullish(cachedYes)
@@ -674,15 +768,25 @@ export const loadMarketsProgressive = async ({
 			: { ...market, yesProbability: cachedYes, noProbability: 1 - cachedYes };
 	});
 
-	onUpdate(seeded);
+	// Phase 1.5 — one batch read fills in real traded volume before first paint,
+	// so the volume-sorted list lands in its final order instead of reshuffling
+	// when volume arrives. Fails open (keeps the seeded / last-known volume).
+	const withVolume = await enrichMarketsWithVolume({ markets: seeded, identity, certified: false });
+
+	if (isStale?.()) {
+		return;
+	}
+
+	onUpdate(withVolume);
 
 	// Phase 2 — background book enrichment for every non-resolved market (open
 	// *and* expired-but-unresolved both carry a live/last book the list prices
 	// off). Resolved markets are skipped: they're already pinned to their
-	// outcome above.
-	const enriched = [...seeded];
-	const indexById = new Map(seeded.map((market, index) => [market.id, index]));
-	const pending = seeded.filter((market) => market.status !== 'Resolved');
+	// outcome above. Built on the volume-enriched set, whose `totalVolume` the
+	// book enrichment preserves (it only overlays price/book fields).
+	const enriched = [...withVolume];
+	const indexById = new Map(withVolume.map((market, index) => [market.id, index]));
+	const pending = withVolume.filter((market) => market.status !== 'Resolved');
 
 	for (let start = 0; start < pending.length; start += MARKETS_ENRICH_BATCH_SIZE) {
 		if (isStale?.()) {
@@ -731,9 +835,6 @@ const fetchMarket = async ({
 		outcome: 'YES'
 	});
 
-	const yesProb = midPrice ?? 0.5;
-	const noProb = 1 - yesProb;
-
 	const bestBid = bids[0]?.price;
 	const bestAsk = asks[0]?.price;
 	const bestBidQty = bids[0]?.totalQty;
@@ -768,10 +869,18 @@ const fetchMarket = async ({
 		? settlementInputOutcome(settlementStatus.settlement)
 		: undefined;
 
+	// Resolved markets pin to their outcome (YES won → 1, NO won → 0); everything
+	// else uses the live book mid, left unknown for an empty book (no 0.5
+	// placeholder). `priceLoaded: true` — this path always reads the book.
+	const isResolvedOutcome = status === 'Resolved' && nonNullish(outcome);
+	const yesProbability = isResolvedOutcome ? (outcome === 'YES' ? 1 : 0) : midPrice;
+	const noProbability = nonNullish(yesProbability) ? 1 - yesProbability : undefined;
+
 	return mapMarketData({
 		series: s,
-		yesProbability: yesProb,
-		noProbability: noProb,
+		yesProbability,
+		noProbability,
+		priceLoaded: true,
 		bestBid,
 		bestAsk,
 		bestBidQty,

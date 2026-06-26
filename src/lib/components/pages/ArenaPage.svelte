@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { page } from '$app/state';
 	import ArenaStandingHero from '$lib/components/arena/ArenaStandingHero.svelte';
 	import FriendsTab from '$lib/components/arena/FriendsTab.svelte';
 	import BattlesInboxPage from '$lib/components/pages/BattlesInboxPage.svelte';
@@ -34,8 +36,21 @@
 
 	let activeTab: Tab = $state('friends');
 
+	// A `friend_request` inbox notification deep-links to
+	// `/arena?request=<relationId>` (see `inbox.store.ts`). When present it
+	// forces the Friends tab and `FriendsTab` scrolls the matching row into
+	// view, so the recipient lands on the Accept affordance.
+	const focusRequestKey = $derived(page.url.searchParams.get('request') ?? undefined);
+
 	onMount(() => {
 		if (!browser) {
+			return;
+		}
+
+		// The deep-link param wins over the last-opened tab.
+		if (nonNullish(focusRequestKey)) {
+			activeTab = 'friends';
+
 			return;
 		}
 
@@ -52,8 +67,23 @@
 		}
 	});
 
+	// Catch a deep-link that arrives via client-side navigation (tapping the
+	// inbox toast while already on /arena), where `onMount` won't re-run.
+	$effect(() => {
+		if (nonNullish(focusRequestKey)) {
+			activeTab = 'friends';
+		}
+	});
+
 	$effect(() => {
 		if (!browser) {
+			return;
+		}
+
+		// Don't persist the tab while a deep-link is forcing Friends — the
+		// forced switch is transient, so writing it would clobber the user's
+		// real last-opened preference just because they followed a link.
+		if (nonNullish(focusRequestKey)) {
 			return;
 		}
 
@@ -94,7 +124,7 @@
 		     rest of the Arena shell (hero + tab strip) stays usable. -->
 		<svelte:boundary>
 			{#if activeTab === 'friends'}
-				<FriendsTab />
+				<FriendsTab {focusRequestKey} />
 			{:else if activeTab === 'leagues'}
 				<LeaguesPage embedded />
 			{:else if activeTab === 'battles'}

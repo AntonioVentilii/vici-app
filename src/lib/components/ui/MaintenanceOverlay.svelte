@@ -20,7 +20,7 @@
 		use:pinToVisualViewport
 	>
 		<div class="flex max-w-sm flex-col items-center gap-2 px-6 text-center">
-			<LoadingSpinner center={false} size="lg" />
+			<LoadingSpinner size="lg" />
 			<p class="text-foreground mt-4 text-lg font-black">
 				{t({ locale: $localeStore, key: 'maintenance.title' })}
 			</p>

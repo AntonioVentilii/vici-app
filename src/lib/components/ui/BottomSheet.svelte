@@ -47,9 +47,23 @@
 		 * scroller layout (body owns the bottom inset).
 		 */
 		footer?: Snippet;
+		/**
+		 * Re-anchor the sheet as a centred modal card on ≥768px viewports —
+		 * full rounded border, zoom-in entrance instead of a slide-up, grip
+		 * hidden. Phone widths keep the standard bottom-docked treatment.
+		 * One set of content, switched purely in CSS, for confirm-style
+		 * surfaces that read better centred on desktop.
+		 */
+		desktopCentered?: boolean;
+		/**
+		 * `id` of a heading inside the sheet, wired to `aria-labelledby` on
+		 * the dialog. Leave unset when the children carry no single title.
+		 */
+		labelledBy?: string;
 	}
 
-	const { isOpen, children, onClose, sidePadding, footer }: Props = $props();
+	const { isOpen, children, onClose, sidePadding, footer, desktopCentered, labelledBy }: Props =
+		$props();
 
 	let sheetEl = $state<HTMLDivElement | undefined>();
 	let trap: FocusTrap | null = null;
@@ -91,6 +105,7 @@
 {#if isOpen}
 	<div
 		class="sheet-scrim"
+		class:desktop-centered={desktopCentered}
 		aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
 		onclick={close}
 		onkeydown={(e) => e.key === 'Escape' && close()}
@@ -101,10 +116,22 @@
 			bind:this={sheetEl}
 			style:--sheet-side-padding={sidePadding}
 			class="sheet"
+			class:desktop-centered={desktopCentered}
 			class:has-footer={Boolean(footer)}
+			aria-labelledby={labelledBy}
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
+			onkeydown={(e) => {
+				// Keys are swallowed so outer surfaces stay inert while the sheet
+				// is open — which also keeps Escape from the `svelte:window`
+				// listener (focus lives inside the sheet via the trap), so close
+				// on it here.
+				e.stopPropagation();
+
+				if (e.key === 'Escape') {
+					close();
+				}
+			}}
 			role="dialog"
 			tabindex="-1"
 		>
@@ -187,10 +214,43 @@
 		animation: friend-sheet-slide-up 280ms var(--ease-vici) both;
 	}
 
+	/* Desktop-centred variant: re-anchor the same panel to the viewport
+	 * centre with a full rounded card and a zoom-in entrance rather than
+	 * a slide-up. The grip handle is a bottom-sheet affordance only. */
+	@media (min-width: 768px) {
+		.sheet-scrim.desktop-centered {
+			justify-content: center;
+			padding: 1rem;
+		}
+
+		.sheet.desktop-centered {
+			max-width: 28rem;
+			max-height: 90vh; /* fallback for engines without `dvh` */
+			max-height: 90dvh;
+			padding: 1.5rem;
+			border: 1px solid var(--border-base);
+			border-radius: 12px;
+			box-shadow: var(--shadow-modal);
+			animation: sheet-zoom-in 200ms var(--ease-vici) both;
+		}
+
+		.sheet.desktop-centered .sheet-grip {
+			display: none;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.sheet-scrim,
-		.sheet {
+		.sheet,
+		.sheet.desktop-centered {
 			animation: none;
+		}
+	}
+
+	@keyframes sheet-zoom-in {
+		from {
+			opacity: 0;
+			transform: scale(0.96);
 		}
 	}
 
@@ -207,6 +267,18 @@
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow-y: auto;
+		/* A scroll container clips on BOTH axes (`overflow-x` can't stay
+		 * `visible` once `overflow-y` is `auto`), which shears off any glow /
+		 * shadow a child paints past the body's left or right edge — e.g. the
+		 * menagerie badge aura in the achievement detail sheet. Reclaim the
+		 * side-inset metric as bleed room: widen the scroll container by
+		 * `--sheet-side-padding` per side and re-apply the same metric as
+		 * padding, so content lands exactly where it did but the clip boundary
+		 * moves outward by that amount. (On the desktop-centered variant the
+		 * sheet padding is 1.5rem, so the body stops short of the sheet edge —
+		 * the bleed room is still the full side-inset metric.) */
+		margin-inline: calc(-1 * var(--sheet-side-padding, 1.1rem));
+		padding-inline: var(--sheet-side-padding, 1.1rem);
 	}
 
 	/* When a `footer` snippet is present the safe-area bottom inset moves

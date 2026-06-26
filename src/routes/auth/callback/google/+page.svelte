@@ -45,7 +45,7 @@
 </script>
 
 <div class="flex h-screen w-full flex-col items-center justify-center gap-4">
-	<LoadingSpinner center={false} size="md" />
+	<LoadingSpinner size="md" />
 	<p class="animate-pulse text-lg font-medium">
 		{t({ locale: $localeStore, key: 'auth.callback.google.completing' })}
 	</p>

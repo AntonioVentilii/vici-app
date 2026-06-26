@@ -84,6 +84,30 @@ export const referrerRewardBaseUnits = (priorPaidCount: number): bigint => {
 };
 
 /**
+ * Cumulative referrer earnings for `creditedCount` credited redemptions, in VXP base units. The
+ * i-th credited redemption (1-based) pays `referrerRewardBaseUnits(i - 1)`, so the total honours
+ * the diminishing tier curve and its hard cap rather than assuming a flat per-friend reward.
+ *
+ * `creditedCount` follows the satellite's `countReferrerCredits` rule: rows whose
+ * `referrerPayout.status` has left `none` (owed / processing / paid — anything in flight still
+ * consumes a slot). Derivable client-side from `listMyReferrals`; cosmetic only — the satellite
+ * remains authoritative on payout.
+ */
+export const cumulativeReferrerRewardBaseUnits = (creditedCount: number): bigint => {
+	// Rewards are zero past the hard cap, so clamping (and flooring at 0) only bounds the loop —
+	// it cannot change the sum.
+	const cappedCount = Math.min(Math.max(creditedCount, 0), REFERRAL_MAX_PAID);
+
+	let total = ZERO;
+
+	for (let priorPaidCount = 0; priorPaidCount < cappedCount; priorPaidCount++) {
+		total += referrerRewardBaseUnits(priorPaidCount);
+	}
+
+	return total;
+};
+
+/**
  * Display-side twin of {@link referrerRewardBaseUnits}: given how many paid redemptions a referrer
  * has *already* banked (lifetime), returns the *next* redemption's reward as a whole-VXP number for
  * copy. Reads the same {@link REFERRAL_REWARD_TIERS} table so the headline figure can never drift

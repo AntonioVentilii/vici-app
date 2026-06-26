@@ -22,3 +22,13 @@ export const ACCURACY_GATE_CALLS = 30;
  */
 export const isAccuracyUnlocked = (totalCalls: number): boolean =>
 	totalCalls >= ACCURACY_GATE_CALLS;
+
+/**
+ * Daily hard cap — the most predictions a single day's Flow can count
+ * (the daily-ten goal plus the +5 Push-to-15 overtime). The cross-session
+ * "come back tomorrow" takeover fires once the day's running total reaches
+ * this. Lives here, in a dependency-free constants module, so the
+ * satellite can import it (it is the authoritative counter — see
+ * `recordFlowSwipe`) without dragging in any FE-only / DOM code.
+ */
+export const DAILY_HARD_CAP = 15;

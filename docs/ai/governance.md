@@ -21,6 +21,15 @@ When two sources disagree, the higher one wins:
 If an agent finds a contradiction, the agent **stops and asks** instead of
 guessing.
 
+**Scoped exception — economy policy.** For the _rules_ of the VXP
+economy (which surfaces mint, and the caps / gates / anti-farming
+posture that bound them), [`economy.md`](./economy.md) is authoritative
+and the code is reconciled **to** it — see its
+[reconciliation protocol](./economy.md#reconciliation-protocol--the-rules-drive-the-code).
+This inverts tiers 1 and 4 **only** for economy rules; numeric _values_
+still live in the constants files (tier 1) and shipped _behaviour_ is
+still described by [`PRODUCT.md`](./PRODUCT.md).
+
 ## Roles
 
 You can play any of these roles in a single session — most non-trivial PRs

@@ -444,6 +444,14 @@ export const idlFactory = ({ IDL }) => {
 		next_cursor: IDL.Opt(IDL.Nat64),
 		items: IDL.Vec(SeriesTradePoint)
 	});
+	const ListSeriesTradedVolumesParams = IDL.Record({
+		series_ids: IDL.Vec(IDL.Text)
+	});
+	const SeriesTradedVolume = IDL.Record({
+		series_id: IDL.Text,
+		volume: IDL.Int,
+		trade_count: IDL.Nat64
+	});
 	const ListSettledSeriesParams = IDL.Record({
 		start_after: IDL.Opt(IDL.Text),
 		limit: IDL.Opt(IDL.Nat64),
@@ -677,6 +685,11 @@ export const idlFactory = ({ IDL }) => {
 		list_series_trade_history: IDL.Func(
 			[ListSeriesTradeHistoryParams],
 			[SeriesTradeHistoryPage],
+			['query']
+		),
+		list_series_traded_volumes: IDL.Func(
+			[ListSeriesTradedVolumesParams],
+			[IDL.Vec(SeriesTradedVolume)],
 			['query']
 		),
 		list_settled_series: IDL.Func([ListSettledSeriesParams], [SettledSeriesPage], ['query']),

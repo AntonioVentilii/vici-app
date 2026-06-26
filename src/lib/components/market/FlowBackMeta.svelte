@@ -6,9 +6,13 @@
 
 	interface Props {
 		market: Market;
+		/** Translated title for the active locale; defaults to the original. */
+		displayTitle?: string;
 	}
 
-	const { market }: Props = $props();
+	const { market, displayTitle }: Props = $props();
+
+	const title = $derived(displayTitle ?? market.title);
 
 	// Live countdown — minute-tick interval. Only runs while this back
 	// panel is mounted (Svelte cleans up the timer on destroy). 60 s is
@@ -91,7 +95,7 @@
 	const predicting = $derived(hasOutcomeData ? predictorsCount : 1240);
 </script>
 
-<h3 class="flow-back-title">{market.title}</h3>
+<h3 class="flow-back-title">{title}</h3>
 <div class="flow-back-meta num">
 	<span>
 		{t({

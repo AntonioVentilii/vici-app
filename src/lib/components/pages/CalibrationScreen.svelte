@@ -273,7 +273,7 @@
 			aria-live="polite"
 			role="status"
 		>
-			<LoadingSpinner center={false} size="md" />
+			<LoadingSpinner size="md" />
 		</div>
 	{:else if phase === 'recovered'}
 		<div class="calib-state">

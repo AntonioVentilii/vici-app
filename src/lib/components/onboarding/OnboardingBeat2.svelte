@@ -12,6 +12,7 @@
 		NICKNAME_PATTERN,
 		sanitizeNickname
 	} from '$lib/constants/profile.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { checkNicknameAvailability } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -428,6 +429,7 @@
 						class:taken
 						aria-disabled={taken}
 						aria-pressed={picked}
+						data-tid={TestId.OnboardingHandleSuggestion}
 						disabled={taken}
 						onclick={() => !taken && (poolPick = name)}
 						type="button"
@@ -508,7 +510,13 @@
 		<button class="ob2-btn-ghost" onclick={onBack} type="button">
 			{t({ locale: $localeStore, key: 'onboarding.beat2.back' })}
 		</button>
-		<button class="ob2-btn-primary" disabled={!canClaim} onclick={() => void claim()} type="button">
+		<button
+			class="ob2-btn-primary"
+			data-tid={TestId.OnboardingPrimary}
+			disabled={!canClaim}
+			onclick={() => void claim()}
+			type="button"
+		>
 			{t({
 				locale: $localeStore,
 				key: isClaiming ? 'onboarding.beat2.claim_pending' : 'onboarding.beat2.claim',
@@ -517,7 +525,12 @@
 		</button>
 	</div>
 
-	<button class="ob2-skip-link" onclick={() => onAdvance(null)} type="button">
+	<button
+		class="ob2-skip-link"
+		data-tid={TestId.OnboardingHandleSkip}
+		onclick={() => onAdvance(null)}
+		type="button"
+	>
 		{t({ locale: $localeStore, key: 'onboarding.beat2.skip' })}
 	</button>
 </div>

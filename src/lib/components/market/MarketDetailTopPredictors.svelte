@@ -1,14 +1,19 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { Market } from '$lib/types/market';
-	import type { FollowedLeanSignal } from '$lib/types/market-signals';
+	import type { FollowedLeanSignal, TopPredictorSignal } from '$lib/types/market-signals';
 	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
-		market: Market;
+		/**
+		 * Leaderboard-ranked predictors who hold a position on this market,
+		 * each with the side they actually took. `undefined` while the page
+		 * is still resolving them — the list area stays blank rather than
+		 * flashing the empty state at people who are about to appear.
+		 */
+		topPredictors?: TopPredictorSignal[];
 		/**
 		 * Lean of the people the viewer follows, if any have called this
 		 * market. Sparse: when absent the followed-lean row is hidden
@@ -17,43 +22,48 @@
 		followedLean?: FollowedLeanSignal;
 	}
 
-	const { market, followedLean }: Props = $props();
+	const { topPredictors, followedLean }: Props = $props();
 
 	const followedNo = $derived(nonNullish(followedLean) ? followedLean.total - followedLean.yes : 0);
 
-	// We don't yet have a "top predictors *on this market*" satellite
-	// query — slice the global leaderboard to approximate it. Top 4
-	// by points until we wire a per-market aggregate (tracked in the
-	// follow-up backlog).
-	const top = $derived($leaderboard.slice(0, 4));
+	// Join each signal back onto its cached leaderboard row for the display
+	// fields (nickname / avatar / accuracy / streak). The signals were
+	// resolved from this same store's principal order, so a miss only
+	// happens if the board refreshed mid-flight — drop that row rather
+	// than render a half-empty identity.
+	const rows = $derived(
+		(topPredictors ?? [])
+			.map((signal) => {
+				const user = $leaderboard.find(({ owner }) => owner === signal.owner);
 
-	// Crowd lean drives the side-pill on each row — tag each row with
-	// the actual crowd-favoured side so the rows feel grounded in the
-	// live market.
-	const crowdSide = $derived(market.yesProbability >= market.noProbability ? 'YES' : 'NO');
+				return nonNullish(user) ? { user, side: signal.side } : undefined;
+			})
+			.filter(nonNullish)
+	);
 </script>
 
-<!-- "Top predictors here" mini-leaderboard. Reads from the cached
-     global leaderboard store (already populated by `LoaderLeaderboard`
-     on app boot) so the section paints instantly without a fresh
-     fetch. -->
+<!-- "Top predictors here" mini-leaderboard: the highest-ranked
+     predictors on the global board who hold a live position on THIS
+     market, tagged with the side they committed (resolved via
+     per-candidate `aggregate_lean` probes — see
+     `top-predictors.services.ts`). -->
 <section class="market-top-predictors" aria-labelledby="market-top-predictors-h">
 	<header class="market-top-predictors-head">
 		<h3 id="market-top-predictors-h" class="market-top-predictors-title">
 			{t({ locale: $localeStore, key: 'market.detail.top_predictors.title' })}
 		</h3>
-		<span class="market-top-predictors-more">
-			{t({ locale: $localeStore, key: 'market.detail.top_predictors.all' })}
-		</span>
 	</header>
 
-	{#if top.length === 0}
+	{#if isNullish(topPredictors)}
+		<!-- Still resolving — keep the area blank instead of flashing the
+		     empty state under people who are about to appear. -->
+	{:else if rows.length === 0}
 		<p class="market-top-predictors-empty">
 			{t({ locale: $localeStore, key: 'market.detail.top_predictors.empty' })}
 		</p>
 	{:else}
 		<ul class="market-top-predictors-list">
-			{#each top as user (user.owner)}
+			{#each rows as { user, side } (user.owner)}
 				<li class="market-top-predictors-row">
 					<div class="market-top-predictors-id">
 						<Avatar
@@ -77,8 +87,8 @@
 							</span>
 						</div>
 					</div>
-					<span class="market-top-predictors-side" class:is-no={crowdSide === 'NO'}>
-						{crowdSide === 'YES'
+					<span class="market-top-predictors-side" class:is-no={side === 'NO'}>
+						{side === 'YES'
 							? t({ locale: $localeStore, key: 'outcome.yes' })
 							: t({ locale: $localeStore, key: 'outcome.no' })}
 					</span>
@@ -137,13 +147,6 @@
 		font-size: var(--t-16);
 		font-weight: 600;
 		letter-spacing: var(--tracking-snug);
-	}
-
-	.market-top-predictors-more {
-		color: var(--laurel);
-		font-size: var(--t-12);
-		font-weight: 600;
-		letter-spacing: 0.02em;
 	}
 
 	.market-top-predictors-empty {

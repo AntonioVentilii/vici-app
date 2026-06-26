@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { navItems } from '$lib/constants/nav.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -140,6 +141,7 @@
 				class:flow-tab={flow}
 				aria-current={active ? 'page' : undefined}
 				data-nav={item.labelKey === 'nav.profile' ? 'profile' : undefined}
+				data-tid={item.labelKey === 'nav.profile' ? TestId.UserMenu : undefined}
 				onclick={() => handleNav(item.path)}
 				type="button"
 			>

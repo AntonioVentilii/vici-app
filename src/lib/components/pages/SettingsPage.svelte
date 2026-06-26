@@ -10,6 +10,7 @@
 		Globe,
 		Info,
 		Key,
+		Languages,
 		LineChart,
 		Lock,
 		Mail,
@@ -17,6 +18,7 @@
 		Scale,
 		Search,
 		Share2,
+		Smartphone,
 		Sun,
 		Target,
 		Trophy,
@@ -26,6 +28,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import A2hsSheet from '$lib/components/pwa/A2hsSheet.svelte';
 	import DeleteAccountFlow from '$lib/components/settings/DeleteAccountFlow.svelte';
 	import SetRow from '$lib/components/settings/SetRow.svelte';
 	import SetSegmented from '$lib/components/settings/SetSegmented.svelte';
@@ -38,9 +41,12 @@
 	import { Collection } from '$lib/constants/collections.constants';
 	import { LOCALE_REGISTRY } from '$lib/constants/locale.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { upsertProfile } from '$lib/services/profile.services';
+	import { persistPreferences } from '$lib/services/profile.services';
+	import { canInstall } from '$lib/stores/a2hs.store';
 	import { localeStore, setLocale } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { theme } from '$lib/stores/theme.store';
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';
@@ -61,6 +67,10 @@
 	// Resolved against the full registry so a regional edition (e.g. `pt-BR`)
 	// shows its own native label and short code, not just the live base set.
 	let langSheetOpen = $state(false);
+
+	// Install sheet — the Add-to-Home-Screen flow lives in `A2hsSheet`; this
+	// row only owns the open toggle and is gated on `$canInstall`.
+	let a2hsSheetOpen = $state(false);
 
 	const activeLocale = $derived(
 		LOCALE_REGISTRY.find((locale) => locale.id === $localeStore) ?? LOCALE_REGISTRY[0]
@@ -195,9 +205,10 @@
 	// `preferences.sharing.profileVisibility`; the top-level
 	// `profile.visibility` enum is mirrored on every write because that is
 	// the field the satellite wire format reads for leaderboard / search
-	// filtering. Both land in a single `upsertProfile` (not via the
-	// preferences store) so the two fields can't clobber each other across
-	// two racing writes to the same doc.
+	// filtering. Both go through the serialized patch queue
+	// (`persistPreferences`) as a leaf-level `sharing` patch so this can't
+	// revert a sibling preference (e.g. the onboarding-picked favourite
+	// team) written concurrently to the same doc.
 	const persistVisibility = async (value: SettingsVisibility) => {
 		const principal = $authPrincipal;
 
@@ -205,17 +216,27 @@
 			return;
 		}
 
-		const data: UserProfile = {
-			...profile,
-			visibility: visibilityToProfile(value),
-			preferences: {
-				...profile.preferences,
-				sharing: { ...profile.preferences.sharing, profileVisibility: value }
-			}
-		};
+		userStore.update((s) =>
+			nonNullish(s.profile)
+				? {
+						...s,
+						profile: {
+							...s.profile,
+							visibility: visibilityToProfile(value),
+							preferences: {
+								...s.profile.preferences,
+								sharing: { ...s.profile.preferences.sharing, profileVisibility: value }
+							}
+						}
+					}
+				: s
+		);
 
-		userStore.update((s) => ({ ...s, profile: data }));
-		await upsertProfile({ key: principal, data });
+		await persistPreferences({
+			principal,
+			preferences: { sharing: { ...profile.preferences.sharing, profileVisibility: value } },
+			visibility: visibilityToProfile(value)
+		});
 	};
 
 	const doSignOut = async () => {
@@ -249,7 +270,7 @@
 		const onKey = (event: KeyboardEvent) => {
 			// Open sheets own Escape while visible (they close themselves,
 			// not the page); don't navigate away underneath them.
-			if (event.key === 'Escape' && !deleteSheetOpen && !langSheetOpen) {
+			if (event.key === 'Escape' && !deleteSheetOpen && !langSheetOpen && !a2hsSheetOpen) {
 				void goto(resolve(AppPath.Profile));
 			}
 		};
@@ -355,6 +376,14 @@
 			</SetRow>
 
 			<SetToggle
+				checked={$marketLanguagePreference === 'translated'}
+				icon={Languages}
+				label={t({ locale: $localeStore, key: 'settings.market_language' })}
+				onchange={(value) => marketLanguagePreference.set(value ? 'translated' : 'original')}
+				sub={t({ locale: $localeStore, key: 'settings.market_language.sub' })}
+			/>
+
+			<SetToggle
 				checked={$preferencesStore.hapticsEnabled}
 				icon={Target}
 				label={t({ locale: $localeStore, key: 'settings.haptics' })}
@@ -373,6 +402,15 @@
 				}}
 				sub={t({ locale: $localeStore, key: 'settings.sound.sub' })}
 			/>
+
+			{#if $canInstall}
+				<SetRow
+					icon={Smartphone}
+					label={t({ locale: $localeStore, key: 'settings.add_home' })}
+					onclick={() => (a2hsSheetOpen = true)}
+					sub={t({ locale: $localeStore, key: 'settings.add_home.sub' })}
+				/>
+			{/if}
 		</SettingsSection>
 
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.privacy' })}>
@@ -524,7 +562,12 @@
 
 		<div class="settings-destructive">
 			{#if !confirmingSignOut}
-				<Button class="settings-signout" onclick={() => (confirmingSignOut = true)} variant="ghost">
+				<Button
+					class="settings-signout"
+					data-tid={TestId.SignOutButton}
+					onclick={() => (confirmingSignOut = true)}
+					variant="ghost"
+				>
 					{t({ locale: $localeStore, key: 'settings.sign_out' })}
 				</Button>
 			{:else}
@@ -534,7 +577,12 @@
 						<Button onclick={() => (confirmingSignOut = false)} variant="ghost">
 							{t({ locale: $localeStore, key: 'settings.sign_out.cancel' })}
 						</Button>
-						<Button onclick={doSignOut} status={signOutStatus} variant="primary">
+						<Button
+							data-tid={TestId.Logout}
+							onclick={doSignOut}
+							status={signOutStatus}
+							variant="primary"
+						>
 							{t({ locale: $localeStore, key: 'settings.sign_out' })}
 						</Button>
 					</div>
@@ -563,6 +611,8 @@
 			langSheetOpen = false;
 		}}
 	/>
+
+	<A2hsSheet isOpen={a2hsSheetOpen} onClose={() => (a2hsSheetOpen = false)} source="settings" />
 
 	{#if nonNullish(toastMessage)}
 		<!--

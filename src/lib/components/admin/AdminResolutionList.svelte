@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { notEmptyString } from '@dfinity/utils';
+	import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId, Outcome } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
@@ -16,13 +18,35 @@
 
 	let resolvingMarketId = $state<MarketId | null>(null);
 
-	const handleResolve = async (params: { marketId: MarketId; outcome: Outcome }) => {
-		resolvingMarketId = params.marketId;
+	let confirmTarget = $state<{ marketId: MarketId; title: string; outcome: Outcome } | null>(null);
+	let showConfirm = $state(false);
+
+	const openConfirm = (params: { marketId: MarketId; title: string; outcome: Outcome }) => {
+		if (nonNullish(resolvingMarketId)) {
+			return;
+		}
+
+		confirmTarget = params;
+		showConfirm = true;
+	};
+
+	const confirmBusy = $derived(
+		nonNullish(confirmTarget) && resolvingMarketId === confirmTarget.marketId
+	);
+
+	const handleResolve = async () => {
+		if (isNullish(confirmTarget)) {
+			return;
+		}
+
+		const { marketId, outcome } = confirmTarget;
+		resolvingMarketId = marketId;
 
 		try {
-			await onResolve(params);
+			await onResolve({ marketId, outcome });
 		} finally {
 			resolvingMarketId = null;
+			showConfirm = false;
 		}
 	};
 
@@ -112,14 +136,17 @@
 	};
 </script>
 
-<div class="border-border bg-card rounded-3xl border p-4 sm:p-8">
+<div
+	class="border-border bg-card rounded-3xl border p-4 sm:p-8"
+	data-tid={TestId.AdminResolutionList}
+>
 	<h2 class="text-foreground mb-6 text-2xl font-bold">
 		{t({ locale: $localeStore, key: 'admin.resolution.title' })}
 	</h2>
 
 	{#if loading}
 		<div class="flex justify-center py-12">
-			<LoadingSpinner center={false} size="sm" />
+			<LoadingSpinner size="sm" />
 		</div>
 	{:else if sortedMarkets.length === 0}
 		<p class="text-muted-foreground py-12 text-center text-sm italic">
@@ -130,6 +157,7 @@
 			class="bg-foreground/5 text-foreground ring-border focus:ring-primary placeholder:text-muted-foreground mb-6 w-full rounded-2xl border-none px-5 py-3 text-sm ring-1 ring-inset focus:ring-2"
 			aria-label={t({ locale: $localeStore, key: 'admin.resolution.search.label' })}
 			autocomplete="off"
+			data-tid={TestId.AdminResolutionSearch}
 			placeholder={t({ locale: $localeStore, key: 'admin.resolution.search.placeholder' })}
 			type="search"
 			bind:value={searchQuery}
@@ -152,6 +180,8 @@
 
 					<div
 						class="space-y-4 rounded-2xl border p-6 {getStatusStyles(status.color)} transition-all"
+						data-market-id={marketId}
+						data-tid={TestId.AdminResolutionCard}
 					>
 						<div class="flex flex-col items-start justify-between gap-2 sm:flex-row">
 							<div class="min-w-0 space-y-1">
@@ -195,7 +225,8 @@
 						<div class="flex gap-2">
 							<Button
 								class="border-success/20 bg-success/10 text-success hover:bg-success/15 flex-1 rounded-xl border py-2 text-xs font-bold"
-								onclick={() => handleResolve({ marketId, outcome: 'YES' })}
+								data-tid={TestId.AdminResolutionResolveYes}
+								onclick={() => openConfirm({ marketId, title, outcome: 'YES' })}
 								size="sm"
 								status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
 								variant="ghost"
@@ -204,7 +235,8 @@
 							</Button>
 							<Button
 								class="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15 flex-1 rounded-xl border py-2 text-xs font-bold"
-								onclick={() => handleResolve({ marketId, outcome: 'NO' })}
+								data-tid={TestId.AdminResolutionResolveNo}
+								onclick={() => openConfirm({ marketId, title, outcome: 'NO' })}
 								size="sm"
 								status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
 								variant="ghost"
@@ -218,3 +250,69 @@
 		{/if}
 	{/if}
 </div>
+
+<Dialog
+	title={t({ locale: $localeStore, key: 'market.resolution.confirm.title' })}
+	bind:show={showConfirm}
+>
+	{#if nonNullish(confirmTarget)}
+		<div
+			class="space-y-4"
+			data-market-id={confirmTarget.marketId}
+			data-tid={TestId.AdminResolutionConfirmDialog}
+		>
+			<div class="space-y-1">
+				<p class="text-muted-foreground eyebrow-xs">
+					{t({ locale: $localeStore, key: 'admin.resolution.confirm.market_label' })}
+				</p>
+				<p class="text-foreground text-base font-bold break-words">{confirmTarget.title}</p>
+			</div>
+
+			<div class="space-y-1">
+				<p class="text-muted-foreground eyebrow-xs">
+					{t({ locale: $localeStore, key: 'market.resolution.confirm.summary_outcome' })}
+				</p>
+				<p
+					class="text-base font-black {confirmTarget.outcome === 'YES'
+						? 'text-success'
+						: 'text-destructive'}"
+				>
+					{t({
+						locale: $localeStore,
+						key:
+							confirmTarget.outcome === 'YES'
+								? 'market.resolution.settle_yes'
+								: 'market.resolution.settle_no'
+					})}
+				</p>
+			</div>
+
+			<p class="text-muted-foreground text-xs">
+				{t({ locale: $localeStore, key: 'admin.resolution.confirm.warning' })}
+			</p>
+
+			<div class="flex gap-2 pt-2">
+				<Button
+					class="flex-1"
+					data-tid={TestId.AdminResolutionConfirmCancel}
+					onclick={() => (showConfirm = false)}
+					size="md"
+					status={confirmBusy ? 'disabled' : 'enabled'}
+					variant="outline"
+				>
+					{t({ locale: $localeStore, key: 'market.resolution.confirm.cancel' })}
+				</Button>
+				<Button
+					class="flex-1"
+					data-tid={TestId.AdminResolutionConfirmCta}
+					onclick={handleResolve}
+					size="md"
+					status={confirmBusy ? 'pending' : 'enabled'}
+					variant={confirmTarget.outcome === 'YES' ? 'primary' : 'danger'}
+				>
+					{t({ locale: $localeStore, key: 'market.resolution.confirm.cta' })}
+				</Button>
+			</div>
+		</div>
+	{/if}
+</Dialog>

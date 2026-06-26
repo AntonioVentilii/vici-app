@@ -3,7 +3,11 @@ import { functions } from '$declarations/satellite/satellite.api';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { COMEBACK_COLD_STREAK_LOSSES } from '$lib/constants/menagerie.constants';
-import { MIN_NICKNAME_LENGTH, sanitizeNickname } from '$lib/constants/profile.constants';
+import {
+	MIN_NICKNAME_LENGTH,
+	nicknameUniqueKey,
+	sanitizeNickname
+} from '$lib/constants/profile.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
@@ -190,6 +194,33 @@ export const updateInterests = async ({
 	await patchProfile({ principal, patch: { interests } });
 };
 
+/**
+ * Persist a partial `preferences` change through the serialized patch
+ * queue, leaf-merging onto the freshest stored slice. Settings surfaces
+ * and the preferences store own different leaves and fire independently;
+ * routing them here (instead of a full-snapshot `upsertProfile` built
+ * from a local mirror) is what keeps a sound/haptics/visibility toggle
+ * from reverting the onboarding-picked `favoriteParticipantId` it never
+ * had in its snapshot.
+ *
+ * `visibility` mirrors the top-level enum the wire format reads for
+ * leaderboard / search filtering; pass it only when the change includes
+ * `sharing.profileVisibility`.
+ */
+export const persistPreferences = ({
+	principal,
+	preferences,
+	visibility
+}: {
+	principal: PrincipalText;
+	preferences: Partial<UserProfile['preferences']>;
+	visibility?: ProfileVisibility;
+}): Promise<UserProfile> =>
+	patchProfile({
+		principal,
+		patch: nonNullish(visibility) ? { preferences, visibility } : { preferences }
+	});
+
 // Serializes the fire-and-forget profile writers (daily streak + daily
 // goal). Both fire on the same first swipe and the goal fires on every
 // subsequent prediction, so without serialization their read-modify-
@@ -200,11 +231,28 @@ export const updateInterests = async ({
 let profilePatchQueue: Promise<unknown> = Promise.resolve();
 
 /**
+ * A `patchProfile` patch may carry only the preference leaves it owns —
+ * the queue merges them onto the freshest stored `preferences` rather
+ * than replacing the whole slice. So a `favoriteSide`-only write can't
+ * drop a concurrently-written `favoriteParticipantId`, and vice versa.
+ */
+type ProfilePatch = Omit<Partial<UserProfile>, 'preferences'> & {
+	preferences?: Partial<UserProfile['preferences']>;
+};
+
+/**
  * Merge a partial field set onto the freshest profile doc, serialized
  * against other profile patches from this module. Reads the latest doc
  * inside the queued turn so concurrent patches never overlay a stale
  * snapshot. Best-effort: callers fire-and-forget; failures don't break
  * the chain.
+ *
+ * `preferences` is merged at the leaf level: a patch carrying a partial
+ * `preferences` overrides only the keys it names and keeps every other
+ * stored preference. A shallow `{ ...current, ...resolved }` would
+ * replace the whole `preferences` object, so a partial patch built from
+ * a stale snapshot (or one that simply omits a sibling) would silently
+ * drop fields like the onboarding-picked `favoriteParticipantId`.
  */
 const patchProfile = ({
 	principal,
@@ -214,12 +262,18 @@ const patchProfile = ({
 	// A static field set, or a function that derives the patch from the
 	// freshest profile (e.g. `longestStreak = max(existing, dailyStreak)`),
 	// evaluated inside the queued turn so it sees prior writes.
-	patch: Partial<UserProfile> | ((current: UserProfile) => Partial<UserProfile>);
+	patch: ProfilePatch | ((current: UserProfile) => ProfilePatch);
 }): Promise<UserProfile> => {
 	const run = profilePatchQueue.then(async () => {
 		const profileDoc = await getProfile(principal);
 		const resolved = typeof patch === 'function' ? patch(profileDoc.data) : patch;
-		const data: UserProfile = { ...profileDoc.data, ...resolved };
+		const data: UserProfile = {
+			...profileDoc.data,
+			...resolved,
+			preferences: nonNullish(resolved.preferences)
+				? { ...profileDoc.data.preferences, ...resolved.preferences }
+				: profileDoc.data.preferences
+		};
 
 		await upsertProfile({ ...profileDoc, data });
 
@@ -263,25 +317,26 @@ export const persistDailyStreak = ({
 	});
 
 /**
- * Persist the user's daily-goal counter. Called from Flow Mode after
- * each committed prediction so the goal survives a refresh and reflects
- * the day's running total across sessions.
+ * Record one committed Flow swipe against the server-authoritative daily
+ * cap. The satellite owns the count: we send only our local-day key (the
+ * `YYYY-MM-DD` from `todayKey`) as the rollover boundary — never a count —
+ * and the server reads the caller's profile, rolls over by the key, and
+ * writes the capped increment itself.
  *
- * Best-effort — callers should fire-and-forget; the local UI already
- * reflects the bumped count for the rest of the session even if the
- * round-trip fails. Serialized via `patchProfile` so overlapping writes
- * (the first-swipe streak write, or rapid goal bumps) apply in order
- * and only ever override the daily-goal fields.
+ * The returned `{ dailyGoalDone, dailyGoalDate, capReached }` is the source
+ * of truth for the cross-session daily hard cap, so a cleared or signed-out
+ * client can no longer reset it. The Flow commit fires this without blocking
+ * the swipe animation and reconciles the returned count into local state +
+ * the mirror in `.then(...)`; on a transport failure it keeps the optimistic
+ * local count but clamps it so the session never rises above the last value
+ * the server confirmed for the day.
  */
-export const persistDailyGoal = ({
-	principal,
-	dailyGoalDone,
-	dailyGoalDate
+export const recordFlowSwipe = ({
+	dayKey
 }: {
-	principal: PrincipalText;
-	dailyGoalDone: number;
-	dailyGoalDate: string;
-}): Promise<UserProfile> => patchProfile({ principal, patch: { dailyGoalDone, dailyGoalDate } });
+	dayKey: string;
+}): Promise<{ dailyGoalDone: number; dailyGoalDate: string; capReached: boolean }> =>
+	functions.recordFlowSwipe({ dayKey });
 
 /**
  * Persist the Menagerie celebration ledger — the set of `${slug}:${tier}` keys
@@ -325,9 +380,17 @@ export const upsertProfile = async (
 		key
 	});
 
+	const base = existing?.data ?? profileDoc.data;
 	const data: UserProfile = {
-		...(existing?.data ?? profileDoc.data),
-		...profileDoc.data
+		...base,
+		...profileDoc.data,
+		// Leaf-merge `preferences` onto the freshest stored slice rather than
+		// replacing it. Full-snapshot callers (avatar parts, handle rename)
+		// carry a `preferences` they built from an in-store snapshot that can
+		// predate a concurrent write — without this merge, an avatar save right
+		// after onboarding would replace `preferences` and drop the just-picked
+		// `favoriteParticipantId`.
+		preferences: { ...base.preferences, ...profileDoc.data.preferences }
 	};
 
 	if (isNullish(existing)) {
@@ -351,6 +414,111 @@ export const upsertProfile = async (
 			data
 		}
 	});
+};
+
+/**
+ * Persist the onboarding picks (handle + backed team/side + completion flag) onto the freshest
+ * profile doc, serialized through {@link patchProfile}'s queue.
+ *
+ * This MUST go through the patch queue rather than a full-snapshot {@link upsertProfile}: on the
+ * login that finishes onboarding, {@link calculateAndSyncStats} writes the same doc concurrently
+ * (it's awaited right after `userStore.set` in `Authn.svelte`, so it overlaps the post-signin
+ * drain). A full-snapshot write built from the pre-sync profile would lose the optimistic-version
+ * race and throw — silently dropping the user's picks (the "could not save your onboarding
+ * choices" report: handle present from the bootstrap, country/team blank). A field-level patch on
+ * the freshest doc both avoids the conflict and leaves the concurrently-written stats intact.
+ *
+ * `setHandle` is gated by the caller's availability probe — pass `true` only when the picked handle
+ * is free. The handle-change cooldown stamp is decided here against the FRESH stored nickname so a
+ * concurrent rename can't desync it.
+ *
+ * Resolves to `{ profile, handleApplied }`. `handleApplied` is `false` when the handle was never
+ * requested (`setHandle: false`) OR when it was claimed in the TOCTOU window between the caller's
+ * probe and this write (the satellite rejects the whole doc with "already taken"): in that case
+ * the handle is dropped and the rest of the picks are retried so team/side/completion — which are
+ * independent of the handle — still persist. The caller maps `setHandle && !handleApplied` to a
+ * collision toast.
+ */
+export const applyOnboardingPicks = async ({
+	principal,
+	handle,
+	setHandle,
+	interests,
+	email,
+	favoriteParticipantId,
+	favoriteSide
+}: {
+	principal: PrincipalText;
+	handle: string | null;
+	setHandle: boolean;
+	interests?: string[];
+	email?: string;
+	favoriteParticipantId: string;
+	favoriteSide: string;
+}): Promise<{ profile: UserProfile; handleApplied: boolean }> => {
+	const buildPatch =
+		(includeHandle: boolean) =>
+		(current: UserProfile): ProfilePatch => {
+			// Only the onboarding-owned preference leaves: `patchProfile`
+			// merges them onto the freshest stored `preferences`, so a
+			// concurrent write to a sibling preference can't be reverted here.
+			const patch: ProfilePatch = {
+				preferences: {
+					favoriteParticipantId,
+					favoriteSide,
+					onboardingCompleted: true
+				}
+			};
+
+			if (nonNullish(interests)) {
+				patch.interests = interests;
+			}
+
+			if (nonNullish(email) && email.length > 0) {
+				patch.email = email;
+			}
+
+			if (includeHandle && nonNullish(handle)) {
+				patch.nickname = handle;
+
+				// Stamp the handle-change time only on a real change so the
+				// set-profile assertion accepts the write — the bootstrapped
+				// nickname almost always differs from the picked handle.
+				if (nicknameUniqueKey(handle) !== nicknameUniqueKey(current.nickname ?? '')) {
+					patch.handleLastChangeMs = Date.now();
+				}
+			}
+
+			return patch;
+		};
+
+	if (!setHandle || isNullish(handle)) {
+		return {
+			profile: await patchProfile({ principal, patch: buildPatch(false) }),
+			handleApplied: false
+		};
+	}
+
+	try {
+		return {
+			profile: await patchProfile({ principal, patch: buildPatch(true) }),
+			handleApplied: true
+		};
+	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : '';
+
+		// TOCTOU: the handle was free at the caller's probe but got claimed before this write
+		// landed, so the satellite rejected the whole doc. Retry WITHOUT the handle so the rest of
+		// the picks still persist; the caller surfaces the collision and the user renames later.
+		if (message.includes('already taken')) {
+			return {
+				profile: await patchProfile({ principal, patch: buildPatch(false) }),
+				handleApplied: false
+			};
+		}
+
+		throw err;
+	}
 };
 
 /**
@@ -440,6 +608,38 @@ const extractOpenIdProfile = (user: User): OpenIdProviderProfile | undefined => 
 	return providerData?.openid;
 };
 
+// Principals whose profile doc was created by THIS browser session's
+// `ensureProfile` (first-touch bootstrap). `onAuthStateChange` can fire a
+// second pass whose `getDoc` now finds the just-created doc and reports
+// `existed: true`; if that lands before the onboarding drain effect reads
+// `profileExisted`, the drain wrongly takes the returning-user branch and
+// drops the picks. This set is the deterministic "is this principal new in
+// this session?" signal the drain consults so a benign second pass can't
+// flip it. Session-scoped (page lifetime); a genuinely returning user whose
+// doc predates this session is never added.
+const bootstrappedThisSession = new Set<PrincipalText>();
+
+/**
+ * True when `ensureProfile` created this principal's profile during the
+ * current browser session — authoritative regardless of a later racy
+ * `getDoc` read. Used by the onboarding drain to decide new-vs-returning.
+ */
+export const wasBootstrappedThisSession = (principal: PrincipalText): boolean =>
+	bootstrappedThisSession.has(principal);
+
+/**
+ * Reset the bootstrapped-this-session capture. Called on sign-out (which always
+ * fires `onAuthStateChange(null)`), so a user who created a profile earlier in
+ * this tab, signed out, and signs back in is correctly seen as RETURNING — not
+ * re-classified as new (which would let a referral-only pending payload run the
+ * new-user branch and clobber their saved picks). The double-`onAuthStateChange`
+ * race this set guards happens within a single sign-in (both passes carry a
+ * non-null user), so clearing on sign-out never reopens it.
+ */
+export const forgetBootstrappedThisSession = (): void => {
+	bootstrappedThisSession.clear();
+};
+
 export const ensureProfile = async (user: User): Promise<EnsureProfileResult> => {
 	const principal = user.key;
 	const profileDoc = await getProfile(principal);
@@ -509,37 +709,49 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	const sanitizedSeed = sanitizeNickname(seedSource);
 	const nickname = sanitizedSeed.length >= MIN_NICKNAME_LENGTH ? sanitizedSeed : principal;
 
-	const data: UserProfile = {
-		...profileDoc.data,
+	// First-touch bootstrap. Seed the nickname (and provider email when present)
+	// through the SAME serialized `patchProfile` queue that `calculateAndSyncStats`
+	// — awaited right after sign-in on this finishing login — and the onboarding
+	// drain use. A direct full-snapshot `upsertProfile` here is NOT serialized
+	// against that concurrent stats write, so its read-then-write loses the
+	// optimistic-version race and throws ("set doc version"), stranding the user
+	// on signup even though auth already succeeded (a refresh then shows them
+	// signed in). Going through the queue orders the create against the stats
+	// write instead, so whichever runs first, the other reads its version.
+	//
+	// The default nickname is the user's shortened principal, which can collide
+	// with another provider's shortened principal — fall back to the unshortened
+	// principal so the assertion cannot veto this implicit write. The user can
+	// change it later from the profile dashboard.
+	const seedPatch: ProfilePatch = {
 		nickname,
-		// Seed the provider email on first touch; the pending-onboarding drain
-		// in `(app)/+layout.svelte` preserves it (it only sets `email` when its
-		// own payload carries one — the email-passkey flow).
 		...(providerEmail.length > 0 && { email: providerEmail })
 	};
 
-	// First-touch bootstrap. The default nickname is the user's
-	// shortened principal, which can occasionally collide with another
-	// shortened principal from a different identity provider — fall
-	// back to the unshortened principal so the assertion cannot veto
-	// this implicit write. The user can then change it from the
-	// profile dashboard.
+	// Record the bootstrap BEFORE the write awaits. A fresh sign-in can fire a
+	// second `onAuthStateChange` pass whose profile read resolves after the
+	// create lands but before control returns here; if the mark lagged behind the
+	// await, that pass would see the doc as pre-existing while
+	// `wasBootstrappedThisSession` was still false, misclassify a brand-new user
+	// as returning, and drop their onboarding handle. Marking up front is safe: a
+	// throwing write errors the caller out, and a principal with no doc reads as
+	// `existed: false` (the new-user path) on any retry.
+	bootstrappedThisSession.add(principal);
+
 	try {
-		await upsertProfile({ ...profileDoc, data });
+		return { profile: await patchProfile({ principal, patch: seedPatch }), existed: false };
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : '';
 
 		if (message.includes('already taken')) {
-			const fallback: UserProfile = { ...data, nickname: principal };
-			await upsertProfile({ ...profileDoc, data: fallback });
-
-			return { profile: fallback, existed: false };
+			return {
+				profile: await patchProfile({ principal, patch: { ...seedPatch, nickname: principal } }),
+				existed: false
+			};
 		}
 
 		throw err;
 	}
-
-	return { profile: data, existed: false };
 };
 
 /**

@@ -1,4 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { DAILY_HARD_CAP } from '$lib/constants/flow-rewards.constants';
 import {
 	handleCooldownDaysLeft,
 	MIN_NICKNAME_LENGTH,
@@ -8,10 +9,17 @@ import {
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
 import { visibilityFromProfile } from '$lib/utils/visibility.utils';
+import { mintFlowOvertime } from '$satellite/services/vxp-flow-awards.services';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
-import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
+import {
+	decodeDocData,
+	encodeDocData,
+	getDocStore,
+	listDocsStore,
+	setDocStore
+} from '@junobuild/functions/sdk';
 import type { PrincipalText } from '@junobuild/schema';
 
 /**
@@ -162,6 +170,125 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		handleLastChangeMs: profile.handleLastChangeMs,
 		preferences: sanitizedPreferences
 	};
+};
+
+/**
+ * A `YYYY-MM-DD` local-day key is well-formed iff its parsed components
+ * round-trip exactly through a UTC date (so `2026-02-31` — which `Date`
+ * would silently normalize to March 3 — is rejected). The satellite has
+ * no notion of the caller's timezone, so it does NOT compute the day
+ * itself; it accepts the client's local-day key and uses it only as the
+ * rollover boundary. The structural check here is the only validation:
+ * forging a different (valid) key to dodge the cap is an adversarial
+ * bypass that's explicitly out of scope for the honest-reset fix.
+ */
+const isWellFormedDayKey = (key: string): boolean => {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+
+	if (isNullish(match)) {
+		return false;
+	}
+
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+	const date = new Date(Date.UTC(year, month - 1, day));
+
+	return (
+		date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+	);
+};
+
+/** Outcome of {@link recordFlowSwipeFn}. */
+export interface RecordFlowSwipeResult {
+	/** The authoritative count of Flow swipes recorded for `dailyGoalDate`. */
+	dailyGoalDone: number;
+	/** The local-day key (`YYYY-MM-DD`) the count belongs to. */
+	dailyGoalDate: string;
+	/** `true` once `dailyGoalDone` has reached {@link DAILY_HARD_CAP}. */
+	capReached: boolean;
+}
+
+/**
+ * Authoritative per-swipe daily-counter increment — the satellite owns the
+ * Flow daily hard cap, not the client.
+ *
+ * The client never sends a count: it sends only its local-day key
+ * (`YYYY-MM-DD`, computed FE-side via `todayKey`), which the server uses
+ * solely as the rollover boundary. The server reads the caller's own
+ * profile and:
+ *
+ *  - if the stored `dailyGoalDate` equals `dayKey`, increments the stored
+ *    `dailyGoalDone` (capped at {@link DAILY_HARD_CAP});
+ *  - otherwise starts the day fresh at 1 under `dayKey`.
+ *
+ * The result is written back via a version-locked `setDocStore` (PROFILES
+ * is user-owned, so the write is authorised by the REAL caller — never an
+ * admin key). With the monotonic-per-day assert as the backstop, a cleared
+ * or stale client can no longer roll the count backward within a day, so
+ * the cap survives reloads, cleared storage, sign-outs, and device
+ * switches. A caller with no profile yet (not onboarded) is a no-op that
+ * reports a 1-of-cap day so the FE can still gate the session.
+ */
+export const recordFlowSwipeFn = async ({
+	dayKey
+}: {
+	dayKey: string;
+}): Promise<RecordFlowSwipeResult> => {
+	if (!isWellFormedDayKey(dayKey)) {
+		throw new Error('dayKey must be a well-formed YYYY-MM-DD local-day key.');
+	}
+
+	const caller = msgCaller();
+	const callerText = caller.toText();
+	const callerBytes = caller.toUint8Array();
+
+	const profileDoc = getDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes
+	});
+
+	// A swipe only ever comes from a signed-in caller, who always has a
+	// profile (created at onboarding); a missing doc here means a broken or
+	// half-created account. Fail fast rather than fabricate an
+	// authoritative-shaped count — the Flow commit's catch clamps the
+	// optimistic tally to the last server-confirmed value, so a rejection
+	// degrades gracefully instead of silently re-opening the cap.
+	if (isNullish(profileDoc)) {
+		throw new Error('Cannot record a Flow swipe: the caller has no profile.');
+	}
+
+	const profile = decodeDocData<UserProfile>(profileDoc.data);
+
+	// Roll over by the client's local-day key: a stored count for any other
+	// day has elapsed, so the new day starts at 0 before this swipe.
+	const prevForDay = profile.dailyGoalDate === dayKey ? (profile.dailyGoalDone ?? 0) : 0;
+	const dailyGoalDone = Math.min(DAILY_HARD_CAP, Math.max(0, prevForDay) + 1);
+
+	const next = withProfileDefaults({ ...profile, dailyGoalDone, dailyGoalDate: dayKey });
+
+	setDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes,
+		doc: {
+			data: encodeDocData<UserProfile>(next),
+			version: profileDoc.version
+		}
+	});
+
+	const capReached = dailyGoalDone >= DAILY_HARD_CAP;
+
+	// Overtime VXP is minted here, inline: the counter write above uses
+	// `setDocStore`, which fires no `onSetDoc` hook, so an award hook would
+	// never see it. `mintFlowOvertime` is idempotent per day and never
+	// throws, so a payout hiccup can't corrupt the swipe-count result.
+	if (capReached) {
+		await mintFlowOvertime({ caller: callerBytes, recipient: callerText, dayKey });
+	}
+
+	return { dailyGoalDone, dailyGoalDate: dayKey, capReached };
 };
 
 /**
@@ -490,5 +617,66 @@ export const assertValidNickname = ({
 		Math.abs(proposedLastChangeMs - nowMs) > HANDLE_LAST_CHANGE_TOLERANCE_MS
 	) {
 		throw new Error('handleLastChangeMs must be set to the current time on a handle change.');
+	}
+};
+
+/**
+ * Backstop for the server-authoritative Flow daily cap: any direct client
+ * `set_doc` to PROFILES must not roll the daily counter backward within a
+ * day, nor push it past {@link DAILY_HARD_CAP}.
+ *
+ * `recordFlowSwipe` is the normal write path (it computes the count
+ * server-side); this assert ensures a stale or cleared client — which
+ * re-fetches the profile, sees a lower count, and `set_doc`s the whole
+ * doc back — can't overwrite the authoritative total downward and re-open
+ * a fresh allotment (the reported honest-reset leak).
+ *
+ * Rules, comparing the proposed doc against the CURRENT stored doc:
+ *
+ *  - First write (no stored doc) → allowed, but still capped at the hard
+ *    cap so a forged first profile can't seed an over-cap count.
+ *  - `dailyGoalDate` advances (a genuine new day) → reset to any value
+ *    within `0..cap` is allowed.
+ *  - `dailyGoalDate` unchanged → the proposed `dailyGoalDone` may not be
+ *    LOWER than the stored one, and may not exceed the hard cap.
+ *
+ * Manipulating `dailyGoalDate` to a different (valid) day to force a reset
+ * is an adversarial bypass, out of scope for the honest-reset fix.
+ */
+export const assertDailyGoalMonotonic = ({
+	data: {
+		collection,
+		data: { proposed, current }
+	}
+}: AssertSetDocContext) => {
+	if (collection !== Collection.PROFILES) {
+		return;
+	}
+
+	const proposedProfile = decodeDocData<UserProfile>(proposed.data);
+	const proposedDone = proposedProfile.dailyGoalDone ?? 0;
+
+	// Reject non-integer / negative / non-finite counts outright: the cap
+	// invariant assumes a whole-number tally in [0, cap], and a NaN or
+	// fractional value would slip past the bounds checks below.
+	if (!Number.isInteger(proposedDone) || proposedDone < 0) {
+		throw new Error('dailyGoalDone must be a non-negative integer.');
+	}
+
+	if (proposedDone > DAILY_HARD_CAP) {
+		throw new Error(`dailyGoalDone cannot exceed the daily hard cap of ${DAILY_HARD_CAP}.`);
+	}
+
+	const currentProfile = nonNullish(current) ? decodeDocData<UserProfile>(current.data) : undefined;
+
+	// First write, or a genuine new-day reset: nothing to roll back against.
+	if (isNullish(currentProfile) || currentProfile.dailyGoalDate !== proposedProfile.dailyGoalDate) {
+		return;
+	}
+
+	// Same day → the count is monotonic non-decreasing. A stale client that
+	// re-saves a lower total is rejected so the server's progress stands.
+	if (proposedDone < (currentProfile.dailyGoalDone ?? 0)) {
+		throw new Error('dailyGoalDone cannot decrease within the same day.');
 	}
 };

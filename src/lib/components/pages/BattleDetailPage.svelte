@@ -4,29 +4,30 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
-	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { isMarketTag, MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { track } from '$lib/services/analytics.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
 		acceptBattle,
+		declineBattle,
 		kickoffBattle,
 		listMyBattles,
 		listMyLeagues,
 		loadLeaguesByIds,
+		readBattleLiveScore,
+		resolveBattle,
 		retractBattle,
+		type BattleLiveScore,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
 	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import {
-		BATTLE_SCOPE_DEFAULT,
-		type BattleDoc,
-		type BattleScope,
-		type BattleState
-	} from '$lib/types/battle';
+	import type { BattleDoc, BattleState } from '$lib/types/battle';
+	import { battleScopeLabel } from '$lib/utils/battle.utils';
 	import { formatDate, shortLeagueId } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
@@ -53,8 +54,26 @@
 	let loadState: 'loading' | 'ready' | 'not_found' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	let actingBattleId = $state<string | null>(null);
-	let resolveTarget = $state<BattleDoc | null>(null);
-	let resolveOurSide = $state<string | null>(null);
+	// Provisional standings while the battle is in flight — null until the
+	// read returns, or for any battle that can't be scored live (duel,
+	// non-in_flight, legacy row missing baselines).
+	let liveScore = $state<BattleLiveScore | null>(null);
+	// Fire `battle_viewed` exactly once per mount, on the first `ready`.
+	let viewedTracked = false;
+	// Battle id → count of lazy auto-resolve attempts. We retry a transient
+	// failure on the next effect pass (there's no manual button to fall back
+	// on) but cap it so a persistently failing write doesn't hammer the
+	// backend on every re-render.
+	const autoResolveAttempts = new SvelteMap<string, number>();
+	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
+
+	// Where the viewer arrived from, for the `battle_viewed` funnel. A
+	// bounded vocabulary — anything unrecognised falls back to deep_link.
+	const viewSource = $derived.by((): 'inbox' | 'league' | 'deep_link' => {
+		const from = page.url.searchParams.get('from');
+
+		return from === 'inbox' || from === 'league' ? from : 'deep_link';
+	});
 
 	const load = async () => {
 		try {
@@ -66,7 +85,24 @@
 			battles = battleList;
 			memberships = mineList;
 			selfPrincipal = identity.getPrincipal().toText();
-			loadState = battles.some((b) => b.id === battleId) ? 'ready' : 'not_found';
+			const found = battles.find((b) => b.id === battleId);
+			loadState = nonNullish(found) ? 'ready' : 'not_found';
+
+			if (nonNullish(found) && !viewedTracked) {
+				viewedTracked = true;
+				track({ name: 'battle_viewed', battleId, label: found.state, source: viewSource });
+			}
+
+			// Provisional standings — read-only; resolution stays the lazy
+			// auto-resolve path. A failure degrades silently to the "—" render.
+			if (nonNullish(found)) {
+				try {
+					liveScore = await readBattleLiveScore({ battle: found });
+				} catch (err) {
+					console.error('BattleDetailPage: live score read failed', err);
+					liveScore = null;
+				}
+			}
 		} catch (err) {
 			console.error('BattleDetailPage: load failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
@@ -126,17 +162,6 @@
 		return b?.role === 'owner' ? battle.sideB : undefined;
 	});
 
-	// Localized scope label: `all` (or absent on legacy rows) reads
-	// "All calls"; a market-tag scope reuses the canonical category
-	// catalog so the label never drifts from the rest of the app.
-	const scopeLabel = (scope: BattleScope | undefined): string => {
-		const resolved = scope ?? BATTLE_SCOPE_DEFAULT;
-
-		return resolved !== 'all' && isMarketTag(resolved)
-			? t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[resolved] })
-			: t({ locale: $localeStore, key: 'battle.detail.scope_all' });
-	};
-
 	const stateLabelKey = (state: BattleState): MessageKey => {
 		switch (state) {
 			case 'proposed':
@@ -147,6 +172,10 @@
 				return 'leagues.battle.state.in_flight';
 			case 'resolved':
 				return 'leagues.battle.state.resolved';
+			case 'declined':
+				return 'leagues.battle.state.declined';
+			case 'expired':
+				return 'leagues.battle.state.expired';
 		}
 	};
 
@@ -176,11 +205,74 @@
 	});
 
 	const canAccept = $derived(battle?.state === 'proposed' && ownedSide === battle.sideB);
+	const canDecline = $derived(battle?.state === 'proposed' && ownedSide === battle.sideB);
 	const canKickoff = $derived(
 		battle?.state === 'accepted' && nonNullish(ownedSide) && Date.now() >= battle.kickoffMs
 	);
+	// Shown to everyone while a settled battle awaits its silent write —
+	// there is no button to press, just a "finalizing" indicator.
+	const isFinalizing = $derived(
+		nonNullish(battle) && battle.state === 'in_flight' && Date.now() >= battle.settleMs
+	);
+
+	// Provisional standings are available — show running accuracy + a
+	// "leading" highlight in place of the pre-resolve "—".
+	const isLive = $derived(
+		nonNullish(battle) && battle.state === 'in_flight' && nonNullish(liveScore)
+	);
+
+	// Score text for a side: the resolved doc score once resolved, the live
+	// projection while in flight, else the pre-resolve placeholder.
+	const scoreText = (side: 'A' | 'B'): string => {
+		if (nonNullish(battle) && battle.state === 'resolved') {
+			const pct = side === 'A' ? battle.scoreA : battle.scoreB;
+
+			return nonNullish(pct)
+				? t({ locale: $localeStore, key: 'leagues.battle.score_pct', params: { pct } })
+				: '—';
+		}
+
+		if (isLive && nonNullish(liveScore)) {
+			const pct = side === 'A' ? liveScore.scoreA : liveScore.scoreB;
+
+			return t({ locale: $localeStore, key: 'leagues.battle.score_pct', params: { pct } });
+		}
+
+		return '—';
+	};
+
+	// Whether a side is ahead — the resolved winner once resolved, the live
+	// leader while in flight. A draw highlights neither side.
+	const isLeading = (side: 'A' | 'B'): boolean => {
+		if (nonNullish(battle) && battle.state === 'resolved') {
+			return battle.winner === side;
+		}
+
+		return isLive && liveScore?.leader === side;
+	};
+
+	// The side whose league the viewer belongs to (any role). Resolution is
+	// open to members, not just owners — the satellite re-derives the scores,
+	// so the writer can't skew them. Duels carry no members, so they fall
+	// back to the principal-owned side.
+	const resolverSide = $derived.by((): string | undefined => {
+		if (!battle) {
+			return;
+		}
+
+		if (battle.kind !== 'league') {
+			return ownedSide;
+		}
+
+		if (membershipByLeagueId.has(battle.sideA)) {
+			return battle.sideA;
+		}
+
+		return membershipByLeagueId.has(battle.sideB) ? battle.sideB : undefined;
+	});
+
 	const canResolve = $derived(
-		battle?.state === 'in_flight' && nonNullish(ownedSide) && Date.now() >= battle.settleMs
+		battle?.state === 'in_flight' && nonNullish(resolverSide) && Date.now() >= battle.settleMs
 	);
 	const canRetract = $derived(
 		battle?.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal
@@ -198,6 +290,25 @@
 			await load();
 		} catch (err) {
 			console.error('BattleDetailPage: acceptBattle failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			actingBattleId = null;
+		}
+	};
+
+	const handleDecline = async () => {
+		if (!battle || nonNullish(actingBattleId)) {
+			return;
+		}
+
+		actingBattleId = battle.id;
+
+		try {
+			await declineBattle({ battle });
+			track({ name: 'battle_declined', battleId: battle.id });
+			await load();
+		} catch (err) {
+			console.error('BattleDetailPage: declineBattle failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBattleId = null;
@@ -240,20 +351,77 @@
 		}
 	};
 
-	const openResolve = () => {
-		if (!battle || isNullish(ownedSide)) {
+	const trackResolved = ({
+		resolved,
+		ourSide,
+		source
+	}: {
+		resolved: BattleDoc;
+		ourSide: string;
+		source: 'auto' | 'nudge';
+	}) => {
+		const ourLetter = ourSide === resolved.sideA ? 'A' : 'B';
+		const isVoid =
+			resolved.winner === 'draw' && (resolved.callsA ?? 0) === 0 && (resolved.callsB ?? 0) === 0;
+		const label = isVoid
+			? 'void'
+			: resolved.winner === 'draw'
+				? 'draw'
+				: resolved.winner === ourLetter
+					? 'win'
+					: 'loss';
+
+		track({
+			name: 'battle_resolved',
+			battleId: resolved.id,
+			leagueId: ourSide,
+			source,
+			label,
+			value: Math.max(resolved.scoreA ?? 0, resolved.scoreB ?? 0)
+		});
+	};
+
+	// Resolve the battle in one tap: scores are each league's window
+	// accuracy, computed by the service from `league_stats` and re-verified
+	// by the satellite assert — there is nothing for the user to enter.
+	const handleResolve = async (source: 'auto' | 'nudge') => {
+		const ourSide = resolverSide;
+
+		if (!battle || nonNullish(actingBattleId) || isNullish(ourSide)) {
 			return;
 		}
 
-		resolveTarget = battle;
-		resolveOurSide = ownedSide;
+		const target = battle;
+		actingBattleId = target.id;
+
+		try {
+			const resolved = await resolveBattle({ battle: target });
+			trackResolved({ resolved, ourSide, source });
+			await load();
+		} catch (err) {
+			console.error('BattleDetailPage: resolveBattle failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			actingBattleId = null;
+		}
 	};
 
-	const onResolveDone = () => {
-		resolveTarget = null;
-		resolveOurSide = null;
-		void load();
-	};
+	// Lazy auto-resolution: Juno has no scheduler, so a settled battle
+	// resolves the first time any member of either side opens it. The attempt
+	// counter guards against re-firing on every re-render while still letting
+	// a transient failure retry up to the cap; resolution is silent, so the
+	// page only ever shows a "finalizing" indicator, never a button.
+	$effect(() => {
+		if (
+			canResolve &&
+			nonNullish(battle) &&
+			isNullish(actingBattleId) &&
+			(autoResolveAttempts.get(battle.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
+		) {
+			autoResolveAttempts.set(battle.id, (autoResolveAttempts.get(battle.id) ?? 0) + 1);
+			void handleResolve('auto');
+		}
+	});
 
 	const backToInbox = () => {
 		void goto(`${resolve(AppPath.Arena)}/battles`);
@@ -311,15 +479,13 @@
 				<div
 					style:--team-accent={sideAccent(battle.sideA)}
 					class="battle-detail-team"
-					class:is-leading={battle.state === 'resolved' && battle.winner === 'A'}
+					class:is-leading={isLeading('A')}
 				>
 					<span class="battle-detail-emblem" aria-hidden="true">
 						{sideLabel(battle.sideA).charAt(0)}
 					</span>
 					<span class="battle-detail-team-name">{sideLabel(battle.sideA)}</span>
-					<span class="battle-detail-score num">
-						{battle.scoreA ?? '—'}
-					</span>
+					<span class="battle-detail-score num">{scoreText('A')}</span>
 				</div>
 
 				<span class="battle-detail-vs serif-italic">vs</span>
@@ -327,21 +493,27 @@
 				<div
 					style:--team-accent={sideAccent(battle.sideB)}
 					class="battle-detail-team"
-					class:is-leading={battle.state === 'resolved' && battle.winner === 'B'}
+					class:is-leading={isLeading('B')}
 				>
 					<span class="battle-detail-emblem" aria-hidden="true">
 						{sideLabel(battle.sideB).charAt(0)}
 					</span>
 					<span class="battle-detail-team-name">{sideLabel(battle.sideB)}</span>
-					<span class="battle-detail-score num">
-						{battle.scoreB ?? '—'}
-					</span>
+					<span class="battle-detail-score num">{scoreText('B')}</span>
 				</div>
 			</div>
 
+			{#if isLive}
+				<p class="allcaps battle-detail-live-note">
+					{t({ locale: $localeStore, key: 'battle.detail.live_provisional' })}
+				</p>
+			{/if}
+
 			{#if battle.state === 'resolved' && battle.winner === 'draw'}
 				<p class="allcaps battle-detail-winner">
-					{t({ locale: $localeStore, key: 'leagues.battle.winner_draw' })}
+					{(battle.callsA ?? 0) === 0 && (battle.callsB ?? 0) === 0
+						? t({ locale: $localeStore, key: 'leagues.battle.winner_void' })
+						: t({ locale: $localeStore, key: 'leagues.battle.winner_draw' })}
 				</p>
 			{:else if battle.state === 'proposed'}
 				<p class="serif-italic battle-detail-pending-foot">
@@ -357,7 +529,9 @@
 			</div>
 			<div class="battle-detail-meta-row">
 				<span class="eyebrow">{t({ locale: $localeStore, key: 'battle.detail.scope_label' })}</span>
-				<span class="num allcaps">{scopeLabel(battle.scope)}</span>
+				<span class="num allcaps"
+					>{battleScopeLabel({ scope: battle.scope, locale: $localeStore })}</span
+				>
 			</div>
 			{#if nonNullish(battle.wager) && battle.wager > 0}
 				<div class="battle-detail-meta-row">
@@ -402,6 +576,18 @@
 						? t({ locale: $localeStore, key: 'leagues.battle.action.accepting' })
 						: t({ locale: $localeStore, key: 'leagues.battle.action.accept' })}
 				</button>
+				{#if canDecline}
+					<button
+						class="battle-detail-action is-danger"
+						disabled={actingBattleId === battle.id}
+						onclick={handleDecline}
+						type="button"
+					>
+						{actingBattleId === battle.id
+							? t({ locale: $localeStore, key: 'leagues.battle.action.declining' })
+							: t({ locale: $localeStore, key: 'leagues.battle.action.decline' })}
+					</button>
+				{/if}
 			{:else if canKickoff}
 				<button
 					class="battle-detail-action is-primary"
@@ -413,10 +599,11 @@
 						? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
 						: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 				</button>
-			{:else if canResolve}
-				<button class="battle-detail-action is-primary" onclick={openResolve} type="button">
-					{t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
-				</button>
+			{:else if isFinalizing}
+				<p class="battle-detail-finalizing num" aria-live="polite" role="status">
+					<LoadingSpinner size="xs" />
+					<span>{t({ locale: $localeStore, key: 'leagues.battle.action.finalizing' })}</span>
+				</p>
 			{/if}
 			{#if canRetract}
 				<button
@@ -433,19 +620,6 @@
 		</section>
 	{/if}
 </div>
-
-{#if nonNullish(resolveTarget) && nonNullish(resolveOurSide)}
-	<ResolveBattleModal
-		battle={resolveTarget}
-		isOpen={true}
-		onClose={() => {
-			resolveTarget = null;
-			resolveOurSide = null;
-		}}
-		onResolved={onResolveDone}
-		ourLeagueId={resolveOurSide}
-	/>
-{/if}
 
 <style lang="postcss">
 	.battle-detail {
@@ -607,6 +781,14 @@
 		color: var(--text-muted);
 	}
 
+	.battle-detail-live-note {
+		margin: 0;
+		font-size: var(--t-10);
+		letter-spacing: var(--tracking-allcaps);
+		text-align: center;
+		color: var(--laurel);
+	}
+
 	.battle-detail-pending-foot {
 		margin: 0;
 		font-size: var(--t-13);
@@ -665,6 +847,15 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.55rem;
+	}
+
+	.battle-detail-finalizing {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: var(--t-13);
+		font-weight: 700;
+		color: var(--text-muted);
 	}
 
 	.battle-detail-action {

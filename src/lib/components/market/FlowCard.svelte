@@ -4,6 +4,8 @@
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import FlowCardFooter from '$lib/components/market/FlowCardFooter.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
+	import MarketTranslationToggle from '$lib/components/market/MarketTranslationToggle.svelte';
 	import SeededAvatarStack from '$lib/components/ui/SeededAvatarStack.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
@@ -17,6 +19,7 @@
 		FollowedLeanSignal,
 		PriorCallSignal
 	} from '$lib/types/market-signals';
+	import type { MarketTranslation } from '$lib/types/market-translation';
 	import { resolveFlowArtCategory, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import {
 		consensusPercent,
@@ -25,6 +28,7 @@
 	} from '$lib/utils/flow-card-display.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { marketDisplayText } from '$lib/utils/market-translation.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
@@ -36,6 +40,14 @@
 		// When true, the parent has paused the deck (e.g. a sheet is
 		// open) and the card desaturates / dims its faces.
 		locked?: boolean;
+		// Gates gesture entry without touching the card's visuals. FlowMode
+		// holds this false for the first card's rise-in after the entry
+		// overlay is dismissed, so the dismissing tap's trailing events
+		// (desktop mouseup/click, and the synthetic mouse chain a touch
+		// fires ~300 ms after touchend) can't leak into a tap-to-flip on the
+		// card that mounts underneath. Default true keeps static / guided
+		// usages unaffected.
+		gesturesArmed?: boolean;
 		// Generative-artwork category. FlowMode resolves this from the
 		// market's primary tag; FlowCard treats it as opaque and falls back
 		// to a hash-derived bucket when the market has no tags.
@@ -68,6 +80,20 @@
 		// SKIP is suppressed: the first call must commit a YES/NO, never
 		// open depth or skip. The footer hint switches to "SWIPE TO CALL".
 		guided?: boolean;
+		// Resolved metadata translation for this market in the active locale,
+		// or undefined when none exists (which gates the quick toggle). When
+		// present and `showOriginal` is false, the title / subtitle / back-face
+		// resolution render translated.
+		translation?: MarketTranslation;
+		// Per-card quick-toggle state, owned by the parent (FlowMode). True =
+		// show the on-chain original even when a translation exists.
+		showOriginal?: boolean;
+		// Native label of the translation's language, for the "View in {lang}"
+		// quick toggle. Absent when there is no translation.
+		translatedLanguageLabel?: string;
+		// Flip this one card between translated and original. No-op-safe when
+		// absent (static / guided usages don't wire it).
+		onToggleTranslation?: () => void;
 	}
 
 	const {
@@ -77,6 +103,7 @@
 		tradeAmount,
 		interactive = true,
 		locked = false,
+		gesturesArmed = true,
 		category,
 		subtitle,
 		committedAction = null,
@@ -87,8 +114,18 @@
 		points,
 		pointXs,
 		onStakeChange,
-		guided = false
+		guided = false,
+		translation,
+		showOriginal = false,
+		translatedLanguageLabel,
+		onToggleTranslation
 	}: Props = $props();
+
+	// Single source for the card's rendered text: translated unless the viewer
+	// flipped this card to the original (or no translation exists). The
+	// subtitle fallback below reads `display.description` / `display.resolution`
+	// so it compares the same language the card is showing.
+	const display = $derived(marketDisplayText({ market, translation, showOriginal }));
 
 	const isCommitted = $derived(nonNullish(committedAction));
 
@@ -149,18 +186,34 @@
 	const backOverlayYes = $derived(flipped ? overlayYes * overlayDim : 0);
 	const backOverlayNo = $derived(flipped ? overlayNo * overlayDim : 0);
 
+	// Crowd consensus is unknown until the book is read (or it was read and
+	// is empty). When unknown we render an odds skeleton and suppress the
+	// payout preview rather than fabricate a 50/50 split. `priceKnown` is the
+	// single gate for every probability-derived surface on the card.
+	const priceKnown = $derived(nonNullish(market.yesProbability));
 	const crowdPct = $derived(consensusPercent(market));
 	const crowdSide = $derived(consensusSide(market));
-	const yesIsFav = $derived(crowdPct >= 50);
-	const noPct = $derived(100 - crowdPct);
+	const yesIsFav = $derived(nonNullish(crowdPct) && crowdPct >= 50);
+	const noPct = $derived(nonNullish(crowdPct) ? 100 - crowdPct : undefined);
 
 	// Payout preview — stake/(probability) − stake, clamped at p=0.05
-	// to keep long-shots from rendering pathological numbers.
+	// to keep long-shots from rendering pathological numbers. Only computed
+	// when the probability is known; otherwise the preview is suppressed.
 	const stakeNum = $derived(Math.max(0, Number(tradeAmount) || 0));
-	const probMyYes = $derived(Math.max(0.05, market.yesProbability));
-	const probMyNo = $derived(Math.max(0.05, 1 - market.yesProbability));
-	const winYes = $derived(Math.max(1, Math.round(stakeNum / probMyYes) - stakeNum));
-	const winNo = $derived(Math.max(1, Math.round(stakeNum / probMyNo) - stakeNum));
+	const winYes = $derived.by<number | undefined>(() => {
+		if (isNullish(market.yesProbability)) {
+			return;
+		}
+
+		return Math.max(1, Math.round(stakeNum / Math.max(0.05, market.yesProbability)) - stakeNum);
+	});
+	const winNo = $derived.by<number | undefined>(() => {
+		if (isNullish(market.yesProbability)) {
+			return;
+		}
+
+		return Math.max(1, Math.round(stakeNum / Math.max(0.05, 1 - market.yesProbability)) - stakeNum);
+	});
 
 	const sizeStake = $derived(Math.max(VXP_DEFAULT_STAKE, stakeNum));
 
@@ -260,9 +313,9 @@
 	// front-card line reads as a snippet, not an accent. Suppress it in
 	// that case; otherwise trim the distinct blurb for the last-resort line.
 	const descriptionSubtitle = $derived.by<string | undefined>(() => {
-		const description = market.description.trim();
+		const description = display.description.trim();
 
-		if (description.length === 0 || description === market.resolution.trim()) {
+		if (description.length === 0 || description === display.resolution.trim()) {
 			return;
 		}
 
@@ -325,7 +378,7 @@
 	};
 
 	const onPointerDown = (e: MouseEvent | TouchEvent) => {
-		if (!interactive || isCommitted) {
+		if (!interactive || isCommitted || !gesturesArmed) {
 			return;
 		}
 
@@ -427,7 +480,11 @@
 			dragX = 0;
 			dragY = 0;
 
-			if (!guided) {
+			// Suppress flip in guided mode, and until the price is known —
+			// the back face's community-read / stake sections all assume a
+			// resolved probability, so flipping to a fabricated split would
+			// surface a 50/50 the book never reported.
+			if (!guided && priceKnown) {
 				flipped = true;
 			}
 
@@ -578,7 +635,11 @@
 								</span>
 							{/if}
 						</div>
-						<ConsensusCompass size={42} yesProbability={market.yesProbability} />
+						<ConsensusCompass
+							priceLoaded={market.priceLoaded}
+							size={42}
+							yesProbability={market.yesProbability}
+						/>
 					</div>
 
 					{#if showPriorOnFront && priorCall}
@@ -598,9 +659,19 @@
 						</p>
 					{/if}
 
-					<h2 class="flow-card-title">{market.title}</h2>
+					<h2 class="flow-card-title">{display.title}</h2>
 					{#if subtitleText}
 						<p class="flow-card-sub serif-italic acc">{subtitleText}</p>
+					{/if}
+					{#if nonNullish(translation) && nonNullish(translatedLanguageLabel) && nonNullish(onToggleTranslation)}
+						<div class="flow-card-translation">
+							<MarketTranslationToggle
+								onToggle={onToggleTranslation}
+								{showOriginal}
+								{translatedLanguageLabel}
+								variant="compact"
+							/>
+						</div>
 					{/if}
 				</header>
 
@@ -643,53 +714,64 @@
 							seed={market.id}
 							size={420}
 							state="neutral"
+							title={market.title}
 						/>
 					</div>
 
 					<!-- Probability split — single bar with payout labels.
 				     Replaces the dual-box layout to compress space and
-				     surface upside without the misleading red 85% box. -->
+				     surface upside without the misleading red 85% box.
+				     When the probability is unknown the split + payout
+				     preview are replaced by an odds skeleton: a pulsing
+				     bar while the book loads, a neutral dash once it's
+				     read but has no liquidity. Never a fabricated 50/50. -->
 					<div class="flow-probs">
-						<div class="flow-probs-row">
-							<div class="flow-probs-side flow-probs-side-no">
-								<span class="flow-probs-pct num">{noPct}%</span>
-								<span class="flow-probs-label text-no">NO</span>
+						{#if priceKnown && nonNullish(crowdPct) && nonNullish(noPct) && nonNullish(winNo) && nonNullish(winYes)}
+							<div class="flow-probs-row">
+								<div class="flow-probs-side flow-probs-side-no">
+									<span class="flow-probs-pct num">{noPct}%</span>
+									<span class="flow-probs-label text-no">NO</span>
+								</div>
+								<div class="flow-probs-track" aria-hidden="true">
+									<div style:width="{noPct}%" class="flow-probs-fill-no"></div>
+									<div style:width="{crowdPct}%" class="flow-probs-fill-yes"></div>
+								</div>
+								<div class="flow-probs-side flow-probs-side-yes">
+									<span class="flow-probs-label text-yes">YES</span>
+									<span class="flow-probs-pct num">{crowdPct}%</span>
+								</div>
 							</div>
-							<div class="flow-probs-track" aria-hidden="true">
-								<div style:width="{noPct}%" class="flow-probs-fill-no"></div>
-								<div style:width="{crowdPct}%" class="flow-probs-fill-yes"></div>
+							<div class="flow-probs-action-row">
+								<div class="flow-probs-action flow-probs-action-no">
+									<span class="flow-probs-arrow text-no" aria-hidden="true">←</span>
+									<span class="flow-probs-payout num">
+										+{winNo}
+										<span class="flow-probs-payout-unit">VXP</span>
+									</span>
+									<span class="flow-probs-role allcaps">
+										{yesIsFav
+											? t({ locale: $localeStore, key: 'card.long_shot' })
+											: t({ locale: $localeStore, key: 'card.favorite' })}
+									</span>
+								</div>
+								<div class="flow-probs-action flow-probs-action-yes">
+									<span class="flow-probs-role allcaps">
+										{yesIsFav
+											? t({ locale: $localeStore, key: 'card.favorite' })
+											: t({ locale: $localeStore, key: 'card.long_shot' })}
+									</span>
+									<span class="flow-probs-payout num">
+										+{winYes}
+										<span class="flow-probs-payout-unit">VXP</span>
+									</span>
+									<span class="flow-probs-arrow text-yes" aria-hidden="true">→</span>
+								</div>
 							</div>
-							<div class="flow-probs-side flow-probs-side-yes">
-								<span class="flow-probs-label text-yes">YES</span>
-								<span class="flow-probs-pct num">{crowdPct}%</span>
+						{:else}
+							<div class="flow-probs-row flow-probs-row-unknown">
+								<MarketOddsSkeleton variant={market.priceLoaded ? 'empty' : 'loading'} />
 							</div>
-						</div>
-						<div class="flow-probs-action-row">
-							<div class="flow-probs-action flow-probs-action-no">
-								<span class="flow-probs-arrow text-no" aria-hidden="true">←</span>
-								<span class="flow-probs-payout num">
-									+{winNo}
-									<span class="flow-probs-payout-unit">VXP</span>
-								</span>
-								<span class="flow-probs-role allcaps">
-									{yesIsFav
-										? t({ locale: $localeStore, key: 'card.long_shot' })
-										: t({ locale: $localeStore, key: 'card.favorite' })}
-								</span>
-							</div>
-							<div class="flow-probs-action flow-probs-action-yes">
-								<span class="flow-probs-role allcaps">
-									{yesIsFav
-										? t({ locale: $localeStore, key: 'card.favorite' })
-										: t({ locale: $localeStore, key: 'card.long_shot' })}
-								</span>
-								<span class="flow-probs-payout num">
-									+{winYes}
-									<span class="flow-probs-payout-unit">VXP</span>
-								</span>
-								<span class="flow-probs-arrow text-yes" aria-hidden="true">→</span>
-							</div>
-						</div>
+						{/if}
 					</div>
 
 					<!-- Foot — SIZE · VXP chip + tap/swipe hint. -->
@@ -726,22 +808,29 @@
 				aria-hidden={!flipped}
 				onclick={closeBackOnTap}
 			>
-				<FlowCardBack
-					category={resolvedCategory}
-					{categoryAcc}
-					{crowdPct}
-					{crowdSide}
-					{followedLean}
-					interactive={flipped}
-					{market}
-					{metadata}
-					onClose={closeBack}
-					{onStakeChange}
-					{pointXs}
-					{points}
-					{priorCall}
-					{tradeAmount}
-				/>
+				{#if nonNullish(crowdPct) && nonNullish(crowdSide)}
+					<!-- Rendered only once the probability is known — the flip
+				     gesture is itself gated on `priceKnown`, so the back
+				     face never opens on a fabricated split. -->
+					<FlowCardBack
+						category={resolvedCategory}
+						{categoryAcc}
+						{crowdPct}
+						{crowdSide}
+						displayResolution={display.resolution}
+						displayTitle={display.title}
+						{followedLean}
+						interactive={flipped}
+						{market}
+						{metadata}
+						onClose={closeBack}
+						{onStakeChange}
+						{pointXs}
+						{points}
+						{priorCall}
+						{tradeAmount}
+					/>
+				{/if}
 
 				<!-- Back-face swipe still commits a call — corner stamps reuse
 			     the front-face YES/NO treatment; the doubly-rotated back face
@@ -773,8 +862,12 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
-		/* Depth context for the 3D rotateY on `.flow-flipper`. */
+		/* Depth context for the 3D rotateY on `.flow-flipper`. The
+		   `-webkit-` prefix is not optional on iOS: older Safari/WebKit
+		   ignores the unprefixed `perspective`, so without it the rotation
+		   has no depth and the flip degrades to an instant backface swap. */
 		perspective: 1400px;
+		-webkit-perspective: 1400px;
 	}
 
 	.flow-card {
@@ -789,6 +882,16 @@
 		   vertical scroll there still works. */
 		touch-action: none;
 		will-change: transform;
+		/* The card carries a live `transform` (the drag translate / rotate),
+		   which makes it a containing block for its descendants' 3D space.
+		   WebKit flattens that space at any transformed ancestor whose
+		   transform-style is the default `flat`, collapsing the flipper's
+		   rotateY into this plane — so the flip renders as an instant
+		   backface swap instead of an animated 3D rotation. Propagate the
+		   3D context (rooted in `.flow-card-root`'s perspective) through to
+		   `.flow-flipper` so the rotation keeps its depth on WebKit. */
+		transform-style: preserve-3d;
+		-webkit-transform-style: preserve-3d;
 	}
 	.flow-card.is-grabbing {
 		cursor: grabbing !important;
@@ -815,7 +918,14 @@
 	.flow-flipper {
 		position: absolute;
 		inset: 0;
+		/* Mirror `.flow-card`'s prefixed `preserve-3d`: this is the element
+		   that actually rotates, and on iOS WebKit the unprefixed
+		   `transform-style` alone is ignored — the faces then flatten into
+		   one plane and `backface-visibility` culls discretely, so the flip
+		   snaps to the other side with no visible rotation (the reported iOS
+		   bug). The `-webkit-` prefix keeps the faces in shared 3D space. */
 		transform-style: preserve-3d;
+		-webkit-transform-style: preserve-3d;
 		transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
 	}
 	.flow-flipper.is-flipped {
@@ -996,6 +1106,12 @@
 		font-weight: 400;
 	}
 
+	/* Quiet language affordance directly under the title/subtitle, kept off
+	   the card's gesture surface via `data-no-card-gesture`. */
+	.flow-card-translation {
+		margin-top: 6px;
+	}
+
 	.flow-momentum-sep {
 		margin: 0 5px;
 		opacity: 0.55;
@@ -1106,6 +1222,16 @@
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
 		gap: 10px;
+	}
+
+	/* Unknown-odds state — the skeleton bar / dash stands in for the
+	   split + payout rows, centered so the card silhouette stays stable
+	   whether the probability is known or still loading. */
+	.flow-probs-row-unknown {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 22px;
 	}
 
 	.flow-probs-side {

@@ -4,6 +4,7 @@ import {
 	type ClearingDid,
 	type ClearingService
 } from '$declarations';
+import { TradeExecutionError } from '$lib/canisters/clearing.errors';
 import { ZERO } from '$lib/constants/app.constants';
 import type { CreateCanisterOptions } from '$lib/types/canister';
 import {
@@ -299,7 +300,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to submit limit order: ${JSON.stringify(result.Err, jsonReplacer)}`);
+		throw new TradeExecutionError(result.Err);
 	};
 
 	submitMarketOrder = async ({
@@ -314,7 +315,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to submit market order: ${JSON.stringify(result.Err, jsonReplacer)}`);
+		throw new TradeExecutionError(result.Err);
 	};
 
 	cancelLimitOrder = async ({
@@ -329,7 +330,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to cancel limit order: ${JSON.stringify(result.Err, jsonReplacer)}`);
+		throw new TradeExecutionError(result.Err);
 	};
 
 	getOrders = async (queryParams: QueryParams): Promise<ClearingDid.LimitOrder[]> => {
@@ -392,6 +393,50 @@ export class ClearingCanister extends Canister<ClearingService> {
 		});
 
 		return candles;
+	};
+
+	/**
+	 * One page of a series' market-wide executed-trade history (every
+	 * participant's fills, not just the caller's). Each {@link
+	 * ClearingDid.SeriesTradePoint} carries the trade's `qty` and `price`, so a
+	 * front end can aggregate traded notional (Σ qty·price) or replot the tape.
+	 * Pass the previous response's `next_cursor` back as `startAfter` to page;
+	 * `limit` unset returns all remaining trades.
+	 */
+	listSeriesTradeHistory = async ({
+		seriesId,
+		startAfter,
+		limit,
+		...queryParams
+	}: {
+		seriesId: string;
+		startAfter?: bigint;
+		limit?: bigint;
+	} & QueryParams): Promise<ClearingDid.SeriesTradeHistoryPage> => {
+		const { list_series_trade_history } = this.caller(queryParams);
+
+		return await list_series_trade_history({
+			series_id: seriesId,
+			start_after: toNullable(startAfter),
+			limit: toNullable(limit)
+		});
+	};
+
+	/**
+	 * Market-wide traded volume for a set of series in one call — the notional
+	 * that changed hands (Σ qty·price) in USD base units, plus each series'
+	 * executed-trade count. Lets the list/cards label a page of markets without
+	 * a per-card read; unknown or untraded ids come back zeroed.
+	 */
+	listSeriesTradedVolumes = async ({
+		seriesIds,
+		...queryParams
+	}: {
+		seriesIds: string[];
+	} & QueryParams): Promise<ClearingDid.SeriesTradedVolume[]> => {
+		const { list_series_traded_volumes } = this.caller(queryParams);
+
+		return await list_series_traded_volumes({ series_ids: seriesIds });
 	};
 
 	mintCompleteSet = async ({

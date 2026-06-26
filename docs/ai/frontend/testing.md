@@ -146,14 +146,22 @@ pre-deployed.
 - **Runner:** `@playwright/test`.
 - **Auth:** the dev-only mock identity exposed by `@junobuild/core`'s
   `signIn({ dev: {} })`, surfaced through the `SignInDev` button in
-  [`SignInActions.svelte`](../../../src/lib/components/authn/SignInActions.svelte)
+  [`SignInProviderStack.svelte`](../../../src/lib/components/authn/SignInProviderStack.svelte)
   (only rendered when `isDev()`). This is the path Juno's official E2E
   guide recommends and what `@junobuild/emulator-playwright` uses under
   the hood. It exercises the real `onAuthStateChange` pipeline — same
-  store, same `UserDropdown`, same sign-out button — without depending
-  on the Internet Identity popup, which is brittle in a containerized
+  store, same nav chrome, same Settings sign-out — without depending on
+  the Internet Identity popup, which is brittle in a containerized
   emulator (the II canister version drifts vs. driver libraries). A
   follow-up PR can add real II coverage on top of this base if needed.
+- **New-user flow:** a fresh dev principal has no profile, so signing in
+  routes through the `/signup` onboarding beats (team → first-call swipe →
+  handle → auth) before the app shell. `HomePage.signInAsDevUser()` drives
+  that end-to-end; the signed-in surface lives at `/flow`, and the markets
+  board at `/app` (`AppPath.Home`). The signed-in account control carries
+  `data-tid="user-menu"` on both the desktop nav handle and the mobile
+  pillnav profile tab, so `[data-tid="user-menu"]:visible` resolves to one
+  control per viewport.
 - **Backend:** Juno emulator started by `juno emulator start --headless`.
   The Juno CLI's `--emulator` flag is only valid with `--mode development`,
   so E2E reuses development mode but exports `JUNO_EMULATOR=true`, which
@@ -183,13 +191,16 @@ e2e/
 ├── pages/                # Page-Object Model classes
 │   └── home.page.ts
 ├── snapshots/            # Playwright visual baselines, committed
-├── homepage.spec.ts      # logged-out: skeleton state + populated feed
-└── auth.spec.ts          # dev sign-in / sign-out + populated feed
+├── auth.spec.ts          # dev sign-in (via onboarding) + Settings sign-out
+├── homepage.spec.ts      # signed-in markets board: loading + loaded
+├── invite.spec.ts        # /join + /i invite-link landing (anonymous)
+├── navigation.spec.ts    # auth-gate redirects + signed-in page snapshots
+└── onboarding.spec.ts    # /signup beats → handle persists to the profile
 ```
 
 ### Visual snapshots
 
-Both specs end with `await expect(page).toHaveScreenshot(...)` — that's
+The snapshot specs end with `await expect(page).toHaveScreenshot(...)` — that's
 the same flow `oisy-wallet` and `gix-components` use: the PNG baselines
 live under [`e2e/snapshots/`](../../../e2e/snapshots/) and **are
 committed to the repo**, so any visual regression shows up directly in

@@ -8,7 +8,7 @@
 	 *       accuracy trend (7 / 30 / 90-day windows), the session delta + streak,
 	 *       and a global ⇄ friends benchmark toggle.
 	 *   2 · Stack       — the holdings card; tapping opens a breakdown sheet
-	 *       (lifetime earned, in-play, referrals).
+	 *       (Your VXP hero + Available / In-play split).
 	 *   3 · Calls       — an Open / Resolved segmented toggle over compact call
 	 *       rows with status dots and an inline "see all".
 	 *
@@ -33,7 +33,6 @@
 	import ResolutionReveal from '$lib/components/market/ResolutionReveal.svelte';
 	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
-	import { REFERRAL_VXP_BONUS_VALUE } from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -46,11 +45,11 @@
 	import {
 		vxpBacked,
 		vxpHoldingsNotInitialized,
-		vxpHoldingsTotal
+		vxpHoldingsTotal,
+		vxpSpendable
 	} from '$lib/derived/vxp-holdings.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
-	import { listMyReferrals } from '$lib/services/referral.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { friendsListStore } from '$lib/stores/friends.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
@@ -78,19 +77,15 @@
 	const streak = $derived(profile?.dailyStreak ?? 0);
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
-	let referralCount = $state(0);
 
 	// ─── Holdings (playground / VXP domain) ────────────────────────────
 	const holdingsDisplay = $derived(
 		formatVxpBalance({ value: $vxpHoldingsTotal, decimals: USD_DECIMALS })
 	);
+	const availableDisplay = $derived(
+		formatVxpBalance({ value: $vxpSpendable, decimals: USD_DECIMALS })
+	);
 	const inPlayDisplay = $derived(formatVxpBalance({ value: $vxpBacked, decimals: USD_DECIMALS }));
-
-	// Lifetime earned = `profile.points`, the running VXP accumulator.
-	const lifetimeDisplay = $derived((profile?.points ?? 0).toLocaleString());
-
-	// Referral earnings — settled referrals × the per-referral bonus.
-	const referralVxpDisplay = $derived((referralCount * REFERRAL_VXP_BONUS_VALUE).toLocaleString());
 
 	// ─── Markets ───────────────────────────────────────────────────────
 	const marketById = $derived(new Map<string, Market>(($marketsStore ?? []).map((m) => [m.id, m])));
@@ -119,12 +114,22 @@
 	};
 
 	// Day-0/1 market context — "{category} · {pct}% YES" from live consensus.
-	const crowdContextOf = (market: Market): string =>
-		t({
+	// When the probability is still unknown (book not yet read or empty; see
+	// `Market.yesProbability`) we drop the "{pct}% YES" clause and show the
+	// bare category rather than a fabricated "0% YES" / "NaN%".
+	const crowdContextOf = (market: Market): string => {
+		const { yesProbability } = market;
+
+		if (isNullish(yesProbability)) {
+			return categoryOf(market);
+		}
+
+		return t({
 			locale: $localeStore,
 			key: 'dash.build.zero_crowd_ctx',
-			params: { category: categoryOf(market), pct: probabilityToPercent(market.yesProbability) }
+			params: { category: categoryOf(market), pct: probabilityToPercent(yesProbability) }
 		});
+	};
 
 	// ─── Positions / orders ────────────────────────────────────────────
 	// The clearing canister deletes positions on settlement, so anything in
@@ -242,6 +247,11 @@
 
 	// ─── Stack: today's delta + breakdown sheet ────────────────────────
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
+
+	// `user_stats` is fetched after mount, so the TODAY figure pulses a
+	// placeholder until the doc lands — distinct from a loaded-but-quiet window,
+	// which reads a real `0` rather than skeleton.
+	const todayLoading = $derived(isNullish(userStats));
 
 	// Net VXP across the recent settlement window: wins add their payout, losses
 	// have no payout (the stake is already gone), so a quiet/loss-only window
@@ -368,14 +378,6 @@
 		} catch (err) {
 			console.error('DashPage: failed to load user_stats', err);
 		}
-
-		try {
-			// Settled referrals back the stack-sheet referral figure.
-			const referrals = await listMyReferrals();
-			referralCount = referrals.filter((r) => r.referrerPayout.status === 'paid').length;
-		} catch (err) {
-			console.error('DashPage: failed to load referrals', err);
-		}
 	});
 </script>
 
@@ -428,6 +430,7 @@
 				loading={$vxpHoldingsNotInitialized}
 				onOpen={() => (sheetOpen = true)}
 				{todayDelta}
+				{todayLoading}
 			/>
 
 			<!-- ZONE 3 · CALLS -->
@@ -439,13 +442,14 @@
 {/if}
 
 <DashStackSheet
+	{availableDisplay}
+	availableValue={$vxpSpendable}
 	{holdingsDisplay}
 	{inPlayDisplay}
+	inPlayValue={$vxpBacked}
 	isOpen={sheetOpen}
-	{lifetimeDisplay}
 	onClose={() => (sheetOpen = false)}
-	{referralCount}
-	{referralVxpDisplay}
+	openCallCount={liveCallCount}
 />
 
 {#if revealOpen}

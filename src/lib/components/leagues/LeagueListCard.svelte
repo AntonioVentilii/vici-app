@@ -2,6 +2,10 @@
 	import { nonNullish } from '@dfinity/utils';
 	import { Check, ChevronRight } from '@lucide/svelte/icons';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
+	import NestedButton from '$lib/components/ui/NestedButton.svelte';
+	import { track } from '$lib/services/analytics.services';
+	import { buildLeagueShareUrl } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
@@ -52,6 +56,10 @@
 		 *  are not). Swaps the role chip for a `REQUEST` chip and
 		 *  hides the copy pill. */
 		isRecommendation?: boolean;
+		/** Count of incoming, not-yet-accepted battle challenges where
+		 *  this league is the challenged side. Surfaces a chip so the
+		 *  owner sees a pending challenge without opening the league. */
+		incomingChallengeCount?: number;
 		/** Click handler — opens the league detail page (or join
 		 *  flow for recommendations). */
 		onclick: () => void;
@@ -65,8 +73,24 @@
 		yourRank,
 		trend = 0,
 		isRecommendation = false,
+		incomingChallengeCount = 0,
 		onclick
 	}: Props = $props();
+
+	const challengeLabel = $derived.by(() => {
+		if (incomingChallengeCount <= 0) {
+			return;
+		}
+
+		return t({
+			locale: $localeStore,
+			key:
+				incomingChallengeCount === 1
+					? 'leagues.card.incoming_battle_one'
+					: 'leagues.card.incoming_battle_many',
+			params: { count: incomingChallengeCount }
+		});
+	});
 
 	// First three overlapping friends, resolved against the shared
 	// profile cache so the stacked cluster shows real avatars.
@@ -137,17 +161,24 @@
 		});
 	});
 
-	const handleCopy = async (event: MouseEvent | KeyboardEvent) => {
-		event.stopPropagation();
-
+	const handleCopy = async () => {
 		try {
-			const url = `${window.location.origin}/league/${league.inviteCode}`;
+			const { url, withReferral } = await buildLeagueShareUrl({
+				inviteCode: league.inviteCode
+			});
 			const shareText = t({
 				locale: $localeStore,
 				key: 'leagues.share_text'
 			});
 			await navigator.clipboard.writeText(`${shareText} ${url}`);
 			copied = true;
+
+			track({
+				name: 'league_invite_sent',
+				source: 'leagues',
+				leagueId: league.id,
+				ok: withReferral
+			});
 
 			setTimeout(() => {
 				copied = false;
@@ -183,11 +214,14 @@
 		<span class="head">
 			<span class="name">{league.name}</span>
 			{#if isRecommendation}
-				<span class="role-chip is-recommendation">
-					{t({ locale: $localeStore, key: 'leagues.card.recommend_chip' }).toUpperCase()}
-				</span>
+				<Badge size="xs" variant="success">
+					{t({ locale: $localeStore, key: 'leagues.card.recommend_chip' })}
+				</Badge>
 			{:else if roleLabel && role !== 'member'}
-				<span class="role-chip" data-role={role}>{roleLabel.toUpperCase()}</span>
+				<Badge size="xs" variant="warning">{roleLabel}</Badge>
+			{/if}
+			{#if challengeLabel}
+				<Badge size="xs" variant="danger">{challengeLabel}</Badge>
 			{/if}
 		</span>
 
@@ -246,25 +280,13 @@
 			<ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} />
 		{/if}
 		{#if !isRecommendation}
-			<!-- Nested interactive control inside a button is technically
-			     invalid HTML; we use a `<span role="button">` so the
-			     copy pill stays accessible without nesting buttons. -->
-			<span
-				class="copy-pill"
-				class:is-copied={copied}
-				aria-label={t({
+			<NestedButton
+				class="copy-pill {copied ? 'is-copied' : ''}"
+				label={t({
 					locale: $localeStore,
 					key: copied ? 'leagues.card.copy_done' : 'leagues.card.copy'
 				})}
-				onclick={handleCopy}
-				onkeydown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault();
-						void handleCopy(e);
-					}
-				}}
-				role="button"
-				tabindex="0"
+				onclick={() => void handleCopy()}
 			>
 				{#if copied}
 					<Check aria-hidden="true" size={11} strokeWidth={2.4} />
@@ -272,7 +294,7 @@
 				{:else}
 					{t({ locale: $localeStore, key: 'leagues.card.copy' })}
 				{/if}
-			</span>
+			</NestedButton>
 		{/if}
 	</span>
 </button>
@@ -398,35 +420,6 @@
 		min-width: 0;
 	}
 
-	/* Role chip explicitly references `--laurel` (NOT `--accent`):
-	   the outer button overrides `--accent` to the per-league colour
-	   for the logo tile gradient, so a bare `var(--accent)` here
-	   would tint owner / admin chips with the league's accent
-	   (sage / red / etc.) instead of the global laurel. */
-	.role-chip {
-		flex-shrink: 0;
-		display: inline-flex;
-		align-items: center;
-		padding: 2px 7px;
-		border-radius: var(--r-4);
-		font-family: var(--font-mono);
-		font-size: 9px;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		background: rgba(226, 184, 66, 0.14);
-		color: var(--laurel);
-	}
-
-	.role-chip[data-role='owner'] {
-		background: rgba(226, 184, 66, 0.14);
-		color: var(--laurel);
-	}
-
-	.role-chip.is-recommendation {
-		background: rgba(79, 211, 161, 0.12);
-		color: var(--yes);
-	}
-
 	.meta {
 		display: inline-flex;
 		align-items: center;
@@ -544,7 +537,10 @@
 	   per-card colour for the logo tile gradient, and a bare
 	   `var(--accent)` here would tint the copy pill with that per-
 	   league colour instead of the global laurel. */
-	.copy-pill {
+	/* The pill renders inside the shared `NestedButton`, so it's a child-
+	   component element; scope the styles under `.trailing` and reach it with
+	   `:global(...)` (effectively local — they only match inside this card). */
+	.trailing :global(.copy-pill) {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.2rem;
@@ -562,11 +558,11 @@
 		transition: background-color 160ms var(--ease-vici);
 	}
 
-	.copy-pill:hover {
+	.trailing :global(.copy-pill:hover) {
 		background: rgba(226, 184, 66, 0.14);
 	}
 
-	.copy-pill.is-copied {
+	.trailing :global(.copy-pill.is-copied) {
 		color: var(--laurel);
 	}
 </style>

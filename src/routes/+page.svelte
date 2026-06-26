@@ -56,7 +56,7 @@
 	<WelcomePage />
 {:else if resumingSession}
 	<div class="bg-background flex min-h-dvh items-center justify-center">
-		<LoadingSpinner center={false} size="lg" />
+		<LoadingSpinner size="lg" />
 	</div>
 {:else}
 	<div class="bg-background min-h-dvh"></div>

@@ -1,6 +1,8 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	AnalyticsSummarySchema,
+	GetAnalyticsEventsArgsSchema,
+	GetAnalyticsEventsResultSchema,
 	GetAnalyticsSummaryArgsSchema,
 	TrackEventsArgsSchema,
 	TrackEventsResultSchema
@@ -13,6 +15,7 @@ import {
 import {
 	GetMarketTranslationArgsSchema,
 	ListMarketTranslationsArgsSchema,
+	ListMarketTranslationsForLocalesArgsSchema,
 	MarketTranslationSchema,
 	UpsertMarketTranslationArgsSchema
 } from '$lib/schema/market-translation.schema';
@@ -25,6 +28,10 @@ import {
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema, FriendRequestOutcomeSchema } from '$lib/schema/relation.schema';
 import {
+	ListFriendResolvedResultsArgsSchema,
+	ResolvedResultSchema
+} from '$lib/schema/resolved-result.schema';
+import {
 	deleteMyAccountFn,
 	hibernateMyAccountFn,
 	listMyBlockingLeaguesFn,
@@ -32,6 +39,12 @@ import {
 	resumeMyAccountFn,
 	sweepExpiredDeletionsFn
 } from '$satellite/services/account.services';
+import {
+	onActivityReactionDelete,
+	onActivityReactionSet,
+	recomputeActivityReactionCountsFn
+} from '$satellite/services/activity-reaction-count.services';
+import { assertSetActivityReaction } from '$satellite/services/activity-reaction.services';
 import { assertSetActivity } from '$satellite/services/activity.services';
 import {
 	assertSetAffiliationStats,
@@ -41,7 +54,11 @@ import {
 	assertDeleteAffiliation,
 	assertSetAffiliation
 } from '$satellite/services/affiliation.services';
-import { getAnalyticsSummaryFn, trackEventsFn } from '$satellite/services/analytics.services';
+import {
+	getAnalyticsEventsFn,
+	getAnalyticsSummaryFn,
+	trackEventsFn
+} from '$satellite/services/analytics.services';
 import { assertDeleteBattle, assertSetBattle } from '$satellite/services/battle.services';
 import {
 	getAffiliationStatsFn,
@@ -75,7 +92,8 @@ import {
 } from '$satellite/services/league-member.services';
 import {
 	assertSetLeagueStats,
-	onProfileSetForLeagueStats
+	onProfileSetForLeagueStats,
+	onUserStatsSetForLeagueStats
 } from '$satellite/services/league-stats.services';
 import { assertSetLeague, transferLeagueOwnershipFn } from '$satellite/services/league.services';
 import {
@@ -85,12 +103,15 @@ import {
 import {
 	getMarketTranslation as getMarketTranslationFn,
 	listMarketTranslations as listMarketTranslationsFn,
+	listMarketTranslationsForLocales as listMarketTranslationsForLocalesFn,
 	upsertMarketTranslation as upsertMarketTranslationFn
 } from '$satellite/services/market-translation.services';
 import {
+	assertDailyGoalMonotonic,
 	assertValidNickname,
 	checkNicknameAvailabilityFn,
 	getProfile as getProfileFn,
+	recordFlowSwipeFn,
 	searchProfiles as searchProfilesFn
 } from '$satellite/services/profile.services';
 import {
@@ -119,6 +140,11 @@ import {
 	rejectFriendRequest as rejectFriendRequestFn,
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
+import {
+	listFriendResolvedResultsFn,
+	onActivitySetForResolvedResults,
+	pruneResolvedResultsFn
+} from '$satellite/services/resolved-results.services';
 import { assertSetRole } from '$satellite/services/roles.services';
 import { submitSchoolFn, verifySchoolCodeFn } from '$satellite/services/school.services';
 import {
@@ -138,6 +164,7 @@ import { onProfileSetForAchievementAward } from '$satellite/services/vxp-achieve
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimCalibrationRewardFn } from '$satellite/services/vxp-calibration.services';
 import { onProfileSetForComebackRestore } from '$satellite/services/vxp-comeback-awards.services';
+import { onProfileSetForFlowMilestone } from '$satellite/services/vxp-flow-awards.services';
 import {
 	onLeagueSetForFounderVxpPayout,
 	settleFounderAwardsFn
@@ -308,6 +335,26 @@ export const checkNicknameAvailability = defineQuery({
 	}
 });
 
+// Server-authoritative Flow daily-cap increment. Called once per committed
+// Flow swipe. The client sends only its local-day key (`YYYY-MM-DD`, from
+// `todayKey`) as the rollover boundary — never a count: the server reads the
+// caller's profile, rolls over by `dayKey`, and writes the capped increment
+// itself. The returned `dailyGoalDone` / `capReached` are the source of truth
+// for the cross-session "come back tomorrow" takeover, so a cleared or
+// signed-out client can no longer reset the cap. Backed by the monotonic
+// PROFILES assert (`assertDailyGoalMonotonic`).
+export const recordFlowSwipe = defineUpdate({
+	args: j.strictObject({
+		dayKey: j.string()
+	}),
+	result: j.strictObject({
+		dailyGoalDone: j.number(),
+		dailyGoalDate: j.string(),
+		capReached: j.boolean()
+	}),
+	handler: async ({ dayKey }) => await recordFlowSwipeFn({ dayKey })
+});
+
 export const getMarketMetadata = defineQuery({
 	args: GetMarketMetadataArgsSchema,
 	result: j.strictObject({
@@ -348,13 +395,28 @@ export const listMarketTranslations = defineQuery({
 	})
 });
 
+// Bulk overlay read for the markets surfaces (list board, Flow deck): one
+// query returns every stored translation doc across the visible series ids ×
+// the reader's candidate locales, replacing N per-card per-series reads. The
+// server returns raw matching docs; the FE resolves best-per-series with the
+// shared `resolveMarketTranslation`.
+export const listMarketTranslationsForLocales = defineQuery({
+	args: ListMarketTranslationsForLocalesArgsSchema,
+	result: j.strictObject({
+		items: j.array(MarketTranslationWireSchema)
+	}),
+	handler: (args) => ({
+		items: listMarketTranslationsForLocalesFn(args).map(toWireMarketTranslation)
+	})
+});
+
 export const upsertMarketTranslation = defineUpdate({
 	args: UpsertMarketTranslationArgsSchema,
 	result: j.strictObject({
 		translation: MarketTranslationSchema
 	}),
-	handler: (args) => ({
-		translation: upsertMarketTranslationFn(args)
+	handler: async (args) => ({
+		translation: await upsertMarketTranslationFn(args)
 	})
 });
 
@@ -517,6 +579,17 @@ export const getAnalyticsSummary = defineQuery({
 	args: GetAnalyticsSummaryArgsSchema,
 	result: AnalyticsSummarySchema,
 	handler: (args) => getAnalyticsSummaryFn(args)
+});
+
+/**
+ * Admin-gated raw-event export for the cockpit warehouse: the next page of
+ * `events` after the given keyset cursor, flattened. Same admin gate as
+ * `getAnalyticsSummary` — restricted to the cockpit's reader principal.
+ */
+export const getAnalyticsEvents = defineQuery({
+	args: GetAnalyticsEventsArgsSchema,
+	result: GetAnalyticsEventsResultSchema,
+	handler: (args) => getAnalyticsEventsFn(args)
 });
 
 // ─── Social cohorts ─────────────────────────────────────────────
@@ -947,6 +1020,45 @@ export const sweepExpiredDeletions = defineUpdate({
 	handler: sweepExpiredDeletionsFn
 });
 
+// Admin-only corrective for the friend-feed like counts: re-derives every
+// activity's exact like count from `activity_reactions` and overwrites the
+// `activity_reaction_counts` rollup docs. Heals any drift from a
+// concurrent-like version race (the hooks are best-effort) and backfills
+// counts for likes that predate the rollup. Admin-gated; `recomputed` is
+// the number of counter docs written.
+export const recomputeActivityReactionCounts = defineUpdate({
+	result: j.strictObject({
+		recomputed: j.number()
+	}),
+	handler: () => recomputeActivityReactionCountsFn()
+});
+
+// Friend-scoped bulk read for the resolved-results digest (the consumer that
+// renders these rows ships separately). Returns the supplied friend set's
+// resolved-result rows over the active retention window in ONE bounded
+// owner-prefix scan — never one call per friend. Public read; the FE scopes the
+// `friends` set to the caller's confirmed friends.
+export const listFriendResolvedResults = defineQuery({
+	args: ListFriendResolvedResultsArgsSchema,
+	result: j.strictObject({
+		items: j.array(ResolvedResultSchema)
+	}),
+	handler: ({ friends }) => ({
+		items: listFriendResolvedResultsFn({ friends })
+	})
+});
+
+// Retention cleanup for `resolved_results` — prunes rows older than the
+// configured horizon. Admin-gated; Juno has no scheduler so this is triggered
+// externally (admin/cron), mirroring `sweepExpiredDeletions`. `pruned` is the
+// number of rows removed.
+export const pruneResolvedResults = defineUpdate({
+	result: j.strictObject({
+		pruned: j.number()
+	}),
+	handler: () => pruneResolvedResultsFn()
+});
+
 // Monthly tournament — Proposal 3. The draw is fire-and-forget on
 // every Tournament-page mount: idempotent via doc-key collision on
 // the month anchor (a second call returns `already_drawn` cleanly).
@@ -1105,8 +1217,20 @@ export const getMonthlyLeaderboard = defineQuery({
 	}
 });
 
+/**
+ * Composed `profiles` pre-write veto. Each sub-assert (`assertValidNickname`,
+ * `assertDailyGoalMonotonic`) is exported independently from its service so
+ * they stay unit-testable; we compose them here to keep the dispatch table's
+ * one-assert-per-collection invariant. A throw from either rejects the write.
+ */
+const assertProfile = (context: AssertSetDocContext): void => {
+	assertValidNickname(context);
+	assertDailyGoalMonotonic(context);
+};
+
 const assertSetDocCollections = [
 	Collection.ACTIVITIES,
+	Collection.ACTIVITY_REACTIONS,
 	Collection.PROFILES,
 	Collection.ROLES,
 	Collection.REFERRAL_CODES,
@@ -1132,7 +1256,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 	assert: (context) => {
 		const fn: Record<AssertSetDocCollection, (ctx: AssertSetDocContext) => void> = {
 			[Collection.ACTIVITIES]: assertSetActivity,
-			[Collection.PROFILES]: assertValidNickname,
+			[Collection.ACTIVITY_REACTIONS]: assertSetActivityReaction,
+			[Collection.PROFILES]: assertProfile,
 			[Collection.ROLES]: assertSetRole,
 			[Collection.REFERRAL_CODES]: assertSetReferralCode,
 			[Collection.REFERRALS]: assertSetReferral,
@@ -1177,10 +1302,12 @@ export const assertDeleteDoc = defineAssert<AssertDeleteDoc>({
 
 const setDocCollections = [
 	Collection.ACTIVITIES,
+	Collection.ACTIVITY_REACTIONS,
 	Collection.PROFILES,
 	Collection.ROLES,
 	Collection.REFERRALS,
-	Collection.LEAGUES
+	Collection.LEAGUES,
+	Collection.USER_STATS
 ] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
@@ -1195,6 +1322,7 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onProfileSetForVxpOnboarding(context);
 	onProfileSetForReferralCode(context);
 	await onProfileSetForStreakAward(context);
+	await onProfileSetForFlowMilestone(context);
 	await onProfileSetForAchievementAward(context);
 	await onProfileSetForComebackRestore(context);
 	onProfileSetForAffiliationStats(context);
@@ -1202,11 +1330,14 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 };
 
 // A trade activity drives both the new-user onboarding milestones and the referral first-prediction
-// payout. Onboarding runs first; referral settlement is best-effort (it logs and swallows its own
-// errors) so it can't disrupt the onboarding payout.
+// payout; a settlement activity fans out the per-participant `resolved_results` rows. Onboarding
+// runs first; the others are best-effort (each logs and swallows its own errors) so they can't
+// disrupt the onboarding payout. Each sub-hook self-filters on the activity type, so the composition
+// stays a single dispatch entry.
 const onActivitySetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onTradeActivityForVxpOnboarding(context);
 	await onTradeActivityForReferral(context);
+	await onActivitySetForResolvedResults(context);
 };
 
 export const onSetDoc = defineHook<OnSetDoc>({
@@ -1215,16 +1346,18 @@ export const onSetDoc = defineHook<OnSetDoc>({
 		const fn: Record<OnSetDocCollection, RunFunction<OnSetDocContext>> = {
 			[Collection.PROFILES]: onProfileSetComposed,
 			[Collection.ACTIVITIES]: onActivitySetComposed,
+			[Collection.ACTIVITY_REACTIONS]: onActivityReactionSet,
 			[Collection.ROLES]: syncRoleToEngineOnSet,
 			[Collection.REFERRALS]: onReferralSetForVxpPayout,
-			[Collection.LEAGUES]: onLeagueSetForFounderVxpPayout
+			[Collection.LEAGUES]: onLeagueSetForFounderVxpPayout,
+			[Collection.USER_STATS]: onUserStatsSetForLeagueStats
 		};
 
 		await fn[context.data.collection]?.(context);
 	}
 });
 
-const deleteDocCollections = [Collection.ROLES] as const;
+const deleteDocCollections = [Collection.ROLES, Collection.ACTIVITY_REACTIONS] as const;
 
 type OnDeleteDocCollection = (typeof deleteDocCollections)[number];
 
@@ -1232,7 +1365,8 @@ export const onDeleteDoc = defineHook<OnDeleteDoc>({
 	collections: deleteDocCollections,
 	run: async (context) => {
 		const fn: Record<OnDeleteDocCollection, RunFunction<OnDeleteDocContext>> = {
-			[Collection.ROLES]: syncRoleToEngineOnDelete
+			[Collection.ROLES]: syncRoleToEngineOnDelete,
+			[Collection.ACTIVITY_REACTIONS]: onActivityReactionDelete
 		};
 
 		await fn[context.data.collection]?.(context);

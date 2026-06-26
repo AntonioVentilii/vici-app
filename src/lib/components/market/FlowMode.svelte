@@ -6,6 +6,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { tradeErrorMessage } from '$lib/canisters/clearing.errors';
 	import FlowBottomBar from '$lib/components/market/FlowBottomBar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
@@ -20,26 +21,35 @@
 	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
 	import XpToast from '$lib/components/market/XpToast.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
+	import A2hsSheet from '$lib/components/pwa/A2hsSheet.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
+	import { guestMode } from '$lib/derived/guest.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { minuteTick_ms } from '$lib/derived/time.derived';
 	import { vxpSpendable } from '$lib/derived/vxp-holdings.derived';
 	import { track } from '$lib/services/analytics.services';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
-	import { persistDailyGoal, persistDailyStreak } from '$lib/services/profile.services';
+	import { persistDailyStreak, recordFlowSwipe } from '$lib/services/profile.services';
 	import { loadMarketPriceCandles } from '$lib/services/trade.services';
+	import { canInstall, shouldAutoPrompt } from '$lib/stores/a2hs.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { setFlowBeatActive } from '$lib/stores/flow-beat.store';
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
+	import { recordGuestPick } from '$lib/stores/guest.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { marketLanguagePreference } from '$lib/stores/market-language.store';
+	import {
+		hydrate as hydrateMarketTranslations,
+		marketTranslations
+	} from '$lib/stores/market-translations.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -80,6 +90,7 @@
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import type { MarketPriceSeries } from '$lib/utils/market-price-history.utils';
+	import { translatedLanguageLabel } from '$lib/utils/market-translation.utils';
 	import {
 		DAILY_HARD_CAP,
 		recordMotionSwipe,
@@ -142,6 +153,28 @@
 	// brief branded moment, no required tap); a real digest waits for the user
 	// (tap-anywhere / CTA, with a safety auto-enter). See FlowEntry.
 	let entered = $state(false);
+	// Deck gestures stay disarmed until the first card has risen in after
+	// entry. The entry overlay enters on `pointerdown`, so the dismissing
+	// tap's trailing events — desktop `mouseup`/`click`, and the synthetic
+	// mouse chain a touch fires ~300 ms after `touchend` — would otherwise
+	// land on the freshly-mounted FlowCard and register as a tap-to-flip.
+	// 480 ms clears both windows and the 440 ms rise-in animation.
+	let deckGesturesArmed = $state(false);
+	const ENTRY_GESTURE_GUARD_MS = 480;
+
+	// Arm deck gestures once the entry transition's trailing events have
+	// drained (see above). Driven by `entered` so the timer is cleared if
+	// FlowMode unmounts mid-window.
+	$effect(() => {
+		if (!entered) {
+			return;
+		}
+
+		const timer = setTimeout(() => (deckGesturesArmed = true), ENTRY_GESTURE_GUARD_MS);
+
+		return () => clearTimeout(timer);
+	});
+
 	// The away-digest while the entry gate is open. Tracks the live store so
 	// a late trade-history fetch still populates the recap; the moment the
 	// user enters, `markResolutionsSeen` empties it and the overlay unmounts
@@ -160,6 +193,17 @@
 	// first call. A failed call subtracts itself back out.
 	let sessionCommittedUsd = $state(ZERO);
 	let completed = $state(false);
+
+	// Install nudge on the summary. The FlowEnd row shows only when the app
+	// can be installed AND the trigger thresholds hold for the user's lifetime
+	// call count (`totalTrades`) — primary at >= 15, fallback at >= 10 on a
+	// 2nd+ session, never in cool-off / installed / already-shown. `a2hsSheetOpen`
+	// owns the shared install sheet, opened from the row.
+	let a2hsSheetOpen = $state(false);
+	const showInstallNudge = $derived(
+		$canInstall && shouldAutoPrompt($userStore.profile?.totalTrades ?? 0)
+	);
+
 	// `nowMs` tracks the shared one-minute heartbeat while the session is in
 	// flight (minute precision is plenty for a day rollover), but freezes once
 	// `completed` flips true so the FlowEnd takeover's Push-to-15 eligibility
@@ -225,10 +269,18 @@
 	let dailyStreak = $state(0);
 	let lastActiveDay = $state<string | undefined>(undefined);
 	// Daily-goal counter + the local day it belongs to. Hydrated from the
-	// profile on mount and persisted after every committed prediction, so
-	// the goal survives a refresh and resets when the day rolls over.
+	// profile on mount and recorded server-side after every committed
+	// prediction, so the goal survives a refresh and resets when the day
+	// rolls over.
 	let dailyGoalCount = $state(0);
 	let dailyGoalDate = $state<string | undefined>(undefined);
+	// Last count the server confirmed for `dailyGoalDate`. The satellite is
+	// authoritative for the daily cap (`recordFlowSwipe`); this tracks the
+	// freshest server value so the error path can clamp the optimistic local
+	// count back down to it — a dropped record must never let the session
+	// climb past what the server actually counted (don't reintroduce the
+	// honest-reset leak via the failure branch).
+	let lastServerDailyGoalDone = $state(0);
 	let hasMarkedActiveThisSession = false;
 	// Set on the first swipe of a session that resumes after a broken
 	// streak. Drives the no-shame "comeback" opener (distinct from the
@@ -358,6 +410,11 @@
 				signals: userSignals
 			} = prepared);
 
+			// One bulk read for the whole deck so each card resolves its
+			// translation overlay from cache rather than firing a per-series
+			// fetch as the viewer swipes.
+			void hydrateMarketTranslations(markets.map((m) => m.id));
+
 			const { profile } = $userStore;
 
 			if (nonNullish(profile)) {
@@ -365,17 +422,25 @@
 				({ lastActiveDay } = profile);
 			}
 
-			// Seed the daily-goal count from the higher of the profile
-			// and the localStorage mirror (#484): a lost best-effort
-			// profile write must not reset the count and re-open the
-			// daily hard cap. Runs even when signed out so the mirror
-			// alone still gates an anonymous session.
+			// Seed the daily-goal count. The profile count is the
+			// authoritative server value (set by `recordFlowSwipe`); it
+			// wins outright when hydrated so a cleared / stale client can't
+			// re-open the daily hard cap. The localStorage mirror only
+			// gates a signed-out / not-yet-loaded session.
 			const reconciledGoal = reconcileDailyGoalOnEntry({
 				done: profile?.dailyGoalDone ?? 0,
-				date: profile?.dailyGoalDate
+				date: profile?.dailyGoalDate,
+				hasProfile: nonNullish(profile)
 			});
 			dailyGoalCount = reconciledGoal.done;
 			dailyGoalDate = reconciledGoal.date;
+			// The hydrated profile count is the last value the server
+			// confirmed for today; the optimistic commit path never lets the
+			// session fall below it on a record failure.
+			lastServerDailyGoalDone = rolloverDailyGoal({
+				done: profile?.dailyGoalDone ?? 0,
+				date: profile?.dailyGoalDate
+			});
 
 			// Snapshot the cumulative daily count this sitting resumes from.
 			// Rolled over against the current day so a stale stored date reads
@@ -652,6 +717,37 @@
 
 		const stakeHuman = Number(tradeAmount) || 0;
 		const stakeUsd = stakeMarginUsd(currentMarket);
+
+		// Guest preview branch — a guest pick never reaches the engine. We
+		// record it as an in-session preview pick (marketId / side only, no
+		// stake) purely to power the conversion cadence, and skip `placeOrder`
+		// / the identity call entirely. Free guest play therefore can't move
+		// market prices. The session-stake accounting and the funds gate are
+		// member-only (the guest has no balance), so they are bypassed here.
+		if ($guestMode) {
+			const guestPickNumber = recordGuestPick({ marketId: currentMarket.id, side: action });
+
+			// `position_taken` with `source: 'guest_flow'` separates guest
+			// activity from member activity without a new event; `count` is the
+			// persisted session pick number (the cadence counter), so it stays
+			// consistent across a reload rather than tracking this sitting's
+			// in-memory `betsCount`.
+			track({
+				name: 'position_taken',
+				source: 'guest_flow',
+				marketId: currentMarket.id,
+				label: action,
+				count: guestPickNumber
+			});
+
+			betsCount += 1;
+			streak += 1;
+			flowTick();
+			finishCommitAdvance();
+
+			return;
+		}
+
 		sessionCommittedUsd += stakeUsd;
 
 		const executeTrade = async () => {
@@ -673,6 +769,8 @@
 				sessionCommittedUsd =
 					sessionCommittedUsd > stakeUsd ? sessionCommittedUsd - stakeUsd : ZERO;
 
+				const { key, params } = tradeErrorMessage(e);
+
 				notificationsStore.add({
 					title: t({ locale: $localeStore, key: 'flow.notification.trade_failed_title' }),
 					message: t({
@@ -680,7 +778,7 @@
 						key: 'flow.notification.trade_failed_message',
 						params: {
 							title: currentMarket.title.slice(0, 30),
-							error: (e as Error).message
+							error: t({ locale: $localeStore, key, params })
 						}
 					}),
 					type: 'error'
@@ -696,11 +794,11 @@
 		sessionStaked += stakeHuman;
 
 		// Daily-goal bump — every committed YES / NO counts toward the
-		// day's goal (skips returned early above). Rolls over to a fresh
-		// day if needed, caps at the hard cap, and persists best-effort so
-		// the running total survives a refresh. This is the cross-session
-		// streak / hard-cap source; the engine's beat cadence runs off the
-		// per-session counter below.
+		// day's goal (skips returned early above). The OPTIMISTIC local bump
+		// runs first so the in-session cadence / cap takeover react instantly;
+		// it rolls over to a fresh day if needed and caps at the hard cap.
+		// This is the cross-session streak / hard-cap source; the engine's
+		// beat cadence runs off the per-session counter below.
 		const goalBump = applyDailyGoalBump({
 			done: dailyGoalCount,
 			date: dailyGoalDate,
@@ -712,24 +810,57 @@
 		dailyGoalCount = goalBump.done;
 		dailyGoalDate = goalBump.date;
 
-		// Synchronous, offline-safe mirror — written before the
-		// best-effort profile round-trip below so the daily hard cap
-		// survives a refresh even if that write is dropped (#484).
+		// Synchronous, offline-safe mirror — written before the server
+		// round-trip below so the daily hard cap survives a refresh that
+		// races the record. The mirror is only an offline hint; it can never
+		// raise the count above the authoritative server value on entry.
 		writeDailyGoalMirror(goalBump);
 
+		const goalDayKey = goalBump.date;
 		const goalPrincipal = $userStore.user?.key;
 
+		// Record the swipe SERVER-side — the satellite owns the count. We send
+		// only our local-day key as the rollover boundary; the server reads
+		// the profile, rolls over, and writes the capped increment itself, so
+		// a cleared / signed-out client can no longer reset the cap. The
+		// authoritative count it returns reconciles the local state + mirror.
+		// On a transport failure the optimistic bump stands but is clamped so
+		// the session can never exceed the last count the server confirmed.
 		if (nonNullish(goalPrincipal)) {
-			void persistDailyGoal({
-				principal: goalPrincipal,
-				dailyGoalDone: goalBump.done,
-				dailyGoalDate: goalBump.date
-			})
-				.then((data) => {
-					userStore.update((s) => ({ ...s, profile: data }));
+			void recordFlowSwipe({ dayKey: goalDayKey })
+				.then(({ dailyGoalDone: serverDone, dailyGoalDate: serverDate }) => {
+					lastServerDailyGoalDone = serverDone;
+					dailyGoalCount = serverDone;
+					dailyGoalDate = serverDate;
+					writeDailyGoalMirror({ done: serverDone, date: serverDate });
+
+					userStore.update((s) =>
+						s.profile
+							? {
+									...s,
+									profile: {
+										...s.profile,
+										dailyGoalDone: serverDone,
+										dailyGoalDate: serverDate
+									}
+								}
+							: s
+					);
 				})
 				.catch((e: unknown) => {
-					console.warn('Daily-goal persistence failed (non-fatal):', e);
+					console.warn('Flow swipe record failed (non-fatal):', e);
+
+					// Degrade gracefully: never let the dropped record leave the
+					// session above the last server-confirmed count for this day.
+					const clamped = rolloverDailyGoal({
+						done: lastServerDailyGoalDone,
+						date: goalDayKey
+					});
+
+					if (dailyGoalCount > clamped && clamped > 0) {
+						dailyGoalCount = clamped;
+						writeDailyGoalMirror({ done: clamped, date: goalDayKey });
+					}
 				});
 		}
 
@@ -750,8 +881,13 @@
 			}, 1600);
 		}
 
-		const yesProb = currentMarket.yesProbability ?? 0.5;
-		const isContrarian = yesProb <= 0.25 || yesProb >= 0.75;
+		// A call is "contrarian" only against a known crowd consensus. With an
+		// unknown probability (book unread / no liquidity) there's no consensus
+		// to lean against, so the swipe is treated as neutral (not contrarian)
+		// rather than assuming a 50/50 split — the motion engine still receives
+		// a definite boolean.
+		const yesProb = currentMarket.yesProbability;
+		const isContrarian = nonNullish(yesProb) && (yesProb <= 0.25 || yesProb >= 0.75);
 
 		// The motion engine's cadence (rhythm 3 / 5 / 8, overtime 11 / 13, and
 		// the daily / overtime-complete beat) keys off the CUMULATIVE daily
@@ -775,13 +911,14 @@
 			dayStreak: dailyStreak,
 			isComeback,
 			// Seed the engine's lifetime-volume milestones from the REAL
-			// profile count (`totalTrades`, our lifetime call count)
-			// rather than the engine's persisted
-			// local tally, so milestone thresholds and the milestone
-			// count-up reflect actual lifetime activity. `totalTrades` is
-			// the lifetime call count BEFORE this swipe; the engine adds the
-			// current swipe (`+1`) internally. Falls back to the local tally
-			// when the profile is not yet hydrated.
+			// profile count (`totalTrades`, our lifetime call count) so
+			// milestone thresholds and the milestone count-up reflect actual
+			// lifetime activity. The engine treats it as a FLOOR merged with
+			// its own persisted tally — `totalTrades` is recomputed from
+			// trade history on profile syncs, not bumped per swipe, so it
+			// lags in-session and alone would replay the same milestone
+			// every swipe. `totalTrades` is the count BEFORE this swipe; the
+			// engine accounts for the current swipe internally.
 			lifetimeCalls: $userStore.profile?.totalTrades
 		});
 
@@ -1009,6 +1146,36 @@
 
 	const currentCard = $derived(markets[currentIndex]);
 
+	// Resolved translation overlay for the focused card (or undefined when the
+	// market has no translation for the active locale) — gates the card's quick
+	// toggle and feeds its display text.
+	const currentTranslation = $derived(
+		nonNullish(currentCard) ? $marketTranslations.get(currentCard.id) : undefined
+	);
+
+	// Per-card quick-toggle state. Seeds from the global preference and resets
+	// to that default whenever the focused card changes (a flip is local to the
+	// card the viewer is on and doesn't change the preference).
+	let flowShowOriginal = $state($marketLanguagePreference === 'original');
+	$effect(() => {
+		currentIndex;
+		$marketLanguagePreference;
+		flowShowOriginal = $marketLanguagePreference === 'original';
+	});
+
+	const onToggleFlowTranslation = () => {
+		flowShowOriginal = !flowShowOriginal;
+
+		if (nonNullish(currentCard)) {
+			track({
+				name: 'market_translation_toggled',
+				marketId: currentCard.id,
+				source: 'deck',
+				label: flowShowOriginal ? 'original' : 'translated'
+			});
+		}
+	};
+
 	// Lazily fetch the focused card's real price history the first time it's
 	// reached (cached by id, so re-visiting is instant). Independent of the
 	// viewer — it's the same series for everyone, so it loads regardless of
@@ -1052,7 +1219,15 @@
 			return;
 		}
 
-		const yes = m.yesProbability ?? 0.5;
+		// No consensus yet when the probability is unknown (book unread /
+		// no liquidity) — there's no minority side to nudge against, so the
+		// Trickster contrarian beat stays quiet rather than asserting 50/50.
+		const yes = m.yesProbability;
+
+		if (isNullish(yes)) {
+			return;
+		}
+
 		const consensusSide = yes >= 0.75 ? 'YES' : yes <= 0.25 ? 'NO' : null;
 
 		if (isNullish(consensusSide)) {
@@ -1110,11 +1285,15 @@
 			comeback={isComeback}
 			onClose={handleClose}
 			onExtend={handleExtend}
+			onInstallPrompt={() => (a2hsSheetOpen = true)}
 			overtime={overtimeSession}
 			pending={betsCount}
+			{showInstallNudge}
 			staked={sessionStaked}
 			streak={dailyStreak}
 		/>
+
+		<A2hsSheet isOpen={a2hsSheetOpen} onClose={() => (a2hsSheetOpen = false)} source="flow_end" />
 	{:else if entered}
 		<!-- Persistent Flow header: VICI wordmark + deck-scope chip +
 		     bolt streak chip on the left; bell on the right. Secondary
@@ -1181,6 +1360,7 @@
 										{categoryAcc}
 										committedAction={currentCard.id === committedMarketId ? committedAction : null}
 										{followedLean}
+										gesturesArmed={deckGesturesArmed}
 										interactive
 										market={currentCard}
 										{metadata}
@@ -1188,11 +1368,17 @@
 										onStakeChange={(next) => {
 											tradeAmount = next;
 										}}
+										onToggleTranslation={onToggleFlowTranslation}
 										pointXs={priceSeries?.xs}
 										points={priceSeries?.yes}
 										{priorCall}
+										showOriginal={flowShowOriginal}
 										signedIn={nonNullish($userStore.user)}
 										{tradeAmount}
+										translatedLanguageLabel={nonNullish(currentTranslation)
+											? translatedLanguageLabel(currentTranslation.locale)
+											: undefined}
+										translation={currentTranslation}
 									/>
 								</div>
 							</div>

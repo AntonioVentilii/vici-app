@@ -8,10 +8,9 @@ import { HomePage } from './pages/home.page';
 const REGISTRY_GLOB = '**/api/*/canister/g5pxl-pyaaa-aaaaj-qqhoq-cai/**';
 
 /**
- * Phase 1 routing change: the markets feed at `/` is auth-gated.
- * Anonymous users land on `/signin` instead, so the loading-state and
- * loaded-state snapshots are now signed-in flows. Sign-out still
- * returns to `/signin` (covered in `auth.spec.ts`).
+ * The markets board lives at `/app` (`AppPath.Home`) and is auth-gated;
+ * sign-in routes a fresh principal through onboarding before landing in
+ * the app, so both tests sign in first and then navigate to the board.
  */
 test.describe('homepage (signed in)', () => {
 	test.beforeEach(async ({ page }) => {
@@ -24,7 +23,7 @@ test.describe('homepage (signed in)', () => {
 	test('renders the loading skeletons while markets are still being fetched', async ({ page }) => {
 		const home = new HomePage(page);
 
-		// Stall every Registry call so the feed stays in its skeleton state
+		// Stall every Registry call so the board stays in its loading state
 		// long enough for a deterministic screenshot. We hold the route
 		// handler on a deferred promise we explicitly release in `finally`
 		// — this avoids a long-lived `setTimeout` that could outlive the
@@ -40,20 +39,18 @@ test.describe('homepage (signed in)', () => {
 		});
 
 		try {
-			// Reload to re-trigger the markets fetch with the route stall
-			// in place — the `signInAsDevUser` flow already populated the
-			// feed once during onboarding completion.
-			await page.reload();
+			// `gotoMarkets` is a full navigation, so it re-runs app init with
+			// the stall in place: the markets store never initializes and
+			// `MarketsPage` renders its dashed loading placeholders rather than
+			// the loaded board.
+			await home.gotoMarkets();
 
 			await expect(home.marketFeed).toBeVisible();
 
-			// Pin the rendered state so the screenshot can't be accidentally
-			// taken in a half-loaded transition: we expect *exactly* the
-			// three MarketCardSkeletons that MarketFeed.svelte renders while
-			// loading, and zero real cards. If anything leaked past the
-			// route stall, `toHaveCount(0)` will fail before we write a
-			// polluted baseline.
-			await expect(home.marketCardSkeleton).toHaveCount(3);
+			// While loading, the board shows skeleton placeholders and zero
+			// real rows. If anything leaked past the route stall, the card
+			// assertion fails before we write a polluted baseline.
+			await expect(home.marketCardSkeleton.first()).toBeVisible();
 			await expect(home.marketCard).toHaveCount(0);
 
 			await expect(page).toHaveScreenshot('homepage-loading.png', {
@@ -65,18 +62,17 @@ test.describe('homepage (signed in)', () => {
 		}
 	});
 
-	test('renders the markets feed once data is loaded', async ({ page }) => {
+	test('renders the markets board once data is loaded', async ({ page }) => {
 		const home = new HomePage(page);
 
-		// `signInAsDevUser` lands at `/` already; just wait for the feed
-		// to settle past first-paint.
-		await expect(home.marketFeed).toBeVisible();
-		await expect(home.marketCard.first()).toBeVisible();
+		await home.gotoMarkets();
 
-		// `marketCard.first()` only proves at least one card has rendered;
-		// the remaining cards may still be streaming in. Wait for the
-		// network to go idle so the snapshot captures the fully-loaded
-		// feed deterministically.
+		await expect(home.marketFeed).toBeVisible();
+
+		// Wait for the network to go idle so the snapshot captures the
+		// fully-loaded board deterministically. The available list can be
+		// empty depending on the World-Cup release schedule, so we assert
+		// the board container rather than a card count.
 		await page.waitForLoadState('networkidle');
 
 		await home.stabilizeForSnapshot();

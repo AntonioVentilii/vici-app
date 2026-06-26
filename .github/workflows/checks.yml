@@ -13,6 +13,34 @@ on:
 permissions: {}
 
 jobs:
+  pr-title:
+    runs-on: ubuntu-24.04
+    # No API access needed — the title comes from the event payload, not the API.
+    permissions: {}
+    steps:
+      - name: Skip outside pull requests
+        if: github.event_name != 'pull_request'
+        run: echo "PR title check only runs for pull_request events."
+
+      - name: Validate Conventional Commit PR title (scope required)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Scope is REQUIRED: type(scope): description — or type(scope)!: … for a breaking change.
+          pattern='^(feat|fix|perf|deps|revert|docs|style|chore|refactor|test|build|ci)\([-a-zA-Z0-9,._/]+\)!?: .+$'
+
+          if [[ "$PR_TITLE" =~ $pattern ]]; then
+            echo "PR title OK."
+            exit 0
+          fi
+
+          # Keep the title off the start of a line so it can't inject a ::workflow:: command.
+          echo "::error::PR title must be a Conventional Commit WITH A SCOPE: 'type(scope): description' (or 'type(scope)!: …' for a breaking change)."
+          echo "::error::Scope = the affected area/package, or a short area such as 'deps' for tooling. E.g. 'feat(market): add filters'."
+          echo "Got title: $PR_TITLE"
+          exit 1
+
   format:
     runs-on: ubuntu-24.04
     permissions:
@@ -28,7 +56,7 @@ jobs:
 
       - name: Checkout for pull request
         if: steps.check_can_add_commit.outputs.can_add_commit == 'true'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
@@ -37,7 +65,7 @@ jobs:
 
       - name: Checkout
         if: steps.check_can_add_commit.outputs.can_add_commit == 'false'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -94,7 +122,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -129,7 +157,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -146,7 +174,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -206,12 +234,12 @@ jobs:
 
   checks-pass:
     if: always()
-    needs: ['format', 'lint', 'check', 'satellite-schema']
+    needs: ['pr-title', 'format', 'lint', 'check', 'satellite-schema']
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - uses: ./.github/actions/needs_success

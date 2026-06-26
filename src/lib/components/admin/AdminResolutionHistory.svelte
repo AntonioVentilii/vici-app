@@ -1,5 +1,6 @@
 <script lang="ts">
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
@@ -11,7 +12,10 @@
 	const { markets }: Props = $props();
 </script>
 
-<div class="border-border bg-card rounded-3xl border p-4 sm:p-8">
+<div
+	class="border-border bg-card rounded-3xl border p-4 sm:p-8"
+	data-tid={TestId.AdminResolutionHistory}
+>
 	<h2 class="text-foreground mb-6 text-2xl font-bold">
 		{t({ locale: $localeStore, key: 'admin.resolution.history.title' })}
 	</h2>
@@ -19,6 +23,7 @@
 		{#each markets.slice(0, 5) as market (market.id)}
 			<div
 				class="border-border flex items-start justify-between gap-3 border-b pb-4 last:border-0 last:pb-0"
+				data-market-id={market.id}
 			>
 				<span class="text-muted-foreground min-w-0 text-sm break-words">{market.title}</span>
 				<div class="shrink-0">

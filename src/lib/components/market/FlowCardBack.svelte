@@ -46,6 +46,11 @@
 		// Parallel x-fractions (0–1) placing each `points` entry on the time
 		// axis. Present alongside real history; absent for the seed shape.
 		pointXs?: number[];
+		// Translated title / resolution for the active locale, resolved by the
+		// parent. Default to the on-chain originals so untranslated decks (and
+		// the guided onboarding card) render unchanged.
+		displayTitle?: string;
+		displayResolution?: string;
 	}
 
 	const {
@@ -62,7 +67,9 @@
 		tradeAmount,
 		onStakeChange,
 		points,
-		pointXs
+		pointXs,
+		displayTitle,
+		displayResolution
 	}: Props = $props();
 
 	const catColor = $derived(tagColor(category));
@@ -73,12 +80,12 @@
 </script>
 
 <div style:--cat-color={catColor} class="flow-back">
-	<FlowBackHeader {category} {market} {priorCall} />
+	<FlowBackHeader {category} {displayTitle} {market} {priorCall} />
 
 	<div class="flow-back-scroll">
-		<FlowBackMeta {market} />
+		<FlowBackMeta {displayTitle} {market} />
 
-		<FlowResolutionBlock {market} />
+		<FlowResolutionBlock {displayResolution} {market} />
 
 		<FlowCommunityRead {crowdPct} {crowdSide} {market} {metadata} {pointXs} {points} />
 

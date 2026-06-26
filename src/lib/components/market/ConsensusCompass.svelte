@@ -10,28 +10,45 @@
 	 * than the category palette so it
 	 * reads as a market-state indicator, not a category accent.
 	 */
+	import { isNullish } from '@dfinity/utils';
+	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
+
 	interface Props {
 		// 0–1 YES-side probability. Clamped defensively to [0, 1].
-		yesProbability: number;
+		// `undefined` means the book isn't known yet — the dial renders a
+		// centred (horizontal) needle and a skeleton in place of the percentage.
+		yesProbability: number | undefined;
+		// Whether the order book has been read. Distinguishes *loading* (book
+		// not read yet → pulsing bar) from *loaded-but-empty* (no liquidity →
+		// neutral dash) when `yesProbability` is unknown.
+		priceLoaded?: boolean;
 		// Rendered px size (square). 42 matches the in-card dial; 56
 		// works well on a wider FlowCardBack panel.
 		size?: number;
 	}
 
-	const { yesProbability, size = 42 }: Props = $props();
+	const { yesProbability, priceLoaded = false, size = 42 }: Props = $props();
 
-	const yesPct = $derived(Math.max(0, Math.min(100, Math.round(yesProbability * 100))));
+	const known = $derived(!isNullish(yesProbability));
+	const yesPct = $derived(
+		isNullish(yesProbability) ? 50 : Math.max(0, Math.min(100, Math.round(yesProbability * 100)))
+	);
 	const isYes = $derived(yesPct >= 50);
 	// Confidence — 0 at 50/50, 1 at the extremes. Drives the needle
 	// rotation linearly so a perfectly balanced market reads horizontal.
+	// When the probability is unknown, yesPct pins to 50 → angle 0 (centred).
 	const conf = $derived(Math.abs(yesPct - 50) / 50);
 	const angle = $derived(isYes ? -conf * 90 : conf * 90);
-	const sideClass = $derived(isYes ? 'yes' : 'no');
+	const sideClass = $derived(known ? (isYes ? 'yes' : 'no') : 'unknown');
 	const leadingPct = $derived(Math.max(yesPct, 100 - yesPct));
 </script>
 
-<div class="flow-compass {sideClass}" aria-label={`${yesPct}% YES consensus`} role="img">
-	<svg height={size} viewBox="0 0 42 42" width={size}>
+<div
+	class="flow-compass {sideClass}"
+	aria-label={known ? `${yesPct}% YES consensus` : undefined}
+	role={known ? 'img' : undefined}
+>
+	<svg aria-hidden="true" height={size} viewBox="0 0 42 42" width={size}>
 		<!-- Outer ring -->
 		<circle cx="21" cy="21" fill="none" r="18" stroke="var(--border-base)" stroke-width="1.2" />
 		<!-- YES (top) and NO (bottom) pole tick marks -->
@@ -53,7 +70,13 @@
 		<!-- Centre hub -->
 		<circle cx="21" cy="21" fill="var(--needle-color)" r="2.5" />
 	</svg>
-	<span class="flow-compass-pct num">{leadingPct}%</span>
+	{#if known}
+		<span class="flow-compass-pct num">{leadingPct}%</span>
+	{:else}
+		<span class="flow-compass-pct num"
+			><MarketOddsSkeleton variant={priceLoaded ? 'empty' : 'loading'} /></span
+		>
+	{/if}
 </div>
 
 <style lang="postcss">
@@ -93,5 +116,13 @@
 
 	.flow-compass.no .flow-compass-pct {
 		color: var(--no);
+	}
+
+	.flow-compass.unknown {
+		--needle-color: var(--border-base);
+	}
+
+	.flow-compass.unknown .flow-compass-pct {
+		color: var(--text-muted);
 	}
 </style>

@@ -204,13 +204,10 @@
 					“{t({ locale: $localeStore, key: animal.oracleKey })}”
 				</div>
 				<p class="mr-rule">{t({ locale: $localeStore, key: animal.ruleKey })}</p>
-
-				<button class="mr-cta" onclick={dismiss} type="button">
-					{t({ locale: $localeStore, key: 'menagerie.reveal.cta' })}
-				</button>
-				<div class="mr-hint">{t({ locale: $localeStore, key: 'menagerie.reveal.hint' })}</div>
 			</div>
 		</div>
+
+		<div class="mr-hint">{t({ locale: $localeStore, key: 'menagerie.reveal.hint' })}</div>
 	</div>
 {/if}
 
@@ -218,12 +215,12 @@
 	/*
 		The reveal is a celebratory takeover whose surfaces are driven by a local
 		`--mr-*` token set: scrim, the foreground tiers (`--mr-fg` / `-dim` /
-		`-mute`), the badge-frame wash, and the CTA fill / ink. The dark theme
-		keeps the original near-black takeover; the light / peach overrides at the
-		bottom of the block re-point those tokens so the celebration reads as a
-		LIGHT takeover (otherwise the on-dark text / CTA looked blacked-out against
-		the warm canvas). The colour bloom / rays use `mix-blend-mode:
-		screen`, which the per-theme blend overrides keep legible either way.
+		`-mute`), and the badge-frame wash. The dark theme keeps the original
+		near-black takeover; the light / peach overrides at the bottom of the
+		block re-point those tokens so the celebration reads as a LIGHT takeover
+		(otherwise the on-dark text looked blacked-out against the warm canvas).
+		The colour bloom / rays use `mix-blend-mode: screen`, which the per-theme
+		blend overrides keep legible either way.
 	*/
 	.mr-root {
 		position: fixed;
@@ -242,8 +239,6 @@
 		--mr-fg-mute: rgba(242, 236, 220, 0.52);
 		--mr-border: rgba(242, 236, 220, 0.18);
 		--mr-spark: #f2ecdc;
-		--mr-cta-fg: #16140f;
-		--mr-cta-glow: rgba(242, 236, 220, 0.4);
 		--mr-frame-fill-a: rgba(242, 236, 220, 0.07);
 		--mr-frame-fill-b: rgba(242, 236, 220, 0.015);
 		--mr-frame-border: rgba(242, 236, 220, 0.05);
@@ -335,6 +330,9 @@
 		align-items: center;
 		padding: 0 32px;
 		text-align: center;
+		/* let taps fall through to the full-screen scrim button so the whole
+		   surface dismisses — "tap anywhere" */
+		pointer-events: none;
 	}
 
 	.mr-badge-fly {
@@ -518,36 +516,38 @@
 		margin: 8px auto 0;
 	}
 
-	.mr-cta {
-		margin-top: 18px;
-		appearance: none;
-		border: 0;
-		cursor: pointer;
-		font-family: inherit;
-		font-size: 14px;
-		font-weight: 600;
-		color: var(--mr-cta-fg);
-		background: var(--mr-fg);
-		padding: 13px 28px;
-		border-radius: 999px;
-		transition: transform 0.12s ease;
-		box-shadow: 0 10px 30px -10px var(--mr-cta-glow);
-	}
-
-	.mr-cta:hover {
-		transform: translateY(-1px);
-	}
-
-	.mr-cta:active {
-		transform: translateY(0);
-	}
-
 	.mr-hint {
-		margin-top: 10px;
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 104px;
+		z-index: 2;
+		pointer-events: none;
+		text-align: center;
 		font-size: 11px;
 		letter-spacing: 0.04em;
 		color: var(--mr-fg-mute);
 		opacity: 0.7;
+		animation: mr-hint-in 0.6s ease 0.6s both;
+	}
+
+	@keyframes mr-hint-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 0.7;
+		}
+	}
+
+	.mr-flying .mr-hint {
+		animation: mr-hint-out 0.3s ease forwards;
+	}
+
+	@keyframes mr-hint-out {
+		to {
+			opacity: 0;
+		}
 	}
 
 	/* nav item pulse when the badge lands — applied imperatively to the nav btn */
@@ -591,8 +591,6 @@
 		--mr-fg-mute: var(--text-muted);
 		--mr-border: var(--border-strong);
 		--mr-spark: var(--laurel-deep);
-		--mr-cta-fg: var(--text-inverse);
-		--mr-cta-glow: rgba(61, 36, 25, 0.28);
 		--mr-frame-fill-a: rgba(61, 36, 25, 0.05);
 		--mr-frame-fill-b: rgba(61, 36, 25, 0.012);
 		--mr-frame-border: rgba(61, 36, 25, 0.06);

@@ -15,45 +15,57 @@
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
 	import { daysToFinal } from '$lib/derived/featured-event.derived';
-	import { listMyLeagues } from '$lib/services/leagues.services';
+	import { listMyBattles, loadLeaguesByIds } from '$lib/services/leagues.services';
 	import { getCurrentTournament } from '$lib/services/tournament.services';
 	import { listAffiliationStats } from '$lib/services/worlds.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
+	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
+	import { leagueBattlesStore, myLeaguesStore, refreshMyLeagues } from '$lib/stores/leagues.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+	import type { BattleDoc } from '$lib/types/battle';
 	import {
 		TOURNAMENT_ROUNDS,
 		type TournamentDoc,
 		type TournamentMatchDoc,
 		type TournamentRound
 	} from '$lib/types/tournament';
+	import { battleScopeLabel } from '$lib/utils/battle.utils';
+	import { shortLeagueId } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { BATTLES_INTRO_SEEN_KEY } from '$lib/utils/onboarding-flags.utils';
 
 	/**
-	 * Battles inbox — institutional + tournament surfaces only.
+	 * Battles inbox — the surface users reach for when looking for a
+	 * "battle request". League-vs-league battles are still *managed*
+	 * under the Leagues surface (a league owner accepts from the league
+	 * detail page), but a challenge the caller has *received* must be
+	 * discoverable here too — otherwise a recipient who looks in Battles
+	 * finds nothing and assumes it never arrived. The page is composed
+	 * of surface-grouped sections (grouped by **surface**, never by
+	 * battle state):
 	 *
-	 * League-vs-league battles live exclusively under the Leagues
-	 * surface (the Leagues tab + each league's detail page), so this
-	 * inbox carries only the cross-app, non-league battles. The page
-	 * is composed of surface-grouped sections (grouped by **surface**,
-	 * never by battle state):
+	 *  1. Incoming league challenges — proposed battles where a league
+	 *     the caller *owns* is the challenged side (`sideB`). Read-only
+	 *     pointers: each row deep-links to that league's detail page,
+	 *     where the owner accepts. Sourced from the shared `leagues`
+	 *     store so it stays in sync with the Leagues tab badge.
 	 *
-	 *  1. Optional "What's a battle?" intro card — dismissible, persists
+	 *  2. Optional "What's a battle?" intro card — dismissible, persists
 	 *     via `localStorage['vici.battles-intro-seen']`. The locked
 	 *     design calls for cross-device `preferences` storage; that
 	 *     is deferred until the satellite `preferences` schema can be
 	 *     migrated without a Candid + Rust binding regen.
 	 *
-	 *  2. Worlds Universities — featured WC podium card (top 3 by
+	 *  3. Worlds Universities — featured WC podium card (top 3 by
 	 *     lifetime accuracy) + monthly compact card linking to the
 	 *     Worlds detail surface.
 	 *
-	 *  3. Worlds Countries — same shape as Universities, sourced off
+	 *  4. Worlds Countries — same shape as Universities, sourced off
 	 *     `listAffiliationStats({ kind: 'country' })`.
 	 *
-	 *  4. Monthly Tournament curated card — rendered only when the
+	 *  5. Monthly Tournament curated card — rendered only when the
 	 *     current tournament has unresolved rounds in flight.
 	 *
 	 * A footer link routes to the Leagues tab, where league battles are
@@ -72,9 +84,122 @@
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	// League ids the caller belongs to — feeds the tournament card's
-	// "your league is in" row. League battles themselves live under the
-	// Leagues surface, so we keep only the ids, not the battle list.
-	let myLeagueIds: string[] = $state([]);
+	// "your league is in" row. Derived from the same `leagues` store the
+	// incoming-challenge section reads, so league membership has a single
+	// source of truth and the inbox never re-lists the caller's leagues.
+	const myLeagueIds = $derived($myLeaguesStore.map((m) => m.league.id));
+
+	// ─── Incoming league challenges ─────────────────────────────────
+	// Proposed battles where a league the caller OWNS is the challenged
+	// side (`sideB`). Surfaced here so a recipient who looks in Battles
+	// (rather than the Leagues tab) still finds the challenge; each row
+	// routes to the league detail page, where the owner accepts. Read
+	// from the shared `leagues` store so it stays in sync with the
+	// Leagues tab badge.
+	const incomingChallenges = $derived(
+		$myLeaguesStore
+			.filter((m) => m.role === 'owner')
+			.flatMap((m) =>
+				($leagueBattlesStore.get(m.league.id) ?? [])
+					.filter((b) => b.kind === 'league' && b.state === 'proposed' && b.sideB === m.league.id)
+					.map((battle) => ({ battle, league: m.league }))
+			)
+	);
+
+	// A challenge stores only the challenger's league id; resolve it to the
+	// current name (own memberships → directory cache → shortened id),
+	// mirroring the league detail page's opponent lookup.
+	const opponentName = (id: string): string =>
+		$myLeaguesStore.find((m) => m.league.id === id)?.league.name ??
+		$leagueDirectoryStore.get(id)?.name ??
+		shortLeagueId(id);
+
+	// A challenger can send more than one challenge to the same league, so
+	// the card must show what sets each apart — duration · scope · optional
+	// wager. Without it two proposals render identically and the recipient
+	// can't tell why they have two.
+	const challengeFacts = (battle: BattleDoc): string => {
+		const days = Math.max(1, Math.ceil((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
+		const facts = [
+			t({ locale: $localeStore, key: 'leagues.challenge.duration_days', params: { count: days } }),
+			battleScopeLabel({ scope: battle.scope, locale: $localeStore })
+		];
+
+		if (nonNullish(battle.wager) && battle.wager > 0) {
+			facts.push(
+				t({
+					locale: $localeStore,
+					key: 'battle.detail.wager_value',
+					params: { amount: battle.wager }
+				})
+			);
+		}
+
+		return facts.join(' · ');
+	};
+
+	// Hydrate the directory for every challenger so each row reads a name
+	// instead of a shortened id.
+	$effect(() => {
+		const challengerIds = incomingChallenges.map((c) => c.battle.sideA);
+
+		if (challengerIds.length > 0) {
+			void loadLeaguesByIds({ ids: challengerIds });
+		}
+	});
+
+	const goToLeague = (leagueId: string) => {
+		void goto(`${resolve(AppPath.Arena)}/leagues/${leagueId}`);
+	};
+
+	// ─── Live battles ───────────────────────────────────────────────
+	// Every battle under way across the leagues the caller belongs to —
+	// the surface a user looks for after accepting a challenge. Sourced
+	// from `listMyBattles` (one authoritative cross-league read, the same
+	// the detail page uses) rather than fanning out over the per-league
+	// store, then filtered to the live states. Each row deep-links to the
+	// battle detail page, where the running standings are shown.
+	let myBattles = $state<BattleDoc[]>([]);
+
+	const activeBattles = $derived(
+		myBattles
+			.filter((b) => b.state === 'in_flight' || b.state === 'accepted')
+			.sort((a, b) => a.settleMs - b.settleMs)
+	);
+
+	// Resolve either side's league id to a name (own memberships →
+	// directory cache → shortened id), mirroring `opponentName`.
+	const sideName = (id: string): string =>
+		$myLeaguesStore.find((m) => m.league.id === id)?.league.name ??
+		$leagueDirectoryStore.get(id)?.name ??
+		shortLeagueId(id);
+
+	// "Day X of Y" window line. Mirrors `BattleDetailPage` exactly (total
+	// = ceil of the span, day = floor of the elapsed + 1, both clamped) so
+	// the inbox row and the detail page it links to never disagree.
+	const battleWindowLine = (battle: BattleDoc): string => {
+		const total = Math.max(1, Math.ceil((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
+		const day = Math.max(
+			1,
+			Math.min(total, Math.floor((Date.now() - battle.kickoffMs) / DAY_IN_MS) + 1)
+		);
+
+		return t({ locale: $localeStore, key: 'battle.detail.day_of', params: { day, total } });
+	};
+
+	// Hydrate the directory for both sides of every live battle so each
+	// row reads names instead of shortened ids.
+	$effect(() => {
+		const sideIds = activeBattles.flatMap((b) => [b.sideA, b.sideB]);
+
+		if (sideIds.length > 0) {
+			void loadLeaguesByIds({ ids: sideIds });
+		}
+	});
+
+	const goToBattle = (battleId: string) => {
+		void goto(`${resolve(AppPath.Arena)}/battles/${battleId}?from=inbox`);
+	};
 
 	// ─── Worlds podium state ────────────────────────────────────────
 	// Caller's affiliations come from the shared cache (stale-while-
@@ -101,16 +226,16 @@
 
 	const load = async () => {
 		try {
-			const [mineList, schools, countries, tour] = await Promise.all([
-				listMyLeagues(),
+			const [schools, countries, tour, battles] = await Promise.all([
 				listAffiliationStats({ kind: 'university' }),
 				listAffiliationStats({ kind: 'country' }),
-				getCurrentTournament()
+				getCurrentTournament(),
+				listMyBattles()
 			]);
-			myLeagueIds = mineList.map((m) => m.league.id);
 			uniStats = schools;
 			countryStats = countries;
 			({ tournament, matches } = tour);
+			myBattles = battles;
 			loadState = 'ready';
 		} catch (err) {
 			console.error('BattlesInboxPage: load failed', err);
@@ -129,6 +254,7 @@
 		}
 
 		void refreshMyAffiliations();
+		void refreshMyLeagues();
 		void load();
 	});
 
@@ -301,6 +427,47 @@
 		/>
 	{/if}
 
+	{#if incomingChallenges.length > 0}
+		<section class="battles-section" aria-label="Incoming challenges">
+			<header class="battles-section-head">
+				<span class="battles-eyebrow allcaps">
+					{t({ locale: $localeStore, key: 'battles.section.incoming' })}
+				</span>
+				<span class="battles-section-head-meta num allcaps">{incomingChallenges.length}</span>
+			</header>
+
+			{#each incomingChallenges as { battle, league } (battle.id)}
+				<button
+					class="battles-card is-incoming"
+					onclick={() => goToLeague(league.id)}
+					type="button"
+				>
+					<div class="battles-card-head">
+						<div class="battles-card-tags">
+							<span class="battles-tag is-incoming">
+								{t({ locale: $localeStore, key: 'leagues.battle.state.incoming' })}
+							</span>
+						</div>
+					</div>
+					<h3 class="battles-card-title">
+						{t({
+							locale: $localeStore,
+							key: 'battles.incoming.title',
+							params: { opponent: opponentName(battle.sideA), league: league.name }
+						})}
+					</h3>
+					<p class="battles-card-meta">{challengeFacts(battle)}</p>
+					{#if nonNullish(battle.trashTalk) && battle.trashTalk.length > 0}
+						<p class="battles-card-trash serif-italic">“{battle.trashTalk}”</p>
+					{/if}
+					<span class="battles-see-all allcaps">
+						{t({ locale: $localeStore, key: 'battles.incoming.cta' })} →
+					</span>
+				</button>
+			{/each}
+		</section>
+	{/if}
+
 	{#if !battlesIntroSeen}
 		<BattlesIntroCard onDismiss={dismissIntro} onStartBattle={openCreateBout} />
 	{:else}
@@ -326,6 +493,45 @@
 			{errorMessage ?? t({ locale: $localeStore, key: 'leagues.error.generic' })}
 		</p>
 	{:else}
+		<!-- ─── Live battles ──────────────────────────────────────
+		     Every battle under way across the caller's leagues. The
+		     surface a user reaches for after accepting a challenge; each
+		     row deep-links to the detail page with the running standings. -->
+		{#if activeBattles.length > 0}
+			<section
+				class="battles-section"
+				aria-label={t({ locale: $localeStore, key: 'battles.section.live' })}
+			>
+				<header class="battles-section-head">
+					<span class="battles-eyebrow allcaps">
+						{t({ locale: $localeStore, key: 'battles.section.live' })}
+					</span>
+					<span class="battles-section-head-meta num allcaps">{activeBattles.length}</span>
+				</header>
+
+				{#each activeBattles as battle (battle.id)}
+					<button class="battles-card" onclick={() => goToBattle(battle.id)} type="button">
+						<div class="battles-card-head">
+							<div class="battles-card-tags">
+								<span class="battles-tag is-live">
+									{t({ locale: $localeStore, key: 'worlds.event.tag_live' })}
+								</span>
+							</div>
+						</div>
+						<h3 class="battles-card-title">
+							{sideName(battle.sideA)}
+							<span class="serif-italic">vs</span>
+							{sideName(battle.sideB)}
+						</h3>
+						<p class="battles-card-meta">{battleWindowLine(battle)}</p>
+						<span class="battles-see-all allcaps">
+							{t({ locale: $localeStore, key: 'battles.live.cta' })} →
+						</span>
+					</button>
+				{/each}
+			</section>
+		{/if}
+
 		<!-- ─── Worlds Universities ─────────────────────────────── -->
 		<WorldsBattleCard
 			kind="university"
@@ -640,6 +846,18 @@
 		border: 1px solid color-mix(in srgb, #b49cff 30%, transparent);
 	}
 
+	/* An incoming challenge is the recipient's call to action — lean on the
+	   laurel accent the rest of the inbox uses for league surfaces. */
+	.battles-card.is-incoming {
+		border-color: color-mix(in srgb, var(--laurel) 34%, var(--border-base));
+	}
+
+	.battles-tag.is-incoming {
+		background: color-mix(in srgb, var(--laurel) 16%, transparent);
+		color: var(--laurel);
+		border: 1px solid color-mix(in srgb, var(--laurel) 30%, transparent);
+	}
+
 	.battles-card-timer {
 		font-size: var(--t-10);
 		color: var(--text-muted);
@@ -671,6 +889,13 @@
 		font-size: var(--t-10);
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-wide);
+	}
+
+	.battles-card-trash {
+		margin: -0.35rem 0 0.6rem;
+		font-size: var(--t-12);
+		line-height: 1.35;
+		color: var(--text-base);
 	}
 
 	/* ─── your-row inside grouped card ──────────────────────── */

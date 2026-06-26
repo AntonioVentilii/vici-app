@@ -40,6 +40,11 @@ VXP has 4 decimals: compare and transfer in base units
 
 ## VXP economy
 
+The compulsory rules of the economy — earn surfaces, caps, gates, the
+anti-farming posture, and the doc-drives-code reconciliation protocol —
+live in [`economy.md`](./economy.md). This section is the shipped-behaviour
+summary; `economy.md` is the governing policy.
+
 Earn-only, by design: there are **no VXP sinks**. Nothing charges VXP
 — league creation is free (founding _awards_ VXP), and the only
 outflow is prediction stakes, which are clearing collateral, not a
@@ -77,12 +82,113 @@ it from the code.
 
 ### Friend activity — tap to "like" a friend's call
 
-Each row of the Arena → Friends activity feed carries a single
-tap-to-react "like" (a `Zap` glyph). Tapping toggles it on/off and
-plays a brief tilt + laurel particle burst on commit; the motion is
-suppressed under reduced-motion. The reaction is local to the session —
-there is no persisted reaction model yet. See
-[`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md).
+Historical: the Arena → Friends section once rendered a per-call activity
+feed where each row carried a single tap-to-react "like" (a `Zap` glyph)
+with a brief tilt + laurel particle burst on commit (suppressed under
+reduced-motion). That like was **persisted** — it survived a refresh, each
+row showed an aggregate count, and liking someone's call sent them an
+in-app inbox notification that deep-linked to the market (own-call likes
+never notified; an unlike withdrew the card; multiple likes collapsed into
+one "{user} and N more liked your call" card). The Friends section now
+renders the per-friend **results digest** above instead of the per-call
+feed, so the persisted like + count no longer appears there (the digest
+keeps the `Zap` glyph as a transient reaction). The persisted-reaction +
+like-received-notification machinery is unchanged for the surfaces that
+still use the `Activity` model. See
+[`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md)
+(the reaction redesign),
+[`specs/2026-06-14-feat-friend-feed-like-persistence.md`](./spec-driven-development/specs/2026-06-14-feat-friend-feed-like-persistence.md)
+(persistence + counts), and
+[`specs/2026-06-14-feat-like-received-notifications.md`](./spec-driven-development/specs/2026-06-14-feat-like-received-notifications.md)
+(the like-received notification).
+
+### Friend-readable resolved results — the per-participant outcome feed
+
+When a market resolves, the satellite records one **per-participant**
+result row in the `resolved_results` collection — that participant's
+outcome (win / loss), the side they held, their signed net VXP, and the
+resolution time, keyed `${owner}#${marketId}`. The rows are written
+server-side from the clearing settlement plan at resolution time
+(controllers-write, mirroring `activity_reaction_counts`), so a user
+cannot forge a win for themselves or a friend. The collection is
+public-read and consumed friend-scoped — a single owner-prefix scan over
+a caller's friend set, never one call per friend — and is the data source
+for the friend results digest. There is **no source for a friend's
+per-call outcome otherwise**: clearing trade-history is caller-scoped, and
+the single settlement activity row is the resolver's market-level result,
+not a per-participant one. Rows past the retention horizon
+(`RESOLVED_RESULTS_RETENTION_MS`, a calendar month plus a grace margin)
+are pruned by a controllers-only cleanup. The collection has no
+user-visible surface on its own; the digest that renders it ships
+separately. See
+[`specs/2026-06-25-feat-resolved-results-collection.md`](./spec-driven-development/specs/2026-06-25-feat-resolved-results-collection.md).
+
+### Arena Friends — the "Recent results" digest
+
+The Arena → Friends section shows a per-friend **results** digest, not a
+per-call activity stream. Each row summarises one friend's resolved
+record over a recent window (a calendar month): their win–loss tally and
+signed net VXP (win/loss coloured), sourced from the friend-scoped league
+standings aggregate in one bulk read, plus a **standout** line — `incl.
+"{market}"` — naming the friend's resolved prediction with the largest
+absolute net VXP (tie-broken to the most recent), read from the
+`resolved_results` collection. A relative time window ("2h ago") comes
+from that standout's resolution time. Friends with no resolved prediction
+in the window do **not** appear — open / unresolved calls carry no
+outcome and are excluded — so the section reads as a quiet scoreboard of
+how your friends are actually doing rather than a feed of every move.
+Tapping a row opens the standout market (or, when a friend has no retained
+standout, their mini-profile sheet). The `Zap` reaction is kept as a
+transient acknowledgement on the row (visual + motion, no persistence —
+a digest row has no `Activity` doc identity to bind a persisted like to).
+The eyebrow reads "Recent results". See
+[`specs/2026-06-25-feat-arena-results-digest.md`](./spec-driven-development/specs/2026-06-25-feat-arena-results-digest.md).
+
+### Market odds — skeleton while the book loads
+
+A market's YES/NO odds are the live order-book mid. Until that book has
+been read the odds are **unknown, not 50%** — the card shows a loading
+skeleton (a repeat visit seeds the last-known odds from a local cache
+for an instant paint, then upgrades in place). A market whose book is
+read but empty shows a neutral dash, never a fabricated coin-flip;
+resolved markets show 100% / 0%. The detail page first-paints from a
+fast query, then upgrades to the certified read. See
+[`specs/2026-06-14-fix-market-odds-skeletons.md`](./spec-driven-development/specs/2026-06-14-fix-market-odds-skeletons.md).
+
+### Market pricing — maker-liquidity disclosure
+
+The market detail page states, in plain language, where the line comes
+from: a live order book that VICI's market maker seeds with resting
+liquidity, so the price can move from the first call without implying a
+crowd of phantom predictors. The disclosure is a quiet caption under the
+stats grid and is mutually exclusive with the cold-start cue — an empty
+market shows "your prediction sets the first read"; a market with a line
+shows the maker disclosure. See
+[`specs/2026-06-20-feat-maker-liquidity-disclosure.md`](./spec-driven-development/specs/2026-06-20-feat-maker-liquidity-disclosure.md).
+
+### Market metadata — translated everywhere, with a global preference and a per-item toggle
+
+When a market has a creator/admin-authored translation for the reader's
+locale (resolved through the locale fallback chain), its title, description,
+resolution clause, and categorical outcome labels render in that language
+**everywhere** — list rows, market cards, the Flow deck (front + back), the
+trade modal, share text, and the detail page — not just the detail page.
+A single global preference governs the default ("Show markets in your
+language" in Settings → Preferences): on (the default) shows translations
+where they exist; off always shows the on-chain original. The preference is
+client-persisted in `localStorage` (identity-agnostic, like the theme), so
+cross-device sync is deferred. On top of that default, every card and the
+detail page carry a small quick switch — shown only when a translation
+exists — that flips that one item between translated and original without
+changing the global preference; the flip is ephemeral and resets on
+navigation. A market with no translation for the reader's locale shows the
+original and renders no toggle. Rendering a list/deck issues one bulk
+translation read for all visible markets (not one per card); changing the
+app locale re-resolves every visible translation. Market **search** still
+matches against the original text (a follow-up). See
+[`specs/2026-06-15-feat-market-translations-everywhere.md`](./spec-driven-development/specs/2026-06-15-feat-market-translations-everywhere.md)
+(fast-follow to
+[`specs/2026-06-14-feat-market-translation-display.md`](./spec-driven-development/specs/2026-06-14-feat-market-translation-display.md)).
 
 ### Friendship rules
 
@@ -121,9 +227,374 @@ service.
 - **Invites.** Inviting by link rewards both sides via the referral
   bonuses in
   [`referral.constants.ts`](../../src/lib/constants/referral.constants.ts).
+- **A league invite implies a friend invite.** Sharing a league invite
+  link also carries the sharer's referral code (`?ref=`), so joining the
+  league auto-friends the person whose link was used: a brand-new
+  sign-up redeems it (friendship + new-user bonus) through the signup
+  drain, an existing signed-in user is friended on join (no bonus). A
+  plain link with no `?ref=` (sharer has no code yet) just joins the
+  league. No opt-out — the friendship is implicit. Decision record:
+  [`specs/2026-06-14-feat-league-invite-implies-friendship.md`](./spec-driven-development/specs/2026-06-14-feat-league-invite-implies-friendship.md).
 - **Errors.** Known outcomes surface as the specific messages above;
   an unexpected failure shows friendly copy carrying a short technical
   detail so a user screenshot is enough to diagnose.
 
 Decision record:
 [`specs/2026-06-12-fix-friend-request-errors-and-reject-policy.md`](./spec-driven-development/specs/2026-06-12-fix-friend-request-errors-and-reject-policy.md).
+
+### Holdings sheet (Dash) — Your VXP, two buckets
+
+Tapping the holdings card on `/dash` opens a sheet that answers a single
+question: every VXP the user holds is either **Available** ("Ready to
+spend on calls") or **In play** ("At stake on N open calls"). It leads
+with a "Your VXP" hero equal to total holdings, then a two-segment split
+bar whose widths are proportional to the available / in-play magnitudes
+(Available = accent, In play = the muted faint token; a zero segment is
+omitted, the whole bar hidden when both are zero), then two colour-keyed
+bucket rows that sum back to the hero. The in-play sub-label pluralises
+on the live open-call count ("At stake on 1 open call" / "… N open
+calls" / "No open calls"). Below the buckets sit the transaction-history
+link and an invite CTA; the CTA opens a native share sheet over the
+viewer's canonical `/i/{code}` referral link (clipboard-copy fallback
+with a brief "copied" state) rather than routing into Arena. The Dash
+holdings card itself is unchanged — its "Available + Today" stats stay,
+with the full split one tap away. Decision record:
+[`specs/2026-06-25-impr-holdings-two-bucket-sheet.md`](./spec-driven-development/specs/2026-06-25-impr-holdings-two-bucket-sheet.md).
+
+### Transaction history (Dash)
+
+The holdings sheet on `/dash` links to `/dash/transactions`: a
+paginated, filterable feed of every event that changed what the user
+owns — bonuses (labelled from the `vxp:<type>:<key>` ledger memo),
+prediction stakes (bound to fills), wins/losses/break-evens (realized
+cashflow), and external transfers. The header shows the dummy-safe
+triple that reconciles by construction — **total = available + in
+play** — and the last column is the running **total** balance after
+each event, anchored on the live total-holdings figure so the top row
+always matches the Dash hero. Placing a prediction is wealth-neutral
+(VXP moves into play, total is unchanged), so it carries no signed
+amount (`—`); the committed stake shows as "… in play" in the
+subtitle. Wins credit the profit, losses debit the stake, break-evens
+net zero. Because total never moves on margin shifting in or out of
+play, the column reconciles to a clean zero genesis no matter how much
+is currently reserved — anchoring on spendable instead drifted the
+oldest balances negative by the reserved amount. Wallet ↔ clearing
+collateral sweeps never render; only their ledger fee feeds the
+balance math. When the full history is loaded (the walk reached the
+beginning), a synthetic "Joined Vici" genesis row closes the feed — no
+amount, zero balance — marking the account's zero-VXP origin. The
+ledger walk is capped (`TRANSACTION_HISTORY_MAX_LEDGER_PAGES`); when
+hit, the genesis row is suppressed and a quiet "older history not
+shown" footer appears instead. Decision record:
+[`specs/2026-06-12-feat-transaction-history.md`](./spec-driven-development/specs/2026-06-12-feat-transaction-history.md).
+
+### League rank — one accuracy-first ranking everywhere
+
+A member's rank within a league is the same number wherever it is shown:
+the leagues-list card badge, the league detail hero (`#N` + the `N°NN`
+corner badge), and the detail-page leaderboard list. All three derive
+from a single ranking — **prediction accuracy** (win rate) descending,
+tie-broken on the longer active streak, then on join order (oldest
+first) — defined once in
+[`league-rank.utils.ts`](../../src/lib/utils/league-rank.utils.ts). It is
+window-independent: the figure is a single lifetime value, so the THIS
+WEEK and ALL TIME tabs show the same order (the tabs and the weekly
+▲/▼ rank-trend flourish are presentational and do not change the
+ranking). A member with no settled prediction sits at 0% and sinks to
+the foot rather than riding join order or role to the top. Decision
+record:
+[`specs/2026-06-15-fix-league-rank-consistency.md`](./spec-driven-development/specs/2026-06-15-fix-league-rank-consistency.md).
+
+### Global leaderboard — qualify gate + confidence-adjusted ranking
+
+The global leaderboard (Arena → Leaderboard) does not rank on raw
+accuracy, which would let a one-and-done predictor (100% on a single
+call) sit above a proven 90%-of-50 record. Two guards apply, both over
+the same per-window slice the board already reads from the clearing
+canister:
+
+- **Qualify gate.** A predictor must have at least a minimum number of
+  **settled calls** to be ranked. Below it they are **provisional**:
+  excluded from the ranked podium/list and shown instead in a separate
+  **Provisional** section with `{done}/{min} to qualify` progress, so a
+  newcomer sees a path rather than a phantom #1. The threshold is a
+  named parameter (default 10, in
+  [`standings.constants.ts`](../../src/lib/constants/standings.constants.ts))
+  and is exposed live in the dev Tweaks panel so it can be tuned without
+  a deploy.
+- **Confidence-adjusted ranking.** Qualified predictors are ordered by a
+  **Bayesian-shrinkage score**, not raw accuracy: a win rate is blended
+  with a population prior weighted by sample size, so a thin-but-qualified
+  record decays toward the mean instead of topping the board. A 10/11
+  (≈91%) record therefore ranks below a 45/50 (90%) record.
+
+Every leaderboard row — podium tile and list row — shows the predictor's
+**call count** as the trust signal behind the score. Ranks are the
+1-based position in the shrinkage order, not the clearing canister's
+net-P&L rank (the Dash "Top X%" rank tile still reads the P&L rank — a
+known, deliberate inconsistency until accuracy ranking moves into the
+canister). Decision record:
+[`specs/2026-06-25-impr-leaderboard-integrity.md`](./spec-driven-development/specs/2026-06-25-impr-leaderboard-integrity.md).
+
+### Battles — accuracy face-offs that resolve themselves
+
+A **battle** is a time-bound accuracy face-off between two leagues. A
+league **owner or admin** proposes; an **owner or admin** of the
+challenged league **accepts or declines**, and an unanswered proposal
+**expires** after a fixed respond-by window (3 days). The `admin` role is
+a delegated battle authority — it can initiate and respond exactly as the
+owner does; a plain member sees "Only a league owner or admin can start a
+battle." and has no battle controls. An **owner** grants the role from
+the member sheet on the league page ("Make admin" / "Remove admin");
+promotion only toggles `member ↔ admin` and is owner-only, enforced
+server-side. For a league battle, **accepting starts the
+clock** — the proposer picks only a duration (7 / 14 / 30 days), and the
+N-day window runs from the moment of acceptance (accept fuses the old
+separate kickoff). The forward-only lifecycle is therefore **proposed →
+in_flight → resolved**, with **declined** and **expired** as terminal
+ends of an unaccepted proposal. A league may run **any number of battles
+at once** (a far client-side rail of 100 simultaneous live battles
+guards against abuse); incoming challenges surface as a "Battle requests"
+list on the league page even while other battles are live, so a busy
+league can still accept or decline. Because Juno docs aren't pushed live
+across users, both sides of the battle are told what they'd otherwise miss
+via inbox notifications derived from the battle's own state: the challenged
+league's owner gets an **incoming-challenge** card ("{opponent} challenged
+your league to a {days}-day accuracy face-off") that deep-links to the
+league page where the Accept / Decline CTA lives, and the proposer is told
+their challenge was accepted or declined. The cards appear the next time
+the recipient's client reads their leagues' battles and age out of a 3-day
+window. (Duels — principal-vs-principal — keep the older **proposed → accepted →
+in_flight → resolved** manual-score path and aren't user-creatable yet.)
+
+**Live battles are discoverable, and you can see who's winning before
+they resolve.** Every battle under way across your leagues appears in a
+**Live battles** list in the Arena → Battles tab, and the live cards on a
+league's page link there too; each row opens the battle detail page. That
+page shows **provisional standings** while a battle is `in_flight` — each
+side's running window accuracy (`Δwins / Δcalls` against the kickoff
+baseline), with the current leader highlighted — computed read-only on
+the same arithmetic resolution uses, so it never alters the battle or
+triggers an early resolve. It's labelled provisional and keeps moving as
+each side predicts, until the window closes and the write-once resolved
+score takes over.
+
+**Who can challenge whom is governed by league privacy.** Only **OPEN**
+leagues are discoverable in challenge search and challengeable by
+outsiders; a league you are **already a member of** is always
+challengeable regardless of its privacy. INVITE and PRIVATE leagues
+never surface as opponents to non-members. You must own or admin the side
+you challenge from. Privacy is **discovery-only**: changing a league's
+privacy after a battle exists never retracts or alters it — a battle's
+identity freezes at proposal and it runs to resolution; tightening
+privacy just removes the league from future challenge search.
+
+**The score is each league's prediction accuracy over the window, and
+nobody types it.** At kickoff the satellite snapshots each league's
+`league_stats` counters (for the battle's category scope — `'all'` or a
+single market tag) as a baseline. At resolution the window result is the
+delta between the current counters and that baseline: `accuracy =
+Δwins / Δcalls`, as a percentage. Higher accuracy wins; an equal-accuracy
+tie breaks toward the league that made **more** predictions; a remaining
+tie — or both leagues making zero predictions in the window (a **void**
+face-off) — is a draw. This matches the accuracy-first league-rank metric
+so a battle and the leaderboard tell the same story. Resolution is
+**trustless**: the `battles` assert independently re-derives the scores
+and winner from `league_stats` and rejects any write whose numbers don't
+match, so no owner can post a fabricated result. Because Juno has no
+scheduler, a settled battle resolves **lazily** — the first time a side
+owner opens the battle (or the league) after the window closes, with a
+one-tap "Resolve now" as a manual fallback. **Known limitations (by
+design):** the snapshot delta measures kickoff → resolution rather than
+the exact window, so prompt (auto) resolution keeps it ≈ the intended
+window — the same approximation the monthly tournament already uses; and
+the optional VXP **wager** is a displayed stake only, not yet moved
+between leagues on resolution. Decision record:
+[`specs/2026-06-15-feat-battle-auto-resolution.md`](./spec-driven-development/specs/2026-06-15-feat-battle-auto-resolution.md).
+
+### Flow daily swipe cap — server-authoritative
+
+The Flow daily cap (15 swipes/day — the daily-ten goal plus the +5
+Push-to-15 overtime) is counted on the **satellite**, not the client. A
+committed swipe calls `recordFlowSwipe`, sending only the client's local
+day key (`YYYY-MM-DD`); the server reads the caller's own profile, rolls
+over by that key, and writes the capped increment **itself** — the client
+never sends a count, so it can't reset or inflate the total. A
+monotonic-per-day assert on the `profiles` collection rejects any direct
+client write that lowers the day's count or pushes it past the cap. The
+result: the "come back tomorrow" takeover holds across reloads, cleared
+storage, sign-outs, and device switches — losing the localStorage mirror
+(now only an offline hint that can never raise the count above the server
+value) no longer hands a fresh allotment. **Known limitation (by
+design):** Flow orders go from the client straight to the agnostic
+clearing engine, so this fixes the reported honest-client reset leak, not
+adversarial bypass — a crafted client that skips the satellite call (or
+forges a different day key) could still place an order. Closing that would
+require routing orders through the satellite or an engine-side limit, a
+separate larger change. Decision record:
+[`specs/2026-06-15-fix-flow-daily-cap-server-authoritative.md`](./spec-driven-development/specs/2026-06-15-fix-flow-daily-cap-server-authoritative.md).
+
+### Flow earn surfaces — milestone and overtime VXP are credited for real
+
+Two Flow grants now credit real VXP, not just a display number. Crossing a
+lifetime call-count milestone (10 / 100 / 500 / 1000 → 50 / 100 / 250 / 500
+VXP) pays once each ever; reaching the daily hard cap ("overtime") pays 25
+VXP once per local day. Both mint through the existing `vxp_awards`
+pending→paid path: the milestone from a `profiles` hook off the lifetime
+call count, the overtime inline in `recordFlowSwipe` (its counter write
+fires no hook). Counts are client-trusted — the same model as the streak
+and Worlds-podium awards — so the overtime mint carries a rolling-window cap
+to bound farming. Earlier these grants were display-only by design (the
+"deflation-safe economy pass" deliberately withheld the credit); this is the
+deferred real-credit path. Decision record:
+[`specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md`](./spec-driven-development/specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md).
+
+### Onboarding — one screen: claim a handle and sign up
+
+The default new-user flow is a single screen (`OnboardingV3`, gated by
+`ONBOARDING_V3_ENABLED`, default on): the user claims a handle (live
+availability check with a Roman-pool suggestion as the empty-field
+placeholder) and signs up with any enabled provider on one surface,
+anchored by the "1,500 VXP starter pack" reward chip. Team selection is
+deferred to the post-signup Profile, so the onboarding handoff always
+carries a `null` team/side — the first prediction now happens free in the
+app. The screen also links to `/signin` ("Already a member?") and offers a
+"Skip — preview first, sign up later" escape into the signed-out Flow
+preview. The earlier multi-beat flow (team → first call → handle → auth)
+is kept in the tree behind the off path until the one-screen flow is
+verified in production; flipping the flag off restores it intact.
+
+The screen reuses, rather than re-implements, the handle machinery (live
+availability probe, session-taken cache, claim-time re-check), the
+provider stack, and the starter-VXP source; analytics reuse the existing
+taxonomy — `onboarding_started` and `handle_checked` fire with
+`label: 'v3'`, and `onboarding_completed` still fires once via the drain
+with `ok` (team-picked) `false`.
+
+### Guest mode — preview Flow free, convert with a starter grant
+
+A visitor who takes the "Skip — preview first, sign up later" path out of
+onboarding becomes a **guest**: they reach Flow and predict immediately
+with no account, no balance, and no wall, and they keep previewing freely
+— there is no hard block at the second pick or ever. Guest picks are a
+throwaway, in-session preview: a guest pick never reaches the engine
+(`placeOrder` and the identity call are bypassed entirely), so free guest
+play can't move market prices. Each pick is recorded only as a client-side
+preview entry (`marketId` / `side` / `ts`, no stake) in `localStorage`,
+purely to power the conversion nudges.
+
+Conversion is driven by loss-aversion, not a gate: a soft sheet on the
+first pick and a remind sheet every fifth pick after offer to **create an
+account, claim the 1,500 VXP starter grant, and start predicting for
+real** — never to "save your pick". A standing inline pill on Flow opens
+the same ask whenever the guest has at least one pick. The remind nudge
+references the in-session count as social proof only ("you've made N
+predictions"), pluralised, and never implies those picks carry over. Every
+surface is dismissible and none blocks a card; the sheet waits until no
+menagerie reveal or Flow beat is on screen before it renders, the same
+collision gate the achievement host uses. The 1,500 VXP figure comes from
+the registration milestone grant, not a literal.
+
+On sign-up from the funnel the guest becomes a member through the **normal
+new-member path**: the existing `onProfileSetForVxpOnboarding` grant fires
+(no new mint, no retro-stake, no new economic action), the in-session
+preview picks are **discarded** — the portfolio starts empty — and the
+guest session and preview `localStorage` are cleared. The sign-up CTAs
+reuse the real provider stack (redirect-safe) labelled with the claimed
+guest handle, and the pre-auth handoff carries only the handle/identity,
+never picks or stakes. A "1,500 VXP added" toast confirms the grant.
+Because guest picks are client-only, a cleared browser simply loses the
+preview, which is harmless — nothing was ever a position. Analytics reuse
+existing names: a guest pick emits `position_taken` with
+`source: 'guest_flow'`, each conversion ask emits `onboarding_step` with
+`source: 'guest_flow'` and the surface as `label`, and conversion emits
+`signed_up` with `source: 'guest_convert'`. Conversion widens the
+new-account mint surface (a brand-new account can be created after a
+frictionless preview) but keeps it no wider than the existing grant; the
+anti-farm hardening tracked in #543 bounds that surface and is not changed
+here. Decision record:
+[`specs/2026-06-25-feat-guest-mode.md`](./spec-driven-development/specs/2026-06-25-feat-guest-mode.md).
+
+### Onboarding — picks persist across every sign-in provider
+
+A new user's onboarding picks — handle and the completion flag (plus
+backed team/side when an older multi-beat path supplies them) — land on
+the new profile no matter which sign-in provider finishes the flow. The
+picks are stashed to local storage the moment an available handle is
+claimed (the auth gate), **before** any provider runs, so a full-page
+OAuth redirect (Google) can't carry off the volatile in-flight state —
+the post-sign-in drain reads the stash and applies it. The "is this a
+brand-new account?" decision the drain uses to
+avoid overwriting a returning user's saved profile is anchored to whether
+this browser session bootstrapped the profile, not a reactive flag a
+second auth pass could flip — so a genuine new user's picks are never
+dropped, and a genuine returning user's profile is never clobbered. The
+flow emits the `onboarding_completed` analytics event with the finishing
+provider and whether a team was persisted. Decision record:
+[`specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`](./spec-driven-development/specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md).
+
+### Onboarding — first-visit surface tips
+
+The first time an early user lands on Dash, Arena, or Profile, a single
+small, non-blocking tip slides in just above the floating tab bar
+explaining what that surface is for, then dismisses with its `X` button.
+Nothing fires up front: a tip only appears when the user actually
+navigates to that surface (progressive disclosure, not an up-front tour),
+one tip is ever on screen at a time, and each surface shows its tip at most
+once per device. The Profile tip does double duty — it nudges picking a
+team for the Worlds race. This is layer 2 of the first-run tutorial system,
+distinct from the in-flow gesture coach (`FlowCoach`, layer 1). Only early
+users see tips: an established user (`totalTrades >= 5`) is never
+interrupted. Seen-state is per-surface local storage (`vici.tip-*-seen`),
+identity-scoped like the coach flags, so a new account on the device
+re-sees the tips. Shown and dismissed both emit `onboarding_step`
+(`source: 'surface_tip' | 'surface_tip_dismiss'`, `label` = the surface).
+Decision record:
+[`specs/2026-06-25-feat-onboarding-surface-tips.md`](./spec-driven-development/specs/2026-06-25-feat-onboarding-surface-tips.md).
+
+### Sign-in — one V3 visual family, Google + passkey-backed email
+
+The returning-user sign-in (`/signin` and every "sign in to continue"
+modal) shares the V3 onboarding visual system: brand pinned top, a
+`Welcome back.` hero (sans phrase + one serif-italic accent word, mirroring
+the sign-up `Claim your handle.` headline), the auth cluster directly
+below, and the "create account" cross-link + legal anchored to the bottom
+of the frame behind a hairline divider. The only primary providers are a
+**dark Google pill** and a lighter **email pill**; the email path opens an
+inline input and runs a device-passkey (WebAuthn) ceremony — there is no
+magic link and no "we sent you a link" state. **Apple is no longer
+offered**: returning V3 users never created an account with it, so it was
+removed from the provider stack (the code stays dormant behind a flag).
+Internet Identity, standalone passkey, and the dev shortcut remain
+production-/dev-gated as before. A successful sign-in emits the `signed_in`
+analytics event with `source = signin_screen` and a `label` of the chosen
+provider (`google | email | passkey | ii | dev`); the email address is
+never sent. Decision record:
+[`specs/2026-06-25-impr-signin-v3-reskin.md`](./spec-driven-development/specs/2026-06-25-impr-signin-v3-reskin.md).
+
+### Add to Home Screen — install VICI as an app
+
+A mobile user can add VICI to their home screen so it launches
+full-screen, like a native app. The ask appears in two calm,
+non-interruptive places and **never** as an auto-popup over Flow: a
+permanent **Settings → Preferences** row and a contextual **install row on
+the end-of-session summary** (`FlowEnd`). The install sheet adapts to the
+platform: on Android/Chrome it captures the browser's `beforeinstallprompt`
+(suppressing the mini-infobar) and a single CTA replays it as the native
+one-tap install dialog; on iOS — where no install API exists — it shows the
+two manual steps (tap Share, then choose Add to Home Screen). Once
+installed (the native accept, the `appinstalled` event, or a later launch
+detected as standalone) every prompt is suppressed.
+
+Both surfaces are gated on `canInstall` (mobile, not already installed, not
+already running standalone), so they are hidden on desktop and inside an
+installed PWA. The Settings row is always available when `canInstall`
+holds; the FlowEnd row additionally honours trigger thresholds — it appears
+at a lifetime call count of 15 or more, or 10 or more on a second-or-later
+visit — and respects a 14-day cool-off after a dismissal plus a
+once-per-session guard. The install funnel is instrumented with
+`pwa_install_prompted` / `_accepted` / `_dismissed`, carrying the
+originating surface and the platform. The manifest, icons, iOS meta, and
+the pre-paint standalone/iOS detection in `app.html` were already shipped;
+this layer adds only the install behaviour. Decision record:
+[`specs/2026-06-25-feat-pwa-install.md`](./spec-driven-development/specs/2026-06-25-feat-pwa-install.md).

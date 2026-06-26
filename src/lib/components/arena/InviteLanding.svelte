@@ -235,7 +235,7 @@
 		     The `friendship` branch below renders interactive controls, where
 		     `role="status"` would mislead assistive tech. -->
 		<div class="flex flex-col items-center justify-center" aria-live="polite" role="status">
-			<LoadingSpinner size="md" />
+			<LoadingSpinner inlinePad size="md" />
 			<p class="text-muted-foreground mt-4 text-sm">
 				{t({ locale: $localeStore, key: 'invite.resolving' })}
 			</p>

@@ -14,15 +14,18 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { MILLISECOND_IN_NANOSECONDS, ZERO } from '$lib/constants/app.constants';
-	import { REFERRAL_MAX_PAID, referrerRewardBaseUnits } from '$lib/constants/referral.constants';
+	import { MILLISECOND_IN_NANOSECONDS, USD_DECIMALS } from '$lib/constants/app.constants';
+	import {
+		cumulativeReferrerRewardBaseUnits,
+		REFERRAL_MAX_PAID
+	} from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-	import { globalActivities } from '$lib/derived/activities.derived';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { track } from '$lib/services/analytics.services';
-	import { getMyReferralCode, listMyReferrals } from '$lib/services/referral.services';
+	import { getMyReferralCode } from '$lib/services/referral.services';
+	import { getFriendResolvedResults } from '$lib/services/relation-queries.services';
 	import {
 		acceptFriendRequest,
 		cancelFriendRequest,
@@ -30,7 +33,7 @@
 		sendFriendRequest,
 		unfriendUser
 	} from '$lib/services/relation.services';
-	import { loadGlobalStandings } from '$lib/services/standings.services';
+	import { getLeagueStandings, loadGlobalStandings } from '$lib/services/standings.services';
 	import {
 		friendRequestsStore,
 		friendsListStore,
@@ -41,21 +44,26 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore, type NotificationType } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
+	import { myReferralsStore, refreshMyReferrals } from '$lib/stores/referrals.store';
 	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
-	import type { ReferralListItem } from '$lib/types/referral';
 	import type { Relation } from '$lib/types/relation';
-	import type { Activity } from '$lib/types/social';
+	import type { ResolvedResult } from '$lib/types/social';
+	import type { StandingEntry, StandingsWindow } from '$lib/types/standings';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
 	import {
+		decimalFixedValueToNumber,
 		formatRelativeAgoFromNs,
-		safeBigInt,
 		shortenWithMiddleEllipsis
 	} from '$lib/utils/format.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { formatVxpBalance, vxpBaseUnitsFromPoints } from '$lib/utils/playground-display.utils';
+	import {
+		formatVxpBalance,
+		formatWholeVxpMagnitude,
+		vxpBaseUnitsFromPoints
+	} from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { friendRequestOutcomeNotice } from '$lib/utils/relation.utils';
 
@@ -73,8 +81,10 @@
 	 *  3. Incoming friend requests — each expandable to Accept / Reject.
 	 *  4. Friends-ranked list — rank 01, 02, …, h2h accuracy delta chip,
 	 *     sticky YOU row pinned at the bottom of the rank list.
-	 *  5. Friends feed — placeholder until a friend activity service
-	 *     lands; today renders quiet serif-italic copy.
+	 *  5. Friends results digest — one row per friend with a resolved
+	 *     record over the window: W–L tally + net VXP + a standout call.
+	 *     Friends with no resolved prediction in the window are excluded;
+	 *     an empty graph renders quiet serif-italic copy.
 	 *  6. Global ranking link — viewer's leaderboard rank with chevron;
 	 *     rank-delta chip deferred until the satellite ships a
 	 *     historical-rank snapshot.
@@ -122,9 +132,11 @@
 	// The viewer's own redemption rows (newest-first), one per friend who signed up
 	// with their code. Each row carries `withinReferrerCap`, which marks whether that
 	// redemption actually paid the referrer under the diminishing tier curve + hard cap
-	// (see `referral.constants.ts`). Loaded on mount; stays empty on failure so the hero
-	// degrades to its zero-state rather than blocking the tab.
-	let myReferrals = $state<ReferralListItem[]>([]);
+	// (see `referral.constants.ts`). Read from the shared `referrals.store` — the same
+	// cache the Dash stack-sheet reads — so the two surfaces can never disagree and a
+	// tab switch reuses the list instead of re-querying. Stays empty on failure so the
+	// hero degrades to its zero-state rather than blocking the tab.
+	const myReferrals = $derived($myReferralsStore);
 
 	onMount(() => {
 		let alive = true;
@@ -164,20 +176,12 @@
 			}
 		})();
 
-		// Fetch the viewer's redemption rows so the hero's social-proof + cap lines reflect
-		// the real, tiered economy rather than a flat per-friend estimate. Fail-open: an
-		// error leaves the list empty and the hero falls back to its zero-state.
-		void (async () => {
-			try {
-				const items = await listMyReferrals();
-
-				if (alive) {
-					myReferrals = items;
-				}
-			} catch {
-				// Decorative social proof — leave the list empty on failure.
-			}
-		})();
+		// Refresh the viewer's redemption rows into the shared store so the hero's
+		// social-proof + cap lines reflect the real, tiered economy rather than a flat
+		// per-friend estimate. The store fails open internally, leaving the previous
+		// cache untouched on error, so the hero falls back to its zero-state on a cold
+		// failure.
+		void refreshMyReferrals();
 
 		return () => {
 			alive = false;
@@ -205,36 +209,29 @@
 	// regardless of payout. The "joined" headline is a factual count, so it must not shrink to
 	// the paid subset once a cap is hit.
 	//
-	// `referralPaidCount` is the CREDITED subset, derived the same way the satellite's
-	// `countReferrerCredits` tally does it: a row counts as paid when its `referrerPayout.status`
+	// `referralCreditedCount` is the CREDITED subset, derived the same way the satellite's
+	// `countReferrerCredits` tally does it: a row counts as credited when its `referrerPayout.status`
 	// is anything other than `none` (`owed | processing | paid` — anything in flight still
 	// consumes a slot). This is the authoritative rule the server uses to feed the diminishing
 	// reward curve and enforce both caps, so the hero stays in lockstep with it rather than
 	// re-reading the stored `withinReferrerCap` flag.
 	//
-	// The earned total sums each paid redemption's tier reward by its 1-based order — the i-th
-	// paid redemption pays `referrerRewardBaseUnits(i - 1)`, so the diminishing tier table (and
-	// its hard cap) is honoured rather than assuming a flat 500 VXP per friend.
+	// The earned total honours the diminishing tier table (and its hard cap) rather than
+	// assuming a flat 500 VXP per friend — see `cumulativeReferrerRewardBaseUnits`.
 	const joinedCount = $derived(myReferrals.length);
-	const referralPaidCount = $derived(
+	const referralCreditedCount = $derived(
 		myReferrals.filter(({ referrerPayout }) => referrerPayout.status !== 'none').length
 	);
-	const referralVxpEarnedBaseUnits = $derived.by(() => {
-		let total = ZERO;
-
-		for (let priorPaidCount = 0; priorPaidCount < referralPaidCount; priorPaidCount++) {
-			total += referrerRewardBaseUnits(priorPaidCount);
-		}
-
-		return total;
-	});
+	const referralVxpEarnedBaseUnits = $derived(
+		cumulativeReferrerRewardBaseUnits(referralCreditedCount)
+	);
 	const referralVxpEarnedLabel = $derived(formatVxpBalance({ value: referralVxpEarnedBaseUnits }));
 
 	// Rewarded-invites-left line mirrors the satellite's single cap: the lifetime hard cap
 	// (`REFERRAL_MAX_PAID`). A row counts as credited once its `referrerPayout.status` is anything
 	// other than `none` (anything in flight still consumes a slot), matching `countReferrerCredits`.
 	// The diminishing curve + this lifetime cap self-limit, so there is no separate monthly cap.
-	const referralsRemaining = $derived(Math.max(0, REFERRAL_MAX_PAID - referralPaidCount));
+	const referralsRemaining = $derived(Math.max(0, REFERRAL_MAX_PAID - referralCreditedCount));
 	let copied = $state(false);
 	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -650,70 +647,215 @@
 		void goto(resolve(`${AppPath.Arena}/leaderboard`));
 	};
 
-	// ── Friends activity feed ───────────────────────────────────────
-	// Drinks from the same cached global activity stream that powers the
-	// market trade rows + dashboard feed (populated by
-	// `LoaderGlobalActivities`), filtered to the viewer's friend set so
-	// no extra fetch is needed and the list stays stale-while-revalidate.
+	// ── Friends results digest ──────────────────────────────────────
+	// One row per friend summarising their resolved record over a recent
+	// window — W–L tally + net VXP (from the friend-scoped league standings
+	// aggregate) and a standout call (the friend's resolved prediction with
+	// the largest |net VXP|, read from the `resolved_results` collection).
+	// Open / unresolved calls carry no outcome, so they never appear.
 	const friendIdSet = $derived(
 		new Set(rankedFriends.map((row) => row.friendId).filter((id): id is string => id.length > 0))
 	);
 
-	const friendActivities = $derived(
-		$globalActivities.filter((activity) => friendIdSet.has(activity.user)).slice(0, 20)
+	// The window the digest aggregates over. `'month'` sits inside the
+	// `resolved_results` retention horizon (so the standout source and the
+	// standings aggregate cover the same span) while still yielding fuller
+	// rows on a thin friend graph than `'week'` would.
+	const DIGEST_WINDOW: StandingsWindow = 'month';
+
+	// Friend-scoped standings slice (W–L + net VXP per friend), hydrated by
+	// the effect below into a per-owner map. Held locally rather than in the
+	// shared `globalStandingsStore` so it can't collide with that store's
+	// global / all-time slices for the same window.
+	const friendStandingsByOwner = new SvelteMap<string, StandingEntry>();
+
+	// The friend set's resolved-result rows over the retention window — the
+	// source for each row's standout call. One bounded bulk read, not one
+	// call per friend.
+	let friendResolvedResults = $state<ResolvedResult[]>([]);
+
+	// Signature of the friend set the digest was last hydrated for. Arena
+	// re-mounts this tab on every tab switch, so guarding on it keeps a
+	// re-mount (or a friend-list refresh that doesn't change the set) from
+	// re-draining the two reads.
+	let hydratedFriendKey: string | undefined;
+
+	// Hydrate the friend-scoped standings slice + resolved-results once the
+	// friend set is known and whenever it actually changes. Fail-open: on
+	// error the digest degrades to the rows it can build (or none) rather
+	// than blocking the tab.
+	$effect(() => {
+		const friends = [...friendIdSet];
+		const key = friends.slice().sort().join('#');
+
+		if (friends.length === 0 || key === hydratedFriendKey) {
+			return;
+		}
+
+		hydratedFriendKey = key;
+
+		void (async () => {
+			try {
+				const [standings, resolved] = await Promise.all([
+					getLeagueStandings({ window: DIGEST_WINDOW, members: friends }),
+					getFriendResolvedResults({ friends })
+				]);
+
+				friendStandingsByOwner.clear();
+
+				for (const entry of standings.entries) {
+					friendStandingsByOwner.set(entry.owner, entry);
+				}
+
+				friendResolvedResults = resolved;
+			} catch (err: unknown) {
+				console.error('FriendsTab: failed to hydrate results digest', err);
+				// Release the guard so a later store refresh can retry — a transient
+				// read failure shouldn't permanently strand the digest on empty rows
+				// for this friend set.
+				hydratedFriendKey = undefined;
+			}
+		})();
+	});
+
+	// Each friend's standout call: the resolved-result row with the greatest
+	// absolute net VXP (their most consequential result, win or loss),
+	// tie-broken to the most recent resolution.
+	const standoutByOwner = $derived.by(() => {
+		const byOwner = new SvelteMap<string, ResolvedResult>();
+
+		for (const row of friendResolvedResults) {
+			const current = byOwner.get(row.owner);
+			const better =
+				isNullish(current) ||
+				Math.abs(row.netVxp) > Math.abs(current.netVxp) ||
+				(Math.abs(row.netVxp) === Math.abs(current.netVxp) &&
+					row.resolvedAtMs > current.resolvedAtMs);
+
+			if (better) {
+				byOwner.set(row.owner, row);
+			}
+		}
+
+		return byOwner;
+	});
+
+	interface FriendDigest {
+		friendId: string;
+		profile: UserProfile | undefined;
+		won: number;
+		lost: number;
+		total: number;
+		/** Signed net-VXP label, e.g. `+312` / `−58`, win/loss colored via `netUp`. */
+		netLabel: string;
+		netUp: boolean;
+		/** Relative window label from the standout's resolution time, when present. */
+		windowLabel: string | undefined;
+		standout: { marketId: string; title: string } | undefined;
+	}
+
+	const friendDigests = $derived.by<FriendDigest[]>(() =>
+		rankedFriends
+			// Keep only friends with a resolved record in the window; a zero
+			// `settledCount` (or no standings entry) is the open-call exclusion.
+			.filter((friend) => {
+				const entry = friendStandingsByOwner.get(friend.friendId);
+
+				return nonNullish(entry) && entry.settledCount > 0;
+			})
+			.map((friend): FriendDigest => {
+				// Safe by the filter above.
+				const entry = friendStandingsByOwner.get(friend.friendId) as StandingEntry;
+				const netVxp = decimalFixedValueToNumber({
+					value: entry.realizedPnl,
+					decimals: USD_DECIMALS
+				});
+				const netUp = netVxp >= 0;
+				const standoutRow = standoutByOwner.get(friend.friendId);
+
+				return {
+					friendId: friend.friendId,
+					profile: friend.profile,
+					won: entry.winCount,
+					lost: Math.max(0, entry.settledCount - entry.winCount),
+					total: entry.settledCount,
+					netLabel: `${netUp ? '+' : '−'}${formatWholeVxpMagnitude(netVxp)}`,
+					netUp,
+					windowLabel: nonNullish(standoutRow)
+						? formatRelativeAgoFromNs({
+								timestampNs:
+									BigInt(Math.trunc(standoutRow.resolvedAtMs)) * MILLISECOND_IN_NANOSECONDS,
+								locale: $localeStore
+							})
+						: undefined,
+					standout: nonNullish(standoutRow)
+						? { marketId: standoutRow.marketId, title: standoutRow.title }
+						: undefined
+				};
+			})
+			// Newest standout first; rows without a standout (no retained result
+			// row) sort after the timestamped ones.
+			.sort((a, b) => {
+				const at = standoutByOwner.get(a.friendId)?.resolvedAtMs ?? 0;
+				const bt = standoutByOwner.get(b.friendId)?.resolvedAtMs ?? 0;
+
+				return bt - at;
+			})
 	);
 
-	// Like is a local-only acknowledgement today — the satellite has no
-	// reaction model, so we track tapped rows in a reactive Set keyed by
-	// the row's stable `timestamp#user` id. Surfaced as a data gap.
-	const likedKeys = new SvelteSet<string>();
-
-	// Rows currently playing the commit motion. A second Set lets the
-	// tilt + burst run for one beat without coupling to the persistent
-	// liked state (so un-liking and re-liking re-fires the motion).
-	const firingKeys = new SvelteSet<string>();
-
+	// The Zap reaction is kept as a transient acknowledgement on the digest
+	// row — a digest row is not an `Activity` doc, so it has no
+	// `activity_reactions` identity to persist against; v1 keeps the visual
+	// + motion and still fires `friend_feed_reaction` so the engagement
+	// series stays continuous across the swap from the per-call feed.
 	const REACTION_MOTION_MS = 600;
+	const firingKeys = new SvelteSet<string>();
+	const reactedKeys = new SvelteSet<string>();
 
-	const activityKey = (activity: Activity): string => `${activity.timestamp}#${activity.user}`;
+	const isFiring = (friendId: string): boolean => firingKeys.has(friendId);
+	const isReacted = (friendId: string): boolean => reactedKeys.has(friendId);
 
-	const isFiring = (activity: Activity): boolean => firingKeys.has(activityKey(activity));
+	const toggleReaction = (friendId: string) => {
+		const desired = !reactedKeys.has(friendId);
 
-	const toggleLike = (activity: Activity) => {
-		const key = activityKey(activity);
+		if (desired) {
+			reactedKeys.add(friendId);
+			haptic('light-tap');
 
-		if (likedKeys.has(key)) {
-			likedKeys.delete(key);
-
-			return;
+			if (!prefersReducedMotion()) {
+				firingKeys.add(friendId);
+				setTimeout(() => firingKeys.delete(friendId), REACTION_MOTION_MS);
+			}
+		} else {
+			reactedKeys.delete(friendId);
 		}
 
-		likedKeys.add(key);
-		haptic('light-tap');
-
-		if (prefersReducedMotion()) {
-			return;
-		}
-
-		firingKeys.add(key);
-		setTimeout(() => firingKeys.delete(key), REACTION_MOTION_MS);
-	};
-
-	const goToMarket = (marketId: string | undefined) => {
-		if (isNullish(marketId) || marketId.length === 0) {
-			return;
-		}
-
-		void goto(resolve(`${AppPath.Markets}/${marketId}`));
-	};
-
-	const feedRelative = (timestampMs: number): string =>
-		formatRelativeAgoFromNs({
-			// Activity timestamps come from stored docs; a fractional / NaN value
-			// would make a bare `BigInt(...)` throw, so coerce defensively.
-			timestampNs: safeBigInt({ value: timestampMs }) * MILLISECOND_IN_NANOSECONDS,
-			locale: $localeStore
+		track({
+			name: 'friend_feed_reaction',
+			source: 'arena',
+			label: desired ? 'like' : 'unlike'
 		});
+	};
+
+	const openDigest = (digest: FriendDigest) => {
+		const marketId = digest.standout?.marketId;
+
+		if (nonNullish(marketId) && marketId.length > 0) {
+			track({ name: 'friend_digest_opened', source: 'arena', marketId });
+			void goto(resolve(`${AppPath.Markets}/${marketId}`));
+
+			return;
+		}
+
+		// No standout to navigate to — open the friend mini-profile sheet so
+		// the row stays interactive rather than a dead tap.
+		const row = rankedFriends.find((friend) => friend.friendId === digest.friendId);
+
+		if (nonNullish(row)) {
+			track({ name: 'friend_digest_opened', source: 'arena' });
+			openFriendSheet(row);
+		}
+	};
 </script>
 
 <div class="friends-tab">
@@ -766,7 +908,7 @@
 									: 'arena.friends.invite.proof_many'
 						})}
 					</span>
-					{#if referralPaidCount > 0}
+					{#if referralCreditedCount > 0}
 						<span class="invite-proof-dot" aria-hidden="true">·</span>
 						<span class="invite-proof-earned">
 							<b>+{referralVxpEarnedLabel}</b>
@@ -971,7 +1113,7 @@
 	<!-- Friends ranked ─────────────────────────────────────────── -->
 	{#if loading}
 		<div class="friends-loading">
-			<LoadingSpinner />
+			<LoadingSpinner inlinePad />
 		</div>
 	{:else}
 		<section class="friends-section">
@@ -1049,55 +1191,78 @@
 		</section>
 	{/if}
 
-	<!-- Friends feed ──────────────────────────────────────────── -->
+	<!-- Friends results digest ─────────────────────────────────── -->
 	<!--
-		Recent calls from the viewer's friend set, sourced from the cached
-		global activity stream. When the friend graph has yet to produce
-		any activity we keep the quiet copy block so the surface stays
-		discoverable without faking data.
+		One row per friend with a resolved record over the window: their W–L
+		tally + net VXP (from the friend-scoped league standings aggregate)
+		and a standout call (their resolved prediction with the largest
+		|net VXP|). Friends with no resolved prediction in the window do not
+		appear; when the graph has yet to resolve anything we keep the quiet
+		copy block so the surface stays discoverable without faking data.
 	-->
-	{#if !loading && friendActivities.length > 0}
+	{#if !loading && friendDigests.length > 0}
 		<section class="friends-section">
 			<header class="section-eyebrow">
 				<span>{t({ locale: $localeStore, key: 'arena.friends.feed.eyebrow' })}</span>
 			</header>
 			<ul class="feed-list">
-				{#each friendActivities as activity (activityKey(activity))}
-					{@const profile = friendProfiles.get(activity.user)}
-					{@const isLiked = likedKeys.has(activityKey(activity))}
+				{#each friendDigests as digest (digest.friendId)}
 					<li>
 						<div class="feed-row">
-							<button class="feed-main" onclick={() => goToMarket(activity.marketId)} type="button">
+							<button class="feed-main" onclick={() => openDigest(digest)} type="button">
 								<span class="feed-avatar">
 									<Avatar
 										class="h-full w-full"
-										avatar={profile?.avatar}
-										avatarParts={profile?.avatarParts}
-										nickname={profile?.nickname}
-										owner={profile?.owner ?? activity.user}
+										avatar={digest.profile?.avatar}
+										avatarParts={digest.profile?.avatarParts}
+										nickname={digest.profile?.nickname}
+										owner={digest.profile?.owner ?? digest.friendId}
 									/>
 								</span>
 								<span class="feed-copy">
 									<span class="feed-line">
 										<b class="feed-handle"
-											>@{profile?.nickname ??
+											>@{digest.profile?.nickname ??
 												t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}</b
 										>
-										<span class="feed-action">{activity.title}</span>
-										{#if activity.details}
-											<span class="feed-market">“{activity.details}”</span>
+										<span class="feed-action">
+											{t({
+												locale: $localeStore,
+												key:
+													digest.total === 1
+														? 'arena.friends.feed.resolved_one'
+														: 'arena.friends.feed.resolved_many',
+												params: { count: digest.total }
+											})}
+										</span>
+										<span class="num feed-record">· {digest.won}–{digest.lost}</span>
+									</span>
+									<span class="feed-meta">
+										{#if nonNullish(digest.windowLabel)}
+											<span class="num feed-when">{digest.windowLabel}</span>
+										{/if}
+										{#if nonNullish(digest.standout)}
+											<span class="feed-market">
+												{t({
+													locale: $localeStore,
+													key: 'arena.friends.feed.standout',
+													params: { question: digest.standout.title }
+												})}
+											</span>
 										{/if}
 									</span>
-									<span class="num feed-when">{feedRelative(activity.timestamp)}</span>
+								</span>
+								<span class="num feed-net" class:is-down={!digest.netUp} class:is-up={digest.netUp}>
+									{digest.netLabel} VXP
 								</span>
 							</button>
 							<button
 								class="feed-react"
-								class:is-firing={isFiring(activity)}
-								class:is-liked={isLiked}
+								class:is-firing={isFiring(digest.friendId)}
+								class:is-liked={isReacted(digest.friendId)}
 								aria-label={t({ locale: $localeStore, key: 'arena.friends.feed.like' })}
-								aria-pressed={isLiked}
-								onclick={() => toggleLike(activity)}
+								aria-pressed={isReacted(digest.friendId)}
+								onclick={() => toggleReaction(digest.friendId)}
 								type="button"
 							>
 								<Zap aria-hidden="true" size={16} strokeWidth={1.6} />
@@ -1703,9 +1868,10 @@
 		padding: 1.5rem 0;
 	}
 
-	/* ── Feed ──────────────────────────────────────────────── */
+	/* ── Feed (results digest) ─────────────────────────────── */
 	/* Unified card with internal dividers — same pattern as the ranked
-	   and pending lists. Each row is the activity line + a clap react. */
+	   and pending lists. Each row is one friend's resolved record (W–L +
+	   net VXP + standout) and a transient Zap reaction. */
 	.feed-list {
 		display: flex;
 		flex-direction: column;
@@ -1732,7 +1898,7 @@
 
 	.feed-main {
 		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
+		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
 		gap: 0.65rem;
 		flex: 1;
@@ -1776,10 +1942,30 @@
 		color: var(--text-muted);
 	}
 
+	/* W–L tally — mono numerals, base weight so the record reads as the
+	   row's spine. */
+	.feed-record {
+		color: var(--text-base);
+		font-weight: 700;
+	}
+
+	/* Window label + standout, on one wrapping meta line under the record. */
+	.feed-meta {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.4rem;
+		min-width: 0;
+	}
+
 	.feed-market {
+		overflow: hidden;
 		color: var(--text-base);
 		font-family: var(--font-serif, var(--font-display, serif));
+		font-size: var(--t-12);
 		font-style: italic;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.feed-when {
@@ -1791,8 +1977,26 @@
 		text-transform: uppercase;
 	}
 
-	/* Like react — acknowledge a friend's call. Brand forbids emoji
-	   (design.md), so the cue is the `Zap` glyph. Resting state is
+	/* Signed net VXP — the row's headline figure, colored win (yes) / loss
+	   (no) and right-aligned beside the copy. */
+	.feed-net {
+		justify-self: end;
+		flex-shrink: 0;
+		font-size: var(--t-13);
+		font-weight: 800;
+		white-space: nowrap;
+	}
+
+	.feed-net.is-up {
+		color: var(--yes);
+	}
+
+	.feed-net.is-down {
+		color: var(--no);
+	}
+
+	/* Like react — acknowledge a friend's result. Brand forbids emoji,
+	   so the cue is the `Zap` glyph. Resting state is
 	   dimmed; tapping commits to full opacity + an accent wash, plus a
 	   one-beat tilt and particle burst (both reduced-motion gated). The
 	   accent uses `--color-primary` (laurel in dark, the contrast-safe
