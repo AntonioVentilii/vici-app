@@ -176,6 +176,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { leaderboard_viewed: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { battle_declined: null }
@@ -995,6 +996,7 @@ export interface AppTrackEventsArgs {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { leaderboard_viewed: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { battle_declined: null }

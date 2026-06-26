@@ -69,6 +69,7 @@ export const AnalyticsEventNameSchema = j.enum([
 	'battle_viewed',
 	'comment_posted',
 	'chat_sent',
+	'leaderboard_viewed',
 	// Worlds
 	'affiliation_set',
 	'affiliation_removed',

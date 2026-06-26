@@ -243,6 +243,37 @@ the foot rather than riding join order or role to the top. Decision
 record:
 [`specs/2026-06-15-fix-league-rank-consistency.md`](./spec-driven-development/specs/2026-06-15-fix-league-rank-consistency.md).
 
+### Global leaderboard — qualify gate + confidence-adjusted ranking
+
+The global leaderboard (Arena → Leaderboard) does not rank on raw
+accuracy, which would let a one-and-done predictor (100% on a single
+call) sit above a proven 90%-of-50 record. Two guards apply, both over
+the same per-window slice the board already reads from the clearing
+canister:
+
+- **Qualify gate.** A predictor must have at least a minimum number of
+  **settled calls** to be ranked. Below it they are **provisional**:
+  excluded from the ranked podium/list and shown instead in a separate
+  **Provisional** section with `{done}/{min} to qualify` progress, so a
+  newcomer sees a path rather than a phantom #1. The threshold is a
+  named parameter (default 10, in
+  [`standings.constants.ts`](../../src/lib/constants/standings.constants.ts))
+  and is exposed live in the dev Tweaks panel so it can be tuned without
+  a deploy.
+- **Confidence-adjusted ranking.** Qualified predictors are ordered by a
+  **Bayesian-shrinkage score**, not raw accuracy: a win rate is blended
+  with a population prior weighted by sample size, so a thin-but-qualified
+  record decays toward the mean instead of topping the board. A 10/11
+  (≈91%) record therefore ranks below a 45/50 (90%) record.
+
+Every leaderboard row — podium tile and list row — shows the predictor's
+**call count** as the trust signal behind the score. Ranks are the
+1-based position in the shrinkage order, not the clearing canister's
+net-P&L rank (the Dash "Top X%" rank tile still reads the P&L rank — a
+known, deliberate inconsistency until accuracy ranking moves into the
+canister). Decision record:
+[`specs/2026-06-25-impr-leaderboard-integrity.md`](./spec-driven-development/specs/2026-06-25-impr-leaderboard-integrity.md).
+
 ### Battles — accuracy face-offs that resolve themselves
 
 A **battle** is a time-bound accuracy face-off between two leagues. The
