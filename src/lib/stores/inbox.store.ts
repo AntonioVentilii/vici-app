@@ -170,14 +170,20 @@ const battleIncomingInboxStore: Readable<InboxNotification[]> = derived(
 			$myLeagues.filter((m) => m.role === 'owner').map((m) => m.league.id)
 		);
 
-		const incoming = [...$battles.values()]
-			.flat()
-			.filter(
-				(battle) =>
-					battle.kind === 'league' &&
-					battle.state === 'proposed' &&
-					ownedLeagueIds.has(battle.sideB)
-			);
+		const incoming = [...$battles.values()].flat().filter(
+			(battle) =>
+				battle.kind === 'league' &&
+				battle.state === 'proposed' &&
+				// The viewer owns the challenged side (`sideB`) but must NOT be on
+				// the challenging side: the proposer (and any co-owner of `sideA`)
+				// already sees the outgoing challenge via `battleInboxStore`, so an
+				// incoming card for one's own challenge would be a self-notification.
+				// A self-vs-self challenge (`sideA === sideB`) is excluded too.
+				ownedLeagueIds.has(battle.sideB) &&
+				battle.sideA !== battle.sideB &&
+				battle.proposer !== viewer &&
+				!ownedLeagueIds.has(battle.sideA)
+		);
 		// A challenge can surface under more than one per-league list, so dedupe
 		// by battle id (Map keeps the last seen), mirroring `battleInboxStore`.
 		const matched = [...new Map(incoming.map((battle) => [battle.id, battle])).values()].filter(
@@ -606,20 +612,17 @@ export const clearInboxToast = (): void => {
  *   first received-reactions load completes (even if empty) — so a cold-start
  *   backlog of likes on the viewer's calls is absorbed into the baseline
  *   instead of replaying as arrival toasts.
- * - `leaguesLoadedStore` starts `false`, flips `true` once the first
- *   `refreshMyLeagues()` completes — so a cold-start backlog of pending
- *   incoming challenges (`battleIncomingInboxStore`) is absorbed into the
- *   baseline rather than replaying as arrival toasts.
+ *
+ * Leagues are deliberately NOT part of this gate: `refreshMyLeagues()` only
+ * runs on Leagues/Battles/LeagueDetail pages, so a session that never visits
+ * them would otherwise leave `sourcesHydrated` false forever and suppress
+ * arrival toasts for EVERY kind. The `battle_incoming` cold-start backlog is
+ * instead absorbed locally in {@link initInboxToasts}, gated on
+ * `leaguesLoadedStore`, so the other kinds toast normally meanwhile.
  */
 const sourcesHydrated: Readable<boolean> = derived(
-	[
-		resolvedPositionsNotInitialized,
-		friendsRelationsLoadedStore,
-		receivedReactionsStore,
-		leaguesLoadedStore
-	],
-	([$notInit, $friendsLoaded, $received, $leaguesLoaded]) =>
-		!$notInit && $friendsLoaded && nonNullish($received) && $leaguesLoaded
+	[resolvedPositionsNotInitialized, friendsRelationsLoadedStore, receivedReactionsStore],
+	([$notInit, $friendsLoaded, $received]) => !$notInit && $friendsLoaded && nonNullish($received)
 );
 
 /**
@@ -635,18 +638,34 @@ const sourcesHydrated: Readable<boolean> = derived(
  * emission just refreshes the baseline (no toast); on the first hydrated tick
  * the existing backlog is absorbed into the baseline; only genuinely new
  * unread items thereafter fire a toast.
+ *
+ * Leagues are gated locally rather than via {@link sourcesHydrated}: the
+ * `battle_incoming` cold-start backlog materialises only when
+ * `refreshMyLeagues()` finally runs (on first visit to a Leagues/Battles page),
+ * which may be long after the global sources hydrate or never at all. So the
+ * incoming-challenge diff is suppressed until `leaguesLoadedStore` flips, and
+ * the tick it flips the whole incoming backlog is folded into the baseline
+ * rather than replaying as arrival toasts. Other kinds keep toasting normally
+ * even in a session that never loads leagues.
  */
+const BATTLE_INCOMING_ID_PREFIX = 'battle-proposed-';
+
 export const initInboxToasts = (): (() => void) => {
 	if (!browser) {
 		return () => undefined;
 	}
 
 	let seenInboxIds: Set<string> | undefined;
+	let leaguesLoadedSeen = false;
 
-	return derived([combinedInboxStore, sourcesHydrated], ([$items, $hydrated]) => ({
-		items: $items,
-		hydrated: $hydrated
-	})).subscribe(({ items, hydrated }) => {
+	return derived(
+		[combinedInboxStore, sourcesHydrated, leaguesLoadedStore],
+		([$items, $hydrated, $leaguesLoaded]) => ({
+			items: $items,
+			hydrated: $hydrated,
+			leaguesLoaded: $leaguesLoaded
+		})
+	).subscribe(({ items, hydrated, leaguesLoaded }) => {
 		if (!hydrated) {
 			// Sources still loading — accumulate ids as baseline without diffing.
 			seenInboxIds = new Set(items.map((item) => item.id));
@@ -658,11 +677,28 @@ export const initInboxToasts = (): (() => void) => {
 			// Hydration just completed but no baseline recorded yet (edge case:
 			// subscribe fired with hydrated=true before any non-hydrated tick).
 			seenInboxIds = new Set(items.map((item) => item.id));
+			leaguesLoadedSeen = leaguesLoaded;
 
 			return;
 		}
 
-		const next = items.find((item) => item.unread && !seenInboxIds?.has(item.id));
+		// Leagues just finished their first load this tick — the incoming
+		// backlog appears all at once. Suppress the incoming diff for this one
+		// tick so the backlog is absorbed; non-incoming kinds still diff.
+		const leaguesJustLoaded = leaguesLoaded && !leaguesLoadedSeen;
+		leaguesLoadedSeen = leaguesLoaded;
+
+		const baseline = seenInboxIds;
+		// An incoming-challenge id can't be a genuine arrival until leagues have
+		// loaded (the source hasn't been fetched), and the first loaded tick is
+		// the cold-start backlog — treat incoming as already-seen in both cases.
+		const incomingSettled = leaguesLoaded && !leaguesJustLoaded;
+		const next = items.find(
+			(item) =>
+				item.unread &&
+				!baseline.has(item.id) &&
+				(incomingSettled || !item.id.startsWith(BATTLE_INCOMING_ID_PREFIX))
+		);
 
 		seenInboxIds = new Set(items.map((item) => item.id));
 
