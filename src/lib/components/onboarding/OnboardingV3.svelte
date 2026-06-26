@@ -374,11 +374,7 @@
 					{:else if availability.reasonKey}
 						{t({ locale: $localeStore, key: availability.reasonKey })}
 					{:else}
-						{t({
-							locale: $localeStore,
-							key: 'onboarding.v3.handle_placeholder',
-							params: { handle: selectedName }
-						})}
+						@{selectedName}
 					{/if}
 				</div>
 

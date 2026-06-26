@@ -1808,7 +1808,6 @@ export const enMessages = {
 	'onboarding.v3.h1_pre': 'Claim your',
 	'onboarding.v3.h1_accent': 'handle.',
 	'onboarding.v3.sub': 'One name. Every call you make carries it.',
-	'onboarding.v3.handle_placeholder': '@{handle}',
 	'onboarding.v3.avail.checking': 'Checking availability…',
 	'onboarding.v3.avail.available': 'Available ·',
 	'onboarding.v3.avail.taken': 'Taken — try a variant',

@@ -1816,7 +1816,6 @@ export const ptMessages = {
 	'onboarding.v3.h1_pre': 'Reivindique o seu',
 	'onboarding.v3.h1_accent': 'identificador.',
 	'onboarding.v3.sub': 'Um nome. Cada palpite que você faz o carrega.',
-	'onboarding.v3.handle_placeholder': '@{handle}',
 	'onboarding.v3.avail.checking': 'Verificando disponibilidade…',
 	'onboarding.v3.avail.available': 'Disponível ·',
 	'onboarding.v3.avail.taken': 'Em uso — tente uma variação',

@@ -1817,7 +1817,6 @@ export const itMessages = {
 	'onboarding.v3.h1_pre': 'Scegli il tuo',
 	'onboarding.v3.h1_accent': 'handle.',
 	'onboarding.v3.sub': 'Un nome. Ogni tua chiamata lo porta con sé.',
-	'onboarding.v3.handle_placeholder': '@{handle}',
 	'onboarding.v3.avail.checking': 'Verifica disponibilità…',
 	'onboarding.v3.avail.available': 'Disponibile ·',
 	'onboarding.v3.avail.taken': 'Già preso — prova una variante',
