@@ -5,6 +5,7 @@
 	"pull-request-title-pattern": "chore(release): v${version}",
 	"packages": {
 		".": {
+			"release-as": "0.3.0",
 			"release-type": "node",
 			"include-component-in-tag": false,
 			"extra-files": [
