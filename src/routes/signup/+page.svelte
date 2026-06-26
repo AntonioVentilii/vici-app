@@ -4,13 +4,9 @@
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import OnboardingFlow from '$lib/components/onboarding/OnboardingFlow.svelte';
-	import OnboardingV3 from '$lib/components/onboarding/OnboardingV3.svelte';
-	import { ONBOARDING_V3_ENABLED } from '$lib/constants/feature-flags.constants';
+	import Onboarding from '$lib/components/onboarding/Onboarding.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
-	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { applyOnboardingPicks, checkNicknameAvailability } from '$lib/services/profile.services';
 	import { startGuestSession } from '$lib/stores/guest.store';
@@ -21,11 +17,11 @@
 
 	// Signed-in routing: a brand-new authenticated user who landed on
 	// `/signup` (typically routed here by the (app) layout because their
-	// profile has `onboardingCompleted: false`) goes through the same
-	// 3-beat flow but with Beat 3's provider stack swapped for a Finish
-	// button — they already have a session. A returning user is bounced into
-	// the app (`AppPath.Flow`) — either because onboarding is already
-	// complete, or because the satellite already held a profile at sign-in
+	// profile has `onboardingCompleted: false`) claims a handle and finishes
+	// in place — the provider stack is swapped for a Finish button since they
+	// already have a session. A returning user is bounced into the app
+	// (`AppPath.Flow`) — either because onboarding is already complete, or
+	// because the satellite already held a profile at sign-in
 	// (`profileExisted`), in which case a legacy `onboardingCompleted: false`
 	// must not re-prompt.
 	const authenticated = $derived(
@@ -33,27 +29,6 @@
 			$userStore.profile?.preferences?.onboardingCompleted !== true &&
 			!$userStore.profileExisted
 	);
-
-	// Landing favourites deep-link in as `/signup?team=<ISO-2 code>`. The
-	// code is a featured-event participant id, so map it straight to a
-	// participant — but only forward it when it resolves to a current
-	// participant. An absent or unknown `team` yields `undefined`, and
-	// OnboardingFlow then opens on the normal team picker (no preselect).
-	const initialParticipantId = $derived.by((): string | undefined => {
-		const team = page.url.searchParams.get('team');
-
-		if (isNullish(team)) {
-			return;
-		}
-
-		// Normalize the deep-link param: participant ids are upper-case
-		// ISO-3166 alpha-2, so trim + upper-case so `?team=br` (or with
-		// stray whitespace) still resolves.
-		const code = team.trim().toUpperCase();
-		const match = $featuredEvent.participants.find((p) => p.id === code);
-
-		return match?.id;
-	});
 
 	// Bounce any returning user back into the app: either onboarding is
 	// already complete, or a profile existed at sign-in (a legacy account
@@ -280,25 +255,16 @@
 	};
 </script>
 
-{#if ONBOARDING_V3_ENABLED}
-	<OnboardingV3
-		{authenticated}
-		onComplete={handleComplete}
-		onPicksReady={handleCompletePreAuth}
-		onSignIn={() => void goto(resolve(PublicPath.SignIn))}
-		onSkip={(handle) => {
-			// Open the guest preview session (the handle rides through the
-			// pre-auth stash already, so conversion keeps the chosen name) and
-			// route into Flow, which the (app) layout now lets a guest reach.
-			startGuestSession(handle);
-			void goto(resolve(AppPath.Flow));
-		}}
-	/>
-{:else}
-	<OnboardingFlow
-		{authenticated}
-		{initialParticipantId}
-		onComplete={handleComplete}
-		onPicksReady={handleCompletePreAuth}
-	/>
-{/if}
+<Onboarding
+	{authenticated}
+	onComplete={handleComplete}
+	onPicksReady={handleCompletePreAuth}
+	onSignIn={() => void goto(resolve(PublicPath.SignIn))}
+	onSkip={(handle) => {
+		// Open the guest preview session (the handle rides through the
+		// pre-auth stash already, so conversion keeps the chosen name) and
+		// route into Flow, which the (app) layout now lets a guest reach.
+		startGuestSession(handle);
+		void goto(resolve(AppPath.Flow));
+	}}
+/>

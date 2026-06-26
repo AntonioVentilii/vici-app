@@ -19,19 +19,3 @@
  * restored by flipping it back to `true`.
  */
 export const MARKET_DETAIL_DIRECT_TRADE_ENABLED = false;
-
-/**
- * Whether `/signup` renders the one-screen onboarding (handle claim + auth
- * provider entry on a single surface) instead of the multi-beat flow.
- *
- * When `true` (the default) `/signup` mounts `OnboardingV3`: the user claims
- * a handle and signs up in one view, team selection deferred to the
- * post-signup Profile. When `false` the multi-beat flow (`OnboardingFlow`,
- * team → first call → handle → auth) is restored.
- *
- * The earlier multi-beat flow is intentionally kept in the tree behind the
- * off path until the one-screen flow is verified in production — a
- * regression is then a one-line flip back, not a revert. The cleanup that
- * deletes the multi-beat flow is a separate follow-up.
- */
-export const ONBOARDING_V3_ENABLED = true;
