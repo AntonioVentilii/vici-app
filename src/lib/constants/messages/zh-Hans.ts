@@ -1730,7 +1730,6 @@ export const zhHansMessages = {
 	'onboarding.v3.h1_pre': '认领你的',
 	'onboarding.v3.h1_accent': '昵称。',
 	'onboarding.v3.sub': '一个名字，伴随你的每一次预测。',
-	'onboarding.v3.handle_placeholder': '@{handle}',
 	'onboarding.v3.avail.checking': '正在检查可用性…',
 	'onboarding.v3.avail.available': '可用 ·',
 	'onboarding.v3.avail.taken': '已被占用 — 换个写法',

@@ -1821,7 +1821,6 @@ export const esMessages = {
 	'onboarding.v3.h1_pre': 'Reclama tu',
 	'onboarding.v3.h1_accent': 'alias.',
 	'onboarding.v3.sub': 'Un nombre. Cada predicción que haces lo lleva.',
-	'onboarding.v3.handle_placeholder': '@{handle}',
 	'onboarding.v3.avail.checking': 'Comprobando disponibilidad…',
 	'onboarding.v3.avail.available': 'Disponible ·',
 	'onboarding.v3.avail.taken': 'Ocupado — prueba una variante',

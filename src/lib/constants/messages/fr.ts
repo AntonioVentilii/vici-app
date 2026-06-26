@@ -1827,7 +1827,6 @@ export const frMessages = {
 	'onboarding.v3.h1_pre': 'Réservez votre',
 	'onboarding.v3.h1_accent': 'pseudo.',
 	'onboarding.v3.sub': 'Un nom. Chaque pronostic que vous faites le porte.',
-	'onboarding.v3.handle_placeholder': '@{handle}',
 	'onboarding.v3.avail.checking': 'Vérification de la disponibilité…',
 	'onboarding.v3.avail.available': 'Disponible ·',
 	'onboarding.v3.avail.taken': 'Pris — essayez une variante',

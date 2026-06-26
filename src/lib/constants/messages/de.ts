@@ -1836,7 +1836,6 @@ export const deMessages = {
 	'onboarding.v3.h1_pre': 'Sichere dir dein',
 	'onboarding.v3.h1_accent': 'Handle.',
 	'onboarding.v3.sub': 'Ein Name. Jede Vorhersage trägt ihn.',
-	'onboarding.v3.handle_placeholder': '@{handle}',
 	'onboarding.v3.avail.checking': 'Verfügbarkeit wird geprüft…',
 	'onboarding.v3.avail.available': 'Verfügbar ·',
 	'onboarding.v3.avail.taken': 'Vergeben — probiere eine Variante',
