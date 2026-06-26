@@ -171,6 +171,7 @@ export const idlFactory = ({ IDL }) => {
 					battle_proposed: IDL.Null,
 					perf_metric: IDL.Null,
 					provider_linked: IDL.Null,
+					leaderboard_viewed: IDL.Null,
 					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
 					battle_declined: IDL.Null,
@@ -201,7 +202,6 @@ export const idlFactory = ({ IDL }) => {
 					prediction_created: IDL.Null,
 					faucet_claimed: IDL.Null,
 					chat_sent: IDL.Null,
-					leaderboard_viewed: IDL.Null,
 					orderbook_viewed: IDL.Null,
 					signed_out: IDL.Null
 				}),
@@ -1162,6 +1162,7 @@ export const idlFactory = ({ IDL }) => {
 					battle_proposed: IDL.Null,
 					perf_metric: IDL.Null,
 					provider_linked: IDL.Null,
+					leaderboard_viewed: IDL.Null,
 					friend_request_sent: IDL.Null,
 					battle_accepted: IDL.Null,
 					battle_declined: IDL.Null,
@@ -1192,7 +1193,6 @@ export const idlFactory = ({ IDL }) => {
 					prediction_created: IDL.Null,
 					faucet_claimed: IDL.Null,
 					chat_sent: IDL.Null,
-					leaderboard_viewed: IDL.Null,
 					orderbook_viewed: IDL.Null,
 					signed_out: IDL.Null
 				}),
