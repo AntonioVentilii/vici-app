@@ -10,34 +10,31 @@ Status: In progress (#982)
 Make the returning-user sign-in screen one visual family with the V3
 onboarding (sign-up) surface, and make the email path read as
 passkey-first. Today `/signin` renders a different composition from the
-new V3 sign-up: a "Sign in to VICI." title, a `184,000 PREDICTORS ·
-1,240 CALLS THIS HOUR` social-proof line, an Apple provider returning
-users can't actually have created an account with, and a **cream**
-Google pill that flashes mid-transition when the theme switches in
-light/peach. After this change the screen reads `Welcome **back.**`
-(sans + serif-italic accent, mirroring V3's `Claim your *handle.*`),
-brand pinned top, hero + auth clustered top-down with the secondary
-"create account" + legal anchored below; the only providers are a
-**dark** Google pill and a **light** email pill, where email goes
-straight to a device passkey (WebAuthn) — no magic link, no Apple.
+V3 sign-up: a "Sign in to {brand}" title, a social-proof
+predictors/calls line, an Apple provider returning users can't actually
+have created an account with, and a **cream** Google pill that flashes
+mid-transition when the theme switches in light/peach. After this change
+the screen reads `Welcome **back.**` (sans + serif-italic accent,
+mirroring the V3 italic-accent headline), brand pinned top, hero + auth
+clustered top-down with the secondary "create account" + legal anchored
+below; the only providers are a **dark** Google pill and a **light**
+email pill, where email goes straight to a device passkey (WebAuthn) —
+no magic link, no Apple.
 
 ## Context
 
-The prototype is the source of truth for the target look and behaviour
-(it is React; we port behaviour + UI + copy, not code). The app is
-Svelte 5 runes. The relevant divergences are concrete and already
-mapped to real files.
+The app is Svelte 5 runes. The relevant divergences are concrete and
+already mapped to real files.
 
-**Prototype (target) behaviour** — captured across the handover
-sign-in changelog arc:
+**Intended design** — the target look and behaviour:
 
 - Re-skin to share the V3 visual system: brand pinned top, hero
   optically composed at the top, "create account" + legal anchored to
   the bottom of the frame, hairline divider between task and footer.
 - `Welcome **back.**` hero — sans phrase + one serif-italic accent
-  word, mirroring V3's italic-accent headline.
+  word, mirroring the V3 italic-accent headline.
 - Social-proof predictors/calls line removed.
-- Email path → device passkey (WebAuthn), `autoComplete="email
+- Email path → device passkey (WebAuthn), `autocomplete="email
 webauthn"`, **no** magic-link "sent" state.
 - Providers: **Google + email only** — Apple dropped (no one signs up
   with Apple in V3, so offering it to returning users was misleading).
@@ -53,12 +50,12 @@ webauthn"`, **no** magic-link "sent" state.
   `SignInScreen mode="signin"`, bounces an already-authenticated user
   to `AppPath.Flow`.
 - `src/lib/components/authn/SignInScreen.svelte` — the screen shell:
-  wordmark, eyebrow, title (`titleParts.before` + hardcoded
-  `<span class="serif-italic acc">VICI.</span>` + `after`), subcopy,
-  **the social-proof block** (`.signin-proof`, lines 108–118, reading
-  `signin.proof.predictors_*` / `signin.proof.calls_*`), the provider
-  stack, and the footer + legal. It is **already** the shared shell for
-  both `signin` and `signup` modes via the `mode` prop.
+  wordmark, eyebrow, title (`titleParts.before` + a hardcoded
+  serif-italic accent span + `after`), subcopy, **the social-proof
+  block** (`.signin-proof`, reading `signin.proof.predictors_*` /
+  `signin.proof.calls_*`), the provider stack, and the footer + legal.
+  It is **already** the shared shell for both `signin` and `signup`
+  modes via the `mode` prop.
 - `src/lib/components/authn/SignInProviderStack.svelte` — the auth
   authority. It **already** implements the passkey-first email path
   (`onEmailSubmit` → `signUp`/`signIn({ webauthn })`, **no magic
@@ -69,18 +66,18 @@ webauthn"`, **no** magic-link "sent" state.
   production-/dev-gated. The shared `startSignIn` wrapper drives
   per-provider loading + the `is-faded` dim-others state.
 - CSS in `src/app.css`:
-  - `.signin-wrap` / `.signin-card` / `.signin-head` (≈2164–2229) —
-    the current layout: head is a top block with `margin-bottom: 28px`,
-    not a centered-hero + bottom-anchored-footer composition.
-  - `.signin-provider-btn` base (2536) — its `transition` shorthand
-    **includes `background 200ms`** (line 2555): this is the
-    theme-switch-flash vector.
-  - `.signin-provider-btn.is-onboarding.ob-dark` (2576) — solid ink
-    pill (Apple today; the target Google pill).
-  - `.signin-provider-btn.is-onboarding.ob-cream` (2585) — cream pill
-    (Google today; to be retired from the sign-in path).
-  - `.signin-proof` (2659–2677) — the social-proof line styling.
-  - `.signin-foot` (3534) / `.signin-legal` (3561) — footer + legal.
+  - `.signin-wrap` / `.signin-card` / `.signin-head` — the current
+    layout: head is a top block with `margin-bottom: 28px`, not a
+    centered-hero + bottom-anchored-footer composition.
+  - `.signin-provider-btn` base — its `transition` shorthand
+    **includes `background 200ms`**: this is the theme-switch-flash
+    vector.
+  - `.signin-provider-btn.is-onboarding.ob-dark` — solid ink pill
+    (Apple today; the target Google pill).
+  - `.signin-provider-btn.is-onboarding.ob-cream` — cream pill (Google
+    today; to be retired from the sign-in path).
+  - `.signin-proof` — the social-proof line styling.
+  - `.signin-foot` / `.signin-legal` — footer + legal.
 - i18n catalogs: `src/lib/constants/messages/*.ts` (12 locales,
   English authored in `en.ts`). The real sign-in keys live under
   `signin.*` (e.g. `signin.title.signin` = "Sign in to {brand}",
@@ -89,17 +86,17 @@ webauthn"`, **no** magic-link "sent" state.
   `.fineprint` / `.placeholder`, `signin.proof.*`, `signin.footer.*`,
   `signin.legal.*`, `signin.provider.apple` / `signin.loading.apple`).
   Note: this app has **no** `signin.send_link` / `signin.sent_*` /
-  `signin.sending` keys — those are prototype-only artifacts; the
-  app's email path was already magic-link-free.
+  `signin.sending` keys — the email path is already magic-link-free, so
+  no "sent" state copy exists or is needed.
 
 **Reuse first** (per `docs/ai/frontend/reusability.md`): keep
 `SignInProviderStack` as the single auth authority — both `/signin` and
 the "sign in to continue" modals (`SignInModal`) depend on it, and the
 sign-up onboarding renders it in `signup` mode. Do **not** fork a
 sign-in-only stack. Keep `SignInScreen` as the shared shell driven by
-`mode`. Reuse the existing `.serif-italic` + `.acc` accent pattern
-(`src/app.css:855–867`, already used by `.signin-title`) for the
-"back." accent. The `ob-dark` / `ob-faint` pill classes already exist
+`mode`. Reuse the existing `.serif-italic` + `.acc` accent pattern in
+`src/app.css` (already used by `.signin-title`) for the "back." accent.
+The `ob-dark` / `ob-faint` pill classes already exist
 — the Google pill moves from `ob-cream` to `ob-dark`.
 
 ## Scope
@@ -119,14 +116,13 @@ provider/copy/social-proof drift.
    `ob-cream` to `ob-dark` so it reads as the primary dark pill and the
    email pill (`ob-faint`) reads as the lighter secondary.
 3. **Drop the social-proof line.** Remove the `.signin-proof` block
-   from `SignInScreen.svelte` (predictors/calls). This is the
-   "remove the social-proof predictors/calls line" item.
+   from `SignInScreen.svelte` (predictors/calls).
 4. **"Welcome back." hero.** Change `signin.title.signin` to the
    `Welcome {brand}` shape with the brand placeholder carrying the
    accent word "back." so the existing `titleParts` split renders
    `Welcome ` + `<span class="serif-italic acc">back.</span>`. The
-   hardcoded `VICI.` accent in `SignInScreen.svelte` (line 105) is
-   replaced by the placeholder-driven accent so signin/signup/onboarded
+   hardcoded accent span in `SignInScreen.svelte` is replaced by the
+   placeholder-driven accent so signin/signup/onboarded
    titles each control their own accent via copy. The redundant
    `signin.eyebrow.signin` ("WELCOME BACK") is dropped from the signin
    path so the eyebrow doesn't echo the hero (signup/onboarded eyebrows
@@ -136,12 +132,12 @@ provider/copy/social-proof drift.
    brand → hero → auth clustered top-down as one unit, secondary
    "create account" + legal anchored to the bottom of the frame, with
    the existing hairline divider reading as the task/footer separator.
-   This matches the prototype's final `flex-start` cluster + bottom
-   footer (it explicitly walked back full vertical centering because it
-   stranded the brand). Pure CSS + minor markup grouping in
-   `SignInScreen.svelte`; the provider stack markup is untouched.
+   The composition is a `flex-start` cluster + bottom footer — full
+   vertical centering is deliberately avoided because it strands the
+   brand. Pure CSS + minor markup grouping in `SignInScreen.svelte`;
+   the provider stack markup is untouched.
 6. **Theme-switch flash fix.** Drop `background` from the
-   `.signin-provider-btn` `transition` shorthand (keep `opacity`,
+   `.signin-provider-btn` `transition` shorthand (keeping `opacity`,
    `border-color`, `transform`). With Google now `ob-dark` (a stable
    ink pill in every theme) and no animated `background`, a runtime
    light↔dark/peach switch no longer animates any sign-in pill through a
@@ -162,11 +158,10 @@ provider/copy/social-proof drift.
   the V3 design; this spec only pulls sign-in into the same family. Any
   `signup` / `onboarded` copy or layout change beyond what the shared
   shell forces is out of scope.
-- **OAuth-brand-compliant buttons.** The prototype itself flags the
-  dark Google pill as **not** Google-brand-compliant and defers a
-  pre-launch OAuth-compliance pass for both screens. This spec ships
-  the cohesive dark pill now; brand-compliant provider buttons are a
-  separate pre-launch task.
+- **OAuth-brand-compliant buttons.** The dark Google pill is **not**
+  Google-brand-compliant; a pre-launch OAuth-compliance pass for both
+  screens is deferred. This spec ships the cohesive dark pill now;
+  brand-compliant provider buttons are a separate pre-launch task.
 - **Removing the Apple code path.** Deleting `onApple` /
   `apple-signin.services` / the Apple icon + keys is deferred — the
   flag-off is reversible and low-risk; a hard removal is a separate
@@ -182,8 +177,8 @@ provider/copy/social-proof drift.
 
 Searched the repository's open issues
 (`repo:AntonioVentilii/vici-app`) for sign-in / signin / auth / passkey
-/ Google — **0 open issues**. No related issue; this is a
-prototype-port improvement with no tracking issue to close.
+/ Google — **0 open issues**. No related issue; this is a sign-in
+re-skin improvement with no tracking issue to close.
 
 ## Analytics
 
@@ -215,8 +210,8 @@ No new event **names** are needed — `signed_in` / `provider_linked` /
 (`src/lib/types/analytics-event.ts` union and
 `src/lib/schema/analytics-event.schema.ts` Zod mirror, both verified
 present). Only `props` are added, drawn from the existing bounded
-`label` / `source` dimensions (`AnalyticsEventProps`,
-`analytics-event.ts:197`) — no schema regen, no new Candid variant.
+`label` / `source` dimensions (`AnalyticsEventProps` in
+`analytics-event.ts`) — no schema regen, no new Candid variant.
 Capture via `track` in `src/lib/services/analytics.services.ts`.
 Behavioural only: `label`/`source` are bounded vocabularies, the email
 address is **never** a prop (no PII).
@@ -248,17 +243,17 @@ most worth showing across themes.
    the footer prompt + legal as the bottom-anchored unit for the new
    layout.
 3. **CSS** (`src/app.css`): drop `background` from the
-   `.signin-provider-btn` `transition` shorthand (≈2555); adjust
+   `.signin-provider-btn` `transition` shorthand; adjust
    `.signin-wrap` / `.signin-card` / `.signin-head` and add the
    footer-anchor rule for the brand-top / hero-cluster /
    footer-bottom composition; remove the now-unused `.signin-proof`
-   rules (2659–2677). Verify the dark Google pill and the email pill
-   contrast in dark, light, and peach.
+   rules. Verify the dark Google pill and the email pill contrast in
+   dark, light, and peach.
 4. **i18n** (`src/lib/constants/messages/*.ts`, 12 locales): set the
    `signin.title.signin` "Welcome {brand}" copy with "back." as the
    accent word per locale (one-word locales may put the whole phrase in
-   the accent with an empty prefix, mirroring the prototype's
-   per-locale handling); remove the four `signin.proof.*` keys from
+   the accent with an empty prefix as the per-locale split requires);
+   remove the four `signin.proof.*` keys from
    every catalog. Run the i18n completeness lint.
 5. **Quality**: `npm run quality` (prettier + eslint + i18n) and
    `npm run check` (svelte-check). Update `docs/ai/PRODUCT.md`'s
@@ -336,13 +331,13 @@ Recorded from the planning handoff (the calls already made):
   `apple-signin.services` / the Apple icon + keys in place (reversible).
   Hard removal is a separate later cleanup only if Apple is confirmed
   permanently gone.
-- **Keep the app's `signin.*` i18n namespace** — do not adopt the
-  prototype's scattered key names. New/changed copy lands under the
-  existing `signin.*` keys.
+- **Keep the app's `signin.*` i18n namespace** — new/changed copy
+  lands under the existing `signin.*` keys; no alternate key scheme is
+  introduced.
 - **No emoji** — the app uses lucide icons (`Mail`, `ChevronRight`);
-  the prototype's inline SVGs/glyphs do not transfer beyond the
-  existing `IconGoogle` component.
-- **Independent of the other V1.8 sign-in/onboarding specs** — this
+  no inline SVGs or glyphs are added beyond the existing `IconGoogle`
+  component.
+- **Independent of the other sign-in/onboarding specs** — this
   re-skin can ship first; it touches only the shared sign-in shell, the
   provider stack flags/classes, the sign-in CSS block, and `signin.*`
   copy, with no dependency on a sign-up/onboarding spec.
