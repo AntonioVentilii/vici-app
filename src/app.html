@@ -28,10 +28,14 @@
 			event here; `a2hs.store` adopts it on init.
 		-->
 		<script>
-			window.addEventListener('beforeinstallprompt', function (event) {
-				event.preventDefault();
-				window.__viciDeferredInstallPrompt = event;
-			});
+			window.addEventListener(
+				'beforeinstallprompt',
+				function (event) {
+					event.preventDefault();
+					window.__viciDeferredInstallPrompt = event;
+				},
+				{ once: true }
+			);
 		</script>
 
 		<!--
