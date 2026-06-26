@@ -22,11 +22,9 @@
 		/** Surface the sheet was opened from — analytics dimension. */
 		source: 'settings' | 'flow_end';
 		onClose: () => void;
-		/** Fired once the app reports itself installed (accept / appinstalled). */
-		onInstalled?: () => void;
 	}
 
-	const { isOpen, source, onClose, onInstalled = undefined }: Props = $props();
+	const { isOpen, source, onClose }: Props = $props();
 
 	const currentPlatform = $derived<A2hsPlatform>(platform());
 	const isIos = $derived(currentPlatform === 'ios');
@@ -68,9 +66,9 @@
 					type: 'success',
 					duration: 2400
 				});
-				onInstalled?.();
 			} else if (outcome === 'dismissed') {
 				track({ name: 'pwa_install_dismissed', source, label: currentPlatform });
+				markDismissed();
 			}
 		} finally {
 			installStatus = 'enabled';
@@ -81,7 +79,7 @@
 
 {#snippet footer()}
 	{#if isIos}
-		<Button class="a2hs-cta" onclick={onClose}>
+		<Button class="a2hs-cta" onclick={dismiss}>
 			{t({ locale: $localeStore, key: 'a2hs.sheet.got_it' })}
 		</Button>
 	{:else}

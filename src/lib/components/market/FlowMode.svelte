@@ -198,7 +198,7 @@
 	// 2nd+ session, never in cool-off / installed / already-shown. `a2hsSheetOpen`
 	// owns the shared install sheet, opened from the row.
 	let a2hsSheetOpen = $state(false);
-	const a2hsCanInstall = $derived(
+	const showInstallNudge = $derived(
 		$canInstall && shouldAutoPrompt($userStore.profile?.totalTrades ?? 0)
 	);
 
@@ -1249,13 +1249,13 @@
 	{:else if completed}
 		<FlowEnd
 			{canExtend}
-			canInstall={a2hsCanInstall}
 			comeback={isComeback}
 			onClose={handleClose}
 			onExtend={handleExtend}
 			onInstallPrompt={() => (a2hsSheetOpen = true)}
 			overtime={overtimeSession}
 			pending={betsCount}
+			{showInstallNudge}
 			staked={sessionStaked}
 			streak={dailyStreak}
 		/>

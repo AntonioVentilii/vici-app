@@ -37,7 +37,6 @@ export const A2HS_COOLOFF_MS = 14 * 24 * 60 * 60 * 1000;
 const KEY_SESSIONS = 'vici.a2hs.sessions';
 const KEY_DISMISSED = 'vici.a2hs.dismissed';
 const KEY_INSTALLED = 'vici.a2hs.installed';
-const KEY_LAST_SHOWN = 'vici.a2hs.lastShown';
 const KEY_SESSION_COUNTED = 'vici.a2hs.session-counted';
 const KEY_SHOWN = 'vici.a2hs.shown';
 
@@ -68,6 +67,14 @@ const initialState: A2hsState = {
 };
 
 const state = writable<A2hsState>(initialState);
+
+/**
+ * Set once the CTA flow has handled (and tracked) an accepted install, so
+ * the global `appinstalled` listener — which can fire moments later for the
+ * same install — skips its own `pwa_install_accepted` track and doesn't
+ * double-count on Chrome/Android.
+ */
+let ctaInstallHandled = false;
 
 /**
  * iOS detection — reuses the SAME facts the pre-paint `app.html` bootstrap
@@ -190,8 +197,6 @@ export const shouldAutoPrompt = (calls: number): boolean => {
 export const markDismissed = (): void => {
 	storageSet({ key: KEY_DISMISSED, value: Date.now() });
 	setSessionFlag(KEY_SHOWN);
-	setSessionFlag(KEY_LAST_SHOWN);
-	storageSet({ key: KEY_LAST_SHOWN, value: Date.now() });
 };
 
 /** Record an install — suppresses every future prompt. */
@@ -220,6 +225,7 @@ export const nativePrompt = async (): Promise<'accepted' | 'dismissed' | 'unavai
 		const { outcome } = await deferred.userChoice;
 
 		if (outcome === 'accepted') {
+			ctaInstallHandled = true;
 			markInstalled();
 		}
 
@@ -292,7 +298,12 @@ export const initA2hs = (): void => {
 		// `appinstalled` can fire after the OS-level install completes, even
 		// without our CTA (e.g. the browser's own menu), so close the funnel
 		// here too. No `source` — this is platform-level, not a surface action.
-		track({ name: 'pwa_install_accepted', label: platform() });
+		// Skip the track when the CTA flow already counted this install (it
+		// fires `appinstalled` moments after an accepted prompt on Chrome).
+		if (!ctaInstallHandled) {
+			track({ name: 'pwa_install_accepted', label: platform() });
+		}
+
 		markInstalled();
 	});
 };

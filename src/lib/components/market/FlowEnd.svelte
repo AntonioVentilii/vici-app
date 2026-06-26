@@ -28,9 +28,10 @@
 		// continues the deck past 10; `onClose` returns to the dashboard.
 		onExtend: () => void;
 		onClose: () => void;
-		// Install nudge — `canInstall` gates the row (the host reads the
-		// `a2hs.store`), `onInstallPrompt` opens the shared install sheet.
-		canInstall?: boolean;
+		// Install nudge — `showInstallNudge` gates the row (the host combines
+		// the `a2hs.store` capability gate with the auto-prompt thresholds),
+		// `onInstallPrompt` opens the shared install sheet.
+		showInstallNudge?: boolean;
 		onInstallPrompt?: () => void;
 	}
 
@@ -43,7 +44,7 @@
 		canExtend,
 		onExtend,
 		onClose,
-		canInstall = false,
+		showInstallNudge = false,
 		onInstallPrompt = undefined
 	}: Props = $props();
 
@@ -269,7 +270,7 @@
 	<!-- Install nudge — a calm, non-interruptive row offering Add-to-Home-Screen,
 	     shown only when the app can be installed (mobile, not already a PWA).
 	     Sits above the Share · Invite links; opens the shared install sheet. -->
-	{#if canInstall && onInstallPrompt}
+	{#if showInstallNudge && onInstallPrompt}
 		<button class="flow-end-install" onclick={onInstallPrompt} type="button">
 			<span class="flow-end-install-glyph" aria-hidden="true">
 				<Smartphone size={18} strokeWidth={1.7} />

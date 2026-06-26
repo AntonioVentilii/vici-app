@@ -612,12 +612,7 @@
 		}}
 	/>
 
-	<A2hsSheet
-		isOpen={a2hsSheetOpen}
-		onClose={() => (a2hsSheetOpen = false)}
-		onInstalled={() => flashToast(t({ locale: $localeStore, key: 'a2hs.toast.installed' }))}
-		source="settings"
-	/>
+	<A2hsSheet isOpen={a2hsSheetOpen} onClose={() => (a2hsSheetOpen = false)} source="settings" />
 
 	{#if nonNullish(toastMessage)}
 		<!--
