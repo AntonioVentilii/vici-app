@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0](https://github.com/AntonioVentilii/vici-app/compare/v0.3.0...v1.8.0) (2026-06-26)
+
+
+### Bug Fixes
+
+* **flow:** make guest Flow preview actually load ([#999](https://github.com/AntonioVentilii/vici-app/issues/999)) ([6b8d809](https://github.com/AntonioVentilii/vici-app/commit/6b8d809c7bb4c5c3e7e36132512ef053ea857d90))
+* **onboarding:** route first-touch bootstrap through the patch queue ([#1000](https://github.com/AntonioVentilii/vici-app/issues/1000)) ([6ef165a](https://github.com/AntonioVentilii/vici-app/commit/6ef165a3d6f2734559b815404752403912f3659f))
+
+
+### Miscellaneous Chores
+
+* **release:** force next release to v1.8.0 ([#997](https://github.com/AntonioVentilii/vici-app/issues/997)) ([d21d1ab](https://github.com/AntonioVentilii/vici-app/commit/d21d1abe94f0ef45ef10c6a705b84fe3e9e8b895))
+
 ## [0.3.0](https://github.com/AntonioVentilii/vici-app/compare/v0.2.10...v0.3.0) (2026-06-26)
 
 
