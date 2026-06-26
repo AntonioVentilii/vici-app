@@ -69,7 +69,12 @@ proposer renders as a handle, not a raw principal.
    counter-delta computation in `resolveBattle` with a window-true count:
    for each side, each member's settled calls whose settle timestamp is
    in `[kickoffMs, settleMs)` and where the caller was a member of that
-   league at the call's settle time (`joinedAtMs <= call.ts`). Scope
+   league at the call's settle time. **Unit discipline:** clearing events
+   carry `timestampNs` (nanoseconds — `event.timestamp` mapped in
+   `settledEventToResolvedPosition`) while `kickoffMs` / `settleMs` /
+   `joinedAtMs` are milliseconds; convert to one unit before comparing
+   (e.g. `callMs = Number(timestampNs / 1_000_000n)`, then
+   `kickoffMs <= callMs < settleMs` and `joinedAtMs <= callMs`). Scope
    filter (`'all'` or a single tag) preserved. `scoreA/scoreB`,
    `callsA/callsB`, `winner` derived via the existing `battleAccuracyPct`
    / `deriveBattleWinner` so the leaderboard story stays consistent.
@@ -141,10 +146,14 @@ Reuse the existing `battle_resolved` event emitted on resolution
 (`trackResolved` in `BattleDetailPage.svelte`). Add a bounded prop
 `resolveBasis: 'history' | 'legacy_void'` to distinguish a real
 window-true resolution from a fallback (a side with zero readable
-settled calls). No new event name, so no dual-source taxonomy change —
-**confirm** the prop addition doesn't require a schema enum entry
-(`src/lib/schema/analytics-event.schema.ts`) for the prop value
-vocabulary. No PII; principals are not logged as event props.
+settled calls). No new event _name_ — but a new prop _key_ is itself a
+taxonomy change: it must land in **both** the TS `AnalyticsEventProps`
+(`src/lib/types/analytics-event.ts:227`) and the runtime Zod mirror
+`AnalyticsEventPropsSchema` (`src/lib/schema/analytics-event.schema.ts:103`,
+a `strictObject` that rejects unknown keys), where the props are
+flattened onto `TrackEventInputSchema`. Omitting the schema half makes
+runtime validation reject every event carrying the field. No PII;
+principals are not logged as event props.
 
 ## Technical requirements (satellite / backend — mandatory)
 
@@ -245,8 +254,6 @@ vocabulary. No PII; principals are not logged as event props.
   one settled position per series per principal (matching how
   `calculateAndSyncStats` counts `isSettledEvent`), not per fill — so
   multiple fills on one market count once.
-- **Analytics prop vocabulary.** Confirm whether adding a bounded prop
-  value to an existing event requires a Zod schema touch.
 
 ## Pending decisions
 
