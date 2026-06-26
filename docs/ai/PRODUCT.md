@@ -82,18 +82,19 @@ it from the code.
 
 ### Friend activity — tap to "like" a friend's call
 
-Each row of the Arena → Friends activity feed carries a single
-tap-to-react "like" (a `Zap` glyph). Tapping toggles it on/off and
-plays a brief tilt + laurel particle burst on commit; the motion is
-suppressed under reduced-motion. The like is **persisted** — it survives
-a refresh, and each row shows a count of how many people liked it
-(aggregated across all users). Tapping is optimistic: it highlights
-immediately and rolls back with an error toast if the write fails. When
-someone likes your call, you get an in-app inbox notification that
-deep-links to the market; liking your own call never notifies you, and an
-unlike withdraws the card. Multiple likes on the same call collapse into a
-single card ("{user} and N more liked your call") rather than one per
-liker. See
+Historical: the Arena → Friends section once rendered a per-call activity
+feed where each row carried a single tap-to-react "like" (a `Zap` glyph)
+with a brief tilt + laurel particle burst on commit (suppressed under
+reduced-motion). That like was **persisted** — it survived a refresh, each
+row showed an aggregate count, and liking someone's call sent them an
+in-app inbox notification that deep-linked to the market (own-call likes
+never notified; an unlike withdrew the card; multiple likes collapsed into
+one "{user} and N more liked your call" card). The Friends section now
+renders the per-friend **results digest** above instead of the per-call
+feed, so the persisted like + count no longer appears there (the digest
+keeps the `Zap` glyph as a transient reaction). The persisted-reaction +
+like-received-notification machinery is unchanged for the surfaces that
+still use the `Activity` model. See
 [`specs/2026-06-12-feat-friend-feed-reaction-redesign.md`](./spec-driven-development/specs/2026-06-12-feat-friend-feed-reaction-redesign.md)
 (the reaction redesign),
 [`specs/2026-06-14-feat-friend-feed-like-persistence.md`](./spec-driven-development/specs/2026-06-14-feat-friend-feed-like-persistence.md)
@@ -121,6 +122,27 @@ are pruned by a controllers-only cleanup. The collection has no
 user-visible surface on its own; the digest that renders it ships
 separately. See
 [`specs/2026-06-25-feat-resolved-results-collection.md`](./spec-driven-development/specs/2026-06-25-feat-resolved-results-collection.md).
+
+### Arena Friends — the "Recent results" digest
+
+The Arena → Friends section shows a per-friend **results** digest, not a
+per-call activity stream. Each row summarises one friend's resolved
+record over a recent window (a calendar month): their win–loss tally and
+signed net VXP (win/loss coloured), sourced from the friend-scoped league
+standings aggregate in one bulk read, plus a **standout** line — `incl.
+"{market}"` — naming the friend's resolved prediction with the largest
+absolute net VXP (tie-broken to the most recent), read from the
+`resolved_results` collection. A relative time window ("2h ago") comes
+from that standout's resolution time. Friends with no resolved prediction
+in the window do **not** appear — open / unresolved calls carry no
+outcome and are excluded — so the section reads as a quiet scoreboard of
+how your friends are actually doing rather than a feed of every move.
+Tapping a row opens the standout market (or, when a friend has no retained
+standout, their mini-profile sheet). The `Zap` reaction is kept as a
+transient acknowledgement on the row (visual + motion, no persistence —
+a digest row has no `Activity` doc identity to bind a persisted like to).
+The eyebrow reads "Recent results". See
+[`specs/2026-06-25-feat-arena-results-digest.md`](./spec-driven-development/specs/2026-06-25-feat-arena-results-digest.md).
 
 ### Market odds — skeleton while the book loads
 

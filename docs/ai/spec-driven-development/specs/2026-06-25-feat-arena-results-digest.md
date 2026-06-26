@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: In progress (#981)
 
 ## Dependencies
 
@@ -33,18 +33,13 @@ actually doing, not a stream of every move they make.
 
 ## Context
 
-**Prototype (source of truth).** The V1.8 handover ports this as
-domain 5 (Arena / Social), shipped in the prototype as `V1.8.45`
-("Arena: Friends default + results digest"). The relevant prototype
-sources are `screens.jsx` `FriendsScreen` (the `feed = D.FRIENDS_DIGEST`
-"Recent results" section, ~lines 3735–3774) and the `FRIENDS_DIGEST`
-seed in `data.js` (~lines 239–245). Each prototype row carries
-`{ handle, won, lost, net, when, highlight }` where `highlight` is a
-market id — rendered as `@handle · resolved N calls · W–L`, a
-`{when} · incl. "{standout market question}"` meta line, the signed
-`net VXP`, and a reaction (the prototype uses a 👏 emoji — **not**
-ported; see Decisions). The legacy per-call `FRIENDS_FEED` seed is kept
-in the prototype only "for reference" and is unused.
+**The design.** The Arena → Friends section presents a per-friend
+"Recent results" digest. Each row carries one friend's resolved record
+over the window — `{ handle, won, lost, net, when, standout }` where
+`standout` is a market id — rendered as `@handle · resolved N calls ·
+W–L`, a `{when} · incl. "{standout market question}"` meta line, the
+signed `net VXP`, and a reaction. The reaction is the app's `Zap` lucide
+glyph (the house icon system; no emoji — see Decisions).
 
 **Friends-as-default-Arena-tab is already shipped** in the app and is
 **out of scope** here — this spec only swaps the feed section's data
@@ -327,40 +322,32 @@ lost, netVxp, windowLabel, standout? }` where `standout` is
 ## Open questions
 
 - **Does `getLeagueStandings` carry a usable per-entry "last resolved at"
-  timestamp, or only the window-aggregate?** The standings aggregate has
-  no single instant for the window-label / sort. Verify whether a
-  `StandingEntry` (or the underlying `list_leaderboard` row) exposes a
-  last-activity timestamp; if not, the window label must derive from the
-  window bucket itself (Pending decisions) rather than a per-friend
-  instant. (The per-friend "2h ago" label is achievable from the
-  standout's `resolvedAtMs` in Spec A's rows, independent of whether the
-  standings aggregate carries a timestamp.)
+  timestamp, or only the window-aggregate?** Resolved: a `StandingEntry`
+  carries no last-activity instant, so the per-friend "2h ago" window
+  label derives from the standout's `resolvedAtMs` (Spec A's rows), which
+  also drives the newest-first sort. A row with no retained standout shows
+  no window label.
 
 ## Pending decisions
 
-- **Which `StandingsWindow` backs the digest** — `'week'` vs `'month'`
-  (vs `'all'`). "Recent results" implies the tightest meaningful bucket
-  (`'week'`); `'month'` yields fuller rows on a thin friend graph. This
-  also bounds the Spec A `resolved_results` read window and its retention
-  TTL. (The per-friend "2h ago" label is achievable from the standout's
-  `resolvedAtMs`, independent of whether the standings aggregate carries
-  a timestamp — see Open questions.)
-- **Reaction persisted identity for a digest row.** A digest row is not
-  an `Activity` doc, so the current `activity_reactions` key
-  (`${user}#${timestamp}#${type}`) has nothing to bind to. Options: (a)
-  keep the reaction **transient** on the digest row (visual `Zap` +
-  motion only, no persistence) for v1 — smallest change, but drops the
-  persisted-like behaviour on this surface; (b) define a digest-row
-  reaction identity (e.g. `${friendId}#${window}`) and a parallel
-  persistence path. Recommendation: (a) for v1, with (b) as a follow-up
-  if friends-reacting-to-results proves worth persisting. Owner to
-  decide.
-- **Row-tap target when a friend has no standout** (no resolved-result
-  row, e.g. dropped by retention). The common case taps through to the
-  standout market via `goToMarket`. For a standout-less row, options:
-  open the friend mini-profile sheet (reuses `openFriendSheet`), or make
-  the row non-interactive. This also determines whether
-  `friend_digest_opened` fires in that case.
+_All resolved during implementation (#981)._
+
+- **Window backing the digest: `'month'`.** "Recent results" reads as a
+  tight bucket, but `'month'` yields fuller rows on a thin friend graph
+  and sits inside the `resolved_results` retention horizon
+  (`RESOLVED_RESULTS_RETENTION_MS`, a calendar month plus grace), so the
+  standings aggregate and the standout source span the same window.
+- **Reaction is transient on the digest row.** A digest row is not an
+  `Activity` doc, so the `activity_reactions` key has nothing to bind to.
+  v1 keeps the reaction transient — visual `Zap` + motion only, no
+  persistence — and still fires `friend_feed_reaction` so the
+  engagement series stays continuous across the swap. A persisted
+  digest-row reaction identity is a possible follow-up.
+- **Row-tap target.** A row taps through to its standout market via the
+  existing market route (firing `friend_digest_opened` with `marketId`).
+  When a friend has no retained standout the tap opens their mini-profile
+  sheet (reusing `openFriendSheet`) and fires `friend_digest_opened`
+  without a `marketId`, so the row is never a dead tap.
 
 ## Decisions
 
@@ -389,21 +376,20 @@ lost, netVxp, windowLabel, standout? }` where `standout` is
   most recent `resolvedAtMs`. Chosen as the sensible default — surfaces
   the result a friend would most want to talk about — over alternatives
   (most recent, biggest win only).
-- **Copy: "Recent activity" → "Recent results."** Handed down with the
-  port. The eyebrow (`arena.friends.feed.eyebrow`) and the empty-state
-  copy reframe the section from per-call activity to resolved results —
-  matching the prototype's `V1.8.45` intent and the new aggregate model.
-- **Keep the `Zap` reaction icon — no emoji.** The prototype renders a
-  👏 emoji; the app standardises on lucide icons, and the Friends feed
-  already uses `Zap`. The reaction glyph stays `Zap`, preserving the
-  app's icon system and the existing reaction motion / a11y label.
-- **Keep the app's `arena.friends.feed.*` i18n namespace.** The
-  prototype's `fr.*` / scattered keys do not transfer; the existing
+- **Copy: "Recent activity" → "Recent results."** The eyebrow
+  (`arena.friends.feed.eyebrow`) and the empty-state copy reframe the
+  section from per-call activity to resolved results — matching the new
+  aggregate model.
+- **Keep the `Zap` reaction icon — no emoji.** The app standardises on
+  lucide icons, and the Friends section already uses `Zap`. The reaction
+  glyph stays `Zap`, preserving the app's icon system and the existing
+  reaction motion / a11y label.
+- **Keep the app's `arena.friends.feed.*` i18n namespace.** The existing
   catalog namespace is retained and its keys retargeted in place, per the
   house i18n rule.
 - **Aggregate digest over a per-call firehose-in-disguise.** The digest
   is intentionally one summarised row per friend (W–L + net VXP + a
   single standout), not a per-resolved-call list — the latter would
-  reintroduce the firehose the port set out to remove. Spec A's
+  reintroduce the firehose this change set out to remove. Spec A's
   `resolved_results` source backs only the one standout line per friend,
   not a per-call stream.

@@ -2263,10 +2263,14 @@ export const deMessages = {
 	'arena.friends.error.send_failed_detail':
 		'Anfrage konnte nicht gesendet werden. Mach einen Screenshot und sag uns Bescheid: {detail}',
 	'arena.friends.error.unfriend_failed': 'Freundschaft konnte nicht beendet werden',
-	'arena.friends.feed.empty_a': 'Wenn deine Freunde tippen, taucht es hier auf.',
+	'arena.friends.feed.empty_a':
+		'Sobald sich die Vorhersagen deiner Freunde auflösen, erscheint ihre Bilanz hier.',
 	'arena.friends.feed.empty_b': 'Bau still und leise die Bilanz auf.',
-	'arena.friends.feed.eyebrow': 'Letzte Aktivität',
+	'arena.friends.feed.eyebrow': 'Letzte Ergebnisse',
 	'arena.friends.feed.like': 'Gefällt mir',
+	'arena.friends.feed.resolved_many': '{count} Vorhersagen aufgelöst',
+	'arena.friends.feed.resolved_one': '{count} Vorhersage aufgelöst',
+	'arena.friends.feed.standout': 'inkl. „{question}“',
 	'arena.friends.global.eyebrow': 'Globales Ranking',
 	'arena.friends.global.unranked': 'Unplatziert',
 	'arena.friends.invite.cap_reached': 'Belohnungslimit erreicht.',

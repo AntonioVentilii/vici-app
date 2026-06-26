@@ -126,6 +126,12 @@ export type AnalyticsEventName =
 	 * (`like | unlike`), `source` the surface (`arena`).
 	 */
 	| 'friend_feed_reaction'
+	/**
+	 * A friend results-digest row was tapped through; `source` the surface
+	 * (`arena`), `marketId` the standout market when the tap targets one
+	 * (omitted otherwise). Behavioural only — no W–L, net VXP, or handle.
+	 */
+	| 'friend_digest_opened'
 	/** A league was created. */
 	| 'league_created'
 	/** A user joined a league. */

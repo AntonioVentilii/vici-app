@@ -2237,10 +2237,14 @@ export const itMessages = {
 	'arena.friends.error.send_failed_detail':
 		'Invio della richiesta non riuscito. Fai uno screenshot e scrivici: {detail}',
 	'arena.friends.error.unfriend_failed': 'Rimozione dell’amico fallita',
-	'arena.friends.feed.empty_a': 'Quando i tuoi amici predicono, comparirà qui.',
+	'arena.friends.feed.empty_a':
+		'Quando le previsioni dei tuoi amici si risolvono, il loro storico compare qui.',
 	'arena.friends.feed.empty_b': 'Lo storico cresce in silenzio.',
-	'arena.friends.feed.eyebrow': 'Attività recente',
+	'arena.friends.feed.eyebrow': 'Risultati recenti',
 	'arena.friends.feed.like': 'Mi piace',
+	'arena.friends.feed.resolved_many': '{count} previsioni risolte',
+	'arena.friends.feed.resolved_one': '{count} previsione risolta',
+	'arena.friends.feed.standout': 'incl. «{question}»',
 	'arena.friends.global.eyebrow': 'Classifica globale',
 	'arena.friends.global.unranked': 'Non classificato',
 	'arena.friends.invite.cap_reached': 'Limite delle ricompense raggiunto.',

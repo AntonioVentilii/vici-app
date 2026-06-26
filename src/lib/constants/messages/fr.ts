@@ -2254,10 +2254,14 @@ export const frMessages = {
 	'arena.friends.error.send_failed_detail':
 		'Impossible d’envoyer la demande. Fais une capture d’écran et dis-le-nous : {detail}',
 	'arena.friends.error.unfriend_failed': 'Échec du retrait de l’ami',
-	'arena.friends.feed.empty_a': 'Quand tes amis prédiront, ça apparaîtra ici.',
+	'arena.friends.feed.empty_a':
+		'Quand les prédictions de tes amis se résolvent, leur palmarès apparaît ici.',
 	'arena.friends.feed.empty_b': 'Le palmarès se construit en silence.',
-	'arena.friends.feed.eyebrow': 'Activité récente',
+	'arena.friends.feed.eyebrow': 'Résultats récents',
 	'arena.friends.feed.like': "J'aime",
+	'arena.friends.feed.resolved_many': '{count} prédictions résolues',
+	'arena.friends.feed.resolved_one': '{count} prédiction résolue',
+	'arena.friends.feed.standout': 'dont « {question} »',
 	'arena.friends.global.eyebrow': 'Classement global',
 	'arena.friends.global.unranked': 'Non classé',
 	'arena.friends.invite.cap_reached': 'Plafond de récompenses atteint.',
