@@ -22,6 +22,7 @@
  * satellite.
  */
 
+import { ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	ANALYTICS_PROP_KEYS,
@@ -301,13 +302,15 @@ export const getAnalyticsEventsFn = ({
 	const cap = Math.min(Math.max(1, Math.floor(limit)), MAX_EXPORT_LIMIT);
 
 	const ordered = items
-		.filter(([, doc]) => (doc.updated_at ?? 0n) > after)
+		.filter(([, doc]) => (doc.updated_at ?? ZERO) > after)
 		.sort(([ak, ad], [bk, bd]) => {
-			const au = ad.updated_at ?? 0n;
-			const bu = bd.updated_at ?? 0n;
+			const au = ad.updated_at ?? ZERO;
+			const bu = bd.updated_at ?? ZERO;
+
 			if (au !== bu) {
 				return au < bu ? -1 : 1;
 			}
+
 			return ak < bk ? -1 : ak > bk ? 1 : 0;
 		});
 
@@ -319,10 +322,10 @@ export const getAnalyticsEventsFn = ({
 
 		return {
 			key,
-			createdAtNs: `${doc.created_at ?? 0n}`,
-			updatedAtNs: `${doc.updated_at ?? 0n}`,
+			createdAtNs: `${doc.created_at ?? ZERO}`,
+			updatedAtNs: `${doc.updated_at ?? ZERO}`,
 			version: isNullish(doc.version) ? undefined : `${doc.version}`,
-			ownerText: isNullish(doc.owner) ? undefined : doc.owner,
+			ownerText: isNullish(doc.owner) ? undefined : Principal.fromUint8Array(doc.owner).toText(),
 			name: data.name,
 			tsMs: data.tsMs,
 			sessionId: data.sessionId,
