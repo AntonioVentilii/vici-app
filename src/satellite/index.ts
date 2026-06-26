@@ -1,6 +1,8 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	AnalyticsSummarySchema,
+	GetAnalyticsEventsArgsSchema,
+	GetAnalyticsEventsResultSchema,
 	GetAnalyticsSummaryArgsSchema,
 	TrackEventsArgsSchema,
 	TrackEventsResultSchema
@@ -52,7 +54,11 @@ import {
 	assertDeleteAffiliation,
 	assertSetAffiliation
 } from '$satellite/services/affiliation.services';
-import { getAnalyticsSummaryFn, trackEventsFn } from '$satellite/services/analytics.services';
+import {
+	getAnalyticsEventsFn,
+	getAnalyticsSummaryFn,
+	trackEventsFn
+} from '$satellite/services/analytics.services';
 import { assertDeleteBattle, assertSetBattle } from '$satellite/services/battle.services';
 import {
 	getAffiliationStatsFn,
@@ -573,6 +579,17 @@ export const getAnalyticsSummary = defineQuery({
 	args: GetAnalyticsSummaryArgsSchema,
 	result: AnalyticsSummarySchema,
 	handler: (args) => getAnalyticsSummaryFn(args)
+});
+
+/**
+ * Admin-gated raw-event export for the cockpit warehouse: the next page of
+ * `events` after the given keyset cursor, flattened. Same admin gate as
+ * `getAnalyticsSummary` — restricted to the cockpit's reader principal.
+ */
+export const getAnalyticsEvents = defineQuery({
+	args: GetAnalyticsEventsArgsSchema,
+	result: GetAnalyticsEventsResultSchema,
+	handler: (args) => getAnalyticsEventsFn(args)
 });
 
 // ─── Social cohorts ─────────────────────────────────────────────
