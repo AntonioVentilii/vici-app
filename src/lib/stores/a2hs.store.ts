@@ -288,6 +288,19 @@ export const initA2hs = (): void => {
 
 	countSession();
 
+	// Adopt the event the early `app.html` listener captured before this store
+	// initialised: `beforeinstallprompt` fires once during initial load, well
+	// before the app layout calls `initA2hs`, so a listener registered only here
+	// misses it and `canInstall` never flips true. Keep listening below for any
+	// later re-fire.
+	const earlyPrompt = (
+		window as unknown as { __viciDeferredInstallPrompt?: BeforeInstallPromptEvent }
+	).__viciDeferredInstallPrompt;
+
+	if (nonNullish(earlyPrompt)) {
+		state.update((s) => ({ ...s, deferredPrompt: earlyPrompt }));
+	}
+
 	window.addEventListener('beforeinstallprompt', (event: Event) => {
 		// Suppress Chrome's mini-infobar; we drive the install from our own UI.
 		event.preventDefault();
