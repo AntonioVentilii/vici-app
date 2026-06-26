@@ -5,10 +5,18 @@
 	import { resolve } from '$app/paths';
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { LEADERBOARD_QUALIFY_MIN } from '$lib/constants/standings.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { worldCupActive, worldCupMode } from '$lib/derived/world-cup.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { preferencesStore } from '$lib/stores/preferences.store';
+	import { leaderboardQualifyMin } from '$lib/stores/tweaks.store';
+
+	// Dev knob bounds for the leaderboard qualify gate — 0 disables the gate
+	// (everyone ranked), 30 is a deliberately strict ceiling for feeling out
+	// the threshold.
+	const QUALIFY_MIN_FLOOR = 0;
+	const QUALIFY_MIN_CEIL = 30;
 
 	const enabled = isDev();
 
@@ -77,6 +85,24 @@
 					</button>
 					<span class="tweaks-status">
 						Active gate: {$worldCupActive ? 'live' : 'archived/off'}
+					</span>
+				</section>
+
+				<section class="tweaks-section">
+					<label class="allcaps tweaks-label" for="tweaks-lb-qualify">
+						Leaderboard qualify (calls)
+					</label>
+					<input
+						id="tweaks-lb-qualify"
+						class="tweaks-range"
+						max={QUALIFY_MIN_CEIL}
+						min={QUALIFY_MIN_FLOOR}
+						step="1"
+						type="range"
+						bind:value={$leaderboardQualifyMin}
+					/>
+					<span class="tweaks-status">
+						Min {$leaderboardQualifyMin} settled to rank (default {LEADERBOARD_QUALIFY_MIN})
 					</span>
 				</section>
 
@@ -231,6 +257,12 @@
 	.tweaks-status {
 		font-size: var(--t-12);
 		color: var(--text-muted);
+	}
+
+	.tweaks-range {
+		width: 100%;
+		accent-color: var(--laurel);
+		cursor: pointer;
 	}
 
 	.tweaks-toggle {

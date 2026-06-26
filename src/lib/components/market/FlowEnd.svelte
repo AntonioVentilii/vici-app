@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ChevronRight, Smartphone } from '@lucide/svelte/icons';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -27,10 +28,25 @@
 		// continues the deck past 10; `onClose` returns to the dashboard.
 		onExtend: () => void;
 		onClose: () => void;
+		// Install nudge — `showInstallNudge` gates the row (the host combines
+		// the `a2hs.store` capability gate with the auto-prompt thresholds),
+		// `onInstallPrompt` opens the shared install sheet.
+		showInstallNudge?: boolean;
+		onInstallPrompt?: () => void;
 	}
 
-	const { pending, staked, streak, overtime, comeback, canExtend, onExtend, onClose }: Props =
-		$props();
+	const {
+		pending,
+		staked,
+		streak,
+		overtime,
+		comeback,
+		canExtend,
+		onExtend,
+		onClose,
+		showInstallNudge = false,
+		onInstallPrompt = undefined
+	}: Props = $props();
 
 	// Reactive reduced-motion gate — the reward springs are the deliberate
 	// brand exception; we keep them but fade their entrance (and drop the
@@ -251,6 +267,21 @@
 		{/if}
 	</div>
 
+	<!-- Install nudge — a calm, non-interruptive row offering Add-to-Home-Screen,
+	     shown only when the app can be installed (mobile, not already a PWA).
+	     Sits above the Share · Invite links; opens the shared install sheet. -->
+	{#if showInstallNudge && onInstallPrompt}
+		<button class="flow-end-install" onclick={onInstallPrompt} type="button">
+			<span class="flow-end-install-glyph" aria-hidden="true">
+				<Smartphone size={18} strokeWidth={1.7} />
+			</span>
+			<span class="flow-end-install-label">
+				{t({ locale: $localeStore, key: 'a2hs.flow_end.row' })}
+			</span>
+			<ChevronRight aria-hidden="true" size={16} strokeWidth={1.7} />
+		</button>
+	{/if}
+
 	<!-- Growth — subtle text links, kept quiet so they never compete with the
 	     primary action. -->
 	<div class="flow-end-links">
@@ -385,6 +416,49 @@
 		animation: fe-rise 500ms ease 0.78s both;
 	}
 
+	/* Install nudge — a quiet bordered row, calmer than the primary CTA, that
+	   inherits the staggered reveal so it lands with the growth links below. */
+	.flow-end-install {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		width: min(18.75rem, 86%);
+		margin-top: 1rem;
+		padding: 0.75rem 0.875rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: var(--bg-surface);
+		color: var(--text-base);
+		text-align: left;
+		cursor: pointer;
+		opacity: 0;
+		animation: fe-rise 500ms ease 0.88s both;
+		transition: border-color var(--d-hover) var(--ease-vici);
+	}
+
+	.flow-end-install:hover {
+		border-color: var(--border-strong);
+	}
+
+	.flow-end-install-glyph {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		color: var(--color-primary);
+	}
+
+	.flow-end-install-label {
+		flex: 1 1 auto;
+		font-size: var(--t-13);
+		font-weight: 600;
+		letter-spacing: -0.005em;
+	}
+
+	.flow-end-install :global(.lucide-chevron-right) {
+		color: var(--text-muted);
+	}
+
 	.flow-end-links {
 		display: flex;
 		gap: 0.875rem;
@@ -423,6 +497,7 @@
 		.flow-end-stat,
 		.flow-end-body,
 		.flow-end-actions,
+		.flow-end-install,
 		.flow-end-links {
 			animation: none;
 			opacity: 1;
