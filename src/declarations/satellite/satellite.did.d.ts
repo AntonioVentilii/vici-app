@@ -154,6 +154,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { pwa_install_prompted: null }
 			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
@@ -165,6 +166,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { pwa_install_dismissed: null }
 			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
@@ -176,6 +178,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { leaderboard_viewed: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { battle_declined: null }
@@ -205,6 +208,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { referral_redeemed: null }
 			| { prediction_created: null }
 			| { faucet_claimed: null }
+			| { pwa_install_accepted: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
@@ -990,6 +994,7 @@ export interface AppTrackEventsArgs {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { pwa_install_prompted: null }
 			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
@@ -1001,6 +1006,7 @@ export interface AppTrackEventsArgs {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { pwa_install_dismissed: null }
 			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
@@ -1012,6 +1018,7 @@ export interface AppTrackEventsArgs {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { leaderboard_viewed: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { battle_declined: null }
@@ -1041,6 +1048,7 @@ export interface AppTrackEventsArgs {
 			| { referral_redeemed: null }
 			| { prediction_created: null }
 			| { faucet_claimed: null }
+			| { pwa_install_accepted: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
