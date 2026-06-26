@@ -30,7 +30,7 @@
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleDoc, BattleState } from '$lib/types/battle';
 	import { battleScopeLabel } from '$lib/utils/battle.utils';
-	import { formatDate, shortLeagueId } from '$lib/utils/format.utils';
+	import { formatDate, shortenPrincipal, shortLeagueId } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
@@ -157,11 +157,9 @@
 			return '';
 		}
 
-		const nickname = $profilesStore.get(battle.proposer)?.nickname;
+		const nickname = $profilesStore.get(battle.proposer)?.nickname?.trim();
 
-		return notEmptyString(nickname)
-			? `@${nickname}`
-			: `${battle.proposer.slice(0, 5)}…${battle.proposer.slice(-5)}`;
+		return notEmptyString(nickname) ? `@${nickname}` : shortenPrincipal(battle.proposer);
 	});
 
 	const ownedSide = $derived.by((): string | undefined => {
