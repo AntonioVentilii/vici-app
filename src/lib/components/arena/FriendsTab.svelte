@@ -368,10 +368,15 @@
 
 	// Viewer's standing within the ranked set: one above every friend
 	// with a strictly higher accuracy. Same `accuracyOf` source as the
-	// friend rows, so the comparison is apples-to-apples.
-	const myFriendRank = $derived(
-		rankedFriends.filter(({ accuracy }) => accuracy > myAccuracy).length + 1
-	);
+	// friend rows, so the comparison is apples-to-apples. `rankedFriends`
+	// is sorted by accuracy descending, so the first friend who isn't
+	// strictly higher marks the viewer's slot — found without allocating
+	// an intermediate array.
+	const myFriendRank = $derived.by(() => {
+		const below = rankedFriends.findIndex(({ accuracy }) => accuracy <= myAccuracy);
+
+		return (below === -1 ? rankedFriends.length : below) + 1;
+	});
 
 	let showAllRanked = $state(false);
 	const visibleRanked = $derived(showAllRanked ? rankedFriends : rankedFriends.slice(0, 10));
