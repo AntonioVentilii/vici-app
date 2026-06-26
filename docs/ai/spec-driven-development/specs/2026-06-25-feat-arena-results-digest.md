@@ -5,6 +5,17 @@ This spec follows the workflow defined in
 
 Status: Draft
 
+## Dependencies
+
+Depends on Spec A —
+[`2026-06-25-feat-resolved-results-collection.md`](./2026-06-25-feat-resolved-results-collection.md)
+(`resolved_results` — friend-readable per-participant resolution feed).
+Spec A is the additive satellite backend that writes and exposes the
+per-participant resolved-result rows this digest reads for its standout
+line; **Spec A merges first**. This spec (B) is a pure-frontend
+consumer — it adds no satellite collection, write path, or backend read
+of its own.
+
 ## Goal
 
 Replace the Arena → Friends "Recent activity" firehose — one row per
@@ -95,27 +106,28 @@ winCount, accuracy, … }`. `winCount` = W, `settledCount - winCount` =
   `loadGlobalStandings({ window: 'all' })` for the ranked list's live
   accuracy (≈ lines 155–159, `globalStandingsStore`), so the
   infrastructure is present.
-- **Per-call breakdown (the standout market + an exact net per call) —
-  NOT available for a friend today; v1 builds it.** `ResolvedPosition`
-  ([`src/lib/types/position.ts`](../../../../src/lib/types/position.ts):
-  `{ marketId, result: 'won' | 'lost' | 'neutral', realizedPnlUsd,
-timestampNs, … }`) and its derived store
-  ([`src/lib/derived/resolved-positions.derived.ts`](../../../../src/lib/derived/resolved-positions.derived.ts))
-  are assembled from the clearing trade-history events, which the
-  clearing canister exposes **caller-scoped only** — you can read your
-  **own** per-call settlements, not a friend's. The single
-  `ActivityType.SETTLEMENT` row is the **resolver's market-level**
-  result ("Market Resolved: YES"), keyed by the resolver's principal —
-  not a per-participant outcome. So no existing surface — clearing
-  trade-history nor the `activities` stream — yields a friend-readable
-  per-call result. The standout market therefore needs a **new
-  friend-readable per-participant resolved-result source**, designed
-  under Technical requirements and shipped in v1 (Decisions).
+- **Per-call breakdown (the standout market) — supplied by Spec A.** No
+  existing app surface yields a friend-readable per-call result:
+  clearing trade-history is caller-scoped only (you can read your
+  **own** per-call settlements via `ResolvedPosition`
+  ([`src/lib/types/position.ts`](../../../../src/lib/types/position.ts))
+  and its derived store
+  ([`src/lib/derived/resolved-positions.derived.ts`](../../../../src/lib/derived/resolved-positions.derived.ts)),
+  not a friend's), and the single `ActivityType.SETTLEMENT` row is the
+  resolver's market-level result keyed by the resolver's principal — not
+  a per-participant outcome. The standout therefore reads from the
+  **`resolved_results` collection delivered by Spec A**
+  ([`2026-06-25-feat-resolved-results-collection.md`](./2026-06-25-feat-resolved-results-collection.md)):
+  per-`(owner, market)` rows of
+  `{ owner, marketId, title, side, outcome, netVxp, resolvedAtMs }`,
+  bulk-read friend-scoped via Spec A's read.
 
 **Reuse (cite first — `docs/ai/frontend/reusability.md`).**
 
 - `getLeagueStandings` + `StandingEntry` + `StandingsWindow` +
   `globalStandingsStore` — the per-friend W–L / net-VXP aggregate.
+- Spec A's `resolved_results` friend-scoped read — the per-call rows
+  backing the standout line.
 - `formatRelativeAgoFromNs({ timestampNs, locale })`
   ([`src/lib/utils/format.utils.ts`](../../../../src/lib/utils/format.utils.ts))
   for the "2h ago" / "today" window string (it already drives the
@@ -133,16 +145,12 @@ timestampNs, … }`) and its derived store
 
 ## Scope
 
-**Backend + frontend.** The aggregate W–L / net-VXP slice is built on the
-existing `getLeagueStandings` clearing query (no backend change), but the
-**standout market is in v1** (Decisions) and there is no friend-readable
-per-participant resolved-result source today. So this spec adds a **new
-satellite collection** holding per-user, friend-readable resolved-result
-rows, written at resolution time and bulk-read friend-scoped for the
-digest (designed under Technical requirements). Because that pulls in a
-new collection + a resolution-time write + a satellite read + the FE
-digest, the work likely exceeds one reviewable PR — see PR scope for the
-split recommendation.
+**Frontend only.** The aggregate W–L / net-VXP slice is built on the
+existing `getLeagueStandings` clearing query (no backend change), and
+the standout market reads from Spec A's `resolved_results` collection
+(merged first — Dependencies). This spec adds no satellite collection,
+write path, or backend read; it consumes the two reads and renders the
+digest.
 
 1. **Replace `friendActivities` with a per-friend digest model.** In
    `FriendsTab.svelte`, derive `friendDigests: FriendDigest[]` from the
@@ -159,17 +167,17 @@ windowLabel, standoutMarketId? }`:
    - `standout` (`{ marketId, title }`) — the friend's most notable
      resolved prediction in the window, selected by the **largest
      |net VXP|, tie-break most recent `resolvedAtMs`** rule (Decisions),
-     read from the new resolved-results collection. Omitted only when the
-     friend has no resolved-result rows in the window, in which case the
-     "incl. …" line is not rendered.
+     read from Spec A's `resolved_results` collection. Omitted only when
+     the friend has no resolved-result rows in the window, in which case
+     the "incl. …" line is not rendered.
 2. **Fetch the friend-scoped standings slice + resolved-results.** Add
    hydration calls (in `onMount`, alongside the existing all-time fetch):
    - `getLeagueStandings({ window: <chosen>, members: [...friendIds] })`
      for the W–L / net-VXP aggregate — one bulk call, no per-friend N+1.
-   - The new friend-scoped resolved-results bulk read (Technical
-     requirements) for the standout market — one bounded `listDocs` over
-     the friend set, **not** one call per friend. The standout is
-     selected client-side per the largest-|net VXP| rule (Decisions).
+   - Spec A's friend-scoped `resolved_results` bulk read for the
+     standout market — one bounded `listDocs` over the friend set,
+     **not** one call per friend. The standout is selected client-side
+     per the largest-|net VXP| rule (Decisions).
 3. **Rewrite the feed section template** (≈ lines 1149–1237) to render
    `friendDigests`: `@handle · resolved {total} {call|calls} · {W}–{L}`,
    a `{windowLabel}` meta line (plus `· incl. "{standout question}"`
@@ -195,12 +203,15 @@ windowLabel, standoutMarketId? }`:
 - **The invite hero, pending/incoming requests, ranked list, global-rank
   link, and both bottom sheets** in `FriendsTab.svelte` — only the feed
   section changes.
+- **The `resolved_results` collection, its write path, friend-scoped
+  read, retention, and collection wiring** — all delivered by Spec A
+  ([`2026-06-25-feat-resolved-results-collection.md`](./2026-06-25-feat-resolved-results-collection.md));
+  this spec consumes the read, it does not build the backend.
 - **A new per-call resolved-position _feed_ for friends** (one visible
   row per resolved call, the firehose in a different coat). The digest
-  stays one aggregate row per friend. Note: v1 _does_ add a
-  friend-readable resolved-result data source (Technical requirements),
-  but it backs only the single standout line per friend — it is not
-  rendered as a per-call stream.
+  stays one aggregate row per friend. Spec A's `resolved_results` source
+  backs only the single standout line per friend — it is not rendered as
+  a per-call stream.
 - **Reviving the standalone global `ActivityFeed`** / `MarketRecentTrades`
   — those keep the `Activity` model; this spec does not touch them. The
   `Activity` / `activities` collection itself is **not** removed (it
@@ -217,37 +228,6 @@ for `friends` / `arena` / `activity` / `feed` / `digest` / `results` /
 [#970](https://github.com/AntonioVentilii/vici-app/issues/970)
 ("I see battles duplicated in Arena"), which concerns the Battles tab,
 not the Friends feed. No closing keyword.
-
-## PR scope — recommend splitting the spec
-
-With the standout market in v1, the work spans a new satellite collection,
-a resolution-time write, a satellite friend-scoped read, and the FE
-digest. That is more than one reviewable PR, and the workflow's
-[one-spec-one-PR rule](../workflow.md#non-negotiables) says when spec'd
-work cannot fit one reviewable PR, the **spec** is split first — each part
-with its own status and PR.
-
-**Recommendation: split this spec into two**, at the data-source / consumer
-boundary:
-
-- **Spec A — `resolved_results` backend.** The new collection (wired in
-  both `juno.config.ts` and `collections.constants.ts`), the
-  controllers-write at the resolution path, the friend-scoped bulk-read
-  endpoint, the retention/cleanup, and the regenerated `satellite.did` /
-  `satellite_extension.did` / `api-schemas.ts`. Ships and merges first;
-  has no user-visible surface on its own (the rows are written and
-  readable but nothing renders them yet).
-- **Spec B — Friends "Recent results" digest (this spec).** The
-  `FriendsTab.svelte` rewrite: the `FriendDigest` model, the
-  `getLeagueStandings` aggregate, consumption of Spec A's resolved-results
-  read for the standout, the copy/i18n, the reaction, and the analytics.
-  Depends on Spec A being merged.
-
-The split boundary is clean: Spec A is purely additive backend with no FE
-coupling; Spec B is the FE consumer and the only place the digest becomes
-visible. If the owner prefers to keep it as one PR despite the size, that
-is a valid override of the prefer-split default — but the two-spec split
-is the recommended path here.
 
 ## Analytics
 
@@ -277,108 +257,6 @@ decides a row tap is non-navigating and carries no meaningful action,
 drop `friend_digest_opened` and keep only the reused
 `friend_feed_reaction` — recorded under Pending decisions.)
 
-## Technical requirements (satellite / backend — mandatory)
-
-The W–L / net-VXP aggregate is the existing `getLeagueStandings` clearing
-query — **no backend change** for that half. The **standout market** is
-the part that needs a new data source: clearing trade-history is
-caller-scoped, and the `SETTLEMENT` activity is the resolver's
-market-level row, so no friend-readable per-participant result exists
-today. v1 adds one.
-
-### Chosen design — `resolved_results` collection
-
-A new Juno datastore collection holding **per-user, friend-readable**
-resolved-result rows, written at resolution time, bulk-read friend-scoped
-for the digest. Doc shape, one per `(owner, market)` resolved call:
-
-```
-{ owner, marketId, title, side, outcome: 'win' | 'loss',
-  netVxp /* USD_DECIMALS, signed */, resolvedAtMs }
-```
-
-Key `${owner}#${marketId}` so the digest read is a bounded owner-prefix
-scan, never N+1. The standout per friend is selected client-side from
-these rows by **largest |netVxp|, tie-break most recent `resolvedAtMs`**
-(Decisions).
-
-**Collection wiring — two places, must stay in sync** (per
-`.claude/rules/juno.md` and `docs/ai/satellite/structure.md`):
-
-- [`juno.config.ts`](../../../../juno.config.ts) — add
-  `RESOLVED_RESULTS = 'resolved_results'` to the `JunoDatastoreCollection`
-  enum and a datastore entry `{ memory: 'stable', read: 'public', write:
-'controllers' }`, mirroring the `activity_reaction_counts` entry.
-- [`src/lib/constants/collections.constants.ts`](../../../../src/lib/constants/collections.constants.ts)
-  — add the matching `RESOLVED_RESULTS` member to the `Collection` object
-  with a docstring (public read; controllers write — only the resolution
-  path writes it).
-
-Snake_case, plural — consistent with `activities` /
-`activity_reaction_counts` / `league_stats`.
-
-### Performance
-
-- **Write frequency.** One `set_doc` per **participant per resolved
-  market**, written at resolution. Resolution is a rare admin/solver
-  action (the existing `SETTLEMENT` log notes "settlements are rare"), so
-  this is a bounded fan-out, not a hot path. Instruction-budget impact on
-  the resolution write path is O(participants in the market) extra
-  `setDocStore` calls — bounded by market size, well under the IC
-  instruction cap for a normal market; a pathologically large market is
-  the scalability watch item below.
-- **Read.** One bounded `listDocs` over the friend set per Friends-tab
-  hydration, guarded by the same cache-miss pattern as the existing
-  all-time standings slice so a re-mount doesn't re-drain. Owner-prefix
-  keying keeps it a single batched read, **not** one call per friend.
-
-### Memory & storage
-
-- New `stable` collection; one small doc per (resolved call,
-  participant). Doc is a handful of scalar fields (~150–250 bytes).
-- **Growth is unbounded** without a cap — it accrues a row for every
-  participant of every resolved market, for all time. **Retention story
-  (required):** prune rows older than the digest's max `StandingsWindow`
-  horizon (the read never looks past the active window), via a periodic
-  controllers-only cleanup keyed on `resolvedAtMs`. The exact TTL is a
-  named constant (Parameters) and a Pending decision.
-
-### Scalability
-
-- At 10×/100× friends, the digest read stays one bulk owner-prefix scan;
-  no N+1. At 10×/100× markets, the resolution-time fan-out grows with
-  participants-per-market — if a single market's participant count can
-  exceed the per-call instruction budget, the write must page across
-  multiple resolution calls (Open questions: confirm max participants and
-  whether resolution already batches).
-
-### Upgrade & compatibility
-
-- **Additive** — a new collection plus a write at the resolution path and
-  a satellite read endpoint. Regenerate `satellite.did` /
-  `satellite_extension.did` / `api-schemas.ts` via
-  `npm run juno:functions:build` and commit. **Not breaking** (no `!`
-  title / `BREAKING CHANGE:` block needed). No clearing `.did` regen is
-  implied — this lives entirely in the satellite, not `../icdc-core/`,
-  precisely to avoid the cross-repo path.
-
-### Security
-
-- **Public read, controllers write.** Only the resolution/controller path
-  writes a result, so a user cannot forge a win for themselves or a
-  friend. Mirror the `activity_reaction_counts` pattern: the write runs
-  inside a satellite hook using `adminCaller()` + `setDocStore`, and the
-  collection's `write: 'controllers'` rule rejects any client write at the
-  Datastore boundary. Reads are public; in practice the FE scopes them to
-  the caller's friend set.
-
-### Parameters
-
-- The digest `StandingsWindow` and the retention TTL are named constants
-  under [`src/lib/constants/`](../../../../src/lib/constants/) (the time
-  windows live in `app.constants.ts`), never literals — a copied horizon
-  goes stale silently.
-
 ## Implementation outline
 
 1. Define `FriendDigest` (co-located in `FriendsTab.svelte` or a small
@@ -394,7 +272,7 @@ lost, netVxp, windowLabel, standout? }` where `standout` is
    timestamp rule.
 3. Add the friend-scoped hydration in `onMount` (alongside the existing
    all-time fetch): `getLeagueStandings({ window, members:
-[...friendIdSet] })` for the aggregate **and** the new
+[...friendIdSet] })` for the aggregate **and** Spec A's
    `resolved_results` friend-scoped bulk read for the standout; guard
    both with the same cache-miss pattern already used for the all-time
    slice so a tab re-mount doesn't re-drain. Select each friend's
@@ -414,15 +292,8 @@ lost, netVxp, windowLabel, standout? }` where `standout` is
    wiring accordingly (keep `friend_feed_reaction`); add
    `friend_digest_opened` to the analytics TS union **and** Zod mirror,
    and `track` it on row tap.
-7. Add the `resolved_results` collection (Technical requirements): wire
-   it in `juno.config.ts` **and** `collections.constants.ts`; write a row
-   per participant at the resolution path via the `adminCaller()` +
-   `setDocStore` controllers-write pattern (mirror
-   `activity_reaction_counts`); add the friend-scoped bulk read endpoint;
-   run `npm run juno:functions:build` and commit regenerated artifacts.
-8. `npm run quality` + `npm run check` (+ `npm run juno:functions:build`
-   if the satellite was touched).
-9. Divergence check; update `docs/ai/PRODUCT.md` (the Friends feed now
+7. `npm run quality` + `npm run check`.
+8. Divergence check; update `docs/ai/PRODUCT.md` (the Friends feed now
    describes results, not calls); flip status to `Implemented (#PR)`.
 
 ## Acceptance criteria
@@ -438,11 +309,8 @@ lost, netVxp, windowLabel, standout? }` where `standout` is
       (open / unresolved calls are excluded).
 - [ ] Each row with resolved results shows a standout "incl.
       '{market}'" line — the friend's resolved call in the window with
-      the largest |net VXP| (tie-break most recent) — sourced from the
-      new `resolved_results` collection.
-- [ ] The `resolved_results` collection is declared in **both**
-      `juno.config.ts` and `collections.constants.ts`, is public-read /
-      controllers-write, and is written only by the resolution path.
+      the largest |net VXP| (tie-break most recent) — sourced from Spec
+      A's `resolved_results` collection.
 - [ ] The eyebrow reads "Recent results" (not "Recent activity") and the
       empty state describes results; all strings route through `t(...)`
       and exist in every locale catalog (`npm run check:i18n` passes).
@@ -453,61 +321,30 @@ lost, netVxp, windowLabel, standout? }` where `standout` is
 - [ ] The `$globalActivities`-based per-call firehose is no longer
       rendered in the Friends tab; the `activities` collection and other
       surfaces that consume it are unaffected.
-- [ ] `npm run quality` and `npm run check` pass, plus
-      `npm run juno:functions:build` with the regenerated `satellite.did`
-      / `satellite_extension.did` / `api-schemas.ts` committed (the
-      satellite is touched by the new collection).
+- [ ] `npm run quality` and `npm run check` pass. (No satellite change in
+      this spec — the `resolved_results` collection ships in Spec A.)
 
 ## Open questions
 
-- **Does the resolution path expose the full participant set + per-user
-  net VXP at write time?** The `resolved_results` write needs, per
-  resolved market, every participant's `{ side, outcome, netVxp }`.
-  Confirm the resolution/settlement path (`settleMarket` →
-  `settleSeriesApi`, then the satellite write) can enumerate participants
-  and their realized per-user net without a clearing round-trip — or
-  whether it must read that back from clearing before writing the rows.
-- **Maximum participants per market vs. the per-resolution instruction
-  budget.** The write fan-out is O(participants); confirm the realistic
-  max market size and whether resolution already batches, to size whether
-  the write must page (Scalability).
-- **Does any friend-readable `list_*_for(principal)`-style clearing read
-  already exist** (`../icdc-core/`) that would let us skip the satellite
-  collection entirely? The chosen design assumes not; verify against the
-  clearing Candid surface before building.
 - **Does `getLeagueStandings` carry a usable per-entry "last resolved at"
   timestamp, or only the window-aggregate?** The standings aggregate has
   no single instant for the window-label / sort. Verify whether a
   `StandingEntry` (or the underlying `list_leaderboard` row) exposes a
   last-activity timestamp; if not, the window label must derive from the
   window bucket itself (Pending decisions) rather than a per-friend
-  instant.
+  instant. (The per-friend "2h ago" label is achievable from the
+  standout's `resolvedAtMs` in Spec A's rows, independent of whether the
+  standings aggregate carries a timestamp.)
 
 ## Pending decisions
 
 - **Which `StandingsWindow` backs the digest** — `'week'` vs `'month'`
   (vs `'all'`). "Recent results" implies the tightest meaningful bucket
   (`'week'`); `'month'` yields fuller rows on a thin friend graph. This
-  also bounds the `resolved_results` read window and the retention TTL
-  below. (The per-friend "2h ago" label is now achievable from the
-  standout's `resolvedAtMs`, independent of whether the standings
-  aggregate carries a timestamp — see Open questions.)
-- **Retention / TTL for `resolved_results`.** The feed grows unbounded
-  without a cap (Memory & storage). The cleanup horizon should not be
-  shorter than the chosen digest window, but how much beyond it (e.g.
-  exactly the window, or window + a grace margin) and the cleanup cadence
-  are an owner/architecture call. Lands as a named constant under
-  `src/lib/constants/`.
-- **Where the `resolved_results` write piggybacks.** Settlement today is
-  FE-initiated (`settleMarket` → `settleSeriesApi` → `logActivity`),
-  **not** a satellite hook. Options: (a) write the rows from a satellite
-  hook that fires on the existing `SETTLEMENT` activity set (reuses the
-  resolution signal, controllers-write via `adminCaller()` like
-  `activity_reaction_counts`); (b) add a dedicated controllers-only
-  resolution endpoint the FE calls right after `settleSeriesApi`.
-  Recommendation: (a) if the participant set + per-user net are derivable
-  server-side at hook time (Open questions); else (b). Owner/architecture
-  to confirm.
+  also bounds the Spec A `resolved_results` read window and its retention
+  TTL. (The per-friend "2h ago" label is achievable from the standout's
+  `resolvedAtMs`, independent of whether the standings aggregate carries
+  a timestamp — see Open questions.)
 - **Reaction persisted identity for a digest row.** A digest row is not
   an `Activity` doc, so the current `activity_reactions` key
   (`${user}#${timestamp}#${type}`) has nothing to bind to. Options: (a)
@@ -527,20 +364,30 @@ lost, netVxp, windowLabel, standout? }` where `standout` is
 
 ## Decisions
 
-- **Standout market in v1 — build the backend data source (owner,
-  2026-06-25).** The spec previously recommended shipping the aggregate
+- **Split the backend out into Spec A (owner, 2026-06-25).** The
+  `resolved_results` collection (the new satellite collection, its
+  resolution-time write, friend-scoped read, retention, and collection
+  wiring) was split into Spec A
+  ([`2026-06-25-feat-resolved-results-collection.md`](./2026-06-25-feat-resolved-results-collection.md))
+  at the data-source / consumer boundary. Spec A is purely additive
+  backend with no FE coupling and merges first; this spec (B) is the FE
+  consumer and the only place the digest becomes visible. Per the
+  workflow's
+  [one-spec-one-PR rule](./../workflow.md#non-negotiables), spec'd work
+  that cannot fit one reviewable PR is split at the spec level first.
+- **Standout market in v1 — consume Spec A's backend source (owner,
+  2026-06-25).** The spec previously considered shipping the aggregate
   digest frontend-only and deferring the standout line, because no
-  friend-readable per-participant resolved-result source exists. The
-  owner accepts the backend work to ship the full digest now: a new
-  `resolved_results` collection written at resolution time and bulk-read
-  friend-scoped (Technical requirements). The "incl. '<market>'" line is
-  part of v1, not a fast-follow.
+  friend-readable per-participant resolved-result source existed. The
+  owner accepts the backend work (now Spec A) to ship the full digest
+  now: the "incl. '<market>'" line is part of v1, not a fast-follow,
+  reading from Spec A's `resolved_results` collection.
 - **Standout selection rule: largest |net VXP|, tie-break most recent
-  (owner default, 2026-06-25).** Among a friend's resolved-result rows in
-  the window, the standout is the call with the greatest absolute net VXP
-  (their most consequential result, win or loss); ties break to the most
-  recent `resolvedAtMs`. Chosen as the sensible default — surfaces the
-  result a friend would most want to talk about — over alternatives
+  (owner default, 2026-06-25).** Among a friend's resolved-result rows
+  in the window, the standout is the call with the greatest absolute net
+  VXP (their most consequential result, win or loss); ties break to the
+  most recent `resolvedAtMs`. Chosen as the sensible default — surfaces
+  the result a friend would most want to talk about — over alternatives
   (most recent, biggest win only).
 - **Copy: "Recent activity" → "Recent results."** Handed down with the
   port. The eyebrow (`arena.friends.feed.eyebrow`) and the empty-state
@@ -557,6 +404,6 @@ lost, netVxp, windowLabel, standout? }` where `standout` is
 - **Aggregate digest over a per-call firehose-in-disguise.** The digest
   is intentionally one summarised row per friend (W–L + net VXP + a
   single standout), not a per-resolved-call list — the latter would
-  reintroduce the firehose the port set out to remove. The new
+  reintroduce the firehose the port set out to remove. Spec A's
   `resolved_results` source backs only the one standout line per friend,
   not a per-call stream.
