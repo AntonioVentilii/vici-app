@@ -408,7 +408,7 @@
 						id="signin-email-input"
 						class="signin-email-input num"
 						autocapitalize="off"
-						autocomplete="email"
+						autocomplete="email webauthn"
 						autofocus
 						disabled={isBusy || !productionAvailable}
 						inputmode="email"
