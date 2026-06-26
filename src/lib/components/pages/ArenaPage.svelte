@@ -42,6 +42,18 @@
 	// view, so the recipient lands on the Accept affordance.
 	const focusRequestKey = $derived(page.url.searchParams.get('request') ?? undefined);
 
+	const isTab = (value: string | null): value is Tab =>
+		value === 'friends' || value === 'leagues' || value === 'battles';
+
+	// A back-nav fallback can target a specific tab via `/arena?tab=battles`
+	// (e.g. closing a battle opened from a cold/deep link). It outranks the
+	// last-opened tab, but a friend-request deep link still wins.
+	const focusTabKey = $derived.by((): Tab | undefined => {
+		const tab = page.url.searchParams.get('tab');
+
+		return isTab(tab) ? tab : undefined;
+	});
+
 	onMount(() => {
 		if (!browser) {
 			return;
@@ -50,6 +62,12 @@
 		// The deep-link param wins over the last-opened tab.
 		if (nonNullish(focusRequestKey)) {
 			activeTab = 'friends';
+
+			return;
+		}
+
+		if (nonNullish(focusTabKey)) {
+			activeTab = focusTabKey;
 
 			return;
 		}
@@ -72,6 +90,13 @@
 	$effect(() => {
 		if (nonNullish(focusRequestKey)) {
 			activeTab = 'friends';
+		}
+	});
+
+	// Same catch for a `?tab=` deep-link arriving via client-side navigation.
+	$effect(() => {
+		if (nonNullish(focusTabKey)) {
+			activeTab = focusTabKey;
 		}
 	});
 
