@@ -16,7 +16,7 @@ those qualified predictors by a **confidence-adjusted score** (Bayesian
 shrinkage toward the population mean) rather than raw accuracy, so a thin
 10/11 record decays toward average instead of out-ranking a proven 45/50.
 Predictors below the threshold are shown — never hidden — in a separate
-**Provisional** section with an "{n}/{min} to qualify" progress label, and
+**Provisional** section with a "{count}/{min} to qualify" progress label, and
 **every** leaderboard row now shows its resolved-call count, the trust
 signal that makes the ranking legible. The qualifying threshold is exposed
 as a dev **Tweak** for live tuning.
@@ -70,25 +70,24 @@ spec replaces the ranking rule and adds the Provisional split + call counts.
   locale catalogs under `src/lib/constants/messages/*.ts`. New copy stays in
   the `leaderboard.*` namespace.
 
-**Point of truth — the prototype.** `VICI-V1.8-Handover` (V1.8.44,
-CHANGELOG domain 4): `app.jsx` `VICI_rankScore(acc, calls)` and
-`VICI_LB_QUALIFY_MIN` (default 10); `screens.jsx` `LeaderboardScreen`
-(~1897–2046). Qualified rows (`calls >= qualifyMin`) sort by `score` desc
-and take ranks `1..n`; sub-threshold rows are **Provisional** (sorted by
-`calls` desc, unranked) and rendered in a separate section with a
-"{n}/{min} to qualify" progress label; every row shows `lb.calls`; the
-threshold is a Tweak mirrored to `window.__viciTweaks.lbQualifyMin` so the
-board re-ranks live. The shrinkage formula is:
+**Ranking model.** A predictor qualifies for ranking once their
+resolved-call count reaches the qualify threshold (default 10). Qualified
+rows sort by a confidence-adjusted `rankScore` (desc) and take ranks
+`1..n`; sub-threshold rows are **Provisional** (sorted by resolved-call
+count desc, unranked) and rendered in a separate section with a
+"{count}/{min} to qualify" progress label. Every row shows its
+resolved-call count. The threshold is a dev Tweak so the board re-ranks
+live when it moves. The shrinkage score is a Bayesian pull of raw accuracy
+toward a fixed population prior, weighted by the predictor's call count:
 
 ```
-rankScore(acc, calls) = (PRIOR·WEIGHT + acc·calls) / (WEIGHT + calls)
+rankScore(accuracy, calls) = (PRIOR·WEIGHT + accuracy·calls) / (WEIGHT + calls)
 PRIOR  = 0.5   (population baseline a thin record decays to)
 WEIGHT = 20    (strength of the prior, in "virtual calls")
 ```
 
-The prototype's demo seeds (`data.js` ~259–272: `quirinus` 1/1, `horatius`
-6 calls — added purely to demonstrate the gate) are **not** ported; the
-app's standings come from the live clearing canister.
+The app's standings come from the live clearing canister; no demo or mock
+seeds are introduced.
 
 ## Scope
 
@@ -115,7 +114,7 @@ app's standings come from the live clearing canister.
 4. **Provisional section on the page.** Below the ranked podium + list,
    render a Provisional section (eyebrow header + the min-calls hint) when
    `provisional.length > 0`. Each provisional row shows a "Provisional"
-   chip, handle, avatar, accuracy, and the "{done}/{min} to qualify"
+   chip, handle, avatar, accuracy, and the "{count}/{min} to qualify"
    progress label. Rows stay tappable (same mini-profile sheet). No podium
    for provisional predictors.
 
@@ -138,11 +137,10 @@ app's standings come from the live clearing canister.
    when the tweak moves.
 
 8. **i18n.** Add `leaderboard.*` keys for the call-count label, the
-   Provisional chip + section header, the "{done}/{min} to qualify"
+   Provisional chip + section header, the "{count}/{min} to qualify"
    progress, the min-calls hint, and the provisional sheet line — across
    every locale catalog under `src/lib/constants/messages/*.ts` (the i18n
-   lint requires parity). No `lb.*` keys (the prototype namespace is not
-   adopted).
+   lint requires parity). All copy stays in the `leaderboard.*` namespace.
 
 9. **`PRODUCT.md`.** Update the leaderboard description to state the
    qualify gate + confidence-adjusted ranking + Provisional bucket, in the
@@ -177,11 +175,12 @@ app's standings come from the live clearing canister.
   clearing canister, so this is weaker than the activity-log gap in #543,
   but any sybil-resistance work on settlement counts belongs there, not
   here.
-- **Porting the prototype demo seeds** (`quirinus` / `horatius`).
+- **Introducing demo or mock standings seeds.** Standings come from the
+  live clearing canister; no fixture predictors are added.
 
 ## Linked issues
 
-No open issue tracks leaderboard ranking integrity (searched the repo's 6
+No open issue tracks leaderboard ranking integrity (searched the repo's
 open issues + `leaderboard` / `accuracy ranking` queries). The nearest,
 `#759` "Dash looks different", is about the **Dash** rank tile and is
 explicitly out of scope; `#543` (anti-farm) is tangential and noted under
@@ -245,7 +244,7 @@ per-user event.
    - Add the call-count to each podium tile + ranked row
      (`entry.settledCount`, `leaderboard.row.calls`).
    - Render the Provisional section (header + min hint) when non-empty;
-     each row = chip + avatar + handle + "{done}/{min} to qualify" +
+     each row = chip + avatar + handle + "{count}/{min} to qualify" +
      accuracy; tappable into the existing sheet.
    - In the sheet, render "Provisional" instead of "#N global" when the
      tapped row is unranked.
@@ -271,12 +270,12 @@ per-user event.
 
 - [ ] A predictor with fewer than the threshold settled calls never appears
       in a ranked slot or on the podium — they appear only in the
-      Provisional section, with a "{n}/{min} to qualify" label.
+      Provisional section, with a "{count}/{min} to qualify" label.
 - [ ] Among qualified predictors a thin record (e.g. 10/11 ≈ 91% raw)
       ranks **below** a proven one (e.g. 45/50 = 90% raw), because the
       shrinkage score pulls the thin record toward the 0.5 prior.
-- [ ] `rankScore` matches the prototype formula `(0.5·20 + acc·n)/(20 + n)`
-      with `acc` as the 0–1 fraction, for the same inputs.
+- [ ] `rankScore` matches `(0.5·20 + acc·n)/(20 + n)` with `acc` as the
+      0–1 fraction, for the same inputs.
 - [ ] Every podium tile and ranked list row shows its resolved-call count.
 - [ ] The mini-profile sheet shows "Provisional" (not a fabricated rank)
       for an unranked predictor, and still shows the Settled stat.
@@ -287,8 +286,8 @@ per-user event.
       `label` ∈ {week, month, all}, `count` = ranked-row count, `value` =
       effective threshold; the name exists in both the TS union and the Zod
       mirror.
-- [ ] New copy is `leaderboard.*` (no `lb.*`), present in every locale
-      catalog; the prototype demo seeds are not ported.
+- [ ] New copy is in the `leaderboard.*` namespace, present in every locale
+      catalog; no demo or mock standings seeds are introduced.
 - [ ] `npm run quality` and `npm run check` pass.
 
 ## Open questions
@@ -314,29 +313,27 @@ per-user event.
 
 ## Pending decisions
 
-- **Call-count placement on the row.** Prototype shows
-  "{calls} calls · {streak}d streak" on the meta line, replacing nothing —
-  but the app's meta line currently reads "{vxp} VXP · {streak}d streak".
-  Decide whether the call count joins as a third segment
-  ("{vxp} VXP · {calls} calls · {streak}d streak"), replaces the streak, or
-  sits as a separate sub-label. Product/visual call; the data is available
-  either way.
-- **Threshold default value.** The prototype default is 10; the app's
-  current floor is 3. Confirm 10 ships as the real-user default (the brief
-  records 10 as decided — restated here only to gate the status flip; flip
-  to a Decision once the owner confirms against live data volume).
+- **Call-count placement on the row.** The app's meta line currently reads
+  "{vxp} VXP · {streak}d streak". Decide whether the call count joins as a
+  third segment ("{vxp} VXP · {calls} calls · {streak}d streak"), replaces
+  the streak, or sits as a separate sub-label. Product/visual call; the
+  data is available either way.
+- **Threshold default value.** The default is 10; the app's current floor
+  is 3. Confirm 10 ships as the real-user default (recorded as decided —
+  restated here only to gate the status flip; flip to a Decision once the
+  owner confirms against live data volume).
 
 ## Decisions
 
-Handed down with the port (recorded here, not re-opened):
+Recorded here, not re-opened:
 
-- **Adopt the full prototype model.** Qualify gate + Bayesian shrinkage +
-  Provisional section + per-row call counts — not a partial port. This is a
-  core product-integrity change, hence spec-driven. Chosen over keeping the
-  current floor-only behaviour because the floor sinks but does not unrank,
-  and has no shrinkage, so thin records still top the board.
-- **Keep the app's `leaderboard.*` i18n namespace.** The prototype's `lb.*`
-  keys are **not** adopted; the app's namespace scheme stays consistent.
+- **Adopt the full model.** Qualify gate + Bayesian shrinkage +
+  Provisional section + per-row call counts — not a partial change. This is
+  a core product-integrity change, hence spec-driven. Chosen over keeping
+  the current floor-only behaviour because the floor sinks but does not
+  unrank, and has no shrinkage, so thin records still top the board.
+- **Keep the app's `leaderboard.*` i18n namespace.** No new namespace
+  scheme is introduced; the app's namespace scheme stays consistent.
 - **Threshold = named constant, default 10, wired to the Tweak, cited from
   the canonical constants file.** A copied number goes stale silently
   (per the workflow's parameters rule), so the value lives once in
@@ -346,6 +343,5 @@ Handed down with the port (recorded here, not re-opened):
   existing i18n (`leaderboard.sheet.settled`) already say "settled"; the
   user-facing "calls" copy is a label choice, the internal field stays
   `settledCount` — no rename.
-- **Do not port the demo seeds.** `quirinus` (1/1) and `horatius` (6) exist
-  only to demonstrate the gate in the prototype's mock data; the app reads
-  live clearing-canister standings.
+- **No demo seeds.** Standings come from live clearing-canister data; no
+  fixture predictors are introduced to demonstrate the gate.
