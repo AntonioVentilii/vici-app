@@ -96,7 +96,7 @@ or its Zod mirror.
 
 ## Design artifacts
 
-- [`./2026-06-26-feat-friends-you-row-sticky/mock.html`](./2026-06-26-feat-friends-you-row-sticky/mock.html)
+- [`./2026-06-26-feat-friends-you-row-sticky/sticky-you-row.html`](./2026-06-26-feat-friends-you-row-sticky/sticky-you-row.html)
   — interactive mock with a **theme switcher** (dark / light / peach,
   rendered via `data-theme` the way the app does), test-scenario presets
   (rank at top / visible-middle / scrolled-middle / bottom), the two
