@@ -290,7 +290,7 @@
 			<div class="leaderboard-spinner"></div>
 			<p class="allcaps">{t({ locale: $localeStore, key: 'leaderboard.loading' })}</p>
 		</div>
-	{:else if rankedRows.length === 0}
+	{:else if rankedRows.length === 0 && provisionalRows.length === 0}
 		<div class="leaderboard-empty">
 			<p class="allcaps">{t({ locale: $localeStore, key: 'leaderboard.empty' })}</p>
 			<p class="leaderboard-empty-sub">
@@ -298,59 +298,19 @@
 			</p>
 		</div>
 	{:else}
-		<!-- 3-tile podium row. #1 gets the gold halo + tinted bg; #2 / #3 stay
-		     on the neutral surface. Every tile but the viewer's own is a real
-		     button that opens the mini-profile sheet. -->
-		<div class="leaderboard-podium">
-			{#each podium as row, i (row.owner)}
-				<button
-					class="leaderboard-podium-tile"
-					class:is-first={i === 0}
-					class:is-you={row.isSelf}
-					aria-label={row.isSelf
-						? undefined
-						: t({
-								locale: $localeStore,
-								key: 'leaderboard.open_profile_aria',
-								params: { name: handleOf(row) }
-							})}
-					disabled={row.isSelf}
-					onclick={() => openSheet(row)}
-					type="button"
-					in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 24, delay: i * 100 }}
-				>
-					<div class="leaderboard-podium-rank num allcaps">#{row.displayRank}</div>
-					<div class="leaderboard-podium-avatar-wrap">
-						<Avatar
-							class={i === 0 ? 'leaderboard-podium-avatar-lg' : 'leaderboard-podium-avatar-md'}
-							avatar={row.avatar ?? null}
-							avatarParts={row.avatarParts ?? null}
-							nickname={row.nickname ?? null}
-							owner={row.owner}
-							self={row.isSelf}
-						/>
-					</div>
-					<div class="leaderboard-podium-name">
-						{row.isSelf ? t({ locale: $localeStore, key: 'leaderboard.you' }) : handleOf(row)}
-					</div>
-					<div class="leaderboard-podium-acc num">{row.entry.accuracy}%</div>
-					<div class="leaderboard-podium-calls num">
-						{t({
-							locale: $localeStore,
-							key: 'leaderboard.row.calls',
-							params: { count: row.entry.settledCount }
-						})}
-					</div>
-				</button>
-			{/each}
-		</div>
-
-		<!-- Flat list of remaining ranked rows. -->
-		<ul class="leaderboard-rows">
-			{#each rest as row, i (row.owner)}
-				<li in:fade={{ delay: i * 20 }}>
+		<!-- The ranked podium + list render only when at least one predictor has
+		     qualified. With everyone still below the gate (e.g. a high Tweak
+		     threshold) the board is all-Provisional — skip straight to that
+		     section rather than painting an empty podium. -->
+		{#if rankedRows.length > 0}
+			<!-- 3-tile podium row. #1 gets the gold halo + tinted bg; #2 / #3 stay
+			     on the neutral surface. Every tile but the viewer's own is a real
+			     button that opens the mini-profile sheet. -->
+			<div class="leaderboard-podium">
+				{#each podium as row, i (row.owner)}
 					<button
-						class="leaderboard-row"
+						class="leaderboard-podium-tile"
+						class:is-first={i === 0}
 						class:is-you={row.isSelf}
 						aria-label={row.isSelf
 							? undefined
@@ -362,43 +322,91 @@
 						disabled={row.isSelf}
 						onclick={() => openSheet(row)}
 						type="button"
+						in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 24, delay: i * 100 }}
 					>
-						<span class="leaderboard-row-left">
-							<span class="leaderboard-row-rank-wrap">
-								<span class="leaderboard-row-rank num">#{row.displayRank}</span>
-							</span>
+						<div class="leaderboard-podium-rank num allcaps">#{row.displayRank}</div>
+						<div class="leaderboard-podium-avatar-wrap">
 							<Avatar
-								class="leaderboard-row-avatar"
+								class={i === 0 ? 'leaderboard-podium-avatar-lg' : 'leaderboard-podium-avatar-md'}
 								avatar={row.avatar ?? null}
 								avatarParts={row.avatarParts ?? null}
 								nickname={row.nickname ?? null}
 								owner={row.owner}
 								self={row.isSelf}
 							/>
-							<span class="leaderboard-row-text">
-								<span class="leaderboard-row-handle">
-									{row.isSelf ? t({ locale: $localeStore, key: 'leaderboard.you' }) : handleOf(row)}
-								</span>
-								<span class="leaderboard-row-meta num">
-									{t({
+						</div>
+						<div class="leaderboard-podium-name">
+							{row.isSelf ? t({ locale: $localeStore, key: 'leaderboard.you' }) : handleOf(row)}
+						</div>
+						<div class="leaderboard-podium-acc num">{row.entry.accuracy}%</div>
+						<div class="leaderboard-podium-calls num">
+							{t({
+								locale: $localeStore,
+								key: 'leaderboard.row.calls',
+								params: { count: row.entry.settledCount }
+							})}
+						</div>
+					</button>
+				{/each}
+			</div>
+
+			<!-- Flat list of remaining ranked rows. -->
+			<ul class="leaderboard-rows">
+				{#each rest as row, i (row.owner)}
+					<li in:fade={{ delay: i * 20 }}>
+						<button
+							class="leaderboard-row"
+							class:is-you={row.isSelf}
+							aria-label={row.isSelf
+								? undefined
+								: t({
 										locale: $localeStore,
-										key: 'leaderboard.row.calls',
-										params: { count: row.entry.settledCount }
-									})} · {t({
-										locale: $localeStore,
-										key: 'leaderboard.row.streak',
-										params: { count: row.dailyStreak }
+										key: 'leaderboard.open_profile_aria',
+										params: { name: handleOf(row) }
 									})}
+							disabled={row.isSelf}
+							onclick={() => openSheet(row)}
+							type="button"
+						>
+							<span class="leaderboard-row-left">
+								<span class="leaderboard-row-rank-wrap">
+									<span class="leaderboard-row-rank num">#{row.displayRank}</span>
+								</span>
+								<Avatar
+									class="leaderboard-row-avatar"
+									avatar={row.avatar ?? null}
+									avatarParts={row.avatarParts ?? null}
+									nickname={row.nickname ?? null}
+									owner={row.owner}
+									self={row.isSelf}
+								/>
+								<span class="leaderboard-row-text">
+									<span class="leaderboard-row-handle">
+										{row.isSelf
+											? t({ locale: $localeStore, key: 'leaderboard.you' })
+											: handleOf(row)}
+									</span>
+									<span class="leaderboard-row-meta num">
+										{t({
+											locale: $localeStore,
+											key: 'leaderboard.row.calls',
+											params: { count: row.entry.settledCount }
+										})} · {t({
+											locale: $localeStore,
+											key: 'leaderboard.row.streak',
+											params: { count: row.dailyStreak }
+										})}
+									</span>
 								</span>
 							</span>
-						</span>
-						<span class="leaderboard-row-acc num" class:is-strong={row.entry.accuracy >= 78}>
-							{row.entry.accuracy}%
-						</span>
-					</button>
-				</li>
-			{/each}
-		</ul>
+							<span class="leaderboard-row-acc num" class:is-strong={row.entry.accuracy >= 78}>
+								{row.entry.accuracy}%
+							</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
 
 		<!-- Provisional — predictors who've predicted but are below the qualify
 		     gate. Unranked, shown with progress so newcomers see a path, not a

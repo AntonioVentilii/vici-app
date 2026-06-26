@@ -29,9 +29,19 @@ import { derived, type Readable } from 'svelte/store';
 export const rankScore = ({
 	winCount,
 	settledCount
-}: Pick<StandingEntry, 'winCount' | 'settledCount'>): number =>
-	(LEADERBOARD_PRIOR_MEAN * LEADERBOARD_PRIOR_WEIGHT + winCount) /
-	(LEADERBOARD_PRIOR_WEIGHT + Math.max(0, settledCount));
+}: Pick<StandingEntry, 'winCount' | 'settledCount'>): number => {
+	// No evidence → the prior mean, explicitly. Guards the documented contract
+	// against an inconsistent upstream (a `winCount` with a zero `settledCount`
+	// would otherwise lift the score above the prior, even past 1).
+	if (settledCount <= 0) {
+		return LEADERBOARD_PRIOR_MEAN;
+	}
+
+	return (
+		(LEADERBOARD_PRIOR_MEAN * LEADERBOARD_PRIOR_WEIGHT + winCount) /
+		(LEADERBOARD_PRIOR_WEIGHT + settledCount)
+	);
+};
 
 /**
  * Shrinkage-first ordering for the *ranked* (qualified) leaderboard slice.
