@@ -23,13 +23,12 @@ the sheet only** — no data-model change.
 
 ## Context
 
-The app's holdings data model is **already** the prototype's "Model A"
-(total = available + in play): `src/lib/derived/vxp-holdings.derived.ts`
-exposes `vxpSpendable` (available), `vxpBacked` (in play), and
-`vxpHoldingsTotal` (their sum) as bigint base units (4-decimal,
-`USD_DECIMALS == VXP_TOKEN.decimals`). The Dash card and the
-Transactions header already render this model. The only surface still on
-the old layout is the **sheet**.
+The app's holdings data model is **already** total = available + in
+play: `src/lib/derived/vxp-holdings.derived.ts` exposes `vxpSpendable`
+(available), `vxpBacked` (in play), and `vxpHoldingsTotal` (their sum)
+as bigint base units (4-decimal, `USD_DECIMALS == VXP_TOKEN.decimals`).
+The Dash card and the Transactions header already render this model. The
+only surface still on the old layout is the **sheet**.
 
 ### Files this spec touches
 
@@ -59,21 +58,16 @@ the old layout is the **sheet**.
   `dash.build.sheet_invite_cta`. Keys to **add** (see Scope §3); keys to
   **retire** (see Out of scope).
 
-### Prototype (source of truth)
+### Intended design
 
-- `dash-build.jsx` → `DBHoldingsSheet` (the rewritten sheet) and
-  `DBHoldings` (the card, unchanged here — see Decisions). Split-bar +
-  bucket markup at `DBHoldingsSheet` lines ~173–224; the split segments
-  use `flexGrow: available` / `flexGrow: inPlay` so the bar widths are
-  proportional to the two figures.
-- `transactions.css` lines ~286–307 — the `.db-split` / `.db-split-seg`
-  / `.db-bucket` / `.db-bucket-dot` styles to port into the Svelte
-  component's scoped `<style>`. Available = `var(--accent)`; In play =
-  the muted `--fg-faint` token.
-- `CHANGELOG.md` V1.8.41 (Total-led model rationale), V1.8.42
-  (declutter to two buckets + "at stake, not returns-on-settlement"
-  honesty), V1.8.43 (i18n key set + plural). V1.8.40 added the
-  transaction-history row (already shipped in the app).
+- The sheet renders the hero (total) above a split bar and two bucket
+  rows; the card is unchanged here (see Decisions). The split bar's two
+  segments use `flex-grow: available` / `flex-grow: inPlay` so the bar
+  widths are proportional to the two figures.
+- The split-bar and bucket styles (`.db-split` / `.db-split-seg` /
+  `.db-bucket` / `.db-bucket-dot`) live in the component's scoped
+  `<style>`. Available = `var(--accent)`; In play = the muted
+  `--fg-faint` token.
 
 ### Existing pattern to reuse / not reuse
 
@@ -106,7 +100,8 @@ the old layout is the **sheet**.
      `dash.build.in_play`, sub the pluralised "At stake on N open calls"
      / "No open calls", value `inPlayDisplay`).
    - keep the transaction-history link row and the invite CTA unchanged
-     (order: buckets → history → invite), modulo A1 (see Out of scope).
+     (order: buckets → history → invite), modulo the invite-CTA rework
+     (see Out of scope).
 2. **Update `DashPage.svelte` wiring.** Add an `availableDisplay`
    derived from `vxpSpendable` (mirror the Transactions page's
    `availableDisplay` at `DashTransactionsPage.svelte:154`), pass it +
@@ -135,32 +130,31 @@ the old layout is the **sheet**.
 
 - **Data model / deriveds.** No change to
   `vxp-holdings.derived.ts`; the three figures already exist.
-- **The Dash holdings card** (`DashStackCard.svelte`). Per the port
-  plan's standing decision, the card keeps its "Available + Today"
-  right-hand stats — the full total/in-play split is one tap away in the
-  sheet, and the session "Today" delta is more actionable on the card.
-  The prototype's card swap (Available + In play) is **not** adopted.
-- **A1 — invite CTA → `navigator.share()`** (port plan atomic A1). The
-  prototype's `shareInvite()` replaces the current `goto(Arena)` with a
-  native share sheet + clipboard fallback + a "copied" state. **Folds
-  into this PR** — it is the same ~15-line CTA handler the spec already
-  rewrites the surrounding markup of, and shipping the reworked sheet
-  with the old "routes to Arena" CTA would knowingly leave the
-  documented bug in place. (If the reviewer prefers it separate, it
-  cleanly lifts out — see Pending decisions.) The canonical referral
-  link + copy already live in the Arena invite surface; reuse that
-  helper rather than re-deriving the URL.
-- **A2 — sub-copy + `_one/_many` plural i18n** (port plan atomic A2).
-  **Folds into this PR**: the sub-labels and their plural variants are
-  the literal text content of the new bucket rows; there is no
-  meaningful "split-bar layout without its copy" intermediate. A2 has no
-  independent surface area once S11 lands.
-- **Transactions page header parity.** The prototype (V1.8.42) also
-  swaps the Transactions header's Total/Available + "in play" chip for
-  the same split-bar bucket block. Whether to do that here is an **Open
-  question** below; default is to leave `DashTransactionsPage.svelte`'s
-  header as-is and track parity as a fast-follow, to keep this PR a
-  single reviewable sheet rework.
+- **The Dash holdings card** (`DashStackCard.svelte`). The card keeps
+  its "Available + Today" right-hand stats — the full total/in-play
+  split is one tap away in the sheet, and the session "Today" delta is
+  more actionable on the card. Swapping the card to Available + In play
+  is **not** adopted.
+- **Invite CTA → `navigator.share()`.** Replace the current
+  `goto(Arena)` CTA with a native share sheet + clipboard fallback + a
+  "copied" state. **Folds into this PR** — it is the same ~15-line CTA
+  handler the spec already rewrites the surrounding markup of, and
+  shipping the reworked sheet with the old "routes to Arena" CTA would
+  knowingly leave the documented bug in place. (If the reviewer prefers
+  it separate, it cleanly lifts out — see Pending decisions.) The
+  canonical referral link + copy already live in the Arena invite
+  surface; reuse that helper rather than re-deriving the URL.
+- **Bucket sub-copy + `_one/_many` plural i18n.** **Folds into this
+  PR**: the sub-labels and their plural variants are the literal text
+  content of the new bucket rows; there is no meaningful "split-bar
+  layout without its copy" intermediate, so this has no independent
+  surface area once the rework lands.
+- **Transactions page header parity.** The Transactions header still
+  shows Total/Available + an "in play" chip rather than the same
+  split-bar bucket block. Whether to do that here is an **Open question**
+  below; default is to leave `DashTransactionsPage.svelte`'s header
+  as-is and track parity as a fast-follow, to keep this PR a single
+  reviewable sheet rework.
 - **Day-0/1 `DashBuildZero.svelte`.** Keeps its "Starter balance"
   framing — a one-call new user has no total/in-play ambiguity. Out of
   scope.
@@ -176,9 +170,7 @@ the old layout is the **sheet**.
 
 Searched the repo's open issues (`AntonioVentilii/vici-app`) for
 "holdings sheet", "dash holdings", "in play / available" — **no related
-open issue**. The work originates from the V1.8 prototype port plan
-(`docs/ai/spec-driven-development/specs/_V1.8-PORT-PLAN.md`, row S11 +
-atomics A1/A2), not a tracked bug.
+open issue**. This is product-driven design work, not a tracked bug.
 
 ## Analytics
 
@@ -218,9 +210,9 @@ decisions. If we decline it, this section's rationale is the explicit
    - Render the `.db-split` bar (segments gated on `> 0`,
      `aria-hidden`) and the two `.db-bucket` rows; the in-play sub picks
      `sheet_inplay_sub_one` / `_many` / `_none` off `openCallCount`.
-   - Keep the history link row; rework the invite CTA per A1
-     (native share + clipboard fallback + copied state), reusing the
-     canonical referral-link helper.
+   - Keep the history link row; rework the invite CTA (native share +
+     clipboard fallback + copied state), reusing the canonical
+     referral-link helper.
    - Port `.db-split*` / `.db-bucket*` styles into the scoped
      `<style lang="postcss">`, using app theme tokens (`--accent`,
      `--fg-faint`, `--border`) — no hardcoded colours, works in all
@@ -262,9 +254,9 @@ decisions. If we decline it, this section's rationale is the explicit
 - [ ] All user-visible strings go through `t(...)` with keys present in
       every locale catalog (`npm run check:i18n` clean); no orphaned
       `sheet_lifetime` / `sheet_referrals*` keys left flagged.
-- [ ] (A1) The invite CTA fires `navigator.share()` with a
-      clipboard-copy + "copied" fallback, reusing the canonical referral
-      link — it no longer routes to Arena.
+- [ ] The invite CTA fires `navigator.share()` with a clipboard-copy +
+      "copied" fallback, reusing the canonical referral link — it no
+      longer routes to Arena.
 - [ ] `PRODUCT.md` describes the two-bucket sheet.
 - [ ] `npm run quality` and `npm run check` pass.
 
@@ -280,14 +272,14 @@ decisions. If we decline it, this section's rationale is the explicit
   `referralVxpDisplay`, `referralCount`, `referralsLoaded` in
   `DashPage.svelte` are consumed anywhere besides the sheet invocation
   before removing them (the referral count may feed another zone).
-- **Transactions header parity.** The prototype shares the split-bar
-  bucket block on the Transactions page header
-  (`DashTransactionsPage.svelte:247–265`, currently Total/Available +
-  "in play" chip). Should this PR also convert that header for parity,
-  or is it a fast-follow? Default: fast-follow, to keep this a
-  single-surface sheet rework. (Needs the product owner's call once the
-  fact — that the header is a separate, already-shipped block — is
-  acknowledged; could move to Pending decisions.)
+- **Transactions header parity.** The Transactions page header
+  (`DashTransactionsPage.svelte`, currently Total/Available + "in play"
+  chip) could share the same split-bar bucket block. Should this PR also
+  convert that header for parity, or is it a fast-follow? Default:
+  fast-follow, to keep this a single-surface sheet rework. (Needs the
+  product owner's call once the fact — that the header is a separate,
+  already-shipped block — is acknowledged; could move to Pending
+  decisions.)
 
 ## Pending decisions
 
@@ -304,11 +296,11 @@ decisions. If we decline it, this section's rationale is the explicit
   `ui/` primitive if the parity work proceeds in the same or an adjacent
   PR (meta-update rule would then apply). Owner to confirm if/when the
   parity question resolves.
-- **A1 fold-in vs. separate PR.** Default is to fold A1 (native-share
-  CTA) into this PR — it is the same CTA the rework already rewrites, and
-  the one-spec-one-PR rule prefers the cohesive whole. If the reviewer
-  wants A1 isolated, it lifts out as a standalone CTA-handler change; the
-  rest of the spec stands without it.
+- **Share-CTA fold-in vs. separate PR.** Default is to fold the
+  native-share CTA into this PR — it is the same CTA the rework already
+  rewrites, and the one-spec-one-PR rule prefers the cohesive whole. If
+  the reviewer wants it isolated, it lifts out as a standalone
+  CTA-handler change; the rest of the spec stands without it.
 - **Ship `holdings_sheet_opened`?** Add the lightweight open event, or
   rely on the existing `transactions_viewed { source: 'dash_sheet' }`
   downstream signal and instrument nothing new? Lean: add it (default-yes
@@ -316,24 +308,21 @@ decisions. If we decline it, this section's rationale is the explicit
 
 ## Decisions
 
-- **Keep the app's `dash.*` i18n namespace** (port-plan standing
-  decision) — the new sub-copy lands as `dash.build.sheet_*`, not the
-  prototype's scattered `hold.*` keys. Bucket labels reuse the existing
+- **Keep the app's `dash.*` i18n namespace** — the new sub-copy lands
+  as `dash.build.sheet_*` keys. Bucket labels reuse the existing
   `dash.holdings.available` / `dash.build.in_play`.
 - **Keep the Dash holdings card as-is (Available + Today).** Only the
   **sheet** changes. The card's session "Today" delta is more actionable
-  than the in-play figure, and the full split is one tap away. The
-  prototype's card swap is not adopted.
+  than the in-play figure, and the full split is one tap away. Swapping
+  the card to a total/in-play split is not adopted.
 - **No emoji.** The bucket dots are colour-keyed CSS dots (lucide-app
-  convention); the prototype's stray emoji do not transfer. Icons stay
-  lucide (`History` for the history row, the share/check pair for the
-  CTA).
+  convention). Icons stay lucide (`History` for the history row, the
+  share/check pair for the CTA).
 - **"At stake", never "returns on settlement."** The in-play sub-copy
   states the stake is _at stake_ on open calls — a stake only returns on
-  a win, so the prototype's earlier "returns on settlement" wording was
-  removed (V1.8.42) and is not reintroduced. Terminology stays
-  "prediction"/"call"; no gambling vocabulary.
-- **Pure-frontend, one PR.** The data model is already Model A, so this
-  is a presentation rework; it fits one reviewable PR (sheet rewrite +
-  page wiring + i18n + the two atomic A1/A2 fold-ins), consistent with
-  one-spec-one-PR.
+  a win, so "returns on settlement" wording is not used. Terminology
+  stays "prediction"/"call"; no gambling vocabulary.
+- **Pure-frontend, one PR.** The data model already splits total into
+  available + in play, so this is a presentation rework; it fits one
+  reviewable PR (sheet rewrite + page wiring + i18n + the share-CTA and
+  sub-copy fold-ins), consistent with one-spec-one-PR.
