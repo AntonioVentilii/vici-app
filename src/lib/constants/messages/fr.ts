@@ -2256,6 +2256,8 @@ export const frMessages = {
 	'arena.friends.feed.empty_b': 'Le palmarès se construit en silence.',
 	'arena.friends.feed.eyebrow': 'Résultats récents',
 	'arena.friends.feed.like': "J'aime",
+	'arena.friends.feed.record_lost': 'D{count}',
+	'arena.friends.feed.record_won': 'V{count}',
 	'arena.friends.feed.resolved_many': '{count} prédictions résolues',
 	'arena.friends.feed.resolved_one': '{count} prédiction résolue',
 	'arena.friends.feed.standout': 'dont « {question} »',
