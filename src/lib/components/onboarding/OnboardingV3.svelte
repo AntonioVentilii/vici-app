@@ -341,6 +341,7 @@
 						class="ob2-custom-input"
 						autocapitalize="off"
 						autocomplete="off"
+						data-tid={TestId.OnboardingHandleInput}
 						maxlength={MAX_NICKNAME_LENGTH}
 						onblur={onCommitHandle}
 						oninput={onInput}
