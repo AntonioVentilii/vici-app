@@ -37,6 +37,16 @@ export const getSettledSeriesIds = async ({
 } = {}): Promise<Set<string>> => {
 	const resolvedIdentity = identity ?? (await getIdentityOrAnonymous());
 
+	// Clearing rejects anonymous callers on `list_settled_series` (IC0406), so a
+	// signed-out / guest preview can't read the settled set. Degrade to an empty
+	// set rather than throwing: the open list is already expiry-filtered, so the
+	// guest deck simply skips the (resolved-but-unexpired) settled filter — an
+	// acceptable preview trade-off, and the authoritative filter still applies
+	// for every authenticated read.
+	if (resolvedIdentity.getPrincipal().isAnonymous()) {
+		return new Set();
+	}
+
 	const ids = await listSettledSeries({
 		identity: resolvedIdentity,
 		certified,

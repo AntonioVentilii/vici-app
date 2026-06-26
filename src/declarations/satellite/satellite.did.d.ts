@@ -135,15 +135,27 @@ export interface AppGetAffiliationStatsResult {
 				}
 		  ];
 }
-export interface AppGetAnalyticsSummaryArgs {
-	days: number;
+export interface AppGetAnalyticsEventsArgs {
+	after_updated_at_ns: [] | [string];
+	limit: number;
+	after_key: [] | [string];
 }
-export interface AppGetAnalyticsSummaryResult {
+export interface AppGetAnalyticsEventsResult {
 	rows: Array<{
-		day: number;
+		ok: [] | [boolean];
+		key: string;
+		ts_ms: number;
+		battle_id: [] | [string];
+		league_id: [] | [string];
+		session_id: string;
+		value: [] | [number];
+		source: [] | [string];
+		market_id: [] | [string];
+		series_id: [] | [string];
 		name:
 			| { delete_confirmed: null }
 			| { school_picked: null }
+			| { battle_viewed: null }
 			| { transactions_viewed: null }
 			| { resolution_disputed: null }
 			| { streak_milestone: null }
@@ -153,6 +165,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { pwa_install_prompted: null }
 			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
@@ -164,6 +177,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { pwa_install_dismissed: null }
 			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
@@ -175,6 +189,8 @@ export interface AppGetAnalyticsSummaryResult {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { friend_digest_opened: null }
+			| { leaderboard_viewed: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { battle_declined: null }
@@ -204,6 +220,98 @@ export interface AppGetAnalyticsSummaryResult {
 			| { referral_redeemed: null }
 			| { prediction_created: null }
 			| { faucet_claimed: null }
+			| { pwa_install_accepted: null }
+			| { chat_sent: null }
+			| { orderbook_viewed: null }
+			| { signed_out: null };
+		path: [] | [string];
+		count: [] | [number];
+		step: [] | [number];
+		updated_at_ns: string;
+		principal_text: [] | [string];
+		label: [] | [string];
+		created_at_ns: string;
+		version: [] | [string];
+		duration_ms: [] | [number];
+		owner_text: [] | [string];
+	}>;
+	has_more: boolean;
+}
+export interface AppGetAnalyticsSummaryArgs {
+	days: number;
+}
+export interface AppGetAnalyticsSummaryResult {
+	rows: Array<{
+		day: number;
+		name:
+			| { delete_confirmed: null }
+			| { school_picked: null }
+			| { battle_viewed: null }
+			| { transactions_viewed: null }
+			| { resolution_disputed: null }
+			| { streak_milestone: null }
+			| { school_verify_email_submitted: null }
+			| { market_shared: null }
+			| { flow_completed: null }
+			| { flow_card_expanded: null }
+			| { affiliation_removed: null }
+			| { league_invite_sent: null }
+			| { pwa_install_prompted: null }
+			| { notification_opened: null }
+			| { position_taken: null }
+			| { flow_abandoned: null }
+			| { watchlist_removed: null }
+			| { delete_succeeded: null }
+			| { friend_feed_reaction: null }
+			| { referral_link_copied: null }
+			| { market_translation_toggled: null }
+			| { comment_posted: null }
+			| { flow_swipe: null }
+			| { referral_converted: null }
+			| { pwa_install_dismissed: null }
+			| { transactions_filtered: null }
+			| { school_verify_code_submitted: null }
+			| { signed_in: null }
+			| { signed_up: null }
+			| { order_placed: null }
+			| { order_cancelled: null }
+			| { onboarding_started: null }
+			| { payout_settled: null }
+			| { battle_proposed: null }
+			| { perf_metric: null }
+			| { provider_linked: null }
+			| { friend_digest_opened: null }
+			| { leaderboard_viewed: null }
+			| { friend_request_sent: null }
+			| { battle_accepted: null }
+			| { battle_declined: null }
+			| { vxp_awarded: null }
+			| { league_joined: null }
+			| { exit_signal: null }
+			| { referral_sent: null }
+			| { resolution_proposed: null }
+			| { app_error: null }
+			| { resolution_confirmed: null }
+			| { flow_session_started: null }
+			| { school_picker_opened: null }
+			| { onboarding_completed: null }
+			| { watchlist_added: null }
+			| { position_closed: null }
+			| { handle_checked: null }
+			| { battle_resolved: null }
+			| { market_searched: null }
+			| { sound_toggled: null }
+			| { league_created: null }
+			| { onboarding_step: null }
+			| { market_viewed: null }
+			| { battle_expired: null }
+			| { delete_flow_opened: null }
+			| { affiliation_set: null }
+			| { session_started: null }
+			| { referral_redeemed: null }
+			| { prediction_created: null }
+			| { faucet_claimed: null }
+			| { pwa_install_accepted: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
@@ -576,6 +684,20 @@ export interface AppListFriendRequestsResult {
 		viewer_principal: [] | [string];
 	}>;
 }
+export interface AppListFriendResolvedResultsArgs {
+	friends: Array<string>;
+}
+export interface AppListFriendResolvedResultsResult {
+	items: Array<{
+		title: string;
+		owner: string;
+		market_id: string;
+		net_vxp: number;
+		side: string;
+		outcome: { win: null } | { loss: null };
+		resolved_at_ms: number;
+	}>;
+}
 export interface AppListFriendsResult {
 	items: Array<{
 		viewer_role:
@@ -845,6 +967,9 @@ export interface AppLookupReferralCodeArgs {
 export interface AppLookupReferralCodeResult {
 	owner: [] | [string];
 }
+export interface AppPruneResolvedResultsResult {
+	pruned: number;
+}
 export interface AppRecomputeActivityReactionCountsResult {
 	recomputed: number;
 }
@@ -962,6 +1087,7 @@ export interface AppTrackEventsArgs {
 		name:
 			| { delete_confirmed: null }
 			| { school_picked: null }
+			| { battle_viewed: null }
 			| { transactions_viewed: null }
 			| { resolution_disputed: null }
 			| { streak_milestone: null }
@@ -971,6 +1097,7 @@ export interface AppTrackEventsArgs {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { pwa_install_prompted: null }
 			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
@@ -982,6 +1109,7 @@ export interface AppTrackEventsArgs {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { pwa_install_dismissed: null }
 			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
@@ -993,6 +1121,8 @@ export interface AppTrackEventsArgs {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { friend_digest_opened: null }
+			| { leaderboard_viewed: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { battle_declined: null }
@@ -1022,6 +1152,7 @@ export interface AppTrackEventsArgs {
 			| { referral_redeemed: null }
 			| { prediction_created: null }
 			| { faucet_claimed: null }
+			| { pwa_install_accepted: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
@@ -1180,6 +1311,7 @@ export interface _SERVICE {
 		[AppGetAffiliationStatsArgs],
 		AppGetAffiliationStatsResult
 	>;
+	app_get_analytics_events: ActorMethod<[AppGetAnalyticsEventsArgs], AppGetAnalyticsEventsResult>;
 	app_get_analytics_summary: ActorMethod<
 		[AppGetAnalyticsSummaryArgs],
 		AppGetAnalyticsSummaryResult
@@ -1216,6 +1348,10 @@ export interface _SERVICE {
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
 	app_list_friend_recommended_leagues: ActorMethod<[], AppListFriendRecommendedLeaguesResult>;
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
+	app_list_friend_resolved_results: ActorMethod<
+		[AppListFriendResolvedResultsArgs],
+		AppListFriendResolvedResultsResult
+	>;
 	app_list_friends: ActorMethod<[], AppListFriendsResult>;
 	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;
 	app_list_league_battles: ActorMethod<[AppListLeagueBattlesArgs], AppListLeagueBattlesResult>;
@@ -1244,6 +1380,7 @@ export interface _SERVICE {
 		AppLookupLeagueByInviteResult
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
+	app_prune_resolved_results: ActorMethod<[], AppPruneResolvedResultsResult>;
 	app_recompute_activity_reaction_counts: ActorMethod<[], AppRecomputeActivityReactionCountsResult>;
 	app_record_flow_swipe: ActorMethod<[AppRecordFlowSwipeArgs], AppRecordFlowSwipeResult>;
 	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;

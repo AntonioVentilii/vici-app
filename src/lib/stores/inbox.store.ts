@@ -9,8 +9,7 @@ import {
 	INBOX_DISMISSED_STORAGE_KEY,
 	INBOX_PROGRESS_STORAGE_KEY,
 	INBOX_READ_STORAGE_KEY,
-	INBOX_SETTLED_READ_STORAGE_KEY,
-	INBOX_STORAGE_KEY
+	INBOX_SETTLED_READ_STORAGE_KEY
 } from '$lib/constants/inbox.constants';
 import type { AppLocale } from '$lib/constants/locale.constants';
 import { AppPath } from '$lib/constants/routes.constants';
@@ -22,11 +21,10 @@ import {
 import { receivedReactionsStore } from '$lib/stores/activity-reactions.store';
 import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/friends.store';
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
-import { leagueBattlesStore } from '$lib/stores/leagues.store';
+import { leagueBattlesStore, leaguesLoadedStore, myLeaguesStore } from '$lib/stores/leagues.store';
 import { localeStore } from '$lib/stores/locale.store';
 import { preferencesStore } from '$lib/stores/preferences.store';
 import { profilesStore } from '$lib/stores/profiles.store';
-import { initStorageStore } from '$lib/stores/storage.store';
 import { userStore } from '$lib/stores/user.store';
 import type { ResolutionItem, ResolutionRevealData } from '$lib/types/flow';
 import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox';
@@ -47,57 +45,6 @@ import { FLAME_STAGE_LABEL_KEYS, stageForStreak, streakMilestone } from '$lib/ut
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
-
-// The seed used to include mock `resolve`, `streak`, and `level` cards;
-// those are now sourced from live data (Settled events via
-// `settledInboxStore`; flame milestones / level-ups via `streakInboxStore` /
-// `levelInboxStore`), so they've been removed. The remaining placeholders
-// (`social`, `challenge`) stay until their own producers land — once they do,
-// drop them the same way.
-const seedInbox = (): InboxNotification[] => [
-	{
-		id: 'n3',
-		kind: 'social',
-		title: 'Friend activity',
-		body: '@oracle_nina called NO on the same market.',
-		when: 'Yesterday',
-		unread: false
-	},
-	{
-		id: 'n5',
-		kind: 'challenge',
-		title: 'Challenge invite',
-		body: 'A friend invited you to a head-to-head Flow duel.',
-		when: '4d ago',
-		unread: false
-	}
-];
-
-const baseInboxStore = initStorageStore<InboxNotification[]>({
-	key: INBOX_STORAGE_KEY,
-	defaultValue: seedInbox()
-});
-
-export const inboxStore = {
-	...baseInboxStore,
-	update: (updater: (items: InboxNotification[]) => InboxNotification[]) => {
-		baseInboxStore.update((current) => {
-			const next = updater(current);
-			baseInboxStore.set({ key: INBOX_STORAGE_KEY, value: next });
-
-			return next;
-		});
-	}
-};
-
-/**
- * Marks the persisted seed/history inbox items as read. The combined
- * `markAllInboxRead` further below also clears the per-event Settled
- * read-state — this internal helper just handles the seed layer.
- */
-const markAllSeedInboxRead = (): void => {
-	inboxStore.update((items) => items.map((item) => ({ ...item, unread: false })));
-};
 
 /**
  * Turns the viewer's pending friend requests into inbox cards. They are
@@ -198,6 +145,76 @@ const battleInboxStore: Readable<InboxNotification[]> = derived(
 					}),
 					unread: true,
 					href: `${AppPath.Arena}/leagues/${battle.sideA}`
+				};
+			});
+	}
+);
+
+// ── Incoming-challenge notifications ────────────────────────────────────────
+// The mirror of `battleInboxStore` for the *recipient*: a league owner whose
+// league has just been challenged. The challenged league is always `sideB`,
+// and the recipient already reads the `proposed` battle via
+// `leagueBattlesStore` (the satellite returns battles referencing the league
+// as either side). We derive one card per `proposed`, `kind='league'` battle
+// where the viewer owns `sideB`. The card ages out of the same 3-day window
+// and drops automatically once the proposal leaves `proposed` (accepted /
+// declined / expired), since the filter no longer matches.
+
+const battleIncomingInboxStore: Readable<InboxNotification[]> = derived(
+	[leagueBattlesStore, myLeaguesStore, leagueDirectoryStore, userStore, localeStore],
+	([$battles, $myLeagues, $directory, $user, $locale]) => {
+		const viewer = $user.user?.owner;
+
+		if (isNullish(viewer)) {
+			return [];
+		}
+
+		const now = Date.now();
+		const ownedLeagueIds = new Set(
+			$myLeagues.filter((m) => m.role === 'owner').map((m) => m.league.id)
+		);
+
+		const incoming = [...$battles.values()].flat().filter(
+			(battle) =>
+				battle.kind === 'league' &&
+				battle.state === 'proposed' &&
+				// The viewer owns the challenged side (`sideB`) but must NOT be on
+				// the challenging side: the proposer (and any co-owner of `sideA`)
+				// already sees the outgoing challenge via `battleInboxStore`, so an
+				// incoming card for one's own challenge would be a self-notification.
+				// A self-vs-self challenge (`sideA === sideB`) is excluded too.
+				ownedLeagueIds.has(battle.sideB) &&
+				battle.sideA !== battle.sideB &&
+				battle.proposer !== viewer &&
+				!ownedLeagueIds.has(battle.sideA)
+		);
+		// A challenge can surface under more than one per-league list, so dedupe
+		// by battle id (Map keeps the last seen), mirroring `battleInboxStore`.
+		const matched = [...new Map(incoming.map((battle) => [battle.id, battle])).values()].filter(
+			(battle) => now - battle.kickoffMs <= BATTLE_NOTIFICATION_WINDOW_MS
+		);
+
+		return matched
+			.sort((a, b) => b.kickoffMs - a.kickoffMs)
+			.map((battle) => {
+				const opponent = $directory.get(battle.sideA)?.name ?? shortLeagueId(battle.sideA);
+				const days = Math.max(1, Math.ceil((battle.settleMs - battle.kickoffMs) / DAY_IN_MS));
+
+				return {
+					id: `battle-proposed-${battle.id}`,
+					kind: 'battle_incoming' as const,
+					title: t({ locale: $locale, key: 'inbox.battle_incoming.title' }),
+					body: t({
+						locale: $locale,
+						key: 'inbox.battle_incoming.body',
+						params: { opponent, days }
+					}),
+					when: formatRelativeAgoFromNs({
+						timestampNs: BigInt(Math.round(battle.kickoffMs)) * MILLISECOND_IN_NANOSECONDS,
+						locale: $locale
+					}),
+					unread: true,
+					href: `${AppPath.Arena}/leagues/${battle.sideB}`
 				};
 			});
 	}
@@ -721,10 +738,10 @@ export const initInboxProgress = (): (() => void) => {
 
 /**
  * The inbox surface (Notifications page, bell badge) reads from this combined
- * view. Order: live actionable items (friend requests, battle responses),
- * then real settled-event notifications, then likes received on your calls,
- * then streak / level milestones, then the persisted local seed. Real event
- * cards sit above the seeds so freshly-arrived items land at the top.
+ * view. Order: live actionable items (friend requests), then incoming league
+ * challenges, then battle responses, then real settled-event notifications,
+ * then likes received on your calls, then streak / level milestones. Every
+ * card is derived from live data — there is no seeded/mock layer.
  *
  * Dismissed cards are filtered out, and the per-id read overlay is applied
  * on top of each item's own `unread` so a card tapped read in place stays
@@ -733,17 +750,35 @@ export const initInboxProgress = (): (() => void) => {
 export const combinedInboxStore: Readable<InboxNotification[]> = derived(
 	[
 		friendRequestInboxStore,
+		battleIncomingInboxStore,
 		battleInboxStore,
 		settledInboxStore,
 		likesReceivedInboxStore,
 		streakInboxStore,
 		levelInboxStore,
-		inboxStore,
 		inboxReadStore,
 		inboxDismissedStore
 	],
-	([$requests, $battles, $settled, $likesReceived, $streak, $level, $inbox, $read, $dismissed]) =>
-		[...$requests, ...$battles, ...$settled, ...$likesReceived, ...$streak, ...$level, ...$inbox]
+	([
+		$requests,
+		$battleIncoming,
+		$battles,
+		$settled,
+		$likesReceived,
+		$streak,
+		$level,
+		$read,
+		$dismissed
+	]) =>
+		[
+			...$requests,
+			...$battleIncoming,
+			...$battles,
+			...$settled,
+			...$likesReceived,
+			...$streak,
+			...$level
+		]
 			.filter((item) => !$dismissed.has(item.id))
 			.map((item) => (item.unread && $read.has(item.id) ? { ...item, unread: false } : item))
 );
@@ -810,6 +845,13 @@ export const clearInboxToast = (): void => {
  *   first received-reactions load completes (even if empty) — so a cold-start
  *   backlog of likes on the viewer's calls is absorbed into the baseline
  *   instead of replaying as arrival toasts.
+ *
+ * Leagues are deliberately NOT part of this gate: `refreshMyLeagues()` only
+ * runs on Leagues/Battles/LeagueDetail pages, so a session that never visits
+ * them would otherwise leave `sourcesHydrated` false forever and suppress
+ * arrival toasts for EVERY kind. The `battle_incoming` cold-start backlog is
+ * instead absorbed locally in {@link initInboxToasts}, gated on
+ * `leaguesLoadedStore`, so the other kinds toast normally meanwhile.
  */
 const sourcesHydrated: Readable<boolean> = derived(
 	[resolvedPositionsNotInitialized, friendsRelationsLoadedStore, receivedReactionsStore],
@@ -829,18 +871,34 @@ const sourcesHydrated: Readable<boolean> = derived(
  * emission just refreshes the baseline (no toast); on the first hydrated tick
  * the existing backlog is absorbed into the baseline; only genuinely new
  * unread items thereafter fire a toast.
+ *
+ * Leagues are gated locally rather than via {@link sourcesHydrated}: the
+ * `battle_incoming` cold-start backlog materialises only when
+ * `refreshMyLeagues()` finally runs (on first visit to a Leagues/Battles page),
+ * which may be long after the global sources hydrate or never at all. So the
+ * incoming-challenge diff is suppressed until `leaguesLoadedStore` flips, and
+ * the tick it flips the whole incoming backlog is folded into the baseline
+ * rather than replaying as arrival toasts. Other kinds keep toasting normally
+ * even in a session that never loads leagues.
  */
+const BATTLE_INCOMING_ID_PREFIX = 'battle-proposed-';
+
 export const initInboxToasts = (): (() => void) => {
 	if (!browser) {
 		return () => undefined;
 	}
 
 	let seenInboxIds: Set<string> | undefined;
+	let leaguesLoadedSeen = false;
 
-	return derived([combinedInboxStore, sourcesHydrated], ([$items, $hydrated]) => ({
-		items: $items,
-		hydrated: $hydrated
-	})).subscribe(({ items, hydrated }) => {
+	return derived(
+		[combinedInboxStore, sourcesHydrated, leaguesLoadedStore],
+		([$items, $hydrated, $leaguesLoaded]) => ({
+			items: $items,
+			hydrated: $hydrated,
+			leaguesLoaded: $leaguesLoaded
+		})
+	).subscribe(({ items, hydrated, leaguesLoaded }) => {
 		if (!hydrated) {
 			// Sources still loading — accumulate ids as baseline without diffing.
 			seenInboxIds = new Set(items.map((item) => item.id));
@@ -852,11 +910,28 @@ export const initInboxToasts = (): (() => void) => {
 			// Hydration just completed but no baseline recorded yet (edge case:
 			// subscribe fired with hydrated=true before any non-hydrated tick).
 			seenInboxIds = new Set(items.map((item) => item.id));
+			leaguesLoadedSeen = leaguesLoaded;
 
 			return;
 		}
 
-		const next = items.find((item) => item.unread && !seenInboxIds?.has(item.id));
+		// Leagues just finished their first load this tick — the incoming
+		// backlog appears all at once. Suppress the incoming diff for this one
+		// tick so the backlog is absorbed; non-incoming kinds still diff.
+		const leaguesJustLoaded = leaguesLoaded && !leaguesLoadedSeen;
+		leaguesLoadedSeen = leaguesLoaded;
+
+		const baseline = seenInboxIds;
+		// An incoming-challenge id can't be a genuine arrival until leagues have
+		// loaded (the source hasn't been fetched), and the first loaded tick is
+		// the cold-start backlog — treat incoming as already-seen in both cases.
+		const incomingSettled = leaguesLoaded && !leaguesJustLoaded;
+		const next = items.find(
+			(item) =>
+				item.unread &&
+				!baseline.has(item.id) &&
+				(incomingSettled || !item.id.startsWith(BATTLE_INCOMING_ID_PREFIX))
+		);
 
 		seenInboxIds = new Set(items.map((item) => item.id));
 
@@ -877,10 +952,9 @@ export const initInboxToasts = (): (() => void) => {
 
 /**
  * Marks every currently-visible settled-event card as read by adding
- * its `event_id` to the persisted per-event read set. Paired with
- * `markAllSeedInboxRead` (which clears the seed/history layer) — see
- * the `markAllInboxRead` public entry point further below for the
- * combined behavior.
+ * its `event_id` to the persisted per-event read set. See the
+ * `markAllInboxRead` public entry point further below, which also overlays
+ * a per-id read marker on the remaining synthetic cards.
  */
 const markAllSettledRead = (): void => {
 	const visible = getStore(settledInboxStore);
@@ -1014,14 +1088,13 @@ export const dismissInboxNotification = (id: string): void => {
 };
 
 /**
- * Public "mark all read" entry point. Clears the seed-store layer, the
- * per-event Settled read-state, and the streak / level high-water markers,
- * and overlays a read marker on every other currently-visible card (synthetic
- * friend requests) so the badge fully clears. Callers (NotificationsPage, bell
- * action) should use this — never the layer-specific helpers directly.
+ * Public "mark all read" entry point. Clears the per-event Settled read-state
+ * and the streak / level high-water markers, and overlays a read marker on
+ * every other currently-visible card (synthetic friend requests, battle
+ * responses, likes) so the badge fully clears. Callers (NotificationsPage,
+ * bell action) should use this — never the layer-specific helpers directly.
  */
 export const markAllInboxRead = (): void => {
-	markAllSeedInboxRead();
 	markAllSettledRead();
 	acknowledgeLevel();
 	acknowledgeStreak();

@@ -305,7 +305,13 @@
 				     figure reads whole, never stretched to the band aspect
 				     (sizing lives in the `.ob-art` rules in app.css). -->
 				<div class="ob-art">
-					<MarketArtwork category={artCategory} fill seed={market.id} state="neutral" />
+					<MarketArtwork
+						category={artCategory}
+						fill
+						seed={market.id}
+						state="neutral"
+						title={market.title}
+					/>
 				</div>
 
 				<!-- Probability split + footer. -->

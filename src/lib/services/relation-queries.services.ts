@@ -1,5 +1,6 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import type { Relation } from '$lib/types/relation';
+import type { ResolvedResult } from '$lib/types/social';
 import type { Doc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
@@ -42,6 +43,27 @@ export const getSentFriendRequests = async (): Promise<Doc<Relation>[]> => {
 			data: relation
 		};
 	});
+};
+
+/**
+ * Friend-scoped resolved-result rows backing the Arena results digest's standout
+ * line. One bounded satellite read over the supplied friend set's
+ * `resolved_results` rows (`${owner}#${marketId}`) within the active retention
+ * window — never one call per friend. Returns an empty list for an empty set so
+ * the digest can render its aggregate (W–L / net VXP) without a standout.
+ */
+export const getFriendResolvedResults = async ({
+	friends
+}: {
+	friends: PrincipalText[];
+}): Promise<ResolvedResult[]> => {
+	if (friends.length === 0) {
+		return [];
+	}
+
+	const { items } = await functions.listFriendResolvedResults({ friends });
+
+	return items;
 };
 
 export const getFollowing = async (): Promise<PrincipalText[]> => {

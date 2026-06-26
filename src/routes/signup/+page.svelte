@@ -6,11 +6,14 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import OnboardingFlow from '$lib/components/onboarding/OnboardingFlow.svelte';
+	import OnboardingV3 from '$lib/components/onboarding/OnboardingV3.svelte';
+	import { ONBOARDING_V3_ENABLED } from '$lib/constants/feature-flags.constants';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
-	import { AppPath } from '$lib/constants/routes.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { applyOnboardingPicks, checkNicknameAvailability } from '$lib/services/profile.services';
+	import { startGuestSession } from '$lib/stores/guest.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -277,9 +280,25 @@
 	};
 </script>
 
-<OnboardingFlow
-	{authenticated}
-	{initialParticipantId}
-	onComplete={handleComplete}
-	onPicksReady={handleCompletePreAuth}
-/>
+{#if ONBOARDING_V3_ENABLED}
+	<OnboardingV3
+		{authenticated}
+		onComplete={handleComplete}
+		onPicksReady={handleCompletePreAuth}
+		onSignIn={() => void goto(resolve(PublicPath.SignIn))}
+		onSkip={(handle) => {
+			// Open the guest preview session (the handle rides through the
+			// pre-auth stash already, so conversion keeps the chosen name) and
+			// route into Flow, which the (app) layout now lets a guest reach.
+			startGuestSession(handle);
+			void goto(resolve(AppPath.Flow));
+		}}
+	/>
+{:else}
+	<OnboardingFlow
+		{authenticated}
+		{initialParticipantId}
+		onComplete={handleComplete}
+		onPicksReady={handleCompletePreAuth}
+	/>
+{/if}

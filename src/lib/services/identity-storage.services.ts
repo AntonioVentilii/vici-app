@@ -2,8 +2,7 @@ import {
 	INBOX_DISMISSED_STORAGE_KEY,
 	INBOX_PROGRESS_STORAGE_KEY,
 	INBOX_READ_STORAGE_KEY,
-	INBOX_SETTLED_READ_STORAGE_KEY,
-	INBOX_STORAGE_KEY
+	INBOX_SETTLED_READ_STORAGE_KEY
 } from '$lib/constants/inbox.constants';
 import { clearDailyGoalMirror } from '$lib/utils/daily-goal.utils';
 import { resetMotionState } from '$lib/utils/motion-engine.utils';
@@ -66,7 +65,6 @@ export const reconcileIdentityScopedStorage = ({
 	// at import, and <Authn> is in the root layout that also wraps the
 	// signed-out/marketing path). The in-memory inbox stores re-read these
 	// keys on their next load, which is when the next identity opens the app.
-	del({ key: INBOX_STORAGE_KEY });
 	del({ key: INBOX_SETTLED_READ_STORAGE_KEY });
 	del({ key: INBOX_READ_STORAGE_KEY });
 	del({ key: INBOX_DISMISSED_STORAGE_KEY });
