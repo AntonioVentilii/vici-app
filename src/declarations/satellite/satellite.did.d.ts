@@ -154,6 +154,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { pwa_install_prompted: null }
 			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
@@ -165,6 +166,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { pwa_install_dismissed: null }
 			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
@@ -176,6 +178,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { leaderboard_viewed: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { battle_declined: null }
@@ -205,6 +208,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { referral_redeemed: null }
 			| { prediction_created: null }
 			| { faucet_claimed: null }
+			| { pwa_install_accepted: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
@@ -577,6 +581,20 @@ export interface AppListFriendRequestsResult {
 		viewer_principal: [] | [string];
 	}>;
 }
+export interface AppListFriendResolvedResultsArgs {
+	friends: Array<string>;
+}
+export interface AppListFriendResolvedResultsResult {
+	items: Array<{
+		title: string;
+		owner: string;
+		market_id: string;
+		net_vxp: number;
+		side: string;
+		outcome: { win: null } | { loss: null };
+		resolved_at_ms: number;
+	}>;
+}
 export interface AppListFriendsResult {
 	items: Array<{
 		viewer_role:
@@ -846,6 +864,9 @@ export interface AppLookupReferralCodeArgs {
 export interface AppLookupReferralCodeResult {
 	owner: [] | [string];
 }
+export interface AppPruneResolvedResultsResult {
+	pruned: number;
+}
 export interface AppRecomputeActivityReactionCountsResult {
 	recomputed: number;
 }
@@ -973,6 +994,7 @@ export interface AppTrackEventsArgs {
 			| { flow_card_expanded: null }
 			| { affiliation_removed: null }
 			| { league_invite_sent: null }
+			| { pwa_install_prompted: null }
 			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
@@ -984,6 +1006,7 @@ export interface AppTrackEventsArgs {
 			| { comment_posted: null }
 			| { flow_swipe: null }
 			| { referral_converted: null }
+			| { pwa_install_dismissed: null }
 			| { transactions_filtered: null }
 			| { school_verify_code_submitted: null }
 			| { signed_in: null }
@@ -995,6 +1018,7 @@ export interface AppTrackEventsArgs {
 			| { battle_proposed: null }
 			| { perf_metric: null }
 			| { provider_linked: null }
+			| { leaderboard_viewed: null }
 			| { friend_request_sent: null }
 			| { battle_accepted: null }
 			| { battle_declined: null }
@@ -1024,6 +1048,7 @@ export interface AppTrackEventsArgs {
 			| { referral_redeemed: null }
 			| { prediction_created: null }
 			| { faucet_claimed: null }
+			| { pwa_install_accepted: null }
 			| { chat_sent: null }
 			| { orderbook_viewed: null }
 			| { signed_out: null };
@@ -1218,6 +1243,10 @@ export interface _SERVICE {
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
 	app_list_friend_recommended_leagues: ActorMethod<[], AppListFriendRecommendedLeaguesResult>;
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
+	app_list_friend_resolved_results: ActorMethod<
+		[AppListFriendResolvedResultsArgs],
+		AppListFriendResolvedResultsResult
+	>;
 	app_list_friends: ActorMethod<[], AppListFriendsResult>;
 	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;
 	app_list_league_battles: ActorMethod<[AppListLeagueBattlesArgs], AppListLeagueBattlesResult>;
@@ -1246,6 +1275,7 @@ export interface _SERVICE {
 		AppLookupLeagueByInviteResult
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
+	app_prune_resolved_results: ActorMethod<[], AppPruneResolvedResultsResult>;
 	app_recompute_activity_reaction_counts: ActorMethod<[], AppRecomputeActivityReactionCountsResult>;
 	app_record_flow_swipe: ActorMethod<[AppRecordFlowSwipeArgs], AppRecordFlowSwipeResult>;
 	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;

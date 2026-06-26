@@ -4939,6 +4939,85 @@ a.title-action::after {
 .ob2-tos .serif-italic {
 	color: var(--fg-dim);
 }
+
+/* ============================================================
+   VICI Onboarding (one-screen) styles. Class prefix `ob-v3-*`.
+   Reuses the `ob2-*` surface primitives (beat, hero, handle input,
+   availability hint, reward strip, auth stack, ToS) — these rules
+   add only the one-screen envelope, brand wordmark, lock cue, and
+   the sign-in / legal footer. Theme tokens resolve dark + light/peach
+   the same way the `ob2-*` block does, so the Google-pill contrast
+   fix carried by `SignInProviderStack` survives unchanged.
+   ============================================================ */
+.ob.ob-v3 {
+	display: flex;
+	flex-direction: column;
+	min-height: 100dvh;
+	background: var(--bg-base);
+	color: var(--text-base);
+}
+.ob-v3-beat {
+	justify-content: flex-start;
+}
+.ob-v3-brand {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.32em;
+	text-transform: uppercase;
+	color: var(--laurel);
+	font-weight: 700;
+	margin-bottom: 18px;
+	flex-shrink: 0;
+}
+.ob-v3-lock {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin: 2px 0 12px;
+	flex-shrink: 0;
+}
+.ob-v3-lock.ready {
+	color: var(--laurel);
+}
+.ob-v3-signin {
+	text-align: center;
+	font-size: 12.5px;
+	color: var(--text-muted);
+	margin-top: 4px;
+	flex-shrink: 0;
+}
+.ob-v3-signin-link {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: var(--laurel);
+	cursor: pointer;
+	font-family: inherit;
+	font-size: 12.5px;
+	font-weight: 600;
+	padding: 0 2px;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	text-decoration-color: rgba(226, 184, 66, 0.4);
+}
+.ob-v3-signin-link:hover {
+	text-decoration-color: var(--laurel);
+}
+.ob-v3-legal {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	margin-top: 16px;
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
 [data-theme='light'] .share-chan,
 [data-theme='peach'] .share-chan {
 	background: rgba(14, 13, 11, 0.04);
@@ -5586,54 +5665,6 @@ a.title-action::after {
 	font-weight: 600;
 	margin-left: 2px;
 	letter-spacing: 0.05em;
-}
-.db-hd-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 11px 0;
-	border-bottom: 1px solid var(--border-base);
-	font-family: var(--font-mono);
-}
-.db-hd-k {
-	font-size: 12px;
-	color: var(--fg-dim);
-}
-.db-hd-v {
-	font-size: 13px;
-	color: var(--text-base);
-	font-weight: 600;
-}
-.db-hd-v em {
-	font-style: normal;
-	color: var(--text-muted);
-	font-weight: 400;
-	font-size: 11px;
-}
-/* Referral row skeleton: the list is fetched after mount, so the value pulses
-   as muted bars until it lands instead of flashing a real-looking "0 · 0
-   friends". Two bars mirror the loaded "{vxp} {n} friends" shape. */
-.db-hd-ph {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-}
-.db-hd-ph-bar {
-	display: inline-block;
-	width: 42px;
-	height: 11px;
-	border-radius: 4px;
-	background: var(--text-muted);
-	opacity: 0.25;
-	animation: db-ph-pulse 1.6s ease-in-out infinite;
-}
-.db-hd-ph-bar-sm {
-	width: 30px;
-}
-@media (prefers-reduced-motion: reduce) {
-	.db-hd-ph-bar {
-		animation: none;
-	}
 }
 .db-hd-cta {
 	display: flex;

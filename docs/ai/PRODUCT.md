@@ -101,6 +101,27 @@ liker. See
 [`specs/2026-06-14-feat-like-received-notifications.md`](./spec-driven-development/specs/2026-06-14-feat-like-received-notifications.md)
 (the like-received notification).
 
+### Friend-readable resolved results — the per-participant outcome feed
+
+When a market resolves, the satellite records one **per-participant**
+result row in the `resolved_results` collection — that participant's
+outcome (win / loss), the side they held, their signed net VXP, and the
+resolution time, keyed `${owner}#${marketId}`. The rows are written
+server-side from the clearing settlement plan at resolution time
+(controllers-write, mirroring `activity_reaction_counts`), so a user
+cannot forge a win for themselves or a friend. The collection is
+public-read and consumed friend-scoped — a single owner-prefix scan over
+a caller's friend set, never one call per friend — and is the data source
+for the friend results digest. There is **no source for a friend's
+per-call outcome otherwise**: clearing trade-history is caller-scoped, and
+the single settlement activity row is the resolver's market-level result,
+not a per-participant one. Rows past the retention horizon
+(`RESOLVED_RESULTS_RETENTION_MS`, a calendar month plus a grace margin)
+are pruned by a controllers-only cleanup. The collection has no
+user-visible surface on its own; the digest that renders it ships
+separately. See
+[`specs/2026-06-25-feat-resolved-results-collection.md`](./spec-driven-development/specs/2026-06-25-feat-resolved-results-collection.md).
+
 ### Market odds — skeleton while the book loads
 
 A market's YES/NO odds are the live order-book mid. Until that book has
@@ -199,6 +220,25 @@ service.
 Decision record:
 [`specs/2026-06-12-fix-friend-request-errors-and-reject-policy.md`](./spec-driven-development/specs/2026-06-12-fix-friend-request-errors-and-reject-policy.md).
 
+### Holdings sheet (Dash) — Your VXP, two buckets
+
+Tapping the holdings card on `/dash` opens a sheet that answers a single
+question: every VXP the user holds is either **Available** ("Ready to
+spend on calls") or **In play** ("At stake on N open calls"). It leads
+with a "Your VXP" hero equal to total holdings, then a two-segment split
+bar whose widths are proportional to the available / in-play magnitudes
+(Available = accent, In play = the muted faint token; a zero segment is
+omitted, the whole bar hidden when both are zero), then two colour-keyed
+bucket rows that sum back to the hero. The in-play sub-label pluralises
+on the live open-call count ("At stake on 1 open call" / "… N open
+calls" / "No open calls"). Below the buckets sit the transaction-history
+link and an invite CTA; the CTA opens a native share sheet over the
+viewer's canonical `/i/{code}` referral link (clipboard-copy fallback
+with a brief "copied" state) rather than routing into Arena. The Dash
+holdings card itself is unchanged — its "Available + Today" stats stay,
+with the full split one tap away. Decision record:
+[`specs/2026-06-25-impr-holdings-two-bucket-sheet.md`](./spec-driven-development/specs/2026-06-25-impr-holdings-two-bucket-sheet.md).
+
 ### Transaction history (Dash)
 
 The holdings sheet on `/dash` links to `/dash/transactions`: a
@@ -243,12 +283,49 @@ the foot rather than riding join order or role to the top. Decision
 record:
 [`specs/2026-06-15-fix-league-rank-consistency.md`](./spec-driven-development/specs/2026-06-15-fix-league-rank-consistency.md).
 
+### Global leaderboard — qualify gate + confidence-adjusted ranking
+
+The global leaderboard (Arena → Leaderboard) does not rank on raw
+accuracy, which would let a one-and-done predictor (100% on a single
+call) sit above a proven 90%-of-50 record. Two guards apply, both over
+the same per-window slice the board already reads from the clearing
+canister:
+
+- **Qualify gate.** A predictor must have at least a minimum number of
+  **settled calls** to be ranked. Below it they are **provisional**:
+  excluded from the ranked podium/list and shown instead in a separate
+  **Provisional** section with `{done}/{min} to qualify` progress, so a
+  newcomer sees a path rather than a phantom #1. The threshold is a
+  named parameter (default 10, in
+  [`standings.constants.ts`](../../src/lib/constants/standings.constants.ts))
+  and is exposed live in the dev Tweaks panel so it can be tuned without
+  a deploy.
+- **Confidence-adjusted ranking.** Qualified predictors are ordered by a
+  **Bayesian-shrinkage score**, not raw accuracy: a win rate is blended
+  with a population prior weighted by sample size, so a thin-but-qualified
+  record decays toward the mean instead of topping the board. A 10/11
+  (≈91%) record therefore ranks below a 45/50 (90%) record.
+
+Every leaderboard row — podium tile and list row — shows the predictor's
+**call count** as the trust signal behind the score. Ranks are the
+1-based position in the shrinkage order, not the clearing canister's
+net-P&L rank (the Dash "Top X%" rank tile still reads the P&L rank — a
+known, deliberate inconsistency until accuracy ranking moves into the
+canister). Decision record:
+[`specs/2026-06-25-impr-leaderboard-integrity.md`](./spec-driven-development/specs/2026-06-25-impr-leaderboard-integrity.md).
+
 ### Battles — accuracy face-offs that resolve themselves
 
-A **battle** is a time-bound accuracy face-off between two leagues. The
-owner of one league proposes; the challenged league's owner **accepts or
-declines**, and an unanswered proposal **expires** after a fixed
-respond-by window (3 days). For a league battle, **accepting starts the
+A **battle** is a time-bound accuracy face-off between two leagues. A
+league **owner or admin** proposes; an **owner or admin** of the
+challenged league **accepts or declines**, and an unanswered proposal
+**expires** after a fixed respond-by window (3 days). The `admin` role is
+a delegated battle authority — it can initiate and respond exactly as the
+owner does; a plain member sees "Only a league owner or admin can start a
+battle." and has no battle controls. An **owner** grants the role from
+the member sheet on the league page ("Make admin" / "Remove admin");
+promotion only toggles `member ↔ admin` and is owner-only, enforced
+server-side. For a league battle, **accepting starts the
 clock** — the proposer picks only a duration (7 / 14 / 30 days), and the
 N-day window runs from the moment of acceptance (accept fuses the old
 separate kickoff). The forward-only lifecycle is therefore **proposed →
@@ -258,9 +335,14 @@ at once** (a far client-side rail of 100 simultaneous live battles
 guards against abuse); incoming challenges surface as a "Battle requests"
 list on the league page even while other battles are live, so a busy
 league can still accept or decline. Because Juno docs aren't pushed live
-across users, the proposer is told their challenge was accepted or
-declined via an inbox notification derived from the battle's own state.
-(Duels — principal-vs-principal — keep the older **proposed → accepted →
+across users, both sides of the battle are told what they'd otherwise miss
+via inbox notifications derived from the battle's own state: the challenged
+league's owner gets an **incoming-challenge** card ("{opponent} challenged
+your league to a {days}-day accuracy face-off") that deep-links to the
+league page where the Accept / Decline CTA lives, and the proposer is told
+their challenge was accepted or declined. The cards appear the next time
+the recipient's client reads their leagues' battles and age out of a 3-day
+window. (Duels — principal-vs-principal — keep the older **proposed → accepted →
 in_flight → resolved** manual-score path and aren't user-creatable yet.)
 
 **Live battles are discoverable, and you can see who's winning before
@@ -279,8 +361,8 @@ score takes over.
 leagues are discoverable in challenge search and challengeable by
 outsiders; a league you are **already a member of** is always
 challengeable regardless of its privacy. INVITE and PRIVATE leagues
-never surface as opponents to non-members. You must own the side you
-challenge from. Privacy is **discovery-only**: changing a league's
+never surface as opponents to non-members. You must own or admin the side
+you challenge from. Privacy is **discovery-only**: changing a league's
 privacy after a battle exists never retracts or alters it — a battle's
 identity freezes at proposal and it runs to resolution; tightening
 privacy just removes the league from future challenge search.
@@ -345,15 +427,38 @@ to bound farming. Earlier these grants were display-only by design (the
 deferred real-credit path. Decision record:
 [`specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md`](./spec-driven-development/specs/2026-06-20-feat-flow-milestone-overtime-vxp-credit.md).
 
+### Onboarding — one screen: claim a handle and sign up
+
+The default new-user flow is a single screen (`OnboardingV3`, gated by
+`ONBOARDING_V3_ENABLED`, default on): the user claims a handle (live
+availability check with a Roman-pool suggestion as the empty-field
+placeholder) and signs up with any enabled provider on one surface,
+anchored by the "1,500 VXP starter pack" reward chip. Team selection is
+deferred to the post-signup Profile, so the onboarding handoff always
+carries a `null` team/side — the first prediction now happens free in the
+app. The screen also links to `/signin` ("Already a member?") and offers a
+"Skip — preview first, sign up later" escape into the signed-out Flow
+preview. The earlier multi-beat flow (team → first call → handle → auth)
+is kept in the tree behind the off path until the one-screen flow is
+verified in production; flipping the flag off restores it intact.
+
+The screen reuses, rather than re-implements, the handle machinery (live
+availability probe, session-taken cache, claim-time re-check), the
+provider stack, and the starter-VXP source; analytics reuse the existing
+taxonomy — `onboarding_started` and `handle_checked` fire with
+`label: 'v3'`, and `onboarding_completed` still fires once via the drain
+with `ok` (team-picked) `false`.
+
 ### Onboarding — picks persist across every sign-in provider
 
-A new user's onboarding picks — backed team/country, first call, handle,
-and the completion flag — land on the new profile no matter which sign-in
-provider finishes the 3-beat flow. The picks are stashed to local storage
-the moment the user reaches the auth step (Beat 3), **before** any
-provider runs, so a full-page OAuth redirect (Google) can't carry off the
-volatile in-flight state — the post-sign-in drain reads the stash and
-applies it. The "is this a brand-new account?" decision the drain uses to
+A new user's onboarding picks — handle and the completion flag (plus
+backed team/side when an older multi-beat path supplies them) — land on
+the new profile no matter which sign-in provider finishes the flow. The
+picks are stashed to local storage the moment an available handle is
+claimed (the auth gate), **before** any provider runs, so a full-page
+OAuth redirect (Google) can't carry off the volatile in-flight state —
+the post-sign-in drain reads the stash and applies it. The "is this a
+brand-new account?" decision the drain uses to
 avoid overwriting a returning user's saved profile is anchored to whether
 this browser session bootstrapped the profile, not a reactive flag a
 second auth pass could flip — so a genuine new user's picks are never
@@ -361,3 +466,30 @@ dropped, and a genuine returning user's profile is never clobbered. The
 flow emits the `onboarding_completed` analytics event with the finishing
 provider and whether a team was persisted. Decision record:
 [`specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`](./spec-driven-development/specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md).
+
+### Add to Home Screen — install VICI as an app
+
+A mobile user can add VICI to their home screen so it launches
+full-screen, like a native app. The ask appears in two calm,
+non-interruptive places and **never** as an auto-popup over Flow: a
+permanent **Settings → Preferences** row and a contextual **install row on
+the end-of-session summary** (`FlowEnd`). The install sheet adapts to the
+platform: on Android/Chrome it captures the browser's `beforeinstallprompt`
+(suppressing the mini-infobar) and a single CTA replays it as the native
+one-tap install dialog; on iOS — where no install API exists — it shows the
+two manual steps (tap Share, then choose Add to Home Screen). Once
+installed (the native accept, the `appinstalled` event, or a later launch
+detected as standalone) every prompt is suppressed.
+
+Both surfaces are gated on `canInstall` (mobile, not already installed, not
+already running standalone), so they are hidden on desktop and inside an
+installed PWA. The Settings row is always available when `canInstall`
+holds; the FlowEnd row additionally honours trigger thresholds — it appears
+at a lifetime call count of 15 or more, or 10 or more on a second-or-later
+visit — and respects a 14-day cool-off after a dismissal plus a
+once-per-session guard. The install funnel is instrumented with
+`pwa_install_prompted` / `_accepted` / `_dismissed`, carrying the
+originating surface and the platform. The manifest, icons, iOS meta, and
+the pre-paint standalone/iOS detection in `app.html` were already shipped;
+this layer adds only the install behaviour. Decision record:
+[`specs/2026-06-25-feat-pwa-install.md`](./spec-driven-development/specs/2026-06-25-feat-pwa-install.md).

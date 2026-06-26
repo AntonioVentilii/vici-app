@@ -69,6 +69,7 @@ export const AnalyticsEventNameSchema = j.enum([
 	'battle_viewed',
 	'comment_posted',
 	'chat_sent',
+	'leaderboard_viewed',
 	// Worlds
 	'affiliation_set',
 	'affiliation_removed',
@@ -84,6 +85,10 @@ export const AnalyticsEventNameSchema = j.enum([
 	'exit_signal',
 	// Notifications
 	'notification_opened',
+	// PWA install (add-to-home-screen)
+	'pwa_install_prompted',
+	'pwa_install_accepted',
+	'pwa_install_dismissed',
 	// Health
 	'app_error',
 	'perf_metric'
