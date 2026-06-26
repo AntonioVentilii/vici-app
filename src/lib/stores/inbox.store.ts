@@ -7,10 +7,12 @@ import {
 } from '$lib/constants/app.constants';
 import {
 	INBOX_DISMISSED_STORAGE_KEY,
+	INBOX_PROGRESS_STORAGE_KEY,
 	INBOX_READ_STORAGE_KEY,
 	INBOX_SETTLED_READ_STORAGE_KEY,
 	INBOX_STORAGE_KEY
 } from '$lib/constants/inbox.constants';
+import type { AppLocale } from '$lib/constants/locale.constants';
 import { AppPath } from '$lib/constants/routes.constants';
 import { marketById } from '$lib/derived/market-by-id.derived';
 import {
@@ -22,6 +24,7 @@ import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/fr
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import { leagueBattlesStore } from '$lib/stores/leagues.store';
 import { localeStore } from '$lib/stores/locale.store';
+import { preferencesStore } from '$lib/stores/preferences.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { initStorageStore } from '$lib/stores/storage.store';
 import { userStore } from '$lib/stores/user.store';
@@ -40,24 +43,18 @@ import {
 import { t } from '$lib/utils/i18n.utils';
 import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 import { get, set as setStorage } from '$lib/utils/storage.utils';
+import { FLAME_STAGE_LABEL_KEYS, stageForStreak, streakMilestone } from '$lib/utils/streak.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
 
-// The seed used to include a mock `resolve` card; that's now sourced from
-// real Settled events via `settledInboxStore`, so it's been removed here.
-// The remaining placeholders are kept because their backing systems
-// (streaks, level XP, follow alerts) aren't wired to live data yet — once
-// they are, drop them the same way.
+// The seed used to include mock `resolve`, `streak`, and `level` cards;
+// those are now sourced from live data (Settled events via
+// `settledInboxStore`; flame milestones / level-ups via `streakInboxStore` /
+// `levelInboxStore`), so they've been removed. The remaining placeholders
+// (`social`, `challenge`) stay until their own producers land — once they do,
+// drop them the same way.
 const seedInbox = (): InboxNotification[] => [
-	{
-		id: 'n1',
-		kind: 'streak',
-		title: 'Streak protected',
-		body: 'You kept your daily flame alive. One more call tomorrow.',
-		when: '2h ago',
-		unread: true
-	},
 	{
 		id: 'n3',
 		kind: 'social',
@@ -67,27 +64,11 @@ const seedInbox = (): InboxNotification[] => [
 		unread: false
 	},
 	{
-		id: 'n4',
-		kind: 'level',
-		title: 'Level up',
-		body: 'You reached level 4. +250 session VXP unlocked.',
-		when: '3d ago',
-		unread: false
-	},
-	{
 		id: 'n5',
 		kind: 'challenge',
 		title: 'Challenge invite',
 		body: 'A friend invited you to a head-to-head Flow duel.',
 		when: '4d ago',
-		unread: false
-	},
-	{
-		id: 'n6',
-		kind: 'market',
-		title: 'Market alert',
-		body: 'YES probability moved 12 pts on a market you follow.',
-		when: '5d ago',
 		unread: false
 	}
 ];
@@ -529,12 +510,221 @@ const persistStringSet = ({ key, set }: { key: string; set: Set<string> }): void
 const inboxReadStore = writable<Set<string>>(loadStringSet(INBOX_READ_STORAGE_KEY));
 const inboxDismissedStore = writable<Set<string>>(loadStringSet(INBOX_DISMISSED_STORAGE_KEY));
 
+// ── Streak + level progress notifications ───────────────────────────────────
+// `level` and the daily-streak milestone are monotonic counters: a pure
+// derivation of "you're level 4" would pin the card forever and replay it on a
+// fresh device. So a persisted high-water marker gates each card — a card
+// exists only while the live value exceeds the marker. The marker seeds to the
+// current value on first observation (no retroactive backlog), advances on
+// acknowledge, and — for the streak, which resets to SPARK on a break — lowers
+// when the run drops below it so re-climbing re-notifies. `initInboxProgress`
+// (mounted by `NotifToastHost`) maintains the marker and records when an
+// unacknowledged milestone first appeared (`*CrossedAt_ms`, for the card's
+// relative-time label); the card stores below are pure derivations of
+// (profile, marker).
+
+interface InboxProgress {
+	seenLevel?: number;
+	seenStreakMilestone?: number;
+	levelCrossedAt_ms?: number;
+	streakCrossedAt_ms?: number;
+}
+
+const loadInboxProgress = (): InboxProgress => {
+	const raw = get<InboxProgress>({ key: INBOX_PROGRESS_STORAGE_KEY });
+
+	return nonNullish(raw) && typeof raw === 'object' ? raw : {};
+};
+
+const inboxProgressStore = writable<InboxProgress>(loadInboxProgress());
+
+const updateInboxProgress = (updater: (current: InboxProgress) => InboxProgress): void => {
+	inboxProgressStore.update((current) => {
+		const next = updater(current);
+		setStorage({ key: INBOX_PROGRESS_STORAGE_KEY, value: next });
+
+		return next;
+	});
+};
+
+/**
+ * Relative-time label for a milestone card. Uses the recorded crossing time
+ * when known; falls back to a "just now" label for the rare case where the
+ * card is derived before the maintenance effect stamped the crossing (the
+ * card is fresh either way).
+ */
+const milestoneWhen = ({ atMs, locale }: { atMs?: number; locale: AppLocale }): string =>
+	nonNullish(atMs)
+		? formatRelativeAgoFromNs({
+				timestampNs: BigInt(Math.round(atMs)) * MILLISECOND_IN_NANOSECONDS,
+				locale
+			})
+		: t({ locale, key: 'inbox.just_now' });
+
+/**
+ * Level-up card. Synthetic, gated by the high-water marker: present only
+ * while the live `profile.level` exceeds `seenLevel`. `seenLevel` is
+ * `undefined` until the maintenance effect seeds it, so a cold start emits
+ * nothing until the marker is known. Routes to the Profile surface via the
+ * kind default (no `mid`).
+ */
+const levelInboxStore: Readable<InboxNotification[]> = derived(
+	[userStore, inboxProgressStore, localeStore],
+	([$user, $progress, $locale]) => {
+		const { profile } = $user;
+
+		if (isNullish(profile) || isNullish($progress.seenLevel)) {
+			return [];
+		}
+
+		const level = profile.level ?? 1;
+
+		if (level <= $progress.seenLevel) {
+			return [];
+		}
+
+		return [
+			{
+				id: `level-${level}`,
+				kind: 'level' as const,
+				title: t({ locale: $locale, key: 'inbox.level.title' }),
+				body: t({ locale: $locale, key: 'inbox.level.body', params: { level } }),
+				when: milestoneWhen({ atMs: $progress.levelCrossedAt_ms, locale: $locale }),
+				unread: true
+			}
+		];
+	}
+);
+
+/**
+ * Streak-milestone card. Synthetic, gated by the high-water marker and the
+ * `notify.streakReminder` preference: present only while the live flame
+ * milestone (`streakMilestone(dailyStreak)`) exceeds `seenStreakMilestone`.
+ * Routes to Flow via the kind default (no `mid`).
+ */
+const streakInboxStore: Readable<InboxNotification[]> = derived(
+	[userStore, preferencesStore, inboxProgressStore, localeStore],
+	([$user, $prefs, $progress, $locale]) => {
+		const { profile } = $user;
+
+		if (
+			isNullish(profile) ||
+			!$prefs.notify.streakReminder ||
+			isNullish($progress.seenStreakMilestone)
+		) {
+			return [];
+		}
+
+		const milestone = streakMilestone(profile.dailyStreak ?? 0);
+
+		if (milestone <= $progress.seenStreakMilestone) {
+			return [];
+		}
+
+		const stageLabel = t({
+			locale: $locale,
+			key: FLAME_STAGE_LABEL_KEYS[stageForStreak(milestone)]
+		});
+
+		return [
+			{
+				id: `streak-milestone-${milestone}`,
+				kind: 'streak' as const,
+				title: t({ locale: $locale, key: 'inbox.streak.title' }),
+				body: t({
+					locale: $locale,
+					key: 'inbox.streak.body',
+					params: { stage: stageLabel, count: milestone }
+				}),
+				when: milestoneWhen({ atMs: $progress.streakCrossedAt_ms, locale: $locale }),
+				unread: true
+			}
+		];
+	}
+);
+
+/**
+ * Advances the level marker to the current level and clears the crossing
+ * stamp, so an acknowledged level-up card drops out and stays gone across
+ * reloads. Idempotent.
+ */
+const acknowledgeLevel = (): void => {
+	const level = getStore(userStore).profile?.level ?? 1;
+
+	updateInboxProgress((current) => ({
+		...current,
+		seenLevel: Math.max(current.seenLevel ?? level, level),
+		levelCrossedAt_ms: undefined
+	}));
+};
+
+/**
+ * Advances the streak marker to the current milestone and clears the crossing
+ * stamp. Idempotent.
+ */
+const acknowledgeStreak = (): void => {
+	const milestone = streakMilestone(getStore(userStore).profile?.dailyStreak ?? 0);
+
+	updateInboxProgress((current) => ({
+		...current,
+		seenStreakMilestone: Math.max(current.seenStreakMilestone ?? milestone, milestone),
+		streakCrossedAt_ms: undefined
+	}));
+};
+
+/**
+ * Maintains the streak/level high-water marker from the live profile:
+ *   • seeds each marker to the current value on first observation (so a
+ *     returning user gets no retroactive card),
+ *   • records the crossing time the first time the live value exceeds the
+ *     marker (for the card's `when` label),
+ *   • lowers the streak marker when the run resets below it, so re-climbing
+ *     re-notifies (the streak — unlike the monotonic level — breaks to SPARK).
+ * The marker only moves *up* on acknowledge, which is what surfaces the card.
+ * Mounted from `NotifToastHost`'s `onMount` (beside `initInboxToasts`) so the
+ * side-effect runs only while the shell is rendered; returns a teardown.
+ */
+export const initInboxProgress = (): (() => void) => {
+	if (!browser) {
+		return () => undefined;
+	}
+
+	return derived(userStore, ($user) => $user.profile).subscribe((profile) => {
+		if (isNullish(profile)) {
+			return;
+		}
+
+		const level = profile.level ?? 1;
+		const milestone = streakMilestone(profile.dailyStreak ?? 0);
+
+		updateInboxProgress((current) => {
+			let next = current;
+
+			if (isNullish(next.seenLevel)) {
+				next = { ...next, seenLevel: level };
+			} else if (level > next.seenLevel && isNullish(next.levelCrossedAt_ms)) {
+				next = { ...next, levelCrossedAt_ms: Date.now() };
+			}
+
+			if (isNullish(next.seenStreakMilestone)) {
+				next = { ...next, seenStreakMilestone: milestone };
+			} else if (milestone < next.seenStreakMilestone) {
+				next = { ...next, seenStreakMilestone: milestone, streakCrossedAt_ms: undefined };
+			} else if (milestone > next.seenStreakMilestone && isNullish(next.streakCrossedAt_ms)) {
+				next = { ...next, streakCrossedAt_ms: Date.now() };
+			}
+
+			return next;
+		});
+	});
+};
+
 /**
  * The inbox surface (Notifications page, bell badge) reads from this combined
- * view. Order: live actionable items (friend requests), then real
- * settled-event notifications, then likes received on your calls, then the
- * persisted local seed. Real event cards sit above the seeds so freshly-
- * arrived items land at the top.
+ * view. Order: live actionable items (friend requests, battle responses),
+ * then real settled-event notifications, then likes received on your calls,
+ * then streak / level milestones, then the persisted local seed. Real event
+ * cards sit above the seeds so freshly-arrived items land at the top.
  *
  * Dismissed cards are filtered out, and the per-id read overlay is applied
  * on top of each item's own `unread` so a card tapped read in place stays
@@ -546,12 +736,14 @@ export const combinedInboxStore: Readable<InboxNotification[]> = derived(
 		battleInboxStore,
 		settledInboxStore,
 		likesReceivedInboxStore,
+		streakInboxStore,
+		levelInboxStore,
 		inboxStore,
 		inboxReadStore,
 		inboxDismissedStore
 	],
-	([$requests, $battles, $settled, $likesReceived, $inbox, $read, $dismissed]) =>
-		[...$requests, ...$battles, ...$settled, ...$likesReceived, ...$inbox]
+	([$requests, $battles, $settled, $likesReceived, $streak, $level, $inbox, $read, $dismissed]) =>
+		[...$requests, ...$battles, ...$settled, ...$likesReceived, ...$streak, ...$level, ...$inbox]
 			.filter((item) => !$dismissed.has(item.id))
 			.map((item) => (item.unread && $read.has(item.id) ? { ...item, unread: false } : item))
 );
@@ -732,7 +924,9 @@ const markAllSettledRead = (): void => {
 /**
  * Marks a single inbox card read in place by its `id`. Settled cards route
  * to the per-event read-set (so the away-digest banner clears in lockstep);
- * every other id goes to the per-id read overlay. Idempotent.
+ * streak / level cards advance their high-water marker (so the milestone card
+ * drops out and stays gone); every other id goes to the per-id read overlay.
+ * Idempotent.
  */
 export const markInboxRead = (id: string): void => {
 	const SETTLED_PREFIX = 'settled-';
@@ -761,6 +955,18 @@ export const markInboxRead = (id: string): void => {
 		return;
 	}
 
+	if (id.startsWith('level-')) {
+		acknowledgeLevel();
+
+		return;
+	}
+
+	if (id.startsWith('streak-milestone-')) {
+		acknowledgeStreak();
+
+		return;
+	}
+
 	inboxReadStore.update((current) => {
 		if (current.has(id)) {
 			return current;
@@ -777,8 +983,23 @@ export const markInboxRead = (id: string): void => {
 /**
  * Dismisses a single inbox card by its `id`, persisting the dismissal so the
  * card stays hidden across reloads. Filtered out of {@link combinedInboxStore}.
+ * Streak / level cards instead advance their high-water marker (no separate
+ * dismissed entry needed — the marker drops the card and a later, higher
+ * milestone still surfaces under a fresh id).
  */
 export const dismissInboxNotification = (id: string): void => {
+	if (id.startsWith('level-')) {
+		acknowledgeLevel();
+
+		return;
+	}
+
+	if (id.startsWith('streak-milestone-')) {
+		acknowledgeStreak();
+
+		return;
+	}
+
 	inboxDismissedStore.update((current) => {
 		if (current.has(id)) {
 			return current;
@@ -793,15 +1014,17 @@ export const dismissInboxNotification = (id: string): void => {
 };
 
 /**
- * Public "mark all read" entry point. Clears the seed-store layer and the
- * per-event Settled read-state, and overlays a read marker on every other
- * currently-visible card (synthetic friend requests) so the badge fully
- * clears. Callers (NotificationsPage, bell action) should use this — never
- * the layer-specific helpers directly.
+ * Public "mark all read" entry point. Clears the seed-store layer, the
+ * per-event Settled read-state, and the streak / level high-water markers,
+ * and overlays a read marker on every other currently-visible card (synthetic
+ * friend requests) so the badge fully clears. Callers (NotificationsPage, bell
+ * action) should use this — never the layer-specific helpers directly.
  */
 export const markAllInboxRead = (): void => {
 	markAllSeedInboxRead();
 	markAllSettledRead();
+	acknowledgeLevel();
+	acknowledgeStreak();
 
 	const unreadIds = getStore(combinedInboxStore)
 		.filter((item) => item.unread)

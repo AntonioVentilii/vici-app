@@ -27,6 +27,31 @@ export const stageForStreak = (days: number): FlameStage => {
 	return 'spark';
 };
 
+/**
+ * Day-count thresholds at which the flame enters a new stage above SPARK —
+ * the milestones worth celebrating. Mirrors the `stageForStreak` thresholds
+ * (EMBER 3 / FLAME 7 / BLAZE 15 / INFERNO 30) and the
+ * `streak_3 | streak_7 | streak_14 | streak_30` VXP award ladder. Ascending.
+ */
+export const STREAK_MILESTONES = [3, 7, 15, 30] as const;
+
+/**
+ * The highest milestone day-count the streak has reached, or 0 while still
+ * at SPARK (1–2 days). Used by the inbox streak card to fire once per stage
+ * crossing rather than on every advancing day.
+ */
+export const streakMilestone = (days: number): number => {
+	let reached = 0;
+
+	for (const threshold of STREAK_MILESTONES) {
+		if (days >= threshold) {
+			reached = threshold;
+		}
+	}
+
+	return reached;
+};
+
 export const FLAME_STAGE_LABEL_KEYS: Record<FlameStage, MessageKey> = {
 	spark: 'flame.spark',
 	ember: 'flame.ember',
