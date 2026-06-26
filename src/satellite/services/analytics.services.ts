@@ -308,12 +308,34 @@ export const getAnalyticsEventsFn = ({
 	}
 
 	const admin = adminCaller();
-	const { items } = listDocsStore({ collection: Collection.EVENTS, caller: admin, params: {} });
 
 	const afterNs = parseCursorNs(afterUpdatedAtNs);
 	const afterKeyText = afterKey?.trim() ?? '';
 	const safeLimit = Number.isFinite(limit) ? Math.floor(limit) : MAX_EXPORT_LIMIT;
 	const cap = Math.min(Math.max(1, safeLimit), MAX_EXPORT_LIMIT);
+
+	// Page at the DATASTORE — not in code. Listing the whole `events` collection
+	// blows the query instruction budget (IC0522) once it grows. The matcher keeps
+	// the cursor's own timestamp (`greater_than(afterNs - 1)`) so a page that splits
+	// a same-`updated_at` group still includes the boundary docs; `start_after`
+	// resumes after the cursor KEY at the datastore so the bounded page is spent on
+	// unseen rows instead of refetching already-seen ones (a batch writes up to
+	// `MAX_BUFFER` docs in one call, so a single `updated_at` can hold more docs than
+	// `cap` — without `start_after` the page would fill with seen keys and the keyset
+	// filter below could empty it, stalling the cursor). `order` + `paginate.limit`
+	// bound the canister's scan + response to a single page.
+	const { items } = listDocsStore({
+		collection: Collection.EVENTS,
+		caller: admin,
+		params: {
+			matcher: afterNs > ZERO ? { updated_at: { greater_than: afterNs - 1n } } : undefined,
+			order: { field: 'updated_at', desc: false },
+			paginate: {
+				limit: BigInt(cap),
+				start_after: afterKeyText.length > 0 ? afterKeyText : undefined
+			}
+		}
+	});
 
 	const ordered = items
 		.filter(([key, doc]) => {
@@ -363,5 +385,9 @@ export const getAnalyticsEventsFn = ({
 		};
 	});
 
-	return { rows, hasMore: ordered.length > page.length };
+	// A full datastore page means there may be more. `start_after` already excluded
+	// the cursor's own key, so the fetched count is the unseen-row count — compare it
+	// to `cap` directly (the keyset filter above is a no-op safety net unless the
+	// cursor doc was deleted mid-pagination).
+	return { rows, hasMore: items.length >= cap };
 };
