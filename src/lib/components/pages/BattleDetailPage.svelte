@@ -2,7 +2,6 @@
 	import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
@@ -33,6 +32,7 @@
 	import { battleScopeLabel } from '$lib/utils/battle.utils';
 	import { formatDate, shortenPrincipal, shortLeagueId } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Battle detail — face-off view for a single battle. Shows sideA + sideB
@@ -491,8 +491,11 @@
 		}
 	});
 
-	const backToInbox = () => {
-		void goto(`${resolve(AppPath.Arena)}/battles`);
+	// Return to wherever the viewer came from in-app (league page, inbox).
+	// When they landed here cold — a deep link or fresh tab with no in-app
+	// history — `goBack` falls back to the Arena battles tab.
+	const handleBack = () => {
+		goBack(`${resolve(AppPath.Arena)}?tab=battles`);
 	};
 </script>
 
@@ -500,7 +503,7 @@
 	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'battle.detail.back' }),
-			onBack: backToInbox
+			onBack: handleBack
 		}}
 		title={t({ locale: $localeStore, key: 'battle.detail.title' })}
 	/>
