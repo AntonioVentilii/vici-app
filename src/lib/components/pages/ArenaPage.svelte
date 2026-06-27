@@ -19,14 +19,14 @@
 	 * own eyebrow carries the context, e.g. GLOBAL RANK) directly above
 	 * the tab strip — there's no page-title header.
 	 *
-	 * Friends is the default tab: a fresh entry into /arena (nav click,
-	 * cold load) always opens Friends. Returning to a specific tab is an
-	 * in-session concern handled by back-navigation — selecting a tab
-	 * mirrors it into the URL via `replaceState` (see `selectTab`), so
-	 * `history.back()` from a drill-down (e.g. a battle opened off the
-	 * Battles tab) restores the originating tab, and a cold back falls
-	 * back to `?tab=` (see `focusTabKey`). The tab is deliberately not
-	 * persisted across sessions.
+	 * Friends is the default tab: entering /arena *without* `?tab=` (nav
+	 * click, cold load, a bare bookmark) always opens Friends. Selecting a
+	 * tab mirrors it into the URL via `replaceState` (see `selectTab`), so
+	 * `?tab=` then acts as the tab pointer: `history.back()` from a
+	 * drill-down (e.g. a battle opened off the Battles tab) restores the
+	 * originating tab, and a reload/bookmark/share of the current URL
+	 * reopens it (see `focusTabKey`). The tab is never written to storage —
+	 * it lives only in the URL, so a fresh `/arena` always resets to Friends.
 	 */
 
 	type Tab = 'friends' | 'leagues' | 'battles';
