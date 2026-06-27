@@ -4895,6 +4895,131 @@ a.title-action::after {
 	font-size: 11px;
 }
 
+/* Getting-started checklist — accent-tinted raised card at the top of the
+   first-run build (see `DashGettingStarted`). */
+.gst-card {
+	background: var(--bg-surface);
+	border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+	border-radius: 14px;
+	padding: 13px 14px 8px;
+	margin-bottom: 4px;
+}
+.gst-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+.gst-head-l {
+	display: flex;
+	align-items: baseline;
+	gap: 9px;
+}
+.gst-title {
+	font-size: 13.5px;
+	font-weight: 600;
+	color: var(--text-base);
+	letter-spacing: -0.01em;
+}
+.gst-count {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--accent);
+	font-weight: 600;
+}
+.gst-skip {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	padding: 4px 2px;
+	transition: color 140ms var(--ease-vici);
+}
+.gst-skip:hover {
+	color: var(--text-base);
+}
+.gst-steps {
+	display: flex;
+	flex-direction: column;
+}
+.gst-step {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	width: 100%;
+	appearance: none;
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+	text-align: left;
+	font-family: inherit;
+	color: inherit;
+	padding: 9px 2px;
+	border-top: 1px solid var(--border-base);
+}
+.gst-steps .gst-step:first-child {
+	border-top: 0;
+}
+.gst-check {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+	border-radius: 999px;
+	border: 1.5px solid var(--border-strong);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-inverse);
+	transition:
+		background 140ms var(--ease-vici),
+		border-color 140ms var(--ease-vici);
+}
+.gst-step.is-done .gst-check {
+	background: var(--accent);
+	border-color: var(--accent);
+}
+.gst-step-txt {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+.gst-step-label {
+	font-size: 13.5px;
+	color: var(--text-base);
+	letter-spacing: -0.01em;
+}
+.gst-step.is-done .gst-step-label {
+	color: var(--text-muted);
+	text-decoration: line-through;
+	text-decoration-color: var(--border-strong);
+}
+.gst-step-sub {
+	font-size: 11px;
+	color: var(--text-muted);
+	margin-top: 1px;
+}
+.gst-step.is-done .gst-step-sub {
+	display: none;
+}
+.gst-step-arrow {
+	flex-shrink: 0;
+	display: inline-flex;
+	color: var(--fg-faint);
+	transition:
+		color 140ms var(--ease-vici),
+		transform 140ms var(--ease-vici);
+}
+.gst-step:hover .gst-step-arrow {
+	color: var(--accent);
+	transform: translateX(2px);
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.db-screen *,
 	.db-screen *::before,
