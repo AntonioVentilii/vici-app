@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: In progress (#1020)
+Status: Implemented (#1020)
 
 ## Goal
 
@@ -101,7 +101,7 @@ or its Zod mirror.
   rendered via `data-theme` the way the app does), test-scenario presets
   (rank at top / visible-middle / scrolled-middle / bottom), the two
   product toggles below, and a **Copy instructions** button that hands
-  the chosen variants back to the chat. Deleted post-merge.
+  the chosen variants back to the chat. Retained as a living reference.
 
 ## Implementation outline
 
