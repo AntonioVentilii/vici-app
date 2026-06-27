@@ -552,7 +552,7 @@
 							onclick={onSkipPreview}
 							type="button"
 						>
-							<Eye size={16} strokeWidth={1.7} aria-hidden="true" />
+							<Eye aria-hidden="true" size={16} strokeWidth={1.7} />
 							{t({ locale: $localeStore, key: 'onboarding.guest_cta' })}
 						</button>
 					{/if}
