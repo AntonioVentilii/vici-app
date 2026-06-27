@@ -3,7 +3,22 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: In progress
+
+**Implementation note (this PR).** Resolution + live standings now read
+each side's current members' settled-call accuracy from the clearing
+canister (`aggregate_settlement_accuracy`, with a `series_ids` filter for
+a tag-scoped battle's category) over the battle window, via a
+controller-only satellite endpoint that writes the resolved doc as a
+controller; the `battles` assert accepts an `in_flight → resolved` league
+write only from a controller. The `league_stats` kickoff **baselines are
+no longer read** for resolution or live standings — a baseline-less legacy
+battle resolves like any other, and the restart/self-heal path is removed.
+To bound the change, baseline stamping at accept/kickoff is **left in
+place (now vestigial)** rather than ripped out; fully retiring the
+baseline fields + their accept/kickoff assert validation is deferred to a
+follow-up. Membership is read at resolve time (current members), per the
+owner decision, not membership-at-settle-time.
 
 ## Goal
 
