@@ -59,6 +59,10 @@ import {
 	getAnalyticsSummaryFn,
 	trackEventsFn
 } from '$satellite/services/analytics.services';
+import {
+	readBattleLiveScoreFn,
+	resolveBattleFromSettlementsFn
+} from '$satellite/services/battle-resolution.services';
 import { assertDeleteBattle, assertSetBattle } from '$satellite/services/battle.services';
 import {
 	getAffiliationStatsFn,
@@ -705,6 +709,40 @@ export const getMyBattleStats = defineQuery({
 		boutsWon: j.number()
 	}),
 	handler: () => getMyBattleStatsFn()
+});
+
+// Resolve a settled league battle from clearing settlement history
+// (controller-trusted). Idempotent + the lazy liveness path: the FE calls this
+// the first time a member of either side opens a settled battle. An `update`
+// because it reads the clearing canister and writes the resolved doc.
+export const resolveBattle = defineUpdate({
+	args: j.strictObject({ battleId: j.string() }),
+	result: j.strictObject({ battle: BattleWireSchema }),
+	handler: async ({ battleId }) => ({
+		battle: toWireBattle(await resolveBattleFromSettlementsFn({ battleId }))
+	})
+});
+
+// Provisional standings of an in-flight league battle, projected from the same
+// clearing settlement history over [kickoff, now). `score` is absent for a
+// battle that can't be scored live or for a non-member caller. An `update`
+// (not a query) because it makes an inter-canister call to clearing.
+export const readBattleLiveScore = defineUpdate({
+	args: j.strictObject({ battleId: j.string() }),
+	result: j.strictObject({
+		score: j.optional(
+			j.strictObject({
+				scoreA: j.number(),
+				scoreB: j.number(),
+				callsA: j.number(),
+				callsB: j.number(),
+				leader: j.enum(['A', 'B', 'draw'])
+			})
+		)
+	}),
+	handler: async ({ battleId }) => ({
+		score: await readBattleLiveScoreFn({ battleId })
+	})
 });
 
 // ─── Worlds affiliations ────────────────────────────────────────
