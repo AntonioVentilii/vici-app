@@ -1705,6 +1705,8 @@ export const zhHansMessages = {
 	'onboarding.lock_ready': '正在锁定 @{handle}',
 	'onboarding.lock_blocked': '输入一个可用的昵称以继续',
 	'onboarding.skip': '跳过 — 先预览，稍后注册',
+	'onboarding.guest_cta': '以访客身份继续',
+	'onboarding.guest_reassure': '无需账户，随时可注册。',
 	'onboarding.signin_prompt': '已经是会员？',
 	'onboarding.signin_link': '登录',
 	'onboarding.legal_currency': 'VXP 为游戏货币 · 非真实货币',

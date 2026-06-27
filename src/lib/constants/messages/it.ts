@@ -1793,6 +1793,8 @@ export const itMessages = {
 	'onboarding.lock_ready': 'Blocco @{handle}',
 	'onboarding.lock_blocked': 'Inserisci un handle disponibile per continuare',
 	'onboarding.skip': 'Salta — prima esplora, registrati dopo',
+	'onboarding.guest_cta': 'Continua come ospite',
+	'onboarding.guest_reassure': 'Nessun account richiesto. Registrati quando vuoi.',
 	'onboarding.signin_prompt': 'Hai già un account?',
 	'onboarding.signin_link': 'Accedi',
 	'onboarding.legal_currency': 'VXP è valuta di gioco · nessun denaro reale',
