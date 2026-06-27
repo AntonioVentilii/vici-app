@@ -1811,7 +1811,7 @@ export const deMessages = {
 	'onboarding.reward_sub': 'Sag {event} voraus',
 	'onboarding.lock_ready': '@{handle} wird gesichert',
 	'onboarding.lock_blocked': 'Gib einen verfügbaren Handle ein, um fortzufahren',
-	'onboarding.skip': 'Überspringen — erst ansehen, später registrieren',
+	'onboarding.skip': 'Überspringen · erst ansehen, später registrieren',
 	'onboarding.guest_cta': 'Als Gast fortfahren',
 	'onboarding.guest_reassure': 'Kein Konto nötig. Jederzeit registrieren.',
 	'onboarding.signin_prompt': 'Schon dabei?',
