@@ -244,21 +244,28 @@
 
 		try {
 			await dropAuth();
-
-			// Drive the redirect from here instead of waiting for the (app)
-			// layout's auth-gate effect to react to the cleared session: that
-			// reactive path paints the shell's hydration spinner first, which
-			// reads as a sluggish sign-out. Going straight to the sign-in route
-			// makes the swap immediate. The button stays `pending` through the
-			// navigation — this component unmounts on the route change, so the
-			// spinner never flickers back to the idle label.
-			await goto(resolve(PublicPath.SignIn), { replaceState: true });
 		} catch {
-			// Sign-out failed before navigating away — restore the confirm
-			// controls so the user can retry rather than stare at a dead spinner.
+			// Sign-out failed before the session changed. `dropAuth` set the
+			// global `authBusy` flag and only `onAuthStateChange` clears it —
+			// which won't fire now — so clear it here, otherwise the (app)
+			// shell stays stuck on its `authResolving` loader instead of the
+			// restored confirm controls. Then re-enable so the user can retry.
+			setAuthBusy(false);
 			signOutStatus = 'enabled';
 			confirmingSignOut = false;
+
+			return;
 		}
+
+		// Auth is dropped. Drive the redirect from here instead of waiting for
+		// the (app) layout's auth-gate effect to react and paint the shell's
+		// hydration spinner first, which reads as a sluggish sign-out. The
+		// button stays `pending` through the navigation — this component
+		// unmounts on the route change, so the spinner never flickers back to
+		// the idle label. Deliberately outside the try: a `goto` abort (a
+		// concurrent redirect already taking us away) is not a sign-out failure
+		// and must not re-enable the controls.
+		await goto(resolve(PublicPath.SignIn), { replaceState: true });
 	};
 
 	/**
