@@ -59,7 +59,10 @@
  * (declared in `:root` below) to lift their CTA above it. `data-ios-bottom-bar`
  * is stamped pre-paint in app.html for all iOS; the token is `0px` everywhere
  * else, so the inset is inert off iOS. Tunable in one place — adjust if the CTA
- * still clips or floats too high. */
+ * still clips or floats too high. This is the NOMINAL value; inside a
+ * `pinToVisualViewport` overlay the pin overrides it down to the residual the
+ * pin hasn't already cleared (0 in browsers whose visualViewport excludes the
+ * bar, e.g. Safari / in-app webviews), so the inset never doubles up. */
 html[data-ios-bottom-bar] {
 	--ios-bottom-bar-inset: 56px;
 }
