@@ -43,7 +43,11 @@ self.addEventListener('install', (event) => {
 		(async () => {
 			const cache = await caches.open(ASSET_CACHE);
 
-			await cache.addAll(build);
+			// Best-effort pre-cache: a flaky gateway is the exact condition this
+			// worker exists for, so one asset failing to fetch at install must not
+			// abort the whole install (`addAll` is all-or-nothing). Misses are
+			// fetched on demand and cached by the build-asset handler.
+			await Promise.allSettled(build.map((asset) => cache.add(asset)));
 
 			await self.skipWaiting();
 		})()
