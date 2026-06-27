@@ -18,10 +18,9 @@
 
 	const { isOpen, onClose, onSaved, leagueId, currentPrivacy }: Props = $props();
 
-	// Same order the create sheet uses — most → least restrictive
-	// (Private / Invite-only / Open) — so the picker reads identically
-	// across both surfaces.
-	const OPTIONS = [LeaguePrivacy.PRIVATE, LeaguePrivacy.INVITE, LeaguePrivacy.OPEN] as const;
+	// Same order the create sheet uses — Open / Private — so the picker
+	// reads identically across both surfaces.
+	const OPTIONS = [LeaguePrivacy.OPEN, LeaguePrivacy.PRIVATE] as const;
 
 	// Seeded from `currentPrivacy` every time the sheet opens (see the
 	// `$effect` below), so the initial value here is just a placeholder

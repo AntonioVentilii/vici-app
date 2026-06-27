@@ -1316,7 +1316,6 @@ export const ptMessages = {
 	'leagues.create.label_emblem': 'Emblema',
 	'leagues.create.label_privacy': 'Privacidade',
 	'leagues.create.preview_meta': '1 membro · {privacy}',
-	'leagues.create.privacy_invite': 'Apenas por convite',
 	'leagues.create.privacy_open': 'Aberta',
 	'leagues.create.privacy_private': 'Privada',
 	'leagues.privacy.cancel': 'Cancelar',
@@ -1324,10 +1323,8 @@ export const ptMessages = {
 		'As ligas abertas são descobertas publicamente: os membros atuais aparecerão em listas públicas e recomendações a amigos. Pode voltar atrás mais tarde, mas isso não pode ser anulado para quem já a viu.',
 	'leagues.privacy.confirm_open_confirm': 'Tornar pública',
 	'leagues.privacy.confirm_open_title': 'Tornar esta liga pública?',
-	'leagues.privacy.desc_invite':
-		'Não listada publicamente. Acesso por código de convite e recomendada aos amigos dos membros.',
 	'leagues.privacy.desc_open':
-		'Listada publicamente e recomendada aos amigos dos membros. Para aderir continua a ser necessário um código de convite.',
+		'Encontrável em pesquisas, listas e recomendações. Para aderir continua a ser necessário um código de convite.',
 	'leagues.privacy.desc_private':
 		'Oculta. Acessível apenas por código de convite e nunca apresentada em lado nenhum.',
 	'leagues.privacy.edit_label': 'Alterar privacidade',
@@ -1335,7 +1332,6 @@ export const ptMessages = {
 	'leagues.privacy.saving': 'A guardar…',
 	'leagues.privacy.sub': 'Escolha quem pode encontrar esta liga.',
 	'leagues.privacy.title': 'Privacidade da liga',
-	'leagues.detail.hero_chip_invite': 'Apenas por convite',
 	'leagues.detail.hero_chip_kind': 'Liga',
 	'leagues.detail.hero_chip_open': 'Aberta',
 	'leagues.detail.hero_chip_private': 'Privada',
@@ -1460,10 +1456,10 @@ export const ptMessages = {
 	'leagues.card.recommend_chip': 'Solicitar',
 	'leagues.card.trend_this_week': '{count} esta semana',
 	'leagues.empty.body':
-		'Compete com a tua equipa, os teus amigos, o teu escritório. Apenas por convite. O histórico fica entre vocês.',
+		'Compete com a tua equipa, os teus amigos, o teu escritório. O histórico fica entre vocês.',
 	'leagues.empty.cta_create': 'Criar uma liga',
 	'leagues.empty.cta_join': 'Entra com um código',
-	'leagues.empty.quote': '“As ligas são privadas.”',
+	'leagues.empty.quote': '“A tua equipa. O teu histórico.”',
 	'leagues.eyebrow.founded': 'As tuas ligas · Admin',
 	'leagues.eyebrow.friends_in': 'Os teus amigos estão aqui',
 	'leagues.eyebrow.joined': 'Ligas em que estás',
@@ -2188,7 +2184,7 @@ export const ptMessages = {
 	'arena.l_eyebrow': '01 · A TUA LIGA',
 	'arena.l_members': '{count} MEMBROS',
 	'arena.l_sub':
-		'Grupos por convite. A tua equipa, o teu escritório, o teu grupo. A classificação que realmente importa.',
+		'Os teus grupos. A tua equipa, o teu escritório, o teu grupo. A classificação que realmente importa.',
 	'arena.l_title_a': 'As pessoas',
 	'arena.l_title_b': 'que te conhecem.',
 	'arena.l_you': 'TU',
