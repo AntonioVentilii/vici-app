@@ -123,6 +123,20 @@ user-visible surface on its own; the digest that renders it ships
 separately. See
 [`specs/2026-06-25-feat-resolved-results-collection.md`](./spec-driven-development/specs/2026-06-25-feat-resolved-results-collection.md).
 
+### Arena Friends — the "Ranked" list
+
+Above the results digest, Arena → Friends ranks your friends by all-time
+prediction **accuracy** (win rate) descending — the same accuracy-first
+metric as league rank. Each row shows accuracy, daily streak, and a
+head-to-head delta chip (your accuracy minus theirs, green when you
+lead). Your own row carries your **rank within the group** (one above
+every friend with strictly higher accuracy), a "You" badge by your
+handle, and your VXP balance in place of a head-to-head chip. It sits
+inline at that real position — not pinned last — and stays visible while
+scrolling by sticking to whichever edge of the card its slot has passed,
+settling back inline when the slot is on screen. See
+[`specs/2026-06-26-feat-friends-you-row-sticky.md`](./spec-driven-development/specs/2026-06-26-feat-friends-you-row-sticky.md).
+
 ### Arena Friends — the "Recent results" digest
 
 The Arena → Friends section shows a per-friend **results** digest, not a

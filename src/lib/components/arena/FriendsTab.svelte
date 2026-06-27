@@ -378,9 +378,10 @@
 		return (below === -1 ? rankedFriends.length : below) + 1;
 	});
 
-	let showAllRanked = $state(false);
-	const visibleRanked = $derived(showAllRanked ? rankedFriends : rankedFriends.slice(0, 10));
-	const hiddenRankedCount = $derived(Math.max(0, rankedFriends.length - visibleRanked.length));
+	// Slot the YOU row occupies in the rendered list (0-based). Equals
+	// `rankedFriends.length` when the viewer trails every friend, where
+	// it renders as the final row.
+	const youInsertAt = $derived(myFriendRank - 1);
 
 	const formatPct = (value: number): string => {
 		// `value` is a 0..100 accuracy percentage — a live standings entry
@@ -1152,38 +1153,7 @@
 					onInvite={() => void handleShare()}
 				/>
 			{:else}
-				<ul class="ranked-list">
-					{#each visibleRanked as row, idx (row.friendId)}
-						{@const h2h = formatH2h(row.accuracy)}
-						<li>
-							<RankedRow
-								accuracyLabel={formatPct(row.accuracy)}
-								avatar={row.profile?.avatar}
-								avatarParts={row.profile?.avatarParts}
-								dailyStreak={row.dailyStreak}
-								displayName={row.profile?.nickname ??
-									t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
-								h2hAhead={h2h.ahead}
-								h2hValue={h2h.value}
-								nickname={row.profile?.nickname}
-								numLabel={String(idx + 1).padStart(2, '0')}
-								onOpen={() => openFriendSheet(row)}
-								owner={row.profile?.owner ?? row.friendId}
-								variant="friend"
-							/>
-						</li>
-					{/each}
-					{#if hiddenRankedCount > 0}
-						<li>
-							<button class="ranked-see-all" onclick={() => (showAllRanked = true)} type="button">
-								{t({
-									locale: $localeStore,
-									key: 'arena.friends.ranked.see_all',
-									params: { count: rankedFriends.length }
-								})}
-							</button>
-						</li>
-					{/if}
+				{#snippet youRow()}
 					<li class="ranked-li-you">
 						<RankedRow
 							accuracyLabel={formatPct(myAccuracy)}
@@ -1199,6 +1169,34 @@
 							vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
 						/>
 					</li>
+				{/snippet}
+				<ul class="ranked-list">
+					{#each rankedFriends as row, idx (row.friendId)}
+						{#if idx === youInsertAt}
+							{@render youRow()}
+						{/if}
+						{@const h2h = formatH2h(row.accuracy)}
+						<li>
+							<RankedRow
+								accuracyLabel={formatPct(row.accuracy)}
+								avatar={row.profile?.avatar}
+								avatarParts={row.profile?.avatarParts}
+								dailyStreak={row.dailyStreak}
+								displayName={row.profile?.nickname ??
+									t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
+								h2hAhead={h2h.ahead}
+								h2hValue={h2h.value}
+								nickname={row.profile?.nickname}
+								numLabel={String(idx < youInsertAt ? idx + 1 : idx + 2).padStart(2, '0')}
+								onOpen={() => openFriendSheet(row)}
+								owner={row.profile?.owner ?? row.friendId}
+								variant="friend"
+							/>
+						</li>
+					{/each}
+					{#if youInsertAt >= rankedFriends.length}
+						{@render youRow()}
+					{/if}
 				</ul>
 			{/if}
 		</section>
@@ -1835,8 +1833,8 @@
 	/* ── Ranked list ───────────────────────────────────────── */
 	/* Single unified card with internal dividers. The
 	   list is its own internal-scroll container (`overflow: auto;
-	   max-height: 60vh`) so the YOU `<li>` can stick to the bottom
-	   of the card on scroll, instead of being trapped by the page
+	   max-height: 60vh`) so the YOU `<li>` can stick to the nearest
+	   card edge on scroll, instead of being trapped by the page
 	   scroll context. */
 	.ranked-list {
 		position: relative;
@@ -1856,40 +1854,21 @@
 		border-top: 1px solid var(--border-base);
 	}
 
-	/* Sticky YOU row — pinned to the bottom edge of the rank list
-	   with a gold-tinted backdrop blur.
-	   `position: sticky` lives on the `<li>` wrapper (not the
-	   inner row element rendered by `RankedRow`): a sticky element
-	   is constrained by its containing block, and the `<li>` is a
-	   direct child of the scrollable `.ranked-list` — putting sticky
-	   on the inner row would constrain it to the `<li>`'s own height,
-	   which is the row itself, so no visible sticking. */
+	/* Sticky YOU row — sits inline at the viewer's real rank and, on
+	   scroll, glues to whichever card edge its natural slot has passed
+	   (top when the slot is above the fold, bottom when below) via a
+	   single sticky element with both insets set; it flows back inline
+	   when the slot is on screen.
+	   `position: sticky` lives on the `<li>` wrapper (not the inner row
+	   element rendered by `RankedRow`): a sticky element is constrained
+	   by its containing block, and the `<li>` is a direct child of the
+	   scrollable `.ranked-list` — putting sticky on the inner row would
+	   constrain it to the `<li>`'s own height, so no visible sticking. */
 	.ranked-li-you {
 		position: sticky;
+		top: 0;
 		bottom: 0;
 		z-index: 2;
-	}
-
-	/* "See all N →" sits as the last divider-separated row inside
-	   the unified ranked card. Accent text, no border (border-top
-	   comes from the shared `li + li` divider rule). */
-	.ranked-see-all {
-		width: 100%;
-		padding: 0.7rem 0.85rem;
-		border: 0;
-		background: transparent;
-		color: var(--color-primary);
-		font-family: var(--font-mono);
-		font-size: var(--t-12);
-		font-weight: 700;
-		letter-spacing: var(--tracking-wide);
-		cursor: pointer;
-		text-align: center;
-		transition: background 140ms ease;
-	}
-
-	.ranked-see-all:hover {
-		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
 	}
 
 	/* ── Empty ─────────────────────────────────────────────── */
