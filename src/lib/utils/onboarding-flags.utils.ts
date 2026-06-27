@@ -18,13 +18,22 @@ export const TIP_DASH_SEEN_KEY = 'vici.tip-dash-seen';
 export const TIP_ARENA_SEEN_KEY = 'vici.tip-arena-seen';
 export const TIP_PROFILE_SEEN_KEY = 'vici.tip-profile-seen';
 
+/**
+ * Dismissal flag for the Dash getting-started checklist (`DashGettingStarted`):
+ * a once-per-device card that points first-run users at their first call, team,
+ * and league. Persisted so the card stays hidden after the user dismisses it,
+ * and identity-scoped like the rest of the onboarding flags.
+ */
+export const CHECKLIST_DASH_SEEN_KEY = 'vici.checklist-dash-seen';
+
 const ONBOARDING_SEEN_KEYS = [
 	COACH_ONBOARDING_SEEN_KEY,
 	COACH_FLOW_SEEN_KEY,
 	BATTLES_INTRO_SEEN_KEY,
 	TIP_DASH_SEEN_KEY,
 	TIP_ARENA_SEEN_KEY,
-	TIP_PROFILE_SEEN_KEY
+	TIP_PROFILE_SEEN_KEY,
+	CHECKLIST_DASH_SEEN_KEY
 ] as const;
 
 /** Drop every onboarding "seen" flag. Best-effort (see `storage.utils`). */
