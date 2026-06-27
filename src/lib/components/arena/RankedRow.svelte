@@ -120,7 +120,7 @@
 		background: color-mix(in srgb, var(--color-primary) 10%, var(--bg-popover));
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
-		box-shadow: 0 -6px 16px -8px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 0 16px -6px rgba(0, 0, 0, 0.3);
 		cursor: default;
 	}
 
