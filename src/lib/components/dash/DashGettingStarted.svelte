@@ -14,6 +14,8 @@
 	 */
 	import { nonNullish } from '@dfinity/utils';
 	import { ArrowRight, Check } from '@lucide/svelte/icons';
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -22,7 +24,6 @@
 	import { userStore } from '$lib/stores/user.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { CHECKLIST_DASH_SEEN_KEY } from '$lib/utils/onboarding-flags.utils';
-	import { has, set } from '$lib/utils/storage.utils';
 
 	interface Step {
 		done: boolean;
@@ -31,7 +32,20 @@
 		go: () => void;
 	}
 
-	let dismissed = $state(has({ key: CHECKLIST_DASH_SEEN_KEY }));
+	// Default to visible so the server render and first client render
+	// agree; the persisted dismissal is read on mount to avoid a
+	// hydration mismatch from touching localStorage at init.
+	let dismissed = $state(false);
+
+	onMount(() => {
+		if (browser) {
+			try {
+				dismissed = localStorage.getItem(CHECKLIST_DASH_SEEN_KEY) === '1';
+			} catch {
+				// Storage unavailable — keep the card visible.
+			}
+		}
+	});
 
 	const callDone = $derived(($userStore.profile?.totalTrades ?? 0) >= 1);
 	const teamDone = $derived(
@@ -63,7 +77,14 @@
 
 	const dismiss = (): void => {
 		dismissed = true;
-		set({ key: CHECKLIST_DASH_SEEN_KEY, value: '1' });
+
+		if (browser) {
+			try {
+				localStorage.setItem(CHECKLIST_DASH_SEEN_KEY, '1');
+			} catch {
+				// Storage unavailable — dismissal won't survive a reload.
+			}
+		}
 	};
 </script>
 
