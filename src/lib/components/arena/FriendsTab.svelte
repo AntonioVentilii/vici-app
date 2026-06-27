@@ -366,14 +366,16 @@
 		return rows.sort((a, b) => b.accuracy - a.accuracy);
 	});
 
-	// Viewer's standing within the ranked set: one above every friend
-	// with a strictly higher accuracy. Same `accuracyOf` source as the
-	// friend rows, so the comparison is apples-to-apples. `rankedFriends`
-	// is sorted by accuracy descending, so the first friend who isn't
-	// strictly higher marks the viewer's slot — found without allocating
-	// an intermediate array.
+	// Viewer's slot in the accuracy-ranked friends list. Placed just above the
+	// first friend with strictly lower accuracy, so friends at equal-or-higher
+	// accuracy stay ahead — on a tie the viewer sits below them, never above.
+	// That keeps a viewer with no edge yet (everyone still at 0% on a thin
+	// graph) off a misleading #01 and at the bottom instead. Same `accuracyOf`
+	// source as the friend rows, so the comparison is apples-to-apples;
+	// `rankedFriends` is accuracy-descending, so this scan finds the slot
+	// without allocating an intermediate array.
 	const myFriendRank = $derived.by(() => {
-		const below = rankedFriends.findIndex(({ accuracy }) => accuracy <= myAccuracy);
+		const below = rankedFriends.findIndex(({ accuracy }) => accuracy < myAccuracy);
 
 		return (below === -1 ? rankedFriends.length : below) + 1;
 	});
