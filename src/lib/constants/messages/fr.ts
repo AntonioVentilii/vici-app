@@ -1801,7 +1801,7 @@ export const frMessages = {
 	'onboarding.reward_sub': 'Pronostiquez {event}',
 	'onboarding.lock_ready': 'Réservation de @{handle}',
 	'onboarding.lock_blocked': 'Saisissez un pseudo disponible pour continuer',
-	'onboarding.skip': 'Passer — explorez d’abord, inscrivez-vous plus tard',
+	'onboarding.skip': 'Passer · explorez d’abord, inscrivez-vous plus tard',
 	'onboarding.signin_prompt': 'Déjà membre ?',
 	'onboarding.signin_link': 'Se connecter',
 	'onboarding.legal_currency': 'Le VXP est une monnaie de jeu · sans argent réel',

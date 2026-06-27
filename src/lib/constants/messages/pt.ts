@@ -1791,7 +1791,7 @@ export const ptMessages = {
 	'onboarding.reward_sub': 'Faça palpites em {event}',
 	'onboarding.lock_ready': 'Reservando @{handle}',
 	'onboarding.lock_blocked': 'Digite um identificador disponível para continuar',
-	'onboarding.skip': 'Pular — veja antes, cadastre-se depois',
+	'onboarding.skip': 'Pular · veja antes, cadastre-se depois',
 	'onboarding.signin_prompt': 'Já tem conta?',
 	'onboarding.signin_link': 'Entrar',
 	'onboarding.legal_currency': 'VXP é moeda de jogo · sem dinheiro real',

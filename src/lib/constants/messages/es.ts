@@ -1796,7 +1796,7 @@ export const esMessages = {
 	'onboarding.reward_sub': 'Predice {event}',
 	'onboarding.lock_ready': 'Reservando @{handle}',
 	'onboarding.lock_blocked': 'Introduce un alias disponible para continuar',
-	'onboarding.skip': 'Saltar — explora primero, regístrate luego',
+	'onboarding.skip': 'Saltar · explora primero, regístrate luego',
 	'onboarding.signin_prompt': '¿Ya tienes cuenta?',
 	'onboarding.signin_link': 'Inicia sesión',
 	'onboarding.legal_currency': 'VXP es moneda de juego · sin dinero real',
