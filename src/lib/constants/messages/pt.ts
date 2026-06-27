@@ -1062,7 +1062,7 @@ export const ptMessages = {
 	'flow.eyebrow': 'MODO FLOW',
 	'flow.fresh_start': 'Começo limpo.',
 	'flow.funds.body':
-		'Os teus VXP já estão em jogo em previsões abertas. Vão libertando-se à medida que esses mercados se resolvem — vê as tuas chamadas abertas no Dashboard.',
+		'Os teus VXP já estão em jogo em previsões abertas. Vão libertando-se à medida que esses mercados se resolvem. Vê as tuas chamadas abertas no Dashboard.',
 	'flow.funds.eyebrow': 'TUDO EM JOGO',
 	'flow.funds.title': 'Tudo aplicado.',
 	'flow.in_flow': 'no Flow',
@@ -1096,9 +1096,9 @@ export const ptMessages = {
 	'flow.skip_aria': 'Saltar',
 	'flow.stage_ended': '{stage} encerrado.',
 	'flow.stake.warning.unaffordable':
-		'Mais do que os teus VXP disponíveis — o teu saldo está em jogo. Baixa o valor.',
+		'Mais do que os teus VXP disponíveis. O teu saldo está em jogo, baixa o valor.',
 	'flow.stake.warning.wont_finish':
-		'Assim sobra muito pouco para terminar o teu flow — tenta um valor menor.',
+		'Assim sobra muito pouco para terminar o teu flow. Tenta um valor menor.',
 	'flow.streak_combo': 'Sequência ×{count}',
 	'flow.title_a': 'Um deslize.',
 	'flow.title_b': 'Uma previsão.',

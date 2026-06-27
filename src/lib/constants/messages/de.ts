@@ -1068,7 +1068,7 @@ export const deMessages = {
 	'flow.eyebrow': 'FLOW-MODUS',
 	'flow.fresh_start': 'Neustart.',
 	'flow.funds.body':
-		'Deine VXP sind bereits in offenen Vorhersagen gebunden. Sie werden frei, sobald sich diese Märkte auflösen — sieh dir deine offenen Calls im Dashboard an.',
+		'Deine VXP sind bereits in offenen Vorhersagen gebunden. Sie werden frei, sobald sich diese Märkte auflösen. Sieh dir deine offenen Calls im Dashboard an.',
 	'flow.funds.eyebrow': 'ALLES IM SPIEL',
 	'flow.funds.title': 'Voll eingesetzt.',
 	'flow.in_flow': 'im Flow',
@@ -1102,9 +1102,9 @@ export const deMessages = {
 	'flow.skip_aria': 'Überspringen',
 	'flow.stage_ended': '{stage} beendet.',
 	'flow.stake.warning.unaffordable':
-		'Mehr als deine verfügbaren VXP — dein Guthaben ist im Spiel. Setze kleiner.',
+		'Mehr als deine verfügbaren VXP. Dein Guthaben ist im Spiel, setze kleiner.',
 	'flow.stake.warning.wont_finish':
-		'So bleibt zu wenig, um deinen Flow zu beenden — versuch es kleiner.',
+		'So bleibt zu wenig, um deinen Flow zu beenden. Versuch es kleiner.',
 	'flow.streak_combo': 'Streak ×{count}',
 	'flow.title_a': 'Ein Swipe.',
 	'flow.title_b': 'Ein Call.',

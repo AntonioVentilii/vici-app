@@ -1066,7 +1066,7 @@ export const frMessages = {
 	'flow.eyebrow': 'MODE FLOW',
 	'flow.fresh_start': 'Nouveau départ.',
 	'flow.funds.body':
-		'Vos VXP sont déjà engagés dans des prédictions ouvertes. Ils se libèrent à mesure que ces marchés se résolvent — consultez vos appels ouverts sur le Dashboard.',
+		'Vos VXP sont déjà engagés dans des prédictions ouvertes. Ils se libèrent à mesure que ces marchés se résolvent. Consultez vos appels ouverts sur le Dashboard.',
 	'flow.funds.eyebrow': 'TOUT ENGAGÉ',
 	'flow.funds.title': 'Tout est en jeu.',
 	'flow.in_flow': 'en Flow',
@@ -1099,9 +1099,9 @@ export const frMessages = {
 	'flow.skip_aria': 'Passer',
 	'flow.stage_ended': '{stage} terminé.',
 	'flow.stake.warning.unaffordable':
-		'Plus que tes VXP disponibles — ton solde est en jeu. Réduis la mise.',
+		'Plus que tes VXP disponibles. Ton solde est en jeu, réduis la mise.',
 	'flow.stake.warning.wont_finish':
-		'Il resterait trop peu pour finir ton flow — essaie une mise plus petite.',
+		'Il resterait trop peu pour finir ton flow. Essaie une mise plus petite.',
 	'flow.streak_combo': 'Série ×{count}',
 	'flow.title_a': 'Un swipe.',
 	'flow.title_b': 'Un pronostic.',

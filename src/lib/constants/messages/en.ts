@@ -1042,7 +1042,7 @@ export const enMessages = {
 	'flow.eyebrow': 'FLOW MODE',
 	'flow.fresh_start': 'Fresh start.',
 	'flow.funds.body':
-		'Your VXP is already in play on open predictions. It frees up as those markets resolve — check your open calls on the Dashboard.',
+		'Your VXP is already in play on open predictions. It frees up as those markets resolve. Check your open calls on the Dashboard.',
 	'flow.funds.eyebrow': "THAT'S ALL IN",
 	'flow.funds.title': 'Fully deployed.',
 	'flow.in_flow': 'in Flow',
@@ -1075,9 +1075,9 @@ export const enMessages = {
 	'flow.skip_aria': 'Skip',
 	'flow.stage_ended': '{stage} ended.',
 	'flow.stake.warning.unaffordable':
-		'More than your spendable VXP — your balance is in play. Lower the size.',
+		'More than your spendable VXP. Your balance is in play, so lower the size.',
 	'flow.stake.warning.wont_finish':
-		'This leaves too little to finish your flow — try a smaller size.',
+		'This leaves too little to finish your flow. Try a smaller size.',
 	'flow.streak_combo': 'Streak ×{count}',
 	'flow.title_a': 'One swipe.',
 	'flow.title_b': 'One call.',
