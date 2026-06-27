@@ -10,18 +10,21 @@
 	} from '$lib/utils/onboarding-flags.utils';
 
 	/**
-	 * FlowCoach — first-run gesture map shown the first time a signed-in
-	 * user meets the prediction card. It is a NON-BLOCKING overlay: the
-	 * card below stays fully readable and swipeable, and only the opt-out
-	 * button captures pointer events. The coach teaches by doing — it
-	 * does not hijack the card, run a timer, or drift the deck.
+	 * FlowCoach — first-run gesture map shown the first time any user
+	 * reaches the prediction card (the deck is open to guests too). It is
+	 * a NON-BLOCKING overlay: the card below stays fully readable and
+	 * swipeable, and only the opt-out button captures pointer events. The
+	 * coach teaches by doing — it does not hijack the card, run a timer,
+	 * or drift the deck.
 	 *
 	 * Dismissal is learn-by-doing: the coach clears itself the moment the
-	 * user places their FIRST real call (a committed YES / NO), reacting
-	 * to the `commitSignal` counter the deck increments on every commit.
-	 * On that first commit it flashes a short confirmation, then unmounts.
-	 * The "Got it" button dismisses immediately, without the flash. Either
-	 * path persists the seen flag so the coach never reappears.
+	 * user places their FIRST real call, reacting to the `commitSignal`
+	 * counter. The deck only bumps that counter on a committed YES / NO,
+	 * which is reachable only when signed in — so for guests the "Got it"
+	 * opt-out is the dismissal path. On the first commit it flashes a
+	 * short confirmation, then unmounts; "Got it" dismisses immediately,
+	 * without the flash. Either path persists the seen flag so the coach
+	 * never reappears.
 	 *
 	 * `surface` selects which dismissal flag persists in `localStorage`
 	 * (shown at most once per device, per surface). Both surfaces share the
