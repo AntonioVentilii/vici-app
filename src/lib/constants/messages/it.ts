@@ -1305,7 +1305,6 @@ export const itMessages = {
 	'leagues.create.label_emblem': 'Emblema',
 	'leagues.create.label_privacy': 'Privacy',
 	'leagues.create.preview_meta': '1 membro · {privacy}',
-	'leagues.create.privacy_invite': 'Solo su invito',
 	'leagues.create.privacy_open': 'Aperta',
 	'leagues.create.privacy_private': 'Privata',
 	'leagues.privacy.cancel': 'Annulla',
@@ -1313,10 +1312,8 @@ export const itMessages = {
 		'Le leghe aperte sono visibili pubblicamente: i membri attuali compariranno negli elenchi pubblici e nei consigli per gli amici. Potrai tornare indietro in seguito, ma non è reversibile per chi l’ha già vista.',
 	'leagues.privacy.confirm_open_confirm': 'Rendi pubblica',
 	'leagues.privacy.confirm_open_title': 'Rendere pubblica questa lega?',
-	'leagues.privacy.desc_invite':
-		'Non elencata pubblicamente. Si entra con codice d’invito ed è consigliata agli amici dei membri.',
 	'leagues.privacy.desc_open':
-		'Elencata pubblicamente e consigliata agli amici dei membri. Per unirsi serve comunque un codice d’invito.',
+		'Trovabile in ricerca, elenchi e consigli. Per unirsi serve comunque un codice d’invito.',
 	'leagues.privacy.desc_private':
 		'Nascosta. Raggiungibile solo con codice d’invito e mai mostrata da nessuna parte.',
 	'leagues.privacy.edit_label': 'Modifica privacy',
@@ -1324,7 +1321,6 @@ export const itMessages = {
 	'leagues.privacy.saving': 'Salvataggio…',
 	'leagues.privacy.sub': 'Scegli chi può trovare questa lega.',
 	'leagues.privacy.title': 'Privacy della lega',
-	'leagues.detail.hero_chip_invite': 'Solo su invito',
 	'leagues.detail.hero_chip_kind': 'Lega',
 	'leagues.detail.hero_chip_open': 'Aperta',
 	'leagues.detail.hero_chip_private': 'Privata',
@@ -1452,10 +1448,10 @@ export const itMessages = {
 	'leagues.card.recommend_chip': 'Richiedi',
 	'leagues.card.trend_this_week': '{count} questa settimana',
 	'leagues.empty.body':
-		'Sfida la tua squadra, i tuoi amici, il tuo ufficio. Solo su invito. Il record resta fra di voi.',
+		'Sfida la tua squadra, i tuoi amici, il tuo ufficio. Il record resta fra di voi.',
 	'leagues.empty.cta_create': 'Crea una lega',
 	'leagues.empty.cta_join': 'Entra con un codice',
-	'leagues.empty.quote': '“Le leghe sono private.”',
+	'leagues.empty.quote': '“La tua squadra. Il tuo record.”',
 	'leagues.eyebrow.founded': 'Le tue leghe · Admin',
 	'leagues.eyebrow.friends_in': 'Ci sono i tuoi amici',
 	'leagues.eyebrow.joined': 'Leghe a cui partecipi',
@@ -2175,7 +2171,7 @@ export const itMessages = {
 	'arena.l_eyebrow': '01 · LA TUA LEGA',
 	'arena.l_members': '{count} MEMBRI',
 	'arena.l_sub':
-		'Gruppi su invito. La tua squadra, il tuo ufficio, la tua chat di gruppo. La classifica che conta davvero.',
+		'I tuoi gruppi. La tua squadra, il tuo ufficio, la tua chat di gruppo. La classifica che conta davvero.',
 	'arena.l_title_a': 'Le persone',
 	'arena.l_title_b': 'che ti conoscono.',
 	'arena.l_you': 'TU',

@@ -662,11 +662,7 @@ export const idlFactory = ({ IDL }) => {
 				description: IDL.Opt(IDL.Text),
 				emblem: IDL.Opt(IDL.Text),
 				created_at_ms: IDL.Float64,
-				privacy: IDL.Variant({
-					open: IDL.Null,
-					private: IDL.Null,
-					invite: IDL.Null
-				})
+				privacy: IDL.Variant({ open: IDL.Null, private: IDL.Null })
 			})
 		)
 	});
@@ -739,11 +735,7 @@ export const idlFactory = ({ IDL }) => {
 					description: IDL.Opt(IDL.Text),
 					emblem: IDL.Opt(IDL.Text),
 					created_at_ms: IDL.Float64,
-					privacy: IDL.Variant({
-						open: IDL.Null,
-						private: IDL.Null,
-						invite: IDL.Null
-					})
+					privacy: IDL.Variant({ open: IDL.Null, private: IDL.Null })
 				}),
 				friend_members: IDL.Vec(IDL.Text),
 				member_count: IDL.Float64
@@ -1022,11 +1014,7 @@ export const idlFactory = ({ IDL }) => {
 					description: IDL.Opt(IDL.Text),
 					emblem: IDL.Opt(IDL.Text),
 					created_at_ms: IDL.Float64,
-					privacy: IDL.Variant({
-						open: IDL.Null,
-						private: IDL.Null,
-						invite: IDL.Null
-					})
+					privacy: IDL.Variant({ open: IDL.Null, private: IDL.Null })
 				}),
 				member_count: IDL.Float64
 			})
@@ -1133,11 +1121,7 @@ export const idlFactory = ({ IDL }) => {
 				description: IDL.Opt(IDL.Text),
 				emblem: IDL.Opt(IDL.Text),
 				created_at_ms: IDL.Float64,
-				privacy: IDL.Variant({
-					open: IDL.Null,
-					private: IDL.Null,
-					invite: IDL.Null
-				})
+				privacy: IDL.Variant({ open: IDL.Null, private: IDL.Null })
 			})
 		)
 	});
