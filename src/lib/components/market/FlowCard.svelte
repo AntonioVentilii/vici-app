@@ -94,6 +94,12 @@
 		// Flip this one card between translated and original. No-op-safe when
 		// absent (static / guided usages don't wire it).
 		onToggleTranslation?: () => void;
+		// Proactive stake warning resolved by FlowMode, surfaced on the
+		// back-face slider. `'unaffordable'` = the selected size exceeds
+		// spendable VXP; `'wont-finish'` = it would leave too little to fund
+		// the rest of the sitting. Defaults to `'none'` so static / preview
+		// usages render no warning.
+		stakeWarning?: 'none' | 'unaffordable' | 'wont-finish';
 	}
 
 	const {
@@ -118,7 +124,8 @@
 		translation,
 		showOriginal = false,
 		translatedLanguageLabel,
-		onToggleTranslation
+		onToggleTranslation,
+		stakeWarning = 'none'
 	}: Props = $props();
 
 	// Single source for the card's rendered text: translated unless the viewer
@@ -828,6 +835,7 @@
 						{pointXs}
 						{points}
 						{priorCall}
+						{stakeWarning}
 						{tradeAmount}
 					/>
 				{/if}

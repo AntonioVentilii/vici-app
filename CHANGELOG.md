@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.8.4](https://github.com/AntonioVentilii/vici-app/compare/v1.8.3...v1.8.4) (2026-06-27)
+
+
+### Features
+
+* **leagues:** collapse visibility model to Open and Private ([#1045](https://github.com/AntonioVentilii/vici-app/issues/1045)) ([5177ba7](https://github.com/AntonioVentilii/vici-app/commit/5177ba72b2a552e6dc89ca0f8ba3a9a4d33d9d2b))
+
+
+### Bug Fixes
+
+* **flow:** hold transient banners longer so they stay readable ([#1050](https://github.com/AntonioVentilii/vici-app/issues/1050)) ([9869aa5](https://github.com/AntonioVentilii/vici-app/commit/9869aa5fb72a02629a2a63898a3a9de7cfc50b16))
+* **flow:** span the entry overlay full-bleed on desktop ([#1049](https://github.com/AntonioVentilii/vici-app/issues/1049)) ([83e8616](https://github.com/AntonioVentilii/vici-app/commit/83e8616227607ff196833aa0d30c60e7d23cbd3e))
+* **pwa:** navigation-fallback service worker to mask transient gateway 500s on OAuth return ([#1046](https://github.com/AntonioVentilii/vici-app/issues/1046)) ([64c67a1](https://github.com/AntonioVentilii/vici-app/commit/64c67a145c3226dd319015c217d824f35bc4096d))
+
+
+### Miscellaneous Chores
+
+* Update ICDC declarations ([35a2a4b](https://github.com/AntonioVentilii/vici-app/commit/35a2a4bd712b9b8acfdd7ed5aba9d9a9acaf74a3))
+
 ## [1.8.3](https://github.com/AntonioVentilii/vici-app/compare/v1.8.2...v1.8.3) (2026-06-27)
 
 

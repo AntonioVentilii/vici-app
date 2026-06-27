@@ -1065,6 +1065,10 @@ export const frMessages = {
 	'flow.exit_aria': 'Quitter Flow',
 	'flow.eyebrow': 'MODE FLOW',
 	'flow.fresh_start': 'Nouveau départ.',
+	'flow.funds.body':
+		'Vos VXP sont déjà engagés dans des prédictions ouvertes. Ils se libèrent à mesure que ces marchés se résolvent. Consultez vos appels ouverts sur le Dashboard.',
+	'flow.funds.eyebrow': 'TOUT ENGAGÉ',
+	'flow.funds.title': 'Tout est en jeu.',
 	'flow.in_flow': 'en Flow',
 	'flow.invite.code_label': 'Code',
 	'flow.invite.copy_code_aria': 'Copier le code d’invitation',
@@ -1094,6 +1098,10 @@ export const frMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP cette session',
 	'flow.skip_aria': 'Passer',
 	'flow.stage_ended': '{stage} terminé.',
+	'flow.stake.warning.unaffordable':
+		'Plus que tes VXP disponibles. Ton solde est en jeu, réduis la mise.',
+	'flow.stake.warning.wont_finish':
+		'Il resterait trop peu pour finir ton flow. Essaie une mise plus petite.',
 	'flow.streak_combo': 'Série ×{count}',
 	'flow.title_a': 'Un swipe.',
 	'flow.title_b': 'Un pronostic.',
