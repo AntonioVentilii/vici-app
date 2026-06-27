@@ -101,8 +101,9 @@
 	const placeholderCycle = sampleHandlePool(PLACEHOLDER_CYCLE_LENGTH);
 
 	// The settled cycle word: the placeholder's claim target and the
-	// `@name` preview. It advances in lock-step with the typewriter at the
-	// empty-field beat, so the preview never disagrees with the hint.
+	// `@name` preview. It advances to the next word only once that word is
+	// visibly being typed, so the preview never names a handle the field
+	// hasn't shown.
 	let suggestion = $state(placeholderCycle[0]);
 
 	// The live placeholder fragment the typewriter reveals then retracts,
@@ -114,7 +115,7 @@
 	// Pause the cycle while the field is engaged.
 	let isFocused = $state(false);
 
-	const placeholderText = $derived(isTyping ? `${typedPlaceholder}|` : suggestion);
+	const placeholderText = $derived(isTyping && !isFocused ? `${typedPlaceholder}|` : suggestion);
 
 	let custom = $state('');
 
@@ -380,9 +381,9 @@
 
 	// Drive the placeholder typewriter. Plain locals (not runes) hold the
 	// loop cursor; only the rendered fragment and the settled word are
-	// reactive. The settled `suggestion` advances at the empty-field beat so
-	// the `@name` preview and the hint never drift apart. Honours reduced
-	// motion by leaving the placeholder on the first settled word.
+	// reactive. The settled `suggestion` advances as each new word starts
+	// typing so the `@name` preview and the hint never drift apart. Honours
+	// reduced motion by leaving the placeholder on the first settled word.
 	onMount(() => {
 		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -411,6 +412,13 @@
 			charIndex += deleting ? -1 : 1;
 			typedPlaceholder = word.slice(0, charIndex);
 
+			// Advance the claim target only once the new word is visibly being
+			// typed — never during the blank beat — so a blur there commits the
+			// word the user just saw, not the next one they haven't.
+			if (!deleting && charIndex === 1) {
+				suggestion = word;
+			}
+
 			let delay_ms = deleting ? DELETE_SPEED_MS : TYPE_SPEED_MS;
 
 			if (!deleting && charIndex === word.length) {
@@ -419,7 +427,6 @@
 			} else if (deleting && charIndex === 0) {
 				deleting = false;
 				wordIndex = (wordIndex + 1) % placeholderCycle.length;
-				suggestion = placeholderCycle[wordIndex];
 				delay_ms = EMPTY_PAUSE_MS;
 			}
 
