@@ -2308,7 +2308,6 @@ export const esMessages = {
 	'status.resolved': 'Resuelto',
 	'status.unknown': 'Desconocido',
 	'ticker.consensus': 'consenso',
-	'transactions.available': 'Disponible',
 	'transactions.back': 'Volver al panel',
 	'transactions.bonus.achievement': 'Logro',
 	'transactions.bonus.calibration': 'Premio de calibración',
@@ -2341,7 +2340,6 @@ export const esMessages = {
 	'transactions.kind.sent': 'Enviados',
 	'transactions.kind.won': 'Ganada',
 	'transactions.title': 'Transacciones',
-	'transactions.total': 'Total',
 	'transactions.truncated': 'Historial anterior no mostrado',
 	'trust.eyebrow': 'CONFIANZA',
 	'trust.p1_b':

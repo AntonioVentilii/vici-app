@@ -2304,7 +2304,6 @@ export const ptMessages = {
 	'status.resolved': 'Resolvido',
 	'status.unknown': 'Desconhecido',
 	'ticker.consensus': 'consenso',
-	'transactions.available': 'Disponível',
 	'transactions.back': 'Voltar ao painel',
 	'transactions.bonus.achievement': 'Conquista',
 	'transactions.bonus.calibration': 'Prêmio de calibração',
@@ -2337,7 +2336,6 @@ export const ptMessages = {
 	'transactions.kind.sent': 'Enviados',
 	'transactions.kind.won': 'Ganha',
 	'transactions.title': 'Transações',
-	'transactions.total': 'Total',
 	'transactions.truncated': 'Histórico anterior não exibido',
 	'trust.eyebrow': 'CONFIANÇA',
 	'trust.p1_b':
