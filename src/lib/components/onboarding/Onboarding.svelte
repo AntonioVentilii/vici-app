@@ -69,10 +69,53 @@
 	const starterVxp = $derived(formatVxpBalance({ value: newUserVxpAmountMilestone1BaseUnits() }));
 	const eventTitle = $derived(event.brandedTitle ?? event.shortTitle ?? event.title);
 
-	// A pool-derived suggestion shown as the empty-field placeholder. Picked
-	// once at init; selecting it (tabbing away / submitting an empty field)
-	// claims it. Pool entries already satisfy the handle validator.
-	const suggestion = HANDLE_POOL[Math.floor(Math.random() * HANDLE_POOL.length)];
+	// Placeholder typewriter cadence — reveal a word, hold it, retract it,
+	// reveal the next.
+	const PLACEHOLDER_CYCLE_LENGTH = 6;
+	const TYPE_SPEED_MS = 95;
+	const DELETE_SPEED_MS = 45;
+	const SETTLED_PAUSE_MS = 2200;
+	const EMPTY_PAUSE_MS = 550;
+	const FOCUS_POLL_MS = 500;
+
+	// Pick `count` distinct entries from the handle pool (sampling without
+	// replacement off a throwaway copy).
+	const sampleHandlePool = (count: number): string[] => {
+		const remaining = [...HANDLE_POOL];
+		const limit = Math.min(count, remaining.length);
+		const picks: string[] = [];
+
+		while (picks.length < limit) {
+			const i = Math.floor(Math.random() * remaining.length);
+			picks.push(remaining.splice(i, 1)[0]);
+		}
+
+		return picks;
+	};
+
+	// A rotating set of pool picks, revealed one at a time as a
+	// typewriter-animated placeholder. Every entry already satisfies the
+	// handle validator, so whichever word is settled in the field is
+	// directly claimable (tabbing away / submitting an empty field claims
+	// it). Sampled once at init.
+	const placeholderCycle = sampleHandlePool(PLACEHOLDER_CYCLE_LENGTH);
+
+	// The settled cycle word: the placeholder's claim target and the
+	// `@name` preview. It advances to the next word only once that word is
+	// visibly being typed, so the preview never names a handle the field
+	// hasn't shown.
+	let suggestion = $state(placeholderCycle[0]);
+
+	// The live placeholder fragment the typewriter reveals then retracts,
+	// and whether the animation is running (a no-op under reduced motion or
+	// a single-word pool, where the placeholder stays the settled word).
+	let typedPlaceholder = $state(placeholderCycle[0]);
+	let isTyping = $state(false);
+
+	// Pause the cycle while the field is engaged.
+	let isFocused = $state(false);
+
+	const placeholderText = $derived(isTyping && !isFocused ? `${typedPlaceholder}|` : suggestion);
 
 	let custom = $state('');
 
@@ -310,6 +353,15 @@
 		onPicksReady?.({ participantId: null, side: null, handle: selectedName });
 	};
 
+	const onFieldFocus = () => {
+		isFocused = true;
+	};
+
+	const onFieldBlur = () => {
+		isFocused = false;
+		onCommitHandle();
+	};
+
 	const lockKey = $derived<MessageKey>(
 		canClaim ? 'onboarding.lock_ready' : 'onboarding.lock_blocked'
 	);
@@ -325,6 +377,66 @@
 
 	onMount(() => {
 		track({ name: 'onboarding_started', source: 'onboarding' });
+	});
+
+	// Drive the placeholder typewriter. Plain locals (not runes) hold the
+	// loop cursor; only the rendered fragment and the settled word are
+	// reactive. The settled `suggestion` advances as each new word starts
+	// typing so the `@name` preview and the hint never drift apart. Honours
+	// reduced motion by leaving the placeholder on the first settled word.
+	onMount(() => {
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		if (reduceMotion || placeholderCycle.length <= 1) {
+			return;
+		}
+
+		isTyping = true;
+
+		let wordIndex = 0;
+		let charIndex = placeholderCycle[0].length;
+		let deleting = true;
+		let timer: ReturnType<typeof setTimeout>;
+
+		const tick = () => {
+			// Hold while the user owns the field — the placeholder is hidden
+			// behind typed text anyway, and the caret shouldn't compete with a
+			// second blinking cursor on focus.
+			if (isFocused || cleaned.length > 0) {
+				timer = setTimeout(tick, FOCUS_POLL_MS);
+
+				return;
+			}
+
+			const word = placeholderCycle[wordIndex];
+			charIndex += deleting ? -1 : 1;
+			typedPlaceholder = word.slice(0, charIndex);
+
+			// Advance the claim target only once the new word is visibly being
+			// typed — never during the blank beat — so a blur there commits the
+			// word the user just saw, not the next one they haven't.
+			if (!deleting && charIndex === 1) {
+				suggestion = word;
+			}
+
+			let delay_ms = deleting ? DELETE_SPEED_MS : TYPE_SPEED_MS;
+
+			if (!deleting && charIndex === word.length) {
+				deleting = true;
+				delay_ms = SETTLED_PAUSE_MS;
+			} else if (deleting && charIndex === 0) {
+				deleting = false;
+				wordIndex = (wordIndex + 1) % placeholderCycle.length;
+				delay_ms = EMPTY_PAUSE_MS;
+			}
+
+			timer = setTimeout(tick, delay_ms);
+		};
+
+		// Let the first word sit before the cycle starts retracting it.
+		timer = setTimeout(tick, SETTLED_PAUSE_MS);
+
+		return () => clearTimeout(timer);
 	});
 </script>
 
@@ -351,9 +463,10 @@
 						autocomplete="off"
 						data-tid={TestId.OnboardingHandleInput}
 						maxlength={MAX_NICKNAME_LENGTH}
-						onblur={onCommitHandle}
+						onblur={onFieldBlur}
+						onfocus={onFieldFocus}
 						oninput={onInput}
-						placeholder={suggestion}
+						placeholder={placeholderText}
 						spellcheck="false"
 						type="text"
 						value={cleaned}
@@ -365,7 +478,7 @@
 					class:checking={availability.tone === 'neutral'}
 					class:no={availability.tone === 'error'}
 					class:ok={availability.tone === 'ok'}
-					aria-live="polite"
+					aria-live={usingSuggestion ? 'off' : 'polite'}
 				>
 					{#if availability.tone === 'ok'}
 						{t({ locale: $localeStore, key: 'onboarding.avail.available' })}
