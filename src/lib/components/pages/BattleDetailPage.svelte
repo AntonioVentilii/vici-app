@@ -248,10 +248,15 @@
 	);
 
 	// The two leagues' results are being computed — either the live-score read
-	// is in flight, or the battle has settled and is finalizing. Drives a pulse
-	// on the scores so the wait reads as "calculating", not a stalled "—".
+	// is in flight, or the battle has settled and is finalizing. League-only:
+	// duels carry no live league standings, so they keep a steady "—" rather
+	// than pulsing through the finalizing window. Drives a pulse on the scores
+	// so the wait reads as "calculating", not a stalled "—".
 	const isCalculating = $derived(
-		nonNullish(battle) && battle.state === 'in_flight' && (liveScoreLoading || isFinalizing)
+		nonNullish(battle) &&
+			battle.kind === 'league' &&
+			battle.state === 'in_flight' &&
+			(liveScoreLoading || isFinalizing)
 	);
 
 	// Score text for a side: the resolved doc score once resolved, the live
