@@ -761,6 +761,14 @@ html[data-app='1'] body {
 	overflow-x: hidden;
 	overflow-y: auto;
 	-webkit-overflow-scrolling: touch;
+	/* Standalone PWA (Home-Screen icon) renders fullscreen under the
+	 * translucent iOS status bar, so every page in this single scroll
+	 * viewport must clear the top safe-area inset or its header tucks
+	 * under the clock. `env()` is 0 in a normal browser tab and on
+	 * desktop. Flow self-manages its own inset: while its top bar is
+	 * shown the `.flow-shell` is `position: fixed; inset: 0` and escapes
+	 * this scroll viewport entirely, so it never double-counts. */
+	padding-top: env(safe-area-inset-top, 0px);
 	padding-bottom: var(--bn-clear);
 }
 
