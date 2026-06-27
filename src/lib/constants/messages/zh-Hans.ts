@@ -1688,7 +1688,7 @@ export const zhHansMessages = {
 	'onboarding.brand': 'VICI',
 	'onboarding.h1_pre': '认领你的',
 	'onboarding.h1_accent': '昵称。',
-	'onboarding.sub': '一个名字，伴随你的每一次预测。',
+	'onboarding.sub': '靠实力赢得，而非赠予。你的名字出现在每个排行榜上。',
 	'onboarding.avail.checking': '正在检查可用性…',
 	'onboarding.avail.available': '可用 ·',
 	'onboarding.avail.taken': '已被占用 — 换个写法',

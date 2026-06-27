@@ -1785,7 +1785,7 @@ export const frMessages = {
 	'onboarding.brand': 'VICI',
 	'onboarding.h1_pre': 'Réservez votre',
 	'onboarding.h1_accent': 'pseudo.',
-	'onboarding.sub': 'Un nom. Chaque pronostic que vous faites le porte.',
+	'onboarding.sub': 'Mérité, pas donné. Votre nom sur chaque classement.',
 	'onboarding.avail.checking': 'Vérification de la disponibilité…',
 	'onboarding.avail.available': 'Disponible ·',
 	'onboarding.avail.taken': 'Pris — essayez une variante',
