@@ -11,6 +11,14 @@ name: Release Please
 # It bumps BOTH `package.json#version` and `package.json#juno.functions.version`
 # in lockstep (see release-please-config.json `extra-files`).
 #
+# BUMP POLICY: `versioning: always-bump-patch` (release-please-config.json) — so
+# EVERY release is a patch by default, regardless of commit type. `feat:` does
+# NOT bump the minor on its own. Minor/major bumps are commanded explicitly: put
+# a `Release-As: X.Y.Z` footer in a commit on `main` (e.g. an empty
+# `git commit --allow-empty -m "chore: release 1.9.0" -m "Release-As: 1.9.0"`),
+# and the next release PR targets that exact version. Conventional Commit types
+# still drive the CHANGELOG sections — they just no longer drive the bump.
+#
 # TOKEN: for the cut tag to trigger deploy.yml/publish.yml, release-please
 # must create it with a token OTHER than the default GITHUB_TOKEN — tags
 # (and PRs) created with GITHUB_TOKEN do not trigger further workflow runs.
