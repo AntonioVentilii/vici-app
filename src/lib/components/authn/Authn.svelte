@@ -52,6 +52,34 @@
 		}
 	};
 
+	/**
+	 * Ask the browser to keep this origin's storage persistent. The Internet
+	 * Identity delegation lives in IndexedDB (`auth-client-db`); on iOS WebKit,
+	 * script-writable storage is evicted after ~7 days of no interaction (ITP),
+	 * which lands on the same horizon as the delegation TTL and silently logs
+	 * the user out. A granted persist() request exempts the delegation store
+	 * from that eviction. Idempotent and a no-op once persisted, so requesting
+	 * once per established session is fine. Fire-and-forget: never block or
+	 * throw on the auth path, and skip when the API is unavailable.
+	 */
+	const requestPersistentStorage = (): void => {
+		if (!browser || isNullish(navigator.storage?.persist)) {
+			return;
+		}
+
+		void (async () => {
+			try {
+				if (await navigator.storage.persisted()) {
+					return;
+				}
+
+				await navigator.storage.persist();
+			} catch (e: unknown) {
+				console.warn('Persistent storage request failed', e);
+			}
+		})();
+	};
+
 	interface Props {
 		children: Snippet;
 	}
@@ -121,6 +149,7 @@
 			const { profile, existed } = await ensureProfile(user);
 
 			setSignedInFlag(true);
+			requestPersistentStorage();
 
 			userStore.set({ user, profile, authBusy: false, profileExisted: existed });
 
