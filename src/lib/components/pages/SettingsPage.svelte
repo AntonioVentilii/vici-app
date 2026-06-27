@@ -244,7 +244,18 @@
 
 		try {
 			await dropAuth();
-		} finally {
+
+			// Drive the redirect from here instead of waiting for the (app)
+			// layout's auth-gate effect to react to the cleared session: that
+			// reactive path paints the shell's hydration spinner first, which
+			// reads as a sluggish sign-out. Going straight to the sign-in route
+			// makes the swap immediate. The button stays `pending` through the
+			// navigation — this component unmounts on the route change, so the
+			// spinner never flickers back to the idle label.
+			await goto(resolve(PublicPath.SignIn), { replaceState: true });
+		} catch {
+			// Sign-out failed before navigating away — restore the confirm
+			// controls so the user can retry rather than stare at a dead spinner.
 			signOutStatus = 'enabled';
 			confirmingSignOut = false;
 		}
