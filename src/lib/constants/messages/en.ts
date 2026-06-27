@@ -1783,6 +1783,8 @@ export const enMessages = {
 	'onboarding.lock_ready': 'Locking @{handle}',
 	'onboarding.lock_blocked': 'Enter an available handle to continue',
 	'onboarding.skip': 'Skip · preview first, sign up later',
+	'onboarding.guest_cta': 'Continue as guest',
+	'onboarding.guest_reassure': 'No account needed. Sign up anytime.',
 	'onboarding.signin_prompt': 'Already a member?',
 	'onboarding.signin_link': 'Sign in',
 	'onboarding.legal_currency': 'VXP is gameplay currency · no real money',
