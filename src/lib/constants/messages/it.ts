@@ -1059,6 +1059,10 @@ export const itMessages = {
 	'flow.exit_aria': 'Esci da Flow',
 	'flow.eyebrow': 'MODALITÀ FLOW',
 	'flow.fresh_start': 'Nuovo inizio.',
+	'flow.funds.body':
+		'I tuoi VXP sono già impegnati in previsioni aperte. Si liberano man mano che quei mercati si risolvono: controlla le tue chiamate aperte nella Dashboard.',
+	'flow.funds.eyebrow': 'TUTTO IMPEGNATO',
+	'flow.funds.title': 'Tutto in gioco.',
 	'flow.in_flow': 'in Flow',
 	'flow.invite.code_label': 'Codice',
 	'flow.invite.copy_code_aria': 'Copia codice invito',

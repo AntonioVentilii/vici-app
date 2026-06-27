@@ -1067,6 +1067,10 @@ export const deMessages = {
 	'flow.exit_aria': 'Flow verlassen',
 	'flow.eyebrow': 'FLOW-MODUS',
 	'flow.fresh_start': 'Neustart.',
+	'flow.funds.body':
+		'Deine VXP sind bereits in offenen Vorhersagen gebunden. Sie werden frei, sobald sich diese Märkte auflösen — sieh dir deine offenen Calls im Dashboard an.',
+	'flow.funds.eyebrow': 'ALLES IM SPIEL',
+	'flow.funds.title': 'Voll eingesetzt.',
 	'flow.in_flow': 'im Flow',
 	'flow.invite.code_label': 'Code',
 	'flow.invite.copy_code_aria': 'Einladungscode kopieren',

@@ -1061,6 +1061,10 @@ export const ptMessages = {
 	'flow.exit_aria': 'Sair do Flow',
 	'flow.eyebrow': 'MODO FLOW',
 	'flow.fresh_start': 'Começo limpo.',
+	'flow.funds.body':
+		'Os teus VXP já estão em jogo em previsões abertas. Vão libertando-se à medida que esses mercados se resolvem — vê as tuas chamadas abertas no Dashboard.',
+	'flow.funds.eyebrow': 'TUDO EM JOGO',
+	'flow.funds.title': 'Tudo aplicado.',
 	'flow.in_flow': 'no Flow',
 	'flow.invite.code_label': 'Código',
 	'flow.invite.copy_code_aria': 'Copiar código de convite',

@@ -998,6 +998,10 @@ export const zhHansMessages = {
 	'flow.exit_aria': '退出心流',
 	'flow.eyebrow': '心流模式',
 	'flow.fresh_start': '重新开始。',
+	'flow.funds.body':
+		'你的 VXP 已经全部投入到未结的预测中。随着这些市场结算，余额会逐步释放——在仪表盘查看你的未结预测。',
+	'flow.funds.eyebrow': '全部投入',
+	'flow.funds.title': '已全部投入。',
 	'flow.in_flow': '在心流中',
 	'flow.invite.code_label': '邀请码',
 	'flow.invite.copy_code_aria': '复制邀请码',

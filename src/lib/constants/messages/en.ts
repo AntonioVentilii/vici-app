@@ -1041,6 +1041,10 @@ export const enMessages = {
 	'flow.exit_aria': 'Exit Flow',
 	'flow.eyebrow': 'FLOW MODE',
 	'flow.fresh_start': 'Fresh start.',
+	'flow.funds.body':
+		'Your VXP is already in play on open predictions. It frees up as those markets resolve — check your open calls on the Dashboard.',
+	'flow.funds.eyebrow': "THAT'S ALL IN",
+	'flow.funds.title': 'Fully deployed.',
 	'flow.in_flow': 'in Flow',
 	'flow.invite.code_label': 'Code',
 	'flow.invite.copy_code_aria': 'Copy invite code',
