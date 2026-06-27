@@ -101,6 +101,7 @@ import {
 	getMarketMetadata as getMarketMetadataFn,
 	upsertMarketMetadata as upsertMarketMetadataFn
 } from '$satellite/services/market-metadata.services';
+import { rebuildMarketTagIndexFn } from '$satellite/services/market-tag-index.services';
 import {
 	getMarketTranslation as getMarketTranslationFn,
 	listMarketTranslations as listMarketTranslationsFn,
@@ -1084,6 +1085,17 @@ export const recomputeActivityReactionCounts = defineUpdate({
 		recomputed: j.number()
 	}),
 	handler: () => recomputeActivityReactionCountsFn()
+});
+
+// Admin-only: re-derive the `market_tag_index` buckets from a single scan of
+// `market_metadata`. Run once after deploy to backfill the index for markets
+// that predate it; also heals any drift from a concurrent-write version race.
+export const rebuildMarketTagIndex = defineUpdate({
+	result: j.strictObject({
+		buckets: j.number(),
+		series: j.number()
+	}),
+	handler: () => rebuildMarketTagIndexFn()
 });
 
 // Friend-scoped bulk read for the resolved-results digest (the consumer that

@@ -159,6 +159,8 @@ type AppReadBattleLiveScoreArgs = record { battle_id : text };
 
 type AppReadBattleLiveScoreResult = record { score : opt record { score_a : float64; score_b : float64; calls_a : float64; calls_b : float64; leader : variant { A; B; draw } } };
 
+type AppRebuildMarketTagIndexResult = record { buckets : float64; series : float64 };
+
 type AppRecomputeActivityReactionCountsResult = record { recomputed : float64 };
 
 type AppRecordFlowSwipeArgs = record { day_key : text };
@@ -271,6 +273,7 @@ service : {
 	app_hibernate_my_account : () -> (AppHibernateMyAccountResult);
 	app_prune_resolved_results : () -> (AppPruneResolvedResultsResult);
 	app_read_battle_live_score : (AppReadBattleLiveScoreArgs) -> (AppReadBattleLiveScoreResult);
+	app_rebuild_market_tag_index : () -> (AppRebuildMarketTagIndexResult);
 	app_recompute_activity_reaction_counts : () -> (AppRecomputeActivityReactionCountsResult);
 	app_record_flow_swipe : (AppRecordFlowSwipeArgs) -> (AppRecordFlowSwipeResult);
 	app_recover_my_account : () -> (AppRecoverMyAccountResult);

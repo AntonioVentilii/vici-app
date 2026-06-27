@@ -1774,6 +1774,23 @@ const readBattleLiveScore = async (
 	return AppReadBattleLiveScoreResultSchema.parse(result);
 };
 
+const AppRebuildMarketTagIndexResultSchema = j.strictObject({
+	buckets: j.number(),
+	series: j.number()
+});
+
+const rebuildMarketTagIndex = async (): Promise<
+	j.infer<typeof AppRebuildMarketTagIndexResultSchema>
+> => {
+	const { app_rebuild_market_tag_index } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_rebuild_market_tag_index();
+
+	const result = schemaFromIdl({ schema: AppRebuildMarketTagIndexResultSchema, value: idlResult });
+	return AppRebuildMarketTagIndexResultSchema.parse(result);
+};
+
 const AppRecomputeActivityReactionCountsResultSchema = j.strictObject({ recomputed: j.number() });
 
 const recomputeActivityReactionCounts = async (): Promise<
@@ -2405,6 +2422,7 @@ export const functions = {
 	hibernateMyAccount,
 	pruneResolvedResults,
 	readBattleLiveScore,
+	rebuildMarketTagIndex,
 	recomputeActivityReactionCounts,
 	recordFlowSwipe,
 	recoverMyAccount,
