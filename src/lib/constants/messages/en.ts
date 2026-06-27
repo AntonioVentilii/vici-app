@@ -1289,7 +1289,6 @@ export const enMessages = {
 	'leagues.create.placeholder_description': 'The cohort that calls things early.',
 	'leagues.create.placeholder_name': 'e.g. Saturday Sharps',
 	'leagues.create.preview_meta': '1 member · {privacy}',
-	'leagues.create.privacy_invite': 'Invite-only',
 	'leagues.create.privacy_open': 'Open',
 	'leagues.create.privacy_private': 'Private',
 	'leagues.privacy.cancel': 'Cancel',
@@ -1297,10 +1296,8 @@ export const enMessages = {
 		'Open leagues are publicly discoverable: current members will appear in public lists and friend recommendations. You can switch back later, but this can’t be undone for anyone who has already seen it.',
 	'leagues.privacy.confirm_open_confirm': 'Make public',
 	'leagues.privacy.confirm_open_title': 'Make this league public?',
-	'leagues.privacy.desc_invite':
-		'Not publicly listed. Joinable by invite code, and recommended to members’ friends.',
 	'leagues.privacy.desc_open':
-		'Publicly listed and recommended to members’ friends. Joining still needs an invite code.',
+		'Discoverable in search, lists, and recommendations. Joining still needs an invite code.',
 	'leagues.privacy.desc_private':
 		'Hidden. Reachable only by invite code, and never surfaced anywhere.',
 	'leagues.privacy.edit_label': 'Change privacy',
@@ -1365,7 +1362,6 @@ export const enMessages = {
 	'leagues.detail.battle_meta_day_of': 'Day {day} of {days} · accuracy face-off',
 	'leagues.detail.battle_meta_incoming': '{opponent} challenged your league — accept below',
 	'leagues.detail.battle_owner_accepts': 'Only a league owner or admin can accept this challenge.',
-	'leagues.detail.hero_chip_invite': 'Invite-only',
 	'leagues.detail.hero_chip_kind': 'League',
 	'leagues.detail.hero_chip_open': 'Open',
 	'leagues.detail.hero_chip_private': 'Private',
@@ -1426,10 +1422,10 @@ export const enMessages = {
 	'leagues.card.recommend_chip': 'Request',
 	'leagues.card.trend_this_week': '{count} this week',
 	'leagues.empty.body':
-		'Compete with your team, your friends, your office. Invite-only. The record stands between you.',
+		'Compete with your team, your friends, your office. The record stands between you.',
 	'leagues.empty.cta_create': 'Create a league',
 	'leagues.empty.cta_join': 'Join with code',
-	'leagues.empty.quote': '“Leagues are private.”',
+	'leagues.empty.quote': '“Your team. Your record.”',
 	'leagues.eyebrow.founded': 'Your leagues · Admin',
 	'leagues.eyebrow.friends_in': 'Friends are in',
 	'leagues.eyebrow.joined': "Leagues you're in",
@@ -2172,7 +2168,7 @@ export const enMessages = {
 	'arena.l_eyebrow': '01 · YOUR LEAGUE',
 	'arena.l_members': '{count} MEMBERS',
 	'arena.l_sub':
-		'Invite-only cohorts. Your team, your office, your group chat. The leaderboard that actually matters.',
+		'Your cohorts. Your team, your office, your group chat. The leaderboard that actually matters.',
 	'arena.l_title_a': 'The people',
 	'arena.l_title_b': 'who know you.',
 	'arena.l_you': 'YOU',

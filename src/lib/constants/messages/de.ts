@@ -1317,7 +1317,6 @@ export const deMessages = {
 	'leagues.create.label_emblem': 'Emblem',
 	'leagues.create.label_privacy': 'Sichtbarkeit',
 	'leagues.create.preview_meta': '1 Mitglied · {privacy}',
-	'leagues.create.privacy_invite': 'Nur mit Einladung',
 	'leagues.create.privacy_open': 'Offen',
 	'leagues.create.privacy_private': 'Privat',
 	'leagues.privacy.cancel': 'Abbrechen',
@@ -1325,10 +1324,8 @@ export const deMessages = {
 		'Offene Ligen sind öffentlich auffindbar: Aktuelle Mitglieder erscheinen in öffentlichen Listen und Freundesempfehlungen. Du kannst später zurückwechseln, aber für alle, die sie bereits gesehen haben, lässt sich das nicht rückgängig machen.',
 	'leagues.privacy.confirm_open_confirm': 'Öffentlich machen',
 	'leagues.privacy.confirm_open_title': 'Diese Liga öffentlich machen?',
-	'leagues.privacy.desc_invite':
-		'Nicht öffentlich gelistet. Beitritt per Einladungscode und wird Freunden von Mitgliedern empfohlen.',
 	'leagues.privacy.desc_open':
-		'Öffentlich gelistet und wird Freunden von Mitgliedern empfohlen. Der Beitritt erfordert weiterhin einen Einladungscode.',
+		'In Suche, Listen und Empfehlungen auffindbar. Der Beitritt erfordert weiterhin einen Einladungscode.',
 	'leagues.privacy.desc_private':
 		'Verborgen. Nur per Einladungscode erreichbar und nirgends sichtbar.',
 	'leagues.privacy.edit_label': 'Sichtbarkeit ändern',
@@ -1336,7 +1333,6 @@ export const deMessages = {
 	'leagues.privacy.saving': 'Wird gespeichert…',
 	'leagues.privacy.sub': 'Lege fest, wer diese Liga finden kann.',
 	'leagues.privacy.title': 'Liga-Sichtbarkeit',
-	'leagues.detail.hero_chip_invite': 'Nur mit Einladung',
 	'leagues.detail.hero_chip_kind': 'Liga',
 	'leagues.detail.hero_chip_open': 'Offen',
 	'leagues.detail.hero_chip_private': 'Privat',
@@ -1466,10 +1462,10 @@ export const deMessages = {
 	'leagues.card.recommend_chip': 'Anfrage',
 	'leagues.card.trend_this_week': '{count} diese Woche',
 	'leagues.empty.body':
-		'Trete gegen dein Team an, gegen Freunde, gegen das Büro. Nur per Einladung. Der Track Record entscheidet.',
+		'Trete gegen dein Team an, gegen Freunde, gegen das Büro. Der Track Record entscheidet.',
 	'leagues.empty.cta_create': 'Liga gründen',
 	'leagues.empty.cta_join': 'Mit Code beitreten',
-	'leagues.empty.quote': '“Ligen sind privat.”',
+	'leagues.empty.quote': '“Dein Team. Dein Track Record.”',
 	'leagues.eyebrow.founded': 'Deine Ligen · Admin',
 	'leagues.eyebrow.friends_in': 'Freunde sind dabei',
 	'leagues.eyebrow.joined': 'Deine Mitgliedschaften',
@@ -2200,7 +2196,7 @@ export const deMessages = {
 	'arena.l_eyebrow': '01 · DEINE LIGA',
 	'arena.l_members': '{count} MITGLIEDER',
 	'arena.l_sub':
-		'Geschlossene Gruppen. Dein Team, dein Büro, dein Gruppen-Chat. Die Rangliste, die wirklich zählt.',
+		'Deine Gruppen. Dein Team, dein Büro, dein Gruppen-Chat. Die Rangliste, die wirklich zählt.',
 	'arena.l_title_a': 'Die Leute,',
 	'arena.l_title_b': 'die dich kennen.',
 	'arena.l_you': 'DU',
