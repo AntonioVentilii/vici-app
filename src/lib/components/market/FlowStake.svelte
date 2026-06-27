@@ -22,9 +22,19 @@
 		// Stake-ladder change callback. Fires when a rung or the
 		// native range input changes.
 		onStakeChange?: (next: string) => void;
+		// Proactive stake warning resolved by FlowMode, rendered on the slider.
+		// Defaults to `'none'` so static / preview usages stay quiet.
+		stakeWarning?: 'none' | 'unaffordable' | 'wont-finish';
 	}
 
-	const { market, yesPct, noPct, tradeAmount, onStakeChange }: Props = $props();
+	const {
+		market,
+		yesPct,
+		noPct,
+		tradeAmount,
+		onStakeChange,
+		stakeWarning = 'none'
+	}: Props = $props();
 
 	// The stake ladder is shown whenever the stake controls are wired and
 	// the user is on the ViciXP domain (the playground domain uses the
@@ -82,6 +92,7 @@
 		{stakeIdx}
 		{stakeNoWin}
 		{stakePct}
+		{stakeWarning}
 		{stakeYesWin}
 		{yesPct}
 	/>

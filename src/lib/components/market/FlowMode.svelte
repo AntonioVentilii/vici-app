@@ -14,6 +14,7 @@
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
 	import FlowEntry from '$lib/components/market/FlowEntry.svelte';
+	import FlowOutOfFunds from '$lib/components/market/FlowOutOfFunds.svelte';
 	import FlowStreakBreakBanner from '$lib/components/market/FlowStreakBreakBanner.svelte';
 	import FlowTopBar from '$lib/components/market/FlowTopBar.svelte';
 	import FlowXpPops from '$lib/components/market/FlowXpPops.svelte';
@@ -25,6 +26,7 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
@@ -365,6 +367,36 @@
 	// (not a fresh deck) so the 15/day model holds. Suppressed mid-session
 	// (`betsCount === 0` means this run hasn't placed a call yet).
 	const dailyCapReached = $derived(isDailyCapReached(dailyGoalDone));
+
+	// Clearing-margin base units of the cheapest possible call — the smallest
+	// VXP ladder rung. A user whose spendable margin can't cover even this can
+	// afford NO further prediction this session, so the per-card funds gate
+	// would block every YES / NO from here on (see `handleAction`). Computed
+	// once: the floor is fixed, only the spendable side moves.
+	const MIN_STAKE_MARGIN_USD = tokenBaseUnitsToUsdBaseUnits({
+		amount: parseToken({ value: String(VXP_MIN_STAKE), unitName: VXP_TOKEN.decimals }),
+		tokenDecimals: VXP_TOKEN.decimals
+	});
+
+	// Out-of-funds takeover gate — the user has entered the deck but every
+	// spendable VXP is already committed to open predictions, so no further
+	// call this session can be funded (the same shortfall the per-card funds
+	// gate catches, generalised to the cheapest stake). Rather than strand the
+	// user on cards they can't act on — whether they hit the wall on entry or
+	// part-way through — surface a takeover with explicit exits.
+	// Scoped to the VXP domain: `collateralsStore` presence is the signed-in /
+	// loaded check (see the funds gate), the playground domains (USD / ICP) use
+	// fractional sub-rung stakes the VXP floor doesn't model. Held off while
+	// `completed` (a run that met its goal earns FlowEnd, not this) and while a
+	// gating beat plays (`flowPaused`) so it never flashes between cards.
+	const outOfFunds = $derived(
+		entered &&
+			!completed &&
+			!flowPaused &&
+			isViciXp($balanceDomain) &&
+			nonNullish($collateralsStore) &&
+			$vxpSpendable - sessionCommittedUsd < MIN_STAKE_MARGIN_USD
+	);
 
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
@@ -1146,6 +1178,56 @@
 
 	const currentCard = $derived(markets[currentIndex]);
 
+	// Spendable margin left for THIS card once the session's in-flight
+	// commitments are subtracted (store refreshes are batched to session end,
+	// so `$vxpSpendable` alone goes stale after the first call).
+	const spendableNow = $derived($vxpSpendable - sessionCommittedUsd);
+
+	// Proactive stake warning surfaced at amount-selection time on the
+	// back-face slider — distinct from the block-on-swipe funds gate, which
+	// only fires once the user throws the card. Resolved to a single state so
+	// the slider renders one line. Scoped to a signed-in, loaded, VXP-domain
+	// run with a card on screen (the playground domains use sub-rung stakes the
+	// VXP floor doesn't model; `collateralsStore` presence is the signed-in /
+	// loaded check, mirroring the funds gate).
+	const stakeWarning = $derived.by<'none' | 'unaffordable' | 'wont-finish'>(() => {
+		if (isNullish($collateralsStore) || !isViciXp($balanceDomain) || isNullish(currentCard)) {
+			return 'none';
+		}
+
+		const thisStake = stakeMarginUsd(currentCard);
+
+		// The selected size already exceeds what's spendable — the swipe would
+		// be rejected by the funds gate. Warn before they throw it.
+		if (thisStake > spendableNow) {
+			return 'unaffordable';
+		}
+
+		// Affordable now, but committing it would leave too little to fund the
+		// predictions still needed to finish the sitting (min stake each).
+		const remainingAfterThis = Math.max(0, maxBets - betsCount - 1);
+
+		if (
+			remainingAfterThis > 0 &&
+			spendableNow - thisStake < BigInt(remainingAfterThis) * MIN_STAKE_MARGIN_USD
+		) {
+			return 'wont-finish';
+		}
+
+		return 'none';
+	});
+
+	// Defensive: the active-deck branch renders `currentCard` (markets[currentIndex]).
+	// If `currentIndex` ever overruns the deck while the session is still live
+	// (entered, not completed, deck non-empty), `currentCard` is nullish and the
+	// card slot would paint an empty / black stage with no way forward. Fall the
+	// session through to the FlowEnd takeover instead so the user always has an
+	// exit. This is a safety net for an index-overflow we don't expect to hit,
+	// not the root fix.
+	const activeDeckStranded = $derived(
+		entered && !completed && markets.length > 0 && isNullish(currentCard)
+	);
+
 	// Resolved translation overlay for the focused card (or undefined when the
 	// market has no translation for the active locale) — gates the card's quick
 	// toggle and feeds its display text.
@@ -1279,7 +1361,13 @@
 		<!-- Daily hard cap already met today (across sessions). Opening Flow
 		     shows the "come back tomorrow" takeover, not a fresh deck. -->
 		<FlowDailyCap hardCap={DAILY_HARD_CAP} onClose={handleClose} />
-	{:else if completed}
+	{:else if outOfFunds}
+		<!-- Every spendable VXP is already in play on open predictions, so no
+		     further call this session can be funded. Surface the out-of-funds
+		     takeover with explicit exits instead of stranding the user on cards
+		     the funds gate would block. -->
+		<FlowOutOfFunds onBackToMarkets={backToMarkets} onClose={handleClose} />
+	{:else if completed || activeDeckStranded}
 		<FlowEnd
 			{canExtend}
 			comeback={isComeback}
@@ -1374,6 +1462,7 @@
 										{priorCall}
 										showOriginal={flowShowOriginal}
 										signedIn={nonNullish($userStore.user)}
+										{stakeWarning}
 										{tradeAmount}
 										translatedLanguageLabel={nonNullish(currentTranslation)
 											? translatedLanguageLabel(currentTranslation.locale)

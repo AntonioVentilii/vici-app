@@ -1041,6 +1041,10 @@ export const enMessages = {
 	'flow.exit_aria': 'Exit Flow',
 	'flow.eyebrow': 'FLOW MODE',
 	'flow.fresh_start': 'Fresh start.',
+	'flow.funds.body':
+		'Your VXP is already in play on open predictions. It frees up as those markets resolve. Check your open calls on the Dashboard.',
+	'flow.funds.eyebrow': "THAT'S ALL IN",
+	'flow.funds.title': 'Fully deployed.',
 	'flow.in_flow': 'in Flow',
 	'flow.invite.code_label': 'Code',
 	'flow.invite.copy_code_aria': 'Copy invite code',
@@ -1070,6 +1074,10 @@ export const enMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP this session',
 	'flow.skip_aria': 'Skip',
 	'flow.stage_ended': '{stage} ended.',
+	'flow.stake.warning.unaffordable':
+		'More than your spendable VXP. Your balance is in play, so lower the size.',
+	'flow.stake.warning.wont_finish':
+		'This leaves too little to finish your flow. Try a smaller size.',
 	'flow.streak_combo': 'Streak ×{count}',
 	'flow.title_a': 'One swipe.',
 	'flow.title_b': 'One call.',

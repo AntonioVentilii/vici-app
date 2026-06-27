@@ -1061,6 +1061,10 @@ export const esMessages = {
 	'flow.exit_aria': 'Salir de Flow',
 	'flow.eyebrow': 'MODO FLOW',
 	'flow.fresh_start': 'Empezar de cero.',
+	'flow.funds.body':
+		'Tus VXP ya están en juego en predicciones abiertas. Se liberan a medida que esos mercados se resuelven: revisa tus llamadas abiertas en el Dashboard.',
+	'flow.funds.eyebrow': 'TODO EN JUEGO',
+	'flow.funds.title': 'Todo desplegado.',
 	'flow.in_flow': 'en Flow',
 	'flow.invite.code_label': 'Código',
 	'flow.invite.copy_code_aria': 'Copiar código de invitación',
@@ -1090,6 +1094,10 @@ export const esMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP en esta sesión',
 	'flow.skip_aria': 'Saltar',
 	'flow.stage_ended': '{stage} terminada.',
+	'flow.stake.warning.unaffordable':
+		'Más de tus VXP disponibles. Tu saldo está en juego, baja el tamaño.',
+	'flow.stake.warning.wont_finish':
+		'Esto deja muy poco para terminar tu flow. Prueba un tamaño menor.',
 	'flow.streak_combo': 'Racha ×{count}',
 	'flow.title_a': 'Un deslizamiento.',
 	'flow.title_b': 'Una predicción.',
