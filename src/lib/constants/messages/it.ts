@@ -1784,7 +1784,7 @@ export const itMessages = {
 	'onboarding.reward_sub': 'Pronostica {event}',
 	'onboarding.lock_ready': 'Blocco @{handle}',
 	'onboarding.lock_blocked': 'Inserisci un handle disponibile per continuare',
-	'onboarding.skip': 'Salta — prima esplora, registrati dopo',
+	'onboarding.skip': 'Salta · prima esplora, registrati dopo',
 	'onboarding.signin_prompt': 'Hai già un account?',
 	'onboarding.signin_link': 'Accedi',
 	'onboarding.legal_currency': 'VXP è valuta di gioco · nessun denaro reale',

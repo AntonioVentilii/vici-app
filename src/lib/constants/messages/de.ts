@@ -1803,7 +1803,7 @@ export const deMessages = {
 	'onboarding.reward_sub': 'Sag {event} voraus',
 	'onboarding.lock_ready': '@{handle} wird gesichert',
 	'onboarding.lock_blocked': 'Gib einen verfügbaren Handle ein, um fortzufahren',
-	'onboarding.skip': 'Überspringen — erst ansehen, später registrieren',
+	'onboarding.skip': 'Überspringen · erst ansehen, später registrieren',
 	'onboarding.signin_prompt': 'Schon dabei?',
 	'onboarding.signin_link': 'Anmelden',
 	'onboarding.legal_currency': 'VXP ist Spielwährung · kein echtes Geld',
