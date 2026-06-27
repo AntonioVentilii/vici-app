@@ -13,10 +13,13 @@ controller-only satellite endpoint that writes the resolved doc as a
 controller; the `battles` assert accepts an `in_flight → resolved` league
 write only from a controller. The `league_stats` kickoff **baselines are
 no longer read** for resolution or live standings — a baseline-less legacy
-battle resolves like any other, and the restart/self-heal path is removed.
-To bound the change, baseline stamping at accept/kickoff is **left in
-place (now vestigial)** rather than ripped out; fully retiring the
-baseline fields + their accept/kickoff assert validation is deferred to a
+battle resolves like any other, and the **FE** restart/self-heal trigger
+(`restartLegacyBattle` + the auto-restart effect) is removed. To bound the
+change, the baseline machinery is otherwise **left in place but
+vestigial**: accept/kickoff still stamp baselines and the assert still
+permits the `in_flight` re-kick (`isRekick`) write, but nothing on the FE
+triggers it anymore. Fully retiring the baseline fields, the `isRekick`
+assert path, and the accept/kickoff baseline validation is deferred to a
 follow-up. Membership is read at resolve time (current members), per the
 owner decision, not membership-at-settle-time.
 

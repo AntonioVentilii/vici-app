@@ -599,12 +599,20 @@ export const assertSetBattle = ({
 				callsB: proposedDoc.callsB
 			});
 
+			// `Number.isInteger` also rejects NaN / ±Infinity, which would slip
+			// through the bare `< 0` / `> 100` range checks (every comparison is
+			// false for NaN). Scores are integer percentages; call counts are
+			// non-negative integers.
 			if (
+				!Number.isInteger(proposedDoc.scoreA) ||
 				proposedDoc.scoreA < 0 ||
 				proposedDoc.scoreA > 100 ||
+				!Number.isInteger(proposedDoc.scoreB) ||
 				proposedDoc.scoreB < 0 ||
 				proposedDoc.scoreB > 100 ||
+				!Number.isInteger(proposedDoc.callsA) ||
 				proposedDoc.callsA < 0 ||
+				!Number.isInteger(proposedDoc.callsB) ||
 				proposedDoc.callsB < 0 ||
 				proposedDoc.winner !== expectedWinner
 			) {

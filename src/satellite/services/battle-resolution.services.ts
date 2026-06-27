@@ -12,6 +12,7 @@ import {
 import type { LeagueMemberDoc } from '$lib/types/league-member';
 import type { MarketMetadata } from '$lib/types/market-metadata';
 import { candidMethod } from '$satellite/utils/candid.utils';
+import { escapeRegex } from '$satellite/utils/regex.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import { call, msgCaller, time } from '@junobuild/functions/ic-cdk';
@@ -57,7 +58,12 @@ const adminCaller = (): Uint8Array => {
 	return first;
 };
 
-/** Current member principals of a league (one prefix scan over `league_members`). */
+/**
+ * Current member principals of a league. The `league_members` key is
+ * `${leagueId}/${principal}`, so the scan is anchored to that prefix with a
+ * key matcher — the datastore skips (and never decodes) rows for other
+ * leagues, keeping this O(this-league's-members) rather than O(all-members).
+ */
 const leagueMemberPrincipals = ({
 	leagueId,
 	caller
@@ -65,13 +71,14 @@ const leagueMemberPrincipals = ({
 	leagueId: string;
 	caller: Uint8Array;
 }): Principal[] => {
+	const prefix = `${leagueId}/`;
+
 	const { items } = listDocsStore({
 		collection: Collection.LEAGUE_MEMBERS,
 		caller,
-		params: {}
+		params: { matcher: { key: `^${escapeRegex(prefix)}` } }
 	});
 
-	const prefix = `${leagueId}/`;
 	const principals: Principal[] = [];
 
 	for (const [key, item] of items) {
