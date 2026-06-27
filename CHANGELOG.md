@@ -1,5 +1,57 @@
 # Changelog
 
+## [1.8.4](https://github.com/AntonioVentilii/vici-app/compare/v1.8.3...v1.8.4) (2026-06-27)
+
+
+### Features
+
+* **leagues:** collapse visibility model to Open and Private ([#1045](https://github.com/AntonioVentilii/vici-app/issues/1045)) ([5177ba7](https://github.com/AntonioVentilii/vici-app/commit/5177ba72b2a552e6dc89ca0f8ba3a9a4d33d9d2b))
+
+
+### Bug Fixes
+
+* **flow:** hold transient banners longer so they stay readable ([#1050](https://github.com/AntonioVentilii/vici-app/issues/1050)) ([9869aa5](https://github.com/AntonioVentilii/vici-app/commit/9869aa5fb72a02629a2a63898a3a9de7cfc50b16))
+* **flow:** span the entry overlay full-bleed on desktop ([#1049](https://github.com/AntonioVentilii/vici-app/issues/1049)) ([83e8616](https://github.com/AntonioVentilii/vici-app/commit/83e8616227607ff196833aa0d30c60e7d23cbd3e))
+* **pwa:** navigation-fallback service worker to mask transient gateway 500s on OAuth return ([#1046](https://github.com/AntonioVentilii/vici-app/issues/1046)) ([64c67a1](https://github.com/AntonioVentilii/vici-app/commit/64c67a145c3226dd319015c217d824f35bc4096d))
+
+
+### Miscellaneous Chores
+
+* Update ICDC declarations ([35a2a4b](https://github.com/AntonioVentilii/vici-app/commit/35a2a4bd712b9b8acfdd7ed5aba9d9a9acaf74a3))
+
+## [1.8.3](https://github.com/AntonioVentilii/vici-app/compare/v1.8.2...v1.8.3) (2026-06-27)
+
+
+### Features
+
+* **arena:** friends YOU row at its real rank, sticky to nearest edge ([#1020](https://github.com/AntonioVentilii/vici-app/issues/1020)) ([1e323bd](https://github.com/AntonioVentilii/vici-app/commit/1e323bdcd23da4c5bf0c814dbd23873dd2a9a8e0))
+* **arena:** show viewer's real rank on the friends YOU row ([#1017](https://github.com/AntonioVentilii/vici-app/issues/1017)) ([e06a1dd](https://github.com/AntonioVentilii/vici-app/commit/e06a1dd0d3230ab934ae72d4788f224cc51d21e8))
+* **dash:** getting-started checklist on the first-run dashboard ([#1039](https://github.com/AntonioVentilii/vici-app/issues/1039)) ([db26aea](https://github.com/AntonioVentilii/vici-app/commit/db26aeaa20dd810f90ab703e2bd0bef42f72bf54))
+
+
+### Bug Fixes
+
+* **arena:** always open Friends on Arena entry ([#1038](https://github.com/AntonioVentilii/vici-app/issues/1038)) ([0df462a](https://github.com/AntonioVentilii/vici-app/commit/0df462aa2bbc2c99e45a42a07d1da8fa088275ee))
+* **auth:** request persistent storage to survive iOS delegation eviction ([#1035](https://github.com/AntonioVentilii/vici-app/issues/1035)) ([cb03c6a](https://github.com/AntonioVentilii/vici-app/commit/cb03c6ac6fe874d49af94c68d37acd723ce059aa))
+* **dash:** unify transaction-history summary with holdings breakdown ([#1040](https://github.com/AntonioVentilii/vici-app/issues/1040)) ([32ebd7e](https://github.com/AntonioVentilii/vici-app/commit/32ebd7e65ba5965f584e8ccc57ef23d8217dd2a7))
+* **ios:** clear the status-bar safe-area on the landing nav in standalone PWA ([#1044](https://github.com/AntonioVentilii/vici-app/issues/1044)) ([b4572fc](https://github.com/AntonioVentilii/vici-app/commit/b4572fc4ed25752eb3dcbbcd699d5b6c7d55a4d4))
+* **ios:** stop the bottom-sheet inset doubling up with the visual-viewport pin ([#1041](https://github.com/AntonioVentilii/vici-app/issues/1041)) ([01e7a28](https://github.com/AntonioVentilii/vici-app/commit/01e7a2877d804f643412e8c3ccc1fa6f7ac54b57))
+* **onboarding:** drop duplicate legal block from sign-up step ([#1032](https://github.com/AntonioVentilii/vici-app/issues/1032)) ([96e8932](https://github.com/AntonioVentilii/vici-app/commit/96e8932743e1c3a153d611cd8322f61841ee1dbb))
+* **onboarding:** restore earned-handle subtitle copy ([#1036](https://github.com/AntonioVentilii/vici-app/issues/1036)) ([9f60d23](https://github.com/AntonioVentilii/vici-app/commit/9f60d23d93d9f5b216b6db17b6051fa1cbae323c))
+* **pwa:** lock installed app to portrait and match splash background ([#1028](https://github.com/AntonioVentilii/vici-app/issues/1028)) ([4227697](https://github.com/AntonioVentilii/vici-app/commit/42276974f4794437c7849e433abb950e0359782b))
+* **ui:** center auth-hydration loader and match boot-loader size ([#1033](https://github.com/AntonioVentilii/vici-app/issues/1033)) ([40b69ef](https://github.com/AntonioVentilii/vici-app/commit/40b69ef02afcca98545ad829b9a8aa2a324b6da1))
+* **ui:** theme-aware floating companion background ([#1027](https://github.com/AntonioVentilii/vici-app/issues/1027)) ([bdabc11](https://github.com/AntonioVentilii/vici-app/commit/bdabc11ac68c752e362c130f14992eade181b432))
+
+
+### Documentation
+
+* **spec:** mark friends YOU row sticky spec Implemented ([#1029](https://github.com/AntonioVentilii/vici-app/issues/1029)) ([1544e83](https://github.com/AntonioVentilii/vici-app/commit/1544e838418931a295e67e5b21097a4429ccea4e))
+
+
+### Continuous Integration
+
+* **release-please:** always-bump-patch, command minor/major via Release-As ([#1025](https://github.com/AntonioVentilii/vici-app/issues/1025)) ([9c628bd](https://github.com/AntonioVentilii/vici-app/commit/9c628bd2020e0c455f0d407809c388fed557626b))
+
 ## [1.8.2](https://github.com/AntonioVentilii/vici-app/compare/v1.8.1...v1.8.2) (2026-06-26)
 
 

@@ -59,7 +59,10 @@
  * (declared in `:root` below) to lift their CTA above it. `data-ios-bottom-bar`
  * is stamped pre-paint in app.html for all iOS; the token is `0px` everywhere
  * else, so the inset is inert off iOS. Tunable in one place — adjust if the CTA
- * still clips or floats too high. */
+ * still clips or floats too high. This is the NOMINAL value; inside a
+ * `pinToVisualViewport` overlay the pin overrides it down to the residual the
+ * pin hasn't already cleared (0 in browsers whose visualViewport excludes the
+ * bar, e.g. Safari / in-app webviews), so the inset never doubles up. */
 html[data-ios-bottom-bar] {
 	--ios-bottom-bar-inset: 56px;
 }
@@ -758,6 +761,14 @@ html[data-app='1'] body {
 	overflow-x: hidden;
 	overflow-y: auto;
 	-webkit-overflow-scrolling: touch;
+	/* Standalone PWA (Home-Screen icon) renders fullscreen under the
+	 * translucent iOS status bar, so every page in this single scroll
+	 * viewport must clear the top safe-area inset or its header tucks
+	 * under the clock. `env()` is 0 in a normal browser tab and on
+	 * desktop. Flow self-manages its own inset: while its top bar is
+	 * shown the `.flow-shell` is `position: fixed; inset: 0` and escapes
+	 * this scroll viewport entirely, so it never double-counts. */
+	padding-top: env(safe-area-inset-top, 0px);
 	padding-bottom: var(--bn-clear);
 }
 
@@ -2275,7 +2286,7 @@ a.title-action::after {
 	box-shadow:
 		0 0 0 4px rgba(226, 184, 66, 0.18),
 		0 6px 18px -6px rgba(226, 184, 66, 0.55);
-	animation: xp-toast-pop 1000ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+	animation: xp-toast-pop 1500ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 .xp-toast .num {
 	font-size: var(--text-body);
@@ -2329,7 +2340,7 @@ a.title-action::after {
    overshoot, no upward travel. */
 @media (prefers-reduced-motion: reduce) {
 	.xp-toast {
-		animation: xp-toast-rm 1000ms ease forwards;
+		animation: xp-toast-rm 1500ms ease forwards;
 	}
 }
 
@@ -3301,6 +3312,13 @@ a.title-action::after {
 		color-mix(in srgb, var(--laurel) 12%, color-mix(in srgb, var(--bg-base) 80%, transparent)),
 		color-mix(in srgb, var(--bg-base) 80%, transparent)
 	);
+}
+/* Desktop drops the floating pill, so the overlay no longer reserves
+   `--bn-clear` at the bottom — it spans the full viewport edge to edge. */
+@media (min-width: 56rem) {
+	.flow-loading {
+		inset: 0;
+	}
 }
 .flow-loading .deckwrap {
 	position: relative;

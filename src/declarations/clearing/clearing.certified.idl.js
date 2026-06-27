@@ -105,6 +105,18 @@ export const idlFactory = ({ IDL }) => {
 		series_id: IDL.Text,
 		outcomes: IDL.Vec(OutcomeLean)
 	});
+	const AggregateSettlementAccuracyParams = IDL.Record({
+		to_ts: IDL.Opt(IDL.Nat64),
+		members: IDL.Vec(IDL.Principal),
+		from_ts: IDL.Opt(IDL.Nat64),
+		series_ids: IDL.Opt(IDL.Vec(IDL.Text))
+	});
+	const SettlementAccuracyEntry = IDL.Record({
+		principal: IDL.Principal,
+		realized_pnl: IDL.Int,
+		win_count: IDL.Nat64,
+		settled_count: IDL.Nat64
+	});
 	const BackfillSettlementEventsParams = IDL.Record({
 		start_after: IDL.Opt(IDL.Text)
 	});
@@ -642,6 +654,11 @@ export const idlFactory = ({ IDL }) => {
 	return IDL.Service({
 		accept_position_transfer: IDL.Func([PositionProof], [AcceptPositionTransferResult], []),
 		aggregate_lean: IDL.Func([AggregateLeanParams], [AggregateLean], []),
+		aggregate_settlement_accuracy: IDL.Func(
+			[AggregateSettlementAccuracyParams],
+			[IDL.Vec(SettlementAccuracyEntry)],
+			[]
+		),
 		backfill_settlement_events: IDL.Func(
 			[BackfillSettlementEventsParams],
 			[BackfillSettlementEventsResult],

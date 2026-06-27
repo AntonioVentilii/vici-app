@@ -1065,6 +1065,10 @@ export const frMessages = {
 	'flow.exit_aria': 'Quitter Flow',
 	'flow.eyebrow': 'MODE FLOW',
 	'flow.fresh_start': 'Nouveau départ.',
+	'flow.funds.body':
+		'Vos VXP sont déjà engagés dans des prédictions ouvertes. Ils se libèrent à mesure que ces marchés se résolvent. Consultez vos appels ouverts sur le Dashboard.',
+	'flow.funds.eyebrow': 'TOUT ENGAGÉ',
+	'flow.funds.title': 'Tout est en jeu.',
 	'flow.in_flow': 'en Flow',
 	'flow.invite.code_label': 'Code',
 	'flow.invite.copy_code_aria': 'Copier le code d’invitation',
@@ -1094,6 +1098,10 @@ export const frMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP cette session',
 	'flow.skip_aria': 'Passer',
 	'flow.stage_ended': '{stage} terminé.',
+	'flow.stake.warning.unaffordable':
+		'Plus que tes VXP disponibles. Ton solde est en jeu, réduis la mise.',
+	'flow.stake.warning.wont_finish':
+		'Il resterait trop peu pour finir ton flow. Essaie une mise plus petite.',
 	'flow.streak_combo': 'Série ×{count}',
 	'flow.title_a': 'Un swipe.',
 	'flow.title_b': 'Un pronostic.',
@@ -1313,7 +1321,6 @@ export const frMessages = {
 	'leagues.create.label_emblem': 'Emblème',
 	'leagues.create.label_privacy': 'Confidentialité',
 	'leagues.create.preview_meta': '1 membre · {privacy}',
-	'leagues.create.privacy_invite': 'Sur invitation',
 	'leagues.create.privacy_open': 'Ouverte',
 	'leagues.create.privacy_private': 'Privée',
 	'leagues.privacy.cancel': 'Annuler',
@@ -1321,10 +1328,8 @@ export const frMessages = {
 		'Les ligues ouvertes sont visibles publiquement : les membres actuels apparaîtront dans les listes publiques et les recommandations aux amis. Vous pourrez revenir en arrière plus tard, mais c’est irréversible pour quiconque l’a déjà vue.',
 	'leagues.privacy.confirm_open_confirm': 'Rendre publique',
 	'leagues.privacy.confirm_open_title': 'Rendre cette ligue publique ?',
-	'leagues.privacy.desc_invite':
-		'Non répertoriée publiquement. Accessible par code d’invitation et recommandée aux amis des membres.',
 	'leagues.privacy.desc_open':
-		'Répertoriée publiquement et recommandée aux amis des membres. Rejoindre nécessite toujours un code d’invitation.',
+		'Trouvable dans la recherche, les listes et les recommandations. Rejoindre nécessite toujours un code d’invitation.',
 	'leagues.privacy.desc_private':
 		'Masquée. Accessible uniquement par code d’invitation et jamais affichée nulle part.',
 	'leagues.privacy.edit_label': 'Modifier la confidentialité',
@@ -1332,7 +1337,6 @@ export const frMessages = {
 	'leagues.privacy.saving': 'Enregistrement…',
 	'leagues.privacy.sub': 'Choisissez qui peut trouver cette ligue.',
 	'leagues.privacy.title': 'Confidentialité de la ligue',
-	'leagues.detail.hero_chip_invite': 'Sur invitation',
 	'leagues.detail.hero_chip_kind': 'Ligue',
 	'leagues.detail.hero_chip_open': 'Ouverte',
 	'leagues.detail.hero_chip_private': 'Privée',
@@ -1460,11 +1464,10 @@ export const frMessages = {
 	'leagues.card.rank_of': 'sur {count}',
 	'leagues.card.recommend_chip': 'Demander',
 	'leagues.card.trend_this_week': '{count} cette semaine',
-	'leagues.empty.body':
-		'Affronte ton équipe, tes amis, ton bureau. Sur invitation. Ton bilan reste entre vous.',
+	'leagues.empty.body': 'Affronte ton équipe, tes amis, ton bureau. Ton bilan reste entre vous.',
 	'leagues.empty.cta_create': 'Créer une ligue',
 	'leagues.empty.cta_join': 'Rejoindre avec un code',
-	'leagues.empty.quote': '“Les ligues sont privées.”',
+	'leagues.empty.quote': '“Ton équipe. Ton bilan.”',
 	'leagues.eyebrow.founded': 'Tes ligues · Admin',
 	'leagues.eyebrow.friends_in': 'Tes amis y sont',
 	'leagues.eyebrow.joined': 'Tes ligues',
@@ -2190,7 +2193,7 @@ export const frMessages = {
 	'arena.l_eyebrow': '01 · VOTRE LIGUE',
 	'arena.l_members': '{count} MEMBRES',
 	'arena.l_sub':
-		'Cohortes privées. Votre équipe, votre bureau, votre chat de groupe. Le classement qui compte vraiment.',
+		'Vos cohortes. Votre équipe, votre bureau, votre chat de groupe. Le classement qui compte vraiment.',
 	'arena.l_title_a': 'Les gens',
 	'arena.l_title_b': 'qui vous connaissent.',
 	'arena.l_you': 'VOUS',
@@ -2316,7 +2319,6 @@ export const frMessages = {
 	'status.resolved': 'Résolu',
 	'status.unknown': 'Inconnu',
 	'ticker.consensus': 'consensus',
-	'transactions.available': 'Disponible',
 	'transactions.back': 'Retour au tableau de bord',
 	'transactions.bonus.achievement': 'Succès',
 	'transactions.bonus.calibration': 'Récompense de calibration',
@@ -2349,7 +2351,6 @@ export const frMessages = {
 	'transactions.kind.sent': 'Envoyés',
 	'transactions.kind.won': 'Gagnée',
 	'transactions.title': 'Transactions',
-	'transactions.total': 'Total',
 	'transactions.truncated': 'Historique antérieur non affiché',
 	'trust.eyebrow': 'CONFIANCE',
 	'trust.p1_b':

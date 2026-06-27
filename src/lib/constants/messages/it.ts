@@ -1059,6 +1059,10 @@ export const itMessages = {
 	'flow.exit_aria': 'Esci da Flow',
 	'flow.eyebrow': 'MODALITÀ FLOW',
 	'flow.fresh_start': 'Nuovo inizio.',
+	'flow.funds.body':
+		'I tuoi VXP sono già impegnati in previsioni aperte. Si liberano man mano che quei mercati si risolvono: controlla le tue chiamate aperte nella Dashboard.',
+	'flow.funds.eyebrow': 'TUTTO IMPEGNATO',
+	'flow.funds.title': 'Tutto in gioco.',
 	'flow.in_flow': 'in Flow',
 	'flow.invite.code_label': 'Codice',
 	'flow.invite.copy_code_aria': 'Copia codice invito',
@@ -1088,6 +1092,10 @@ export const itMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP in questa sessione',
 	'flow.skip_aria': 'Salta',
 	'flow.stage_ended': '{stage} terminato.',
+	'flow.stake.warning.unaffordable':
+		'Più dei VXP disponibili. Il saldo è in gioco, abbassa la posta.',
+	'flow.stake.warning.wont_finish':
+		'Così resta troppo poco per finire il tuo flow. Prova una posta più bassa.',
 	'flow.streak_combo': 'Serie ×{count}',
 	'flow.title_a': 'Uno swipe.',
 	'flow.title_b': 'Una previsione.',
@@ -1305,7 +1313,6 @@ export const itMessages = {
 	'leagues.create.label_emblem': 'Emblema',
 	'leagues.create.label_privacy': 'Privacy',
 	'leagues.create.preview_meta': '1 membro · {privacy}',
-	'leagues.create.privacy_invite': 'Solo su invito',
 	'leagues.create.privacy_open': 'Aperta',
 	'leagues.create.privacy_private': 'Privata',
 	'leagues.privacy.cancel': 'Annulla',
@@ -1313,10 +1320,8 @@ export const itMessages = {
 		'Le leghe aperte sono visibili pubblicamente: i membri attuali compariranno negli elenchi pubblici e nei consigli per gli amici. Potrai tornare indietro in seguito, ma non è reversibile per chi l’ha già vista.',
 	'leagues.privacy.confirm_open_confirm': 'Rendi pubblica',
 	'leagues.privacy.confirm_open_title': 'Rendere pubblica questa lega?',
-	'leagues.privacy.desc_invite':
-		'Non elencata pubblicamente. Si entra con codice d’invito ed è consigliata agli amici dei membri.',
 	'leagues.privacy.desc_open':
-		'Elencata pubblicamente e consigliata agli amici dei membri. Per unirsi serve comunque un codice d’invito.',
+		'Trovabile in ricerca, elenchi e consigli. Per unirsi serve comunque un codice d’invito.',
 	'leagues.privacy.desc_private':
 		'Nascosta. Raggiungibile solo con codice d’invito e mai mostrata da nessuna parte.',
 	'leagues.privacy.edit_label': 'Modifica privacy',
@@ -1324,7 +1329,6 @@ export const itMessages = {
 	'leagues.privacy.saving': 'Salvataggio…',
 	'leagues.privacy.sub': 'Scegli chi può trovare questa lega.',
 	'leagues.privacy.title': 'Privacy della lega',
-	'leagues.detail.hero_chip_invite': 'Solo su invito',
 	'leagues.detail.hero_chip_kind': 'Lega',
 	'leagues.detail.hero_chip_open': 'Aperta',
 	'leagues.detail.hero_chip_private': 'Privata',
@@ -1452,10 +1456,10 @@ export const itMessages = {
 	'leagues.card.recommend_chip': 'Richiedi',
 	'leagues.card.trend_this_week': '{count} questa settimana',
 	'leagues.empty.body':
-		'Sfida la tua squadra, i tuoi amici, il tuo ufficio. Solo su invito. Il record resta fra di voi.',
+		'Sfida la tua squadra, i tuoi amici, il tuo ufficio. Il record resta fra di voi.',
 	'leagues.empty.cta_create': 'Crea una lega',
 	'leagues.empty.cta_join': 'Entra con un codice',
-	'leagues.empty.quote': '“Le leghe sono private.”',
+	'leagues.empty.quote': '“La tua squadra. Il tuo record.”',
 	'leagues.eyebrow.founded': 'Le tue leghe · Admin',
 	'leagues.eyebrow.friends_in': 'Ci sono i tuoi amici',
 	'leagues.eyebrow.joined': 'Leghe a cui partecipi',
@@ -2175,7 +2179,7 @@ export const itMessages = {
 	'arena.l_eyebrow': '01 · LA TUA LEGA',
 	'arena.l_members': '{count} MEMBRI',
 	'arena.l_sub':
-		'Gruppi su invito. La tua squadra, il tuo ufficio, la tua chat di gruppo. La classifica che conta davvero.',
+		'I tuoi gruppi. La tua squadra, il tuo ufficio, la tua chat di gruppo. La classifica che conta davvero.',
 	'arena.l_title_a': 'Le persone',
 	'arena.l_title_b': 'che ti conoscono.',
 	'arena.l_you': 'TU',
@@ -2300,7 +2304,6 @@ export const itMessages = {
 	'status.resolved': 'Risolto',
 	'status.unknown': 'Sconosciuto',
 	'ticker.consensus': 'consenso',
-	'transactions.available': 'Disponibile',
 	'transactions.back': 'Torna alla dashboard',
 	'transactions.bonus.achievement': 'Obiettivo',
 	'transactions.bonus.calibration': 'Premio calibrazione',
@@ -2333,7 +2336,6 @@ export const itMessages = {
 	'transactions.kind.sent': 'Inviati',
 	'transactions.kind.won': 'Vinta',
 	'transactions.title': 'Transazioni',
-	'transactions.total': 'Totale',
 	'transactions.truncated': 'Cronologia precedente non mostrata',
 	'trust.eyebrow': 'FIDUCIA',
 	'trust.p1_b': 'Ogni domanda si chiude su una fonte pubblica. Niente discrezione. Niente ricorsi.',

@@ -42,12 +42,12 @@
 		{ id: 'violet', value: '#b49cff' },
 		{ id: 'parch', value: '#f2ecdc' }
 	] as const;
-	// Three-way privacy selector — Private / Invite-only / Open, ordered
-	// most → least restrictive, defaulting to Open (new leagues are
-	// publicly listed and battle-eligible from creation; owners tighten in
-	// two taps). The chosen value persists onto the league doc's `privacy`
-	// field and reads back as the detail header's privacy chip.
-	const PRIVACIES = [LeaguePrivacy.PRIVATE, LeaguePrivacy.INVITE, LeaguePrivacy.OPEN] as const;
+	// Two-way privacy selector — Open / Private, defaulting to Open (new
+	// leagues are discoverable and battle-eligible from creation; owners
+	// tighten to hidden in two taps). The chosen value persists onto the
+	// league doc's `privacy` field and reads back as the detail header's
+	// privacy chip.
+	const PRIVACIES = [LeaguePrivacy.OPEN, LeaguePrivacy.PRIVATE] as const;
 
 	const [DEFAULT_COLOR] = COLORS;
 
