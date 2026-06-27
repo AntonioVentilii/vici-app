@@ -244,7 +244,6 @@ here.
 - **Build now vs. defer the recipient card (the crux).** Three options
   were considered for _how_ the recipient learns of an incoming
   challenge:
-
   - **(a) Client-side derive (RECOMMENDED — this spec).** Derive the
     card in `inbox.store.ts` from the `proposed` battle docs the
     recipient admin **can already read** (`leagueBattlesStore`, populated

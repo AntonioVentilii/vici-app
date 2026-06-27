@@ -25,14 +25,9 @@ export enum TestId {
 	MarketCardSkeleton = 'market-card-skeleton',
 	MarketTimeRemaining = 'market-time-remaining',
 	PrincipalDisplay = 'principal-display',
-	// Onboarding (`/signup`): the outer wrapper shared by both surfaces; the
-	// one-screen flow's handle input + skip; and the multi-beat flow's team
-	// skip, first-call card, pool suggestions, and shared primary CTA (claim /
-	// finish), still reachable behind the flag-off path.
-	OnboardingFlow = 'onboarding-flow',
-	OnboardingTeamSkip = 'onboarding-team-skip',
-	OnboardingCard = 'onboarding-card',
-	OnboardingHandleSuggestion = 'onboarding-handle-suggestion',
+	// Onboarding (`/signup`): the outer wrapper, the handle input, the skip
+	// escape, and the primary CTA (claim / finish).
+	Onboarding = 'onboarding',
 	OnboardingHandleInput = 'onboarding-handle-input',
 	OnboardingHandleSkip = 'onboarding-handle-skip',
 	OnboardingPrimary = 'onboarding-primary',

@@ -21,6 +21,24 @@
 		<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
 
 		<!--
+			Capture `beforeinstallprompt` at the earliest possible point. Chrome fires
+			it once, during initial load — before the app hydrates — so a listener
+			registered later (when the app layout calls `initA2hs`) misses it and the
+			in-app "Add to home screen" affordance never appears. Stash the deferred
+			event here; `a2hs.store` adopts it on init.
+		-->
+		<script>
+			window.addEventListener(
+				'beforeinstallprompt',
+				function (event) {
+					event.preventDefault();
+					window.__viciDeferredInstallPrompt = event;
+				},
+				{ once: true }
+			);
+		</script>
+
+		<!--
 			`minimum-scale=1` blocks pinch-zoom-OUT below device width — the app
 			is tuned to device-width and zooming out just exposes background
 			chrome. We intentionally do NOT set `maximum-scale` or

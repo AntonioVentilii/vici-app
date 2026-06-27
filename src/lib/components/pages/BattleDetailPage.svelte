@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
@@ -20,16 +19,20 @@
 		loadLeaguesByIds,
 		readBattleLiveScore,
 		resolveBattle,
+		restartLegacyBattle,
 		retractBattle,
 		type BattleLiveScore,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
+	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 	import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleDoc, BattleState } from '$lib/types/battle';
 	import { battleScopeLabel } from '$lib/utils/battle.utils';
-	import { formatDate, shortLeagueId } from '$lib/utils/format.utils';
+	import { formatDate, shortenPrincipal, shortLeagueId } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Battle detail — face-off view for a single battle. Shows sideA + sideB
@@ -66,6 +69,9 @@
 	// backend on every re-render.
 	const autoResolveAttempts = new SvelteMap<string, number>();
 	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
+	// Battle id → count of lazy auto-restart attempts for a baseline-less legacy
+	// row (#912). Same cap + retry rationale as the resolve counter above.
+	const autoRestartAttempts = new SvelteMap<string, number>();
 
 	// Where the viewer arrived from, for the `battle_viewed` funnel. A
 	// bounded vocabulary — anything unrecognised falls back to deep_link.
@@ -137,13 +143,27 @@
 		$leagueDirectoryStore.get(sideId)?.accentColor ??
 		'var(--laurel)';
 
-	// Hydrate the directory so the opponent side resolves too.
+	// Hydrate the directory so the opponent side resolves too, and the
+	// proposer's profile so it renders as a handle, not a raw principal.
 	$effect(() => {
 		if (!battle) {
 			return;
 		}
 
 		void loadLeaguesByIds({ ids: [battle.sideA, battle.sideB] });
+		void loadProfilesByPrincipals({ principals: [battle.proposer] });
+	});
+
+	// Proposer handle (`@nickname`), falling back to the shortened principal
+	// until — or unless — a profile with a nickname is in the store.
+	const proposerLabel = $derived.by((): string => {
+		if (!battle) {
+			return '';
+		}
+
+		const nickname = $profilesStore.get(battle.proposer)?.nickname?.trim();
+
+		return notEmptyString(nickname) ? `@${nickname}` : shortenPrincipal(battle.proposer);
 	});
 
 	const ownedSide = $derived.by((): string | undefined => {
@@ -272,7 +292,21 @@
 	});
 
 	const canResolve = $derived(
-		battle?.state === 'in_flight' && nonNullish(resolverSide) && Date.now() >= battle.settleMs
+		battle?.state === 'in_flight' &&
+			nonNullish(resolverSide) &&
+			nonNullish(battle.baselineA) &&
+			nonNullish(battle.baselineB) &&
+			Date.now() >= battle.settleMs
+	);
+	// A legacy league battle accepted before baselines existed (#912): in
+	// flight but unscoreable. A member viewing it lazily restarts the window so
+	// it starts producing real standings instead of a frozen "—".
+	const needsRestart = $derived(
+		battle?.state === 'in_flight' &&
+			battle.kind === 'league' &&
+			nonNullish(resolverSide) &&
+			isNullish(battle.baselineA) &&
+			isNullish(battle.baselineB)
 	);
 	const canRetract = $derived(
 		battle?.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal
@@ -406,6 +440,24 @@
 		}
 	};
 
+	const handleRestart = async () => {
+		if (!battle || nonNullish(actingBattleId)) {
+			return;
+		}
+
+		const target = battle;
+		actingBattleId = target.id;
+
+		try {
+			await restartLegacyBattle({ battle: target });
+			await load();
+		} catch (err) {
+			console.error('BattleDetailPage: restartLegacyBattle failed', err);
+		} finally {
+			actingBattleId = null;
+		}
+	};
+
 	// Lazy auto-resolution: Juno has no scheduler, so a settled battle
 	// resolves the first time any member of either side opens it. The attempt
 	// counter guards against re-firing on every re-render while still letting
@@ -423,8 +475,27 @@
 		}
 	});
 
-	const backToInbox = () => {
-		void goto(`${resolve(AppPath.Arena)}/battles`);
+	// Lazy auto-restart: a legacy baseline-less battle heals the first time a
+	// member opens it, on the same scheduler-free liveness model as resolve.
+	// Silent and capped identically; on success the reload shows the fresh
+	// window and real standings.
+	$effect(() => {
+		if (
+			needsRestart &&
+			nonNullish(battle) &&
+			isNullish(actingBattleId) &&
+			(autoRestartAttempts.get(battle.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
+		) {
+			autoRestartAttempts.set(battle.id, (autoRestartAttempts.get(battle.id) ?? 0) + 1);
+			void handleRestart();
+		}
+	});
+
+	// Return to wherever the viewer came from in-app (league page, inbox).
+	// When they landed here cold — a deep link or fresh tab with no in-app
+	// history — `goBack` falls back to the Arena battles tab.
+	const handleBack = () => {
+		goBack(`${resolve(AppPath.Arena)}?tab=battles`);
 	};
 </script>
 
@@ -432,7 +503,7 @@
 	<ScreenHeader
 		back={{
 			label: t({ locale: $localeStore, key: 'battle.detail.back' }),
-			onBack: backToInbox
+			onBack: handleBack
 		}}
 		title={t({ locale: $localeStore, key: 'battle.detail.title' })}
 	/>
@@ -456,7 +527,7 @@
 				<span class="allcaps battle-detail-eyebrow" data-state={battle.state}>
 					{t({ locale: $localeStore, key: stateLabelKey(battle.state) })}
 				</span>
-				{#if battle.state === 'in_flight'}
+				{#if battle.state === 'in_flight' && !isFinalizing}
 					<span class="num allcaps battle-detail-window">
 						{t({
 							locale: $localeStore,
@@ -550,7 +621,7 @@
 			<div class="battle-detail-meta-row">
 				<span class="eyebrow">{t({ locale: $localeStore, key: 'battle.detail.proposer' })}</span>
 				<span class="num battle-detail-meta-mono">
-					{battle.proposer.slice(0, 5)}…{battle.proposer.slice(-5)}
+					{proposerLabel}
 				</span>
 			</div>
 		</section>

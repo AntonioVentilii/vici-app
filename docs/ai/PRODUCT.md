@@ -123,6 +123,20 @@ user-visible surface on its own; the digest that renders it ships
 separately. See
 [`specs/2026-06-25-feat-resolved-results-collection.md`](./spec-driven-development/specs/2026-06-25-feat-resolved-results-collection.md).
 
+### Arena Friends — the "Ranked" list
+
+Above the results digest, Arena → Friends ranks your friends by all-time
+prediction **accuracy** (win rate) descending — the same accuracy-first
+metric as league rank. Each row shows accuracy, daily streak, and a
+head-to-head delta chip (your accuracy minus theirs, green when you
+lead). Your own row carries your **rank within the group** (one above
+every friend with strictly higher accuracy), a "You" badge by your
+handle, and your VXP balance in place of a head-to-head chip. It sits
+inline at that real position — not pinned last — and stays visible while
+scrolling by sticking to whichever edge of the card its slot has passed,
+settling back inline when the slot is on screen. See
+[`specs/2026-06-26-feat-friends-you-row-sticky.md`](./spec-driven-development/specs/2026-06-26-feat-friends-you-row-sticky.md).
+
 ### Arena Friends — the "Recent results" digest
 
 The Arena → Friends section shows a per-friend **results** digest, not a
@@ -143,6 +157,17 @@ transient acknowledgement on the row (visual + motion, no persistence —
 a digest row has no `Activity` doc identity to bind a persisted like to).
 The eyebrow reads "Recent results". See
 [`specs/2026-06-25-feat-arena-results-digest.md`](./spec-driven-development/specs/2026-06-25-feat-arena-results-digest.md).
+
+### Streak and level milestones in the inbox
+
+When your daily flame reaches a new stage (3 / 7 / 15 / 30 days) or your
+profile level goes up, an unread inbox card tells you — the flame card
+deep-links to Flow, the level card to your profile. Both are derived live
+from your own profile, gated by a high-water marker so a returning user
+never sees a retroactive backlog (only a genuine new milestone fires) and
+re-climbing a broken streak re-notifies. The streak card respects your
+streak-reminder preference. See
+[`specs/2026-06-23-feat-streak-level-inbox-notifications.md`](./spec-driven-development/specs/2026-06-23-feat-streak-level-inbox-notifications.md).
 
 ### Market odds — skeleton while the book loads
 
@@ -333,7 +358,12 @@ Every leaderboard row — podium tile and list row — shows the predictor's
 1-based position in the shrinkage order, not the clearing canister's
 net-P&L rank (the Dash "Top X%" rank tile still reads the P&L rank — a
 known, deliberate inconsistency until accuracy ranking moves into the
-canister). Decision record:
+canister). The Arena Friends "Global ranking" card reads the viewer's own
+all-time position from this same partition (`ownGlobalStanding`), so it
+shows the shrinkage rank — or **Provisional** when the viewer is below the
+gate — and can never disagree with the board it links into (it previously
+showed the satellite points rank, which could read a phantom #1). Decision
+record:
 [`specs/2026-06-25-impr-leaderboard-integrity.md`](./spec-driven-development/specs/2026-06-25-impr-leaderboard-integrity.md).
 
 ### Battles — accuracy face-offs that resolve themselves
@@ -404,7 +434,16 @@ and winner from `league_stats` and rejects any write whose numbers don't
 match, so no owner can post a fabricated result. Because Juno has no
 scheduler, a settled battle resolves **lazily** — the first time a side
 owner opens the battle (or the league) after the window closes, with a
-one-tap "Resolve now" as a manual fallback. **Known limitations (by
+one-tap "Resolve now" as a manual fallback. **Legacy battles self-heal.**
+A league battle accepted before kickoff baselines existed carries no
+snapshot, so it can neither show live standings nor resolve — it would
+hang in flight forever. The first time a member of either side opens such
+a battle, its window **restarts** from now: a fresh `league_stats`
+baseline is stamped (re-read and re-validated by the assert, so it can't
+be faked) and the **original duration** is preserved, leaving proposer,
+scope, and wager untouched. The already-elapsed days are unrecoverable —
+no per-call history exists to reconstruct them — so a restart trades them
+for a real, scorable window going forward. **Known limitations (by
 design):** the snapshot delta measures kickoff → resolution rather than
 the exact window, so prompt (auto) resolution keeps it ≈ the intended
 window — the same approximation the monthly tournament already uses; and

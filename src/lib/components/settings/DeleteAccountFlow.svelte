@@ -234,7 +234,7 @@
 
 			const hydrated = await Promise.all(
 				owned.map(async ({ league }) => {
-					let members: LeagueMemberDoc[] = [];
+					let members: LeagueMemberDoc[];
 
 					try {
 						members = await listLeagueMembers({ leagueId: league.id });
@@ -497,8 +497,7 @@
 					maxlength={EXIT_SIGNAL_NOTE_MAX_LENGTH}
 					placeholder={t({ locale: $localeStore, key: 'settings.delete.note_placeholder' })}
 					rows="3"
-					bind:value={note}
-				></textarea>
+					bind:value={note}></textarea>
 			{/if}
 
 			<div class="del-retain">

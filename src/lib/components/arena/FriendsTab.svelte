@@ -21,7 +21,7 @@
 	} from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-	import { leaderboard } from '$lib/derived/leaderboard.derived';
+	import { ownGlobalStanding } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { track } from '$lib/services/analytics.services';
 	import { getMyReferralCode } from '$lib/services/referral.services';
@@ -366,9 +366,22 @@
 		return rows.sort((a, b) => b.accuracy - a.accuracy);
 	});
 
-	let showAllRanked = $state(false);
-	const visibleRanked = $derived(showAllRanked ? rankedFriends : rankedFriends.slice(0, 10));
-	const hiddenRankedCount = $derived(Math.max(0, rankedFriends.length - visibleRanked.length));
+	// Viewer's standing within the ranked set: one above every friend
+	// with a strictly higher accuracy. Same `accuracyOf` source as the
+	// friend rows, so the comparison is apples-to-apples. `rankedFriends`
+	// is sorted by accuracy descending, so the first friend who isn't
+	// strictly higher marks the viewer's slot — found without allocating
+	// an intermediate array.
+	const myFriendRank = $derived.by(() => {
+		const below = rankedFriends.findIndex(({ accuracy }) => accuracy <= myAccuracy);
+
+		return (below === -1 ? rankedFriends.length : below) + 1;
+	});
+
+	// Slot the YOU row occupies in the rendered list (0-based). Equals
+	// `rankedFriends.length` when the viewer trails every friend, where
+	// it renders as the final row.
+	const youInsertAt = $derived(myFriendRank - 1);
 
 	const formatPct = (value: number): string => {
 		// `value` is a 0..100 accuracy percentage — a live standings entry
@@ -634,12 +647,13 @@
 	};
 
 	// ── Global ranking link ─────────────────────────────────────────
-	const globalLeaderboard = $derived<UserProfile[]>($leaderboard);
-	const myRank = $derived.by(() => {
-		const idx = globalLeaderboard.findIndex((entry) => entry.owner === userPrincipal);
-
-		return idx === -1 ? undefined : idx + 1;
-	});
+	// The viewer's own position on the global board, read from the same
+	// confidence-adjusted standings the Leaderboard renders (`ownGlobalStanding`
+	// → the all-time `globalStandingsRows` partition), NOT the satellite points
+	// ranking. The two surfaces must agree: a viewer below the qualify gate is
+	// `provisional` here exactly as they are there, never a phantom points #1.
+	// The 'all' slice is hydrated on mount above.
+	const ownStanding = ownGlobalStanding('all');
 
 	const goToLeaderboard = () => {
 		// Leaderboard lives at /arena/leaderboard; this keeps the user inside
@@ -1139,8 +1153,28 @@
 					onInvite={() => void handleShare()}
 				/>
 			{:else}
+				{#snippet youRow()}
+					<li class="ranked-li-you">
+						<RankedRow
+							accuracyLabel={formatPct(myAccuracy)}
+							avatar={myProfile?.avatar}
+							avatarParts={myProfile?.avatarParts}
+							dailyStreak={myProfile?.dailyStreak ?? 0}
+							displayName={myProfile?.nickname ??
+								t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
+							nickname={myProfile?.nickname}
+							numLabel={String(myFriendRank).padStart(2, '0')}
+							owner={userPrincipal}
+							variant="you"
+							vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
+						/>
+					</li>
+				{/snippet}
 				<ul class="ranked-list">
-					{#each visibleRanked as row, idx (row.friendId)}
+					{#each rankedFriends as row, idx (row.friendId)}
+						{#if idx === youInsertAt}
+							{@render youRow()}
+						{/if}
 						{@const h2h = formatH2h(row.accuracy)}
 						<li>
 							<RankedRow
@@ -1153,39 +1187,16 @@
 								h2hAhead={h2h.ahead}
 								h2hValue={h2h.value}
 								nickname={row.profile?.nickname}
-								numLabel={String(idx + 1).padStart(2, '0')}
+								numLabel={String(idx < youInsertAt ? idx + 1 : idx + 2).padStart(2, '0')}
 								onOpen={() => openFriendSheet(row)}
 								owner={row.profile?.owner ?? row.friendId}
 								variant="friend"
 							/>
 						</li>
 					{/each}
-					{#if hiddenRankedCount > 0}
-						<li>
-							<button class="ranked-see-all" onclick={() => (showAllRanked = true)} type="button">
-								{t({
-									locale: $localeStore,
-									key: 'arena.friends.ranked.see_all',
-									params: { count: rankedFriends.length }
-								})}
-							</button>
-						</li>
+					{#if youInsertAt >= rankedFriends.length}
+						{@render youRow()}
 					{/if}
-					<li class="ranked-li-you">
-						<RankedRow
-							accuracyLabel={formatPct(myAccuracy)}
-							avatar={myProfile?.avatar}
-							avatarParts={myProfile?.avatarParts}
-							dailyStreak={myProfile?.dailyStreak ?? 0}
-							displayName={myProfile?.nickname ??
-								t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
-							nickname={myProfile?.nickname}
-							numLabel={t({ locale: $localeStore, key: 'arena.friends.ranked.you' })}
-							owner={userPrincipal}
-							variant="you"
-							vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
-						/>
-					</li>
 				</ul>
 			{/if}
 		</section>
@@ -1235,7 +1246,21 @@
 												params: { count: digest.total }
 											})}
 										</span>
-										<span class="num feed-record">· {digest.won}–{digest.lost}</span>
+										<span class="num feed-record"
+											>· <span class="feed-record-win"
+												>{t({
+													locale: $localeStore,
+													key: 'arena.friends.feed.record_won',
+													params: { count: digest.won }
+												})}</span
+											>–<span class="feed-record-loss"
+												>{t({
+													locale: $localeStore,
+													key: 'arena.friends.feed.record_lost',
+													params: { count: digest.lost }
+												})}</span
+											></span
+										>
 									</span>
 									<span class="feed-meta">
 										{#if nonNullish(digest.windowLabel)}
@@ -1306,9 +1331,13 @@
 			</span>
 			<span class="global-link-value num">
 				<span class="global-link-rank">
-					{nonNullish(myRank)
-						? `#${myRank}`
-						: t({ locale: $localeStore, key: 'arena.friends.global.unranked' })}
+					{#if nonNullish($ownStanding?.displayRank)}
+						#{$ownStanding.displayRank}
+					{:else if $ownStanding?.provisional}
+						{t({ locale: $localeStore, key: 'arena.friends.global.provisional' })}
+					{:else}
+						{t({ locale: $localeStore, key: 'arena.friends.global.unranked' })}
+					{/if}
 				</span>
 				<!-- Rank delta (↑/↓ N this week) deferred until the satellite
 				     ships a `previousRank` snapshot. -->
@@ -1804,8 +1833,8 @@
 	/* ── Ranked list ───────────────────────────────────────── */
 	/* Single unified card with internal dividers. The
 	   list is its own internal-scroll container (`overflow: auto;
-	   max-height: 60vh`) so the YOU `<li>` can stick to the bottom
-	   of the card on scroll, instead of being trapped by the page
+	   max-height: 60vh`) so the YOU `<li>` can stick to the nearest
+	   card edge on scroll, instead of being trapped by the page
 	   scroll context. */
 	.ranked-list {
 		position: relative;
@@ -1825,40 +1854,21 @@
 		border-top: 1px solid var(--border-base);
 	}
 
-	/* Sticky YOU row — pinned to the bottom edge of the rank list
-	   with a gold-tinted backdrop blur.
-	   `position: sticky` lives on the `<li>` wrapper (not the
-	   inner row element rendered by `RankedRow`): a sticky element
-	   is constrained by its containing block, and the `<li>` is a
-	   direct child of the scrollable `.ranked-list` — putting sticky
-	   on the inner row would constrain it to the `<li>`'s own height,
-	   which is the row itself, so no visible sticking. */
+	/* Sticky YOU row — sits inline at the viewer's real rank and, on
+	   scroll, glues to whichever card edge its natural slot has passed
+	   (top when the slot is above the fold, bottom when below) via a
+	   single sticky element with both insets set; it flows back inline
+	   when the slot is on screen.
+	   `position: sticky` lives on the `<li>` wrapper (not the inner row
+	   element rendered by `RankedRow`): a sticky element is constrained
+	   by its containing block, and the `<li>` is a direct child of the
+	   scrollable `.ranked-list` — putting sticky on the inner row would
+	   constrain it to the `<li>`'s own height, so no visible sticking. */
 	.ranked-li-you {
 		position: sticky;
+		top: 0;
 		bottom: 0;
 		z-index: 2;
-	}
-
-	/* "See all N →" sits as the last divider-separated row inside
-	   the unified ranked card. Accent text, no border (border-top
-	   comes from the shared `li + li` divider rule). */
-	.ranked-see-all {
-		width: 100%;
-		padding: 0.7rem 0.85rem;
-		border: 0;
-		background: transparent;
-		color: var(--color-primary);
-		font-family: var(--font-mono);
-		font-size: var(--t-12);
-		font-weight: 700;
-		letter-spacing: var(--tracking-wide);
-		cursor: pointer;
-		text-align: center;
-		transition: background 140ms ease;
-	}
-
-	.ranked-see-all:hover {
-		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
 	}
 
 	/* ── Empty ─────────────────────────────────────────────── */
@@ -1943,10 +1953,20 @@
 	}
 
 	/* W–L tally — mono numerals, base weight so the record reads as the
-	   row's spine. */
+	   row's spine. Wins/losses carry the same yes/no color as the net
+	   figure plus a leading W/L glyph, so the split reads at a glance
+	   without leaning on color alone. */
 	.feed-record {
-		color: var(--text-base);
+		color: var(--text-muted);
 		font-weight: 700;
+	}
+
+	.feed-record-win {
+		color: var(--yes);
+	}
+
+	.feed-record-loss {
+		color: var(--no);
 	}
 
 	/* Window label + standout, on one wrapping meta line under the record. */

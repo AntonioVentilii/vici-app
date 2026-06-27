@@ -22,19 +22,18 @@
 
 	/**
 	 * One-screen onboarding — claim a handle and sign up on a single
-	 * surface. Replaces the multi-beat flow: brand wordmark → hero →
-	 * handle field (live availability + pool-suggested placeholder) →
-	 * reward chip → auth provider stack → escapes → legal fine print.
+	 * surface: brand wordmark → hero → handle field (live availability +
+	 * pool-suggested placeholder) → reward chip → auth provider stack →
+	 * escapes → legal fine print.
 	 *
-	 * Handle behaviour (live probe, monotonic cancel token, session-taken
-	 * cache, offline-tolerant `failed`, claim-time TOCTOU re-check) is the
-	 * same machinery the multi-beat handle picker uses, recomposed here.
-	 * Team selection is dropped — it moves to the post-signup Profile — so
+	 * Handle behaviour: live probe, monotonic cancel token, session-taken
+	 * cache, offline-tolerant `failed`, and a claim-time TOCTOU re-check.
+	 * Team selection happens in the post-signup Profile instead — so
 	 * `participantId` / `side` are always `null` in the emitted handoff and
 	 * the persist-across-providers stash/drain is reused unchanged.
 	 *
-	 * Emits the same handoff shape the signup page already consumes, so its
-	 * pre-auth stash and authenticated direct-write need no signature change.
+	 * Emits the handoff shape the signup page consumes, so its pre-auth
+	 * stash and authenticated direct-write need no signature change.
 	 */
 	interface Props {
 		// Fires after the provider stack resolves in-page (non-redirect).
@@ -45,7 +44,7 @@
 		}) => void;
 		// Fires once an available handle is claimed, BEFORE any provider runs
 		// — so a full-page redirect provider (Google) carries the handle
-		// through. Mirrors the multi-beat flow's auth-gate stash.
+		// through the auth-gate stash.
 		onPicksReady?: (result: {
 			participantId: string | null;
 			side: 'YES' | 'NO' | null;
@@ -151,7 +150,7 @@
 
 		if (sessionTaken.has(candidate)) {
 			liveAvailability = 'taken';
-			track({ name: 'handle_checked', source: 'onboarding', label: 'v3', ok: false });
+			track({ name: 'handle_checked', source: 'onboarding', ok: false });
 
 			return;
 		}
@@ -177,7 +176,6 @@
 					track({
 						name: 'handle_checked',
 						source: 'onboarding',
-						label: 'v3',
 						ok: res.available
 					});
 				} catch (err) {
@@ -218,37 +216,37 @@
 		}
 
 		if (name.length < MIN_NICKNAME_LENGTH) {
-			return { ok: false, tone: 'error', reasonKey: 'onboarding.v3.avail.too_short' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.avail.too_short' };
 		}
 
 		if (name.length > MAX_NICKNAME_LENGTH) {
-			return { ok: false, tone: 'error', reasonKey: 'onboarding.v3.avail.too_long' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.avail.too_long' };
 		}
 
 		if (!NICKNAME_PATTERN.test(name)) {
-			return { ok: false, tone: 'error', reasonKey: 'onboarding.v3.avail.invalid' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.avail.invalid' };
 		}
 
 		if (RESERVED_HANDLES.has(name.toLowerCase())) {
-			return { ok: false, tone: 'error', reasonKey: 'onboarding.v3.avail.reserved' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.avail.reserved' };
 		}
 
 		if (claimError === 'taken' || sessionTaken.has(name)) {
-			return { ok: false, tone: 'error', reasonKey: 'onboarding.v3.avail.taken' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.avail.taken' };
 		}
 
 		if (liveAvailability === 'idle' || liveAvailability === 'checking') {
-			return { ok: false, tone: 'neutral', reasonKey: 'onboarding.v3.avail.checking' };
+			return { ok: false, tone: 'neutral', reasonKey: 'onboarding.avail.checking' };
 		}
 
 		if (liveAvailability === 'taken') {
-			return { ok: false, tone: 'error', reasonKey: 'onboarding.v3.avail.taken' };
+			return { ok: false, tone: 'error', reasonKey: 'onboarding.avail.taken' };
 		}
 
 		// Probe failed — claimable but neutral; never the green "Available",
 		// since it wasn't confirmed. The claim-time re-check is the gate.
 		if (liveAvailability === 'failed') {
-			return { ok: true, tone: 'neutral', reasonKey: 'onboarding.v3.avail.check_failed' };
+			return { ok: true, tone: 'neutral', reasonKey: 'onboarding.avail.check_failed' };
 		}
 
 		return { ok: true, tone: 'ok' };
@@ -313,7 +311,7 @@
 	};
 
 	const lockKey = $derived<MessageKey>(
-		canClaim ? 'onboarding.v3.lock_ready' : 'onboarding.v3.lock_blocked'
+		canClaim ? 'onboarding.lock_ready' : 'onboarding.lock_blocked'
 	);
 
 	// Skip into guest preview. Stash the claimed handle through the same
@@ -326,39 +324,36 @@
 	};
 
 	onMount(() => {
-		track({ name: 'onboarding_started', source: 'onboarding', label: 'v3' });
+		track({ name: 'onboarding_started', source: 'onboarding' });
 	});
 </script>
 
-<div class="ob ob-v3" data-tid={TestId.OnboardingFlow}>
+<div class="ob" data-tid={TestId.Onboarding}>
 	<div class="ob-wrap">
 		<div class="ob-body-wrap">
-			<div class="ob2-beat ob-v3-beat">
-				<span class="ob-v3-brand">{t({ locale: $localeStore, key: 'onboarding.v3.brand' })}</span>
+			<div class="ob-beat">
+				<span class="ob-brand">{t({ locale: $localeStore, key: 'onboarding.brand' })}</span>
 
-				<h1 class="ob2-h1">
-					{t({ locale: $localeStore, key: 'onboarding.v3.h1_pre' })}
+				<h1 id="onboarding-handle-heading" class="ob-h1">
+					{t({ locale: $localeStore, key: 'onboarding.h1_pre' })}
 					<span class="serif-italic acc">
-						{t({ locale: $localeStore, key: 'onboarding.v3.h1_accent' })}
+						{t({ locale: $localeStore, key: 'onboarding.h1_accent' })}
 					</span>
 				</h1>
-				<p class="ob2-sub">{t({ locale: $localeStore, key: 'onboarding.v3.sub' })}</p>
+				<p class="ob-sub">{t({ locale: $localeStore, key: 'onboarding.sub' })}</p>
 
-				<div class="ob2-custom-input-wrap">
-					<span class="ob2-at-large">@</span>
+				<div class="ob-custom-input-wrap">
+					<span class="ob-at-large">@</span>
 					<input
-						class="ob2-custom-input"
+						class="ob-custom-input"
+						aria-labelledby="onboarding-handle-heading"
 						autocapitalize="off"
 						autocomplete="off"
 						data-tid={TestId.OnboardingHandleInput}
 						maxlength={MAX_NICKNAME_LENGTH}
 						onblur={onCommitHandle}
 						oninput={onInput}
-						placeholder={t({
-							locale: $localeStore,
-							key: 'onboarding.v3.handle_placeholder',
-							params: { handle: suggestion }
-						})}
+						placeholder={suggestion}
 						spellcheck="false"
 						type="text"
 						value={cleaned}
@@ -366,39 +361,35 @@
 				</div>
 
 				<div
-					class="ob2-avail"
+					class="ob-avail"
 					class:checking={availability.tone === 'neutral'}
 					class:no={availability.tone === 'error'}
 					class:ok={availability.tone === 'ok'}
 					aria-live="polite"
 				>
 					{#if availability.tone === 'ok'}
-						{t({ locale: $localeStore, key: 'onboarding.v3.avail.available' })}
+						{t({ locale: $localeStore, key: 'onboarding.avail.available' })}
 						<span class="serif-italic">@{selectedName}</span>
 					{:else if availability.reasonKey}
 						{t({ locale: $localeStore, key: availability.reasonKey })}
 					{:else}
-						{t({
-							locale: $localeStore,
-							key: 'onboarding.v3.handle_placeholder',
-							params: { handle: selectedName }
-						})}
+						@{selectedName}
 					{/if}
 				</div>
 
-				<div class="ob2-summary ob2-summary-starter">
-					<div class="ob2-summary-row">
-						<span class="ob2-summary-flag ob2-summary-flag-starter">
+				<div class="ob-summary ob-summary-starter">
+					<div class="ob-summary-row">
+						<span class="ob-summary-flag ob-summary-flag-starter">
 							<Gift size={16} strokeWidth={1.7} />
 						</span>
 						<div>
-							<div class="ob2-summary-q">
-								{t({ locale: $localeStore, key: 'onboarding.v3.reward_title' })}
+							<div class="ob-summary-q">
+								{t({ locale: $localeStore, key: 'onboarding.reward_title' })}
 							</div>
-							<div class="ob2-summary-meta">
+							<div class="ob-summary-meta">
 								{t({
 									locale: $localeStore,
-									key: 'onboarding.v3.reward_sub',
+									key: 'onboarding.reward_sub',
 									params: { event: eventTitle }
 								})}
 								· {starterVxp} VXP
@@ -407,7 +398,7 @@
 					</div>
 				</div>
 
-				<div class="ob-v3-lock" class:ready={canClaim}>
+				<div class="ob-lock" class:ready={canClaim}>
 					{t({
 						locale: $localeStore,
 						key: lockKey,
@@ -415,10 +406,10 @@
 					})}
 				</div>
 
-				<div class="ob2-auth-buttons">
+				<div class="ob-auth-buttons">
 					{#if authenticated}
 						<button
-							class="ob2-btn-primary"
+							class="ob-btn-primary"
 							data-tid={TestId.OnboardingPrimary}
 							disabled={!canClaim}
 							onclick={() => {
@@ -430,7 +421,7 @@
 							}}
 							type="button"
 						>
-							{t({ locale: $localeStore, key: 'onboarding.beat3.finish_cta' })}
+							{t({ locale: $localeStore, key: 'onboarding.finish_cta' })}
 						</button>
 					{:else}
 						<div onpointerdowncapture={onCommitHandle}>
@@ -445,42 +436,42 @@
 				</div>
 
 				{#if !authenticated}
-					<div class="ob2-tos">
-						<div class="ob2-tos-play">
-							{t({ locale: $localeStore, key: 'onboarding.beat3.tos.play_currency' })}
+					<div class="ob-tos">
+						<div class="ob-tos-play">
+							{t({ locale: $localeStore, key: 'onboarding.tos.play_currency' })}
 						</div>
-						{t({ locale: $localeStore, key: 'onboarding.beat3.tos.prefix' })}
+						{t({ locale: $localeStore, key: 'onboarding.tos.prefix' })}
 						<a href="/info/terms" rel="noopener" target="_blank">
-							{t({ locale: $localeStore, key: 'onboarding.beat3.tos.terms' })}
+							{t({ locale: $localeStore, key: 'onboarding.tos.terms' })}
 						</a>
-						{t({ locale: $localeStore, key: 'onboarding.beat3.tos.and' })}
+						{t({ locale: $localeStore, key: 'onboarding.tos.and' })}
 						<a href="/info/privacy" rel="noopener" target="_blank">
-							{t({ locale: $localeStore, key: 'onboarding.beat3.tos.privacy' })}
-						</a>{t({ locale: $localeStore, key: 'onboarding.beat3.tos.suffix' })}
+							{t({ locale: $localeStore, key: 'onboarding.tos.privacy' })}
+						</a>{t({ locale: $localeStore, key: 'onboarding.tos.suffix' })}
 					</div>
 				{/if}
 
 				<button
-					class="ob2-skip-link"
+					class="ob-skip-link"
 					data-tid={TestId.OnboardingHandleSkip}
 					onclick={onSkipPreview}
 					type="button"
 				>
-					{t({ locale: $localeStore, key: 'onboarding.v3.skip' })}
+					{t({ locale: $localeStore, key: 'onboarding.skip' })}
 				</button>
 
 				{#if !authenticated}
-					<div class="ob-v3-signin">
-						{t({ locale: $localeStore, key: 'onboarding.v3.signin_prompt' })}
-						<button class="ob-v3-signin-link" onclick={onSignIn} type="button">
-							{t({ locale: $localeStore, key: 'onboarding.v3.signin_link' })}
+					<div class="ob-signin">
+						{t({ locale: $localeStore, key: 'onboarding.signin_prompt' })}
+						<button class="ob-signin-link" onclick={onSignIn} type="button">
+							{t({ locale: $localeStore, key: 'onboarding.signin_link' })}
 						</button>
 					</div>
 				{/if}
 
-				<div class="ob-v3-legal">
-					<span>{t({ locale: $localeStore, key: 'onboarding.v3.legal_currency' })}</span>
-					<span>{t({ locale: $localeStore, key: 'onboarding.v3.legal_resolution' })}</span>
+				<div class="ob-legal">
+					<span>{t({ locale: $localeStore, key: 'onboarding.legal_currency' })}</span>
+					<span>{t({ locale: $localeStore, key: 'onboarding.legal_resolution' })}</span>
 				</div>
 			</div>
 		</div>
