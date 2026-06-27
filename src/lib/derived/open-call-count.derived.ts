@@ -19,7 +19,9 @@ export const openCallCount: Readable<number> = derived(
 			$marketById.get(marketId)?.status !== 'Resolved';
 
 		const openPositions = $positions.filter(({ marketId }) => isUnresolved(marketId)).length;
-		const openOrders = $orders.filter(({ series_id }) => isUnresolved(series_id as MarketId)).length;
+		const openOrders = $orders.filter(({ series_id }) =>
+			isUnresolved(series_id as MarketId)
+		).length;
 
 		return openPositions + openOrders;
 	}
