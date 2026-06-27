@@ -7,8 +7,7 @@
  * invite code is the sole way into a league at every tier. What changes
  * across tiers is whether the league surfaces publicly.
  *
- * Two tiers (Facebook-Groups convention), ordered most → least
- * restrictive everywhere they surface:
+ * Two tiers (Facebook-Groups convention):
  *
  * - {@link LeaguePrivacy.PRIVATE} — hidden: reachable only by invite
  *   code, never surfaced in any public list, recommendation, or

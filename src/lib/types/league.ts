@@ -199,4 +199,4 @@ export const isLeaguePubliclyListed = (league: LeaguePrivacyReadable): boolean =
  * qualify; {@link LeaguePrivacy.PRIVATE} (hidden) is never recommended.
  */
 export const isLeagueRecommendableToFriends = (league: LeaguePrivacyReadable): boolean =>
-	leaguePrivacy(league) !== LeaguePrivacy.PRIVATE;
+	leaguePrivacy(league) === LeaguePrivacy.OPEN;
