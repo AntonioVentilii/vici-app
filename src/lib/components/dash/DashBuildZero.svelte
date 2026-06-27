@@ -32,6 +32,7 @@
 	import { resolve } from '$app/paths';
 	import DashCallRow from '$lib/components/dash/DashCallRow.svelte';
 	import type { OpenCallRow } from '$lib/components/dash/DashCallsZone.svelte';
+	import DashGettingStarted from '$lib/components/dash/DashGettingStarted.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -99,6 +100,9 @@
 </script>
 
 <div class="db-body">
+	<!-- Getting-started checklist — cross-surface direction for the first run -->
+	<DashGettingStarted />
+
 	<!-- ZONE 1 · PERFORMANCE — calibrating -->
 	<div class="db-hero">
 		<div class="db-hrow">
