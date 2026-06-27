@@ -4125,7 +4125,7 @@ a.title-action::after {
    Onboarding envelope + chrome — the page wrapper, brand wordmark,
    lock cue, and the sign-in / legal footer that sit around the
    shared `ob-*` surface primitives above (hero, handle input,
-   availability hint, reward strip, auth stack, ToS). Theme tokens
+   availability hint, reward strip, auth stack). Theme tokens
    resolve dark + light/peach the same way, so the Google-pill
    contrast fix carried by `SignInProviderStack` survives unchanged.
    ============================================================ */
