@@ -108,7 +108,8 @@ export const idlFactory = ({ IDL }) => {
 	const AggregateSettlementAccuracyParams = IDL.Record({
 		to_ts: IDL.Opt(IDL.Nat64),
 		members: IDL.Vec(IDL.Principal),
-		from_ts: IDL.Opt(IDL.Nat64)
+		from_ts: IDL.Opt(IDL.Nat64),
+		series_ids: IDL.Opt(IDL.Vec(IDL.Text))
 	});
 	const SettlementAccuracyEntry = IDL.Record({
 		principal: IDL.Principal,

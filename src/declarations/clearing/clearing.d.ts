@@ -164,6 +164,15 @@ export interface AggregateSettlementAccuracyParams {
 	 * epoch). `None` starts from the earliest settlement.
 	 */
 	from_ts: [] | [bigint];
+	/**
+	 * Optional series allow-list. `None` counts settlements on every series;
+	 * `Some(set)` counts only settlements whose `series_id` is in the set, so
+	 * a consumer can scope a cohort's accuracy to a market category (e.g. a
+	 * battle scoped to one tag passes that tag's series). An empty `Some(vec)`
+	 * therefore matches nothing. The clearing layer ascribes no meaning to the
+	 * set; how it is chosen is entirely a consumer concern.
+	 */
+	series_ids: [] | [Array<string>];
 }
 /**
  * Represents a supported asset in the ICDC ecosystem.
@@ -2279,8 +2288,10 @@ export interface _SERVICE {
 	 * `O(events)`, the same cost class as [`get_trade_history`] and the
 	 * post-upgrade leaderboard rebuild. Only `Settled` events count; a `Settled`
 	 * event's `qty` is the position's signed `cashflow_usd`, so a win is
-	 * `qty > 0`, matching the leaderboard's rule exactly. Guarded by
-	 * `caller_is_not_anonymous`, matching the other settlement-derived reads.
+	 * `qty > 0`, matching the leaderboard's rule exactly. Pass `series_ids` to
+	 * scope the count to a set of series (e.g. one market category); `None`
+	 * counts every series. Guarded by `caller_is_not_anonymous`, matching the
+	 * other settlement-derived reads.
 	 *
 	 * [`get_trade_history`]: crate::api::trade::get_trade_history
 	 */

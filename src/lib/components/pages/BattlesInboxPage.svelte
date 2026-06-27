@@ -510,23 +510,27 @@
 				</header>
 
 				{#each activeBattles as battle (battle.id)}
-					<button class="battles-card" onclick={() => goToBattle(battle.id)} type="button">
-						<div class="battles-card-head">
-							<div class="battles-card-tags">
-								<span class="battles-tag is-live">
-									{t({ locale: $localeStore, key: 'worlds.event.tag_live' })}
-								</span>
+					<button
+						class="battles-card is-live-link"
+						onclick={() => goToBattle(battle.id)}
+						type="button"
+					>
+						<div class="battles-card-body">
+							<div class="battles-card-head">
+								<div class="battles-card-tags">
+									<span class="battles-tag is-live">
+										{t({ locale: $localeStore, key: 'worlds.event.tag_live' })}
+									</span>
+								</div>
 							</div>
+							<h3 class="battles-card-title">
+								{sideName(battle.sideA)}
+								<span class="serif-italic">vs</span>
+								{sideName(battle.sideB)}
+							</h3>
+							<p class="battles-card-meta">{battleWindowLine(battle)}</p>
 						</div>
-						<h3 class="battles-card-title">
-							{sideName(battle.sideA)}
-							<span class="serif-italic">vs</span>
-							{sideName(battle.sideB)}
-						</h3>
-						<p class="battles-card-meta">{battleWindowLine(battle)}</p>
-						<span class="battles-see-all allcaps">
-							{t({ locale: $localeStore, key: 'battles.live.cta' })} →
-						</span>
+						<span class="battles-card-arrow" aria-hidden="true">→</span>
 					</button>
 				{/each}
 			</section>
@@ -969,6 +973,32 @@
 
 	.battles-card.is-tournament .battles-see-all {
 		color: #b49cff;
+	}
+
+	/* ─── live battle → arrow-only affordance ─────────────────── */
+	.battles-card.is-live-link {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.battles-card.is-live-link .battles-card-body {
+		flex: 1;
+		min-width: 0;
+	}
+
+	/* The window line is the card's last visible row now that the
+	   "view battle" label is gone — drop its trailing margin so the
+	   body centers cleanly against the arrow. */
+	.battles-card.is-live-link .battles-card-meta {
+		margin-bottom: 0;
+	}
+
+	.battles-card-arrow {
+		flex-shrink: 0;
+		font-size: var(--t-18, 1.15rem);
+		line-height: 1;
+		color: var(--laurel);
 	}
 
 	/* ─── league battles → Leagues footer link ────────────────── */
