@@ -1,5 +1,6 @@
 import { default as svelteConfig } from '@dfinity/eslint-config-oisy-wallet/svelte';
 import { default as vitestConfig } from '@dfinity/eslint-config-oisy-wallet/vitest';
+import globals from 'globals';
 import ts from 'typescript-eslint';
 
 export default ts.config(
@@ -37,6 +38,15 @@ export default ts.config(
 		files: ['src/**/*'],
 		rules: {
 			'local-rules/no-relative-imports': 'error'
+		}
+	},
+
+	{
+		// The service worker legitimately uses the ServiceWorkerGlobalScope
+		// surface (`self`, `caches`, `fetch`, `clients`, event listeners).
+		files: ['src/service-worker.ts'],
+		languageOptions: {
+			globals: globals.serviceworker
 		}
 	},
 
