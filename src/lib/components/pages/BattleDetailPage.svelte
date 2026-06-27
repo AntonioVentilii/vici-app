@@ -19,7 +19,6 @@
 		loadLeaguesByIds,
 		readBattleLiveScore,
 		resolveBattle,
-		restartLegacyBattle,
 		retractBattle,
 		type BattleLiveScore,
 		type LeagueWithRole
@@ -69,9 +68,6 @@
 	// backend on every re-render.
 	const autoResolveAttempts = new SvelteMap<string, number>();
 	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
-	// Battle id → count of lazy auto-restart attempts for a baseline-less legacy
-	// row (#912). Same cap + retry rationale as the resolve counter above.
-	const autoRestartAttempts = new SvelteMap<string, number>();
 
 	// Where the viewer arrived from, for the `battle_viewed` funnel. A
 	// bounded vocabulary — anything unrecognised falls back to deep_link.
@@ -291,22 +287,11 @@
 		return membershipByLeagueId.has(battle.sideB) ? battle.sideB : undefined;
 	});
 
+	// Resolution reads each side's accuracy from clearing settlement history,
+	// so it needs no kickoff baseline — a settled battle (legacy or not)
+	// resolves once a member of either side opens it past its settle time.
 	const canResolve = $derived(
-		battle?.state === 'in_flight' &&
-			nonNullish(resolverSide) &&
-			nonNullish(battle.baselineA) &&
-			nonNullish(battle.baselineB) &&
-			Date.now() >= battle.settleMs
-	);
-	// A legacy league battle accepted before baselines existed (#912): in
-	// flight but unscoreable. A member viewing it lazily restarts the window so
-	// it starts producing real standings instead of a frozen "—".
-	const needsRestart = $derived(
-		battle?.state === 'in_flight' &&
-			battle.kind === 'league' &&
-			nonNullish(resolverSide) &&
-			isNullish(battle.baselineA) &&
-			isNullish(battle.baselineB)
+		battle?.state === 'in_flight' && nonNullish(resolverSide) && Date.now() >= battle.settleMs
 	);
 	const canRetract = $derived(
 		battle?.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal
@@ -440,24 +425,6 @@
 		}
 	};
 
-	const handleRestart = async () => {
-		if (!battle || nonNullish(actingBattleId)) {
-			return;
-		}
-
-		const target = battle;
-		actingBattleId = target.id;
-
-		try {
-			await restartLegacyBattle({ battle: target });
-			await load();
-		} catch (err) {
-			console.error('BattleDetailPage: restartLegacyBattle failed', err);
-		} finally {
-			actingBattleId = null;
-		}
-	};
-
 	// Lazy auto-resolution: Juno has no scheduler, so a settled battle
 	// resolves the first time any member of either side opens it. The attempt
 	// counter guards against re-firing on every re-render while still letting
@@ -472,22 +439,6 @@
 		) {
 			autoResolveAttempts.set(battle.id, (autoResolveAttempts.get(battle.id) ?? 0) + 1);
 			void handleResolve('auto');
-		}
-	});
-
-	// Lazy auto-restart: a legacy baseline-less battle heals the first time a
-	// member opens it, on the same scheduler-free liveness model as resolve.
-	// Silent and capped identically; on success the reload shows the fresh
-	// window and real standings.
-	$effect(() => {
-		if (
-			needsRestart &&
-			nonNullish(battle) &&
-			isNullish(actingBattleId) &&
-			(autoRestartAttempts.get(battle.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
-		) {
-			autoRestartAttempts.set(battle.id, (autoRestartAttempts.get(battle.id) ?? 0) + 1);
-			void handleRestart();
 		}
 	});
 

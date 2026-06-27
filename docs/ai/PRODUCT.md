@@ -402,12 +402,12 @@ they resolve.** Every battle under way across your leagues appears in a
 **Live battles** list in the Arena → Battles tab, and the live cards on a
 league's page link there too; each row opens the battle detail page. That
 page shows **provisional standings** while a battle is `in_flight` — each
-side's running window accuracy (`Δwins / Δcalls` against the kickoff
-baseline), with the current leader highlighted — computed read-only on
-the same arithmetic resolution uses, so it never alters the battle or
-triggers an early resolve. It's labelled provisional and keeps moving as
-each side predicts, until the window closes and the write-once resolved
-score takes over.
+side's members' settled-call win rate so far over `[kickoff, now)`, read
+from clearing settlement history, with the current leader highlighted —
+computed read-only on the same data resolution uses, so it never alters
+the battle or triggers an early resolve. It's labelled provisional and
+keeps moving as each side predicts, until the window closes and the
+write-once resolved score takes over.
 
 **Who can challenge whom is governed by league privacy.** Only **OPEN**
 leagues are discoverable in challenge search and challengeable by
@@ -420,36 +420,35 @@ identity freezes at proposal and it runs to resolution; tightening
 privacy just removes the league from future challenge search.
 
 **The score is each league's prediction accuracy over the window, and
-nobody types it.** At kickoff the satellite snapshots each league's
-`league_stats` counters (for the battle's category scope — `'all'` or a
-single market tag) as a baseline. At resolution the window result is the
-delta between the current counters and that baseline: `accuracy =
-Δwins / Δcalls`, as a percentage. Higher accuracy wins; an equal-accuracy
-tie breaks toward the league that made **more** predictions; a remaining
-tie — or both leagues making zero predictions in the window (a **void**
-face-off) — is a draw. This matches the accuracy-first league-rank metric
-so a battle and the leaderboard tell the same story. Resolution is
-**trustless**: the `battles` assert independently re-derives the scores
-and winner from `league_stats` and rejects any write whose numbers don't
-match, so no owner can post a fabricated result. Because Juno has no
-scheduler, a settled battle resolves **lazily** — the first time a side
-owner opens the battle (or the league) after the window closes, with a
-one-tap "Resolve now" as a manual fallback. **Legacy battles self-heal.**
-A league battle accepted before kickoff baselines existed carries no
-snapshot, so it can neither show live standings nor resolve — it would
-hang in flight forever. The first time a member of either side opens such
-a battle, its window **restarts** from now: a fresh `league_stats`
-baseline is stamped (re-read and re-validated by the assert, so it can't
-be faked) and the **original duration** is preserved, leaving proposer,
-scope, and wager untouched. The already-elapsed days are unrecoverable —
-no per-call history exists to reconstruct them — so a restart trades them
-for a real, scorable window going forward. **Known limitations (by
-design):** the snapshot delta measures kickoff → resolution rather than
-the exact window, so prompt (auto) resolution keeps it ≈ the intended
-window — the same approximation the monthly tournament already uses; and
-the optional VXP **wager** is a displayed stake only, not yet moved
-between leagues on resolution. Decision record:
-[`specs/2026-06-15-feat-battle-auto-resolution.md`](./spec-driven-development/specs/2026-06-15-feat-battle-auto-resolution.md).
+nobody types it.** Each side's score is its **current members'**
+settled-call win rate inside the battle window, read from the clearing
+canister's settlement history — every settled position a side's members
+held in `[kickoff, settle)`, scoped to the battle's category (`'all'`, or
+a single market tag whose series the satellite resolves from market
+metadata): `accuracy = wins / settled`, as a percentage, where a **win**
+is a net-positive settlement. Higher accuracy wins; an equal-accuracy tie
+breaks toward the side with **more** settled calls; a remaining tie — or
+both sides settling nothing in the window (a **void** face-off) — is a
+draw. This is the same win/total metric the leaderboard uses, so a battle
+and the leaderboard tell the same story. Because Juno has no scheduler, a
+settled battle resolves **lazily** — the first time a member of either
+side opens the battle after the window closes. Reading from real
+settlement history means a battle accepted before kickoff baselines
+existed resolves exactly like any other; there is **no separate
+legacy-restart path**, and a long-overdue battle no longer hangs in
+`Finalizing…`. Resolution is **controller-trusted**: an assert cannot make
+the inter-canister call to re-derive the figure, so a controller-only
+satellite endpoint reads clearing, computes the scoreline, and writes the
+resolved doc as a controller — the `battles` assert accepts an
+`in_flight → resolved` league write **only from a controller** and checks
+it is internally consistent, so no client can post a fabricated result.
+**Known limitations (by design):** membership is read at resolve time, so
+a member who joined or left mid-window is scored by their current
+membership rather than their membership when each call settled; and the
+optional VXP **wager** is a displayed stake only, not yet moved between
+leagues on resolution. Decision records:
+[`specs/2026-06-15-feat-battle-auto-resolution.md`](./spec-driven-development/specs/2026-06-15-feat-battle-auto-resolution.md),
+[`specs/2026-06-26-impr-battle-resolution-from-settled-history.md`](./spec-driven-development/specs/2026-06-26-impr-battle-resolution-from-settled-history.md).
 
 ### Flow daily swipe cap — server-authoritative
 

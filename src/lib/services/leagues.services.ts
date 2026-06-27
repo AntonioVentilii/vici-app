@@ -12,11 +12,10 @@ import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
 	BATTLE_WAGER_MAX,
 	BATTLE_WAGER_MIN,
-	battleAccuracyPct,
-	deriveBattleWinner,
 	isBattleScope,
 	type BattleDoc,
-	type BattleScope
+	type BattleScope,
+	type BattleWinner
 } from '$lib/types/battle';
 import {
 	LEAGUE_DESCRIPTION_MAX_LENGTH,
@@ -1098,71 +1097,6 @@ export const kickoffBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 };
 
 /**
- * Restart a legacy league battle whose kickoff predates the baseline
- * snapshot (#912). Such a row carries no `baselineA` / `baselineB`, so it
- * can neither show live standings nor resolve — it hangs in `in_flight`
- * forever. This re-opens the window from now, stamping each side's current
- * `league_stats` bucket as the fresh baseline and preserving the original
- * duration; every identity field (proposer, scope, wager) is untouched. The
- * satellite assert re-reads `league_stats` and rejects a baseline that
- * doesn't match. A no-op (returns the row unchanged, no write) for anything
- * already scorable — a duel, a non-`in_flight` battle, or a row that already
- * carries baselines.
- */
-export const restartLegacyBattle = async ({
-	battle
-}: {
-	battle: BattleDoc;
-}): Promise<BattleDoc> => {
-	const existing = await getDoc<BattleDoc>({
-		collection: Collection.BATTLES,
-		key: battle.id
-	});
-
-	if (!existing) {
-		throw new Error('Battle no longer exists.');
-	}
-
-	const current = existing.data;
-
-	if (
-		current.kind !== 'league' ||
-		current.state !== 'in_flight' ||
-		nonNullish(current.baselineA) ||
-		nonNullish(current.baselineB)
-	) {
-		return current;
-	}
-
-	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
-	const durationMs = current.settleMs - current.kickoffMs;
-
-	// Snapshot both sides concurrently so neither bucket goes stale waiting on
-	// the other — the assert rejects a baseline that no longer equals the live
-	// league_stats, so a tighter read window means fewer retries.
-	const [baselineA, baselineB] = await Promise.all([
-		readLeagueStatsBucket({ leagueId: current.sideA, scope }),
-		readLeagueStatsBucket({ leagueId: current.sideB, scope })
-	]);
-	const kickoffMs = Date.now();
-
-	const next: BattleDoc = {
-		...current,
-		kickoffMs,
-		settleMs: kickoffMs + durationMs,
-		baselineA,
-		baselineB
-	};
-
-	await setDoc<BattleDoc>({
-		collection: Collection.BATTLES,
-		doc: { key: battle.id, data: next, version: existing.version }
-	});
-
-	return next;
-};
-
-/**
  * Retract a `proposed`-state battle. Only the original proposer can
  * call this; the satellite assert hard-rejects anyone else and any
  * battle past `proposed`.
@@ -1192,79 +1126,18 @@ export const retractBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 };
 
 /**
- * Resolve a league battle (`in_flight → resolved`). Takes no scores:
- * each side's score is its prediction accuracy over the window,
- * computed from the delta between the current `league_stats` bucket and
- * the baseline stamped at kickoff. The satellite assert re-derives the
- * same figures from `league_stats` and rejects any mismatch, so the
- * result can't be falsified. Idempotent at the call site: an
- * already-resolved battle is returned unchanged without a write.
+ * Resolve a settled league battle (`in_flight → resolved`). Delegates to the
+ * satellite `resolveBattle` endpoint, which derives each side's accuracy from
+ * the clearing canister's settlement history over the battle window (scoped to
+ * the battle's market category) and writes the resolved doc as a controller —
+ * a client cannot forge a result. Idempotent server-side: an already-resolved
+ * battle is returned unchanged. A legacy row that never got a kickoff baseline
+ * resolves fine, since resolution no longer reads baselines.
  */
 export const resolveBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
-	const existing = await getDoc<BattleDoc>({
-		collection: Collection.BATTLES,
-		key: battle.id
-	});
+	const { battle: resolved } = await functions.resolveBattle({ battleId: battle.id });
 
-	if (!existing) {
-		throw new Error('Battle no longer exists.');
-	}
-
-	const current = existing.data;
-
-	if (current.state === 'resolved') {
-		return current;
-	}
-
-	if (current.kind !== 'league') {
-		throw new Error('Only league battles resolve from league accuracy.');
-	}
-
-	if (isNullish(current.baselineA) || isNullish(current.baselineB)) {
-		throw new Error('Battle is missing its kickoff baselines.');
-	}
-
-	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
-	const [statsA, statsB] = await Promise.all([
-		readLeagueStatsBucket({ leagueId: current.sideA, scope }),
-		readLeagueStatsBucket({ leagueId: current.sideB, scope })
-	]);
-
-	const deltaA = {
-		calls: Math.max(0, statsA.calls - current.baselineA.calls),
-		wins: Math.max(0, statsA.wins - current.baselineA.wins)
-	};
-	const deltaB = {
-		calls: Math.max(0, statsB.calls - current.baselineB.calls),
-		wins: Math.max(0, statsB.wins - current.baselineB.wins)
-	};
-
-	const scoreA = battleAccuracyPct(deltaA);
-	const scoreB = battleAccuracyPct(deltaB);
-	const winner = deriveBattleWinner({
-		scoreA,
-		scoreB,
-		callsA: deltaA.calls,
-		callsB: deltaB.calls
-	});
-
-	const next: BattleDoc = {
-		...current,
-		state: 'resolved',
-		scoreA,
-		scoreB,
-		callsA: deltaA.calls,
-		callsB: deltaB.calls,
-		winner,
-		resolvedAtMs: Date.now()
-	};
-
-	await setDoc<BattleDoc>({
-		collection: Collection.BATTLES,
-		doc: { key: battle.id, data: next, version: existing.version }
-	});
-
-	return next;
+	return projectBattleWire(resolved);
 };
 
 /** Running standings for an in-flight battle, before it resolves. */
@@ -1278,59 +1151,29 @@ export interface BattleLiveScore {
 	/** Side B window call count so far. */
 	callsB: number;
 	/** Who's ahead right now, by the same rule resolution uses. */
-	leader: ReturnType<typeof deriveBattleWinner>;
+	leader: BattleWinner;
 }
 
 /**
  * Project the **current** standings of an in-flight league battle —
- * "who's winning" while the window is still open. Runs the identical
- * `league_stats − baseline` accuracy arithmetic as {@link resolveBattle},
- * but is strictly **read-only**: it never writes the doc, so viewing a
- * battle can't resolve it (that stays the lazy auto-resolve path). The
- * standing is provisional and moves as each side keeps predicting.
+ * "who's winning" while the window is still open. Delegates to the satellite
+ * `readBattleLiveScore` endpoint, which runs the identical clearing-settlement
+ * accuracy arithmetic as {@link resolveBattle} over `[kickoff, now)`, strictly
+ * read-only.
  *
- * Returns `null` for anything that can't be scored live — a duel (no
- * `league_stats` to delta), a non-`in_flight` battle, or a legacy row
- * missing its kickoff baselines. Callers fall back to their existing
- * render.
+ * Returns `null` for anything that can't be scored live — a duel, a
+ * non-`in_flight` battle, or a caller who is not a member of either side.
  */
 export const readBattleLiveScore = async ({
 	battle
 }: {
 	battle: BattleDoc;
 }): Promise<BattleLiveScore | null> => {
-	if (
-		battle.state !== 'in_flight' ||
-		battle.kind !== 'league' ||
-		isNullish(battle.baselineA) ||
-		isNullish(battle.baselineB)
-	) {
+	if (battle.state !== 'in_flight' || battle.kind !== 'league') {
 		return null;
 	}
 
-	const scope: BattleScope = battle.scope ?? BATTLE_SCOPE_DEFAULT;
-	const [statsA, statsB] = await Promise.all([
-		readLeagueStatsBucket({ leagueId: battle.sideA, scope }),
-		readLeagueStatsBucket({ leagueId: battle.sideB, scope })
-	]);
+	const { score } = await functions.readBattleLiveScore({ battleId: battle.id });
 
-	const deltaA = {
-		calls: Math.max(0, statsA.calls - battle.baselineA.calls),
-		wins: Math.max(0, statsA.wins - battle.baselineA.wins)
-	};
-	const deltaB = {
-		calls: Math.max(0, statsB.calls - battle.baselineB.calls),
-		wins: Math.max(0, statsB.wins - battle.baselineB.wins)
-	};
-
-	const scoreA = battleAccuracyPct(deltaA);
-	const scoreB = battleAccuracyPct(deltaB);
-
-	return {
-		scoreA,
-		scoreB,
-		callsA: deltaA.calls,
-		callsB: deltaB.calls,
-		leader: deriveBattleWinner({ scoreA, scoreB, callsA: deltaA.calls, callsB: deltaB.calls })
-	};
+	return score ?? null;
 };
