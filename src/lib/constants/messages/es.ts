@@ -1768,12 +1768,6 @@ export const esMessages = {
 	'onboarding.markets.taylor_tour.title':
 		'¿Taylor Swift anunciará una gira de 2027 antes de agosto?',
 	'onboarding.finish_cta': 'Finalizar configuración',
-	'onboarding.tos.and': 'y la',
-	'onboarding.tos.play_currency': 'VICI es gratis. VXP es solo moneda de juego.',
-	'onboarding.tos.prefix': 'Al continuar, aceptas los',
-	'onboarding.tos.privacy': 'Privacidad',
-	'onboarding.tos.suffix': ' de VICI.',
-	'onboarding.tos.terms': 'Términos',
 	'onboarding.brand': 'VICI',
 	'onboarding.h1_pre': 'Reclama tu',
 	'onboarding.h1_accent': 'alias.',

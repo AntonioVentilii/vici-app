@@ -435,22 +435,6 @@
 					{/if}
 				</div>
 
-				{#if !authenticated}
-					<div class="ob-tos">
-						<div class="ob-tos-play">
-							{t({ locale: $localeStore, key: 'onboarding.tos.play_currency' })}
-						</div>
-						{t({ locale: $localeStore, key: 'onboarding.tos.prefix' })}
-						<a href="/info/terms" rel="noopener" target="_blank">
-							{t({ locale: $localeStore, key: 'onboarding.tos.terms' })}
-						</a>
-						{t({ locale: $localeStore, key: 'onboarding.tos.and' })}
-						<a href="/info/privacy" rel="noopener" target="_blank">
-							{t({ locale: $localeStore, key: 'onboarding.tos.privacy' })}
-						</a>{t({ locale: $localeStore, key: 'onboarding.tos.suffix' })}
-					</div>
-				{/if}
-
 				<button
 					class="ob-skip-link"
 					data-tid={TestId.OnboardingHandleSkip}

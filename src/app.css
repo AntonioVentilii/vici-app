@@ -4121,31 +4121,11 @@ a.title-action::after {
 	gap: 8px;
 }
 
-.ob-tos {
-	font-size: 11px;
-	line-height: 1.55;
-	color: var(--text-muted);
-	margin-top: 18px;
-	text-align: center;
-}
-.ob-tos a {
-	color: var(--laurel);
-	text-decoration: underline;
-	text-underline-offset: 2px;
-}
-.ob-tos-play {
-	margin-bottom: 6px;
-	color: var(--fg-dim);
-}
-.ob-tos .serif-italic {
-	color: var(--fg-dim);
-}
-
 /* ============================================================
    Onboarding envelope + chrome — the page wrapper, brand wordmark,
    lock cue, and the sign-in / legal footer that sit around the
    shared `ob-*` surface primitives above (hero, handle input,
-   availability hint, reward strip, auth stack, ToS). Theme tokens
+   availability hint, reward strip, auth stack). Theme tokens
    resolve dark + light/peach the same way, so the Google-pill
    contrast fix carried by `SignInProviderStack` survives unchanged.
    ============================================================ */
