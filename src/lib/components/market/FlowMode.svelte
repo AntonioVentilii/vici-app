@@ -538,7 +538,7 @@
 		// Bonus pops linger (paired copy needs to read).
 		setTimeout(() => {
 			xpPops = xpPops.filter((p) => p.id !== id);
-		}, 1800);
+		}, 2600);
 	};
 
 	const finishCommitAdvance = () => {
@@ -693,7 +693,7 @@
 				vibrate('low-thud');
 				setTimeout(() => {
 					streakBreakBanner = null;
-				}, 2200);
+				}, 3200);
 			}
 		}
 
@@ -878,7 +878,7 @@
 				if (lastStreakShown === shown) {
 					lastStreakShown = 0;
 				}
-			}, 1600);
+			}, 2400);
 		}
 
 		// A call is "contrarian" only against a known crowd consensus. With an
