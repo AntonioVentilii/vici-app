@@ -56,7 +56,13 @@ const decodeSeriesIds = (doc: ReturnType<typeof getDocStore>): string[] => {
 	}
 
 	try {
-		return decodeDocData<MarketTagIndex>(doc.data).seriesIds;
+		const { seriesIds } = decodeDocData<MarketTagIndex>(doc.data);
+
+		// A bucket that decodes but carries a non-array (or non-string entries)
+		// `seriesIds` is treated as empty rather than passed through — otherwise a
+		// malformed value could make scoping count every market or trap when the
+		// ids are candid-encoded for the clearing call.
+		return Array.isArray(seriesIds) ? seriesIds.filter((id) => typeof id === 'string') : [];
 	} catch {
 		// A malformed bucket can't contribute series — treat as empty.
 		return [];
@@ -249,7 +255,9 @@ export const rebuildMarketTagIndexFn = (): { buckets: number; series: number } =
 	// Reconcile every tag bucket — including ones that now resolve to empty, so
 	// a stale membership is cleared rather than left behind.
 	for (const tag of MARKET_TAGS) {
-		const seriesIds = buckets.get(tag) ?? [];
+		// De-duplicate before persisting — the bucket's documented invariant is a
+		// set, and a series defensively can't appear twice in one tag's list.
+		const seriesIds = [...new Set(buckets.get(tag) ?? [])];
 
 		const existing = getDocStore({
 			collection: Collection.MARKET_TAG_INDEX,
