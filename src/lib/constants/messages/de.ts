@@ -2316,7 +2316,6 @@ export const deMessages = {
 	'status.resolved': 'Aufgelöst',
 	'status.unknown': 'Unbekannt',
 	'ticker.consensus': 'Konsens',
-	'transactions.available': 'Verfügbar',
 	'transactions.back': 'Zurück zum Dashboard',
 	'transactions.bonus.achievement': 'Erfolg',
 	'transactions.bonus.calibration': 'Kalibrierungs-Belohnung',
@@ -2349,7 +2348,6 @@ export const deMessages = {
 	'transactions.kind.sent': 'Gesendet',
 	'transactions.kind.won': 'Gewonnen',
 	'transactions.title': 'Transaktionen',
-	'transactions.total': 'Gesamt',
 	'transactions.truncated': 'Ältere Historie nicht angezeigt',
 	'trust.eyebrow': 'VERTRAUEN',
 	'trust.p1_b':

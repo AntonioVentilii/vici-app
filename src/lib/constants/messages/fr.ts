@@ -2308,7 +2308,6 @@ export const frMessages = {
 	'status.resolved': 'Résolu',
 	'status.unknown': 'Inconnu',
 	'ticker.consensus': 'consensus',
-	'transactions.available': 'Disponible',
 	'transactions.back': 'Retour au tableau de bord',
 	'transactions.bonus.achievement': 'Succès',
 	'transactions.bonus.calibration': 'Récompense de calibration',
@@ -2341,7 +2340,6 @@ export const frMessages = {
 	'transactions.kind.sent': 'Envoyés',
 	'transactions.kind.won': 'Gagnée',
 	'transactions.title': 'Transactions',
-	'transactions.total': 'Total',
 	'transactions.truncated': 'Historique antérieur non affiché',
 	'trust.eyebrow': 'CONFIANCE',
 	'trust.p1_b':
