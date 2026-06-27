@@ -1767,7 +1767,7 @@ export const itMessages = {
 	'onboarding.brand': 'VICI',
 	'onboarding.h1_pre': 'Scegli il tuo',
 	'onboarding.h1_accent': 'handle.',
-	'onboarding.sub': 'Un nome. Ogni tua chiamata lo porta con sé.',
+	'onboarding.sub': 'Guadagnato, non regalato. Il tuo nome su ogni classifica.',
 	'onboarding.avail.checking': 'Verifica disponibilità…',
 	'onboarding.avail.available': 'Disponibile ·',
 	'onboarding.avail.taken': 'Già preso — prova una variante',

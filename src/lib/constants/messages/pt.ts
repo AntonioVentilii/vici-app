@@ -1766,7 +1766,7 @@ export const ptMessages = {
 	'onboarding.brand': 'VICI',
 	'onboarding.h1_pre': 'Reivindique o seu',
 	'onboarding.h1_accent': 'identificador.',
-	'onboarding.sub': 'Um nome. Cada palpite que você faz o carrega.',
+	'onboarding.sub': 'Conquistado, não dado. Seu nome em cada ranking.',
 	'onboarding.avail.checking': 'Verificando disponibilidade…',
 	'onboarding.avail.available': 'Disponível ·',
 	'onboarding.avail.taken': 'Em uso — tente uma variação',

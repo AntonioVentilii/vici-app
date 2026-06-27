@@ -1771,7 +1771,7 @@ export const esMessages = {
 	'onboarding.brand': 'VICI',
 	'onboarding.h1_pre': 'Reclama tu',
 	'onboarding.h1_accent': 'alias.',
-	'onboarding.sub': 'Un nombre. Cada predicción que haces lo lleva.',
+	'onboarding.sub': 'Ganado, no regalado. Tu nombre en cada clasificación.',
 	'onboarding.avail.checking': 'Comprobando disponibilidad…',
 	'onboarding.avail.available': 'Disponible ·',
 	'onboarding.avail.taken': 'Ocupado — prueba una variante',

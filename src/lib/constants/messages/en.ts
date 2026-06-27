@@ -1757,7 +1757,7 @@ export const enMessages = {
 	'onboarding.brand': 'VICI',
 	'onboarding.h1_pre': 'Claim your',
 	'onboarding.h1_accent': 'handle.',
-	'onboarding.sub': 'One name. Every call you make carries it.',
+	'onboarding.sub': 'Earned, not given. Your name on every leaderboard.',
 	'onboarding.avail.checking': 'Checking availability…',
 	'onboarding.avail.available': 'Available ·',
 	'onboarding.avail.taken': 'Taken — try a variant',

@@ -1786,7 +1786,7 @@ export const deMessages = {
 	'onboarding.brand': 'VICI',
 	'onboarding.h1_pre': 'Sichere dir dein',
 	'onboarding.h1_accent': 'Handle.',
-	'onboarding.sub': 'Ein Name. Jede Vorhersage trägt ihn.',
+	'onboarding.sub': 'Verdient, nicht geschenkt. Dein Name in jeder Rangliste.',
 	'onboarding.avail.checking': 'Verfügbarkeit wird geprüft…',
 	'onboarding.avail.available': 'Verfügbar ·',
 	'onboarding.avail.taken': 'Vergeben — probiere eine Variante',
