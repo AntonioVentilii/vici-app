@@ -1666,54 +1666,6 @@ html[data-app='1'] body {
 	}
 }
 
-/* Flow coach choreography — full keyframe set. */
-@keyframes flow-coach-fade-in {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
-@keyframes flow-coach-tap-pulse {
-	0%,
-	100% {
-		transform: scale(1);
-		opacity: 0.95;
-	}
-	50% {
-		transform: scale(0.92);
-		opacity: 1;
-	}
-}
-@keyframes flow-coach-pulse-y {
-	0%,
-	100% {
-		transform: translateY(0);
-	}
-	50% {
-		transform: translateY(-4px);
-	}
-}
-@keyframes flow-coach-pulse-x-left {
-	0%,
-	100% {
-		transform: translateX(0);
-	}
-	50% {
-		transform: translateX(-4px);
-	}
-}
-@keyframes flow-coach-pulse-x-right {
-	0%,
-	100% {
-		transform: translateX(0);
-	}
-	50% {
-		transform: translateX(4px);
-	}
-}
-
 /* ── D. Bottom-sheet + toast envelopes ──────────────────────── */
 @keyframes friend-sheet-fade-in {
 	from {
@@ -2257,7 +2209,7 @@ a.title-action::after {
 }
 
 /* ============================================================
-   Flow sub-component rules — `.flow-coach` / `.xp-toast` /
+   Flow sub-component rules — `.xp-toast` /
    `.swipe-hint` / `.share-pop` blocks. Built on the
    shared token set (`--text-base` / `--text-muted` /
    `--color-accent` / `--bg-popover` / `--bg-surface` /
@@ -2386,118 +2338,6 @@ a.title-action::after {
 	opacity: 0.55;
 }
 
-/* ── Flow coach overlay — phase machine ─────────────────── */
-.flow-coach {
-	position: absolute;
-	inset: 0;
-	z-index: 40;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: transparent;
-	pointer-events: none;
-	animation: flow-coach-fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1);
-	border-radius: inherit;
-}
-
-.flow-coach-center {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0 28px;
-	pointer-events: auto;
-	text-align: center;
-	text-wrap: balance;
-	max-width: 80%;
-	animation: coach-line-in 360ms cubic-bezier(0.16, 1, 0.3, 1);
-	text-shadow:
-		0 2px 12px rgba(14, 13, 11, 0.85),
-		0 0 24px rgba(14, 13, 11, 0.7),
-		0 0 6px rgba(14, 13, 11, 0.5);
-}
-[data-theme='light'] .flow-coach-center,
-[data-theme='peach'] .flow-coach-center {
-	text-shadow:
-		0 2px 12px color-mix(in srgb, var(--text-base) 95%, transparent),
-		0 0 24px color-mix(in srgb, var(--text-base) 90%, transparent),
-		0 0 6px color-mix(in srgb, var(--text-base) 85%, transparent),
-		0 0 2px rgba(14, 13, 11, 0.2);
-}
-@keyframes coach-line-in {
-	from {
-		opacity: 0;
-		transform: translateY(6px) scale(0.96);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0) scale(1);
-	}
-}
-.flow-coach-line {
-	font-family: var(--font-serif);
-	font-style: italic;
-	font-size: var(--text-h2);
-	line-height: 1.3;
-	color: var(--text-base);
-	display: inline-flex;
-	align-items: baseline;
-	gap: 6px;
-	flex-wrap: wrap;
-	justify-content: center;
-}
-.flow-coach-accent {
-	font-family: var(--font-mono);
-	font-style: normal;
-	font-weight: 700;
-	font-size: 20px;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	padding: 2px 10px;
-	border-radius: 6px;
-}
-.flow-coach-center.is-no .flow-coach-accent {
-	color: var(--no);
-	background: color-mix(in srgb, var(--no) 14%, transparent);
-}
-.flow-coach-center.is-yes .flow-coach-accent {
-	color: var(--yes);
-	background: color-mix(in srgb, var(--yes) 14%, transparent);
-}
-.flow-coach-center.is-skip .flow-coach-accent {
-	color: var(--color-accent);
-	background: rgba(226, 184, 66, 0.14);
-}
-.flow-coach-center.is-idle .flow-coach-accent {
-	color: var(--color-accent);
-	background: transparent;
-	font-family: 'Söhne', system-ui, sans-serif;
-	font-style: normal;
-	font-weight: 700;
-	font-size: 24px;
-	padding: 0 2px;
-	text-transform: none;
-	letter-spacing: 0;
-	animation: coach-idle-pulse 1.4s ease-in-out infinite;
-}
-@keyframes coach-idle-pulse {
-	0%,
-	100% {
-		transform: scale(1);
-		opacity: 1;
-	}
-	50% {
-		transform: scale(1.1);
-		opacity: 0.85;
-	}
-}
-.flow-coach-center.is-tap .flow-coach-accent {
-	color: var(--color-accent);
-	background: rgba(226, 184, 66, 0.1);
-	font-family: var(--font-serif);
-	font-style: italic;
-	font-weight: 400;
-	letter-spacing: 0;
-}
 .signin-title .acc {
 	color: var(--laurel);
 }
@@ -2785,49 +2625,6 @@ a.title-action::after {
 	color: var(--fg-dim);
 	margin: 0 0 14px;
 	flex-shrink: 0;
-}
-
-/* Flow-deck gesture-coach card drift — driven by data-coach-phase.
-   Plain selectors: this is a global stylesheet (imported via
-   `routes/+layout.svelte`), NOT a Svelte `<style>` block, so `:global()`
-   would be passed to the browser verbatim and dropped as an invalid
-   pseudo — which is why the deck card never drifted/blurred. !important
-   overrides FlowCard's inline drag transform. Phases follow the swipe
-   directions: NO → left, YES → right, SKIP → up, then a settle on TAP. */
-.flow-card[data-coach-phase] {
-	transition:
-		transform 480ms cubic-bezier(0.16, 1, 0.3, 1),
-		filter 240ms ease !important;
-	filter: blur(1.4px) saturate(0.92) brightness(0.86);
-	pointer-events: none;
-}
-.flow-card[data-coach-phase='0'] {
-	transform: translate(-22px, 0) rotate(-2deg) !important;
-}
-.flow-card[data-coach-phase='1'] {
-	transform: translate(22px, 0) rotate(2deg) !important;
-}
-.flow-card[data-coach-phase='2'] {
-	transform: translate(0, -22px) !important;
-}
-/* Phase 3 ("tap card for detail") — de-blur and settle a hair above
-   rest (no pulse). The detail back is meant to reveal here via an
-   opacity crossfade; the deck card still uses a 3D rotateY flip, and a
-   follow-up will swap that flip for the opacity crossfade. Until then
-   the back-reveal is deferred to that change rather than forced through
-   the incompatible opacity override here (the back face is culled by
-   backface-visibility while the flipper sits at 0°). */
-.flow-card[data-coach-phase='3'] {
-	filter: none !important;
-	transform: scale(1.01) !important;
-	pointer-events: none;
-}
-@media (prefers-reduced-motion: reduce) {
-	.flow-card[data-coach-phase] {
-		transition: none !important;
-		transform: none !important;
-		animation: none !important;
-	}
 }
 
 /* ── Share popover — capability-aware ─────────────────── */

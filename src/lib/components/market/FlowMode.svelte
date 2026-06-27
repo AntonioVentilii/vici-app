@@ -318,7 +318,7 @@
 		key: number;
 	}
 	let commitToast = $state<CommitToast | null>(null);
-	let commitToastKeySeq = 0;
+	let commitToastKeySeq = $state(0);
 
 	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
 
@@ -1478,12 +1478,12 @@
 
 			<FlowXpPops pops={xpPops} />
 
-			<!-- Gesture coach — first-run only. Cycles through NO / YES /
-			     SKIP / TAP / IDLE phases while the cards drift in
-			     sympathy via the `data-coach-phase` CSS in app.css.
-			     Self-dismisses on any pointer-down; persists dismissal
-			     in localStorage. -->
-			<FlowCoach />
+			<!-- Gesture coach — first-run only. A non-blocking map of the
+			     swipe gestures over the live card; it teaches by doing and
+			     clears itself on the first committed YES / NO, signalled by
+			     the `commitToastKeySeq` counter. Persists dismissal in
+			     localStorage so it shows at most once. -->
+			<FlowCoach commitSignal={commitToastKeySeq} />
 
 			<!-- Per-swipe commit pop — "CALLED YES · {stake} IN PLAY". Rises
 			     from the exit edge (is-yes → right, is-no → left) on every
