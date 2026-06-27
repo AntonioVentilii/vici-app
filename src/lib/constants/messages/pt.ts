@@ -1763,12 +1763,6 @@ export const ptMessages = {
 	'onboarding.markets.taylor_tour.title':
 		'A Taylor Swift anunciará uma digressão de 2027 até agosto?',
 	'onboarding.finish_cta': 'Concluir configuração',
-	'onboarding.tos.and': 'e a',
-	'onboarding.tos.play_currency': 'A VICI é gratuita. VXP é apenas moeda de jogo.',
-	'onboarding.tos.prefix': 'Ao continuar, aceitas os',
-	'onboarding.tos.privacy': 'Privacidade',
-	'onboarding.tos.suffix': ' da VICI.',
-	'onboarding.tos.terms': 'Termos',
 	'onboarding.brand': 'VICI',
 	'onboarding.h1_pre': 'Reivindique o seu',
 	'onboarding.h1_accent': 'identificador.',
