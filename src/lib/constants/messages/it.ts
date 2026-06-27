@@ -1092,6 +1092,10 @@ export const itMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP in questa sessione',
 	'flow.skip_aria': 'Salta',
 	'flow.stage_ended': '{stage} terminato.',
+	'flow.stake.warning.unaffordable':
+		'Più dei VXP disponibili — il saldo è in gioco. Abbassa la posta.',
+	'flow.stake.warning.wont_finish':
+		'Così resta troppo poco per finire il tuo flow — prova una posta più bassa.',
 	'flow.streak_combo': 'Serie ×{count}',
 	'flow.title_a': 'Uno swipe.',
 	'flow.title_b': 'Una previsione.',

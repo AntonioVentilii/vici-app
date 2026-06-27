@@ -1094,6 +1094,10 @@ export const esMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP en esta sesión',
 	'flow.skip_aria': 'Saltar',
 	'flow.stage_ended': '{stage} terminada.',
+	'flow.stake.warning.unaffordable':
+		'Más de tus VXP disponibles — tu saldo está en juego. Baja el tamaño.',
+	'flow.stake.warning.wont_finish':
+		'Esto deja muy poco para terminar tu flow — prueba un tamaño menor.',
 	'flow.streak_combo': 'Racha ×{count}',
 	'flow.title_a': 'Un deslizamiento.',
 	'flow.title_b': 'Una predicción.',

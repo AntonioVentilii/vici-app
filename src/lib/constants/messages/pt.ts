@@ -1095,6 +1095,10 @@ export const ptMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP nesta sessão',
 	'flow.skip_aria': 'Saltar',
 	'flow.stage_ended': '{stage} encerrado.',
+	'flow.stake.warning.unaffordable':
+		'Mais do que os teus VXP disponíveis — o teu saldo está em jogo. Baixa o valor.',
+	'flow.stake.warning.wont_finish':
+		'Assim sobra muito pouco para terminar o teu flow — tenta um valor menor.',
 	'flow.streak_combo': 'Sequência ×{count}',
 	'flow.title_a': 'Um deslize.',
 	'flow.title_b': 'Uma previsão.',

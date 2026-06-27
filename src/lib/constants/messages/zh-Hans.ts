@@ -1031,6 +1031,8 @@ export const zhHansMessages = {
 	'flow.session_xp_subtitle': '本场 +{xp} VXP',
 	'flow.skip_aria': '跳过',
 	'flow.stage_ended': '{stage} 已结束。',
+	'flow.stake.warning.unaffordable': '超过你的可用 VXP — 余额已在押注中。请调低金额。',
+	'flow.stake.warning.wont_finish': '这样剩下的不够完成这轮 flow — 试试更小的金额。',
 	'flow.streak_combo': '连胜 ×{count}',
 	'flow.title_a': '一次滑动。',
 	'flow.title_b': '一个判断。',

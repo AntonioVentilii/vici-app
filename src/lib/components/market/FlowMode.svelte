@@ -1178,6 +1178,45 @@
 
 	const currentCard = $derived(markets[currentIndex]);
 
+	// Spendable margin left for THIS card once the session's in-flight
+	// commitments are subtracted (store refreshes are batched to session end,
+	// so `$vxpSpendable` alone goes stale after the first call).
+	const spendableNow = $derived($vxpSpendable - sessionCommittedUsd);
+
+	// Proactive stake warning surfaced at amount-selection time on the
+	// back-face slider — distinct from the block-on-swipe funds gate, which
+	// only fires once the user throws the card. Resolved to a single state so
+	// the slider renders one line. Scoped to a signed-in, loaded, VXP-domain
+	// run with a card on screen (the playground domains use sub-rung stakes the
+	// VXP floor doesn't model; `collateralsStore` presence is the signed-in /
+	// loaded check, mirroring the funds gate).
+	const stakeWarning = $derived.by<'none' | 'unaffordable' | 'wont-finish'>(() => {
+		if (isNullish($collateralsStore) || !isViciXp($balanceDomain) || isNullish(currentCard)) {
+			return 'none';
+		}
+
+		const thisStake = stakeMarginUsd(currentCard);
+
+		// The selected size already exceeds what's spendable — the swipe would
+		// be rejected by the funds gate. Warn before they throw it.
+		if (thisStake > spendableNow) {
+			return 'unaffordable';
+		}
+
+		// Affordable now, but committing it would leave too little to fund the
+		// predictions still needed to finish the sitting (min stake each).
+		const remainingAfterThis = Math.max(0, maxBets - betsCount - 1);
+
+		if (
+			remainingAfterThis > 0 &&
+			spendableNow - thisStake < BigInt(remainingAfterThis) * MIN_STAKE_MARGIN_USD
+		) {
+			return 'wont-finish';
+		}
+
+		return 'none';
+	});
+
 	// Defensive: the active-deck branch renders `currentCard` (markets[currentIndex]).
 	// If `currentIndex` ever overruns the deck while the session is still live
 	// (entered, not completed, deck non-empty), `currentCard` is nullish and the
@@ -1423,6 +1462,7 @@
 										{priorCall}
 										showOriginal={flowShowOriginal}
 										signedIn={nonNullish($userStore.user)}
+										{stakeWarning}
 										{tradeAmount}
 										translatedLanguageLabel={nonNullish(currentTranslation)
 											? translatedLanguageLabel(currentTranslation.locale)

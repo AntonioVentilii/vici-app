@@ -1098,6 +1098,10 @@ export const frMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP cette session',
 	'flow.skip_aria': 'Passer',
 	'flow.stage_ended': '{stage} terminé.',
+	'flow.stake.warning.unaffordable':
+		'Plus que tes VXP disponibles — ton solde est en jeu. Réduis la mise.',
+	'flow.stake.warning.wont_finish':
+		'Il resterait trop peu pour finir ton flow — essaie une mise plus petite.',
 	'flow.streak_combo': 'Série ×{count}',
 	'flow.title_a': 'Un swipe.',
 	'flow.title_b': 'Un pronostic.',

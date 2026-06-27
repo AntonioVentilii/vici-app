@@ -1074,6 +1074,10 @@ export const enMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP this session',
 	'flow.skip_aria': 'Skip',
 	'flow.stage_ended': '{stage} ended.',
+	'flow.stake.warning.unaffordable':
+		'More than your spendable VXP — your balance is in play. Lower the size.',
+	'flow.stake.warning.wont_finish':
+		'This leaves too little to finish your flow — try a smaller size.',
 	'flow.streak_combo': 'Streak ×{count}',
 	'flow.title_a': 'One swipe.',
 	'flow.title_b': 'One call.',

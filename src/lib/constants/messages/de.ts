@@ -1101,6 +1101,10 @@ export const deMessages = {
 	'flow.session_xp_subtitle': '+{xp} VXP in dieser Session',
 	'flow.skip_aria': 'Überspringen',
 	'flow.stage_ended': '{stage} beendet.',
+	'flow.stake.warning.unaffordable':
+		'Mehr als deine verfügbaren VXP — dein Guthaben ist im Spiel. Setze kleiner.',
+	'flow.stake.warning.wont_finish':
+		'So bleibt zu wenig, um deinen Flow zu beenden — versuch es kleiner.',
 	'flow.streak_combo': 'Streak ×{count}',
 	'flow.title_a': 'Ein Swipe.',
 	'flow.title_b': 'Ein Call.',
