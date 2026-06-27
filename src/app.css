@@ -396,6 +396,12 @@ html[data-ios-bottom-bar] {
 	   stays a faint lightening on dark and a faint darkening on the
 	   parchment / peach canvases. */
 	--flow-res-fill: rgba(242, 236, 220, 0.03);
+
+	/* Floating companion chip (the bottom-right mascot toast). Its text
+	   reads `--text-base`, so the background must invert per theme or the
+	   ink-coloured copy blacks out on the light canvases. Dark keeps the
+	   translucent ink glass; light / peach get a translucent parchment. */
+	--companion-float-bg: rgba(14, 13, 11, 0.85);
 }
 
 [data-theme='light'] {
@@ -443,6 +449,8 @@ html[data-ios-bottom-bar] {
 	--shadow-card: var(--shadow-card-light);
 
 	--flow-res-fill: rgba(14, 13, 11, 0.025);
+
+	--companion-float-bg: rgba(250, 246, 234, 0.9);
 }
 
 [data-theme='peach'] {
@@ -497,6 +505,8 @@ html[data-ios-bottom-bar] {
 	--shadow-card: var(--shadow-card-light);
 
 	--flow-res-fill: rgba(14, 13, 11, 0.025);
+
+	--companion-float-bg: rgba(255, 243, 232, 0.92);
 }
 
 @theme {
