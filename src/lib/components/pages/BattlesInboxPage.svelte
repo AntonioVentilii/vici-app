@@ -512,7 +512,6 @@
 				{#each activeBattles as battle (battle.id)}
 					<button
 						class="battles-card is-live-link"
-						aria-label={t({ locale: $localeStore, key: 'battles.live.cta' })}
 						onclick={() => goToBattle(battle.id)}
 						type="button"
 					>
