@@ -63,16 +63,16 @@
 	 * throw on the auth path, and skip when the API is unavailable.
 	 */
 	const requestPersistentStorage = (): void => {
-		if (!browser || isNullish(navigator.storage?.persist)) {
+		if (
+			!browser ||
+			typeof navigator.storage?.persist !== 'function' ||
+			typeof navigator.storage?.persisted !== 'function'
+		) {
 			return;
 		}
 
 		void (async () => {
 			try {
-				if (await navigator.storage.persisted()) {
-					return;
-				}
-
 				await navigator.storage.persist();
 			} catch (e: unknown) {
 				console.warn('Persistent storage request failed', e);
