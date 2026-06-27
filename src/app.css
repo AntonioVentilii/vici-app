@@ -3305,6 +3305,13 @@ a.title-action::after {
 		color-mix(in srgb, var(--bg-base) 80%, transparent)
 	);
 }
+/* Desktop drops the floating pill, so the overlay no longer reserves
+   `--bn-clear` at the bottom — it spans the full viewport edge to edge. */
+@media (min-width: 56rem) {
+	.flow-loading {
+		inset: 0;
+	}
+}
 .flow-loading .deckwrap {
 	position: relative;
 	width: 140px;
