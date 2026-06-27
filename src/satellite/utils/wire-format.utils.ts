@@ -438,9 +438,10 @@ export const LeagueWireSchema = j.strictObject({
 	createdAtMs: j.number(),
 	accentColor: j.string().optional(),
 	emblem: j.string().optional(),
-	// Three-way visibility. `toWireLeague` always emits a concrete value
-	// (mapping the legacy `private` boolean: `true` → `invite`, else
-	// `open`), so this default only guards a genuinely absent field.
+	// Two-way visibility. `toWireLeague` always emits a concrete value
+	// (mapping the legacy `private` boolean and the retired `'invite'`
+	// tier to `private`, else `open`), so this default only guards a
+	// genuinely absent field.
 	privacy: j.enum(LeaguePrivacy).default(LeaguePrivacy.OPEN),
 	imageUrl: j.string().optional()
 });
@@ -475,7 +476,7 @@ export const toWireLeague = (league: {
 	accentColor?: string;
 	emblem?: string;
 	privacy?: LeaguePrivacy;
-	/** Legacy boolean still carried by rows written before the 3-way
+	/** Legacy boolean still carried by rows written before the typed
 	 *  model; mapped to a concrete `privacy` below so an old private
 	 *  league doesn't serialize as `open`. */
 	private?: boolean;
@@ -489,11 +490,23 @@ export const toWireLeague = (league: {
 	createdAtMs: league.createdAtMs,
 	accentColor: league.accentColor,
 	emblem: league.emblem,
-	// Emit a concrete privacy on the wire. Legacy rows (no `privacy`) map
-	// from the old boolean: `private === true` (code-gated + hidden from
-	// public lists) → `invite` so it's never leaked as Open; otherwise →
-	// `open` (the old publicly-listed default).
-	privacy: league.privacy ?? (league.private === true ? LeaguePrivacy.INVITE : LeaguePrivacy.OPEN),
+	// Emit a concrete privacy on the wire, coercing legacy at-rest shapes
+	// to the narrowed two-tier enum. Asserts only run on WRITE, so docs
+	// persisted under the retired three-way model are still read here —
+	// and once the Candid variant no longer contains `invite`, emitting it
+	// would fail encoding and break league listing. So:
+	//   - a stored `privacy === 'invite'` (retired invite-only tier; hidden
+	//     from public lists) → `private` so it's never leaked as Open;
+	//   - a legacy `private === true` boolean (code-gated + hidden) →
+	//     `private`;
+	//   - everything else → its stored value, or `open` (the old
+	//     publicly-listed default) when truly absent.
+	// Legacy invite docs thus encode validly as Private and self-heal to
+	// `'private'` on their next write.
+	privacy:
+		(league.privacy as string | undefined) === 'invite'
+			? LeaguePrivacy.PRIVATE
+			: (league.privacy ?? (league.private === true ? LeaguePrivacy.PRIVATE : LeaguePrivacy.OPEN)),
 	imageUrl: league.imageUrl
 });
 
