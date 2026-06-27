@@ -18,13 +18,13 @@
 	 * own eyebrow carries the context, e.g. GLOBAL RANK) directly above
 	 * the tab strip — there's no page-title header.
 	 *
-	 * Tab state persists in localStorage under `vici.arena-tab`,
-	 * so a user returning to /arena lands on the tab they last
-	 * looked at. Legacy values (`worlds`, `global`) fall through to
-	 * the new `friends` default.
+	 * Friends is the default tab: a fresh entry into /arena (nav click,
+	 * cold load) always opens Friends. Returning to a specific tab is an
+	 * in-session concern handled by back-navigation — `history.back()`
+	 * restores the originating tab's URL, and a cold back falls back to
+	 * `?tab=` (see `focusTabKey`). The tab is deliberately not persisted
+	 * across sessions.
 	 */
-
-	const STORAGE_KEY = 'vici.arena-tab';
 
 	type Tab = 'friends' | 'leagues' | 'battles';
 
@@ -47,7 +47,7 @@
 
 	// A back-nav fallback can target a specific tab via `/arena?tab=battles`
 	// (e.g. closing a battle opened from a cold/deep link). It outranks the
-	// last-opened tab, but a friend-request deep link still wins.
+	// Friends default, but a friend-request deep link still wins.
 	const focusTabKey = $derived.by((): Tab | undefined => {
 		const tab = page.url.searchParams.get('tab');
 
@@ -59,7 +59,9 @@
 			return;
 		}
 
-		// The deep-link param wins over the last-opened tab.
+		// A friend-request deep link forces Friends; otherwise a `?tab=`
+		// back-nav target wins. Absent both, `activeTab` keeps its Friends
+		// default — entry into Arena always opens Friends.
 		if (nonNullish(focusRequestKey)) {
 			activeTab = 'friends';
 
@@ -68,20 +70,6 @@
 
 		if (nonNullish(focusTabKey)) {
 			activeTab = focusTabKey;
-
-			return;
-		}
-
-		try {
-			const stored = localStorage.getItem(STORAGE_KEY);
-
-			if (stored === 'leagues' || stored === 'battles') {
-				activeTab = stored;
-			} else {
-				activeTab = 'friends';
-			}
-		} catch {
-			activeTab = 'friends';
 		}
 	});
 
@@ -103,25 +91,6 @@
 
 		if (nonNullish(focusTabKey)) {
 			activeTab = focusTabKey;
-		}
-	});
-
-	$effect(() => {
-		if (!browser) {
-			return;
-		}
-
-		// Don't persist the tab while a deep-link is forcing Friends — the
-		// forced switch is transient, so writing it would clobber the user's
-		// real last-opened preference just because they followed a link.
-		if (nonNullish(focusRequestKey)) {
-			return;
-		}
-
-		try {
-			localStorage.setItem(STORAGE_KEY, activeTab);
-		} catch {
-			// localStorage may be blocked (private mode); not fatal.
 		}
 	});
 
