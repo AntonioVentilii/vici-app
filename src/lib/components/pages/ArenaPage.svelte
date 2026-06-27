@@ -2,6 +2,7 @@
 	import { nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import ArenaStandingHero from '$lib/components/arena/ArenaStandingHero.svelte';
 	import FriendsTab from '$lib/components/arena/FriendsTab.svelte';
@@ -20,10 +21,12 @@
 	 *
 	 * Friends is the default tab: a fresh entry into /arena (nav click,
 	 * cold load) always opens Friends. Returning to a specific tab is an
-	 * in-session concern handled by back-navigation — `history.back()`
-	 * restores the originating tab's URL, and a cold back falls back to
-	 * `?tab=` (see `focusTabKey`). The tab is deliberately not persisted
-	 * across sessions.
+	 * in-session concern handled by back-navigation — selecting a tab
+	 * mirrors it into the URL via `replaceState` (see `selectTab`), so
+	 * `history.back()` from a drill-down (e.g. a battle opened off the
+	 * Battles tab) restores the originating tab, and a cold back falls
+	 * back to `?tab=` (see `focusTabKey`). The tab is deliberately not
+	 * persisted across sessions.
 	 */
 
 	type Tab = 'friends' | 'leagues' | 'battles';
@@ -95,10 +98,27 @@
 	});
 
 	const TABS: readonly Tab[] = ['friends', 'leagues', 'battles'] as const;
+
+	// Switch tab and mirror it into the URL (`?tab=`) without a navigation, so
+	// `history.back()` from a drill-down lands back on the tab it was opened
+	// from. A one-shot `request` focus is dropped on the way — keeping it would
+	// re-force Friends via the deep-link effect and trap the user there.
+	const selectTab = (tab: Tab) => {
+		activeTab = tab;
+
+		if (!browser) {
+			return;
+		}
+
+		const url = new URL(page.url);
+		url.searchParams.set('tab', tab);
+		url.searchParams.delete('request');
+		replaceState(url, page.state);
+	};
 </script>
 
 <div class="arena-page">
-	<ArenaStandingHero onSelectTab={(tab) => (activeTab = tab)} />
+	<ArenaStandingHero onSelectTab={selectTab} />
 
 	<div class="arena-tabs" aria-label="Arena sections" role="tablist">
 		{#each TABS as tab (tab)}
@@ -106,7 +126,7 @@
 				class="arena-tab"
 				class:is-active={activeTab === tab}
 				aria-selected={activeTab === tab}
-				onclick={() => (activeTab = tab)}
+				onclick={() => selectTab(tab)}
 				role="tab"
 				type="button"
 			>
