@@ -1199,6 +1199,38 @@ html[data-app='1'] body {
 	}
 }
 
+/* Skeleton placeholder — the app's single pulsating data-loading block.
+ * Global (like the char-* idle loops above) so one reduced-motion guard
+ * covers every skeleton and the class never drifts from its keyframe.
+ * Apply it through the `Skeleton` UI primitive, or add the class directly
+ * to an element that already carries its own layout/sizing CSS (e.g. the
+ * market-detail / stats skeletons, whose geometry lives in scoped styles).
+ * The element owns size + shape; this class owns the muted fill + the pulse. */
+.skeleton {
+	display: block;
+	background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+	animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.skeleton.soft {
+	background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+}
+
+@keyframes skeleton-pulse {
+	0%,
+	100% {
+		opacity: 0.55;
+	}
+	50% {
+		opacity: 0.9;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.skeleton {
+		animation: none;
+	}
+}
+
 /* Optical-feedback keyframes — give swipe / award / save
    micro-interactions a visible envelope on iOS Safari (where
    `navigator.vibrate` is a no-op and haptics silently swallow). */

@@ -277,7 +277,7 @@
 	{#if loading}
 		<div class="txh-skeleton" aria-hidden="true">
 			{#each Array.from({ length: 6 }) as _, i (i)}
-				<div class="txh-skeleton-row animate-pulse"></div>
+				<div class="txh-skeleton-row skeleton soft"></div>
 			{/each}
 		</div>
 	{:else if filteredRows.length === 0}
@@ -500,7 +500,6 @@
 	.txh-skeleton-row {
 		height: 40px;
 		border-radius: 10px;
-		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 	}
 
 	.txh-truncated {

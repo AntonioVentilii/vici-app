@@ -11,7 +11,7 @@
 	const { size = 120 }: Props = $props();
 </script>
 
-<div style:--mb-size="{size}px" class="mbadge-skeleton animate-pulse" aria-hidden="true"></div>
+<div style:--mb-size="{size}px" class="mbadge-skeleton skeleton soft" aria-hidden="true"></div>
 
 <style lang="postcss">
 	.mbadge-skeleton {
@@ -21,6 +21,5 @@
 		/* Matches MenagerieBadge's `.mb-frame` corner radius (`size * 0.25`). */
 		border-radius: calc(var(--mb-size, 120px) * 0.25);
 		border: 1px solid var(--border-base);
-		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 	}
 </style>

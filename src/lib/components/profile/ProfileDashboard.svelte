@@ -739,8 +739,8 @@
 				{#each MENAGERIE as animal (animal.slug)}
 					<div class="profile-menagerie-tile is-skeleton">
 						<MenagerieBadgeSkeleton size={68} />
-						<span class="profile-menagerie-name-skeleton animate-pulse"></span>
-						<span class="profile-menagerie-concept-skeleton animate-pulse"></span>
+						<span class="profile-menagerie-name-skeleton skeleton"></span>
+						<span class="profile-menagerie-concept-skeleton skeleton soft"></span>
 					</div>
 				{/each}
 			{:else}
@@ -1385,12 +1385,13 @@
 		cursor: default;
 	}
 
+	/* Geometry only — the pulse + muted fill come from the global `.skeleton`
+	   class (app.css). */
 	.profile-menagerie-name-skeleton {
 		width: 4.5rem;
 		height: 0.8125rem;
 		margin-top: 0.75rem;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--text-base) 12%, transparent);
 	}
 
 	.profile-menagerie-concept-skeleton {
@@ -1398,7 +1399,6 @@
 		height: 0.625rem;
 		margin-top: 0.375rem;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 	}
 
 	/* Confirmation toast — floats above the pill-nav after a handle

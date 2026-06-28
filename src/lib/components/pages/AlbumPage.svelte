@@ -78,7 +78,7 @@
 		</span>
 		<div class="men-progress-counts">
 			{#if loading}
-				<span class="men-progress-earned-skeleton animate-pulse"></span>
+				<span class="men-progress-earned-skeleton skeleton"></span>
 			{:else}
 				<span class="num men-progress-earned">{earned}</span>
 			{/if}
@@ -102,8 +102,8 @@
 			{#each MENAGERIE as animal (animal.slug)}
 				<div class="men-tile is-skeleton">
 					<MenagerieBadgeSkeleton size={84} />
-					<span class="men-tile-name-skeleton animate-pulse"></span>
-					<span class="men-tile-concept-skeleton animate-pulse"></span>
+					<span class="men-tile-name-skeleton skeleton"></span>
+					<span class="men-tile-concept-skeleton skeleton soft"></span>
 				</div>
 			{/each}
 		{:else}
@@ -359,12 +359,13 @@
 		animation: none;
 	}
 
+	/* Geometry only — the pulse + muted fill come from the global `.skeleton`
+	   class (app.css). */
 	.men-tile-name-skeleton {
 		width: 4rem;
 		height: 0.8125rem;
 		margin-top: 12px;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--text-base) 12%, transparent);
 	}
 
 	.men-tile-concept-skeleton {
@@ -372,7 +373,6 @@
 		height: 0.6875rem;
 		margin-top: 6px;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 	}
 
 	.men-progress-earned-skeleton {
@@ -380,7 +380,6 @@
 		width: 1.5rem;
 		height: 1.5rem;
 		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--text-base) 12%, transparent);
 	}
 
 	/* ── Detail sheet (chrome comes from the shared BottomSheet) ── */

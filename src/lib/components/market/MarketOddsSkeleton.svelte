@@ -10,6 +10,7 @@
 	 * `BinaryProbabilities` free of an `i18n.utils` import, so their literal
 	 * "Yes"/"No" copy stays clear of `no-bare-svelte-text`.
 	 */
+	import Skeleton from '$lib/components/ui/Skeleton.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -30,7 +31,6 @@
 	<span class="text-muted-foreground" aria-label={label}>—</span>
 {:else}
 	<span class="inline-flex items-center" aria-busy="true" aria-label={label} role="status">
-		<span class="bg-muted-foreground/30 h-[1em] w-12 animate-pulse rounded-md" aria-hidden="true"
-		></span>
+		<Skeleton class="h-[1em] w-12 rounded-md" />
 	</span>
 {/if}

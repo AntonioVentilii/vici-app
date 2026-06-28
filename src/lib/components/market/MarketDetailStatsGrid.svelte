@@ -143,7 +143,7 @@
 			</span>
 			<div class="market-stats-value-row">
 				{#if stat.loading}
-					<span class="market-stats-skeleton" aria-hidden="true"></span>
+					<span class="market-stats-skeleton skeleton" aria-hidden="true"></span>
 				{:else}
 					<span class="num market-stats-value" class:is-mute={stat.mute}>{stat.value}</span>
 					{#if stat.suffix !== ''}
@@ -204,32 +204,14 @@
 		color: var(--text-muted);
 	}
 
-	/* Tile-level loading pulse — mirrors the market-detail skeleton's block
-	   so a tile still resolving (e.g. MY CALL waiting on the position read)
-	   shows a shimmer instead of a placeholder value. */
+	/* Tile-level loading placeholder — geometry only; the pulse + muted fill
+	   come from the global `.skeleton` class (app.css) so a tile still
+	   resolving (e.g. MY CALL waiting on the position read) shows the same
+	   shimmer as every other skeleton instead of a placeholder value. */
 	.market-stats-skeleton {
-		display: block;
 		width: 2.75rem;
 		height: 1rem;
 		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--text-muted) 16%, transparent);
-		animation: market-stats-pulse 1.4s ease-in-out infinite;
-	}
-
-	@keyframes market-stats-pulse {
-		0%,
-		100% {
-			opacity: 0.55;
-		}
-		50% {
-			opacity: 0.9;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.market-stats-skeleton {
-			animation: none;
-		}
 	}
 
 	.market-stats-suffix {

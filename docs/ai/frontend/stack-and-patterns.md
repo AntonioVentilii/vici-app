@@ -201,6 +201,13 @@ the service layer and let the service own caching.
   _loaded-but-empty_ (dash); the odds placeholder is
   `$lib/components/market/MarketOddsSkeleton.svelte`. See
   [`PRODUCT.md`](../PRODUCT.md) → "Market odds".
+- **Pulsating placeholders go through the one canonical pulse.** For any
+  "data is loading" placeholder block, use the `Skeleton` UI primitive
+  (or, when the geometry already lives in scoped CSS, add the global
+  `.skeleton` class — defined once in `app.css` beside the `char-*` idle
+  loops, reduced-motion safe). Never hand-roll an `animate-pulse` block or
+  a per-component pulse keyframe. The spinner equivalent is
+  `LoadingSpinner`. See [`reusability.md`](./reusability.md) → `Skeleton`.
 
 ## Service / data flow
 

@@ -4,38 +4,40 @@
      market data lands. Pure pulse blocks — no copy, decorative only. -->
 <div class="detail-skeleton" aria-hidden="true">
 	<div class="detail-skeleton-hero">
-		<span class="detail-skeleton-block detail-skeleton-tag"></span>
-		<span class="detail-skeleton-block detail-skeleton-title"></span>
-		<span class="detail-skeleton-block detail-skeleton-title detail-skeleton-title-short"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-tag"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-title"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-title detail-skeleton-title-short"
+		></span>
 	</div>
 
 	<div class="detail-skeleton-prob">
 		<div class="detail-skeleton-prob-row">
-			<span class="detail-skeleton-block detail-skeleton-pct"></span>
-			<span class="detail-skeleton-block detail-skeleton-pct"></span>
+			<span class="skeleton detail-skeleton-block detail-skeleton-pct"></span>
+			<span class="skeleton detail-skeleton-block detail-skeleton-pct"></span>
 		</div>
-		<span class="detail-skeleton-block detail-skeleton-bar"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-bar"></span>
 	</div>
 
 	<div class="detail-skeleton-card">
 		<div class="detail-skeleton-card-head">
-			<span class="detail-skeleton-block detail-skeleton-eyebrow"></span>
-			<span class="detail-skeleton-block detail-skeleton-chips"></span>
+			<span class="skeleton detail-skeleton-block detail-skeleton-eyebrow"></span>
+			<span class="skeleton detail-skeleton-block detail-skeleton-chips"></span>
 		</div>
-		<span class="detail-skeleton-block detail-skeleton-chart"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-chart"></span>
 	</div>
 
 	<div class="detail-skeleton-stats">
-		<span class="detail-skeleton-block detail-skeleton-stat"></span>
-		<span class="detail-skeleton-block detail-skeleton-stat"></span>
-		<span class="detail-skeleton-block detail-skeleton-stat"></span>
-		<span class="detail-skeleton-block detail-skeleton-stat"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-stat"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-stat"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-stat"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-stat"></span>
 	</div>
 
 	<div class="detail-skeleton-card">
-		<span class="detail-skeleton-block detail-skeleton-eyebrow"></span>
-		<span class="detail-skeleton-block detail-skeleton-line"></span>
-		<span class="detail-skeleton-block detail-skeleton-line detail-skeleton-line-short"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-eyebrow"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-line"></span>
+		<span class="skeleton detail-skeleton-block detail-skeleton-line detail-skeleton-line-short"
+		></span>
 	</div>
 </div>
 
@@ -46,26 +48,10 @@
 		gap: 0.75rem;
 	}
 
+	/* Pulse + muted fill come from the global `.skeleton` class (app.css);
+	   these rules only carry the per-block geometry. */
 	.detail-skeleton-block {
-		display: block;
 		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--text-muted) 16%, transparent);
-		animation: detail-skeleton-pulse 1.4s ease-in-out infinite;
-	}
-
-	@keyframes detail-skeleton-pulse {
-		0%,
-		100% {
-			opacity: 0.55;
-		}
-		50% {
-			opacity: 0.9;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.detail-skeleton-block {
-			animation: none;
-		}
 	}
 
 	.detail-skeleton-hero {
