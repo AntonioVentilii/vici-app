@@ -464,11 +464,12 @@
 		}
 	});
 
-	// Return to wherever the viewer came from in-app (league page, inbox).
-	// When they landed here cold — a deep link or fresh tab with no in-app
-	// history — `goBack` falls back to the Arena battles tab.
+	// Return to wherever the viewer came from in-app — `history.back()`
+	// restores the originating Arena tab (the tab strip mirrors itself into
+	// the URL on selection). When they landed here cold — a deep link or fresh
+	// tab with no in-app history — `goBack` falls back to Arena's Friends tab.
 	const handleBack = () => {
-		goBack(`${resolve(AppPath.Arena)}?tab=battles`);
+		goBack(resolve(AppPath.Arena));
 	};
 </script>
 
