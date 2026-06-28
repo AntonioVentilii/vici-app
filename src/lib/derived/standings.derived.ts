@@ -207,17 +207,27 @@ export const globalStandingsRows = (
 					selfProfile: profile
 				});
 
-			// Honor the "Show on global leaderboard" opt-out: a predictor who
-			// turned it off vanishes from everyone else's board (ranks below
-			// them compress with no gap), but the viewer always keeps their own
-			// row and rank — `ownGlobalStanding` reads the same self-inclusive
-			// slice, so the two surfaces never disagree. Nullish (legacy rows /
-			// default) reads as opted-in, matching the always-shown default.
-			const visible = [...result.entries].filter(
-				(entry) =>
-					entry.owner === selfOwner ||
-					$profiles.get(entry.owner)?.preferences.sharing.leaderboardOptIn !== false
-			);
+			// Honor the "Show on global leaderboard" opt-out, failing CLOSED: a
+			// non-self row is shown only once its profile is loaded AND not
+			// opted out. While the profile is still hydrating it stays hidden,
+			// so an opted-out predictor never flashes onto the board in the gap
+			// before we know their preference (showing-then-hiding is itself a
+			// leak). The viewer always keeps their own row and rank —
+			// `ownGlobalStanding` reads this same self-inclusive slice, so the
+			// two surfaces never disagree. The leaderboard page hydrates every
+			// raw-slice entry (not just the visible rows), so opted-in rows fill
+			// in as profiles land rather than starving — see LeaderboardPage's
+			// hydration effect. A nullish flag on a loaded profile (legacy row)
+			// reads as opted-in, matching the always-shown default.
+			const visible = [...result.entries].filter((entry) => {
+				if (entry.owner === selfOwner) {
+					return true;
+				}
+
+				const profile = $profiles.get(entry.owner);
+
+				return nonNullish(profile) && profile.preferences.sharing.leaderboardOptIn !== false;
+			});
 			const qualified = visible.filter((entry) => entry.settledCount >= $qualifyMin);
 			const provisional = visible.filter((entry) => entry.settledCount < $qualifyMin);
 

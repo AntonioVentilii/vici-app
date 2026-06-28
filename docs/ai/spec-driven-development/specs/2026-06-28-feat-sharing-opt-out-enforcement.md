@@ -61,13 +61,20 @@ UI → service → source):
    behaviour for legacy rows). The full profile is already decoded for
    the existing hibernation guard, so this adds no read.
 
-2. **Leaderboard opt-out (FE filter).** In `globalStandingsRows`, drop
-   any entry whose joined profile has `leaderboardOptIn === false`
-   **and is not the viewer** (`entry.owner !== selfOwner`), before the
-   qualify-gate split and `displayRank` assignment — so opted-out users
-   vanish from both `ranked` and `provisional` and ranks compress with
-   no gaps. Keeping `self` satisfies the decided "hide from others,
-   keep own rank" semantics: the viewer still sees their own row, and
+2. **Leaderboard opt-out (FE filter, fail-closed).** In
+   `globalStandingsRows`, a non-self entry is shown only when its joined
+   profile is loaded **and** `leaderboardOptIn !== false`, applied before
+   the qualify-gate split and `displayRank` assignment — so opted-out
+   users vanish from both `ranked` and `provisional` and ranks compress
+   with no gaps. Failing closed (hide until the profile is known, rather
+   than show-then-hide) means an opted-out predictor never flashes onto
+   the board during the hydration gap. Because that hides not-yet-loaded
+   rows, the leaderboard page must hydrate from the **raw** standings
+   slice (`globalStandingsStore`), not the filtered partition — else a
+   hidden row's profile would never be fetched and the filter could never
+   resolve it into view (a deadlock). Keeping `self` satisfies the
+   decided "hide from others, keep own rank" semantics: the viewer still
+   sees their own row, and
    [`ownGlobalStanding`](../../../src/lib/derived/standings.derived.ts)
    (the Arena "Global ranking" card / top-decile source) still resolves
    their own number.
@@ -156,8 +163,11 @@ each change of the two controls.
    guard, add `if (afterProfile.preferences?.sharing?.worldsOptIn ===
 false) return;`.
 2. `src/lib/derived/standings.derived.ts` (`globalStandingsRows`):
-   filter `entries` to drop `leaderboardOptIn === false` non-self rows
-   before the qualified/provisional split.
+   filter `entries` fail-closed (show a non-self row only once its
+   profile is loaded and not opted out) before the qualified/provisional
+   split; `src/lib/components/pages/LeaderboardPage.svelte` hydrates
+   profiles from the raw `globalStandingsStore` slice so hidden rows
+   still load.
 3. Add `privacy_sharing_toggled` to the analytics union + Zod mirror;
    call `track` from the two toggle handlers in
    `SettingsPage.svelte:479` / `:492`.
@@ -211,4 +221,15 @@ false) return;`.
   includes the defaulted `sharing` group, and the satellite `getProfile`
   wire format returns `preferences` as a required record, so the FE join
   in `globalStandingsRows` always sees the flag (nullish guarded anyway).
+- **Leaderboard filter fails closed (review feedback).** Initial
+  implementation failed open (a row with no cached profile was shown),
+  which let an opted-out predictor flash onto the board during profile
+  hydration. Changed to fail closed: hide a non-self row until its
+  profile is loaded and confirmed not opted out. This forced a second
+  change — `LeaderboardPage` now hydrates profiles from the raw standings
+  slice rather than the filtered partition, otherwise hidden rows would
+  never fetch their profile and the board would deadlock to self-only.
+  Tradeoff accepted: opted-in rows fill in as profiles hydrate (a brief
+  progressive paint) instead of rendering immediately, which is the
+  correct bias for a privacy control.
 - Built via the spec-first workflow at the requester's direction.

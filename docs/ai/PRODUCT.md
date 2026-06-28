@@ -376,10 +376,15 @@ ranking surfaces. Both default **on** (legacy / unset reads as on).
   compress with no gap. They keep their own rank: their `You` row and
   the Arena "Global ranking" card (`ownGlobalStanding`) still resolve,
   and their top-decile achievement (a separate satellite points-rank
-  path) is unaffected. Enforced FE-side in `globalStandingsRows` — the
-  clearing canister still publishes raw P&L + principals, so this is a
-  display opt-out, not a data-hiding guarantee (canister-level hiding is
-  a tracked fast-follow).
+  path) is unaffected. Enforced FE-side in `globalStandingsRows`,
+  **failing closed**: a non-self row appears only once its profile is
+  loaded and not opted out, so an opted-out predictor never flashes onto
+  the board before their preference is known. The leaderboard hydrates
+  every raw-slice principal (not just visible rows), so opted-in rows
+  fill in as profiles land rather than starving. The clearing canister
+  still publishes raw P&L + principals, so this is a display opt-out,
+  not a data-hiding guarantee (canister-level hiding is a tracked
+  fast-follow).
 - **Show in Worlds Universities** off → the user's resolved-trade delta
   stops counting toward their school / country aggregate. Enforced in
   the `onProfileSetForAffiliationStats` hook. `AFFILIATION_STATS` is a
