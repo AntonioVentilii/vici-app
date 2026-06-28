@@ -22,6 +22,7 @@
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { guestMode } from '$lib/derived/guest.derived';
 	import { authBusy, userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
+	import { installE2eResetHook } from '$lib/dev/e2e-reset';
 	import {
 		drainPendingOnboarding,
 		hasPendingOnboarding
@@ -69,6 +70,10 @@
 		// browser fires it once, early, on a cold load. Idempotent and
 		// browser-only (see `a2hs.store`).
 		initA2hs();
+
+		// Dev-only: expose the e2e profile-reset hook so the onboarding spec can
+		// escape the shared dev mock identity. No-op in production.
+		installE2eResetHook();
 
 		return () => {
 			delete document.documentElement.dataset.app;

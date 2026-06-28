@@ -18,10 +18,27 @@ import { HomePage } from './pages/home.page';
  * synchronously on the auth-surface pointer-down, so a redirect provider
  * would carry it through too. This test guards that path: the profile hero
  * must show the claimed handle, not the bootstrapped principal default.
+ *
+ * The dev mock identity is ONE principal for the whole CI run, and every
+ * earlier `signInAsDevUser` auto-claims the handle field's pool suggestion
+ * and completes onboarding for it — so without a reset this principal is a
+ * fully-onboarded returning user and the handoff is (correctly) a no-op. We
+ * therefore sign in, hard-delete its profile via the dev-only reset hook,
+ * and sign back out first, so the run below exercises a genuine new user.
  */
 test.describe('pre-sign-in onboarding', () => {
 	test('claims a handle and applies it after dev sign-in', async ({ page }) => {
 		const home = new HomePage(page);
+
+		// Restore the pristine, pre-onboarding state for the shared dev principal
+		// (see the file header) so the handle handoff runs its new-user path.
+		await home.signInAsDevUser();
+		await home.resetDevProfile();
+		await home.logout();
+
+		// Let the sign-out redirect land before navigating, otherwise the
+		// `/signup` goto races the in-flight redirect to `/signin` and aborts.
+		await page.waitForURL('**/signin');
 
 		await page.goto('/signup');
 
