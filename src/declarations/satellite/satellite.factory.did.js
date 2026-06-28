@@ -162,6 +162,7 @@ export const idlFactory = ({ IDL }) => {
 				series_id: IDL.Opt(IDL.Text),
 				name: IDL.Variant({
 					delete_confirmed: IDL.Null,
+					privacy_sharing_toggled: IDL.Null,
 					school_picked: IDL.Null,
 					battle_viewed: IDL.Null,
 					transactions_viewed: IDL.Null,
@@ -254,6 +255,7 @@ export const idlFactory = ({ IDL }) => {
 				day: IDL.Float64,
 				name: IDL.Variant({
 					delete_confirmed: IDL.Null,
+					privacy_sharing_toggled: IDL.Null,
 					school_picked: IDL.Null,
 					battle_viewed: IDL.Null,
 					transactions_viewed: IDL.Null,
@@ -1297,6 +1299,7 @@ export const idlFactory = ({ IDL }) => {
 				series_id: IDL.Opt(IDL.Text),
 				name: IDL.Variant({
 					delete_confirmed: IDL.Null,
+					privacy_sharing_toggled: IDL.Null,
 					school_picked: IDL.Null,
 					battle_viewed: IDL.Null,
 					transactions_viewed: IDL.Null,

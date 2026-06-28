@@ -74,6 +74,8 @@ export const AnalyticsEventNameSchema = j.enum([
 	// Worlds
 	'affiliation_set',
 	'affiliation_removed',
+	// Settings / privacy
+	'privacy_sharing_toggled',
 	// School verification
 	'school_picker_opened',
 	'school_picked',
