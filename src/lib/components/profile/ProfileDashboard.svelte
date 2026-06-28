@@ -739,8 +739,9 @@
 				{#each MENAGERIE as animal (animal.slug)}
 					<div class="profile-menagerie-tile is-skeleton">
 						<MenagerieBadgeSkeleton size={68} />
-						<span class="profile-menagerie-name-skeleton skeleton"></span>
-						<span class="profile-menagerie-concept-skeleton skeleton soft"></span>
+						<span class="profile-menagerie-name-skeleton skeleton" aria-hidden="true"></span>
+						<span class="profile-menagerie-concept-skeleton skeleton soft" aria-hidden="true"
+						></span>
 					</div>
 				{/each}
 			{:else}

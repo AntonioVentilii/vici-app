@@ -78,7 +78,7 @@
 		</span>
 		<div class="men-progress-counts">
 			{#if loading}
-				<span class="men-progress-earned-skeleton skeleton"></span>
+				<span class="men-progress-earned-skeleton skeleton" aria-hidden="true"></span>
 			{:else}
 				<span class="num men-progress-earned">{earned}</span>
 			{/if}
@@ -102,8 +102,8 @@
 			{#each MENAGERIE as animal (animal.slug)}
 				<div class="men-tile is-skeleton">
 					<MenagerieBadgeSkeleton size={84} />
-					<span class="men-tile-name-skeleton skeleton"></span>
-					<span class="men-tile-concept-skeleton skeleton soft"></span>
+					<span class="men-tile-name-skeleton skeleton" aria-hidden="true"></span>
+					<span class="men-tile-concept-skeleton skeleton soft" aria-hidden="true"></span>
 				</div>
 			{/each}
 		{:else}

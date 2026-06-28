@@ -83,7 +83,7 @@ the five). That becomes the canonical pulse.
    - The element owns **size + shape** (its own width/height/radius, via
      utilities or its scoped CSS); the class owns **fill + pulse**. This
      composition is what makes it work with Svelte's scoped styles — a
-     component whose geometry lives in a scoped class simply *adds*
+     component whose geometry lives in a scoped class simply _adds_
      `skeleton` to that element (`class="market-stats-skeleton skeleton"`),
      no specificity fight.
 2. **Add `src/lib/components/ui/Skeleton.svelte`** — the ergonomic wrapper

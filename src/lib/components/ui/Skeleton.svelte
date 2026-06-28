@@ -19,4 +19,5 @@
 	const { class: className = 'rounded-md', style, tone = 'default' }: Props = $props();
 </script>
 
-<span class="skeleton {tone === 'soft' ? 'soft ' : ''}{className}" aria-hidden="true" {style}></span>
+<span {style} class="skeleton {tone === 'soft' ? 'soft ' : ''}{className}" aria-hidden="true"
+></span>
