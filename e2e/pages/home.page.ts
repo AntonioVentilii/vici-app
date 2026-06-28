@@ -217,6 +217,33 @@ export class HomePage {
 	}
 
 	/**
+	 * Hard-delete the signed-in dev principal's profile via the dev-only
+	 * reset hook (`window.__viciE2E.resetMyProfile`, installed by the `(app)`
+	 * layout when `isDev()`).
+	 *
+	 * The dev mock identity resolves to ONE principal for the whole CI run,
+	 * and every prior `signInAsDevUser` auto-claims the handle field's pool
+	 * suggestion and completes onboarding for it — so by the time a spec needs
+	 * a brand-new user, that principal is already a fully-onboarded returning
+	 * user. Call this (while signed in) then sign out: the next sign-in finds
+	 * no profile doc and bootstraps fresh, restoring the genuine new-user path.
+	 */
+	async resetDevProfile(): Promise<void> {
+		await this.page.evaluate(async () => {
+			const hooks = (window as unknown as { __viciE2E?: { resetMyProfile: () => Promise<void> } })
+				.__viciE2E;
+
+			if (!hooks) {
+				throw new Error(
+					'Dev-only e2e reset hook (window.__viciE2E) is not installed — expected isDev() on the dev server.'
+				);
+			}
+
+			await hooks.resetMyProfile();
+		});
+	}
+
+	/**
 	 * Sign out via the Settings page — the only sign-out surface in the
 	 * current app (the old account dropdown is gone). The reveal button
 	 * arms an in-page confirm; the destructive confirm calls `signOut()`,
