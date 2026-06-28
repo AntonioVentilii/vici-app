@@ -1741,6 +1741,37 @@ const pruneResolvedResults = async (): Promise<
 	return AppPruneResolvedResultsResultSchema.parse(result);
 };
 
+const AppReadBattleLiveScoreArgsSchema = j.strictObject({ battleId: j.string() });
+const AppReadBattleLiveScoreResultSchema = j.strictObject({
+	score: j.optional(
+		j.strictObject({
+			scoreA: j.number(),
+			scoreB: j.number(),
+			callsA: j.number(),
+			callsB: j.number(),
+			leader: j.enum(['A', 'B', 'draw'])
+		})
+	)
+});
+
+const readBattleLiveScore = async (
+	args: j.infer<typeof AppReadBattleLiveScoreArgsSchema>
+): Promise<j.infer<typeof AppReadBattleLiveScoreResultSchema>> => {
+	const parsedArgs = AppReadBattleLiveScoreArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppReadBattleLiveScoreArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_read_battle_live_score']>[0];
+
+	const { app_read_battle_live_score } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_read_battle_live_score(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppReadBattleLiveScoreResultSchema, value: idlResult });
+	return AppReadBattleLiveScoreResultSchema.parse(result);
+};
+
 const AppRecomputeActivityReactionCountsResultSchema = j.strictObject({ recomputed: j.number() });
 
 const recomputeActivityReactionCounts = async (): Promise<
@@ -1828,6 +1859,47 @@ const rejectFriendRequest = async (
 		idlFactory
 	});
 	await app_reject_friend_request(idlArgs);
+};
+
+const AppResolveBattleArgsSchema = j.strictObject({ battleId: j.string() });
+const AppResolveBattleResultSchema = j.strictObject({
+	battle: j.strictObject({
+		id: j.string(),
+		kind: j.enum(['league', 'duel']),
+		sideA: j.string(),
+		sideB: j.string(),
+		proposer: j.string(),
+		state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved', 'declined', 'expired']),
+		kickoffMs: j.number(),
+		settleMs: j.number(),
+		respondByMs: j.optional(j.number()),
+		respondedAtMs: j.optional(j.number()),
+		scope: j.optional(j.string()),
+		wager: j.optional(j.number()),
+		trashTalk: j.optional(j.string()),
+		scoreA: j.optional(j.number()),
+		scoreB: j.optional(j.number()),
+		callsA: j.optional(j.number()),
+		callsB: j.optional(j.number()),
+		winner: j.optional(j.enum(['A', 'B', 'draw'])),
+		resolvedAtMs: j.optional(j.number())
+	})
+});
+
+const resolveBattle = async (
+	args: j.infer<typeof AppResolveBattleArgsSchema>
+): Promise<j.infer<typeof AppResolveBattleResultSchema>> => {
+	const parsedArgs = AppResolveBattleArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppResolveBattleArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_resolve_battle']>[0];
+
+	const { app_resolve_battle } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_resolve_battle(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppResolveBattleResultSchema, value: idlResult });
+	return AppResolveBattleResultSchema.parse(result);
 };
 
 const AppResolveTournamentRoundArgsSchema = j.strictObject({
@@ -2329,11 +2401,13 @@ export const functions = {
 	followUser,
 	hibernateMyAccount,
 	pruneResolvedResults,
+	readBattleLiveScore,
 	recomputeActivityReactionCounts,
 	recordFlowSwipe,
 	recoverMyAccount,
 	redeemReferralCode,
 	rejectFriendRequest,
+	resolveBattle,
 	resolveTournamentRound,
 	resumeMyAccount,
 	sendFriendRequest,

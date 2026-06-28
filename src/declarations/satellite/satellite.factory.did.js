@@ -1130,6 +1130,22 @@ export const idlFactory = ({ IDL }) => {
 		owner: IDL.Opt(IDL.Text)
 	});
 	const AppPruneResolvedResultsResult = IDL.Record({ pruned: IDL.Float64 });
+	const AppReadBattleLiveScoreArgs = IDL.Record({ battle_id: IDL.Text });
+	const AppReadBattleLiveScoreResult = IDL.Record({
+		score: IDL.Opt(
+			IDL.Record({
+				calls_a: IDL.Float64,
+				calls_b: IDL.Float64,
+				score_a: IDL.Float64,
+				score_b: IDL.Float64,
+				leader: IDL.Variant({
+					A: IDL.Null,
+					B: IDL.Null,
+					draw: IDL.Null
+				})
+			})
+		)
+	});
 	const AppRecomputeActivityReactionCountsResult = IDL.Record({
 		recomputed: IDL.Float64
 	});
@@ -1146,6 +1162,37 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AppRedeemReferralCodeArgs = IDL.Record({ code: IDL.Text });
 	const AppRejectFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
+	const AppResolveBattleArgs = IDL.Record({ battle_id: IDL.Text });
+	const AppResolveBattleResult = IDL.Record({
+		battle: IDL.Record({
+			id: IDL.Text,
+			trash_talk: IDL.Opt(IDL.Text),
+			respond_by_ms: IDL.Opt(IDL.Float64),
+			responded_at_ms: IDL.Opt(IDL.Float64),
+			kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
+			winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
+			calls_a: IDL.Opt(IDL.Float64),
+			calls_b: IDL.Opt(IDL.Float64),
+			score_a: IDL.Opt(IDL.Float64),
+			score_b: IDL.Opt(IDL.Float64),
+			scope: IDL.Opt(IDL.Text),
+			state: IDL.Variant({
+				resolved: IDL.Null,
+				expired: IDL.Null,
+				proposed: IDL.Null,
+				in_flight: IDL.Null,
+				accepted: IDL.Null,
+				declined: IDL.Null
+			}),
+			side_a: IDL.Text,
+			side_b: IDL.Text,
+			proposer: IDL.Text,
+			kickoff_ms: IDL.Float64,
+			wager: IDL.Opt(IDL.Float64),
+			resolved_at_ms: IDL.Opt(IDL.Float64),
+			settle_ms: IDL.Float64
+		})
+	});
 	const AppResolveTournamentRoundArgs = IDL.Record({
 		tournament_id: IDL.Text,
 		round: IDL.Text
@@ -1597,6 +1644,11 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_prune_resolved_results: IDL.Func([], [AppPruneResolvedResultsResult], []),
+		app_read_battle_live_score: IDL.Func(
+			[AppReadBattleLiveScoreArgs],
+			[AppReadBattleLiveScoreResult],
+			[]
+		),
 		app_recompute_activity_reaction_counts: IDL.Func(
 			[],
 			[AppRecomputeActivityReactionCountsResult],
@@ -1606,6 +1658,7 @@ export const idlFactory = ({ IDL }) => {
 		app_recover_my_account: IDL.Func([], [AppRecoverMyAccountResult], []),
 		app_redeem_referral_code: IDL.Func([AppRedeemReferralCodeArgs], [], []),
 		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),
+		app_resolve_battle: IDL.Func([AppResolveBattleArgs], [AppResolveBattleResult], []),
 		app_resolve_tournament_round: IDL.Func(
 			[AppResolveTournamentRoundArgs],
 			[AppResolveTournamentRoundResult],

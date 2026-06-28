@@ -10,7 +10,6 @@ import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
 	BATTLE_WAGER_MAX,
 	BATTLE_WAGER_MIN,
-	battleAccuracyPct,
 	deriveBattleWinner,
 	type BattleDoc,
 	type BattleScope,
@@ -24,19 +23,19 @@ import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertDeleteDocContext, AssertSetDocContext } from '@junobuild/functions';
 import { time } from '@junobuild/functions/ic-cdk';
-import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
+import { decodeDocData, getAdminAccessKeys, getDocStore } from '@junobuild/functions/sdk';
 
-/** Window delta between a baseline snapshot and the current bucket, clamped `≥ 0`. */
-const deltaBucket = ({
-	baseline,
-	current
-}: {
-	baseline: CategoryStatsBucket;
-	current: CategoryStatsBucket;
-}): CategoryStatsBucket => ({
-	calls: Math.max(0, current.calls - baseline.calls),
-	wins: Math.max(0, current.wins - baseline.wins)
-});
+/**
+ * Whether `callerText` is one of the satellite's controllers. The trust anchor
+ * for controller-written league resolutions: the resolve endpoint derives the
+ * scoreline from clearing settlement history and writes the resolved doc as a
+ * controller, so the assert — which cannot make that inter-canister call to
+ * re-derive it — trusts a league resolve only from a controller.
+ */
+const isControllerText = (callerText: string): boolean =>
+	getAdminAccessKeys().some(
+		([keyBytes]) => Principal.fromUint8Array(keyBytes).toText() === callerText
+	);
 
 // eslint-disable-next-line local-rules/prefer-object-params -- equality predicate; a/b read best positionally
 const bucketsEqual = (a: CategoryStatsBucket, b: CategoryStatsBucket): boolean =>
@@ -563,22 +562,6 @@ export const assertSetBattle = ({
 			throw new Error('duel battles must not carry baselines.');
 		}
 	} else if (transition === 'in_flight->resolved') {
-		// Resolution is trustless: the integrity check below re-derives every
-		// score field from the frozen baselines and the current league_stats,
-		// so the writer's identity can't change the outcome. We therefore let
-		// any member of either side trigger it, not just owners — many more
-		// people can finalize a settled battle just by viewing it, which is
-		// the only liveness available without a scheduler. Duels carry no
-		// members, so they stay principal-only.
-		const canResolveSide =
-			proposedDoc.kind === 'league'
-				? isMemberOfLeague(currentDoc.sideA) || isMemberOfLeague(currentDoc.sideB)
-				: isSideOwner(currentDoc.sideA) || isSideOwner(currentDoc.sideB);
-
-		if (!canResolveSide) {
-			throw new Error('battles resolve requires a sideA or sideB member.');
-		}
-
 		if (nowMs < currentDoc.settleMs) {
 			throw new Error('battles cannot resolve before settleMs.');
 		}
@@ -588,45 +571,60 @@ export const assertSetBattle = ({
 		}
 
 		if (proposedDoc.kind === 'league') {
-			// Re-derive the windowed result from the frozen baselines and the
-			// current league_stats. Any score the writer didn't compute from
-			// real data is rejected — this is the integrity guarantee.
-			if (isNullish(currentDoc.baselineA) || isNullish(currentDoc.baselineB)) {
-				throw new Error('league battles cannot resolve without kickoff baselines.');
+			// Controller-trusted resolution. Each side's score is its members'
+			// settled-call accuracy over the window, read from the clearing
+			// canister's settlement history by the resolution endpoint (running
+			// as the satellite). An assert cannot make that inter-canister call
+			// to re-derive the figure, so it accepts an `in_flight → resolved`
+			// league write only from a controller — the endpoint writes the
+			// resolved doc as one — and verifies the result is internally
+			// consistent. A client write is not a controller, so a user cannot
+			// forge a result. Membership + the settle-time liveness gate are
+			// enforced by the endpoint, not here. Baselines are no longer read:
+			// a legacy row that never got a kickoff snapshot resolves fine.
+			if (!isControllerText(callerText)) {
+				throw new Error(
+					'league battles resolve only via the controller-trusted resolution endpoint.'
+				);
 			}
 
 			if (isNullish(proposedDoc.callsA) || isNullish(proposedDoc.callsB)) {
 				throw new Error('league battles state="resolved" requires callsA and callsB.');
 			}
 
-			const deltaA = deltaBucket({
-				baseline: currentDoc.baselineA,
-				current: readLeagueStatsBucket(currentDoc.sideA)
-			});
-			const deltaB = deltaBucket({
-				baseline: currentDoc.baselineB,
-				current: readLeagueStatsBucket(currentDoc.sideB)
-			});
-			const expectedScoreA = battleAccuracyPct(deltaA);
-			const expectedScoreB = battleAccuracyPct(deltaB);
 			const expectedWinner = deriveBattleWinner({
-				scoreA: expectedScoreA,
-				scoreB: expectedScoreB,
-				callsA: deltaA.calls,
-				callsB: deltaB.calls
+				scoreA: proposedDoc.scoreA,
+				scoreB: proposedDoc.scoreB,
+				callsA: proposedDoc.callsA,
+				callsB: proposedDoc.callsB
 			});
 
+			// `Number.isInteger` also rejects NaN / ±Infinity, which would slip
+			// through the bare `< 0` / `> 100` range checks (every comparison is
+			// false for NaN). Scores are integer percentages; call counts are
+			// non-negative integers.
 			if (
-				proposedDoc.scoreA !== expectedScoreA ||
-				proposedDoc.scoreB !== expectedScoreB ||
-				proposedDoc.callsA !== deltaA.calls ||
-				proposedDoc.callsB !== deltaB.calls ||
+				!Number.isInteger(proposedDoc.scoreA) ||
+				proposedDoc.scoreA < 0 ||
+				proposedDoc.scoreA > 100 ||
+				!Number.isInteger(proposedDoc.scoreB) ||
+				proposedDoc.scoreB < 0 ||
+				proposedDoc.scoreB > 100 ||
+				!Number.isInteger(proposedDoc.callsA) ||
+				proposedDoc.callsA < 0 ||
+				!Number.isInteger(proposedDoc.callsB) ||
+				proposedDoc.callsB < 0 ||
 				proposedDoc.winner !== expectedWinner
 			) {
-				throw new Error('battles resolution must match the league_stats window delta.');
+				throw new Error('league battles resolution fields are inconsistent.');
 			}
 		} else {
-			// Duel — manual scores, winner from arithmetic (no league_stats).
+			// Duel — a side owner resolves with manual scores; winner from
+			// arithmetic (no league_stats / settlement history to read).
+			if (!isSideOwner(currentDoc.sideA) && !isSideOwner(currentDoc.sideB)) {
+				throw new Error('duel battles resolve requires a sideA or sideB owner.');
+			}
+
 			if (nonNullish(proposedDoc.callsA) || nonNullish(proposedDoc.callsB)) {
 				throw new Error('duel battles must not carry callsA / callsB.');
 			}

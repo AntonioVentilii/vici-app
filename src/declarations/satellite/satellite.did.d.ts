@@ -981,6 +981,22 @@ export interface AppLookupReferralCodeResult {
 export interface AppPruneResolvedResultsResult {
 	pruned: number;
 }
+export interface AppReadBattleLiveScoreArgs {
+	battle_id: string;
+}
+export interface AppReadBattleLiveScoreResult {
+	score:
+		| []
+		| [
+				{
+					calls_a: number;
+					calls_b: number;
+					score_a: number;
+					score_b: number;
+					leader: { A: null } | { B: null } | { draw: null };
+				}
+		  ];
+}
 export interface AppRecomputeActivityReactionCountsResult {
 	recomputed: number;
 }
@@ -1002,6 +1018,38 @@ export interface AppRedeemReferralCodeArgs {
 }
 export interface AppRejectFriendRequestArgs {
 	relation_id: string;
+}
+export interface AppResolveBattleArgs {
+	battle_id: string;
+}
+export interface AppResolveBattleResult {
+	battle: {
+		id: string;
+		trash_talk: [] | [string];
+		respond_by_ms: [] | [number];
+		responded_at_ms: [] | [number];
+		kind: { duel: null } | { league: null };
+		winner: [] | [{ A: null } | { B: null } | { draw: null }];
+		calls_a: [] | [number];
+		calls_b: [] | [number];
+		score_a: [] | [number];
+		score_b: [] | [number];
+		scope: [] | [string];
+		state:
+			| { resolved: null }
+			| { expired: null }
+			| { proposed: null }
+			| { in_flight: null }
+			| { accepted: null }
+			| { declined: null };
+		side_a: string;
+		side_b: string;
+		proposer: string;
+		kickoff_ms: number;
+		wager: [] | [number];
+		resolved_at_ms: [] | [number];
+		settle_ms: number;
+	};
 }
 export interface AppResolveTournamentRoundArgs {
 	tournament_id: string;
@@ -1396,11 +1444,16 @@ export interface _SERVICE {
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
 	app_prune_resolved_results: ActorMethod<[], AppPruneResolvedResultsResult>;
+	app_read_battle_live_score: ActorMethod<
+		[AppReadBattleLiveScoreArgs],
+		AppReadBattleLiveScoreResult
+	>;
 	app_recompute_activity_reaction_counts: ActorMethod<[], AppRecomputeActivityReactionCountsResult>;
 	app_record_flow_swipe: ActorMethod<[AppRecordFlowSwipeArgs], AppRecordFlowSwipeResult>;
 	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;
 	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
+	app_resolve_battle: ActorMethod<[AppResolveBattleArgs], AppResolveBattleResult>;
 	app_resolve_tournament_round: ActorMethod<
 		[AppResolveTournamentRoundArgs],
 		AppResolveTournamentRoundResult

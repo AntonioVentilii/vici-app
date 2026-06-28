@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.8.5](https://github.com/AntonioVentilii/vici-app/compare/v1.8.4...v1.8.5) (2026-06-27)
+
+
+### Features
+
+* **arena:** resolve league battles from clearing settlement history ([#1056](https://github.com/AntonioVentilii/vici-app/issues/1056)) ([2a3cb88](https://github.com/AntonioVentilii/vici-app/commit/2a3cb888d52f39fb74bd248c536819e64c6803cf))
+* **onboarding:** cycle the handle placeholder with a typewriter animation ([#1053](https://github.com/AntonioVentilii/vici-app/issues/1053)) ([b48072e](https://github.com/AntonioVentilii/vici-app/commit/b48072e52381e5e03afdf43dbcaea550f7bb5946))
+* **onboarding:** promote guest preview to a ghost button on sign-up ([#1057](https://github.com/AntonioVentilii/vici-app/issues/1057)) ([f1bbe17](https://github.com/AntonioVentilii/vici-app/commit/f1bbe177c445495b17957babd97967c341dd3390))
+
+
+### Bug Fixes
+
+* **arena:** keep viewer off a false [#01](https://github.com/AntonioVentilii/vici-app/issues/01) when friends tie on accuracy ([#1058](https://github.com/AntonioVentilii/vici-app/issues/1058)) ([290995c](https://github.com/AntonioVentilii/vici-app/commit/290995c1205c0dd12acad368d0d7b6aaeef7e64b))
+* **flow:** out-of-funds takeover when VXP is fully in play ([#1048](https://github.com/AntonioVentilii/vici-app/issues/1048)) ([709faf6](https://github.com/AntonioVentilii/vici-app/commit/709faf6460af8f83cabdff1e7b59087472ae1f4d))
+* **ios:** clear the status-bar safe-area on the authenticated app shell in standalone PWA ([#1054](https://github.com/AntonioVentilii/vici-app/issues/1054)) ([8cb72a4](https://github.com/AntonioVentilii/vici-app/commit/8cb72a4be8123ca046d0e94cd59a4d9b0691d289))
+* **onboarding:** drop em dash from the skip-onboarding label ([#1051](https://github.com/AntonioVentilii/vici-app/issues/1051)) ([58067a3](https://github.com/AntonioVentilii/vici-app/commit/58067a358b6c286864dd7ac1f50769c5767c9adf))
+* **settings:** make sign-out feel responsive ([#1052](https://github.com/AntonioVentilii/vici-app/issues/1052)) ([46d8d75](https://github.com/AntonioVentilii/vici-app/commit/46d8d756f5e7d681e0ef245ae72b485243628c86))
+
+
+### Miscellaneous Chores
+
+* Update ICDC declarations ([e193ed3](https://github.com/AntonioVentilii/vici-app/commit/e193ed3cc80b1695bc5649a8e617344802f62a76))
+
+
+### Code Refactoring
+
+* **arena:** replace live battle card CTA label with a centered arrow ([#1042](https://github.com/AntonioVentilii/vici-app/issues/1042)) ([949c15e](https://github.com/AntonioVentilii/vici-app/commit/949c15e05c2693c47c679299f4a62e8ab2455885))
+
 ## [1.8.4](https://github.com/AntonioVentilii/vici-app/compare/v1.8.3...v1.8.4) (2026-06-27)
 
 

@@ -155,6 +155,10 @@ type AppHibernateMyAccountResult = record { ok : bool; reason : opt variant { no
 
 type AppPruneResolvedResultsResult = record { pruned : float64 };
 
+type AppReadBattleLiveScoreArgs = record { battle_id : text };
+
+type AppReadBattleLiveScoreResult = record { score : opt record { score_a : float64; score_b : float64; calls_a : float64; calls_b : float64; leader : variant { A; B; draw } } };
+
 type AppRecomputeActivityReactionCountsResult = record { recomputed : float64 };
 
 type AppRecordFlowSwipeArgs = record { day_key : text };
@@ -166,6 +170,10 @@ type AppRecoverMyAccountResult = record { ok : bool; recovered : opt bool; reaso
 type AppRedeemReferralCodeArgs = record { code : text };
 
 type AppRejectFriendRequestArgs = record { relation_id : text };
+
+type AppResolveBattleArgs = record { battle_id : text };
+
+type AppResolveBattleResult = record { battle : record { id : text; kind : variant { league; duel }; side_a : text; side_b : text; proposer : text; state : variant { proposed; accepted; in_flight; resolved; declined; expired }; kickoff_ms : float64; settle_ms : float64; respond_by_ms : opt float64; responded_at_ms : opt float64; scope : opt text; wager : opt float64; trash_talk : opt text; score_a : opt float64; score_b : opt float64; calls_a : opt float64; calls_b : opt float64; winner : opt variant { A; B; draw }; resolved_at_ms : opt float64 } };
 
 type AppResolveTournamentRoundArgs = record { tournament_id : text; round : text };
 
@@ -262,11 +270,13 @@ service : {
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_hibernate_my_account : () -> (AppHibernateMyAccountResult);
 	app_prune_resolved_results : () -> (AppPruneResolvedResultsResult);
+	app_read_battle_live_score : (AppReadBattleLiveScoreArgs) -> (AppReadBattleLiveScoreResult);
 	app_recompute_activity_reaction_counts : () -> (AppRecomputeActivityReactionCountsResult);
 	app_record_flow_swipe : (AppRecordFlowSwipeArgs) -> (AppRecordFlowSwipeResult);
 	app_recover_my_account : () -> (AppRecoverMyAccountResult);
 	app_redeem_referral_code : (AppRedeemReferralCodeArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();
+	app_resolve_battle : (AppResolveBattleArgs) -> (AppResolveBattleResult);
 	app_resolve_tournament_round : (AppResolveTournamentRoundArgs) -> (AppResolveTournamentRoundResult);
 	app_resume_my_account : () -> (AppResumeMyAccountResult);
 	app_send_friend_request : (AppSendFriendRequestArgs) -> (AppSendFriendRequestResult);

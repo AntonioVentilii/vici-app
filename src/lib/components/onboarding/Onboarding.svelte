@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Gift } from '@lucide/svelte/icons';
+	import { Eye, Gift } from '@lucide/svelte/icons';
 	import { onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import SignInProviderStack from '$lib/components/authn/SignInProviderStack.svelte';
@@ -545,17 +545,33 @@
 								onSuccess={onAuthSuccess}
 							/>
 						</div>
+
+						<button
+							class="ob-guest-btn"
+							data-tid={TestId.OnboardingHandleSkip}
+							onclick={onSkipPreview}
+							type="button"
+						>
+							<Eye aria-hidden="true" size={16} strokeWidth={1.7} />
+							{t({ locale: $localeStore, key: 'onboarding.guest_cta' })}
+						</button>
 					{/if}
 				</div>
 
-				<button
-					class="ob-skip-link"
-					data-tid={TestId.OnboardingHandleSkip}
-					onclick={onSkipPreview}
-					type="button"
-				>
-					{t({ locale: $localeStore, key: 'onboarding.skip' })}
-				</button>
+				{#if authenticated}
+					<button
+						class="ob-skip-link"
+						data-tid={TestId.OnboardingHandleSkip}
+						onclick={onSkipPreview}
+						type="button"
+					>
+						{t({ locale: $localeStore, key: 'onboarding.skip' })}
+					</button>
+				{:else}
+					<p class="ob-guest-reassure">
+						{t({ locale: $localeStore, key: 'onboarding.guest_reassure' })}
+					</p>
+				{/if}
 
 				{#if !authenticated}
 					<div class="ob-signin">

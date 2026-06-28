@@ -19,7 +19,6 @@
 		loadLeaguesByIds,
 		readBattleLiveScore,
 		resolveBattle,
-		restartLegacyBattle,
 		retractBattle,
 		type BattleLiveScore,
 		type LeagueWithRole
@@ -61,6 +60,10 @@
 	// read returns, or for any battle that can't be scored live (duel,
 	// non-in_flight, legacy row missing baselines).
 	let liveScore = $state<BattleLiveScore | null>(null);
+	// True only while the in-flight live-score read is in flight, so the
+	// face-off scores can pulse instead of sitting on a static "—" while the
+	// two leagues' standings are still being computed.
+	let liveScoreLoading = $state(false);
 	// Fire `battle_viewed` exactly once per mount, on the first `ready`.
 	let viewedTracked = false;
 	// Battle id → count of lazy auto-resolve attempts. We retry a transient
@@ -69,9 +72,6 @@
 	// backend on every re-render.
 	const autoResolveAttempts = new SvelteMap<string, number>();
 	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
-	// Battle id → count of lazy auto-restart attempts for a baseline-less legacy
-	// row (#912). Same cap + retry rationale as the resolve counter above.
-	const autoRestartAttempts = new SvelteMap<string, number>();
 
 	// Where the viewer arrived from, for the `battle_viewed` funnel. A
 	// bounded vocabulary — anything unrecognised falls back to deep_link.
@@ -102,11 +102,17 @@
 			// Provisional standings — read-only; resolution stays the lazy
 			// auto-resolve path. A failure degrades silently to the "—" render.
 			if (nonNullish(found)) {
+				// Only league battles in flight return a live score; flagging
+				// just those keeps the pulse off rows that resolve to "—" anyway.
+				liveScoreLoading = found.state === 'in_flight' && found.kind === 'league';
+
 				try {
 					liveScore = await readBattleLiveScore({ battle: found });
 				} catch (err) {
 					console.error('BattleDetailPage: live score read failed', err);
 					liveScore = null;
+				} finally {
+					liveScoreLoading = false;
 				}
 			}
 		} catch (err) {
@@ -241,6 +247,18 @@
 		nonNullish(battle) && battle.state === 'in_flight' && nonNullish(liveScore)
 	);
 
+	// The two leagues' results are being computed — either the live-score read
+	// is in flight, or the battle has settled and is finalizing. League-only:
+	// duels carry no live league standings, so they keep a steady "—" rather
+	// than pulsing through the finalizing window. Drives a pulse on the scores
+	// so the wait reads as "calculating", not a stalled "—".
+	const isCalculating = $derived(
+		nonNullish(battle) &&
+			battle.kind === 'league' &&
+			battle.state === 'in_flight' &&
+			(liveScoreLoading || isFinalizing)
+	);
+
 	// Score text for a side: the resolved doc score once resolved, the live
 	// projection while in flight, else the pre-resolve placeholder.
 	const scoreText = (side: 'A' | 'B'): string => {
@@ -291,22 +309,11 @@
 		return membershipByLeagueId.has(battle.sideB) ? battle.sideB : undefined;
 	});
 
+	// Resolution reads each side's accuracy from clearing settlement history,
+	// so it needs no kickoff baseline — a settled battle (legacy or not)
+	// resolves once a member of either side opens it past its settle time.
 	const canResolve = $derived(
-		battle?.state === 'in_flight' &&
-			nonNullish(resolverSide) &&
-			nonNullish(battle.baselineA) &&
-			nonNullish(battle.baselineB) &&
-			Date.now() >= battle.settleMs
-	);
-	// A legacy league battle accepted before baselines existed (#912): in
-	// flight but unscoreable. A member viewing it lazily restarts the window so
-	// it starts producing real standings instead of a frozen "—".
-	const needsRestart = $derived(
-		battle?.state === 'in_flight' &&
-			battle.kind === 'league' &&
-			nonNullish(resolverSide) &&
-			isNullish(battle.baselineA) &&
-			isNullish(battle.baselineB)
+		battle?.state === 'in_flight' && nonNullish(resolverSide) && Date.now() >= battle.settleMs
 	);
 	const canRetract = $derived(
 		battle?.state === 'proposed' && nonNullish(selfPrincipal) && battle.proposer === selfPrincipal
@@ -440,24 +447,6 @@
 		}
 	};
 
-	const handleRestart = async () => {
-		if (!battle || nonNullish(actingBattleId)) {
-			return;
-		}
-
-		const target = battle;
-		actingBattleId = target.id;
-
-		try {
-			await restartLegacyBattle({ battle: target });
-			await load();
-		} catch (err) {
-			console.error('BattleDetailPage: restartLegacyBattle failed', err);
-		} finally {
-			actingBattleId = null;
-		}
-	};
-
 	// Lazy auto-resolution: Juno has no scheduler, so a settled battle
 	// resolves the first time any member of either side opens it. The attempt
 	// counter guards against re-firing on every re-render while still letting
@@ -472,22 +461,6 @@
 		) {
 			autoResolveAttempts.set(battle.id, (autoResolveAttempts.get(battle.id) ?? 0) + 1);
 			void handleResolve('auto');
-		}
-	});
-
-	// Lazy auto-restart: a legacy baseline-less battle heals the first time a
-	// member opens it, on the same scheduler-free liveness model as resolve.
-	// Silent and capped identically; on success the reload shows the fresh
-	// window and real standings.
-	$effect(() => {
-		if (
-			needsRestart &&
-			nonNullish(battle) &&
-			isNullish(actingBattleId) &&
-			(autoRestartAttempts.get(battle.id) ?? 0) < MAX_AUTO_RESOLVE_ATTEMPTS
-		) {
-			autoRestartAttempts.set(battle.id, (autoRestartAttempts.get(battle.id) ?? 0) + 1);
-			void handleRestart();
 		}
 	});
 
@@ -556,7 +529,9 @@
 						{sideLabel(battle.sideA).charAt(0)}
 					</span>
 					<span class="battle-detail-team-name">{sideLabel(battle.sideA)}</span>
-					<span class="battle-detail-score num">{scoreText('A')}</span>
+					<span class="battle-detail-score num" class:is-calculating={isCalculating}>
+						{scoreText('A')}
+					</span>
 				</div>
 
 				<span class="battle-detail-vs serif-italic">vs</span>
@@ -570,7 +545,9 @@
 						{sideLabel(battle.sideB).charAt(0)}
 					</span>
 					<span class="battle-detail-team-name">{sideLabel(battle.sideB)}</span>
-					<span class="battle-detail-score num">{scoreText('B')}</span>
+					<span class="battle-detail-score num" class:is-calculating={isCalculating}>
+						{scoreText('B')}
+					</span>
 				</div>
 			</div>
 
@@ -837,6 +814,29 @@
 		font-size: var(--t-22, 1.4rem);
 		font-weight: 700;
 		color: var(--team-accent);
+	}
+
+	/* While the two leagues' results are being computed the score sits on a
+	   "—" placeholder; pulsing it reads as "calculating" rather than stalled. */
+	.battle-detail-score.is-calculating {
+		animation: battle-detail-score-pulse 1.2s ease-in-out infinite;
+	}
+
+	@keyframes battle-detail-score-pulse {
+		0%,
+		100% {
+			opacity: 0.3;
+		}
+		50% {
+			opacity: 1;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.battle-detail-score.is-calculating {
+			animation: none;
+			opacity: 0.6;
+		}
 	}
 
 	.battle-detail-vs {
