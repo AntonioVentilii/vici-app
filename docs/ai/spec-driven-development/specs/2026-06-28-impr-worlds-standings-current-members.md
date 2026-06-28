@@ -27,7 +27,7 @@ of which is already correct:
 - **All-time window — already roster-derived (PR #884).**
   `aggregateMembersLifetime` in
   [`cohort.services.ts`](../../../../src/satellite/services/cohort.services.ts)
-  sums each *current* member's profile lifetime (`totalTrades` +
+  sums each _current_ member's profile lifetime (`totalTrades` +
   derived wins from `winRate`) per affiliation. `listAffiliationStatsFn`
   and `getAffiliationStatsFn` read all-time from it. Leaving already
   subtracts your lifetime here. **It does not yet honor `worldsOptIn`.**
@@ -56,7 +56,7 @@ surfaces; the all-time window is already immune post-#884):
    monthly + frozen-snapshot credit forever.
 2. Sequentially pump A, leave; pump B, leave — every school retains
    the credit.
-3. `worldsOptIn` (see below) can only gate *future* contribution under
+3. `worldsOptIn` (see below) can only gate _future_ contribution under
    the current model; it cannot subtract the past.
 
 **The opt-out flag exists but is unenforced.** `worldsOptIn` lives on
@@ -72,7 +72,7 @@ opt-out, because the Worlds aggregation point is the only place that
 can apply it.
 
 **The reuse anchor that collapses the hard part.** The monthly podium
-cannot move to live recompute over *profiles*, because profiles store
+cannot move to live recompute over _profiles_, because profiles store
 only lifetime totals — no per-month deltas. But the repo already has a
 per-member-per-month store:
 [`USER_MONTHLY_STATS`](../../../../src/lib/types/user-monthly-stats.ts)
@@ -183,14 +183,15 @@ behaviour that drives a roster change.
 ## Technical requirements (satellite / backend — mandatory)
 
 **Performance.**
-- *Hook removal is a net win.* `onProfileSetForAffiliationStats` fires
+
+- _Hook removal is a net win._ `onProfileSetForAffiliationStats` fires
   on **every** profile write and today does one `AFFILIATION_STATS`-
   adjacent `listDocsStore(AFFILIATIONS)` scan + up to 2 `getDocStore`
-  + up to 4 `setDocStore` under the **update** instruction budget.
-  Deleting it removes that cost from the hot profile-write path.
-  `USER_MONTHLY_STATS` writes already happen independently in
-  `syncMyMonthlyStats`, so no write cost moves elsewhere.
-- *Reads move to query budget.* The new aggregator runs inside
+  - up to 4 `setDocStore` under the **update** instruction budget.
+    Deleting it removes that cost from the hot profile-write path.
+    `USER_MONTHLY_STATS` writes already happen independently in
+    `syncMyMonthlyStats`, so no write cost moves elsewhere.
+- _Reads move to query budget._ The new aggregator runs inside
   read-only `defineQuery` endpoints (IC query instruction ceiling,
   ~5B, far above the update ceiling). Cost per monthly leaderboard
   read: one `listDocsStore(AFFILIATIONS)` scan + one
@@ -203,18 +204,20 @@ behaviour that drives a roster change.
   per-member round-trip.
 
 **Memory & storage.**
-- *Net reduction.* No new collection. `USER_MONTHLY_STATS` already
-  exists and is already written; this spec only *reads* it. The
+
+- _Net reduction._ No new collection. `USER_MONTHLY_STATS` already
+  exists and is already written; this spec only _reads_ it. The
   `AFFILIATION_STATS` collection stops growing (no more rolling
   increments, no more monthly snapshot docs); its existing docs become
   dead data, reclaimed when the follow-up chore drops the collection.
-- *Growth.* `USER_MONTHLY_STATS` grows at one doc per active user per
+- _Growth._ `USER_MONTHLY_STATS` grows at one doc per active user per
   month they trade (`syncMyMonthlyStats` skips empty months). At 10k
   active monthly users that is ~10k docs/month; unchanged by this spec
   since the FE already writes them. Retention of old user-months ties
   to the closed-month-podium decision (see Pending decisions).
 
 **Scalability.**
+
 - The aggregators are O(roster) per kind: bounded by total affiliated
   members, not by markets. At 10×/100× membership the per-read cost
   scales linearly — identical to the already-shipped all-time path.
@@ -226,6 +229,7 @@ behaviour that drives a roster change.
   today). Note any such cap explicitly rather than silently sampling.
 
 **Upgrade & compatibility.**
+
 - **Bindings-neutral, non-breaking.** Every affected endpoint keeps
   its current request/response schema
   (`AffiliationStatsWireSchema` et al.) — only the handler's data
@@ -236,15 +240,16 @@ behaviour that drives a roster change.
   `satellite/index.ts` wiring (still a satellite wasm rebuild +
   `juno:functions:build` for the functions bundle, but no Candid
   surface change).
-- The deferred collection drop (Out of scope) *will* be a schema
+- The deferred collection drop (Out of scope) _will_ be a schema
   change in its follow-up PR.
 
 **Security.**
-- *Collection rules.* No rule changes. `assertSetAffiliationStats` is
+
+- _Collection rules._ No rule changes. `assertSetAffiliationStats` is
   deleted along with all writes to `AFFILIATION_STATS`.
   `assertSetUserMonthlyStats` (own-row, structural sanity) already
   governs the only collection now feeding the monthly window.
-- *New trust surface — the central risk.* The podium pays VXP
+- _New trust surface — the central risk._ The podium pays VXP
   (`VXP_WORLDS_PODIUM`). Moving the podium ranking onto
   `USER_MONTHLY_STATS` means an affiliation's monthly standing is
   derived from member-written docs. Those docs are derived from the
@@ -255,10 +260,10 @@ behaviour that drives a roster change.
   onto the podium and trigger payouts to its members. The pre-existing
   monthly path had the same root weakness (the hook trusted the
   profile's self-reported `totalTrades`/`winRate`), so this is not a
-  *new* class of trust, but it now gates a VXP payout more directly.
+  _new_ class of trust, but it now gates a VXP payout more directly.
   Mitigations available: the `MIN_CALLS_FOR_RANK` depth floor, the
   per-user `MONTHLY_MIN_CALLS` floor, and the bounded blast radius
-  (inflating helps the *affiliation*, which still must out-rank
+  (inflating helps the _affiliation_, which still must out-rank
   others by accuracy). Full server-side re-derivation from the
   `RESOLVED_RESULTS` collection is the heavier fix — captured as a
   Pending decision, not built here.
@@ -271,7 +276,7 @@ new tunables. The depth floor stays `MIN_CALLS_FOR_RANK`.
 1. In `cohort.services.ts`, add `aggregateMembersForMonth`:
    - `listDocsStore(USER_MONTHLY_STATS)`, filter keys ending
      `/${monthAnchor}`, decode to a `Map<owner, {monthCalls,
-     monthWins}>` (mirror `getMonthlyLeaderboardFn`'s suffix scan).
+monthWins}>` (mirror `getMonthlyLeaderboardFn`'s suffix scan).
    - `listDocsStore(AFFILIATIONS)`, filter to the kind (and optional
      `affiliationIdentifier`); for each member read their profile
      (`getDocStore(PROFILES, member)`), drop if
@@ -332,7 +337,7 @@ new tunables. The depth floor stays `MIN_CALLS_FOR_RANK`.
 
 ## Open questions
 
-- Does `USER_MONTHLY_STATS` have sufficient coverage for the *current*
+- Does `USER_MONTHLY_STATS` have sufficient coverage for the _current_
   closed-month podium claim window? `syncMyMonthlyStats` writes the
   current + prior month on every sync, so an honest user who syncs in
   the first days of month N+1 has month N populated. Confirm that the
@@ -343,7 +348,7 @@ new tunables. The depth floor stays `MIN_CALLS_FOR_RANK`.
 ## Pending decisions
 
 - **Closed-month ranking: fully live vs frozen-at-close.** Recomputing
-  a closed month over the *current* roster means its ranking can drift
+  a closed month over the _current_ roster means its ranking can drift
   after the month ends as members join/leave/opt-out, while podium
   award docs are write-once (no clawback) — so two claimers of the
   same month could receive placements computed against slightly
