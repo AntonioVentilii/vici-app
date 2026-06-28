@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.7](https://github.com/AntonioVentilii/vici-app/compare/v1.8.6...v1.8.7) (2026-06-28)
+
+
+### Features
+
+* **privacy:** enforce leaderboard & Worlds sharing opt-outs ([#1069](https://github.com/AntonioVentilii/vici-app/issues/1069)) ([f395535](https://github.com/AntonioVentilii/vici-app/commit/f3955358d163bfe35a1664b24b5ddb151ae12a22))
+
+
+### Tests
+
+* **e2e:** unblock the two deterministically-failing Playwright specs ([#1066](https://github.com/AntonioVentilii/vici-app/issues/1066)) ([d176116](https://github.com/AntonioVentilii/vici-app/commit/d176116daa777cb2f3ea38204a7128fae6ed4ba6))
+
 ## [1.8.6](https://github.com/AntonioVentilii/vici-app/compare/v1.8.5...v1.8.6) (2026-06-28)
 
 
