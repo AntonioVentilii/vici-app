@@ -202,6 +202,23 @@ behaviour that drives a roster change.
   (`aggregateMembersLifetime` already reads one profile per member);
   the monthly path adds a single collection scan, not an extra
   per-member round-trip.
+- _Podium claim runs the recompute under the **update** budget._
+  `claimWorldsPodiumPrize` is a `defineUpdate` (it pays the VXP
+  transfer) and derives top-3 via `listAffiliationStatsForMonthFn`,
+  which now calls `aggregateMembersForMonth` — so the two full scans +
+  per-member profile reads execute under the tighter **update**
+  instruction ceiling, not the query one, on every claim. This is a
+  per-user, once-per-month call (idempotent via the write-once award
+  doc), so absolute frequency is low, but the per-claim cost grows
+  linearly with the kind's roster. Note the top-3 check is inherently
+  whole-kind — verifying the caller's affiliation placed top-3 requires
+  ranking every affiliation, so it cannot be narrowed to the caller's
+  own roster. If it nears the budget the mitigation is to compute the
+  closed-month ranking once and read a cached result on the update
+  path: this is exactly the frozen-at-close option under Pending
+  decisions, so the cost concern and that decision resolve together —
+  fully-live keeps the whole-kind scan on every claim; frozen-at-close
+  pays it once. Capture which form ships in Implementation.
 
 **Memory & storage.**
 
@@ -275,15 +292,19 @@ new tunables. The depth floor stays `MIN_CALLS_FOR_RANK`.
 
 1. In `cohort.services.ts`, add `aggregateMembersForMonth`:
    - `listDocsStore(USER_MONTHLY_STATS)`, filter keys ending
-     `/${monthAnchor}`, decode to a `Map<owner, {monthCalls,
-monthWins}>` (mirror `getMonthlyLeaderboardFn`'s suffix scan).
+     `/${monthAnchor}`, decode to a `Map<owner, { monthCalls, monthWins }>`
+     using the per-owner field names from `UserMonthlyStatsDoc` (mirror
+     `getMonthlyLeaderboardFn`'s suffix scan).
    - `listDocsStore(AFFILIATIONS)`, filter to the kind (and optional
      `affiliationIdentifier`); for each member read their profile
      (`getDocStore(PROFILES, member)`), drop if
-     `preferences.sharing.worldsOptIn === false`, else add their
-     month bucket into the affiliation's `{totalCalls, wins}` (named
-     to match the monthly accessors).
-   - Return `Map<affiliationIdentifier, {monthCalls, monthWins}>`.
+     `preferences.sharing.worldsOptIn === false`, else fold their
+     per-owner `monthCalls` / `monthWins` into the affiliation's
+     accumulator. The accumulator uses the `AffiliationStatsDoc`
+     monthly field names — `{ monthTotalCalls, monthWins }` — so the
+     re-sourcing in step 3 maps straight onto the doc's monthly column
+     (`monthCalls → monthTotalCalls`, `monthWins → monthWins`).
+   - Return `Map<affiliationIdentifier, { monthTotalCalls, monthWins }>`.
 2. Add the same `worldsOptIn` profile check inside
    `aggregateMembersLifetime` (one decoded field on the profile it
    already reads — no extra read).
