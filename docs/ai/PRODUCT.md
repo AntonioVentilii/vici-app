@@ -603,6 +603,22 @@ flow emits the `onboarding_completed` analytics event with the finishing
 provider and whether a team was persisted. Decision record:
 [`specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md`](./spec-driven-development/specs/2026-06-18-fix-onboarding-picks-persist-across-providers.md).
 
+### Onboarding — in-flow gesture coach
+
+The first time an early user meets the prediction card on the Flow deck, a
+non-blocking gesture map overlays the live card: a centered cross showing
+YES (right) / NO (left) / SKIP (up) / tap (detail), with YES-NO weighted as
+the primary actions. It does not hijack the card — the card underneath stays
+fully readable and swipeable, and only the "Got it" opt-out captures pointer
+events. The coach teaches by doing: it dismisses on the user's first real
+call (a committed YES or NO) with a brief confirmation, or immediately via
+the "Got it" opt-out. It is shown at most once per device
+(`vici.coach-flow-seen`), identity-scoped like the other onboarding flags so
+a new account on the device re-sees it. This is layer 1 of the first-run
+tutorial system, distinct from the layer-2 surface tips below. Decision
+record:
+[`specs/2026-06-28-impr-flow-coach-learn-by-doing.md`](./spec-driven-development/specs/2026-06-28-impr-flow-coach-learn-by-doing.md).
+
 ### Onboarding — first-visit surface tips
 
 The first time an early user lands on Dash, Arena, or Profile, a single

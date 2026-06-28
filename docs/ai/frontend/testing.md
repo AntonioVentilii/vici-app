@@ -154,14 +154,26 @@ pre-deployed.
   the Internet Identity popup, which is brittle in a containerized
   emulator (the II canister version drifts vs. driver libraries). A
   follow-up PR can add real II coverage on top of this base if needed.
-- **New-user flow:** a fresh dev principal has no profile, so signing in
-  routes through the `/signup` onboarding beats (team → first-call swipe →
-  handle → auth) before the app shell. `HomePage.signInAsDevUser()` drives
-  that end-to-end; the signed-in surface lives at `/flow`, and the markets
-  board at `/app` (`AppPath.Home`). The signed-in account control carries
-  `data-tid="user-menu"` on both the desktop nav handle and the mobile
-  pillnav profile tab, so `[data-tid="user-menu"]:visible` resolves to one
-  control per viewport.
+- **New-user flow:** signing in with no profile routes through the
+  `/signup` onboarding (handle → auth) before the app shell.
+  `HomePage.signInAsDevUser()` drives that end-to-end; the signed-in surface
+  lives at `/flow`, and the markets board at `/app` (`AppPath.Home`). The
+  signed-in account control carries `data-tid="user-menu"` on both the
+  desktop nav handle and the mobile pillnav profile tab, so
+  `[data-tid="user-menu"]:visible` resolves to one control per viewport.
+- **The dev principal is shared, not fresh per spec.** `signIn({ dev: {} })`
+  resolves to ONE principal for the whole CI run (it changes only on a fresh
+  emulator boot), and the suite is serial against a never-reset satellite. So
+  the FIRST `signInAsDevUser` already bootstraps a profile for that principal
+  — and because the empty handle field auto-claims its pool suggestion, that
+  first sign-in also COMPLETES onboarding for it. Every later spec therefore
+  sees a fully-onboarded **returning** user, not a new one. A spec that needs
+  the genuine new-user path must restore the pristine state itself: sign in,
+  call `HomePage.resetDevProfile()` (the dev-only `window.__viciE2E`
+  hard-delete hook installed by the `(app)` layout, see
+  [`src/lib/dev/e2e-reset.ts`](../../../src/lib/dev/e2e-reset.ts)), then sign
+  out — the next sign-in then bootstraps fresh. `onboarding.spec.ts` does
+  exactly this.
 - **Backend:** Juno emulator started by `juno emulator start --headless`.
   The Juno CLI's `--emulator` flag is only valid with `--mode development`,
   so E2E reuses development mode but exports `JUNO_EMULATOR=true`, which
