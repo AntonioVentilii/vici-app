@@ -165,6 +165,7 @@ export interface AppGetAnalyticsEventsResult {
 		series_id: [] | [string];
 		name:
 			| { delete_confirmed: null }
+			| { privacy_sharing_toggled: null }
 			| { school_picked: null }
 			| { battle_viewed: null }
 			| { transactions_viewed: null }
@@ -256,6 +257,7 @@ export interface AppGetAnalyticsSummaryResult {
 		day: number;
 		name:
 			| { delete_confirmed: null }
+			| { privacy_sharing_toggled: null }
 			| { school_picked: null }
 			| { battle_viewed: null }
 			| { transactions_viewed: null }
@@ -1145,6 +1147,7 @@ export interface AppTrackEventsArgs {
 		series_id: [] | [string];
 		name:
 			| { delete_confirmed: null }
+			| { privacy_sharing_toggled: null }
 			| { school_picked: null }
 			| { battle_viewed: null }
 			| { transactions_viewed: null }

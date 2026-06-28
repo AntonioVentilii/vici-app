@@ -207,10 +207,19 @@ export const globalStandingsRows = (
 					selfProfile: profile
 				});
 
-			// Copy before partitioning — never mutate the cached slice in place.
-			const entries = [...result.entries];
-			const qualified = entries.filter((entry) => entry.settledCount >= $qualifyMin);
-			const provisional = entries.filter((entry) => entry.settledCount < $qualifyMin);
+			// Honor the "Show on global leaderboard" opt-out: a predictor who
+			// turned it off vanishes from everyone else's board (ranks below
+			// them compress with no gap), but the viewer always keeps their own
+			// row and rank — `ownGlobalStanding` reads the same self-inclusive
+			// slice, so the two surfaces never disagree. Nullish (legacy rows /
+			// default) reads as opted-in, matching the always-shown default.
+			const visible = [...result.entries].filter(
+				(entry) =>
+					entry.owner === selfOwner ||
+					$profiles.get(entry.owner)?.preferences.sharing.leaderboardOptIn !== false
+			);
+			const qualified = visible.filter((entry) => entry.settledCount >= $qualifyMin);
+			const provisional = visible.filter((entry) => entry.settledCount < $qualifyMin);
 
 			return {
 				// 1-based position in the shrinkage order, not the canister rank.

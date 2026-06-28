@@ -240,6 +240,16 @@ export const onProfileSetForAffiliationStats = (ctx: OnSetDocContext): void => {
 		return;
 	}
 
+	// Honor the "Show in Worlds Universities" opt-out. A user who turned it
+	// off stops contributing their resolved-trade delta to their school /
+	// country aggregate. Nullish (legacy rows / default) reads as opted-in,
+	// matching the always-shown default. This gates FUTURE contribution only —
+	// `AFFILIATION_STATS` is a forward-only aggregate with no per-member
+	// breakdown, so a past contribution can't be subtracted here.
+	if (afterProfile.preferences?.sharing?.worldsOptIn === false) {
+		return;
+	}
+
 	const beforeTrades = beforeProfile.totalTrades ?? 0;
 	const afterTrades = afterProfile.totalTrades ?? 0;
 	const deltaTrades = afterTrades - beforeTrades;

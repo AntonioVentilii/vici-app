@@ -366,6 +366,33 @@ showed the satellite points rank, which could read a phantom #1). Decision
 record:
 [`specs/2026-06-25-impr-leaderboard-integrity.md`](./spec-driven-development/specs/2026-06-25-impr-leaderboard-integrity.md).
 
+### Privacy — leaderboard & Worlds sharing opt-outs
+
+Two Settings → Privacy toggles let a user remove themselves from public
+ranking surfaces. Both default **on** (legacy / unset reads as on).
+
+- **Show on global leaderboard** off → the user is dropped from the
+  ranked and provisional lists **other people** see; ranks below them
+  compress with no gap. They keep their own rank: their `You` row and
+  the Arena "Global ranking" card (`ownGlobalStanding`) still resolve,
+  and their top-decile achievement (a separate satellite points-rank
+  path) is unaffected. Enforced FE-side in `globalStandingsRows` — the
+  clearing canister still publishes raw P&L + principals, so this is a
+  display opt-out, not a data-hiding guarantee (canister-level hiding is
+  a tracked fast-follow).
+- **Show in Worlds Universities** off → the user's resolved-trade delta
+  stops counting toward their school / country aggregate. Enforced in
+  the `onProfileSetForAffiliationStats` hook. `AFFILIATION_STATS` is a
+  forward-only aggregate with no per-member breakdown, so this gates
+  **future** contribution only; a past contribution already folded into
+  the total cannot be subtracted (the same reason a member who leaves
+  keeps their contribution credited — a known limitation tracked
+  separately).
+
+Each toggle emits `privacy_sharing_toggled` (`source: leaderboard |
+worlds`, `label: on | off`). Decision record:
+[`specs/2026-06-28-feat-sharing-opt-out-enforcement.md`](./spec-driven-development/specs/2026-06-28-feat-sharing-opt-out-enforcement.md).
+
 ### Battles — accuracy face-offs that resolve themselves
 
 A **battle** is a time-bound accuracy face-off between two leagues. A
