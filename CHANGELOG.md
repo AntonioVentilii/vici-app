@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.8.6](https://github.com/AntonioVentilii/vici-app/compare/v1.8.5...v1.8.6) (2026-06-28)
+
+
+### Features
+
+* **arena:** pulse battle scores while results compute ([#1061](https://github.com/AntonioVentilii/vici-app/issues/1061)) ([c7696db](https://github.com/AntonioVentilii/vici-app/commit/c7696db45c274a168ed22a263a2ad9dd3a8391f0))
+* **onboarding:** redesign the in-flow gesture coach to dismiss on first call ([#1059](https://github.com/AntonioVentilii/vici-app/issues/1059)) ([b95374a](https://github.com/AntonioVentilii/vici-app/commit/b95374adeb244dd9100b06eefff1e672eb9013af))
+
+
+### Bug Fixes
+
+* **arena:** return to the originating tab when leaving a battle ([#1062](https://github.com/AntonioVentilii/vici-app/issues/1062)) ([5889d35](https://github.com/AntonioVentilii/vici-app/commit/5889d355ac79b47389e4e0a5142993d68ddc74c7))
+* **wc:** reveal knockout-stage markets hidden by the release calendar ([#1064](https://github.com/AntonioVentilii/vici-app/issues/1064)) ([17b592d](https://github.com/AntonioVentilii/vici-app/commit/17b592d68e5ac40eccf5c1cdbc42f25484c8b136))
+
 ## [1.8.5](https://github.com/AntonioVentilii/vici-app/compare/v1.8.4...v1.8.5) (2026-06-27)
 
 

@@ -1,9 +1,9 @@
 {
 	"name": "vici-app",
-	"version": "1.8.5",
+	"version": "1.8.6",
 	"juno": {
 		"functions": {
-			"version": "1.8.5"
+			"version": "1.8.6"
 		}
 	},
 	"private": true,
