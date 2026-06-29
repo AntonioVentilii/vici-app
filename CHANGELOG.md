@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.8](https://github.com/AntonioVentilii/vici-app/compare/v1.8.7...v1.8.8) (2026-06-29)
+
+
+### Features
+
+* **wc:** add R32 market deck with 7-locale translations ([#1071](https://github.com/AntonioVentilii/vici-app/issues/1071)) ([cb79ed0](https://github.com/AntonioVentilii/vici-app/commit/cb79ed02b047e3284c505a8d8f6258b0496680bd))
+* **wc:** schedule R32 market releases ([#1072](https://github.com/AntonioVentilii/vici-app/issues/1072)) ([22f4f3f](https://github.com/AntonioVentilii/vici-app/commit/22f4f3f7180227bbb8da82cadc88e813ce9fcff2))
+
 ## [1.8.7](https://github.com/AntonioVentilii/vici-app/compare/v1.8.6...v1.8.7) (2026-06-28)
 
 
