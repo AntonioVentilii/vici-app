@@ -7,6 +7,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.34,
 		"translations": {
 			"it": {
 				"title": "Vinícius Júnior segnerà contro il Giappone?",
@@ -53,6 +54,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.26,
 		"translations": {
 			"it": {
 				"title": "Quattro o più partite del turno dei 32 verranno decise ai calci di rigore?",
@@ -99,6 +101,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Jamal Musiala segnerà o servirà un assist contro il Paraguay?",
@@ -145,6 +148,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.18,
 		"translations": {
 			"it": {
 				"title": "Una squadra vincerà una partita del turno dei 32 dopo essere stata sotto di due o più gol?",
@@ -191,6 +195,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.3,
 		"translations": {
 			"it": {
 				"title": "Cody Gakpo segnerà contro il Marocco?",
@@ -237,6 +242,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Cinque o più partite del turno dei 32 saranno vinte dalla squadra peggio classificata?",
@@ -283,6 +289,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.31,
 		"translations": {
 			"it": {
 				"title": "Paesi Bassi–Marocco andrà ai tempi supplementari o ai rigori?",
@@ -329,6 +336,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.34,
 		"translations": {
 			"it": {
 				"title": "Un giocatore di diciannove anni o meno segnerà nel turno dei 32?",
@@ -375,6 +383,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.46,
 		"translations": {
 			"it": {
 				"title": "I Paesi Bassi batteranno il Marocco nei tempi regolamentari?",
@@ -421,6 +430,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.51,
 		"translations": {
 			"it": {
 				"title": "Il turno dei 32 avrà una media di più di due gol e mezzo a partita?",
@@ -467,6 +477,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Brasile–Giappone produrrà più gol del primo?",
@@ -513,6 +524,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.56,
 		"translations": {
 			"it": {
 				"title": "In Germania–Paraguay verranno segnati più di due gol e mezzo?",
@@ -559,6 +571,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.49,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Brasile–Giappone?",
@@ -605,6 +618,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.44,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Germania–Paraguay produrrà più gol del primo?",
@@ -651,6 +665,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.53,
 		"translations": {
 			"it": {
 				"title": "In Brasile–Giappone verranno segnati più di due gol e mezzo?",
@@ -697,6 +712,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.55,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Germania–Paraguay?",
@@ -743,6 +759,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.41,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Brasile–Giappone?",
@@ -789,6 +806,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.29,
 		"translations": {
 			"it": {
 				"title": "Kai Havertz segnerà contro il Paraguay?",
@@ -835,6 +853,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.47,
 		"translations": {
 			"it": {
 				"title": "In Paesi Bassi–Marocco verranno segnati più di due gol e mezzo?",
@@ -881,6 +900,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.38,
 		"translations": {
 			"it": {
 				"title": "Raphinha segnerà o servirà un assist contro il Giappone?",
@@ -927,6 +947,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Germania–Paraguay?",
@@ -973,6 +994,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Paesi Bassi–Marocco sarà decisa da un solo gol?",
@@ -1019,6 +1041,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.6,
 		"translations": {
 			"it": {
 				"title": "Il Brasile batterà il Giappone nei tempi regolamentari?",
@@ -1065,6 +1088,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.44,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Paesi Bassi–Marocco?",
@@ -1111,6 +1135,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.63,
 		"translations": {
 			"it": {
 				"title": "La Germania batterà il Paraguay nei tempi regolamentari?",
@@ -1157,6 +1182,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Paesi Bassi–Marocco produrrà più gol del primo?",
@@ -1203,6 +1229,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.39,
 		"translations": {
 			"it": {
 				"title": "Brasile–Giappone sarà decisa da un solo gol?",
@@ -1249,6 +1276,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.63,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Paesi Bassi–Marocco?",
@@ -1295,6 +1323,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Brasile–Giappone?",
@@ -1341,6 +1370,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Paesi Bassi–Marocco?",
@@ -1387,6 +1417,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.28,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Brasile–Giappone?",
@@ -1433,6 +1464,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.37,
 		"translations": {
 			"it": {
 				"title": "Memphis Depay segnerà o servirà un assist contro il Marocco?",
@@ -1479,6 +1511,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.28,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Brasile–Giappone?",
@@ -1525,6 +1558,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.36,
 		"translations": {
 			"it": {
 				"title": "Germania–Paraguay sarà decisa da un solo gol?",
@@ -1571,6 +1605,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.19,
 		"translations": {
 			"it": {
 				"title": "Kaoru Mitoma segnerà contro il Brasile?",
@@ -1617,6 +1652,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.39,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Germania–Paraguay?",
@@ -1663,6 +1699,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.25,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Paesi Bassi–Marocco?",
@@ -1709,6 +1746,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.31,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Germania–Paraguay?",
@@ -1755,6 +1793,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.25,
 		"translations": {
 			"it": {
 				"title": "Youssef En-Nesyri segnerà contro i Paesi Bassi?",
@@ -1801,6 +1840,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.27,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Germania–Paraguay?",
@@ -1847,6 +1887,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.34,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Paesi Bassi–Marocco?",
@@ -1893,6 +1934,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.18,
 		"translations": {
 			"it": {
 				"title": "Julio Enciso segnerà contro la Germania?",
@@ -1939,6 +1981,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Kylian Mbappé segnerà contro la Svezia?",
@@ -1985,6 +2028,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.33,
 		"translations": {
 			"it": {
 				"title": "Costa d'Avorio–Norvegia andrà ai tempi supplementari o ai rigori?",
@@ -2031,6 +2075,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.29,
 		"translations": {
 			"it": {
 				"title": "Alexander Isak segnerà contro la Francia?",
@@ -2077,6 +2122,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.34,
 		"translations": {
 			"it": {
 				"title": "Messico–Ecuador andrà ai tempi supplementari o ai rigori?",
@@ -2123,6 +2169,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Erling Haaland segnerà contro la Costa d'Avorio?",
@@ -2169,6 +2216,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.55,
 		"translations": {
 			"it": {
 				"title": "In Francia–Svezia verranno segnati più di due gol e mezzo?",
@@ -2215,6 +2263,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.46,
 		"translations": {
 			"it": {
 				"title": "La Norvegia batterà la Costa d'Avorio nei tempi regolamentari?",
@@ -2261,6 +2310,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Francia–Svezia produrrà più gol del primo?",
@@ -2307,6 +2357,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Il Messico batterà l'Ecuador nei tempi regolamentari?",
@@ -2353,6 +2404,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.52,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Francia–Svezia?",
@@ -2399,6 +2451,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.52,
 		"translations": {
 			"it": {
 				"title": "In Costa d'Avorio–Norvegia verranno segnati più di due gol e mezzo?",
@@ -2445,6 +2498,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.41,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Francia–Svezia?",
@@ -2491,6 +2545,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Costa d'Avorio–Norvegia sarà decisa da un solo gol?",
@@ -2537,6 +2592,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Ousmane Dembélé segnerà o servirà un assist contro la Svezia?",
@@ -2583,6 +2639,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.45,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Costa d'Avorio–Norvegia?",
@@ -2629,6 +2686,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.49,
 		"translations": {
 			"it": {
 				"title": "In Messico–Ecuador verranno segnati più di due gol e mezzo?",
@@ -2675,6 +2733,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Costa d'Avorio–Norvegia produrrà più gol del primo?",
@@ -2721,6 +2780,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Messico–Ecuador sarà decisa da un solo gol?",
@@ -2767,6 +2827,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.56,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Costa d'Avorio–Norvegia?",
@@ -2813,6 +2874,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.46,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Messico–Ecuador?",
@@ -2859,6 +2921,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Costa d'Avorio–Norvegia?",
@@ -2905,6 +2968,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Messico–Ecuador produrrà più gol del primo?",
@@ -2951,6 +3015,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.39,
 		"translations": {
 			"it": {
 				"title": "Martin Ødegaard segnerà o servirà un assist contro la Costa d'Avorio?",
@@ -2997,6 +3062,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.62,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Messico–Ecuador?",
@@ -3043,6 +3109,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.38,
 		"translations": {
 			"it": {
 				"title": "Francia–Svezia sarà decisa da un solo gol?",
@@ -3089,6 +3156,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Messico–Ecuador?",
@@ -3135,6 +3203,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.38,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Francia–Svezia?",
@@ -3181,6 +3250,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.3,
 		"translations": {
 			"it": {
 				"title": "Santiago Giménez segnerà contro l'Ecuador?",
@@ -3227,6 +3297,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.28,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Francia–Svezia?",
@@ -3273,6 +3344,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.34,
 		"translations": {
 			"it": {
 				"title": "Hirving Lozano segnerà o servirà un assist contro l'Ecuador?",
@@ -3319,6 +3391,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.3,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Francia–Svezia?",
@@ -3365,6 +3438,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.24,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Costa d'Avorio–Norvegia?",
@@ -3411,6 +3485,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.29,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Messico–Ecuador?",
@@ -3457,6 +3532,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.27,
 		"translations": {
 			"it": {
 				"title": "Sébastien Haller segnerà contro la Norvegia?",
@@ -3503,6 +3579,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.24,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Messico–Ecuador?",
@@ -3549,6 +3626,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.33,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Costa d'Avorio–Norvegia?",
@@ -3595,6 +3673,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.25,
 		"translations": {
 			"it": {
 				"title": "Enner Valencia segnerà contro il Messico?",
@@ -3641,6 +3720,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Harry Kane segnerà contro la RD Congo?",
@@ -3687,6 +3767,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.3,
 		"translations": {
 			"it": {
 				"title": "Stati Uniti–Bosnia ed Erzegovina andrà ai tempi supplementari o ai rigori?",
@@ -3733,6 +3814,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.41,
 		"translations": {
 			"it": {
 				"title": "Jude Bellingham segnerà o servirà un assist contro la RD Congo?",
@@ -3779,6 +3861,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.49,
 		"translations": {
 			"it": {
 				"title": "Il Belgio batterà il Senegal nei tempi regolamentari?",
@@ -3825,6 +3908,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.56,
 		"translations": {
 			"it": {
 				"title": "In Inghilterra–RD Congo verranno segnati più di due gol e mezzo?",
@@ -3871,6 +3955,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.38,
 		"translations": {
 			"it": {
 				"title": "Kevin De Bruyne segnerà o servirà un assist contro il Senegal?",
@@ -3917,6 +4002,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.44,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Inghilterra–RD Congo produrrà più gol del primo?",
@@ -3963,6 +4049,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.24,
 		"translations": {
 			"it": {
 				"title": "Sadio Mané segnerà contro il Belgio?",
@@ -4009,6 +4096,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.52,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Inghilterra–RD Congo?",
@@ -4055,6 +4143,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.5,
 		"translations": {
 			"it": {
 				"title": "Gli Stati Uniti batteranno la Bosnia ed Erzegovina nei tempi regolamentari?",
@@ -4101,6 +4190,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Inghilterra–RD Congo?",
@@ -4147,6 +4237,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.28,
 		"translations": {
 			"it": {
 				"title": "Belgio–Senegal andrà ai tempi supplementari o ai rigori?",
@@ -4193,6 +4284,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.5,
 		"translations": {
 			"it": {
 				"title": "In Stati Uniti–Bosnia ed Erzegovina verranno segnati più di due gol e mezzo?",
@@ -4239,6 +4331,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Belgio–Senegal?",
@@ -4285,6 +4378,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Stati Uniti–Bosnia ed Erzegovina sarà decisa da un solo gol?",
@@ -4331,6 +4425,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.49,
 		"translations": {
 			"it": {
 				"title": "In Belgio–Senegal verranno segnati più di due gol e mezzo?",
@@ -4377,6 +4472,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.44,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Stati Uniti–Bosnia ed Erzegovina?",
@@ -4423,6 +4519,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Belgio–Senegal produrrà più gol del primo?",
@@ -4469,6 +4566,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.54,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Stati Uniti–Bosnia ed Erzegovina?",
@@ -4515,6 +4613,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Belgio–Senegal?",
@@ -4561,6 +4660,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Stati Uniti–Bosnia ed Erzegovina produrrà più gol del primo?",
@@ -4607,6 +4707,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.57,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Belgio–Senegal?",
@@ -4653,6 +4754,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Stati Uniti–Bosnia ed Erzegovina?",
@@ -4699,6 +4801,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.31,
 		"translations": {
 			"it": {
 				"title": "Romelu Lukaku segnerà contro il Senegal?",
@@ -4745,6 +4848,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.35,
 		"translations": {
 			"it": {
 				"title": "Inghilterra–RD Congo sarà decisa da un solo gol?",
@@ -4791,6 +4895,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Christian Pulisic segnerà o servirà un assist contro la Bosnia ed Erzegovina?",
@@ -4837,6 +4942,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.39,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Inghilterra–RD Congo?",
@@ -4883,6 +4989,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.31,
 		"translations": {
 			"it": {
 				"title": "Folarin Balogun segnerà contro la Bosnia ed Erzegovina?",
@@ -4929,6 +5036,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.27,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Inghilterra–RD Congo?",
@@ -4975,6 +5083,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Belgio–Senegal sarà decisa da un solo gol?",
@@ -5021,6 +5130,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.34,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Inghilterra–RD Congo?",
@@ -5067,6 +5177,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.26,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Belgio–Senegal?",
@@ -5113,6 +5224,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.18,
 		"translations": {
 			"it": {
 				"title": "Yoane Wissa segnerà contro l'Inghilterra?",
@@ -5159,6 +5271,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.31,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Belgio–Senegal?",
@@ -5205,6 +5318,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.66,
 		"translations": {
 			"it": {
 				"title": "L'Inghilterra batterà la RD Congo nei tempi regolamentari?",
@@ -5251,6 +5365,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.25,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Stati Uniti–Bosnia ed Erzegovina?",
@@ -5297,6 +5412,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.3,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Stati Uniti–Bosnia ed Erzegovina?",
@@ -5343,6 +5459,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.2,
 		"translations": {
 			"it": {
 				"title": "Edin Džeko segnerà contro gli Stati Uniti?",
@@ -5389,6 +5506,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Lamine Yamal segnerà o servirà un assist contro l'Austria?",
@@ -5435,6 +5553,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.49,
 		"translations": {
 			"it": {
 				"title": "Il Portogallo batterà la Croazia nei tempi regolamentari?",
@@ -5481,6 +5600,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.34,
 		"translations": {
 			"it": {
 				"title": "Svizzera–Algeria andrà ai tempi supplementari o ai rigori?",
@@ -5527,6 +5647,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.31,
 		"translations": {
 			"it": {
 				"title": "Cristiano Ronaldo segnerà contro la Croazia?",
@@ -5573,6 +5694,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.53,
 		"translations": {
 			"it": {
 				"title": "In Spagna–Austria verranno segnati più di due gol e mezzo?",
@@ -5619,6 +5741,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.32,
 		"translations": {
 			"it": {
 				"title": "Portogallo–Croazia andrà ai tempi supplementari o ai rigori?",
@@ -5665,6 +5788,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Spagna–Austria produrrà più gol del primo?",
@@ -5711,6 +5835,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.46,
 		"translations": {
 			"it": {
 				"title": "In Portogallo–Croazia verranno segnati più di due gol e mezzo?",
@@ -5757,6 +5882,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.5,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Spagna–Austria?",
@@ -5803,6 +5929,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Portogallo–Croazia sarà decisa da un solo gol?",
@@ -5849,6 +5976,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.41,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Spagna–Austria?",
@@ -5895,6 +6023,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.45,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Portogallo–Croazia?",
@@ -5941,6 +6070,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.32,
 		"translations": {
 			"it": {
 				"title": "Álvaro Morata segnerà contro l'Austria?",
@@ -5987,6 +6117,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Portogallo–Croazia produrrà più gol del primo?",
@@ -6033,6 +6164,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.45,
 		"translations": {
 			"it": {
 				"title": "La Svizzera batterà l'Algeria nei tempi regolamentari?",
@@ -6079,6 +6211,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.6,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Portogallo–Croazia?",
@@ -6125,6 +6258,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.61,
 		"translations": {
 			"it": {
 				"title": "La Spagna batterà l'Austria nei tempi regolamentari?",
@@ -6171,6 +6305,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Portogallo–Croazia?",
@@ -6217,6 +6352,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.48,
 		"translations": {
 			"it": {
 				"title": "In Svizzera–Algeria verranno segnati più di due gol e mezzo?",
@@ -6263,6 +6399,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.38,
 		"translations": {
 			"it": {
 				"title": "Bruno Fernandes segnerà o servirà un assist contro la Croazia?",
@@ -6309,6 +6446,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Svizzera–Algeria sarà decisa da un solo gol?",
@@ -6355,6 +6493,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.39,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Spagna–Austria?",
@@ -6401,6 +6540,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Svizzera–Algeria produrrà più gol del primo?",
@@ -6447,6 +6587,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.37,
 		"translations": {
 			"it": {
 				"title": "Spagna–Austria sarà decisa da un solo gol?",
@@ -6493,6 +6634,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.46,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Svizzera–Algeria?",
@@ -6539,6 +6681,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.28,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Spagna–Austria?",
@@ -6585,6 +6728,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.58,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Svizzera–Algeria?",
@@ -6631,6 +6775,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.3,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Spagna–Austria?",
@@ -6677,6 +6822,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Svizzera–Algeria?",
@@ -6723,6 +6869,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.19,
 		"translations": {
 			"it": {
 				"title": "Marko Arnautović segnerà contro la Spagna?",
@@ -6769,6 +6916,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.27,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Portogallo–Croazia?",
@@ -6815,6 +6963,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.29,
 		"translations": {
 			"it": {
 				"title": "Breel Embolo segnerà contro l'Algeria?",
@@ -6861,6 +7010,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.32,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Portogallo–Croazia?",
@@ -6907,6 +7057,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.27,
 		"translations": {
 			"it": {
 				"title": "Granit Xhaka segnerà o servirà un assist contro l'Algeria?",
@@ -6953,6 +7104,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.38,
 		"translations": {
 			"it": {
 				"title": "Andrej Kramarić segnerà contro il Portogallo?",
@@ -6999,6 +7151,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.25,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Svizzera–Algeria?",
@@ -7045,6 +7198,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.31,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Svizzera–Algeria?",
@@ -7091,6 +7245,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.24,
 		"translations": {
 			"it": {
 				"title": "Riyad Mahrez segnerà contro la Svizzera?",
@@ -7137,6 +7292,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.52,
 		"translations": {
 			"it": {
 				"title": "Lionel Messi segnerà o servirà un assist contro Capo Verde?",
@@ -7183,6 +7339,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.35,
 		"translations": {
 			"it": {
 				"title": "Australia–Egitto andrà ai tempi supplementari o ai rigori?",
@@ -7229,6 +7386,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.29,
 		"translations": {
 			"it": {
 				"title": "Luis Díaz segnerà contro il Ghana?",
@@ -7275,6 +7433,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.44,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Argentina–Capo Verde produrrà più gol del primo?",
@@ -7321,6 +7480,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Mohamed Salah segnerà contro l'Australia?",
@@ -7367,6 +7527,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.31,
 		"translations": {
 			"it": {
 				"title": "Colombia–Ghana andrà ai tempi supplementari o ai rigori?",
@@ -7413,6 +7574,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.49,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Argentina–Capo Verde?",
@@ -7459,6 +7621,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.49,
 		"translations": {
 			"it": {
 				"title": "La Colombia batterà il Ghana nei tempi regolamentari?",
@@ -7505,6 +7668,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.43,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Argentina–Capo Verde?",
@@ -7551,6 +7715,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.49,
 		"translations": {
 			"it": {
 				"title": "In Australia–Egitto verranno segnati più di due gol e mezzo?",
@@ -7597,6 +7762,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.33,
 		"translations": {
 			"it": {
 				"title": "Julián Álvarez segnerà contro Capo Verde?",
@@ -7643,6 +7809,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.44,
 		"translations": {
 			"it": {
 				"title": "Australia–Egitto sarà decisa da un solo gol?",
@@ -7689,6 +7856,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.32,
 		"translations": {
 			"it": {
 				"title": "Lautaro Martínez segnerà contro Capo Verde?",
@@ -7735,6 +7903,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.47,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Australia–Egitto?",
@@ -7781,6 +7950,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.5,
 		"translations": {
 			"it": {
 				"title": "In Colombia–Ghana verranno segnati più di due gol e mezzo?",
@@ -7827,6 +7997,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Australia–Egitto produrrà più gol del primo?",
@@ -7873,6 +8044,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Colombia–Ghana sarà decisa da un solo gol?",
@@ -7919,6 +8091,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.56,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Australia–Egitto?",
@@ -7965,6 +8138,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.45,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Colombia–Ghana?",
@@ -8011,6 +8185,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Australia–Egitto?",
@@ -8057,6 +8232,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "Il secondo tempo di Colombia–Ghana produrrà più gol del primo?",
@@ -8103,6 +8279,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.38,
 		"translations": {
 			"it": {
 				"title": "Omar Marmoush segnerà o servirà un assist contro l'Australia?",
@@ -8149,6 +8326,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.58,
 		"translations": {
 			"it": {
 				"title": "Verranno mostrati tre o più cartellini gialli in Colombia–Ghana?",
@@ -8195,6 +8373,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.42,
 		"translations": {
 			"it": {
 				"title": "L'Egitto batterà l'Australia nei tempi regolamentari?",
@@ -8241,6 +8420,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.4,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol all'ottantesimo minuto o dopo in Colombia–Ghana?",
@@ -8287,6 +8467,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.57,
 		"translations": {
 			"it": {
 				"title": "In Argentina–Capo Verde verranno segnati più di due gol e mezzo?",
@@ -8333,6 +8514,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.28,
 		"translations": {
 			"it": {
 				"title": "James Rodríguez segnerà o servirà un assist contro il Ghana?",
@@ -8379,6 +8561,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.28,
 		"translations": {
 			"it": {
 				"title": "Argentina–Capo Verde sarà decisa da un solo gol?",
@@ -8425,6 +8608,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.24,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Australia–Egitto?",
@@ -8471,6 +8655,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.29,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Argentina–Capo Verde?",
@@ -8517,6 +8702,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.2,
 		"translations": {
 			"it": {
 				"title": "Mitchell Duke segnerà contro l'Egitto?",
@@ -8563,6 +8749,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.28,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Argentina–Capo Verde?",
@@ -8609,6 +8796,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.32,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Australia–Egitto?",
@@ -8655,6 +8843,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.26,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol da fuori area in Colombia–Ghana?",
@@ -8701,6 +8890,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.34,
 		"translations": {
 			"it": {
 				"title": "Il punteggio sarà in parità all'intervallo in Argentina–Capo Verde?",
@@ -8747,6 +8937,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.31,
 		"translations": {
 			"it": {
 				"title": "Verrà segnato un gol di testa in Colombia–Ghana?",
@@ -8793,6 +8984,7 @@
 		"categories": ["wc"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
+		"consensus": 0.23,
 		"translations": {
 			"it": {
 				"title": "Mohammed Kudus segnerà contro la Colombia?",
