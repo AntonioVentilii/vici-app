@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
 	import type { ClearingDid } from '$declarations';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
@@ -13,7 +12,6 @@
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { cancelLimitOrder } from '$lib/services/order.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { marketDisplay } from '$lib/stores/market-translations.store';
 	import type { Market, MarketId } from '$lib/types/market';
 	import { formatPrice, formatQuantity } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -28,14 +26,6 @@
 	const { orders, markets, onRefresh }: Props = $props();
 
 	const getMarketById = (id: string) => markets.find((m) => m.id === id);
-
-	// Translations are hydrated by the Portfolio page that owns these orders;
-	// resolve the row title for the reader's language, falling back to the
-	// unknown-market label when the market list hasn't caught up.
-	const titleFor = (market: Market | undefined): string =>
-		nonNullish(market)
-			? $marketDisplay(market).title
-			: t({ locale: $localeStore, key: 'portfolio.unknown_market' });
 
 	const isBuyOrder = (order: ClearingDid.LimitOrder) => 'Buy' in order.side;
 
@@ -106,7 +96,7 @@
 			<li>
 				<a
 					class="portfolio-row portfolio-row-card"
-					aria-label={titleFor(market)}
+					aria-label={market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 					href="{AppPath.Markets}/{marketId}"
 				>
 					<div class="portfolio-row-tags">
@@ -122,7 +112,7 @@
 						</span>
 					</div>
 					<div class="portfolio-row-title">
-						{titleFor(market)}
+						{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 					</div>
 					<div class="portfolio-row-meta">
 						<span class="num portfolio-row-prob">

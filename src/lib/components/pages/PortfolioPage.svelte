@@ -25,7 +25,7 @@
 	import { tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 	import { vxpHoldingsTotal } from '$lib/derived/vxp-holdings.derived';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { hydrate, marketDisplay } from '$lib/stores/market-translations.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
@@ -82,29 +82,10 @@
 		refreshPositions();
 	};
 
-	const getMarketById = (id: string) => $markets.find((m) => m.id === id);
-
-	// Bulk-hydrate translations for every market the user holds a position,
-	// settled call, or resting order on, so the rows below resolve the reader's
-	// language from one read rather than per-row fetches.
-	$effect(() => {
-		const ids = [
-			...$positions.map((pos) => pos.marketId),
-			...$resolvedPositions.map((resolved) => resolved.marketId),
-			...$orders.map((order) => order.series_id)
-		];
-
-		if (ids.length > 0) {
-			void hydrate([...new Set(ids)]);
-		}
-	});
-
-	// Translated market title for a row, falling back to the unknown-market
-	// label when the market list hasn't caught up to the position.
-	const titleFor = (market: ReturnType<typeof getMarketById>): string =>
-		nonNullish(market)
-			? $marketDisplay(market).title
-			: t({ locale: $localeStore, key: 'portfolio.unknown_market' });
+	// Markets in the reader's language (see `displayMarkets`); every numeric /
+	// status field is the untouched canonical value, so this is the right source
+	// for both the row titles and the PnL / probability math below.
+	const getMarketById = (id: string) => $displayMarkets.get(id);
 
 	// Live positions whose market hasn't resolved yet. The clearing canister
 	// deletes positions on settlement, so anything still in `$positions` is
@@ -206,11 +187,7 @@
 	const sideLabel = (pos: Position): string => {
 		const market = getMarketById(pos.marketId);
 
-		if (isNullish(market)) {
-			return pos.outcomeId;
-		}
-
-		return $marketDisplay(market).outcomeTitle(pos.outcomeId) || pos.outcomeId;
+		return market?.outcomes?.find((o) => o.id === pos.outcomeId)?.title ?? pos.outcomeId;
 	};
 
 	const categoryLabel = (marketId: string): string | null => {
@@ -291,11 +268,7 @@
 			return EM_DASH;
 		}
 
-		if (isNullish(market)) {
-			return outcomeId;
-		}
-
-		return $marketDisplay(market).outcomeTitle(outcomeId) || outcomeId;
+		return market?.outcomes?.find((o) => o.id === outcomeId)?.title ?? outcomeId;
 	};
 
 	/**
@@ -406,7 +379,8 @@
 						<li>
 							<a
 								class="portfolio-row portfolio-row-card portfolio-row-inline"
-								aria-label={titleFor(market)}
+								aria-label={market?.title ??
+									t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 								href="{AppPath.Markets}/{pos.marketId}"
 							>
 								<div class="portfolio-row-tags">
@@ -420,7 +394,7 @@
 									</span>
 								</div>
 								<div class="portfolio-row-title">
-									{titleFor(market)}
+									{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 								</div>
 								<div class="portfolio-row-meta">
 									<span class="num portfolio-row-prob">
@@ -484,7 +458,7 @@
 							<a class="portfolio-history-row" href="{AppPath.Markets}/{resolved.marketId}">
 								<div class="portfolio-history-body">
 									<div class="portfolio-history-title">
-										{titleFor(market)}
+										{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 									</div>
 									<div class="portfolio-history-meta">
 										<span class="portfolio-row-side portfolio-row-side-{sideKey}">
@@ -526,7 +500,11 @@
 					</h2>
 					<span class="num portfolio-section-count">{$orders.length}</span>
 				</header>
-				<OpenOrdersTable markets={$markets} onRefresh={onOrdersRefresh} orders={$orders} />
+				<OpenOrdersTable
+					markets={[...$displayMarkets.values()]}
+					onRefresh={onOrdersRefresh}
+					orders={$orders}
+				/>
 			</section>
 		{/if}
 	{/if}

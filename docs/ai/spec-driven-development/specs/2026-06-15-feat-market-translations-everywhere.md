@@ -260,26 +260,35 @@ surface (operators read canonical text by design).
 
 ### What this wave adds
 
-- **Shared resolver.** `marketDisplay` — a `derived` in
-  `market-translations.store.ts` over `(resolved overlay, global
-preference)` that returns `marketDisplayText(...)` for a given market.
-  Imperative surfaces (store derivations, `$derived.by` row builders)
-  read it instead of re-plumbing `marketDisplayText` per component;
-  `MarketDisplayOriginal` is exported from the util for its param type.
-- **Surfaces wired** (each owner calls `hydrate(visibleMarketIds)` from a
-  **translation-independent** source — positions / orders /
-  resolvedPositions / transactions / deck — never off the translated
-  output, which would feed back into itself):
-  - Portfolio (`PortfolioPage`): active-call + history titles and
-    categorical side labels; `OpenOrdersTable` row titles.
-  - Dashboard (`DashPage`): open + resolved call rows and the Day-0/1
-    starter list.
-  - Away-resolution digest + settled-market notifications
-    (`inbox.store` `settledInboxStore` / `maturedResolutions`); hydrated
-    by `DashPage`, `FlowMode`, `NotificationsPage`.
-  - Wallet (`WalletHistory`, `WalletPage` recent activity) and
-    `DashTransactionsPage` row details.
-  - Calibration deck (`CalibrationScreen`).
+- **Global translated-markets store.** `displayMarkets` — a `derived` in
+  `market-translations.store.ts` over `(markets, resolved overlay, global
+preference)` keyed by `id`, mirroring `marketById`, where each market's
+  `title` / `description` / `resolution` / `outcome.title` are swapped to
+  the active-locale translation (every other field is the untouched
+  canonical value, so it's safe for the math / inference helpers too).
+  When the preference is `original`, or a market has no translation, the
+  canonical object is returned by reference. **The canonical `markets`
+  store stays the source of truth** — consumers that MUST show the
+  original (admin, the WC-art template key, search) keep reading it.
+- **Surfaces just repoint their market lookup** to `displayMarkets` and
+  keep their plain `market.title` / `outcome.title` rendering — no
+  per-component merge:
+  - Portfolio (`PortfolioPage` `getMarketById`, `OpenOrdersTable` via a
+    translated `markets` prop), Dashboard (`DashPage` `marketById` + the
+    Day-0/1 starter list), the away-digest + settled notifications
+    (`inbox.store` `settledInboxStore` / `maturedResolutions`), wallet
+    (`WalletHistory`, `WalletPage` recent activity), `DashTransactionsPage`.
+  - `CalibrationScreen` keeps the per-item `marketDisplay` resolver
+    because its deck comes from `getCalibrationDeck()`, not the `markets`
+    catalog (so it isn't in `displayMarkets` / auto-hydrated).
+- **Central hydration.** A single subscription in the store hydrates the
+  whole `markets` catalog (chunked bulk read, gated on genuinely-new
+  `(locale, id)` pairs, skipped for English) — so no surface triggers its
+  own fetch and no surface can feed its translated output back into a
+  hydrate trigger.
+- `marketDisplay` (the per-item resolver) stays for the toggle surfaces
+  (cards / detail, #905) and `CalibrationScreen`; `MarketDisplayOriginal`
+  is exported from the util for its param type.
 - These list-style surfaces honour the **global preference** only — no
   per-item quick toggle (no room in a row / notification / digest line).
 
