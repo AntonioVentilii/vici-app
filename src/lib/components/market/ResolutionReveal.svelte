@@ -175,7 +175,12 @@
 				>
 					<span class="reso-row-side {it.sideKey}">{it.side}</span>
 					{#if data.marketsLoading}
-						<span class="reso-row-q-skeleton" aria-hidden="true"></span>
+						<span
+							class="reso-row-q-skeleton"
+							aria-busy="true"
+							aria-label={t({ locale: $localeStore, key: 'ui.loading' })}
+							role="status"
+						></span>
 					{:else}
 						<span class="reso-row-q">{it.question}</span>
 					{/if}

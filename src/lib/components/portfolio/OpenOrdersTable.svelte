@@ -99,7 +99,9 @@
 			<li>
 				<a
 					class="portfolio-row portfolio-row-card"
-					aria-label={market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+					aria-label={$marketsNotInitialized && isNullish(market)
+						? t({ locale: $localeStore, key: 'ui.loading' })
+						: (market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' }))}
 					href="{AppPath.Markets}/{marketId}"
 				>
 					<div class="portfolio-row-tags">
