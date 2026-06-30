@@ -174,7 +174,11 @@
 							: ''}"
 				>
 					<span class="reso-row-side {it.sideKey}">{it.side}</span>
-					<span class="reso-row-q">{it.question}</span>
+					{#if data.marketsLoading}
+						<span class="reso-row-q-skeleton" aria-hidden="true"></span>
+					{:else}
+						<span class="reso-row-q">{it.question}</span>
+					{/if}
 					<span class="reso-row-out num {it.result}">
 						{it.net > 0
 							? `+${formatWholeVxpMagnitude(it.net)}`

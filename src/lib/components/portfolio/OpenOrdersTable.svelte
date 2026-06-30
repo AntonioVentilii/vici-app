@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import type { ClearingDid } from '$declarations';
+	import MarketTitleSkeleton from '$lib/components/market/MarketTitleSkeleton.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
@@ -10,6 +12,7 @@
 	} from '$lib/constants/portfolio.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
+	import { marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { cancelLimitOrder } from '$lib/services/order.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId } from '$lib/types/market';
@@ -112,7 +115,11 @@
 						</span>
 					</div>
 					<div class="portfolio-row-title">
-						{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+						{#if $marketsNotInitialized && isNullish(market)}
+							<MarketTitleSkeleton />
+						{:else}
+							{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+						{/if}
 					</div>
 					<div class="portfolio-row-meta">
 						<span class="num portfolio-row-prob">

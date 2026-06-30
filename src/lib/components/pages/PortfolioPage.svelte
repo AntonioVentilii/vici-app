@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
+	import MarketTitleSkeleton from '$lib/components/market/MarketTitleSkeleton.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
 	import PortfolioEmptyState from '$lib/components/portfolio/PortfolioEmptyState.svelte';
@@ -390,7 +391,11 @@
 									</span>
 								</div>
 								<div class="portfolio-row-title">
-									{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+									{#if $marketsNotInitialized && isNullish(market)}
+										<MarketTitleSkeleton />
+									{:else}
+										{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+									{/if}
 								</div>
 								<div class="portfolio-row-meta">
 									<span class="num portfolio-row-prob">
@@ -454,7 +459,12 @@
 							<a class="portfolio-history-row" href="{AppPath.Markets}/{resolved.marketId}">
 								<div class="portfolio-history-body">
 									<div class="portfolio-history-title">
-										{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+										{#if $marketsNotInitialized && isNullish(market)}
+											<MarketTitleSkeleton />
+										{:else}
+											{market?.title ??
+												t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+										{/if}
 									</div>
 									<div class="portfolio-history-meta">
 										<span class="portfolio-row-side portfolio-row-side-{sideKey}">
