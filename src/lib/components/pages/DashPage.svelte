@@ -54,6 +54,7 @@
 	import { friendsListStore } from '$lib/stores/friends.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { hydrate, marketDisplay } from '$lib/stores/market-translations.store';
 	import { marketsStore } from '$lib/stores/markets.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -89,6 +90,20 @@
 
 	// ─── Markets ───────────────────────────────────────────────────────
 	const marketById = $derived(new Map<string, Market>(($marketsStore ?? []).map((m) => [m.id, m])));
+
+	// Bulk-hydrate translations for the markets behind the open + resolved call
+	// rows so each row resolves the reader's language from one read.
+	$effect(() => {
+		const ids = [
+			...$positions.map((pos) => pos.marketId),
+			...$orders.map((order) => order.series_id),
+			...$resolvedPositions.map((resolved) => resolved.marketId)
+		];
+
+		if (ids.length > 0) {
+			void hydrate([...new Set(ids)]);
+		}
+	});
 
 	// Short, year-stripped close label so the row end stays compact.
 	const timerOf = (market: Market): string => {
@@ -163,7 +178,7 @@
 				market,
 				row: {
 					key: position.marketId,
-					question: market.title,
+					question: $marketDisplay(market).title,
 					side: position.outcomeId === 'YES' ? ('YES' as const) : ('NO' as const),
 					context: categoryOf(market),
 					timer: timerOf(market),
@@ -180,7 +195,7 @@
 				market,
 				row: {
 					key: order.order_id,
-					question: market.title,
+					question: $marketDisplay(market).title,
 					side: orderSide(order),
 					context: categoryOf(market),
 					timer: timerOf(market),
@@ -214,7 +229,7 @@
 
 				return {
 					key: `${row.marketId}-${settledAtMs}`,
-					question: market?.title ?? row.marketId,
+					question: nonNullish(market) ? $marketDisplay(market).title : row.marketId,
 					side,
 					context: t({
 						locale: $localeStore,
@@ -330,13 +345,23 @@
 	);
 	const toZeroRow = (market: Market): ZeroMarketRow => ({
 		marketId: market.id,
-		question: market.title,
+		question: $marketDisplay(market).title,
 		context: crowdContextOf(market),
 		timer: timerOf(market)
 	});
 
 	const starterRows = $derived(openMarketsByVolume.slice(0, 3).map(toZeroRow));
 	const moreRows = $derived(openMarketsByVolume.slice(0, 2).map(toZeroRow));
+
+	// The Day-0/1 zero-state surfaces a few open markets the user hasn't called
+	// yet — hydrate those too so their titles render in the reader's language.
+	$effect(() => {
+		const ids = openMarketsByVolume.slice(0, 3).map((m) => m.id);
+
+		if (ids.length > 0) {
+			void hydrate(ids);
+		}
+	});
 
 	// Day-1 calibrating caption — names when the soonest-expiring live position
 	// settles. The in-flight list itself is the full `openCalls` set below.

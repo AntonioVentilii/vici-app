@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { markets } from '$lib/derived/markets.derived';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { hydrate, marketDisplay } from '$lib/stores/market-translations.store';
 	import type { Transaction, TransactionType } from '$lib/types/wallet';
 	import { formatNanosecondsToDate, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -40,8 +42,24 @@
 		}
 	};
 
-	const marketTitle = (marketId: string): string | undefined =>
-		$markets.find((m) => m.id === marketId)?.title;
+	// Bulk-hydrate translations for every market referenced by a transaction row,
+	// so the Details column reads in the reader's language. Driven off the
+	// transactions (translation-independent) so it can't re-trigger itself.
+	$effect(() => {
+		const ids = transactions.flatMap((tx) =>
+			nonNullish(tx.marketId) && tx.marketId !== '' ? [tx.marketId] : []
+		);
+
+		if (ids.length > 0) {
+			void hydrate([...new Set(ids)]);
+		}
+	});
+
+	const marketTitle = (marketId: string): string | undefined => {
+		const market = $markets.find((m) => m.id === marketId);
+
+		return nonNullish(market) ? $marketDisplay(market).title : undefined;
+	};
 </script>
 
 <div class="border-border bg-foreground/3 overflow-x-auto rounded-2xl border">

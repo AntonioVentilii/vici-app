@@ -6,7 +6,7 @@ explicitly deferred by `2026-06-14-feat-market-translation-display.md`
 (#883), which shipped translated metadata + a toggle on the market
 **detail page only**.
 
-Status: In progress (#905)
+Status: In progress (#905); personal-surface follow-up wave below.
 
 ## Goal
 
@@ -248,3 +248,53 @@ closing keyword.
     deck + outcomes + trade modal + share — each with its own status and
     PR. Authored as one spec because the bulk-read + preference + helper
     are the shared foundation every surface depends on.
+
+## Follow-up wave — personal / post-prediction surfaces
+
+#905 closed the **discovery** surfaces (cards, list rows, featured deck,
+Flow front + back, trade modal, share, detail). The surfaces that name a
+market the reader has **already predicted on** were still rendering the
+on-chain original. This wave routes them through the same overlay so the
+reader sees their own language everywhere except the admin resolution
+surface (operators read canonical text by design).
+
+### What this wave adds
+
+- **Shared resolver.** `marketDisplay` — a `derived` in
+  `market-translations.store.ts` over `(resolved overlay, global
+preference)` that returns `marketDisplayText(...)` for a given market.
+  Imperative surfaces (store derivations, `$derived.by` row builders)
+  read it instead of re-plumbing `marketDisplayText` per component;
+  `MarketDisplayOriginal` is exported from the util for its param type.
+- **Surfaces wired** (each owner calls `hydrate(visibleMarketIds)` from a
+  **translation-independent** source — positions / orders /
+  resolvedPositions / transactions / deck — never off the translated
+  output, which would feed back into itself):
+  - Portfolio (`PortfolioPage`): active-call + history titles and
+    categorical side labels; `OpenOrdersTable` row titles.
+  - Dashboard (`DashPage`): open + resolved call rows and the Day-0/1
+    starter list.
+  - Away-resolution digest + settled-market notifications
+    (`inbox.store` `settledInboxStore` / `maturedResolutions`); hydrated
+    by `DashPage`, `FlowMode`, `NotificationsPage`.
+  - Wallet (`WalletHistory`, `WalletPage` recent activity) and
+    `DashTransactionsPage` row details.
+  - Calibration deck (`CalibrationScreen`).
+- These list-style surfaces honour the **global preference** only — no
+  per-item quick toggle (no room in a row / notification / digest line).
+
+### Deliberately excluded
+
+- **Admin resolution surfaces** (`AdminResolution*`,
+  `MarketResolutionInterface`, `AdminMarketForm`) — operators must read
+  the canonical on-chain text.
+- **`FlowArtFrame` `title`** — passed to the WC art renderer as a
+  template-matching key against the English catalogue, **not** display
+  text; translating it would mis-select artwork. Left as the original.
+- **Arena friend-activity feed** (`ActivityFeed` / `ActivityItem`).
+  Its rows are denormalised, **composed, hard-coded-English** strings
+  (`"Market created: {title}"`, `"Market Resolved: {outcome}"`) written
+  at log time — not bare market titles, and not localised at all.
+  Translating only the embedded name would read inconsistently; doing it
+  properly needs a precursor refactor (log `marketId` + compose localised
+  strings at render). Tracked as a separate follow-up.

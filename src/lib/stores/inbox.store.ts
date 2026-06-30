@@ -23,6 +23,8 @@ import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/fr
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import { leagueBattlesStore, leaguesLoadedStore, myLeaguesStore } from '$lib/stores/leagues.store';
 import { localeStore } from '$lib/stores/locale.store';
+import { marketLanguagePreference } from '$lib/stores/market-language.store';
+import { marketTranslations } from '$lib/stores/market-translations.store';
 import { preferencesStore } from '$lib/stores/preferences.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { userStore } from '$lib/stores/user.store';
@@ -39,10 +41,11 @@ import {
 	shortLeagueId
 } from '$lib/utils/format.utils';
 import { t } from '$lib/utils/i18n.utils';
+import { marketDisplayText } from '$lib/utils/market-translation.utils';
 import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 import { get, set as setStorage } from '$lib/utils/storage.utils';
 import { FLAME_STAGE_LABEL_KEYS, stageForStreak, streakMilestone } from '$lib/utils/streak.utils';
-import { isNullish, nonNullish } from '@dfinity/utils';
+import { isNullish, nonNullish, notEmptyString } from '@dfinity/utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
 
@@ -258,8 +261,15 @@ const settledReadStore = writable<Set<bigint>>(loadSettledReadSet());
  * already-existing "X.YZ USD" presentation downstream surfaces use.
  */
 const settledInboxStore: Readable<InboxNotification[]> = derived(
-	[resolvedPositions, marketById, settledReadStore, localeStore],
-	([$resolved, $marketById, $read, $locale]) =>
+	[
+		resolvedPositions,
+		marketById,
+		settledReadStore,
+		localeStore,
+		marketTranslations,
+		marketLanguagePreference
+	],
+	([$resolved, $marketById, $read, $locale, $translations, $marketLanguage]) =>
 		$resolved.map((entry): InboxNotification => {
 			const market = $marketById.get(entry.marketId);
 
@@ -284,7 +294,13 @@ const settledInboxStore: Readable<InboxNotification[]> = derived(
 				2
 			);
 
-			const marketTitle = market?.title ?? t({ locale: $locale, key: 'portfolio.unknown_market' });
+			const marketTitle = nonNullish(market)
+				? marketDisplayText({
+						market,
+						translation: $translations.get(market.id),
+						showOriginal: $marketLanguage === 'original'
+					}).title
+				: t({ locale: $locale, key: 'portfolio.unknown_market' });
 
 			return {
 				id: `settled-${entry.eventId.toString()}`,
@@ -400,10 +416,12 @@ const likesReceivedInboxStore: Readable<InboxNotification[]> = derived(
  */
 const resolvedSide = ({
 	resolved,
-	market
+	market,
+	outcomeTitle
 }: {
 	resolved: Pick<ResolvedPosition, 'outcomeId'>;
 	market?: Market;
+	outcomeTitle?: (id: string) => string;
 }): { label: string; sideKey: ResolutionItem['sideKey'] } => {
 	const outcomeId = inferResolvedOutcomeId({ resolved, market });
 
@@ -415,9 +433,8 @@ const resolvedSide = ({
 		return { label: 'NO', sideKey: 'no' };
 	}
 
-	const label = outcomeId
-		? (market?.outcomes?.find((o) => o.id === outcomeId)?.title ?? outcomeId)
-		: '—';
+	const translatedLabel = outcomeId ? outcomeTitle?.(outcomeId) : undefined;
+	const label = outcomeId ? (notEmptyString(translatedLabel) ? translatedLabel : outcomeId) : '—';
 
 	return { label, sideKey: 'hold' };
 };
@@ -430,13 +447,31 @@ const resolvedSide = ({
  * win reads "<1" rather than a broken "+0" — see `formatWholeVxpMagnitude`).
  */
 export const maturedResolutions: Readable<ResolutionRevealData> = derived(
-	[resolvedPositions, marketById, settledReadStore, localeStore],
-	([$resolved, $marketById, $read, $locale]) => {
+	[
+		resolvedPositions,
+		marketById,
+		settledReadStore,
+		localeStore,
+		marketTranslations,
+		marketLanguagePreference
+	],
+	([$resolved, $marketById, $read, $locale, $translations, $marketLanguage]) => {
 		const unseen = $resolved.filter((entry) => !$read.has(entry.eventId));
 
 		const items: ResolutionItem[] = unseen.map((entry) => {
 			const market = $marketById.get(entry.marketId);
-			const { label, sideKey } = resolvedSide({ resolved: entry, market });
+			const display = nonNullish(market)
+				? marketDisplayText({
+						market,
+						translation: $translations.get(market.id),
+						showOriginal: $marketLanguage === 'original'
+					})
+				: undefined;
+			const { label, sideKey } = resolvedSide({
+				resolved: entry,
+				market,
+				outcomeTitle: display?.outcomeTitle
+			});
 			// Full precision — the digest renderers round for display via
 			// `formatWholeVxpMagnitude` (a sub-1 favourite win reads "<1", not a
 			// broken "+0"). Summing the precise per-call nets also keeps the
@@ -449,7 +484,7 @@ export const maturedResolutions: Readable<ResolutionRevealData> = derived(
 			return {
 				eventId: entry.eventId,
 				marketId: entry.marketId,
-				question: market?.title ?? t({ locale: $locale, key: 'portfolio.unknown_market' }),
+				question: display?.title ?? t({ locale: $locale, key: 'portfolio.unknown_market' }),
 				side: label,
 				sideKey,
 				result: entry.result,

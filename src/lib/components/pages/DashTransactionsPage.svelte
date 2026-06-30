@@ -50,6 +50,7 @@
 		type VxpLedgerHistory
 	} from '$lib/services/transaction-history.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { hydrate, marketDisplay } from '$lib/stores/market-translations.store';
 	import type {
 		TransactionHistoryBonusTag,
 		TransactionHistoryFilter,
@@ -99,6 +100,19 @@
 			totalAnchor: $vxpHoldingsTotal,
 			includeGenesis: nonNullish(ledger) && !ledger.truncated
 		});
+	});
+
+	// Hydrate translations for the markets behind the history rows so each row's
+	// title reads in the reader's language. Driven off the rows
+	// (translation-independent) so it can't re-trigger itself.
+	$effect(() => {
+		const ids = (rows ?? []).flatMap((row) =>
+			nonNullish(row.marketId) && row.marketId !== '' ? [row.marketId] : []
+		);
+
+		if (ids.length > 0) {
+			void hydrate([...new Set(ids)]);
+		}
 	});
 
 	let filter = $state<TransactionHistoryFilter>('all');
@@ -193,7 +207,7 @@
 		const kindLabel = t({ locale, key: `transactions.kind.${row.kind}` as const });
 		const market = nonNullish(row.marketId) ? $marketById.get(row.marketId) : undefined;
 
-		return nonNullish(market) ? `${kindLabel} · ${market.title}` : kindLabel;
+		return nonNullish(market) ? `${kindLabel} · ${$marketDisplay(market).title}` : kindLabel;
 	};
 
 	const rowMeta = (row: TransactionHistoryRow): string => {

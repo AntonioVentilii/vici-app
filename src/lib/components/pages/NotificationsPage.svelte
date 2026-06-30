@@ -6,6 +6,7 @@
 	import NotifRow from '$lib/components/ui/NotifRow.svelte';
 	import { notificationDestination } from '$lib/constants/notification-kind.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
 	import { track } from '$lib/services/analytics.services';
 	import { refreshFriendRelations } from '$lib/stores/friends.store';
 	import {
@@ -15,6 +16,7 @@
 		markInboxRead
 	} from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { hydrate } from '$lib/stores/market-translations.store';
 	import type { InboxNotification } from '$lib/types/inbox';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -23,6 +25,19 @@
 	const unread = $derived($combinedInboxStore.filter((item) => item.unread));
 	const earlier = $derived($combinedInboxStore.filter((item) => !item.unread));
 	const hasUnread = $derived(unread.length > 0);
+
+	// Hydrate translations for the markets behind settled-event cards so their
+	// titles render in the reader's language (the body text is resolved in
+	// `inbox.store` from this overlay). Driven off `resolvedPositions` — the
+	// translation-independent source — rather than the translated inbox view, so
+	// hydrating can't re-trigger itself.
+	$effect(() => {
+		const ids = $resolvedPositions.map((entry) => entry.marketId);
+
+		if (ids.length > 0) {
+			void hydrate([...new Set(ids)]);
+		}
+	});
 
 	// Tap router: mark the card read, then deep-link to its market when one is
 	// attached (`mid`), otherwise fall back to the kind's home surface — a

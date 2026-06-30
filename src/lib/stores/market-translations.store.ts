@@ -1,10 +1,16 @@
 import { localeFallbackChain, type AppLocale } from '$lib/constants/locale.constants';
 import { listMarketTranslationsForLocales } from '$lib/services/market-translation.services';
 import { localeStore } from '$lib/stores/locale.store';
+import { marketLanguagePreference } from '$lib/stores/market-language.store';
 import type { MarketTranslation } from '$lib/types/market-translation';
-import { resolveMarketTranslation } from '$lib/utils/market-translation.utils';
+import {
+	marketDisplayText,
+	resolveMarketTranslation,
+	type MarketDisplayOriginal,
+	type MarketDisplayText
+} from '$lib/utils/market-translation.utils';
 import { SvelteMap } from 'svelte/reactivity';
-import { get, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 
 /**
  * Bulk-hydrated market-translation overlay shared by the list/deck surfaces.
@@ -121,6 +127,28 @@ export const hydrate = async (seriesIds: string[]): Promise<void> => {
 		}
 	}
 };
+
+/**
+ * Reactive display-text resolver shared by every surface that renders a market
+ * the user predicted on (portfolio, dashboard, wallet history, calibration,
+ * inbox digest). Given a market it returns the {@link MarketDisplayText} for the
+ * active locale + global language preference, reading the bulk-hydrated overlay
+ * so a list of rows resolves from one prior `hydrate(ids)` call. Re-emits when
+ * the overlay, the locale, or the preference change.
+ *
+ * The market must already be hydrated (the surface owner calls `hydrate(ids)`);
+ * an un-hydrated id resolves to `undefined` and renders the on-chain original.
+ */
+export const marketDisplay = derived(
+	[resolved, marketLanguagePreference],
+	([$resolved, $preference]) =>
+		(market: MarketDisplayOriginal & { id: string }): MarketDisplayText =>
+			marketDisplayText({
+				market,
+				translation: $resolved.get(market.id),
+				showOriginal: $preference === 'original'
+			})
+);
 
 // Re-resolve every known series whenever the app locale changes. The first
 // emission (current locale) is a no-op against an empty cache; subsequent

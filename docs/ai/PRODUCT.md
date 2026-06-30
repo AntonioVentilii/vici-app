@@ -197,7 +197,13 @@ When a market has a creator/admin-authored translation for the reader's
 locale (resolved through the locale fallback chain), its title, description,
 resolution clause, and categorical outcome labels render in that language
 **everywhere** — list rows, market cards, the Flow deck (front + back), the
-trade modal, share text, and the detail page — not just the detail page.
+trade modal, share text, the detail page, and every surface that names a
+market the reader has predicted on: the portfolio (active calls, history,
+open orders), the dashboard (open + resolved call rows and the Day-0 starter
+list), the away-resolution digest, the settled-market notifications, the
+wallet transaction history + recent activity, and the calibration deck.
+The only place a market deliberately keeps its on-chain original is the
+admin resolution surface, where operators read canonical text.
 A single global preference governs the default ("Show markets in your
 language" in Settings → Preferences): on (the default) shows translations
 where they exist; off always shows the on-chain original. The preference is

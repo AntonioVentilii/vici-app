@@ -33,6 +33,7 @@
 		type WalletTransactionsDone
 	} from '$lib/services/wallet.service';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { hydrate, marketDisplay } from '$lib/stores/market-translations.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
@@ -105,6 +106,19 @@
 
 	// First 6 rows powering the "Recent activity" block.
 	const recentActivity = $derived(filteredTransactions.slice(0, 6));
+
+	// Hydrate translations for markets referenced by the recent-activity rows so
+	// their titles read in the reader's language. Driven off the transactions
+	// (translation-independent) so it can't re-trigger itself.
+	$effect(() => {
+		const ids = recentActivity.flatMap((tx) =>
+			nonNullish(tx.marketId) && tx.marketId !== '' ? [tx.marketId] : []
+		);
+
+		if (ids.length > 0) {
+			void hydrate([...new Set(ids)]);
+		}
+	});
 
 	const sortNewestFirst = (arr: Transaction[]) =>
 		arr.sort((a, b) => (a.timestamp === b.timestamp ? 0 : a.timestamp > b.timestamp ? -1 : 1));
@@ -299,8 +313,11 @@
 	// activity list. Mirrors `WalletHistory`'s `directionFor` but renders
 	// a single inline string (e.g. "Won · {market}", "Stake · {market}",
 	// "Receive", "Send") so the row reads at a glance.
-	const marketTitle = (marketId: string | undefined): string | undefined =>
-		marketId ? $markets.find((m) => m.id === marketId)?.title : undefined;
+	const marketTitle = (marketId: string | undefined): string | undefined => {
+		const market = nonNullish(marketId) ? $markets.find((m) => m.id === marketId) : undefined;
+
+		return nonNullish(market) ? $marketDisplay(market).title : undefined;
+	};
 
 	const recentRowTitleKey = (tx: Transaction): MessageKey => {
 		switch (tx.type) {

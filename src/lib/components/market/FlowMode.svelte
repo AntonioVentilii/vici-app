@@ -32,6 +32,7 @@
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { guestMode } from '$lib/derived/guest.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
+	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
 	import { minuteTick_ms } from '$lib/derived/time.derived';
 	import { vxpSpendable } from '$lib/derived/vxp-holdings.derived';
 	import { track } from '$lib/services/analytics.services';
@@ -184,6 +185,18 @@
 	// freezes the last render for the `out:fade`). `ResolutionRevealData` is
 	// the shared shape the Dashboard banner / ResolutionReveal also consume.
 	const liveDigest = $derived<ResolutionRevealData>($maturedResolutions);
+
+	// Hydrate translations for the markets in the away-digest (resolved calls,
+	// not part of the swipe deck) so its recap rows read in the reader's
+	// language. Driven off `resolvedPositions` — the translation-independent
+	// source — so hydrating can't re-trigger itself via the translated digest.
+	$effect(() => {
+		const ids = $resolvedPositions.map((entry) => entry.marketId);
+
+		if (ids.length > 0) {
+			void hydrateMarketTranslations([...new Set(ids)]);
+		}
+	});
 	let tradeAmount = $state('1.0');
 	let betsCount = $state(0);
 	// VXP locked at risk across this session's calls — the FlowEnd "Called"
