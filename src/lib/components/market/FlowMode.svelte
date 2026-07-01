@@ -373,18 +373,9 @@
 			.catch(() => undefined)
 			.then(() => recordFlowSwipe({ dayKey }))
 			.then(({ dailyGoalDone: serverDone, dailyGoalDate: serverDate }) => {
-				if (serverDate === dailyGoalDate) {
-					// Same local day — monotonic: never fall below the optimistic
-					// value the user already sees.
-					dailyGoalCount = Math.max(dailyGoalCount, serverDone);
-				} else {
-					// The server rolled over to a new local day; adopt it wholesale.
-					dailyGoalCount = serverDone;
-					dailyGoalDate = serverDate;
-				}
-
-				writeDailyGoalMirror({ done: dailyGoalCount, date: dailyGoalDate ?? serverDate });
-
+				// Mirror the authoritative server field regardless of day: the
+				// FIFO chain resolves replies in enqueue order, so the profile
+				// write stays monotonic in time and reflects the latest record.
 				userStore.update((s) =>
 					s.profile
 						? {
@@ -397,6 +388,20 @@
 							}
 						: s
 				);
+
+				// Reconcile the live count / mirror against this record's OWN
+				// day, not the live `dailyGoalDate`. If the session swiped
+				// across local midnight while this call was in flight,
+				// `dailyGoalDate` has already advanced to the new day; a reply
+				// for the elapsed day is stale and must not clobber it.
+				if (dayKey !== dailyGoalDate) {
+					return;
+				}
+
+				// Monotonic: a reply can only raise today's count, never fall
+				// below the optimistic value the user already sees.
+				dailyGoalCount = Math.max(dailyGoalCount, serverDone);
+				writeDailyGoalMirror({ done: dailyGoalCount, date: dailyGoalDate });
 			})
 			.catch((e: unknown) => {
 				// Non-fatal: the optimistic bump (capped at the hard cap) stands,
