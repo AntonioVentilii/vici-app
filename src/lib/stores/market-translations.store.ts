@@ -139,8 +139,10 @@ export const hydrate = async (seriesIds: string[]): Promise<void> => {
  * Reactive display-text resolver for a market the caller already holds, when it
  * also needs the per-item toggle state (the on-card / detail quick switch). Most
  * surfaces don't — they read the whole translated market from {@link
- * displayMarkets} instead. Returns the {@link MarketDisplayText} for the active
- * locale + global preference; an un-hydrated id resolves to the original.
+ * displayMarkets} instead. Always returns a {@link MarketDisplayText} for the
+ * active locale + global preference; when the id has no overlay entry (not
+ * hydrated, or no translation exists) every field falls back to the on-chain
+ * original.
  */
 export const marketDisplay = derived(
 	[resolved, marketLanguagePreference],
