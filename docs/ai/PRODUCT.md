@@ -366,6 +366,28 @@ showed the satellite points rank, which could read a phantom #1). Decision
 record:
 [`specs/2026-06-25-impr-leaderboard-integrity.md`](./spec-driven-development/specs/2026-06-25-impr-leaderboard-integrity.md).
 
+### Worlds Universities — standings reflect the current opted-in roster
+
+A school's / country's Worlds standing is its **current members'** record,
+not a running tally that outlives them. The live windows — the all-time
+board and the current-month column — are recomputed on read over the
+affiliation's present roster: the all-time accuracy sums each member's
+lifetime, the month sums each member's `USER_MONTHLY_STATS` for the current
+month. So the instant a member leaves (allowed after the 90-day affiliation
+lock) or turns off the **Worlds** sharing toggle
+(`preferences.sharing.worldsOptIn`), their contribution drops out of the
+next read — a member can no longer pump a school and keep crediting it after
+leaving.
+
+A **closed** month is different: it is **frozen at close**. The first time
+anyone claims that month's podium, the ranking over the then-current
+opted-in roster is captured as an immutable snapshot, and the podium payout
+and the champion cup read from it thereafter. A later leave does not rewrite
+a month that has already ended, so awards and cups stay stable and can't
+drift between two people claiming the same month. A month confers a cup only
+once it has been frozen (claimed). Decision record:
+[`specs/2026-06-28-impr-worlds-standings-current-members.md`](./spec-driven-development/specs/2026-06-28-impr-worlds-standings-current-members.md).
+
 ### Battles — accuracy face-offs that resolve themselves
 
 A **battle** is a time-bound accuracy face-off between two leagues. A

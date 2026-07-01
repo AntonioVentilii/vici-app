@@ -227,11 +227,19 @@ export default defineConfig(({ mode }) => ({
 					read: 'public',
 					write: 'public'
 				},
+				// Frozen monthly Worlds snapshots only — one immutable doc per
+				// `${kind}/${affiliationIdentifier}/${monthAnchor}`, written by the
+				// podium freeze (writing as a controller) the first time a closed
+				// month is claimed. Public read (standings surfaces render them);
+				// controllers write so a client can't forge a frozen ranking. The
+				// live windows (all-time, current month) are recomputed on read from
+				// the roster and never persisted here. `assertSetAffiliationStats`
+				// enforces snapshot-key-only + write-once as defence in depth.
 				{
 					collection: JunoDatastoreCollection.AFFILIATION_STATS,
 					memory: 'stable',
 					read: 'public',
-					write: 'public'
+					write: 'controllers'
 				},
 				{
 					collection: JunoDatastoreCollection.EXIT_SIGNALS,

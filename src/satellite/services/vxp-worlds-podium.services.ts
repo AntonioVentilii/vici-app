@@ -3,11 +3,13 @@ import { Collection } from '$lib/constants/collections.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
-import { monthAnchorFromMs } from '$lib/types/affiliation-stats';
+import { affiliationStatsSnapshotKey, monthAnchorFromMs } from '$lib/types/affiliation-stats';
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
 import { parseToken } from '$lib/utils/parse.utils';
 import {
+	hasFrozenMonthlySnapshotFn,
 	listAffiliationStatsForMonthFn,
+	liveMonthlyRows,
 	readAffiliationDoc
 } from '$satellite/services/cohort.services';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
@@ -16,7 +18,13 @@ import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import { IcrcLedgerCanister } from '@junobuild/functions/canisters/ledger/icrc';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
-import { encodeDocData, getDocStore, listDocsStore, setDocStore } from '@junobuild/functions/sdk';
+import {
+	encodeDocData,
+	getAdminAccessKeys,
+	getDocStore,
+	listDocsStore,
+	setDocStore
+} from '@junobuild/functions/sdk';
 
 /**
  * Worlds podium monthly payout — user-claim variant
@@ -80,6 +88,65 @@ export interface ClaimWorldsPodiumPrizeResult {
 }
 
 /**
+ * Freeze a closed month's affiliation ranking the first time its podium is
+ * claimed (frozen-at-close). The live windows recompute over the current
+ * roster on every read; a *closed* month is instead captured once here — the
+ * ranking over the then-current opted-in roster ({@link liveMonthlyRows}) is
+ * written as immutable snapshot docs, so the podium payout and the champion
+ * cup stay stable and can't drift as members later churn.
+ *
+ * All-or-nothing gate: {@link hasFrozenMonthlySnapshotFn} short-circuits once
+ * the month has any snapshot, so only the first claim writes the set and later
+ * claims leave it untouched. Written as a controller (the collection is
+ * controllers-write) with values from the server's own recompute, so a client
+ * cannot forge a frozen ranking. Only affiliations clearing `MIN_CALLS_FOR_RANK`
+ * are captured (the only rows that can rank / appear).
+ */
+const freezeMonthlySnapshotsIfNeeded = ({
+	kind,
+	monthAnchor,
+	nowMs
+}: {
+	kind: AffiliationKind;
+	monthAnchor: string;
+	nowMs: number;
+}): void => {
+	if (hasFrozenMonthlySnapshotFn({ kind, monthAnchor })) {
+		return;
+	}
+
+	const admin = getAdminAccessKeys()[0]?.[0];
+
+	if (isNullish(admin)) {
+		logError({
+			message: 'worlds_podium freeze skipped — no controller key available',
+			detail: { kind, monthAnchor }
+		});
+
+		return;
+	}
+
+	const { rows } = liveMonthlyRows({ kind, monthAnchor, nowMs });
+
+	for (const row of rows) {
+		const key = affiliationStatsSnapshotKey({
+			kind,
+			affiliationIdentifier: row.affiliationIdentifier,
+			monthAnchor
+		});
+
+		setDocStore({
+			collection: Collection.AFFILIATION_STATS,
+			key,
+			caller: admin,
+			doc: {
+				data: encodeDocData(row)
+			}
+		});
+	}
+};
+
+/**
  * Per-user claim endpoint. Returns counts so the FE can render a
  * toast like "+400 VXP for your school's gold finish" when at
  * least one award lands.
@@ -113,13 +180,18 @@ export const claimWorldsPodiumPrizeFn = async ({
 	let foundAnyEligibleAffiliation = false;
 
 	for (const kind of KINDS) {
+		// Frozen-at-close: the first claim of the month captures the ranking over
+		// the current opted-in roster so the podium + cup stay stable across
+		// claimants. A no-op once the month is already frozen.
+		freezeMonthlySnapshotsIfNeeded({ kind, monthAnchor, nowMs });
+
 		// Read the caller's current affiliation for this kind.
 		const myAffiliation = readMyAffiliation({ callerText, callerBytes, kind });
 
 		if (isNullish(myAffiliation)) {
 			// No affiliation for this kind — caller is not eligible.
 		} else {
-			// Top-3 for the requested month (snapshot docs only).
+			// Top-3 for the requested (now frozen) month.
 			const top3 = listAffiliationStatsForMonthFn({ kind, monthAnchor }).slice(0, 3);
 			const placeIndex = top3.findIndex(
 				(s) => s.affiliationIdentifier === myAffiliation.affiliationIdentifier

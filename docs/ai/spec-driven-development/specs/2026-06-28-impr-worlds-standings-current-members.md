@@ -3,21 +3,30 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Draft
+Status: Implemented (#1068)
 
 ## Goal
 
 Make the Worlds Universities standings (Arena → Worlds → Schools)
-reflect **only the current, opted-in roster** of each
-school/country — on every window: all-time, current month, the
-closed-month podium, and championship history. Today a member's
-contribution is an append-only, forward-only aggregate that can never
-be retracted: once you pump a school's numbers you can wait out the
-90-day lock, leave, and the school keeps your wins/calls forever. The
-fix removes the append-only aggregate entirely and derives every
-standings window by recomputing over the affiliation's present
-roster, so leaving (or opting out via `worldsOptIn`) instantly
-subtracts a member's past contribution.
+reflect **only the current, opted-in roster** of each school/country
+on the **live** windows — all-time and the current month — so leaving
+(or opting out via `worldsOptIn`) instantly subtracts a member's past
+contribution. Today a member's contribution is an append-only,
+forward-only aggregate that can never be retracted: once you pump a
+school's numbers you can wait out the 90-day lock, leave, and the
+school keeps your wins/calls forever. The fix removes the append-only
+aggregate and derives the live windows by recomputing over the
+affiliation's present roster.
+
+A **closed** month (its podium ranking and the championship cup it
+confers) is instead **frozen at close**: the first time anyone claims
+that month's podium, the ranking is computed once over the
+then-current opted-in roster and written to an immutable, controller-
+owned snapshot. Awards and cups are then stable — a later leave does
+not rewrite a month that has already ended (the 90-day lock means a
+pump-then-leave already spans multiple months, so almost no
+anti-exploit value is lost). See [Decisions](#decisions) for why
+frozen-at-close won over fully-live.
 
 ## Context
 
@@ -103,54 +112,74 @@ Endpoints affected, all registered in
 
 ## Scope
 
-Replace the append-only monthly path with roster-recompute, and apply
-the `worldsOptIn` opt-out at every Worlds aggregation point. **The
-wire shapes of all affected endpoints are unchanged** — only the
-internal data source changes — so there is no `.did`/bindings regen
-(see Technical requirements → Upgrade).
+Replace the append-only monthly path with roster-recompute for the
+live windows, freeze closed months at first claim, and apply the
+`worldsOptIn` opt-out at every Worlds aggregation point. **The wire
+shapes of all affected endpoints are unchanged** — only the internal
+data source changes — so there is no `.did`/bindings regen (see
+Technical requirements → Upgrade). The `AFFILIATION_STATS` collection
+is **kept** but repurposed: it now holds only immutable frozen monthly
+snapshots (`${kind}/${affiliationIdentifier}/${monthAnchor}`, 3-segment
+keys), written by the podium-claim path as a controller. Its write
+rule flips from `public` to `controllers`.
 
 1. **New monthly aggregator** in `cohort.services.ts`:
    `aggregateMembersForMonth({ kind, monthAnchor, affiliationIdentifier? })`,
    the monthly mirror of `aggregateMembersLifetime`. It buckets, per
    affiliation, the sum of each **current, opted-in** member's
    `USER_MONTHLY_STATS[${member}/${monthAnchor}]` `monthCalls` /
-   `monthWins`.
+   `monthWins`. Pure read helper (no writes), so it is reusable from
+   both query and update contexts.
 
 2. **Opt-out filter** applied in **both** aggregators: a member whose
    decoded profile has `preferences.sharing.worldsOptIn === false` is
    excluded from every bucket (all-time and monthly). Missing/legacy
    profiles default to included (opt-out defaults to `true` = shown).
+   Closes the gap the all-time path (#884) left open.
 
-3. **Re-source the monthly column** of `listAffiliationStatsFn`,
-   `getAffiliationStatsFn`, `listAffiliationStatsForMonthFn`, and
-   `listAffiliationChampionshipsFn` from `aggregateMembersForMonth`
-   instead of the `AFFILIATION_STATS` rolling/snapshot docs. Ranking,
-   tie-break (`compareAffiliationRank`), and the `MIN_CALLS_FOR_RANK`
-   depth floor are unchanged — they now rank recomputed rows.
+3. **Live windows — recompute over current roster:**
+   - `listAffiliationStatsFn` (leaderboard) — all-time ranking base from
+     `aggregateMembersLifetime` (opt-out filtered), current-month column
+     from `aggregateMembersForMonth({ kind, monthAnchor: currentAnchor })`.
+   - `getAffiliationStatsFn` (detail) — same, scoped to one
+     `affiliationIdentifier`.
 
-4. **Podium claim** (`claimWorldsPodiumPrizeFn`) keeps reading
-   `listAffiliationStatsForMonthFn` for the top-3; because that now
-   recomputes over the current opted-in roster, a member who has left
-   (or opted out) no longer counts toward, and can no longer claim
-   for, that month. The award doc remains write-once / idempotent.
+4. **Closed windows — frozen snapshot, live fallback until frozen:**
+   - `listAffiliationStatsForMonthFn({ kind, monthAnchor })` — return
+     the frozen snapshot docs for that month if any exist; otherwise
+     live-recompute from `aggregateMembersForMonth` as a **provisional**
+     view. Ranking, tie-break (`compareAffiliationRank`), and the
+     `MIN_CALLS_FOR_RANK` floor are unchanged.
+   - `listAffiliationChampionshipsFn` — reads the frozen snapshots (a
+     month confers a cup only once it has been frozen, i.e. claimed).
 
-5. **Delete the append-only writers:** remove
-   `onProfileSetForAffiliationStats` and `assertSetAffiliationStats`
-   and their registration in `satellite/index.ts`. After this, nothing
-   reads or writes `AFFILIATION_STATS`.
+5. **Freeze-on-claim** in `vxp-worlds-podium.services.ts`
+   (`claimWorldsPodiumPrizeFn`): before ranking, if no frozen snapshot
+   exists for `(kind, monthAnchor)`, compute
+   `aggregateMembersForMonth` over the current opted-in roster and
+   write one immutable snapshot doc **as controller**
+   (`getAdminAccessKeys()[0]?.[0]`) per affiliation clearing
+   `MIN_CALLS_FOR_RANK`, then rank the frozen rows to find top-3. First
+   claimant freezes; every later claim + every display read reads the
+   same frozen ranking, so placements can't drift between claimants.
+   The award doc stays write-once / idempotent; a member who has left
+   or opted out before the freeze is simply absent from the snapshot.
 
-6. **Apply the opt-out to the existing all-time path** (item 2 covers
-   the filter; this closes the gap that #884 left open).
+6. **Rewrite `assertSetAffiliationStats`** to guard the repurposed
+   collection: accept only 3-segment snapshot keys, enforce write-once
+   (reject any overwrite of an existing snapshot) and the
+   `wins ≤ totalCalls` / non-negative sanity invariants. The
+   membership/forward-only checks are dropped (writes are now
+   controller-only and immutable).
+
+7. **Delete the append-only writer:** remove
+   `onProfileSetForAffiliationStats` and its registration in
+   `onProfileSetComposed`. Nothing increments a rolling doc anymore.
 
 ### Out of scope
 
-- **Removing the `AFFILIATION_STATS` collection** from
-  [`juno.config.ts`](../../../../juno.config.ts) and
-  [`collections.constants.ts`](../../../../src/lib/constants/collections.constants.ts).
-  Dropping a collection is a destructive schema change; this PR leaves
-  it declared-but-unused (no reads, no writes) and a follow-up chore PR
-  removes it. Keeping it avoids a migration in this PR and keeps the
-  change bindings-neutral.
+- **Removing the `AFFILIATION_STATS` collection.** It is retained for
+  the frozen snapshots (repurposed, not dropped).
 - **Server-side re-verification of `USER_MONTHLY_STATS` against
   clearing history** (see Security + Pending decisions).
 - **The global-leaderboard `worldsOptIn`/`leaderboardOptIn`
@@ -202,36 +231,49 @@ behaviour that drives a roster change.
   (`aggregateMembersLifetime` already reads one profile per member);
   the monthly path adds a single collection scan, not an extra
   per-member round-trip.
-- _Podium claim runs the recompute under the **update** budget._
-  `claimWorldsPodiumPrize` is a `defineUpdate` (it pays the VXP
-  transfer) and derives top-3 via `listAffiliationStatsForMonthFn`,
-  which now calls `aggregateMembersForMonth` — so the two full scans +
-  per-member profile reads execute under the tighter **update**
-  instruction ceiling, not the query one, on every claim. This is a
-  per-user, once-per-month call (idempotent via the write-once award
-  doc), so absolute frequency is low, but the per-claim cost grows
-  linearly with the kind's roster. Note the top-3 check is inherently
-  whole-kind — verifying the caller's affiliation placed top-3 requires
-  ranking every affiliation, so it cannot be narrowed to the caller's
-  own roster. If it nears the budget the mitigation is to compute the
-  closed-month ranking once and read a cached result on the update
-  path: this is exactly the frozen-at-close option under Pending
-  decisions, so the cost concern and that decision resolve together —
-  fully-live keeps the whole-kind scan on every claim; frozen-at-close
-  pays it once. Capture which form ships in Implementation.
+- _The whole-kind recompute happens once per month, at freeze._
+  `claimWorldsPodiumPrize` is a `defineUpdate`. The **first** claimant
+  of a closed month pays the whole-kind recompute (two full scans +
+  per-member profile reads) plus the snapshot writes, under the tighter
+  **update** instruction ceiling — this is frozen-at-close, chosen
+  precisely so the cost is paid once rather than on every claim. Every
+  later claim and every display read of that month is a cheap frozen-
+  snapshot scan (`listDocsStore(AFFILIATION_STATS)` filtered by the
+  `/${monthAnchor}` suffix), no roster recompute. The freeze bounds its
+  writes to affiliations clearing `MIN_CALLS_FOR_RANK` (only rows that
+  can rank/appear), so the write count is small — not one per
+  affiliation. The freeze is all-or-nothing per month: a
+  `hasFrozenMonthlySnapshot` gate means the **first** claim writes the
+  whole ranked set and every later claim leaves it untouched, so the
+  frozen ranking never grows or drifts as the roster later churns
+  (choosing this over per-doc idempotent writes, which would let the
+  frozen set grow between claims on the common roster-changed path).
+  Edge: if a first claim traps mid-freeze it awards nothing (the whole
+  update rolls back, never paying against a partial ranking), but the
+  partial snapshots it wrote make the month look frozen to the gate — a
+  rare trap-only case that leaves an incomplete month; acceptable at
+  realistic ranked-affiliation counts and recoverable by an admin
+  re-freeze. A reverse-index would raise the trap ceiling (Scalability).
 
 **Memory & storage.**
 
-- _Net reduction._ No new collection. `USER_MONTHLY_STATS` already
-  exists and is already written; this spec only _reads_ it. The
-  `AFFILIATION_STATS` collection stops growing (no more rolling
-  increments, no more monthly snapshot docs); its existing docs become
-  dead data, reclaimed when the follow-up chore drops the collection.
-- _Growth._ `USER_MONTHLY_STATS` grows at one doc per active user per
-  month they trade (`syncMyMonthlyStats` skips empty months). At 10k
-  active monthly users that is ~10k docs/month; unchanged by this spec
-  since the FE already writes them. Retention of old user-months ties
-  to the closed-month-podium decision (see Pending decisions).
+- _No new collection._ `USER_MONTHLY_STATS` already exists and is
+  already written; this spec only _reads_ it. `AFFILIATION_STATS` is
+  reused for frozen snapshots only; its old rolling (2-segment) docs
+  stop being written and are ignored by the new readers (harmless dead
+  data).
+- _Frozen-snapshot growth._ One immutable snapshot doc per ranked
+  affiliation (≥ `MIN_CALLS_FOR_RANK`) per closed month per kind —
+  bounded by the small count of ranked affiliations, written once at
+  first claim. Universities + countries × a handful of ranked slots ×
+  months: negligible.
+- _Growth (source)._ `USER_MONTHLY_STATS` grows at one doc per active
+  user per month they trade (`syncMyMonthlyStats` skips empty months);
+  ~10k docs/month at 10k active users, unchanged by this spec (the FE
+  already writes them). These rows must be retained for at least the
+  claim window of the month they cover; long-tail retention is a
+  follow-up (the frozen snapshot preserves the closed-month ranking
+  independently, so pruning old user-months does not rewrite history).
 
 **Scalability.**
 
@@ -248,110 +290,123 @@ behaviour that drives a roster change.
 **Upgrade & compatibility.**
 
 - **Bindings-neutral, non-breaking.** Every affected endpoint keeps
-  its current request/response schema
-  (`AffiliationStatsWireSchema` et al.) — only the handler's data
-  source changes — so **no `npm run did` / `juno:functions:build`
-  regen is required**. No `.did` change, no `BREAKING CHANGE:` block,
-  no `!` title.
-- Removing the two hook/assert functions changes only
-  `satellite/index.ts` wiring (still a satellite wasm rebuild +
-  `juno:functions:build` for the functions bundle, but no Candid
-  surface change).
-- The deferred collection drop (Out of scope) _will_ be a schema
-  change in its follow-up PR.
+  its current request/response schema (`AffiliationStatsWireSchema` et
+  al.) — only the handler's data source changes — so **no `npm run did`
+  regen is required** and `src/declarations/**` stays byte-identical.
+  Still rebuild the functions bundle (`npm run juno:functions:build`);
+  no Candid surface change.
+- **One collection-rule change:** `AFFILIATION_STATS` write flips
+  `public → controllers` in [`juno.config.ts`](../../../../juno.config.ts).
+  This is an access-rule change applied on satellite upgrade, not a
+  schema/bindings change; existing docs are untouched. Mirrors the
+  `RESOLVED_RESULTS` / `SCHOOLS` / `EVENTS` posture (controllers-write,
+  server is the sole writer via the privileged `*DocStore` APIs).
+- No breaking-change block or `!` title — wire and data are compatible.
 
 **Security.**
 
-- _Collection rules._ No rule changes. `assertSetAffiliationStats` is
-  deleted along with all writes to `AFFILIATION_STATS`.
-  `assertSetUserMonthlyStats` (own-row, structural sanity) already
-  governs the only collection now feeding the monthly window.
-- _New trust surface — the central risk._ The podium pays VXP
-  (`VXP_WORLDS_PODIUM`). Moving the podium ranking onto
-  `USER_MONTHLY_STATS` means an affiliation's monthly standing is
-  derived from member-written docs. Those docs are derived from the
-  clearing canister's settled events (`syncMyMonthlyStats` buckets
-  real history), but `assertSetUserMonthlyStats` does **not**
+- _Collection rules._ `AFFILIATION_STATS` becomes controllers-write, so
+  a client can no longer write any stats doc directly. The freeze
+  writes snapshots as a controller (`getAdminAccessKeys()[0]?.[0]`)
+  with values from the server's own recompute — a user cannot forge a
+  frozen ranking. `assertSetAffiliationStats` stays as defence in depth:
+  snapshot-key-shape + write-once (immutable history) + `wins ≤
+totalCalls`. `assertSetUserMonthlyStats` (own-row) continues to guard
+  the source collection.
+- _Residual trust surface — the central risk._ The podium pays VXP
+  (`VXP_WORLDS_PODIUM`). The frozen ranking is computed from
+  `USER_MONTHLY_STATS`, which is member-written. Those docs are derived
+  from the clearing canister's settled events (`syncMyMonthlyStats`
+  buckets real history), but `assertSetUserMonthlyStats` does **not**
   re-verify the counters against clearing — a tampered client could
-  inflate its own `monthCalls`/`monthWins` to push its affiliation
-  onto the podium and trigger payouts to its members. The pre-existing
-  monthly path had the same root weakness (the hook trusted the
-  profile's self-reported `totalTrades`/`winRate`), so this is not a
-  _new_ class of trust, but it now gates a VXP payout more directly.
-  Mitigations available: the `MIN_CALLS_FOR_RANK` depth floor, the
-  per-user `MONTHLY_MIN_CALLS` floor, and the bounded blast radius
-  (inflating helps the _affiliation_, which still must out-rank
-  others by accuracy). Full server-side re-derivation from the
-  `RESOLVED_RESULTS` collection is the heavier fix — captured as a
-  Pending decision, not built here.
+  inflate its own `monthCalls`/`monthWins` to push its affiliation onto
+  the podium and trigger payouts to its members. Freezing does not
+  remove this (it snapshots whatever the aggregation says); it only
+  makes the result immutable and controller-owned once set. The
+  pre-existing monthly path had the same root weakness (the hook
+  trusted profile-reported `totalTrades`/`winRate`), so this is not a
+  _new_ class of trust, but it gates a VXP payout directly. Mitigations
+  in place: the `MIN_CALLS_FOR_RANK` depth floor, the per-user
+  `MONTHLY_MIN_CALLS` floor, and the bounded blast radius (inflating
+  helps the _affiliation_, which must still out-rank others by
+  accuracy). Full server-side re-derivation from `RESOLVED_RESULTS` is
+  the heavier fix — deferred (Pending decisions).
 
 **Parameters.** Reuse the existing constants cited in Context; add no
 new tunables. The depth floor stays `MIN_CALLS_FOR_RANK`.
 
 ## Implementation outline
 
-1. In `cohort.services.ts`, add `aggregateMembersForMonth`:
+1. In `cohort.services.ts`, add a shared `worldsOptIn` reader:
+   decode the profile slice already read by the aggregators and treat
+   `preferences?.sharing?.worldsOptIn === false` as opted-out
+   (anything else, incl. missing, = included).
+2. Add `aggregateMembersForMonth({ kind, monthAnchor, affiliationIdentifier? })`:
    - `listDocsStore(USER_MONTHLY_STATS)`, filter keys ending
      `/${monthAnchor}`, decode to a `Map<owner, { monthCalls, monthWins }>`
      using the per-owner field names from `UserMonthlyStatsDoc` (mirror
      `getMonthlyLeaderboardFn`'s suffix scan).
    - `listDocsStore(AFFILIATIONS)`, filter to the kind (and optional
      `affiliationIdentifier`); for each member read their profile
-     (`getDocStore(PROFILES, member)`), drop if
-     `preferences.sharing.worldsOptIn === false`, else fold their
-     per-owner `monthCalls` / `monthWins` into the affiliation's
-     accumulator. The accumulator uses the `AffiliationStatsDoc`
-     monthly field names — `{ monthTotalCalls, monthWins }` — so the
-     re-sourcing in step 3 maps straight onto the doc's monthly column
-     (`monthCalls → monthTotalCalls`, `monthWins → monthWins`).
+     (`getDocStore(PROFILES, member)`), drop if opted-out, else fold
+     the owner's `monthCalls` / `monthWins` into the affiliation's
+     accumulator. Accumulator uses `AffiliationStatsDoc` monthly names
+     `{ monthTotalCalls, monthWins }` (`monthCalls → monthTotalCalls`).
    - Return `Map<affiliationIdentifier, { monthTotalCalls, monthWins }>`.
-2. Add the same `worldsOptIn` profile check inside
-   `aggregateMembersLifetime` (one decoded field on the profile it
-   already reads — no extra read).
-3. Re-source the monthly column:
-   - `listAffiliationStatsFn`: replace the `AFFILIATION_STATS` rolling
-     scan with `aggregateMembersForMonth({ kind, monthAnchor: anchor })`;
-     keep the all-time lifetime as the ranking base, fill the monthly
-     fields from the recompute.
-   - `getAffiliationStatsFn`: fill `monthTotalCalls`/`monthWins` from
-     `aggregateMembersForMonth({ kind, monthAnchor, affiliationIdentifier })`.
-   - `listAffiliationStatsForMonthFn`: recompute the per-affiliation
-     monthly rows from `aggregateMembersForMonth({ kind, monthAnchor })`,
-     apply `MIN_CALLS_FOR_RANK`, sort with `compareAffiliationRank`
-     (monthly accessors).
-   - `listAffiliationChampionshipsFn`: derive each closed month's
-     winner from `aggregateMembersForMonth` for that month (see
-     Pending decisions on month enumeration).
-4. Delete `onProfileSetForAffiliationStats` and
-   `assertSetAffiliationStats`; remove their imports/registration in
-   `satellite/index.ts`. Delete now-unused snapshot key helpers if no
-   longer referenced (`affiliationStatsSnapshotKey`), keeping
-   `affiliationStatsKey`/`monthAnchorFromMs` if still used.
-5. `npm run juno:functions:build` (functions bundle rebuild — no
-   Candid change expected; confirm the diff under
-   `src/declarations/**` is empty), then `npm run quality` +
-   `npm run check`.
-6. Update [`PRODUCT.md`](../../PRODUCT.md): the Worlds standings now
-   reflect the current opted-in roster on every window, and leaving or
-   opting out retracts past contribution.
+     Pure read (no writes) so both query and update paths can call it.
+3. Add the opt-out check to `aggregateMembersLifetime` (one decoded
+   field on the profile it already reads — no extra read).
+4. Live windows: `listAffiliationStatsFn` + `getAffiliationStatsFn`
+   fill the monthly column from
+   `aggregateMembersForMonth({ kind, monthAnchor: currentAnchor, … })`;
+   all-time ranking base stays `aggregateMembersLifetime`.
+5. Closed windows: `listAffiliationStatsForMonthFn` returns the frozen
+   snapshot docs for the month when any exist, else live-recomputes via
+   `aggregateMembersForMonth` (provisional). `listAffiliationChampionshipsFn`
+   keeps reading the frozen snapshot docs (unchanged shape). Retire the
+   rolling-doc reads (2-segment keys) from both.
+6. Freeze in `vxp-worlds-podium.services.ts`: add
+   `freezeMonthlySnapshotsIfNeeded({ kind, monthAnchor, nowMs })` —
+   if no snapshot exists for the month, `aggregateMembersForMonth`,
+   then for each affiliation ≥ `MIN_CALLS_FOR_RANK` `getDocStore` the
+   snapshot key and, when absent, `setDocStore` it as controller
+   (`getAdminAccessKeys()[0]?.[0]`), building an `AffiliationStatsDoc`
+   (lifetime fields mirror the monthly ones for a frozen row).
+   `claimWorldsPodiumPrizeFn` calls it before reading
+   `listAffiliationStatsForMonthFn` for the top-3.
+7. Rewrite `assertSetAffiliationStats` (in `affiliation-stats.services.ts`):
+   snapshot-key-only + write-once + `wins ≤ totalCalls` / non-negative;
+   drop the membership and forward-only logic. Delete
+   `onProfileSetForAffiliationStats` and drop it from
+   `onProfileSetComposed` in `satellite/index.ts`. Remove the now-unused
+   rolling-key helper (`affiliationStatsKey`) if nothing references it;
+   keep `affiliationStatsSnapshotKey` + `monthAnchorFromMs`.
+8. Flip `AFFILIATION_STATS` write to `controllers` in `juno.config.ts`.
+9. `npm run juno:functions:build` (confirm `src/declarations/**` is
+   unchanged), then `npm run quality` + `npm run check`.
+10. Update [`PRODUCT.md`](../../PRODUCT.md): the live Worlds windows
+    reflect the current opted-in roster (leaving / opting out retracts);
+    a closed month's podium + cup freeze at first claim.
 
 ## Acceptance criteria
 
-- [ ] A member who contributes to a school then leaves (after the
-      lock) no longer appears in, or contributes to, that school's
-      all-time, monthly, podium, or championship standing.
-- [ ] Setting `worldsOptIn = false` removes the member's contribution
-      from every Worlds standings window on the next read.
-- [ ] The monthly Worlds column for affiliation X and month M equals
-      the sum of `USER_MONTHLY_STATS[member/M]` over X's current
+- [ ] On the **live** windows (all-time + current month), a member who
+      leaves (after the lock) or sets `worldsOptIn = false` no longer
+      appears in or contributes to the school's standing on the next read.
+- [ ] The current-month Worlds column for affiliation X equals the sum
+      of `USER_MONTHLY_STATS[member/currentAnchor]` over X's current
       opted-in roster, gated by `MIN_CALLS_FOR_RANK`.
-- [ ] `claimWorldsPodiumPrize` awards only to current members of an
-      affiliation that ranks top-3 under the recomputed month; a left
-      or opted-out member is rejected as not eligible; already-paid
-      award docs remain write-once/idempotent.
-- [ ] `onProfileSetForAffiliationStats` and `assertSetAffiliationStats`
-      are deleted; nothing writes `AFFILIATION_STATS`; a profile write
-      no longer touches that collection.
+- [ ] A closed month's podium ranking is frozen at first claim: the
+      first `claimWorldsPodiumPrize` writes controller-owned, write-once
+      snapshot docs; later claims and display reads use the same frozen
+      ranking (no drift). A member absent (left/opted-out) at freeze
+      time is excluded; a leave **after** freeze does not change that
+      month.
+- [ ] `claimWorldsPodiumPrize` award docs remain write-once/idempotent;
+      a member not on the frozen top-3 is `notEligible`.
+- [ ] `onProfileSetForAffiliationStats` is deleted; a profile write no
+      longer touches `AFFILIATION_STATS`. `AFFILIATION_STATS` is
+      controllers-write; only the freeze (as controller) writes it.
 - [ ] No `.did`/bindings change: `src/declarations/**` is unchanged
       after `juno:functions:build`.
 - [ ] `npm run quality` and `npm run check` pass.
@@ -368,32 +423,11 @@ new tunables. The depth floor stays `MIN_CALLS_FOR_RANK`.
 
 ## Pending decisions
 
-- **Closed-month ranking: fully live vs frozen-at-close.** Recomputing
-  a closed month over the _current_ roster means its ranking can drift
-  after the month ends as members join/leave/opt-out, while podium
-  award docs are write-once (no clawback) — so two claimers of the
-  same month could receive placements computed against slightly
-  different rosters. Options: **(a)** fully live recompute everywhere
-  (recommended — leaving always retracts, including retroactively for
-  the displayed board and championship cups; the write-once award
-  bounds the only inconsistency to "already-paid stays paid"); **(b)**
-  freeze a per-month ranking snapshot at first rollover/claim computed
-  over the then-current opted-in roster (stable awards/cups, but a
-  post-close leave no longer retracts that one closed month — note the
-  90-day lock means most pump-then-leave spans multiple months
-  anyway). Owner: product. This is the hard trade-off the monthly
-  podium forces; resolve before flipping to In progress.
-- **Championship history without snapshot docs.** With
-  `AFFILIATION_STATS` snapshots gone, `listAffiliationChampionships`
-  has no list of "which months closed." Option (a): enumerate the
-  distinct month anchors present in `USER_MONTHLY_STATS` and recompute
-  each (live, mutable history). Option (b): keep a lightweight
-  immutable per-month champion record. Tied to the decision above.
 - **Pre-`USER_MONTHLY_STATS` historical months.** Months that closed
-  before `USER_MONTHLY_STATS` was populated will show reduced/no
-  monthly data under recompute (those affiliations' old snapshots are
-  abandoned). Accept as historical (those podiums are long claimed),
-  or one-time backfill? Recommend accept — no backfill.
+  before `USER_MONTHLY_STATS` was populated show reduced/no monthly
+  data when first frozen (their old rolling docs are abandoned). Accept
+  as historical (those podiums are long claimed), or one-time backfill?
+  Recommend accept — no backfill.
 - **Server-side verification of monthly counters against
   `RESOLVED_RESULTS`.** Given the podium pays VXP, decide whether to
   re-derive `monthCalls`/`monthWins` server-side rather than trust the
@@ -402,17 +436,37 @@ new tunables. The depth floor stays `MIN_CALLS_FOR_RANK`.
 
 ## Decisions
 
+- **Closed months freeze at close; live windows recompute.** Chosen
+  over fully-live. A VXP podium payout and a championship cup are
+  records of _that month_ — fully-live would let a school lose a cup it
+  already won (or shift a placement between two claimants) months later
+  as members churn, which is worse UX than the exploit it prevents. The
+  live board + all-time already retract on leave (the surface users see
+  most), and the 90-day lock means a pump-then-leave already spans
+  multiple months, so freezing only the closed months forfeits almost
+  no anti-exploit value. It is also cheaper and safer on the paid path:
+  the whole-kind recompute runs **once** at freeze, not on every claim,
+  and immutability removes cross-claimant drift. Cost: one write-once
+  snapshot doc per ranked affiliation per closed month (negligible),
+  reusing the existing 3-segment snapshot shape and readers.
 - **Reuse `USER_MONTHLY_STATS` rather than introduce a per-affiliation
   contribution ledger.** A new ledger that the leave/opt-out path
   actively decrements was considered and rejected: it fights the
-  existing write-once/forward-only invariants (you would have to
-  mutate frozen snapshots to subtract), adds a collection, and needs a
-  migration for baked-in totals. `USER_MONTHLY_STATS` already holds
-  the per-member-per-month deltas, derived from real clearing history,
-  with an own-row assert — so read-time roster-recompute (the same
-  shape #884 used for all-time) closes the exploit with no new storage
-  and no bindings change.
-- **Aggregate at read time, delete the write-time hook.** Moving all
-  windows to read-time recompute is what makes retraction automatic
-  (leave = not in the roster scan; opt-out = filtered) and removes the
-  append-only writer that caused the bug.
+  existing write-once invariants (you would have to mutate frozen
+  snapshots to subtract), adds a collection, and needs a migration for
+  baked-in totals. `USER_MONTHLY_STATS` already holds the
+  per-member-per-month deltas, derived from real clearing history, with
+  an own-row assert — so read-time roster-recompute (the same shape
+  #884 used for all-time) closes the exploit with no new storage and no
+  bindings change.
+- **Aggregate at read time, delete the write-time hook.** Moving the
+  live windows to read-time recompute is what makes retraction
+  automatic (leave = not in the roster scan; opt-out = filtered) and
+  removes the append-only writer that caused the bug. The one write
+  that remains — the closed-month freeze — is controller-owned and
+  immutable, so it can't be forged or pumped.
+- **Freeze is controller-written from the server's own recompute.**
+  `AFFILIATION_STATS` flips to controllers-write so a client can't
+  forge a frozen ranking; the freeze runs inside the podium-claim
+  update and writes as admin. Same posture as `RESOLVED_RESULTS` /
+  `SCHOOLS` / `EVENTS`.
