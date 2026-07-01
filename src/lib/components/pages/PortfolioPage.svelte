@@ -26,6 +26,7 @@
 	import { tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 	import { vxpHoldingsTotal } from '$lib/derived/vxp-holdings.derived';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
@@ -82,7 +83,10 @@
 		refreshPositions();
 	};
 
-	const getMarketById = (id: string) => $markets.find((m) => m.id === id);
+	// Markets in the reader's language (see `displayMarkets`); every numeric /
+	// status field is the untouched canonical value, so this is the right source
+	// for both the row titles and the PnL / probability math below.
+	const getMarketById = (id: string) => $displayMarkets.get(id);
 
 	// Live positions whose market hasn't resolved yet. The clearing canister
 	// deletes positions on settlement, so anything still in `$positions` is
@@ -507,7 +511,11 @@
 					</h2>
 					<span class="num portfolio-section-count">{$orders.length}</span>
 				</header>
-				<OpenOrdersTable markets={$markets} onRefresh={onOrdersRefresh} orders={$orders} />
+				<OpenOrdersTable
+					markets={[...$displayMarkets.values()]}
+					onRefresh={onOrdersRefresh}
+					orders={$orders}
+				/>
 			</section>
 		{/if}
 	{/if}
