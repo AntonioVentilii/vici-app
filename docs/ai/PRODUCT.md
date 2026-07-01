@@ -391,18 +391,39 @@ ranking surfaces. Both default **on** (legacy / unset reads as on).
   still publishes raw P&L + principals, so this is a display opt-out,
   not a data-hiding guarantee (canister-level hiding is a tracked
   fast-follow).
-- **Show in Worlds Universities** off → the user's resolved-trade delta
-  stops counting toward their school / country aggregate. Enforced in
-  the `onProfileSetForAffiliationStats` hook. `AFFILIATION_STATS` is a
-  forward-only aggregate with no per-member breakdown, so this gates
-  **future** contribution only; a past contribution already folded into
-  the total cannot be subtracted (the same reason a member who leaves
-  keeps their contribution credited — a known limitation tracked
-  separately).
+- **Show in Worlds Universities** off → the user drops out of their
+  school / country standings. Enforced at read time in the Worlds
+  aggregators (`cohort.services`), which recompute every window over the
+  current opted-in roster — so, unlike the leaderboard's display filter,
+  this retracts **past** contribution too, not just future. See
+  _Worlds Universities — standings reflect the current opted-in roster_
+  below for the full behaviour.
 
 Each toggle emits `privacy_sharing_toggled` (`source: leaderboard |
 worlds`, `label: on | off`). Decision record:
 [`specs/2026-06-28-feat-sharing-opt-out-enforcement.md`](./spec-driven-development/specs/2026-06-28-feat-sharing-opt-out-enforcement.md).
+
+### Worlds Universities — standings reflect the current opted-in roster
+
+A school's / country's Worlds standing is its **current members'** record,
+not a running tally that outlives them. The live windows — the all-time
+board and the current-month column — are recomputed on read over the
+affiliation's present roster: the all-time accuracy sums each member's
+lifetime, the month sums each member's `USER_MONTHLY_STATS` for the current
+month. So the instant a member leaves (allowed after the 90-day affiliation
+lock) or turns off the **Worlds** sharing toggle
+(`preferences.sharing.worldsOptIn`), their contribution drops out of the
+next read — a member can no longer pump a school and keep crediting it after
+leaving.
+
+A **closed** month is different: it is **frozen at close**. The first time
+anyone claims that month's podium, the ranking over the then-current
+opted-in roster is captured as an immutable snapshot, and the podium payout
+and the champion cup read from it thereafter. A later leave does not rewrite
+a month that has already ended, so awards and cups stay stable and can't
+drift between two people claiming the same month. A month confers a cup only
+once it has been frozen (claimed). Decision record:
+[`specs/2026-06-28-impr-worlds-standings-current-members.md`](./spec-driven-development/specs/2026-06-28-impr-worlds-standings-current-members.md).
 
 ### Battles — accuracy face-offs that resolve themselves
 

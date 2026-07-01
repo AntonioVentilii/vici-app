@@ -46,10 +46,7 @@ import {
 } from '$satellite/services/activity-reaction-count.services';
 import { assertSetActivityReaction } from '$satellite/services/activity-reaction.services';
 import { assertSetActivity } from '$satellite/services/activity.services';
-import {
-	assertSetAffiliationStats,
-	onProfileSetForAffiliationStats
-} from '$satellite/services/affiliation-stats.services';
+import { assertSetAffiliationStats } from '$satellite/services/affiliation-stats.services';
 import {
 	assertDeleteAffiliation,
 	assertSetAffiliation
@@ -1381,7 +1378,6 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onProfileSetForFlowMilestone(context);
 	await onProfileSetForAchievementAward(context);
 	await onProfileSetForComebackRestore(context);
-	onProfileSetForAffiliationStats(context);
 	onProfileSetForLeagueStats(context);
 };
 

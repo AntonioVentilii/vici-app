@@ -2,7 +2,6 @@ import { Collection } from '$lib/constants/collections.constants';
 import { RelationCategory, RelationState } from '$lib/enums/relation';
 import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 import {
-	affiliationStatsKey,
 	MIN_CALLS_FOR_RANK,
 	monthAnchorFromMs,
 	type AffiliationStatsDoc
@@ -15,6 +14,7 @@ import {
 } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
 import type { Relation } from '$lib/types/relation';
+import type { UserMonthlyStatsDoc } from '$lib/types/user-monthly-stats';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
@@ -905,20 +905,19 @@ export interface AffiliationChampionship {
  * which it finished **first** in its kind's monthly ranking.
  *
  * This reads the frozen `affiliation_stats` snapshot docs (3-segment
- * keys, written by the lazy month-rollover in
- * `affiliation-stats.services.ts`). For each closed month present in
+ * keys, written by the Worlds podium freeze in
+ * `vxp-worlds-podium.services.ts`). For each closed month present in
  * the snapshots, the top-ranked affiliation — by the same sort the
  * podium fan-out uses (`listAffiliationStatsForMonthFn`) — is that
  * month's champion. We collect the months where the requested
  * affiliation held that top slot.
  *
  * There is no separate "season conclusion" or champion-recording
- * entity in the backend: the only thing that closes a Worlds window
- * is this per-doc monthly rollover (Juno exposes no scheduler
- * primitive, so there's nothing that ends a season and stamps a
- * winner). History therefore populates one entry per month that has
- * actually rolled over and had a ranked leader — empty until the
- * first month closes.
+ * entity in the backend: a closed month is captured only when its
+ * podium is first claimed (Juno exposes no scheduler primitive, so
+ * nothing ends a season and stamps a winner on its own). History
+ * therefore populates one entry per month that has been frozen and had
+ * a ranked leader — a month with no claim yet confers no cup.
  *
  * Cost: O(snapshots) scan + a group-by; the per-month winner is the
  * first element of each month's sorted bucket.
@@ -1004,14 +1003,29 @@ export const listAffiliationChampionshipsFn = ({
 };
 
 /**
- * Subset of the profile payload the lifetime aggregate reads. Mirrors the
- * slice `affiliation-stats.services` decodes for the per-trade fan-out, but
- * here we read the *full* lifetime totals rather than a before/after delta.
+ * Subset of the profile payload the Worlds aggregates read: the lifetime
+ * totals plus the Worlds sharing opt-out. `decodeDocData` returns the raw
+ * msgpack shape, so a partial / legacy `preferences` decodes with the
+ * nested fields simply absent.
  */
 interface ProfileLifetimeSlice {
 	totalTrades?: number;
 	winRate?: number;
+	preferences?: {
+		sharing?: {
+			worldsOptIn?: boolean;
+		};
+	};
 }
+
+/**
+ * Worlds sharing opt-out. `preferences.sharing.worldsOptIn === false` hides
+ * the member from every Worlds standing (all-time, monthly, frozen podium).
+ * The flag is an opt-out defaulting to `true`, so a missing / legacy value
+ * (anything that isn't the literal `false`) counts as opted-in / shown.
+ */
+const isWorldsOptedOut = (slice: ProfileLifetimeSlice): boolean =>
+	slice.preferences?.sharing?.worldsOptIn === false;
 
 /**
  * Real lifetime tally for a Worlds kind, summed over each affiliation's
@@ -1082,7 +1096,8 @@ const aggregateMembersLifetime = ({
 
 			const trades = slice?.totalTrades ?? 0;
 
-			if (nonNullish(slice) && trades > 0) {
+			// Worlds opt-out: an opted-out member contributes to no standing.
+			if (nonNullish(slice) && !isWorldsOptedOut(slice) && trades > 0) {
 				// `winRate` is a 0..100 percentage; cap the derived win count at the
 				// trade total so the aggregate keeps `wins ≤ totalCalls`.
 				const wins = Math.min(trades, Math.round((trades * (slice.winRate ?? 0)) / 100));
@@ -1099,13 +1114,135 @@ const aggregateMembersLifetime = ({
 };
 
 /**
- * Single-affiliation stats for the detail page. The all-time totals
- * (`totalCalls` / `wins`) reflect the current roster's real lifetime
- * (see {@link aggregateMembersLifetime}); the monthly/season window comes
- * from the rolling `affiliation_stats` doc.
+ * Real per-month tally for a Worlds kind, summed over each affiliation's
+ * CURRENT opted-in roster. The monthly mirror of {@link aggregateMembersLifetime}:
+ * where the lifetime aggregate reads each member's profile totals, this reads
+ * each member's `USER_MONTHLY_STATS[${member}/${monthAnchor}]` row and folds
+ * that month's `monthCalls` / `monthWins` into the member's affiliation bucket.
  *
- * Returns `undefined` only when the affiliation has neither a stats doc nor
- * any members with history — callers treat that as "unranked / no data".
+ * This is what lets the monthly Worlds window retract on leave / opt-out with
+ * no per-month deltas on the profile: the month's numbers live per-member in
+ * `USER_MONTHLY_STATS` (written from real clearing history by the FE), and the
+ * aggregate is recomputed over whoever is a current, opted-in member now.
+ *
+ * Cost: one `USER_MONTHLY_STATS` scan (filtered by the `/${monthAnchor}`
+ * suffix, same shape as `getMonthlyLeaderboard`) + one `affiliations` scan +
+ * one `profiles` read per member who has activity in the month (for the
+ * opt-out gate). Pass `affiliationIdentifier` to limit to a single affiliation.
+ * Pure read (no writes) so both query and update paths can call it.
+ */
+const aggregateMembersForMonth = ({
+	kind,
+	monthAnchor,
+	affiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	monthAnchor: string;
+	affiliationIdentifier?: string;
+}): Map<string, { monthTotalCalls: number; monthWins: number }> => {
+	const caller = msgCaller().toUint8Array();
+
+	// Per-owner month totals for the requested month — one collection scan,
+	// suffix-filtered to the month (rolling docs live under `${owner}/${anchor}`).
+	const { items: monthlyItems } = listDocsStore({
+		collection: Collection.USER_MONTHLY_STATS,
+		caller,
+		params: {}
+	});
+
+	const suffix = `/${monthAnchor}`;
+	const byOwner = new Map<string, { monthCalls: number; monthWins: number }>();
+
+	for (const [docKey, item] of monthlyItems) {
+		if (docKey.endsWith(suffix)) {
+			try {
+				const doc = decodeDocData<UserMonthlyStatsDoc>(item.data);
+
+				// Guard against a key/anchor drift (a malformed write that slipped
+				// the assert): only trust rows whose embedded anchor matches.
+				if (doc.monthAnchor === monthAnchor) {
+					byOwner.set(doc.owner, { monthCalls: doc.monthCalls, monthWins: doc.monthWins });
+				}
+			} catch {
+				// skip malformed
+			}
+		}
+	}
+
+	const { items } = listDocsStore({
+		collection: Collection.AFFILIATIONS,
+		caller,
+		params: {}
+	});
+
+	const monthly = new Map<string, { monthTotalCalls: number; monthWins: number }>();
+
+	for (const [, item] of items) {
+		let aff: AffiliationDoc | undefined;
+
+		try {
+			aff = readAffiliationDoc(item.data);
+		} catch {
+			// skip malformed
+			aff = undefined;
+		}
+
+		const matches =
+			nonNullish(aff) &&
+			aff.kind === kind &&
+			(isNullish(affiliationIdentifier) || aff.affiliationIdentifier === affiliationIdentifier);
+
+		if (matches && nonNullish(aff)) {
+			const owned = byOwner.get(aff.member);
+
+			// Only members with activity in the month can contribute; skip the
+			// profile read entirely for members with no month row.
+			if (nonNullish(owned)) {
+				const profileDoc = getDocStore({
+					collection: Collection.PROFILES,
+					key: aff.member,
+					caller
+				});
+
+				let optedOut = false;
+
+				if (nonNullish(profileDoc)) {
+					try {
+						optedOut = isWorldsOptedOut(decodeDocData<ProfileLifetimeSlice>(profileDoc.data));
+					} catch {
+						// Malformed profile — treat as opted-in (shown).
+						optedOut = false;
+					}
+				}
+
+				if (!optedOut) {
+					const bucket = monthly.get(aff.affiliationIdentifier) ?? {
+						monthTotalCalls: 0,
+						monthWins: 0
+					};
+
+					bucket.monthTotalCalls += owned.monthCalls;
+					bucket.monthWins += owned.monthWins;
+					monthly.set(aff.affiliationIdentifier, bucket);
+				}
+			}
+		}
+	}
+
+	return monthly;
+};
+
+/**
+ * Single-affiliation stats for the detail page. Both windows are recomputed
+ * live over the affiliation's CURRENT opted-in roster: the all-time totals
+ * (`totalCalls` / `wins`) from {@link aggregateMembersLifetime}, the
+ * current-month window (`monthTotalCalls` / `monthWins`) from
+ * {@link aggregateMembersForMonth}. A member who has left or opted out is
+ * absent from both — no baked-in aggregate survives them.
+ *
+ * Returns `undefined` only when the affiliation has neither lifetime nor
+ * current-month activity from its present roster — callers treat that as
+ * "unranked / no data".
  */
 export const getAffiliationStatsFn = ({
 	kind,
@@ -1114,61 +1251,40 @@ export const getAffiliationStatsFn = ({
 	kind: AffiliationKind;
 	affiliationIdentifier: string;
 }): AffiliationStatsDoc | undefined => {
-	const caller = msgCaller();
-	const key = affiliationStatsKey({ kind, affiliationIdentifier });
-	const doc = getDocStore({
-		collection: Collection.AFFILIATION_STATS,
-		key,
-		caller: caller.toUint8Array()
-	});
-
-	let rolling: AffiliationStatsDoc | undefined;
-
-	if (nonNullish(doc)) {
-		try {
-			const decoded = decodeDocData<AffiliationStatsDoc>(doc.data);
-
-			// Guard against a corrupted/legacy row whose body doesn't match the key it's stored
-			// under — mixing another affiliation's monthly window into this response would be worse
-			// than no monthly data. Treat a mismatch as malformed and fall back to the roster view.
-			if (decoded.kind === kind && decoded.affiliationIdentifier === affiliationIdentifier) {
-				rolling = decoded;
-			}
-		} catch {
-			// Malformed payload — fall through to the roster-derived view.
-		}
-	}
+	const nowMs = Number(time() / 1_000_000n);
+	const anchor = monthAnchorFromMs(nowMs);
 
 	const lifetime = aggregateMembersLifetime({ kind, affiliationIdentifier }).get(
 		affiliationIdentifier
 	);
+	const month = aggregateMembersForMonth({ kind, monthAnchor: anchor, affiliationIdentifier }).get(
+		affiliationIdentifier
+	);
 
-	if (isNullish(rolling) && isNullish(lifetime)) {
+	if (isNullish(lifetime) && isNullish(month)) {
 		return;
 	}
-
-	const nowMs = Number(time() / 1_000_000n);
 
 	return {
 		kind,
 		affiliationIdentifier,
 		totalCalls: lifetime?.totalCalls ?? 0,
 		wins: lifetime?.wins ?? 0,
-		monthAnchor: rolling?.monthAnchor ?? monthAnchorFromMs(nowMs),
-		monthTotalCalls: rolling?.monthTotalCalls ?? 0,
-		monthWins: rolling?.monthWins ?? 0,
-		updatedAtMs: rolling?.updatedAtMs ?? nowMs
+		monthAnchor: anchor,
+		monthTotalCalls: month?.monthTotalCalls ?? 0,
+		monthWins: month?.monthWins ?? 0,
+		updatedAtMs: nowMs
 	};
 };
 
 /**
- * Ranked leaderboard scan for a Worlds kind. The all-time totals
- * (`totalCalls` / `wins`) are the current roster's real lifetime
- * (see {@link aggregateMembersLifetime}), so the WC/all-time board reflects
- * the members' actual history; the monthly window is carried over from each
- * affiliation's rolling `affiliation_stats` doc for the season board. An
- * affiliation surfaces as soon as its roster's combined lifetime crosses
- * `MIN_CALLS_FOR_RANK` — even before anyone has traded since joining.
+ * Ranked leaderboard scan for a Worlds kind. Both windows are recomputed
+ * live over each affiliation's CURRENT opted-in roster: the all-time totals
+ * (`totalCalls` / `wins`) from {@link aggregateMembersLifetime} (the ranking
+ * base), the current-month window (`monthTotalCalls` / `monthWins`) from
+ * {@link aggregateMembersForMonth}. An affiliation surfaces as soon as its
+ * roster's combined lifetime crosses `MIN_CALLS_FOR_RANK`; a member who has
+ * left or opted out contributes to neither window.
  *
  * Sort key: `wins / totalCalls` desc, then `totalCalls` desc (rewards depth),
  * then `affiliationIdentifier` asc (deterministic tie break across re-runs —
@@ -1182,51 +1298,22 @@ export const listAffiliationStatsFn = ({
 	kind: AffiliationKind;
 	limit?: number;
 }): AffiliationStatsDoc[] => {
-	const caller = msgCaller().toUint8Array();
-
-	// All-time totals: the real lifetime of the current roster, per affiliation.
-	const lifetime = aggregateMembersLifetime({ kind });
-
-	// Monthly/season window: the rolling stats docs, keyed by affiliation.
-	const { items } = listDocsStore({
-		collection: Collection.AFFILIATION_STATS,
-		caller,
-		params: {}
-	});
-
-	const rolling = new Map<string, AffiliationStatsDoc>();
-
-	for (const [docKey, item] of items) {
-		// Skip snapshot docs (3-segment keys) — only rolling (current-month)
-		// docs carry the live monthly window. Counting slashes is cheaper than
-		// splitting; we just need >1.
-		const isRollingDoc = docKey.indexOf('/') === docKey.lastIndexOf('/');
-
-		if (isRollingDoc) {
-			try {
-				const doc = decodeDocData<AffiliationStatsDoc>(item.data);
-
-				if (doc.kind === kind) {
-					rolling.set(doc.affiliationIdentifier, doc);
-				}
-			} catch {
-				// skip malformed
-			}
-		}
-	}
-
 	const nowMs = Number(time() / 1_000_000n);
 	const anchor = monthAnchorFromMs(nowMs);
 
+	// All-time totals: the real lifetime of the current opted-in roster.
+	const lifetime = aggregateMembersLifetime({ kind });
+	// Current-month window: live recompute over the same roster.
+	const monthly = aggregateMembersForMonth({ kind, monthAnchor: anchor });
+
 	// Rank over the affiliations that have current members — their roster lifetime
-	// is the all-time tally. An affiliation whose roster has emptied (a rolling
-	// doc survives but nobody represents it now) has a zero tally and would fall
-	// below the floor anyway, so it's intentionally left off; the `rolling` map is
-	// consulted only for each ranked row's monthly window.
+	// is the all-time tally. An affiliation whose roster has emptied has a zero
+	// tally and falls below the floor; the monthly map only fills each ranked
+	// row's current-month window.
 	const stats: AffiliationStatsDoc[] = [];
 
 	for (const [affiliationIdentifier, life] of lifetime) {
-		const month = rolling.get(affiliationIdentifier);
+		const month = monthly.get(affiliationIdentifier);
 		const { totalCalls, wins } = life;
 
 		// Same depth floor as before, now against the real lifetime tally — at
@@ -1237,10 +1324,10 @@ export const listAffiliationStatsFn = ({
 				affiliationIdentifier,
 				totalCalls,
 				wins,
-				monthAnchor: month?.monthAnchor ?? anchor,
+				monthAnchor: anchor,
 				monthTotalCalls: month?.monthTotalCalls ?? 0,
 				monthWins: month?.monthWins ?? 0,
-				updatedAtMs: month?.updatedAtMs ?? nowMs
+				updatedAtMs: nowMs
 			});
 		}
 	}
@@ -1260,14 +1347,17 @@ export const listAffiliationStatsFn = ({
 };
 
 /**
- * List the frozen snapshot docs for a specific completed month.
- * Returns affiliation stats for `(kind, *, monthAnchor)` — one row
- * per affiliation that had any activity in that month.
+ * Ranked affiliation rows for a specific completed month — the input the
+ * Worlds podium reads to pick top-3.
  *
- * Drives the Worlds podium monthly fan-out: pick the top-3 here and
- * credit VXP to every member of each. Sort key is the same as
- * `listAffiliationStatsFn` so the leaderboard view and the awards
- * agree.
+ * Frozen-at-close: once a month's podium has been claimed the ranking is
+ * captured as immutable snapshot docs (`${kind}/${affiliationIdentifier}/${monthAnchor}`,
+ * written by the freeze in `vxp-worlds-podium.services`). This function
+ * returns those frozen rows when they exist, so awards and the champion cup
+ * are stable and can't drift as members later churn. Before a month has been
+ * frozen (no claim yet) it live-recomputes over the current opted-in roster
+ * via {@link aggregateMembersForMonth} as a **provisional** view — the same
+ * data the freeze will capture. Sort key matches `listAffiliationStatsFn`.
  */
 export const listAffiliationStatsForMonthFn = ({
 	kind,
@@ -1284,12 +1374,11 @@ export const listAffiliationStatsForMonthFn = ({
 	});
 
 	const expectedSuffix = `/${monthAnchor}`;
-	const stats: AffiliationStatsDoc[] = [];
+	const frozen: AffiliationStatsDoc[] = [];
 
 	for (const [docKey, item] of items) {
-		// Only 3-segment keys ending in `/${monthAnchor}` qualify — these
-		// are the frozen snapshots written at the moment the month
-		// rolled over.
+		// Only 3-segment keys ending in `/${monthAnchor}` qualify — the frozen
+		// snapshots captured when the month's podium was first claimed.
 		const isSnapshotForMonth =
 			docKey.indexOf('/') !== docKey.lastIndexOf('/') && docKey.endsWith(expectedSuffix);
 
@@ -1302,13 +1391,17 @@ export const listAffiliationStatsForMonthFn = ({
 					doc.monthAnchor === monthAnchor &&
 					doc.monthTotalCalls >= MIN_CALLS_FOR_RANK
 				) {
-					stats.push(doc);
+					frozen.push(doc);
 				}
 			} catch {
 				// skip malformed
 			}
 		}
 	}
+
+	// Frozen snapshot present → that's the immutable ranking. Otherwise fall
+	// back to a provisional live recompute over the current opted-in roster.
+	const stats = frozen.length > 0 ? frozen : liveMonthlyRows({ kind, monthAnchor, nowMs: 0 }).rows;
 
 	stats.sort(
 		compareAffiliationRank({
@@ -1318,4 +1411,87 @@ export const listAffiliationStatsForMonthFn = ({
 	);
 
 	return stats;
+};
+
+/**
+ * Build ranked-eligible `AffiliationStatsDoc` rows for a month from the live
+ * roster recompute (used as the provisional fallback before a month is frozen,
+ * and as the source the freeze snapshots). Only affiliations clearing
+ * `MIN_CALLS_FOR_RANK` are returned. For a month-scoped row the lifetime
+ * fields mirror the monthly ones (the podium reads only the monthly window).
+ *
+ * `nowMs` stamps `updatedAtMs`; callers in a query context that don't need a
+ * real timestamp may pass `0`.
+ */
+export const liveMonthlyRows = ({
+	kind,
+	monthAnchor,
+	nowMs
+}: {
+	kind: AffiliationKind;
+	monthAnchor: string;
+	nowMs: number;
+}): { rows: AffiliationStatsDoc[] } => {
+	const monthly = aggregateMembersForMonth({ kind, monthAnchor });
+	const rows: AffiliationStatsDoc[] = [];
+
+	for (const [affiliationIdentifier, m] of monthly) {
+		if (m.monthTotalCalls >= MIN_CALLS_FOR_RANK) {
+			rows.push({
+				kind,
+				affiliationIdentifier,
+				totalCalls: m.monthTotalCalls,
+				wins: m.monthWins,
+				monthAnchor,
+				monthTotalCalls: m.monthTotalCalls,
+				monthWins: m.monthWins,
+				updatedAtMs: nowMs
+			});
+		}
+	}
+
+	return { rows };
+};
+
+/**
+ * Whether a closed month has already been frozen — i.e. at least one snapshot
+ * doc exists for `(kind, monthAnchor)`. The podium freeze uses this as an
+ * all-or-nothing gate: the first claim writes the whole ranked set, and every
+ * later claim sees the month as frozen and leaves it untouched, so the frozen
+ * ranking never grows or drifts as the roster later churns.
+ */
+export const hasFrozenMonthlySnapshotFn = ({
+	kind,
+	monthAnchor
+}: {
+	kind: AffiliationKind;
+	monthAnchor: string;
+}): boolean => {
+	const caller = msgCaller().toUint8Array();
+	const { items } = listDocsStore({
+		collection: Collection.AFFILIATION_STATS,
+		caller,
+		params: {}
+	});
+
+	const suffix = `/${monthAnchor}`;
+
+	for (const [docKey, item] of items) {
+		const isSnapshotForMonth =
+			docKey.indexOf('/') !== docKey.lastIndexOf('/') && docKey.endsWith(suffix);
+
+		if (isSnapshotForMonth) {
+			try {
+				const doc = decodeDocData<AffiliationStatsDoc>(item.data);
+
+				if (doc.kind === kind && doc.monthAnchor === monthAnchor) {
+					return true;
+				}
+			} catch {
+				// skip malformed
+			}
+		}
+	}
+
+	return false;
 };
