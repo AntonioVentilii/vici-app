@@ -8,6 +8,7 @@ export const zhHansMessages = {
 	'trade.error.generic': '无法提交你的预测，请稍后重试。',
 	'trade.error.insufficient_margin':
 		'可用余额不足——此预测需要 {required}，但你只有 {available}。随着你未结的预测结算，余额会逐渐释放。',
+	'trade.error.market_closed': '此市场刚刚关闭——预测已不再开放。',
 	'trade.error.not_authorized_to_trade': '你无权访问此市场。',
 	'trade.error.not_order_creator': '你只能取消自己的订单。',
 	'trade.error.order_not_found': '该挂单刚刚被成交或撤销——请重试。',

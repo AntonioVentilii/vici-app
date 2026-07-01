@@ -6,6 +6,7 @@ import {
 	submitLimitOrder,
 	submitMarketOrder
 } from '$lib/api/clearing.api';
+import { MarketClosedError } from '$lib/canisters/clearing.errors';
 import { PRICE_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import { logActivity } from '$lib/services/activity.services';
@@ -112,7 +113,8 @@ export const placeOrder = async ({
 	type,
 	price,
 	qty,
-	outcome
+	outcome,
+	expiryDate
 }: {
 	marketId: MarketId;
 	marketTitle: string;
@@ -121,7 +123,17 @@ export const placeOrder = async ({
 	price: number;
 	qty: bigint;
 	outcome: Outcome;
+	expiryDate: bigint;
 }): Promise<void> => {
+	// Stopgap expiry gate. The deck/catalog is filtered `only_unexpired` at
+	// fetch time, but the clearing engine has no expiry check (its `TradeError`
+	// has no `Expired` variant — it only rejects settled series), so a deck
+	// opened just before kickoff could submit after it. Reject at/after the
+	// market's expiry until icdc-core enforces this server-side.
+	if (BigInt(Date.now()) >= expiryDate) {
+		throw new MarketClosedError();
+	}
+
 	// Sizing rounds the stake down to whole contracts (`amountUsd / priceUsd`),
 	// so a stake smaller than one contract's price arrives here as zero —
 	// reject it before any state changes or activity logging.
