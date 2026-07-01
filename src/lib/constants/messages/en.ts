@@ -9,6 +9,7 @@ export const enMessages = {
 	'trade.error.generic': "Your prediction couldn't be placed. Try again shortly.",
 	'trade.error.insufficient_margin':
 		'Not enough available balance — this prediction needs {required}, but you have {available}. It frees up as your open predictions resolve.',
+	'trade.error.market_closed': 'This market just closed — predictions are no longer open.',
 	'trade.error.not_authorized_to_trade': "You don't have access to this market.",
 	'trade.error.not_order_creator': 'You can only cancel your own orders.',
 	'trade.error.order_not_found': 'That offer was just taken or withdrawn — try again.',

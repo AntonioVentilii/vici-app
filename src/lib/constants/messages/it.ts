@@ -9,6 +9,8 @@ export const itMessages = {
 	'trade.error.generic': 'Impossibile inviare la tua previsione. Riprova tra poco.',
 	'trade.error.insufficient_margin':
 		'Saldo disponibile insufficiente — questa previsione richiede {required}, ma hai {available}. Si libera man mano che le tue previsioni aperte si risolvono.',
+	'trade.error.market_closed':
+		'Questo mercato si è appena chiuso — le predizioni non sono più aperte.',
 	'trade.error.not_authorized_to_trade': 'Non hai accesso a questo mercato.',
 	'trade.error.not_order_creator': 'Puoi annullare solo i tuoi ordini.',
 	'trade.error.order_not_found': "Quell'offerta è stata appena presa o ritirata — riprova.",

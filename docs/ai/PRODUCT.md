@@ -197,7 +197,13 @@ When a market has a creator/admin-authored translation for the reader's
 locale (resolved through the locale fallback chain), its title, description,
 resolution clause, and categorical outcome labels render in that language
 **everywhere** — list rows, market cards, the Flow deck (front + back), the
-trade modal, share text, and the detail page — not just the detail page.
+trade modal, share text, the detail page, and every surface that names a
+market the reader has predicted on: the portfolio (active calls, history,
+open orders), the dashboard (open + resolved call rows and the Day-0 starter
+list), the away-resolution digest, the settled-market notifications, the
+wallet transaction history + recent activity, and the calibration deck.
+The only place a market deliberately keeps its on-chain original is the
+admin resolution surface, where operators read canonical text.
 A single global preference governs the default ("Show markets in your
 language" in Settings → Preferences): on (the default) shows translations
 where they exist; off always shows the on-chain original. The preference is
@@ -365,6 +371,37 @@ gate — and can never disagree with the board it links into (it previously
 showed the satellite points rank, which could read a phantom #1). Decision
 record:
 [`specs/2026-06-25-impr-leaderboard-integrity.md`](./spec-driven-development/specs/2026-06-25-impr-leaderboard-integrity.md).
+
+### Privacy — leaderboard & Worlds sharing opt-outs
+
+Two Settings → Privacy toggles let a user remove themselves from public
+ranking surfaces. Both default **on** (legacy / unset reads as on).
+
+- **Show on global leaderboard** off → the user is dropped from the
+  ranked and provisional lists **other people** see; ranks below them
+  compress with no gap. They keep their own rank: their `You` row and
+  the Arena "Global ranking" card (`ownGlobalStanding`) still resolve,
+  and their top-decile achievement (a separate satellite points-rank
+  path) is unaffected. Enforced FE-side in `globalStandingsRows`,
+  **failing closed**: a non-self row appears only once its profile is
+  loaded and not opted out, so an opted-out predictor never flashes onto
+  the board before their preference is known. The leaderboard hydrates
+  every raw-slice principal (not just visible rows), so opted-in rows
+  fill in as profiles land rather than starving. The clearing canister
+  still publishes raw P&L + principals, so this is a display opt-out,
+  not a data-hiding guarantee (canister-level hiding is a tracked
+  fast-follow).
+- **Show in Worlds Universities** off → the user drops out of their
+  school / country standings. Enforced at read time in the Worlds
+  aggregators (`cohort.services`), which recompute every window over the
+  current opted-in roster — so, unlike the leaderboard's display filter,
+  this retracts **past** contribution too, not just future. See
+  *Worlds Universities — standings reflect the current opted-in roster*
+  below for the full behaviour.
+
+Each toggle emits `privacy_sharing_toggled` (`source: leaderboard |
+worlds`, `label: on | off`). Decision record:
+[`specs/2026-06-28-feat-sharing-opt-out-enforcement.md`](./spec-driven-development/specs/2026-06-28-feat-sharing-opt-out-enforcement.md).
 
 ### Worlds Universities — standings reflect the current opted-in roster
 

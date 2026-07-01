@@ -14,6 +14,7 @@ export const ptMessages = {
 	'trade.error.generic': 'Não foi possível colocar a tua previsão. Tenta novamente daqui a pouco.',
 	'trade.error.insufficient_margin':
 		'Saldo disponível insuficiente — esta previsão precisa de {required}, mas tens {available}. Fica livre à medida que as tuas previsões em aberto são resolvidas.',
+	'trade.error.market_closed': 'Este mercado acabou de fechar — as previsões já não estão abertas.',
 	'trade.error.not_authorized_to_trade': 'Não tens acesso a este mercado.',
 	'trade.error.not_order_creator': 'Só podes cancelar as tuas próprias ordens.',
 	'trade.error.order_not_found': 'Essa oferta acabou de ser aceite ou retirada — tenta novamente.',

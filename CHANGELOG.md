@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.8.9](https://github.com/AntonioVentilii/vici-app/compare/v1.8.8...v1.8.9) (2026-07-01)
+
+
+### Features
+
+* **i18n:** translate market names on personal surfaces ([#1079](https://github.com/AntonioVentilii/vici-app/issues/1079)) ([cbe9bba](https://github.com/AntonioVentilii/vici-app/commit/cbe9bba28b0f54b56c8ac3a9f731c19af535e346))
+* **wc:** add refreshed opening odds to R32 deck ([#1074](https://github.com/AntonioVentilii/vici-app/issues/1074)) ([d9bd99d](https://github.com/AntonioVentilii/vici-app/commit/d9bd99d563b6d4d25d42620b9fd6fde3ae3d9bc4))
+
+
+### Bug Fixes
+
+* **flow:** keep the daily-goal count monotonic under fast swiping ([#1080](https://github.com/AntonioVentilii/vici-app/issues/1080)) ([4162fb4](https://github.com/AntonioVentilii/vici-app/commit/4162fb4ee12233d96878399031310aad0a3ea835))
+* **flow:** skeleton resolved-call titles until the markets catalog loads ([#1076](https://github.com/AntonioVentilii/vici-app/issues/1076)) ([8053ad1](https://github.com/AntonioVentilii/vici-app/commit/8053ad1ba812829011bfce0b94d795076bd89c24))
+* **trade:** reject predictions placed after market expiry ([#1078](https://github.com/AntonioVentilii/vici-app/issues/1078)) ([0d58894](https://github.com/AntonioVentilii/vici-app/commit/0d58894b966be3a4f559ed888542ae0c5dc1b5eb))
+* **wc:** remove matchday-squad void clause from R32 market resolutions ([#1077](https://github.com/AntonioVentilii/vici-app/issues/1077)) ([f944aec](https://github.com/AntonioVentilii/vici-app/commit/f944aec984ff62f85b13b84447b36bc520882684))
+
+
+### Miscellaneous Chores
+
+* **npm-deps-dev:** bump @types/node from 25.9.4 to 26.0.0 ([#1031](https://github.com/AntonioVentilii/vici-app/issues/1031)) ([45f5510](https://github.com/AntonioVentilii/vici-app/commit/45f55102aa76414ab2729ef2f6afad9fe5f7324e))
+* **satellite:** remove dead clearing-executed-counts helper ([#1081](https://github.com/AntonioVentilii/vici-app/issues/1081)) ([e842797](https://github.com/AntonioVentilii/vici-app/commit/e842797e8c7452345f249f999f9b1be2ba78f56c))
+
+## [1.8.8](https://github.com/AntonioVentilii/vici-app/compare/v1.8.7...v1.8.8) (2026-06-29)
+
+
+### Features
+
+* **wc:** add R32 market deck with 7-locale translations ([#1071](https://github.com/AntonioVentilii/vici-app/issues/1071)) ([cb79ed0](https://github.com/AntonioVentilii/vici-app/commit/cb79ed02b047e3284c505a8d8f6258b0496680bd))
+* **wc:** schedule R32 market releases ([#1072](https://github.com/AntonioVentilii/vici-app/issues/1072)) ([22f4f3f](https://github.com/AntonioVentilii/vici-app/commit/22f4f3f7180227bbb8da82cadc88e813ce9fcff2))
+
+## [1.8.7](https://github.com/AntonioVentilii/vici-app/compare/v1.8.6...v1.8.7) (2026-06-28)
+
+
+### Features
+
+* **privacy:** enforce leaderboard & Worlds sharing opt-outs ([#1069](https://github.com/AntonioVentilii/vici-app/issues/1069)) ([f395535](https://github.com/AntonioVentilii/vici-app/commit/f3955358d163bfe35a1664b24b5ddb151ae12a22))
+
+
+### Tests
+
+* **e2e:** unblock the two deterministically-failing Playwright specs ([#1066](https://github.com/AntonioVentilii/vici-app/issues/1066)) ([d176116](https://github.com/AntonioVentilii/vici-app/commit/d176116daa777cb2f3ea38204a7128fae6ed4ba6))
+
 ## [1.8.6](https://github.com/AntonioVentilii/vici-app/compare/v1.8.5...v1.8.6) (2026-06-28)
 
 

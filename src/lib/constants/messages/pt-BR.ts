@@ -16,6 +16,8 @@ export const ptBRMessages = {
 	'trade.error.generic': 'Não foi possível registrar sua previsão. Tente de novo em instantes.',
 	'trade.error.insufficient_margin':
 		'Saldo disponível insuficiente — esta previsão precisa de {required}, mas você tem {available}. Ele é liberado conforme suas previsões em aberto são resolvidas.',
+	'trade.error.market_closed':
+		'Este mercado acabou de fechar — as previsões não estão mais abertas.',
 	'trade.error.not_authorized_to_trade': 'Você não tem acesso a este mercado.',
 	'trade.error.not_order_creator': 'Você só pode cancelar suas próprias ordens.',
 	'trade.error.order_not_found': 'Essa oferta acabou de ser aceita ou retirada — tente de novo.',

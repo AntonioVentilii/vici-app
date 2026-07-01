@@ -31,6 +31,21 @@ export class TradeExecutionError extends Error {
 }
 
 /**
+ * A prediction was attempted at or after the market's kickoff/expiry. Thrown
+ * client-side by `placeOrder`: the clearing engine has no expiry gate (its
+ * `TradeError` carries no `Expired` variant — it only rejects already-settled
+ * series), so a stale Flow deck built before kickoff could otherwise submit
+ * after it. Distinct from a settled-series rejection: the market is closed but
+ * not yet resolved.
+ */
+export class MarketClosedError extends Error {
+	constructor() {
+		super('Market closed: predictions are no longer open');
+		this.name = 'MarketClosedError';
+	}
+}
+
+/**
  * An i18n message descriptor — a `MessageKey` plus its interpolation params —
  * resolved by the caller through `t({ locale, key, params })`.
  */
@@ -129,6 +144,10 @@ export const mapTradeError = (err: ClearingDid.TradeError): TradeErrorMessage =>
  * through to a generic key so the toast never surfaces a raw payload.
  */
 export const tradeErrorMessage = (error: unknown): TradeErrorMessage => {
+	if (error instanceof MarketClosedError) {
+		return { key: 'trade.error.market_closed' };
+	}
+
 	if (!(error instanceof TradeExecutionError)) {
 		return { key: 'trade.error.generic' };
 	}

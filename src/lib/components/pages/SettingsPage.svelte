@@ -43,6 +43,7 @@
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { track } from '$lib/services/analytics.services';
 	import { persistPreferences } from '$lib/services/profile.services';
 	import { canInstall } from '$lib/stores/a2hs.store';
 	import { localeStore, setLocale } from '$lib/stores/locale.store';
@@ -470,9 +471,8 @@
 			Secondary "Privacy" card — the two opt-out share toggles
 			(global leaderboard, Worlds Universities) distinct from the
 			privacy-and-security set above. Both persist through the
-			`preferences.sharing` slice. They record the user's intent
-			today; server-side enforcement (actually hiding an opted-out
-			user from those surfaces) is a follow-up.
+			`preferences.sharing` slice and are enforced: leaderboard via
+			the FE standings filter, Worlds via the affiliation-stats hook.
 		-->
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.privacy_share' })}>
 			<SetToggle
@@ -484,6 +484,11 @@
 						...prefs,
 						sharing: { ...prefs.sharing, leaderboardOptIn: value }
 					}));
+					track({
+						name: 'privacy_sharing_toggled',
+						source: 'leaderboard',
+						label: value ? 'on' : 'off'
+					});
 				}}
 				sub={t({ locale: $localeStore, key: 'settings.privacy_share.global.sub' })}
 			/>
@@ -497,6 +502,7 @@
 						...prefs,
 						sharing: { ...prefs.sharing, worldsOptIn: value }
 					}));
+					track({ name: 'privacy_sharing_toggled', source: 'worlds', label: value ? 'on' : 'off' });
 				}}
 				sub={t({ locale: $localeStore, key: 'settings.privacy_share.worlds.sub' })}
 			/>

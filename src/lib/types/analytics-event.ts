@@ -167,6 +167,13 @@ export type AnalyticsEventName =
 	| 'affiliation_set'
 	/** An affiliation was removed (after the 90-day lock). */
 	| 'affiliation_removed'
+	// ── Settings / privacy ────────────────────────────────────────────
+	/**
+	 * A sharing opt-out toggle was flipped in Settings → Privacy. `source`
+	 * carries which control (`leaderboard | worlds`), `label` the new state
+	 * (`on | off`) — so opt-out rates per surface are measurable.
+	 */
+	| 'privacy_sharing_toggled'
 	// ── School verification ───────────────────────────────────────────
 	/** The school picker was opened. */
 	| 'school_picker_opened'

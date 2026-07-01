@@ -54,7 +54,7 @@
 	import { friendsListStore } from '$lib/stores/friends.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { marketsStore } from '$lib/stores/markets.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
@@ -88,7 +88,10 @@
 	const inPlayDisplay = $derived(formatVxpBalance({ value: $vxpBacked, decimals: USD_DECIMALS }));
 
 	// ─── Markets ───────────────────────────────────────────────────────
-	const marketById = $derived(new Map<string, Market>(($marketsStore ?? []).map((m) => [m.id, m])));
+	// Markets in the reader's language (see `displayMarkets`) — every numeric /
+	// status field is the untouched canonical value, so the call-row math and
+	// `isUnresolved` status checks below read from it unchanged.
+	const marketById = $derived($displayMarkets);
 
 	// Short, year-stripped close label so the row end stays compact.
 	const timerOf = (market: Market): string => {
@@ -318,7 +321,7 @@
 	// Open markets, most-traded first — the starter list (Day 0) and the
 	// "add another while you wait" pair (Day 1).
 	const openMarketsByVolume = $derived.by<Market[]>(() =>
-		[...($marketsStore ?? [])]
+		[...$displayMarkets.values()]
 			.filter((m) => m.status === 'Open')
 			.sort((a, b) => {
 				if (b.totalVolume === a.totalVolume) {

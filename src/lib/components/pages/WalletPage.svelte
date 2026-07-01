@@ -33,6 +33,7 @@
 		type WalletTransactionsDone
 	} from '$lib/services/wallet.service';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
@@ -300,7 +301,7 @@
 	// a single inline string (e.g. "Won · {market}", "Stake · {market}",
 	// "Receive", "Send") so the row reads at a glance.
 	const marketTitle = (marketId: string | undefined): string | undefined =>
-		marketId ? $markets.find((m) => m.id === marketId)?.title : undefined;
+		nonNullish(marketId) ? $displayMarkets.get(marketId)?.title : undefined;
 
 	const recentRowTitleKey = (tx: Transaction): MessageKey => {
 		switch (tx.type) {

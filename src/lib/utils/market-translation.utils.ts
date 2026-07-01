@@ -48,7 +48,7 @@ export const resolveMarketTranslation = ({
 export const translatedLanguageLabel = (locale: string): string =>
 	SUPPORTED_LOCALES.find(({ id }) => id === locale)?.label ?? locale;
 
-interface MarketDisplayOriginal {
+export interface MarketDisplayOriginal {
 	title: string;
 	description: string;
 	resolution: string;

@@ -27,6 +27,7 @@
 	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
+	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { leaderboardQualifyMin } from '$lib/stores/tweaks.store';
 	import type { Relation } from '$lib/types/relation';
 	import type { StandingsWindow } from '$lib/types/standings';
@@ -134,20 +135,31 @@
 		});
 	});
 
-	// Hydrate the shared profile cache for the rows this surface actually
-	// paints — handle / avatar / streak overlay onto the standing reactively as
-	// profiles land. `loadGlobalStandings` no longer hydrates (the dash shares
-	// its cached slice but only needs the viewer's own rank), so the Leaderboard
-	// owns this. `loadProfilesByPrincipals` dedupes against the cache, so the
-	// re-run this triggers once profiles arrive is a no-op.
+	// Hydrate the shared profile cache for the rows this surface paints —
+	// handle / avatar / streak overlay onto the standing reactively as profiles
+	// land. `loadGlobalStandings` no longer hydrates (the dash shares its cached
+	// slice but only needs the viewer's own rank), so the Leaderboard owns this.
+	// `loadProfilesByPrincipals` dedupes against the cache, so the re-run this
+	// triggers once profiles arrive is a no-op.
 	//
-	// The viewer's own row is excluded: `globalStandingsRows` already overlays
-	// the self row from the live `userStore.profile`, so hydrating it would only
-	// add a redundant `getProfile` on every visit / window switch.
+	// Driven off the RAW slice (`globalStandingsStore`), not the filtered
+	// `rankedRows` / `provisionalRows`: the leaderboard opt-out fails closed, so
+	// a not-yet-hydrated (or opted-out) row is absent from the partition.
+	// Hydrating only the visible rows would never fetch the missing profiles, so
+	// an opted-in row could never resolve into view. The viewer's own row is
+	// excluded — `globalStandingsRows` overlays it from the live
+	// `userStore.profile`, so hydrating it would only add a redundant
+	// `getProfile` on every visit / window switch.
 	$effect(() => {
-		const owners = [...rankedRows, ...provisionalRows]
-			.filter((row) => !row.isSelf)
-			.map((row) => row.owner);
+		const slice = $globalStandingsStore.get(activeWindow);
+
+		if (isNullish(slice)) {
+			return;
+		}
+
+		const owners = slice.entries
+			.filter((entry) => entry.owner !== currentUser)
+			.map((entry) => entry.owner);
 
 		if (owners.length > 0) {
 			void loadProfilesByPrincipals({ principals: owners });

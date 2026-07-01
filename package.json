@@ -1,9 +1,9 @@
 {
 	"name": "vici-app",
-	"version": "1.8.6",
+	"version": "1.8.9",
 	"juno": {
 		"functions": {
-			"version": "1.8.6"
+			"version": "1.8.9"
 		}
 	},
 	"private": true,
@@ -53,7 +53,7 @@
 		"@tailwindcss/postcss": "^4.2.4",
 		"@tailwindcss/vite": "^4.2.2",
 		"@types/eslint": "^9.6.1",
-		"@types/node": "^25.9.2",
+		"@types/node": "^26.0.0",
 		"eslint": "^10.5.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.19.0",

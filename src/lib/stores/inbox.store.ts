@@ -13,7 +13,7 @@ import {
 } from '$lib/constants/inbox.constants';
 import type { AppLocale } from '$lib/constants/locale.constants';
 import { AppPath } from '$lib/constants/routes.constants';
-import { marketById } from '$lib/derived/market-by-id.derived';
+import { marketsNotInitialized } from '$lib/derived/markets.derived';
 import {
 	resolvedPositions,
 	resolvedPositionsNotInitialized
@@ -23,6 +23,7 @@ import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/fr
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import { leagueBattlesStore, leaguesLoadedStore, myLeaguesStore } from '$lib/stores/leagues.store';
 import { localeStore } from '$lib/stores/locale.store';
+import { displayMarkets } from '$lib/stores/market-translations.store';
 import { preferencesStore } from '$lib/stores/preferences.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { userStore } from '$lib/stores/user.store';
@@ -258,10 +259,20 @@ const settledReadStore = writable<Set<bigint>>(loadSettledReadSet());
  * already-existing "X.YZ USD" presentation downstream surfaces use.
  */
 const settledInboxStore: Readable<InboxNotification[]> = derived(
-	[resolvedPositions, marketById, settledReadStore, localeStore],
-	([$resolved, $marketById, $read, $locale]) =>
-		$resolved.map((entry): InboxNotification => {
-			const market = $marketById.get(entry.marketId);
+	[resolvedPositions, displayMarkets, marketsNotInitialized, settledReadStore, localeStore],
+	([$resolved, $displayMarkets, $marketsNotInitialized, $read, $locale]) => {
+		// The card body bakes the market title into its copy ("You won $X on
+		// {market}"), so there is no room for a title skeleton — until the
+		// catalog loads we'd render "Unknown Market" inline. Hold the settled
+		// cards back instead; they surface the moment titles resolve. Read state
+		// lives in `settledReadStore`, so this display-only gate can't lose an
+		// acknowledgement.
+		if ($marketsNotInitialized) {
+			return [];
+		}
+
+		return $resolved.map((entry): InboxNotification => {
+			const market = $displayMarkets.get(entry.marketId);
 
 			const variant: 'won' | 'lost' | 'neutral' = entry.result;
 			const titleKey =
@@ -301,7 +312,8 @@ const settledInboxStore: Readable<InboxNotification[]> = derived(
 				// (`notificationDestination`) — `mid` carries the market id.
 				mid: entry.marketId
 			};
-		})
+		});
+	}
 );
 
 // ── Likes received on your own calls ────────────────────────────────────────
@@ -430,12 +442,12 @@ const resolvedSide = ({
  * win reads "<1" rather than a broken "+0" — see `formatWholeVxpMagnitude`).
  */
 export const maturedResolutions: Readable<ResolutionRevealData> = derived(
-	[resolvedPositions, marketById, settledReadStore, localeStore],
-	([$resolved, $marketById, $read, $locale]) => {
+	[resolvedPositions, displayMarkets, marketsNotInitialized, settledReadStore, localeStore],
+	([$resolved, $displayMarkets, $marketsNotInitialized, $read, $locale]) => {
 		const unseen = $resolved.filter((entry) => !$read.has(entry.eventId));
 
 		const items: ResolutionItem[] = unseen.map((entry) => {
-			const market = $marketById.get(entry.marketId);
+			const market = $displayMarkets.get(entry.marketId);
 			const { label, sideKey } = resolvedSide({ resolved: entry, market });
 			// Full precision — the digest renderers round for display via
 			// `formatWholeVxpMagnitude` (a sub-1 favourite win reads "<1", not a
@@ -468,7 +480,12 @@ export const maturedResolutions: Readable<ResolutionRevealData> = derived(
 			wins,
 			losses: items.length - wins - neutrals,
 			neutrals,
-			netVxp
+			netVxp,
+			// Counts and net VXP above come straight off the positions and are
+			// already correct; only the per-row titles depend on the catalog. The
+			// reveal renders a title skeleton while this holds, rather than the
+			// `Unknown Market` fallback (a genuine miss once the catalog is in).
+			marketsLoading: $marketsNotInitialized
 		};
 	}
 );
