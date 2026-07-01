@@ -11,6 +11,8 @@ export const esMessages = {
 	'trade.error.generic': 'No se pudo colocar tu predicción. Inténtalo de nuevo en un momento.',
 	'trade.error.insufficient_margin':
 		'No tienes saldo disponible suficiente — esta predicción necesita {required}, pero tienes {available}. Se libera a medida que se resuelven tus predicciones abiertas.',
+	'trade.error.market_closed':
+		'Este mercado acaba de cerrarse — las predicciones ya no están abiertas.',
 	'trade.error.not_authorized_to_trade': 'No tienes acceso a este mercado.',
 	'trade.error.not_order_creator': 'Solo puedes cancelar tus propias órdenes.',
 	'trade.error.order_not_found': 'Esa oferta acaba de aceptarse o retirarse — inténtalo de nuevo.',

@@ -276,13 +276,6 @@
 	// rolls over.
 	let dailyGoalCount = $state(0);
 	let dailyGoalDate = $state<string | undefined>(undefined);
-	// Last count the server confirmed for `dailyGoalDate`. The satellite is
-	// authoritative for the daily cap (`recordFlowSwipe`); this tracks the
-	// freshest server value so the error path can clamp the optimistic local
-	// count back down to it — a dropped record must never let the session
-	// climb past what the server actually counted (don't reintroduce the
-	// honest-reset leak via the failure branch).
-	let lastServerDailyGoalDone = $state(0);
 	let hasMarkedActiveThisSession = false;
 	// Set on the first swipe of a session that resumes after a broken
 	// streak. Drives the no-shame "comeback" opener (distinct from the
@@ -367,6 +360,58 @@
 	// (not a fresh deck) so the 15/day model holds. Suppressed mid-session
 	// (`betsCount === 0` means this run hasn't placed a call yet).
 	const dailyCapReached = $derived(isDailyCapReached(dailyGoalDone));
+
+	// Per-swipe count records are serialised through this FIFO chain. Firing
+	// them concurrently (fast swiping) let out-of-order replies overwrite the
+	// optimistic count — the visible dip — and let a session that left Flow
+	// mid-flight re-read a stale-low count and re-open the daily cap. Chaining
+	// keeps replies ordered; reconciliation only ever raises today's count.
+	let dailyGoalRecordChain: Promise<void> = Promise.resolve();
+
+	const enqueueDailyGoalRecord = (dayKey: string): void => {
+		dailyGoalRecordChain = dailyGoalRecordChain
+			.catch(() => undefined)
+			.then(() => recordFlowSwipe({ dayKey }))
+			.then(({ dailyGoalDone: serverDone, dailyGoalDate: serverDate }) => {
+				// Mirror the authoritative server field regardless of day: the
+				// FIFO chain resolves replies in enqueue order, so the profile
+				// write stays monotonic in time and reflects the latest record.
+				userStore.update((s) =>
+					s.profile
+						? {
+								...s,
+								profile: {
+									...s.profile,
+									dailyGoalDone: serverDone,
+									dailyGoalDate: serverDate
+								}
+							}
+						: s
+				);
+
+				// Reconcile the live count / mirror against this record's OWN
+				// day, not the live `dailyGoalDate`. If the session swiped
+				// across local midnight while this call was in flight,
+				// `dailyGoalDate` has already advanced to the new day; a reply
+				// for the elapsed day is stale and must not clobber it.
+				if (dayKey !== dailyGoalDate) {
+					return;
+				}
+
+				// Monotonic: a reply can only raise today's count, never fall
+				// below the optimistic value the user already sees.
+				dailyGoalCount = Math.max(dailyGoalCount, serverDone);
+				writeDailyGoalMirror({ done: dailyGoalCount, date: dailyGoalDate });
+			})
+			.catch((e: unknown) => {
+				// Non-fatal: the optimistic bump (capped at the hard cap) stands,
+				// so a dropped record only ever leaves the count too HIGH — the
+				// safe direction for the cap — and the next successful record
+				// reconciles it. Never clamp DOWN: that was the dip, and it
+				// briefly re-opened the cap.
+				console.warn('Flow swipe record failed (non-fatal):', e);
+			});
+	};
 
 	// Clearing-margin base units of the cheapest possible call — the smallest
 	// VXP ladder rung. A user whose spendable margin can't cover even this can
@@ -454,25 +499,19 @@
 				({ lastActiveDay } = profile);
 			}
 
-			// Seed the daily-goal count. The profile count is the
-			// authoritative server value (set by `recordFlowSwipe`); it
-			// wins outright when hydrated so a cleared / stale client can't
-			// re-open the daily hard cap. The localStorage mirror only
-			// gates a signed-out / not-yet-loaded session.
+			// Seed the daily-goal count from the higher of the server value
+			// and the localStorage mirror (see `reconcileDailyGoalOnEntry`):
+			// the server count is authoritative, but a fast-swiping session
+			// can leave Flow with per-swipe records still in flight, so the
+			// freshly-read profile may lag the optimistic mirror. Taking the
+			// max never lets a re-entry read below what the user committed,
+			// so bouncing in and out of Flow can't re-open the hard cap.
 			const reconciledGoal = reconcileDailyGoalOnEntry({
-				done: profile?.dailyGoalDone ?? 0,
-				date: profile?.dailyGoalDate,
-				hasProfile: nonNullish(profile)
-			});
-			dailyGoalCount = reconciledGoal.done;
-			dailyGoalDate = reconciledGoal.date;
-			// The hydrated profile count is the last value the server
-			// confirmed for today; the optimistic commit path never lets the
-			// session fall below it on a record failure.
-			lastServerDailyGoalDone = rolloverDailyGoal({
 				done: profile?.dailyGoalDone ?? 0,
 				date: profile?.dailyGoalDate
 			});
+			dailyGoalCount = reconciledGoal.done;
+			dailyGoalDate = reconciledGoal.date;
 
 			// Snapshot the cumulative daily count this sitting resumes from.
 			// Rolled over against the current day so a stale stored date reads
@@ -844,56 +883,18 @@
 
 		// Synchronous, offline-safe mirror — written before the server
 		// round-trip below so the daily hard cap survives a refresh that
-		// races the record. The mirror is only an offline hint; it can never
-		// raise the count above the authoritative server value on entry.
+		// races the record, and so a re-entry mid-flight reads the optimistic
+		// high-water rather than a lagging server count (see
+		// `reconcileDailyGoalOnEntry`).
 		writeDailyGoalMirror(goalBump);
 
-		const goalDayKey = goalBump.date;
 		const goalPrincipal = $userStore.user?.key;
 
-		// Record the swipe SERVER-side — the satellite owns the count. We send
-		// only our local-day key as the rollover boundary; the server reads
-		// the profile, rolls over, and writes the capped increment itself, so
-		// a cleared / signed-out client can no longer reset the cap. The
-		// authoritative count it returns reconciles the local state + mirror.
-		// On a transport failure the optimistic bump stands but is clamped so
-		// the session can never exceed the last count the server confirmed.
+		// Record the swipe SERVER-side — the satellite owns the count. Chained
+		// through the FIFO queue so fast swiping can't fire records
+		// concurrently; the reply only ever raises today's count.
 		if (nonNullish(goalPrincipal)) {
-			void recordFlowSwipe({ dayKey: goalDayKey })
-				.then(({ dailyGoalDone: serverDone, dailyGoalDate: serverDate }) => {
-					lastServerDailyGoalDone = serverDone;
-					dailyGoalCount = serverDone;
-					dailyGoalDate = serverDate;
-					writeDailyGoalMirror({ done: serverDone, date: serverDate });
-
-					userStore.update((s) =>
-						s.profile
-							? {
-									...s,
-									profile: {
-										...s.profile,
-										dailyGoalDone: serverDone,
-										dailyGoalDate: serverDate
-									}
-								}
-							: s
-					);
-				})
-				.catch((e: unknown) => {
-					console.warn('Flow swipe record failed (non-fatal):', e);
-
-					// Degrade gracefully: never let the dropped record leave the
-					// session above the last server-confirmed count for this day.
-					const clamped = rolloverDailyGoal({
-						done: lastServerDailyGoalDone,
-						date: goalDayKey
-					});
-
-					if (dailyGoalCount > clamped && clamped > 0) {
-						dailyGoalCount = clamped;
-						writeDailyGoalMirror({ done: clamped, date: goalDayKey });
-					}
-				});
+			enqueueDailyGoalRecord(goalBump.date);
 		}
 
 		// Per-swipe sound cue — one tick per committed call (YES / NO).

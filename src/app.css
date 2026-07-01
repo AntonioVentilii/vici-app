@@ -1187,7 +1187,8 @@ html[data-app='1'] body {
 	.char-bolt,
 	.char-chart,
 	.char-flicker,
-	.char-pop {
+	.char-pop,
+	.reso-row-q-skeleton {
 		animation: none;
 	}
 
@@ -3621,6 +3622,24 @@ a.title-action::after {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+.reso-row-q-skeleton {
+	flex: 1;
+	min-width: 0;
+	max-width: 60%;
+	height: 0.72em;
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--fg-dim) 22%, transparent);
+	animation: reso-skeleton-pulse 1.2s ease-in-out infinite;
+}
+@keyframes reso-skeleton-pulse {
+	0%,
+	100% {
+		opacity: 0.4;
+	}
+	50% {
+		opacity: 0.8;
+	}
 }
 .reso-row-out {
 	flex-shrink: 0;

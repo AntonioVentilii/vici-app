@@ -35,7 +35,6 @@
 		ZERO
 	} from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { marketById } from '$lib/derived/market-by-id.derived';
 	import { openCallCount } from '$lib/derived/open-call-count.derived';
 	import { tradeHistory, tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 	import {
@@ -50,6 +49,7 @@
 		type VxpLedgerHistory
 	} from '$lib/services/transaction-history.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import type {
 		TransactionHistoryBonusTag,
 		TransactionHistoryFilter,
@@ -191,7 +191,7 @@
 		}
 
 		const kindLabel = t({ locale, key: `transactions.kind.${row.kind}` as const });
-		const market = nonNullish(row.marketId) ? $marketById.get(row.marketId) : undefined;
+		const market = nonNullish(row.marketId) ? $displayMarkets.get(row.marketId) : undefined;
 
 		return nonNullish(market) ? `${kindLabel} · ${market.title}` : kindLabel;
 	};

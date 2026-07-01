@@ -21,6 +21,7 @@
 	} from '$lib/services/vxp-awards.services';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { hydrate, marketDisplay } from '$lib/stores/market-translations.store';
 	import type { CalibrationCard, CalibrationSide } from '$lib/types/calibration';
 	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -101,6 +102,16 @@
 	);
 
 	const currentCard = $derived<CalibrationCard | undefined>(deck[cardIndex]);
+
+	// Hydrate translations for the calibration deck so each card's question reads
+	// in the reader's language.
+	$effect(() => {
+		const ids = deck.map((card) => card.market.id);
+
+		if (ids.length > 0) {
+			void hydrate([...new Set(ids)]);
+		}
+	});
 
 	onMount(async () => {
 		try {
@@ -365,7 +376,7 @@
 				<div class="eyebrow calib-card-tag">
 					{t({ locale: $localeStore, key: 'calibration.card.tag' })}
 				</div>
-				<h2 class="calib-card-q">{currentCard.market.title}</h2>
+				<h2 class="calib-card-q">{$marketDisplay(currentCard.market).title}</h2>
 				<div class="eyebrow calib-card-meta">
 					{t({ locale: $localeStore, key: 'calibration.card.meta' })}
 				</div>

@@ -6,7 +6,7 @@ explicitly deferred by `2026-06-14-feat-market-translation-display.md`
 (#883), which shipped translated metadata + a toggle on the market
 **detail page only**.
 
-Status: In progress (#905)
+Status: In progress (#905); personal-surface follow-up wave below.
 
 ## Goal
 
@@ -248,3 +248,62 @@ closing keyword.
     deck + outcomes + trade modal + share — each with its own status and
     PR. Authored as one spec because the bulk-read + preference + helper
     are the shared foundation every surface depends on.
+
+## Follow-up wave — personal / post-prediction surfaces
+
+#905 closed the **discovery** surfaces (cards, list rows, featured deck,
+Flow front + back, trade modal, share, detail). The surfaces that name a
+market the reader has **already predicted on** were still rendering the
+on-chain original. This wave routes them through the same overlay so the
+reader sees their own language everywhere except the admin resolution
+surface (operators read canonical text by design).
+
+### What this wave adds
+
+- **Global translated-markets store.** `displayMarkets` — a `derived` in
+  `market-translations.store.ts` over `(markets, resolved overlay, global
+preference)` keyed by `id`, mirroring `marketById`, where each market's
+  `title` / `description` / `resolution` / `outcome.title` are swapped to
+  the active-locale translation (every other field is the untouched
+  canonical value, so it's safe for the math / inference helpers too).
+  When the preference is `original`, or a market has no translation, the
+  canonical object is returned by reference. **The canonical `markets`
+  store stays the source of truth** — consumers that MUST show the
+  original (admin, the WC-art template key, search) keep reading it.
+- **Surfaces just repoint their market lookup** to `displayMarkets` and
+  keep their plain `market.title` / `outcome.title` rendering — no
+  per-component merge:
+  - Portfolio (`PortfolioPage` `getMarketById`, `OpenOrdersTable` via a
+    translated `markets` prop), Dashboard (`DashPage` `marketById` + the
+    Day-0/1 starter list), the away-digest + settled notifications
+    (`inbox.store` `settledInboxStore` / `maturedResolutions`), wallet
+    (`WalletHistory`, `WalletPage` recent activity), `DashTransactionsPage`.
+  - `CalibrationScreen` keeps the per-item `marketDisplay` resolver
+    because its deck comes from `getCalibrationDeck()`, not the `markets`
+    catalog (so it isn't in `displayMarkets` / auto-hydrated).
+- **Central hydration.** A single subscription in the store hydrates the
+  whole `markets` catalog (chunked bulk read, gated on genuinely-new
+  `(locale, id)` pairs, skipped for English) — so no surface triggers its
+  own fetch and no surface can feed its translated output back into a
+  hydrate trigger.
+- `marketDisplay` (the per-item resolver) stays for the toggle surfaces
+  (cards / detail, #905) and `CalibrationScreen`; `MarketDisplayOriginal`
+  is exported from the util for its param type.
+- These list-style surfaces honour the **global preference** only — no
+  per-item quick toggle (no room in a row / notification / digest line).
+
+### Deliberately excluded
+
+- **Admin resolution surfaces** (`AdminResolution*`,
+  `MarketResolutionInterface`, `AdminMarketForm`) — operators must read
+  the canonical on-chain text.
+- **`FlowArtFrame` `title`** — passed to the WC art renderer as a
+  template-matching key against the English catalogue, **not** display
+  text; translating it would mis-select artwork. Left as the original.
+- **Arena friend-activity feed** (`ActivityFeed` / `ActivityItem`).
+  Its rows are denormalised, **composed, hard-coded-English** strings
+  (`"Market created: {title}"`, `"Market Resolved: {outcome}"`) written
+  at log time — not bare market titles, and not localised at all.
+  Translating only the embedded name would read inconsistently; doing it
+  properly needs a precursor refactor (log `marketId` + compose localised
+  strings at render). Tracked as a separate follow-up.
