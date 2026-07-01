@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.8.9](https://github.com/AntonioVentilii/vici-app/compare/v1.8.8...v1.8.9) (2026-07-01)
+
+
+### Features
+
+* **i18n:** translate market names on personal surfaces ([#1079](https://github.com/AntonioVentilii/vici-app/issues/1079)) ([cbe9bba](https://github.com/AntonioVentilii/vici-app/commit/cbe9bba28b0f54b56c8ac3a9f731c19af535e346))
+* **wc:** add refreshed opening odds to R32 deck ([#1074](https://github.com/AntonioVentilii/vici-app/issues/1074)) ([d9bd99d](https://github.com/AntonioVentilii/vici-app/commit/d9bd99d563b6d4d25d42620b9fd6fde3ae3d9bc4))
+
+
+### Bug Fixes
+
+* **flow:** keep the daily-goal count monotonic under fast swiping ([#1080](https://github.com/AntonioVentilii/vici-app/issues/1080)) ([4162fb4](https://github.com/AntonioVentilii/vici-app/commit/4162fb4ee12233d96878399031310aad0a3ea835))
+* **flow:** skeleton resolved-call titles until the markets catalog loads ([#1076](https://github.com/AntonioVentilii/vici-app/issues/1076)) ([8053ad1](https://github.com/AntonioVentilii/vici-app/commit/8053ad1ba812829011bfce0b94d795076bd89c24))
+* **trade:** reject predictions placed after market expiry ([#1078](https://github.com/AntonioVentilii/vici-app/issues/1078)) ([0d58894](https://github.com/AntonioVentilii/vici-app/commit/0d58894b966be3a4f559ed888542ae0c5dc1b5eb))
+* **wc:** remove matchday-squad void clause from R32 market resolutions ([#1077](https://github.com/AntonioVentilii/vici-app/issues/1077)) ([f944aec](https://github.com/AntonioVentilii/vici-app/commit/f944aec984ff62f85b13b84447b36bc520882684))
+
+
+### Miscellaneous Chores
+
+* **npm-deps-dev:** bump @types/node from 25.9.4 to 26.0.0 ([#1031](https://github.com/AntonioVentilii/vici-app/issues/1031)) ([45f5510](https://github.com/AntonioVentilii/vici-app/commit/45f55102aa76414ab2729ef2f6afad9fe5f7324e))
+* **satellite:** remove dead clearing-executed-counts helper ([#1081](https://github.com/AntonioVentilii/vici-app/issues/1081)) ([e842797](https://github.com/AntonioVentilii/vici-app/commit/e842797e8c7452345f249f999f9b1be2ba78f56c))
+
 ## [1.8.8](https://github.com/AntonioVentilii/vici-app/compare/v1.8.7...v1.8.8) (2026-06-29)
 
 
