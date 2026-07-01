@@ -396,7 +396,7 @@ ranking surfaces. Both default **on** (legacy / unset reads as on).
   aggregators (`cohort.services`), which recompute every window over the
   current opted-in roster — so, unlike the leaderboard's display filter,
   this retracts **past** contribution too, not just future. See
-  *Worlds Universities — standings reflect the current opted-in roster*
+  _Worlds Universities — standings reflect the current opted-in roster_
   below for the full behaviour.
 
 Each toggle emits `privacy_sharing_toggled` (`source: leaderboard |

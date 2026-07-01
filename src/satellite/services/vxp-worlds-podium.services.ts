@@ -101,6 +101,12 @@ export interface ClaimWorldsPodiumPrizeResult {
  * controllers-write) with values from the server's own recompute, so a client
  * cannot forge a frozen ranking. Only affiliations clearing `MIN_CALLS_FOR_RANK`
  * are captured (the only rows that can rank / appear).
+ *
+ * Fails **closed**: if no controller key is available the freeze cannot run,
+ * so it throws rather than letting the claim fall back to an unfrozen (live,
+ * drift-prone) ranking and pay VXP against it. The whole claim aborts and the
+ * caller can retry once a controller is configured — no payout on an
+ * unfrozen month.
  */
 const freezeMonthlySnapshotsIfNeeded = ({
 	kind,
@@ -119,11 +125,13 @@ const freezeMonthlySnapshotsIfNeeded = ({
 
 	if (isNullish(admin)) {
 		logError({
-			message: 'worlds_podium freeze skipped — no controller key available',
+			message: 'worlds_podium freeze aborted — no controller key available',
 			detail: { kind, monthAnchor }
 		});
 
-		return;
+		throw new Error(
+			`claimWorldsPodiumPrize: cannot freeze ${kind}/${monthAnchor} — no satellite controller available.`
+		);
 	}
 
 	const { rows } = liveMonthlyRows({ kind, monthAnchor, nowMs });

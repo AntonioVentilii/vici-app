@@ -27,9 +27,15 @@ import { decodeDocData } from '@junobuild/functions/sdk';
  *     (2-segment) keys are no longer written and are rejected.
  *  3. **Write-once.** A frozen month is immutable history — any write over an
  *     existing snapshot is rejected.
- *  4. **Counter sanity.** Non-negative, and `wins ≤ totalCalls` /
- *     `monthWins ≤ monthTotalCalls` on both windows.
+ *  4. **`monthAnchor` format.** Must be a well-formed `YYYY-MM`.
+ *  5. **Counter sanity.** Both windows' counters are finite, non-negative
+ *     integers, and `wins ≤ totalCalls` / `monthWins ≤ monthTotalCalls` — a
+ *     corrupted snapshot would otherwise break the ranking math it feeds.
  */
+const MONTH_ANCHOR_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+const isNonNegativeInteger = (value: number): boolean => Number.isInteger(value) && value >= 0;
+
 export const assertSetAffiliationStats = ({
 	data: {
 		collection,
@@ -42,6 +48,12 @@ export const assertSetAffiliationStats = ({
 	}
 
 	const proposedDoc = decodeDocData<AffiliationStatsDoc>(proposed.data);
+
+	if (!MONTH_ANCHOR_RE.test(proposedDoc.monthAnchor)) {
+		throw new Error(
+			`affiliation_stats monthAnchor "${proposedDoc.monthAnchor}" must match YYYY-MM.`
+		);
+	}
 
 	const snapshotKey = affiliationStatsSnapshotKey({
 		kind: proposedDoc.kind,
@@ -62,8 +74,17 @@ export const assertSetAffiliationStats = ({
 		);
 	}
 
-	if (proposedDoc.totalCalls < 0 || proposedDoc.wins < 0) {
-		throw new Error('affiliation_stats counters must be non-negative.');
+	// Counters must be finite, non-negative integers on both windows —
+	// NaN / Infinity / fractional / negative would corrupt ranking math.
+	if (
+		!isNonNegativeInteger(proposedDoc.totalCalls) ||
+		!isNonNegativeInteger(proposedDoc.wins) ||
+		!isNonNegativeInteger(proposedDoc.monthTotalCalls) ||
+		!isNonNegativeInteger(proposedDoc.monthWins)
+	) {
+		throw new Error(
+			'affiliation_stats counters must be finite, non-negative integers (NaN / Infinity / negative not allowed).'
+		);
 	}
 
 	if (proposedDoc.wins > proposedDoc.totalCalls) {

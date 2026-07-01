@@ -310,9 +310,12 @@ behaviour that drives a roster change.
   writes snapshots as a controller (`getAdminAccessKeys()[0]?.[0]`)
   with values from the server's own recompute — a user cannot forge a
   frozen ranking. `assertSetAffiliationStats` stays as defence in depth:
-  snapshot-key-shape + write-once (immutable history) + `wins ≤
-totalCalls`. `assertSetUserMonthlyStats` (own-row) continues to guard
-  the source collection.
+  snapshot-key-shape + write-once (immutable history) + `monthAnchor`
+  format + finite non-negative-integer counters + `wins ≤ totalCalls`
+  on both windows. The freeze also **fails closed**: with no controller
+  key it throws rather than paying the podium against an unfrozen (live,
+  drift-prone) ranking. `assertSetUserMonthlyStats` (own-row) continues
+  to guard the source collection.
 - _Residual trust surface — the central risk._ The podium pays VXP
   (`VXP_WORLDS_PODIUM`). The frozen ranking is computed from
   `USER_MONTHLY_STATS`, which is member-written. Those docs are derived
