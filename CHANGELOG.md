@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.10](https://github.com/AntonioVentilii/vici-app/compare/v1.8.9...v1.8.10) (2026-07-01)
+
+
+### Features
+
+* **worlds:** standings reflect current opted-in roster; freeze closed months ([#1068](https://github.com/AntonioVentilii/vici-app/issues/1068)) ([5b6de71](https://github.com/AntonioVentilii/vici-app/commit/5b6de71a99a9691859e77c63d0b582f1e0a1acd3))
+
 ## [1.8.9](https://github.com/AntonioVentilii/vici-app/compare/v1.8.8...v1.8.9) (2026-07-01)
 
 
