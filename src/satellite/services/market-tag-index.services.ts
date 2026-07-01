@@ -240,11 +240,19 @@ export const rebuildMarketTagIndexFn = (): { buckets: number; series: number } =
 		if (nonNullish(metadata)) {
 			series += 1;
 
-			for (const tag of metadata.tags) {
-				// `tags` is persisted normalized, but guard against an unknown value
-				// so a stray tag can't create a bucket outside the taxonomy.
-				if (isMarketTag(tag)) {
-					buckets.get(tag)?.push(metadata.seriesId);
+			// `tags` / `seriesId` are persisted well-formed, but a legacy or
+			// partially-malformed row could decode with a non-array `tags` or a
+			// non-string `seriesId`. Skip such a row rather than let it throw and
+			// abort the whole rebuild — this is the index's backfill/repair path.
+			const { seriesId, tags } = metadata;
+
+			if (typeof seriesId === 'string' && Array.isArray(tags)) {
+				for (const tag of tags) {
+					// Guard against an unknown value so a stray tag can't create a
+					// bucket outside the taxonomy.
+					if (isMarketTag(tag)) {
+						buckets.get(tag)?.push(seriesId);
+					}
 				}
 			}
 		}
