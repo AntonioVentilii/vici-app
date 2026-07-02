@@ -1005,6 +1005,10 @@ export interface AppReadBattleLiveScoreResult {
 				}
 		  ];
 }
+export interface AppRebuildMarketTagIndexResult {
+	series: number;
+	buckets: number;
+}
 export interface AppRecomputeActivityReactionCountsResult {
 	recomputed: number;
 }
@@ -1461,6 +1465,7 @@ export interface _SERVICE {
 		[AppReadBattleLiveScoreArgs],
 		AppReadBattleLiveScoreResult
 	>;
+	app_rebuild_market_tag_index: ActorMethod<[], AppRebuildMarketTagIndexResult>;
 	app_recompute_activity_reaction_counts: ActorMethod<[], AppRecomputeActivityReactionCountsResult>;
 	app_record_flow_swipe: ActorMethod<[AppRecordFlowSwipeArgs], AppRecordFlowSwipeResult>;
 	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;

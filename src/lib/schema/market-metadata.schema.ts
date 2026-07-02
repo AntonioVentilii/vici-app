@@ -40,6 +40,14 @@ export const MarketMetadataSchema = j.strictObject({
 	updatedBy: PrincipalTextSchema
 });
 
+// One bucket of the `market tag → seriesId[]` reverse index. The doc key is
+// the tag id; `seriesIds` is the de-duplicated set of series carrying that tag.
+export const MarketTagIndexSchema = j.strictObject({
+	tag: j.string(),
+	seriesIds: j.array(j.string()).default([]),
+	updatedAtMs: j.number()
+});
+
 export const UpsertMarketMetadataArgsSchema = j.strictObject({
 	seriesId: j.string(),
 	data: MarketMetadataInputSchema
