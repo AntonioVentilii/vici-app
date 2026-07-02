@@ -37,7 +37,6 @@ volume grows.
   `src/lib/constants/collections.constants.ts` — both controllers-scoped;
   the privileged `*DocStore` APIs run as an admin via
   `getAdminAccessKeys()[0][0]`, because the end user is not a controller.
-  (See [[feedback_sputnik_store_controllers_caller]].)
 - Admin gate: `isAdmin({ caller })` in `src/satellite/services/_authz.ts`
   (the cockpit founder principal).
 - Event doc shape + name union: `src/lib/types/analytics-event.ts`;
@@ -102,8 +101,7 @@ taxonomy. Instrumenting an admin drain would be noise.
 - **Upgrade & compatibility.** Satellite code change →
   `npm run juno:functions:build`, commit regenerated `.did` + FE
   declarations. Additive endpoints — not breaking. Requires a **manual
-  satellite wasm upgrade** (auto-upgrade is off, see
-  [[reference_juno_action_drops_endpoints]]).
+  satellite wasm upgrade** (auto-upgrade is off).
 - **Security.** Both endpoints `isAdmin`-gated (cockpit founder
   principal); a non-admin caller is rejected. `*DocStore` runs as a
   controller for the controllers-scoped `EVENTS` collection. Event bodies

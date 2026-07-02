@@ -3,11 +3,11 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: In progress (#1060)
+Status: Implemented (#1060)
 
-**Authored retroactively** to satisfy the mandatory satellite-spec rule
-for the already-open #1060 (a follow-up to #1056). #1060 is the
-implementing PR and flips this spec to `Implemented` on merge.
+**Authored retroactively.** #1060 (a follow-up to #1056) shipped without
+the mandatory satellite spec; this is the decision record reconstructed
+from the merged implementation.
 
 ## Goal
 
@@ -31,12 +31,12 @@ which would otherwise degrade as the market catalog grows.
   (`rebuildMarketTagIndex`).
 - Types: `src/lib/types/market-metadata.ts` (`MarketTagIndex`) + Zod
   mirror `src/lib/schema/market-metadata.schema.ts` (`MarketTagIndexSchema`).
-- Collection wiring (the two-place sync rule, see [[reference_satellite_admin_vs_creator_auth]]):
+- Collection wiring (the two-place sync rule):
   `juno.collections.json`, `juno.config.ts`, and the `Collection` enum in
   `src/lib/constants/collections.constants.ts`. Closed tag taxonomy:
   `MARKET_TAGS`.
 - Existing precedent for an inline-maintained index (hooks don't fire on
-  serverless `setDocStore`, see [[reference_hooks_dont_fire_on_setdocstore]]):
+  serverless `setDocStore`):
   `activity_reaction_counts`, `event_rollups`.
 
 ## Scope
@@ -121,18 +121,18 @@ None — no frontend surface changes.
 
 ## Acceptance criteria
 
-- [ ] A tag-scoped battle resolves from a single `market_tag_index`
+- [x] A tag-scoped battle resolves from a single `market_tag_index`
       bucket read; `market_metadata` is not scanned on the resolve/live
       path.
-- [ ] Upserting a market with changed tags moves its series id out of the
+- [x] Upserting a market with changed tags moves its series id out of the
       old bucket(s) and into the new one(s); unchanged tags are untouched.
-- [ ] A metadata upsert still succeeds if a bucket write fails
+- [x] A metadata upsert still succeeds if a bucket write fails
       (best-effort, no trap).
-- [ ] `rebuildMarketTagIndex` reconstructs every bucket and clears stale
+- [x] `rebuildMarketTagIndex` reconstructs every bucket and clears stale
       membership from a single scan.
-- [ ] An empty/absent bucket scores the battle as a void face-off
+- [x] An empty/absent bucket scores the battle as a void face-off
       (unchanged semantics).
-- [ ] `npm run juno:functions:build` + `npm run check` pass; regenerated
+- [x] `npm run juno:functions:build` + `npm run check` pass; regenerated
       `.did` and FE declarations committed.
 
 ## Decisions
