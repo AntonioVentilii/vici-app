@@ -145,6 +145,10 @@ type AppClaimWorldsPodiumPrizeArgs = record { month_anchor : text };
 
 type AppClaimWorldsPodiumPrizeResult = record { month_anchor : text; awards_created : float64; awards_already_claimed : float64; not_eligible : bool };
 
+type AppDeleteAnalyticsEventsArgs = record { keys : vec text };
+
+type AppDeleteAnalyticsEventsResult = record { deleted : float64 };
+
 type AppDeleteMyAccountArgs = record { reason : text; note : text; league_resolutions : opt vec record { league_id : text; action : variant { transfer; delete }; transfer_to : opt text } };
 
 type AppDeleteMyAccountResult = record { ok : bool; reason : opt variant { owns_non_empty_league; league_resolution_failed; invalid_input }; blocking_league_ids : opt vec text; failed_league_id : opt text; resolution_reason : opt text; soft_deleted : opt bool };
@@ -266,6 +270,7 @@ service : {
 	app_claim_referral_friendship : (AppClaimReferralFriendshipArgs) -> ();
 	app_claim_tournament_prize : (AppClaimTournamentPrizeArgs) -> (AppClaimTournamentPrizeResult);
 	app_claim_worlds_podium_prize : (AppClaimWorldsPodiumPrizeArgs) -> (AppClaimWorldsPodiumPrizeResult);
+	app_delete_analytics_events : (AppDeleteAnalyticsEventsArgs) -> (AppDeleteAnalyticsEventsResult);
 	app_delete_my_account : (AppDeleteMyAccountArgs) -> (AppDeleteMyAccountResult);
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_hibernate_my_account : () -> (AppHibernateMyAccountResult);

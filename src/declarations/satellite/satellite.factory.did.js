@@ -93,6 +93,12 @@ export const idlFactory = ({ IDL }) => {
 		awards_created: IDL.Float64,
 		awards_already_claimed: IDL.Float64
 	});
+	const AppDeleteAnalyticsEventsArgs = IDL.Record({
+		keys: IDL.Vec(IDL.Text)
+	});
+	const AppDeleteAnalyticsEventsResult = IDL.Record({
+		deleted: IDL.Float64
+	});
 	const AppDeleteMyAccountArgs = IDL.Record({
 		note: IDL.Text,
 		league_resolutions: IDL.Opt(
@@ -1529,6 +1535,11 @@ export const idlFactory = ({ IDL }) => {
 		app_claim_worlds_podium_prize: IDL.Func(
 			[AppClaimWorldsPodiumPrizeArgs],
 			[AppClaimWorldsPodiumPrizeResult],
+			[]
+		),
+		app_delete_analytics_events: IDL.Func(
+			[AppDeleteAnalyticsEventsArgs],
+			[AppDeleteAnalyticsEventsResult],
 			[]
 		),
 		app_delete_my_account: IDL.Func([AppDeleteMyAccountArgs], [AppDeleteMyAccountResult], []),

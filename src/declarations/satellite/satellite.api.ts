@@ -1662,6 +1662,27 @@ const claimWorldsPodiumPrize = async (
 	return AppClaimWorldsPodiumPrizeResultSchema.parse(result);
 };
 
+const AppDeleteAnalyticsEventsArgsSchema = j.strictObject({ keys: j.array(j.string()) });
+const AppDeleteAnalyticsEventsResultSchema = j.strictObject({ deleted: j.number() });
+
+const deleteAnalyticsEvents = async (
+	args: j.infer<typeof AppDeleteAnalyticsEventsArgsSchema>
+): Promise<j.infer<typeof AppDeleteAnalyticsEventsResultSchema>> => {
+	const parsedArgs = AppDeleteAnalyticsEventsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppDeleteAnalyticsEventsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_delete_analytics_events']>[0];
+
+	const { app_delete_analytics_events } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_delete_analytics_events(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppDeleteAnalyticsEventsResultSchema, value: idlResult });
+	return AppDeleteAnalyticsEventsResultSchema.parse(result);
+};
+
 const AppDeleteMyAccountArgsSchema = j.strictObject({
 	reason: j.string(),
 	note: j.string(),
@@ -2400,6 +2421,7 @@ export const functions = {
 	claimReferralFriendship,
 	claimTournamentPrize,
 	claimWorldsPodiumPrize,
+	deleteAnalyticsEvents,
 	deleteMyAccount,
 	followUser,
 	hibernateMyAccount,

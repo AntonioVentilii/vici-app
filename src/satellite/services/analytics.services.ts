@@ -40,6 +40,7 @@ import { Principal } from '@icp-sdk/core/principal';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
+	deleteDocStore,
 	encodeDocData,
 	getAdminAccessKeys,
 	getDocStore,
@@ -398,4 +399,48 @@ export const getAnalyticsEventsFn = ({
 	// to `cap` directly (the keyset filter above is a no-op safety net unless the
 	// cursor doc was deleted mid-pagination).
 	return { rows, hasMore: items.length >= cap };
+};
+
+/**
+ * Admin-gated DRAIN delete for the cockpit warehouse export. After the cockpit has
+ * durably written a page of events to its own store, it passes their keys back here
+ * to delete them from the on-chain `events` collection, keeping that collection a
+ * small BUFFER rather than an ever-growing log. This is what makes the export
+ * sustainable: `listDocsStore` materializes the whole collection per call, so a
+ * large `events` collection blows the 5B-instruction query budget (IC0522) — draining
+ * after ingest keeps every read cheap. Each delete is an O(log n) keyed op; `keys`
+ * is capped at `MAX_EXPORT_LIMIT` so one call stays well under budget. Missing keys
+ * (already drained / never existed) are skipped, so the call is idempotent — safe to
+ * retry a page whose Postgres write succeeded but whose delete didn't.
+ */
+export const deleteAnalyticsEventsFn = ({ keys }: { keys: string[] }): { deleted: number } => {
+	const caller = msgCaller();
+
+	if (!isAdmin({ caller })) {
+		throw new Error('Analytics is restricted to admins.');
+	}
+
+	const admin = adminCaller();
+
+	let deleted = 0;
+
+	for (const key of keys.slice(0, MAX_EXPORT_LIMIT)) {
+		const existing = getDocStore({ collection: Collection.EVENTS, key, caller: admin });
+
+		// Skip missing keys (already drained / never existed) — keeps the call
+		// idempotent so a page whose Postgres write landed but whose delete didn't can
+		// be retried safely.
+		if (nonNullish(existing)) {
+			deleteDocStore({
+				collection: Collection.EVENTS,
+				key,
+				caller: admin,
+				doc: { version: existing.version }
+			});
+
+			deleted += 1;
+		}
+	}
+
+	return { deleted };
 };
