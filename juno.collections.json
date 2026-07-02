@@ -5,6 +5,7 @@
 	"CHATS": "chats",
 	"COMMENTS": "comments",
 	"MARKET_METADATA": "market_metadata",
+	"MARKET_TAG_INDEX": "market_tag_index",
 	"MARKET_TRANSLATIONS": "market_translations",
 	"ACTIVITIES": "activities",
 	"ACTIVITY_REACTIONS": "activity_reactions",

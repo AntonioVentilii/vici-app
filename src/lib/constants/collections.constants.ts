@@ -7,6 +7,15 @@ export const Collection = {
 	CHATS: collections.CHATS,
 	COMMENTS: collections.COMMENTS,
 	MARKET_METADATA: collections.MARKET_METADATA,
+	/**
+	 * Reverse index from market tag to the series carrying it. One doc per tag in the closed
+	 * {@link MARKET_TAGS} taxonomy, keyed by the tag id, holding that tag's `seriesIds`. Maintained
+	 * inline by `upsertMarketMetadata` (diffing a market's old vs new tags); public read so battle
+	 * resolution can read a single bucket, controllers write so only the satellite upsert / the admin
+	 * `rebuildMarketTagIndex` endpoint can mutate it. Lets `scopeSeriesIds` read O(matching-series)
+	 * instead of scanning the whole {@link Collection.MARKET_METADATA} collection on every resolve.
+	 */
+	MARKET_TAG_INDEX: collections.MARKET_TAG_INDEX,
 	MARKET_TRANSLATIONS: collections.MARKET_TRANSLATIONS,
 	ACTIVITIES: collections.ACTIVITIES,
 	/**

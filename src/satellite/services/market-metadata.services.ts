@@ -2,6 +2,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { normalizeMarketTags } from '$lib/constants/market-tags.constants';
 import type { MarketMetadata, MarketMetadataInput } from '$lib/types/market-metadata';
 import { isAdmin, isCreatorOrAdmin } from '$satellite/services/_authz';
+import { updateMarketTagIndex } from '$satellite/services/market-tag-index.services';
 import { isNullish } from '@dfinity/utils';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobuild/functions/sdk';
@@ -74,6 +75,16 @@ export const upsertMarketMetadata = async ({
 			data: encodeDocData(metadata)
 		},
 		caller
+	});
+
+	// Keep the `tag → seriesId[]` reverse index in sync inline — Juno hooks
+	// don't fire on serverless `setDocStore`, so this is the only place a
+	// metadata write can update the index. Both tag sets are already normalized
+	// to the closed taxonomy.
+	updateMarketTagIndex({
+		seriesId,
+		oldTags: currentData?.tags ?? [],
+		newTags: metadata.tags
 	});
 
 	return metadata;

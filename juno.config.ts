@@ -17,6 +17,7 @@ enum JunoDatastoreCollection {
 	CHATS = 'chats',
 	COMMENTS = 'comments',
 	MARKET_METADATA = 'market_metadata',
+	MARKET_TAG_INDEX = 'market_tag_index',
 	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
 	ACTIVITY_REACTIONS = 'activity_reactions',
@@ -130,6 +131,18 @@ export default defineConfig(({ mode }) => ({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				// Reverse index `market tag → seriesId[]` (one doc per tag).
+				// Maintained inline by `upsertMarketMetadata` so battle scoping
+				// reads a single bucket instead of scanning `market_metadata`.
+				// Public read (battle resolution reads it as the caller);
+				// controllers-only write — only the satellite upsert / rebuild
+				// endpoints write it (as admin), so a client can't forge a tag set.
+				{
+					collection: JunoDatastoreCollection.MARKET_TAG_INDEX,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
 				},
 				{
 					collection: JunoDatastoreCollection.MARKET_TRANSLATIONS,
