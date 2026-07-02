@@ -6,7 +6,12 @@ explicitly deferred by `2026-06-14-feat-market-translation-display.md`
 (#883), which shipped translated metadata + a toggle on the market
 **detail page only**.
 
-Status: In progress (#905); personal-surface follow-up wave below.
+Status: Implemented (#905, #1079)
+
+Shipped in two waves: discovery surfaces (#905) and the personal
+post-prediction surfaces — portfolio / dash / inbox / wallet /
+calibration (#1079). The Arena feed and FlowArt title are out of scope
+(see below).
 
 ## Goal
 

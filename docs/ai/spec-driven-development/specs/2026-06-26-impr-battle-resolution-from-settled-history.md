@@ -3,7 +3,16 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: In progress
+Status: Implemented (#1056)
+
+Shipped across #1003 (proposer handle + settling state) and #1056
+(settled-history resolution + live standings). The "Findings (gates the
+build)" and "Pending decisions" sections below **predate the build** and
+were resolved by **option A**: icdc-core now exposes
+`aggregate_settlement_accuracy` — per-member settled accuracy over an
+arbitrary `[from, to]` window with a `series_ids` filter — which the
+resolution engine reads directly. Everything below is the frozen
+decision record; for current behaviour see `PRODUCT.md` §"Battles".
 
 **Implementation note (this PR).** Resolution + live standings now read
 each side's current members' settled-call accuracy from the clearing
