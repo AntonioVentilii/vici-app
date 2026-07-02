@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.11](https://github.com/AntonioVentilii/vici-app/compare/v1.8.10...v1.8.11) (2026-07-02)
+
+
+### Bug Fixes
+
+* **satellite:** page analytics-events export by key, not updated_at (IC0522) ([#1083](https://github.com/AntonioVentilii/vici-app/issues/1083)) ([d50e78b](https://github.com/AntonioVentilii/vici-app/commit/d50e78bb09891f7d2df047b193945ab71074a771))
+
 ## [1.8.10](https://github.com/AntonioVentilii/vici-app/compare/v1.8.9...v1.8.10) (2026-07-01)
 
 
