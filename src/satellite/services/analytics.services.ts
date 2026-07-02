@@ -311,6 +311,17 @@ export const getAnalyticsEventsFn = ({
 
 	const afterNs = parseCursorNs(afterUpdatedAtNs);
 	const afterKeyText = afterKey?.trim() ?? '';
+
+	// The cursor is now the KEY (see the paging note below). A timestamp-only cursor
+	// — `after_updated_at_ns` set but `after_key` blank — can't position the
+	// key-ordered walk: it would list from the start and then the `afterNs` filter
+	// below would drop every row, returning an empty page and stalling pagination.
+	// Reject it loudly rather than silently stalling. (A blank/blank cursor is the
+	// valid first page; a set/set cursor is a normal resume.)
+	if (afterNs > ZERO && afterKeyText === '') {
+		throw new Error('after_key is required when after_updated_at_ns is set.');
+	}
+
 	const safeLimit = Number.isFinite(limit) ? Math.floor(limit) : MAX_EXPORT_LIMIT;
 	const cap = Math.min(Math.max(1, safeLimit), MAX_EXPORT_LIMIT);
 
