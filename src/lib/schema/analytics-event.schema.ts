@@ -241,3 +241,18 @@ export const GetAnalyticsEventsResultSchema = j.strictObject({
 	rows: j.array(AnalyticsEventExportRowSchema),
 	hasMore: j.boolean()
 });
+
+/** Args for `deleteAnalyticsEvents` — the cockpit's DRAIN step. After a page of
+ * events is durably written to the warehouse, the cockpit passes their `keys` back
+ * to delete them, keeping the on-chain `events` collection a small buffer (a large
+ * collection makes `listDocsStore` blow the query instruction budget — IC0522).
+ * Admin-gated; `keys` beyond the export page cap are ignored. */
+export const DeleteAnalyticsEventsArgsSchema = j.strictObject({
+	keys: j.array(j.string())
+});
+
+/** `deleted` is the count actually removed (missing keys are skipped, so a retried
+ * page reports fewer than it sent — the call is idempotent). */
+export const DeleteAnalyticsEventsResultSchema = j.strictObject({
+	deleted: j.number()
+});

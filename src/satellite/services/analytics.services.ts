@@ -40,6 +40,7 @@ import { Principal } from '@icp-sdk/core/principal';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
+	deleteDocStore,
 	encodeDocData,
 	getAdminAccessKeys,
 	getDocStore,
@@ -311,25 +312,33 @@ export const getAnalyticsEventsFn = ({
 
 	const afterNs = parseCursorNs(afterUpdatedAtNs);
 	const afterKeyText = afterKey?.trim() ?? '';
+
+	// The cursor is now the KEY (see the paging note below). A timestamp-only cursor
+	// — `after_updated_at_ns` set but `after_key` blank — can't position the
+	// key-ordered walk: it would list from the start and then the `afterNs` filter
+	// below would drop every row, returning an empty page and stalling pagination.
+	// Reject it loudly rather than silently stalling. (A blank/blank cursor is the
+	// valid first page; a set/set cursor is a normal resume.)
+	if (afterNs > ZERO && afterKeyText === '') {
+		throw new Error('after_key is required when after_updated_at_ns is set.');
+	}
+
 	const safeLimit = Number.isFinite(limit) ? Math.floor(limit) : MAX_EXPORT_LIMIT;
 	const cap = Math.min(Math.max(1, safeLimit), MAX_EXPORT_LIMIT);
 
-	// Page at the DATASTORE — not in code. Listing the whole `events` collection
-	// blows the query instruction budget (IC0522) once it grows. The matcher keeps
-	// the cursor's own timestamp (`greater_than(afterNs - 1)`) so a page that splits
-	// a same-`updated_at` group still includes the boundary docs; `start_after`
-	// resumes after the cursor KEY at the datastore so the bounded page is spent on
-	// unseen rows instead of refetching already-seen ones (a batch writes up to
-	// `MAX_BUFFER` docs in one call, so a single `updated_at` can hold more docs than
-	// `cap` — without `start_after` the page would fill with seen keys and the keyset
-	// filter below could empty it, stalling the cursor). `order` + `paginate.limit`
-	// bound the canister's scan + response to a single page.
+	// Page by KEY only — the datastore's native (indexed) order. Event keys are
+	// `${ns}-${sessionId}-${index}` (ns from `time()` at write) and the collection is
+	// append-only, so key order IS chronological order; no `order`/`matcher` on
+	// `updated_at` is needed. Those non-key params were the bug: the datastore has no
+	// secondary index on `updated_at`, so ordering/matching on it forced Juno to load
+	// and sort the ENTIRE `events` collection on every call, blowing the 5B-instruction
+	// query budget once the collection grew (IC0522 — even at limit=1). `start_after`
+	// on the unique key is a complete keyset cursor, and `paginate.limit` bounds the
+	// walk to a single page, so the scan + response stay O(page), not O(collection).
 	const { items } = listDocsStore({
 		collection: Collection.EVENTS,
 		caller: admin,
 		params: {
-			matcher: afterNs > ZERO ? { updated_at: { greater_than: afterNs - 1n } } : undefined,
-			order: { field: 'updated_at', desc: false },
 			paginate: {
 				limit: BigInt(cap),
 				start_after: afterKeyText.length > 0 ? afterKeyText : undefined
@@ -390,4 +399,48 @@ export const getAnalyticsEventsFn = ({
 	// to `cap` directly (the keyset filter above is a no-op safety net unless the
 	// cursor doc was deleted mid-pagination).
 	return { rows, hasMore: items.length >= cap };
+};
+
+/**
+ * Admin-gated DRAIN delete for the cockpit warehouse export. After the cockpit has
+ * durably written a page of events to its own store, it passes their keys back here
+ * to delete them from the on-chain `events` collection, keeping that collection a
+ * small BUFFER rather than an ever-growing log. This is what makes the export
+ * sustainable: `listDocsStore` materializes the whole collection per call, so a
+ * large `events` collection blows the 5B-instruction query budget (IC0522) — draining
+ * after ingest keeps every read cheap. Each delete is an O(log n) keyed op; `keys`
+ * is capped at `MAX_EXPORT_LIMIT` so one call stays well under budget. Missing keys
+ * (already drained / never existed) are skipped, so the call is idempotent — safe to
+ * retry a page whose Postgres write succeeded but whose delete didn't.
+ */
+export const deleteAnalyticsEventsFn = ({ keys }: { keys: string[] }): { deleted: number } => {
+	const caller = msgCaller();
+
+	if (!isAdmin({ caller })) {
+		throw new Error('Analytics is restricted to admins.');
+	}
+
+	const admin = adminCaller();
+
+	let deleted = 0;
+
+	for (const key of keys.slice(0, MAX_EXPORT_LIMIT)) {
+		const existing = getDocStore({ collection: Collection.EVENTS, key, caller: admin });
+
+		// Skip missing keys (already drained / never existed) — keeps the call
+		// idempotent so a page whose Postgres write landed but whose delete didn't can
+		// be retried safely.
+		if (nonNullish(existing)) {
+			deleteDocStore({
+				collection: Collection.EVENTS,
+				key,
+				caller: admin,
+				doc: { version: existing.version }
+			});
+
+			deleted += 1;
+		}
+	}
+
+	return { deleted };
 };

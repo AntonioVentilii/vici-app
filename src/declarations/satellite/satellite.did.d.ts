@@ -96,6 +96,12 @@ export interface AppClaimWorldsPodiumPrizeResult {
 	awards_created: number;
 	awards_already_claimed: number;
 }
+export interface AppDeleteAnalyticsEventsArgs {
+	keys: Array<string>;
+}
+export interface AppDeleteAnalyticsEventsResult {
+	deleted: number;
+}
 export interface AppDeleteMyAccountArgs {
 	note: string;
 	league_resolutions:
@@ -1374,6 +1380,10 @@ export interface _SERVICE {
 	app_claim_worlds_podium_prize: ActorMethod<
 		[AppClaimWorldsPodiumPrizeArgs],
 		AppClaimWorldsPodiumPrizeResult
+	>;
+	app_delete_analytics_events: ActorMethod<
+		[AppDeleteAnalyticsEventsArgs],
+		AppDeleteAnalyticsEventsResult
 	>;
 	app_delete_my_account: ActorMethod<[AppDeleteMyAccountArgs], AppDeleteMyAccountResult>;
 	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;

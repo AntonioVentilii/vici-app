@@ -1,6 +1,8 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	AnalyticsSummarySchema,
+	DeleteAnalyticsEventsArgsSchema,
+	DeleteAnalyticsEventsResultSchema,
 	GetAnalyticsEventsArgsSchema,
 	GetAnalyticsEventsResultSchema,
 	GetAnalyticsSummaryArgsSchema,
@@ -52,6 +54,7 @@ import {
 	assertSetAffiliation
 } from '$satellite/services/affiliation.services';
 import {
+	deleteAnalyticsEventsFn,
 	getAnalyticsEventsFn,
 	getAnalyticsSummaryFn,
 	trackEventsFn
@@ -593,6 +596,15 @@ export const getAnalyticsEvents = defineQuery({
 	args: GetAnalyticsEventsArgsSchema,
 	result: GetAnalyticsEventsResultSchema,
 	handler: (args) => getAnalyticsEventsFn(args)
+});
+
+// The cockpit's DRAIN step — delete a page of events after the warehouse has
+// durably ingested it, so the on-chain `events` collection stays a small buffer and
+// the export query never blows the instruction budget (IC0522). Admin-gated update.
+export const deleteAnalyticsEvents = defineUpdate({
+	args: DeleteAnalyticsEventsArgsSchema,
+	result: DeleteAnalyticsEventsResultSchema,
+	handler: (args) => deleteAnalyticsEventsFn(args)
 });
 
 // ─── Social cohorts ─────────────────────────────────────────────
