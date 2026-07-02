@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: Implemented (#1083, #1085)
+Status: Implemented (#1085)
 
 **Authored retroactively.** The export/drain endpoints shipped in #1083
 (keyset paging fix) and #1085 (drain delete) without the mandatory

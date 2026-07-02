@@ -194,7 +194,7 @@ shows the maker disclosure. See
 ### Market close — no predictions after kickoff
 
 A market's expiry is the kickoff of the earliest relevant match, and the
-rule is "no trading after kickoff". Enforcement was UI-only — the Flow
+rule is "no predictions after kickoff". Enforcement was UI-only — the Flow
 deck and catalog are fetched already filtered to unexpired markets — so a
 reader who opened Flow just before kickoff could still swipe a stale card
 through afterward, because the clearing engine has no expiry gate (it only
