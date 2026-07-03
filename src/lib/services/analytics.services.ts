@@ -104,16 +104,22 @@ export const track = (event: { name: AnalyticsEventName } & AnalyticsEventProps)
 	// Coarse geo/language dims from the browser locale (`en-US` → country US,
 	// locale en) — feeds the cockpit's regional + localization analytics.
 	// Aggregate-level only, never precise location; best-effort (many browsers
-	// report a bare `en`, in which case country is simply absent).
-	const [lang, region] = (navigator.language ?? '').split('-');
+	// report a bare `en`, in which case country is simply absent). Validated
+	// strictly (2-letter alpha subtags) so a malformed tag can't smuggle an
+	// invalid ISO code in. Spread BEFORE `props` deliberately: a call site that
+	// passes an explicit `country`/`locale` knows more than the ambient browser
+	// locale and wins.
+	const [lang, region] = (navigator.languages?.[0] ?? navigator.language ?? '').split('-');
+	const locale = lang && /^[a-z]{2,3}$/i.test(lang) ? lang.toLowerCase() : undefined;
+	const country = region && /^[a-z]{2}$/i.test(region) ? region.toUpperCase() : undefined;
 
 	buffer.push({
 		name,
 		sessionId: sessionId(),
 		path: window.location.pathname,
 		occurredAtMs: Date.now(),
-		...(lang ? { locale: lang.toLowerCase() } : {}),
-		...(region && region.length === 2 ? { country: region.toUpperCase() } : {}),
+		...(locale ? { locale } : {}),
+		...(country ? { country } : {}),
 		...props
 	});
 
