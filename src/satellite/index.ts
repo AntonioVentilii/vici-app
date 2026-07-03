@@ -57,6 +57,7 @@ import {
 	deleteAnalyticsEventsFn,
 	getAnalyticsEventsFn,
 	getAnalyticsSummaryFn,
+	onVxpAwardSetForAnalytics,
 	trackEventsFn
 } from '$satellite/services/analytics.services';
 import {
@@ -1384,7 +1385,8 @@ const setDocCollections = [
 	Collection.ROLES,
 	Collection.REFERRALS,
 	Collection.LEAGUES,
-	Collection.USER_STATS
+	Collection.USER_STATS,
+	Collection.VXP_AWARDS
 ] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
@@ -1426,7 +1428,10 @@ export const onSetDoc = defineHook<OnSetDoc>({
 			[Collection.ROLES]: syncRoleToEngineOnSet,
 			[Collection.REFERRALS]: onReferralSetForVxpPayout,
 			[Collection.LEAGUES]: onLeagueSetForFounderVxpPayout,
-			[Collection.USER_STATS]: onUserStatsSetForLeagueStats
+			[Collection.USER_STATS]: onUserStatsSetForLeagueStats,
+			// Server-side capture: every VXP payout (any award service) emits
+			// `vxp_awarded` (+ `streak_milestone`) on its pending→paid transition.
+			[Collection.VXP_AWARDS]: onVxpAwardSetForAnalytics
 		};
 
 		await fn[context.data.collection]?.(context);

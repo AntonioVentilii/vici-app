@@ -24,6 +24,7 @@
 
 import { ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
+import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import {
 	ANALYTICS_PROP_KEYS,
 	type AnalyticsEventDoc,
@@ -33,10 +34,12 @@ import {
 	type EventRollupDoc,
 	type TrackEventInput
 } from '$lib/types/analytics-event';
+import type { VxpAwardDoc } from '$lib/types/vxp-award';
 import { isAdmin } from '$satellite/services/_authz';
 import { logError } from '$satellite/utils/logger.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
+import type { OnSetDocContext } from '@junobuild/functions';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
@@ -447,4 +450,112 @@ export const deleteAnalyticsEventsFn = ({ keys }: { keys: string[] }): { deleted
 	}
 
 	return { deleted };
+};
+
+// ─── Server-side capture ────────────────────────────────────────
+
+/** One server-originated behavioural event (no browser visit behind it). */
+interface ServerEventInput {
+	name: AnalyticsEventName;
+	/** Recipient / actor principal text, when the event concerns one. */
+	principal?: string;
+	props?: AnalyticsEventProps;
+}
+
+/**
+ * Write server-originated events into the `events` collection — the capture
+ * path for behaviour that never touches a browser (VXP payouts, settlements).
+ * Mirrors `trackEventsFn`'s doc write (admin caller, `${ns}-…-${index}` key
+ * scheme, rollup bump) but takes the principal from the SERVER's own record
+ * rather than `msgCaller`, and stamps `sessionId: 'server'` (there is no visit).
+ */
+export const captureServerEvents = ({ events }: { events: ServerEventInput[] }): void => {
+	if (events.length === 0) {
+		return;
+	}
+
+	const admin = adminCaller();
+	const tsMs = nowMs();
+	const stamp = time();
+
+	events.forEach((event, index) => {
+		const doc: AnalyticsEventDoc = {
+			name: event.name,
+			tsMs,
+			sessionId: 'server',
+			...(isNullish(event.principal) ? {} : { principal: event.principal }),
+			...(isNullish(event.props) ? {} : { props: event.props })
+		};
+
+		setDocStore({
+			collection: Collection.EVENTS,
+			key: `${stamp}-server-${index}`,
+			caller: admin,
+			doc: {
+				data: encodeDocData<AnalyticsEventDoc>(doc)
+			}
+		});
+	});
+
+	bumpRollup({ admin, tsMs, names: events.map(({ name }) => name) });
+};
+
+/**
+ * `vxp_awards` post-write analytics: emit `vxp_awarded` (value = whole-VXP
+ * amount, label = award type) exactly once per award — on the `pending → paid`
+ * transition, when the ledger transfer actually completed. Streak awards also
+ * emit `streak_milestone` (`step` = the crossed day count from the award key,
+ * e.g. `streak_7` → 7). Best-effort: analytics must never break a payout.
+ */
+export const onVxpAwardSetForAnalytics = (ctx: OnSetDocContext): void => {
+	try {
+		const {
+			data: {
+				collection,
+				data: { before, after }
+			}
+		} = ctx;
+
+		if (collection !== Collection.VXP_AWARDS) {
+			return;
+		}
+
+		const award = decodeDocData<VxpAwardDoc>(after.data);
+		const prior = nonNullish(before) ? decodeDocData<VxpAwardDoc>(before.data) : undefined;
+
+		// Only the transition INTO `paid` mints — a pending write, a failed write,
+		// or a re-set of an already-paid doc must not double-count.
+		if (award.status !== 'paid' || prior?.status === 'paid') {
+			return;
+		}
+
+		const value = Number(award.amountBaseUnits) / 10 ** VXP_TOKEN.decimals;
+
+		const events: ServerEventInput[] = [
+			{
+				name: 'vxp_awarded',
+				principal: award.recipient,
+				props: { value, label: award.awardType }
+			}
+		];
+
+		if (award.awardType === 'streak') {
+			const days = Number(award.awardKey.replace('streak_', ''));
+
+			if (Number.isFinite(days) && days > 0) {
+				events.push({
+					name: 'streak_milestone',
+					principal: award.recipient,
+					props: { step: days }
+				});
+			}
+		}
+
+		captureServerEvents({ events });
+	} catch (err) {
+		logError({
+			message: 'vxp award analytics capture failed',
+			detail: { error: err instanceof Error ? err.message : `${err}` }
+		});
+	}
 };
