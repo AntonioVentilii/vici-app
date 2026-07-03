@@ -258,6 +258,14 @@ export interface AnalyticsEventProps {
 	durationMs?: number;
 	/** Boolean outcome (e.g. handle available, verification ok). */
 	ok?: boolean;
+	/**
+	 * ISO-3166 alpha-2 country (uppercase), best-effort from the browser
+	 * locale's region subtag (`en-US` → `US`). Coarse geo for aggregate
+	 * regional analytics only — never precise location, never PII.
+	 */
+	country?: string;
+	/** BCP-47 primary language subtag (`en-US` → `en`) — localization analytics. */
+	locale?: string;
 }
 
 /**
@@ -323,7 +331,9 @@ export const ANALYTICS_PROP_KEYS = [
 	'value',
 	'count',
 	'durationMs',
-	'ok'
+	'ok',
+	'country',
+	'locale'
 ] as const satisfies readonly (keyof AnalyticsEventProps)[];
 
 /** One event-name → count pair within a daily rollup. */

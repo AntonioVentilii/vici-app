@@ -3,6 +3,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
 import { authPrincipal } from '$lib/derived/user.derived';
 import { LeaguePrivacy } from '$lib/enums/league';
+import { track } from '$lib/services/analytics.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getMyReferralCode } from '$lib/services/referral.services';
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
@@ -630,6 +631,8 @@ export const joinLeagueByInvite = async ({
 			data: membership
 		}
 	});
+
+	track({ name: 'league_joined', leagueId: league.id, source: 'invite' });
 
 	return league;
 };

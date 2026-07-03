@@ -2,6 +2,7 @@ import { browser } from '$app/environment';
 import { MARKET_TAGS } from '$lib/constants/market-tags.constants';
 import { PREFERENCES_STORAGE_KEY } from '$lib/constants/settings.constants';
 import { authPrincipal } from '$lib/derived/user.derived';
+import { track } from '$lib/services/analytics.services';
 import { persistPreferences } from '$lib/services/profile.services';
 import { userStore } from '$lib/stores/user.store';
 import type { SettingsVisibility, SharingPrefs, UserPreferences } from '$lib/types/preferences';
@@ -428,7 +429,10 @@ export const flowSessionMaxBets = (prefs: UserPreferences): number => prefs.flow
 export const toggleSavedMarket = ({ marketId }: { marketId: string }): void => {
 	preferencesStore.update((current) => {
 		const ids = current.savedMarketIds;
-		const next = ids.includes(marketId) ? ids.filter((id) => id !== marketId) : [...ids, marketId];
+		const removing = ids.includes(marketId);
+		const next = removing ? ids.filter((id) => id !== marketId) : [...ids, marketId];
+
+		track({ name: removing ? 'watchlist_removed' : 'watchlist_added', marketId });
 
 		return { ...current, savedMarketIds: next };
 	});

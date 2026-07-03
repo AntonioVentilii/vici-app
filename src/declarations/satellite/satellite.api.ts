@@ -198,7 +198,9 @@ const AppGetAnalyticsEventsResultSchema = j.strictObject({
 			value: j.optional(j.number()),
 			count: j.optional(j.number()),
 			durationMs: j.optional(j.number()),
-			ok: j.optional(j.boolean())
+			ok: j.optional(j.boolean()),
+			country: j.optional(j.string()),
+			locale: j.optional(j.string())
 		})
 	),
 	hasMore: j.boolean()
@@ -2175,6 +2177,8 @@ const AppTrackEventsArgsSchema = j.strictObject({
 			count: j.optional(j.number()),
 			durationMs: j.optional(j.number()),
 			ok: j.optional(j.boolean()),
+			country: j.optional(j.string()),
+			locale: j.optional(j.string()),
 			occurredAtMs: j.optional(j.number())
 		})
 	)

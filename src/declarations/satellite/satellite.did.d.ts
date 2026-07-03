@@ -163,6 +163,7 @@ export interface AppGetAnalyticsEventsResult {
 		key: string;
 		ts_ms: number;
 		battle_id: [] | [string];
+		country: [] | [string];
 		league_id: [] | [string];
 		session_id: string;
 		value: [] | [number];
@@ -245,6 +246,7 @@ export interface AppGetAnalyticsEventsResult {
 		path: [] | [string];
 		count: [] | [number];
 		step: [] | [number];
+		locale: [] | [string];
 		updated_at_ns: string;
 		principal_text: [] | [string];
 		label: [] | [string];
@@ -1148,6 +1150,7 @@ export interface AppTrackEventsArgs {
 	events: Array<{
 		ok: [] | [boolean];
 		battle_id: [] | [string];
+		country: [] | [string];
 		league_id: [] | [string];
 		session_id: string;
 		value: [] | [number];
@@ -1231,6 +1234,7 @@ export interface AppTrackEventsArgs {
 		path: [] | [string];
 		count: [] | [number];
 		step: [] | [number];
+		locale: [] | [string];
 		label: [] | [string];
 		duration_ms: [] | [number];
 	}>;
