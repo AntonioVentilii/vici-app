@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.8.13](https://github.com/AntonioVentilii/vici-app/compare/v1.8.12...v1.8.13) (2026-07-03)
+
+
+### Features
+
+* **analytics:** country/locale dims + instrument real trades, league joins & watchlist ([#1089](https://github.com/AntonioVentilii/vici-app/issues/1089)) ([1707990](https://github.com/AntonioVentilii/vici-app/commit/170799043543de7eb36070bd2cf785a1bf1c2747))
+* **analytics:** server-side capture of VXP payouts (vxp_awarded + streak_milestone) ([#1090](https://github.com/AntonioVentilii/vici-app/issues/1090)) ([ebac1d1](https://github.com/AntonioVentilii/vici-app/commit/ebac1d120c8913c9daf1fe023bc637b57d7c1af0))
+
+
+### Documentation
+
+* **spec:** reconcile merged spec statuses and PRODUCT.md drift ([#1087](https://github.com/AntonioVentilii/vici-app/issues/1087)) ([4fc4177](https://github.com/AntonioVentilii/vici-app/commit/4fc4177117811d0ab501057e3ff8810bcda9f268))
+
+
+### Miscellaneous Chores
+
+* **github-actions:** bump actions/checkout from 6.0.3 to 7.0.0 ([#1030](https://github.com/AntonioVentilii/vici-app/issues/1030)) ([8a78aa0](https://github.com/AntonioVentilii/vici-app/commit/8a78aa0717a7865446ddfdf3ff01c3e12ebf7739))
+
 ## [1.8.12](https://github.com/AntonioVentilii/vici-app/compare/v1.8.11...v1.8.12) (2026-07-02)
 
 
