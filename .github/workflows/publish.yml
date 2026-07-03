@@ -2,23 +2,48 @@ name: Publish Serverless Functions
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment (satellite) to publish to.'
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
   push:
+    branches:
+      - main
     tags:
       - v*
 
-# Shared group with deploy.yml — serializes all mutations of the satellite
-# canister so a publish never overlaps deploy.yml's `functions upgrade`
-# (which stops the canister) or its `hosting deploy`.
+# Same environment routing as deploy.yml (main → staging, v* → production,
+# dispatch → chosen input). Group suffixed with the resolved mode so staging
+# and production never block each other, and workflow-specific (`-publish`) so
+# publish keeps its own queue independent of deploy.
 concurrency:
-  group: juno-satellite-publish
+  group: juno-satellite-publish-${{ github.ref_type == 'tag' && 'production' || (github.event_name == 'workflow_dispatch' && inputs.environment || 'staging') }}
   cancel-in-progress: false
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       id-token: write
     steps:
+      - name: Resolve target environment
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MODE="${{ inputs.environment }}"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            MODE="production"
+          else
+            MODE="staging"
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Resolved publish mode: $MODE"
+
       - name: Check out the repo
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -33,4 +58,4 @@ jobs:
       - name: Publish
         uses: junobuild/juno-action@full
         with:
-          args: functions publish
+          args: functions publish --mode ${{ steps.target.outputs.mode }}

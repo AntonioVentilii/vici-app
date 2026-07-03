@@ -79,6 +79,7 @@ export default defineConfig(({ mode }) => ({
 	satellite: {
 		ids: {
 			development: isEmulator ? EMULATOR_SATELLITE_ID : 'auamu-4x777-77775-aaaaa-cai',
+			staging: 'd22z5-nyaaa-aaaal-asz5a-cai',
 			production: '7scay-7yaaa-aaaal-asxqa-cai'
 		},
 		hosting: {
