@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.12](https://github.com/AntonioVentilii/vici-app/compare/v1.8.11...v1.8.12) (2026-07-02)
+
+
+### Features
+
+* **satellite:** add admin-gated app_delete_analytics_events (cockpit drain) ([#1085](https://github.com/AntonioVentilii/vici-app/issues/1085)) ([e0677c2](https://github.com/AntonioVentilii/vici-app/commit/e0677c207b43298700944eec6aeef773de5bf62d))
+
+
+### Performance Improvements
+
+* **satellite:** index market tags so battle scoping skips the metadata scan ([#1060](https://github.com/AntonioVentilii/vici-app/issues/1060)) ([e252f2d](https://github.com/AntonioVentilii/vici-app/commit/e252f2da28e0895572336ee4c4969d6e6b3c348e))
+
 ## [1.8.11](https://github.com/AntonioVentilii/vici-app/compare/v1.8.10...v1.8.11) (2026-07-02)
 
 

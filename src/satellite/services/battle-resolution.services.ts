@@ -10,7 +10,7 @@ import {
 	type BattleWinner
 } from '$lib/types/battle';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
-import type { MarketMetadata } from '$lib/types/market-metadata';
+import { seriesIdsForTag } from '$satellite/services/market-tag-index.services';
 import { candidMethod } from '$satellite/utils/candid.utils';
 import { escapeRegex } from '$satellite/utils/regex.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -100,10 +100,11 @@ const leagueMemberPrincipals = ({
 
 /**
  * The series allow-list for a battle scope. `'all'` returns `undefined` (no
- * filter — every series counts); a market-tag scope returns the set of series
- * carrying that tag, read from `market_metadata`. An unknown tag yields an
- * empty set, which correctly scores the battle as a void face-off rather than
- * silently counting every market.
+ * filter — every series counts); a market-tag scope returns that tag's series
+ * set read straight from the `market_tag_index` bucket — O(matching-series),
+ * not a scan of the whole `market_metadata` collection. An unscoped (empty)
+ * bucket yields an empty set, which correctly scores the battle as a void
+ * face-off rather than silently counting every market.
  */
 const scopeSeriesIds = ({
 	scope,
@@ -116,27 +117,7 @@ const scopeSeriesIds = ({
 		return;
 	}
 
-	const { items } = listDocsStore({
-		collection: Collection.MARKET_METADATA,
-		caller,
-		params: {}
-	});
-
-	const seriesIds: string[] = [];
-
-	for (const [, item] of items) {
-		try {
-			const metadata = decodeDocData<MarketMetadata>(item.data);
-
-			if (metadata.tags.includes(scope)) {
-				seriesIds.push(metadata.seriesId);
-			}
-		} catch {
-			// Skip an undecodable metadata row.
-		}
-	}
-
-	return seriesIds;
+	return seriesIdsForTag({ tag: scope, caller });
 };
 
 /** Per-side settled-call totals over a window, summed across the side's members. */

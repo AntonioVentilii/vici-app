@@ -1156,6 +1156,10 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppRebuildMarketTagIndexResult = IDL.Record({
+		series: IDL.Float64,
+		buckets: IDL.Float64
+	});
 	const AppRecomputeActivityReactionCountsResult = IDL.Record({
 		recomputed: IDL.Float64
 	});
@@ -1667,6 +1671,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppReadBattleLiveScoreResult],
 			[]
 		),
+		app_rebuild_market_tag_index: IDL.Func([], [AppRebuildMarketTagIndexResult], []),
 		app_recompute_activity_reaction_counts: IDL.Func(
 			[],
 			[AppRecomputeActivityReactionCountsResult],

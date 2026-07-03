@@ -3,7 +3,7 @@
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
 
-Status: In progress (#981)
+Status: Implemented (#981)
 
 ## Dependencies
 

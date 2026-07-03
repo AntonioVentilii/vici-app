@@ -191,6 +191,19 @@ market shows "your prediction sets the first read"; a market with a line
 shows the maker disclosure. See
 [`specs/2026-06-20-feat-maker-liquidity-disclosure.md`](./spec-driven-development/specs/2026-06-20-feat-maker-liquidity-disclosure.md).
 
+### Market close — no predictions after kickoff
+
+A market's expiry is the kickoff of the earliest relevant match, and the
+rule is "no predictions after kickoff". Enforcement was UI-only — the Flow
+deck and catalog are fetched already filtered to unexpired markets — so a
+reader who opened Flow just before kickoff could still swipe a stale card
+through afterward, because the clearing engine has no expiry gate (it only
+rejects an already-**settled** series, which is a later, distinct state).
+Placing a prediction now re-checks the market's expiry client-side at
+submit time and rejects it if the market has closed, with a distinct
+"market closed" message on both the Flow swipe and the trade modal. This
+is a stopgap ahead of an engine-side expiry gate in icdc-core.
+
 ### Market metadata — translated everywhere, with a global preference and a per-item toggle
 
 When a market has a creator/admin-authored translation for the reader's
@@ -468,10 +481,11 @@ the battle or triggers an early resolve. It's labelled provisional and
 keeps moving as each side predicts, until the window closes and the
 write-once resolved score takes over.
 
-**Who can challenge whom is governed by league privacy.** Only **OPEN**
-leagues are discoverable in challenge search and challengeable by
-outsiders; a league you are **already a member of** is always
-challengeable regardless of its privacy. INVITE and PRIVATE leagues
+**Who can challenge whom is governed by league privacy.** A league is
+either **Open** or **Private** (the two-tier model — there is no separate
+invite tier). Only **Open** leagues are discoverable in challenge search
+and challengeable by outsiders; a league you are **already a member of**
+is always challengeable regardless of its privacy. **Private** leagues
 never surface as opponents to non-members. You must own or admin the side
 you challenge from. Privacy is **discovery-only**: changing a league's
 privacy after a battle exists never retracts or alters it — a battle's
