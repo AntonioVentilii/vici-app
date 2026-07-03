@@ -101,11 +101,19 @@ export const track = (event: { name: AnalyticsEventName } & AnalyticsEventProps)
 
 	const { name, ...props } = event;
 
+	// Coarse geo/language dims from the browser locale (`en-US` → country US,
+	// locale en) — feeds the cockpit's regional + localization analytics.
+	// Aggregate-level only, never precise location; best-effort (many browsers
+	// report a bare `en`, in which case country is simply absent).
+	const [lang, region] = (navigator.language ?? '').split('-');
+
 	buffer.push({
 		name,
 		sessionId: sessionId(),
 		path: window.location.pathname,
 		occurredAtMs: Date.now(),
+		...(lang ? { locale: lang.toLowerCase() } : {}),
+		...(region && region.length === 2 ? { country: region.toUpperCase() } : {}),
 		...props
 	});
 

@@ -113,7 +113,9 @@ export const AnalyticsEventPropsSchema = j.strictObject({
 	value: j.optional(j.number()),
 	count: j.optional(j.number()),
 	durationMs: j.optional(j.number()),
-	ok: j.optional(j.boolean())
+	ok: j.optional(j.boolean()),
+	country: j.optional(j.string()),
+	locale: j.optional(j.string())
 });
 
 /**
@@ -159,6 +161,8 @@ export const TrackEventInputSchema = j.strictObject({
 	count: j.optional(j.number()),
 	durationMs: j.optional(j.number()),
 	ok: j.optional(j.boolean()),
+	country: j.optional(j.string()),
+	locale: j.optional(j.string()),
 	occurredAtMs: j.optional(j.number())
 });
 
@@ -234,7 +238,9 @@ export const AnalyticsEventExportRowSchema = j.strictObject({
 	value: j.optional(j.number()),
 	count: j.optional(j.number()),
 	durationMs: j.optional(j.number()),
-	ok: j.optional(j.boolean())
+	ok: j.optional(j.boolean()),
+	country: j.optional(j.string()),
+	locale: j.optional(j.string())
 });
 
 export const GetAnalyticsEventsResultSchema = j.strictObject({

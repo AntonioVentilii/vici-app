@@ -273,6 +273,8 @@ interface AnalyticsEventExportRow {
 	count?: number;
 	durationMs?: number;
 	ok?: boolean;
+	country?: string;
+	locale?: string;
 }
 
 /** Parse the exclusive `updated_at` cursor. Tolerates absent/whitespace/
@@ -390,7 +392,9 @@ export const getAnalyticsEventsFn = ({
 			value: p.value,
 			count: p.count,
 			durationMs: p.durationMs,
-			ok: p.ok
+			ok: p.ok,
+			country: p.country,
+			locale: p.locale
 		};
 	});
 

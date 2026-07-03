@@ -10,6 +10,7 @@ import { MarketClosedError } from '$lib/canisters/clearing.errors';
 import { PRICE_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import { logActivity } from '$lib/services/activity.services';
+import { track } from '$lib/services/analytics.services';
 import {
 	getIdentity,
 	getIdentityOrAnonymous,
@@ -273,6 +274,21 @@ export const placeOrder = async ({
 
 	refreshAllBalances();
 
+	// Behavioural telemetry for the cockpit — every REAL trade goes through here
+	// (the flow deck's guest picks emit separately). `value` is the VXP at stake
+	// (contracts × price of the chosen outcome); a resting limit order reports its
+	// full placed size, a market order the actually-executed fill.
+	if (filledQty > ZERO || type === 'LIMIT') {
+		track({
+			name:
+				type === 'LIMIT' ? 'order_placed' : side === 'BUY' ? 'position_taken' : 'position_closed',
+			marketId,
+			label: outcome,
+			count: Number(filledQty),
+			value: Number(filledQty) * normalizedPrice
+		});
+	}
+
 	try {
 		const userText = identity.getPrincipal().toText();
 		await logActivity({
@@ -300,6 +316,8 @@ export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 			order_id: orderId
 		}
 	});
+
+	track({ name: 'order_cancelled' });
 
 	refreshPositions();
 

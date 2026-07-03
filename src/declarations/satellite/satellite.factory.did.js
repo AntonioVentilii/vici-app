@@ -160,6 +160,7 @@ export const idlFactory = ({ IDL }) => {
 				key: IDL.Text,
 				ts_ms: IDL.Float64,
 				battle_id: IDL.Opt(IDL.Text),
+				country: IDL.Opt(IDL.Text),
 				league_id: IDL.Opt(IDL.Text),
 				session_id: IDL.Text,
 				value: IDL.Opt(IDL.Float64),
@@ -243,6 +244,7 @@ export const idlFactory = ({ IDL }) => {
 				path: IDL.Opt(IDL.Text),
 				count: IDL.Opt(IDL.Float64),
 				step: IDL.Opt(IDL.Float64),
+				locale: IDL.Opt(IDL.Text),
 				updated_at_ns: IDL.Text,
 				principal_text: IDL.Opt(IDL.Text),
 				label: IDL.Opt(IDL.Text),
@@ -1296,6 +1298,7 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				ok: IDL.Opt(IDL.Bool),
 				battle_id: IDL.Opt(IDL.Text),
+				country: IDL.Opt(IDL.Text),
 				league_id: IDL.Opt(IDL.Text),
 				session_id: IDL.Text,
 				value: IDL.Opt(IDL.Float64),
@@ -1380,6 +1383,7 @@ export const idlFactory = ({ IDL }) => {
 				path: IDL.Opt(IDL.Text),
 				count: IDL.Opt(IDL.Float64),
 				step: IDL.Opt(IDL.Float64),
+				locale: IDL.Opt(IDL.Text),
 				label: IDL.Opt(IDL.Text),
 				duration_ms: IDL.Opt(IDL.Float64)
 			})
