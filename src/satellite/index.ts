@@ -6,6 +6,7 @@ import {
 	GetAnalyticsEventsArgsSchema,
 	GetAnalyticsEventsResultSchema,
 	GetAnalyticsSummaryArgsSchema,
+	GetAnalyticsUserStatsResultSchema,
 	TrackEventsArgsSchema,
 	TrackEventsResultSchema
 } from '$lib/schema/analytics-event.schema';
@@ -57,6 +58,7 @@ import {
 	deleteAnalyticsEventsFn,
 	getAnalyticsEventsFn,
 	getAnalyticsSummaryFn,
+	getAnalyticsUserStatsFn,
 	onVxpAwardSetForAnalytics,
 	trackEventsFn
 } from '$satellite/services/analytics.services';
@@ -606,6 +608,17 @@ export const deleteAnalyticsEvents = defineUpdate({
 	args: DeleteAnalyticsEventsArgsSchema,
 	result: DeleteAnalyticsEventsResultSchema,
 	handler: (args) => deleteAnalyticsEventsFn(args)
+});
+
+/**
+ * Admin-gated registered-accounts count for the cockpit: the `profiles`
+ * collection length (bootstrapped on first sign-in), i.e. the all-time
+ * registered denominator the event stream can't provide. O(1) length read —
+ * no listing, no IC0522 exposure.
+ */
+export const getAnalyticsUserStats = defineQuery({
+	result: GetAnalyticsUserStatsResultSchema,
+	handler: () => getAnalyticsUserStatsFn()
 });
 
 // ─── Social cohorts ─────────────────────────────────────────────

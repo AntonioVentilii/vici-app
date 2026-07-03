@@ -262,3 +262,10 @@ export const DeleteAnalyticsEventsArgsSchema = j.strictObject({
 export const DeleteAnalyticsEventsResultSchema = j.strictObject({
 	deleted: j.number()
 });
+
+/** Result of `getAnalyticsUserStats` — the all-time registered-accounts count
+ * (the `profiles` collection length; a profile is bootstrapped on first
+ * sign-in). Admin-gated; feeds the cockpit Acquisition denominator. */
+export const GetAnalyticsUserStatsResultSchema = j.strictObject({
+	registered: j.number()
+});

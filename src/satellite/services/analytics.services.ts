@@ -42,6 +42,7 @@ import { Principal } from '@icp-sdk/core/principal';
 import type { OnSetDocContext } from '@junobuild/functions';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
+	countCollectionDocsStore,
 	decodeDocData,
 	deleteDocStore,
 	encodeDocData,
@@ -450,6 +451,25 @@ export const deleteAnalyticsEventsFn = ({ keys }: { keys: string[] }): { deleted
 	}
 
 	return { deleted };
+};
+
+/**
+ * Admin-gated registered-accounts count for the cockpit. `profiles` is
+ * bootstrapped for every principal on first sign-in (`ensureProfile`), so the
+ * collection length IS the all-time registered figure — the denominator the
+ * cockpit's Acquisition surface measures every active/dormant rate against,
+ * which the event stream alone can't provide (capture only began 2026-07-02).
+ * `countCollectionDocsStore` reads the collection length without materializing
+ * docs, so unlike a listing it carries no IC0522 exposure.
+ */
+export const getAnalyticsUserStatsFn = (): { registered: number } => {
+	const caller = msgCaller();
+
+	if (!isAdmin({ caller })) {
+		throw new Error('Analytics is restricted to admins.');
+	}
+
+	return { registered: Number(countCollectionDocsStore({ collection: Collection.PROFILES })) };
 };
 
 // ─── Server-side capture ────────────────────────────────────────
