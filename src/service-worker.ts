@@ -78,19 +78,25 @@ const handleNavigation = async (request: Request): Promise<Response> => {
 	try {
 		const res = await fetch(request);
 
-		// Only cache a genuinely-served HTML shell (2xx + text/html). A gateway
-		// error page — the 5xx we exist to mask, but equally a 4xx/3xx HTML page —
-		// must never overwrite the last-good shell, or the fallback would serve the
-		// wrong document and break sign-in/recovery.
+		// Every SUCCESSFUL navigation passes through untouched — including
+		// non-HTML documents (sitemap.xml, robots.txt), which the previous
+		// shell-substitution turned into an SPA 404 for any browser with this
+		// worker installed. Only cache a genuinely-served HTML shell (2xx +
+		// text/html): a gateway error page — the 5xx we exist to mask, but
+		// equally a 4xx/3xx HTML page — must never overwrite the last-good
+		// shell, or the fallback would serve the wrong document and break
+		// sign-in/recovery.
 		const contentType = res.headers.get('content-type') ?? '';
 
-		if (res.ok && contentType.includes('text/html')) {
-			await shellCache.put(SHELL_KEY, res.clone());
+		if (res.ok) {
+			if (contentType.includes('text/html')) {
+				await shellCache.put(SHELL_KEY, res.clone());
+			}
 
 			return res;
 		}
 
-		// Any non-shell response: prefer the last-good shell so the SPA still boots.
+		// Error response: prefer the last-good shell so the SPA still boots.
 		const cached = await shellCache.match(SHELL_KEY);
 
 		return cached ?? res;
