@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.14](https://github.com/AntonioVentilii/vici-app/compare/v1.8.13...v1.8.14) (2026-07-06)
+
+
+### Features
+
+* **seo:** generate sitemap + per-market crawler pages at deploy ([#1098](https://github.com/AntonioVentilii/vici-app/issues/1098)) ([c16a879](https://github.com/AntonioVentilii/vici-app/commit/c16a8791729c2060b2e99d8ddb2598ade15a1413))
+* **seo:** keyword slugs for market share links ([#1100](https://github.com/AntonioVentilii/vici-app/issues/1100)) ([88ab0af](https://github.com/AntonioVentilii/vici-app/commit/88ab0af12536ff62ce0625f351858d9eecad4c88))
+
+
+### Bug Fixes
+
+* **seo:** strict share-param suffix, unique-match resolution ([#1101](https://github.com/AntonioVentilii/vici-app/issues/1101)) ([e12aae3](https://github.com/AntonioVentilii/vici-app/commit/e12aae3ce93db3009d21f4938f884b76fd6f13f5))
+
 ## [1.8.13](https://github.com/AntonioVentilii/vici-app/compare/v1.8.12...v1.8.13) (2026-07-03)
 
 
