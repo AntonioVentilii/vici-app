@@ -48,8 +48,13 @@
 
 		try {
 			const series = await listSeries({ identity: new AnonymousIdentity() });
+			const matches = series.filter(({ series_id }) => series_id.startsWith(suffix));
 
-			return series.find(({ series_id }) => series_id.startsWith(suffix))?.series_id;
+			// Exactly one match or nothing: a colliding suffix must degrade to
+			// the markets board, never redirect to whichever market sorts first.
+			if (matches.length === 1) {
+				return matches[0].series_id;
+			}
 		} catch {
 			// Registry unreachable — fall through to "unresolvable"; the
 			// caller lands on the markets board instead of a dead page.
