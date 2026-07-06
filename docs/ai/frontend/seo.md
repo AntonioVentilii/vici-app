@@ -13,12 +13,12 @@ layer is generated **at deploy time** instead:
   [`juno.config.ts`](../../../juno.config.ts) and emits into `build/`:
   - `sitemap.xml` — public statics + one URL per visible market
     (referenced from [`static/robots.txt`](../../../static/robots.txt));
-  - per-market copies of the built shell with that market's
-    title/description swapped into the head tags, at three paths:
-    `m/{slug~id8}/index.html` (the keyword-carrying **canonical**, the same
-    param the share sheet hands out), plus `markets/{id}/index.html` and
-    `m/{id}/index.html` (legacy hash links) which canonicalize to it. Each
-    embeds `window.__viciSeriesId` for the `/m/[id]` route.
+  - ONE per-market copy of the built shell at `m/{slug~id8}/index.html`
+    (the keyword-carrying **canonical**, the same param the share sheet
+    hands out) with that market's title/description swapped into the head
+    tags and `window.__viciSeriesId` embedded for the `/m/[id]` route.
+    The plain-id routes (`/markets/{id}`, `/m/{id}`) deliberately get no
+    copies — see the file-count constraint below.
 
 ## Slugged share links
 
@@ -56,5 +56,13 @@ deploy); unresolvable params land on the markets board.
   entry URL. Per-market head content is English (registry `title` /
   `description.plain`), matching the detail page's `<svelte:head>` title
   shape (`{title} | Vici Social Markets`).
+- **File count is the binding budget — keep it to ONE page per market.**
+  Every emitted file is staged, committed and deleted again per deploy, and
+  the satellite recomputes the asset certification tree across all assets
+  on bulk operations (junobuild/juno#2263). Deleting ~6k staged assets blew
+  the IC's 40B-instruction message limit on the v1.8.14 deploy (change
+  applied, cleanup failed → red CI + ~94 MB of orphaned staged assets on
+  the prod satellite). The pre-SEO ~3k-file baseline is the proven-safe
+  zone; do not add per-market page variants without checking this budget.
 - The script skips itself under `JUNO_EMULATOR=true` (E2E deploys have no
   mainnet registry to read).
