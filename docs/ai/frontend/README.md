@@ -51,6 +51,9 @@ Non-obvious points the codebase will not tell you:
   `$lib/constants/app.constants` and bare `return;`.
 - No test runner is wired yet — when the first Vitest spec lands,
   [`testing.md`](./testing.md) becomes the contract.
+- The crawler-facing surface (sitemap + per-market meta pages) is generated
+  at deploy time, not at runtime — see [`seo.md`](./seo.md) before touching
+  `src/app.html` head tags, `robots.txt`, or the hosting `predeploy` chain.
 
 ## What "good" looks like in this repo
 
