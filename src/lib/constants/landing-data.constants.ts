@@ -7,13 +7,7 @@
  */
 
 export type LandingMarketCategory =
-	| 'wc'
-	| 'macro'
-	| 'crypto'
-	| 'politics'
-	| 'tech'
-	| 'sports'
-	| 'culture';
+	'wc' | 'macro' | 'crypto' | 'politics' | 'tech' | 'sports' | 'culture';
 
 export interface LandingMarket {
 	readonly id: string;

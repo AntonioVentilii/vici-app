@@ -20,10 +20,7 @@
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
 	type HubPath =
-		| AppPath.AdminAccess
-		| AppPath.AdminMarkets
-		| AppPath.AdminResolutions
-		| AppPath.AdminVxp;
+		AppPath.AdminAccess | AppPath.AdminMarkets | AppPath.AdminResolutions | AppPath.AdminVxp;
 	type HubIcon = typeof UsersRound | typeof TrendingUp | typeof Gavel | typeof Coins;
 
 	interface Tile {

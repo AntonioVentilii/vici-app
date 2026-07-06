@@ -22,7 +22,7 @@ substantive, read the canonical docs.
   [`../icdc-core/`](../../../icdc-core/); this repo only consumes its
   Candid surface via generated bindings.
 - **Don't hand-edit `src/declarations/**`** — regenerate via `npm run
-  did` and commit the result with the FE wiring change.
+did` and commit the result with the FE wiring change.
 - **Don't modify `../icdc-core/` from this repo** — open it as its own
   workspace and obey its `AGENTS.md`. When you come back to wire the
   new method, do it in a separate PR here.

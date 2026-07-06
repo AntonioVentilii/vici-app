@@ -11,12 +11,7 @@
  */
 
 export type FeaturedEventKind =
-	| 'tournament'
-	| 'championship'
-	| 'election'
-	| 'series'
-	| 'awards'
-	| 'other';
+	'tournament' | 'championship' | 'election' | 'series' | 'awards' | 'other';
 
 export interface FeaturedEventParticipant {
 	/** Stable identifier — ISO-3166 alpha-2 for the WC, candidate slug for an

@@ -107,9 +107,7 @@ export const ACCOUNT_RECOVERY_WINDOW_MS = 30 * 86_400_000;
  */
 
 export type DeleteMyAccountRefusalReason =
-	| 'owns_non_empty_league'
-	| 'league_resolution_failed'
-	| 'invalid_input';
+	'owns_non_empty_league' | 'league_resolution_failed' | 'invalid_input';
 
 /**
  * One owner-league resolution the caller applies as part of deletion.
@@ -154,8 +152,7 @@ export interface DeleteMyAccountResult {
 
 /** Result of {@link recoverMyAccountFn}, discriminated by `ok`. */
 export type RecoverMyAccountResult =
-	| { ok: true; recovered: boolean }
-	| { ok: false; reason: 'expired' };
+	{ ok: true; recovered: boolean } | { ok: false; reason: 'expired' };
 
 /**
  * Result of {@link sweepExpiredDeletionsFn} — count of accounts purged.
@@ -185,8 +182,7 @@ export interface SweepExpiredDeletionsResult {
  *    states, so we refuse cleanly rather than stacking the two markers.
  */
 export type HibernateMyAccountResult =
-	| { ok: true }
-	| { ok: false; reason: 'no_profile' | 'deleted' };
+	{ ok: true } | { ok: false; reason: 'no_profile' | 'deleted' };
 
 /**
  * Result of {@link resumeMyAccountFn}, discriminated by `ok`. `resumed` is

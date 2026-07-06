@@ -136,9 +136,10 @@ const bumpRollup = ({
 		const rollup: EventRollupDoc = {
 			epochDay,
 			dayStartMs: epochDay * MS_PER_DAY,
-			counts: Object.keys(counts).map(
-				(name): EventCount => ({ name: name as AnalyticsEventName, count: counts[name] })
-			),
+			counts: Object.keys(counts).map((name): EventCount => ({
+				name: name as AnalyticsEventName,
+				count: counts[name]
+			})),
 			updatedAtMs: tsMs
 		};
 

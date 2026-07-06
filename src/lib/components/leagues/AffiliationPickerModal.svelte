@@ -138,12 +138,7 @@
 	 * reachable only when {@link SCHOOL_PASS2_ENABLED} is on.
 	 */
 	type Mode =
-		| 'browse'
-		| 'verify-existing'
-		| 'add-confirm'
-		| 'add-form'
-		| 'add-verifying'
-		| 'verified';
+		'browse' | 'verify-existing' | 'add-confirm' | 'add-form' | 'add-verifying' | 'verified';
 	let mode = $state<Mode>(nonNullish(initialVerifyTarget) ? 'verify-existing' : 'browse');
 
 	let query = $state('');

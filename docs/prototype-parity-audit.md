@@ -27,7 +27,7 @@ These need a per-item decision before deletion. Default = remove.
 | C-5  | Markets list     | Hover lift on cards (`hover:-translate-y-0.5`)              | ✅ Remove         | Prototype is truth                                                         |
 | C-6  | Sign-in          | Decorative orb radial gradients                             | ✅ Remove         | Prototype is truth                                                         |
 | C-7  | Sign-in          | `or` divider between providers                              | ✅ Remove         | Prototype is truth                                                         |
-| C-8  | Sign-in          | Internet Identity + Passkey + Dev buttons                   | ⏭ Keep           | Production-needed; style to match prototype tone                           |
+| C-8  | Sign-in          | Internet Identity + Passkey + Dev buttons                   | ⏭ Keep            | Production-needed; style to match prototype tone                           |
 | C-9  | Flow             | FlowTopBar (persistent close/progress/streak header)        | ✅ Remove         | Prototype is truth                                                         |
 | C-10 | Flow             | LIMIT pill on edge labels (limit-order indicator)           | ✅ Remove         | Prototype is truth                                                         |
 | C-11 | Flow             | Suggested badge in meta row                                 | ✅ Remove         | Prototype is truth                                                         |
@@ -38,17 +38,17 @@ These need a per-item decision before deletion. Default = remove.
 | C-16 | Profile          | ReferralCard                                                | ✅ Remove         | Prototype is truth                                                         |
 | C-17 | Profile          | Skill grid (Accuracy/Calls/Wins/Streak)                     | ✅ Remove         | Prototype is truth                                                         |
 | C-18 | Profile          | 30-day streak activity heatmap                              | ✅ Remove         | Prototype is truth                                                         |
-| C-19 | Settings         | Language selector segmented control                         | ⏭ Keep           | Production-need (7 locales shipped)                                        |
-| C-20 | Settings         | Inline blocking-leagues link list in delete flow            | ⏭ Keep           | Production safety                                                          |
-| C-21 | Settings         | Transfer ownership UI in delete flow                        | ⏭ Keep           | Production need; backend shipped                                           |
-| C-22 | League detail    | Transfer ownership CTA + modal                              | ⏭ Keep           | Production need; backend shipped                                           |
+| C-19 | Settings         | Language selector segmented control                         | ⏭ Keep            | Production-need (7 locales shipped)                                        |
+| C-20 | Settings         | Inline blocking-leagues link list in delete flow            | ⏭ Keep            | Production safety                                                          |
+| C-21 | Settings         | Transfer ownership UI in delete flow                        | ⏭ Keep            | Production need; backend shipped                                           |
+| C-22 | League detail    | Transfer ownership CTA + modal                              | ⏭ Keep            | Production need; backend shipped                                           |
 | C-23 | Account settings | Different intro copy / no provider-specific glyphs          | ✅ Strip glyphs   | Stripped; reverted provider-glyph tile + VERIFIED chip in commit `ac6dcc8` |
-| C-24 | Wallet           | Multi-tab production wallet (Send / Receive / History tabs) | ⏭ Keep           | Production need                                                            |
-| C-25 | Portfolio        | OpenOrders table                                            | ⏭ Keep           | Production need (limit orders)                                             |
+| C-24 | Wallet           | Multi-tab production wallet (Send / Receive / History tabs) | ⏭ Keep            | Production need                                                            |
+| C-25 | Portfolio        | OpenOrders table                                            | ⏭ Keep            | Production need (limit orders)                                             |
 | C-26 | Tournament       | (additive UI from us — TBD list)                            | ✅ Re-audited     | Findings in Tournament re-audit sub-section; 3 shipped, 6 deferred         |
 | C-27 | Friends          | Back-arrow appbar to Profile                                | ✅ Remove         | Drop standalone `/friends` route; Friends only inside Social               |
-| C-28 | Layout           | 200ms cross-fade between routes                             | ⏭ Keep           | Confirmed earlier as intentional                                           |
-| C-29 | Worlds           | Podium prize claim banner                                   | ⏭ Keep           | Production need (real claim flow)                                          |
+| C-28 | Layout           | 200ms cross-fade between routes                             | ⏭ Keep            | Confirmed earlier as intentional                                           |
+| C-29 | Worlds           | Podium prize claim banner                                   | ⏭ Keep            | Production need (real claim flow)                                          |
 | C-30 | Layout           | DomainSwitch                                                | ✅ Hidden in prod | Locked earlier                                                             |
 
 ## Surface checklist — A-tier divergences (must-fix)
