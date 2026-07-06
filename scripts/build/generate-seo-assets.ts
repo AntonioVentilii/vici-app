@@ -9,11 +9,14 @@
  *
  *   - `sitemap.xml` — the public static routes plus one URL per visible
  *     market, so search engines discover the catalog at all.
- *   - `markets/{id}/index.html` and `m/{id}/index.html` — copies of the
- *     built shell with the market's title/description swapped into
- *     `<title>`, the description meta, the canonical link and the
- *     OG/Twitter tags. The share alias (`/m/{id}`) canonicalizes to
- *     `/markets/{id}` so the two never compete in search.
+ *   - per-market copies of the built shell with the market's
+ *     title/description swapped into `<title>`, the description meta, the
+ *     canonical link and the OG/Twitter tags, at three paths:
+ *     `m/{slug~id8}` (the keyword-carrying canonical, same param the share
+ *     sheet hands out — see `$lib/utils/market-slug.utils`), plus
+ *     `markets/{id}` and `m/{id}` which canonicalize to it so the variants
+ *     never compete in search. Each embeds `window.__viciSeriesId` so the
+ *     `/m/[id]` route resolves the market without a catalog lookup.
  *
  * Contract with `src/app.html`: the head tags rewritten here must keep
  * matching the patterns below — the script hard-fails when a pattern stops
@@ -38,6 +41,7 @@ import {
 	normalizeWcQuestion,
 	WC_QUESTION_REVEAL_MS
 } from '$lib/constants/wc-market-schedule.constants';
+import { marketShareParam } from '$lib/utils/market-slug.utils';
 import { fromNullable, isNullish, nonNullish, toNullable } from '@dfinity/utils';
 import { Actor, HttpAgent, type ActorSubclass } from '@icp-sdk/core/agent';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -270,10 +274,25 @@ const renderMarketShell = ({
 	);
 };
 
-// Series ids are used as path segments under `build/` — a separator, a `..`
-// or any other unexpected character in one could make `join` escape the
-// build directory or collide with another generated page.
+// Series ids and share params are used as path segments under `build/` — a
+// separator, a `..` or any other unexpected character in one could make
+// `join` escape the build directory or collide with another generated page.
+// `~` is the slug/id separator of `marketShareParam`.
 const SAFE_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+const SAFE_SHARE_PARAM_PATTERN = /^[A-Za-z0-9_~-]+$/;
+
+/**
+ * Lets the `/m/[id]` route resolve the market without parsing the URL: the
+ * SPA reads `window.__viciSeriesId` before falling back to param parsing.
+ * The id is `SAFE_ID_PATTERN`-validated, so inlining it is injection-safe.
+ */
+const embedSeriesId = ({ html, id }: { html: string; id: string }): string =>
+	replaceOnce({
+		html,
+		pattern: /<\/head>/,
+		replacement: `<script>window.__viciSeriesId = ${JSON.stringify(id)};</script></head>`,
+		label: 'head close tag'
+	});
 
 const writePage = ({ relativeDir, html }: { relativeDir: string; html: string }) => {
 	const dir = join(BUILD_DIR, relativeDir);
@@ -282,11 +301,10 @@ const writePage = ({ relativeDir, html }: { relativeDir: string; html: string })
 	writeFileSync(join(dir, 'index.html'), html, 'utf8');
 };
 
-const renderSitemap = (marketIds: string[]): string => {
+const renderSitemap = (paths: string[]): string => {
 	const staticPaths = ['/', '/about', '/welcome'];
-	const paths = [...staticPaths, ...marketIds.map((id) => `/markets/${encodeURIComponent(id)}`)];
 
-	const urls = paths
+	const urls = [...staticPaths, ...paths]
 		.map((path) => `\t<url><loc>${escapeHtml(`${PROD_ORIGIN}${path}`)}</loc></url>`)
 		.join('\n');
 
@@ -323,6 +341,8 @@ const main = async () => {
 		);
 	}
 
+	const sitemapPaths: string[] = [];
+
 	for (const market of visible) {
 		const id = market.series_id;
 
@@ -330,29 +350,47 @@ const main = async () => {
 			throw new Error(`Refusing to use series id as a path segment: ${JSON.stringify(id)}`);
 		}
 
-		const canonicalUrl = `${PROD_ORIGIN}/markets/${encodeURIComponent(id)}`;
-		const html = renderMarketShell({
-			shell,
-			title: market.title,
-			description: market.description.plain,
-			canonicalUrl
+		const shareParam = marketShareParam({ title: market.title, seriesId: id });
+
+		if (!SAFE_SHARE_PARAM_PATTERN.test(shareParam)) {
+			throw new Error(
+				`Refusing to use share param as a path segment: ${JSON.stringify(shareParam)}`
+			);
+		}
+
+		// The slugged share URL is the canonical: it is what the share sheet
+		// hands out and the only variant whose URL carries the question's
+		// keywords. The plain-id routes stay crawlable but defer to it.
+		const canonicalUrl = `${PROD_ORIGIN}/m/${shareParam}`;
+		const html = embedSeriesId({
+			html: renderMarketShell({
+				shell,
+				title: market.title,
+				description: market.description.plain,
+				canonicalUrl
+			}),
+			id
 		});
 
+		writePage({ relativeDir: join('m', shareParam), html });
 		writePage({ relativeDir: join('markets', id), html });
-		// The share alias serves the same head but canonicalizes to the
-		// detail route, so unfurlers show the question while search
-		// consolidates on one URL.
-		writePage({ relativeDir: join('m', id), html });
+
+		// Legacy hash share links (`/m/{id}`) predate the slugs and keep
+		// unfurling; skipped when the title yields no slug (shareParam IS the
+		// bare id then, already written above).
+		if (shareParam !== id) {
+			writePage({ relativeDir: join('m', id), html });
+		}
+
+		sitemapPaths.push(`/m/${shareParam}`);
 	}
 
-	const sortedIds = visible.map(({ series_id }) => series_id).sort();
-
-	writeFileSync(join(BUILD_DIR, 'sitemap.xml'), renderSitemap(sortedIds), 'utf8');
+	writeFileSync(join(BUILD_DIR, 'sitemap.xml'), renderSitemap(sitemapPaths.sort()), 'utf8');
 
 	const hidden = viciSeries.length - visible.length;
 
 	console.log(
-		`[seo-assets] ${visible.length} market pages (×2 routes) + sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
+		`[seo-assets] ${visible.length} market pages (×3 routes) + sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
 	);
 };
 
