@@ -9,14 +9,21 @@
  *
  *   - `sitemap.xml` — the public static routes plus one URL per visible
  *     market, so search engines discover the catalog at all.
- *   - per-market copies of the built shell with the market's
+ *   - ONE per-market copy of the built shell at `m/{slug~id8}` (the
+ *     keyword-carrying canonical, same param the share sheet hands out —
+ *     see `$lib/utils/market-slug.utils`) with the market's
  *     title/description swapped into `<title>`, the description meta, the
- *     canonical link and the OG/Twitter tags, at three paths:
- *     `m/{slug~id8}` (the keyword-carrying canonical, same param the share
- *     sheet hands out — see `$lib/utils/market-slug.utils`), plus
- *     `markets/{id}` and `m/{id}` which canonicalize to it so the variants
- *     never compete in search. Each embeds `window.__viciSeriesId` so the
- *     `/m/[id]` route resolves the market without a catalog lookup.
+ *     canonical link and the OG/Twitter tags, plus `window.__viciSeriesId`
+ *     so the `/m/[id]` route resolves the market without a catalog lookup.
+ *
+ * Exactly one page per market, deliberately: every emitted file is staged,
+ * committed AND deleted again per deploy, and the satellite recomputes the
+ * asset certification tree across all assets on those bulk operations —
+ * deleting ~6k staged assets exceeded the IC's 40B-instruction message
+ * limit (see junobuild/juno#2263; deploy applied, cleanup failed). The
+ * plain-id routes (`/markets/{id}`, `/m/{id}`) intentionally get no copies:
+ * they serve the generic shell and the app resolves them client-side, while
+ * sitemap + share links only ever point at the slug URL.
  *
  * Contract with `src/app.html`: the head tags rewritten here must keep
  * matching the patterns below — the script hard-fails when a pattern stops
@@ -358,9 +365,9 @@ const main = async () => {
 			);
 		}
 
-		// The slugged share URL is the canonical: it is what the share sheet
-		// hands out and the only variant whose URL carries the question's
-		// keywords. The plain-id routes stay crawlable but defer to it.
+		// The slugged share URL is the sole emitted page and the canonical: it
+		// is what the share sheet hands out, the only variant whose URL
+		// carries the question's keywords, and the only URL the sitemap lists.
 		const canonicalUrl = `${PROD_ORIGIN}/m/${shareParam}`;
 		const html = embedSeriesId({
 			html: renderMarketShell({
@@ -373,14 +380,6 @@ const main = async () => {
 		});
 
 		writePage({ relativeDir: join('m', shareParam), html });
-		writePage({ relativeDir: join('markets', id), html });
-
-		// Legacy hash share links (`/m/{id}`) predate the slugs and keep
-		// unfurling; skipped when the title yields no slug (shareParam IS the
-		// bare id then, already written above).
-		if (shareParam !== id) {
-			writePage({ relativeDir: join('m', id), html });
-		}
 
 		sitemapPaths.push(`/m/${shareParam}`);
 	}
@@ -390,7 +389,7 @@ const main = async () => {
 	const hidden = viciSeries.length - visible.length;
 
 	console.log(
-		`[seo-assets] ${visible.length} market pages (×3 routes) + sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
+		`[seo-assets] ${visible.length} market pages + sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
 	);
 };
 

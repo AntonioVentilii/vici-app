@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.15](https://github.com/AntonioVentilii/vici-app/compare/v1.8.14...v1.8.15) (2026-07-06)
+
+
+### Bug Fixes
+
+* **seo:** emit one page per market to stay under the certification instruction budget ([#1102](https://github.com/AntonioVentilii/vici-app/issues/1102)) ([46ca87a](https://github.com/AntonioVentilii/vici-app/commit/46ca87a62d196c5fad3c597971d25f34da36d93b))
+
 ## [1.8.14](https://github.com/AntonioVentilii/vici-app/compare/v1.8.13...v1.8.14) (2026-07-06)
 
 
