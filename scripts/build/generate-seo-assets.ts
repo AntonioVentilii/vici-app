@@ -186,8 +186,12 @@ const replaceOnce = ({
 	replacement: string;
 	label: string;
 }): string => {
-	if (!pattern.test(html)) {
-		throw new Error(`SEO shell contract broken: ${label} not found in build/index.html`);
+	const matches = html.match(new RegExp(pattern, 'g'))?.length ?? 0;
+
+	if (matches !== 1) {
+		throw new Error(
+			`SEO shell contract broken: ${label} matched ${matches} times in build/index.html (expected exactly 1)`
+		);
 	}
 
 	// Replacement via callback so `$…` sequences in market text stay literal.
@@ -266,6 +270,11 @@ const renderMarketShell = ({
 	);
 };
 
+// Series ids are used as path segments under `build/` — a separator, a `..`
+// or any other unexpected character in one could make `join` escape the
+// build directory or collide with another generated page.
+const SAFE_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+
 const writePage = ({ relativeDir, html }: { relativeDir: string; html: string }) => {
 	const dir = join(BUILD_DIR, relativeDir);
 
@@ -316,6 +325,11 @@ const main = async () => {
 
 	for (const market of visible) {
 		const id = market.series_id;
+
+		if (!SAFE_ID_PATTERN.test(id)) {
+			throw new Error(`Refusing to use series id as a path segment: ${JSON.stringify(id)}`);
+		}
+
 		const canonicalUrl = `${PROD_ORIGIN}/markets/${encodeURIComponent(id)}`;
 		const html = renderMarketShell({
 			shell,

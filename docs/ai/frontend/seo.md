@@ -37,7 +37,7 @@ layer is generated **at deploy time** instead:
 - **Client rendering is unchanged.** The injected pages are byte-identical
   to the shell apart from head tags; the SPA hydrates them like any other
   entry URL. Per-market head content is English (registry `title` /
-  `description.text`), matching the detail page's `<svelte:head>` title
+  `description.plain`), matching the detail page's `<svelte:head>` title
   shape (`{title} | Vici Social Markets`).
 - The script skips itself under `JUNO_EMULATOR=true` (E2E deploys have no
   mainnet registry to read).
