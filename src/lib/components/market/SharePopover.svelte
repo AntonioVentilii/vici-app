@@ -19,6 +19,7 @@
 	import { type FlowArtCategory, resolveFlowArtCategory } from '$lib/utils/flow-art.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { marketShareParam } from '$lib/utils/market-slug.utils';
 	import { renderPredictionCard, type ShareCardResult } from '$lib/utils/share-card.utils';
 
 	/**
@@ -99,7 +100,12 @@
 
 	const refToken = $derived(referralCode ?? handle);
 	const origin = $derived(browser ? window.location.origin : 'https://vici.market');
-	const url = $derived(`${origin}/m/${market.id}?ref=${refToken}`);
+	// Slugged from the on-chain (EN) title, never `displayTitle`: the SEO
+	// generator derives the same param from the registry title, and the two
+	// must agree for a shared link to land on its prerendered crawler page.
+	const url = $derived(
+		`${origin}/m/${marketShareParam({ title: market.title, seriesId: market.id })}?ref=${refToken}`
+	);
 
 	const text = $derived.by(() => {
 		if (nonNullish(priorCall)) {

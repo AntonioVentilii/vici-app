@@ -13,10 +13,27 @@ layer is generated **at deploy time** instead:
   [`juno.config.ts`](../../../juno.config.ts) and emits into `build/`:
   - `sitemap.xml` — public statics + one URL per visible market
     (referenced from [`static/robots.txt`](../../../static/robots.txt));
-  - `markets/{id}/index.html` and `m/{id}/index.html` — copies of the built
-    shell with that market's title/description swapped into the head tags.
-    Both routes share one head; the `/m/{id}` share alias canonicalizes to
-    `/markets/{id}`.
+  - per-market copies of the built shell with that market's
+    title/description swapped into the head tags, at three paths:
+    `m/{slug~id8}/index.html` (the keyword-carrying **canonical**, the same
+    param the share sheet hands out), plus `markets/{id}/index.html` and
+    `m/{id}/index.html` (legacy hash links) which canonicalize to it. Each
+    embeds `window.__viciSeriesId` for the `/m/[id]` route.
+
+## Slugged share links
+
+`$lib/utils/market-slug.utils` is the single source of the `/m/{param}`
+shape: `slugifyMarketTitle` (EN registry title → `will-brazil-beat-norway`)
+and `marketShareParam` (`slug~id8`). The 8-hex id suffix makes the param
+unique by construction — registry titles are immutable but not
+collision-proof after normalization, and the share sheet (one market in
+hand) and the SEO generator (whole catalog) must produce identical params
+with no coordination. `SharePopover` builds links from the **on-chain EN
+title, never `displayTitle`** — a translated slug would miss the emitted
+page. The `/m/[id]` route resolves incoming params: embedded
+`__viciSeriesId` (guarded for staleness against the param) → bare-id param
+→ catalog match on the `~id8` suffix (covers markets newer than the last
+deploy); unresolvable params land on the markets board.
 
 ## Non-obvious constraints
 
