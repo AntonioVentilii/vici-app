@@ -61,10 +61,12 @@ export const marketShareParam = ({ title, seriesId }: { title: string; seriesId:
 };
 
 // Exactly what `marketShareParam` produces: the first 8 characters of a
-// series id. Anything else (shorter, longer, foreign charset) is a
-// malformed link — rejecting it here keeps a crafted short fragment like
-// `/m/foo~a` from prefix-matching an arbitrary market.
-const SLUG_ID_SUFFIX_PATTERN = new RegExp(`^[A-Za-z0-9_-]{${SLUG_ID_SUFFIX_LENGTH}}$`);
+// series id — a lowercase-hex hash on the registry. Anything else
+// (shorter, longer, foreign charset) is a malformed link — rejecting it
+// here keeps a crafted short fragment like `/m/foo~a` from prefix-matching
+// an arbitrary market. If the id format ever changes, a stale pattern
+// degrades to the markets board, never to a wrong redirect.
+const SLUG_ID_SUFFIX_PATTERN = new RegExp(`^[0-9a-f]{${SLUG_ID_SUFFIX_LENGTH}}$`);
 
 /**
  * The short-id suffix of a slugged share param, or `undefined` when the
