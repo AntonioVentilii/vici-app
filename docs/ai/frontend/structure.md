@@ -180,8 +180,8 @@ import type { _SERVICE as ClearingService } from '$declarations/clearing/clearin
   split into
   [`relation-queries.services.ts`](../../../src/lib/services/relation-queries.services.ts),
   away from the mutation layer in `relation.services.ts`, so
-  `group.services`and`relation.services`no longer form a cycle. If you
-  hit a circular dependency, split the module; do not reach for`await import()`. (This is a hard project preference — keep modules small
+  `group.services` and `relation.services` no longer form a cycle. If you
+  hit a circular dependency, split the module; do not reach for `await import()`. (This is a hard project preference — keep modules small
   and single-purpose rather than gigantic ones that import each other.)
 
 ## Where to put new files (decision tree)
