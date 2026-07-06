@@ -83,7 +83,11 @@ export default defineConfig(({ mode }) => ({
 		},
 		hosting: {
 			source: 'build',
-			predeploy: ['npm run build']
+			// `seo:assets` rewrites the built shell into per-market crawler pages
+			// (+ sitemap) — see `scripts/build/generate-seo-assets.ts`. It must run
+			// on EVERY hosting deploy: `--prune` deletes any asset missing from
+			// `build/`, so skipping it would wipe the deployed SEO surface.
+			predeploy: ['npm run build', 'npm run seo:assets']
 		},
 		authentication: {
 			google: {

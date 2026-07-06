@@ -69,7 +69,14 @@
 
 		<!-- Open Graph / Twitter. The og:image is a 1200×630 raster rendered
 			 from the brand SVGs (wordmark on the ink canvas + tagline). Twitter
-			 card upgraded to `summary_large_image` to honour it. -->
+			 card upgraded to `summary_large_image` to honour it.
+
+			 Deploy-time contract: `scripts/build/generate-seo-assets.ts` rewrites
+			 the title tag, description meta, canonical link, the og:
+			 type/url/title/description tags and the twitter: title/description
+			 tags into per-market copies of the built shell. Renaming or
+			 restructuring these tags breaks its patterns — the deploy fails
+			 loudly, but keep them in sync. -->
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content="VICI" />
 		<meta property="og:url" content="https://vici.market/" />
