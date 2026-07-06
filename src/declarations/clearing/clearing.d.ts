@@ -385,9 +385,7 @@ export type BalanceDomain =
 			Settlement: null;
 	  };
 export type CancelFundWithdrawalError =
-	| { PlanNotFound: null }
-	| { InvalidPlanStatus: null }
-	| { Common: CommonError };
+	{ PlanNotFound: null } | { InvalidPlanStatus: null } | { Common: CommonError };
 export interface CancelFundWithdrawalParams {
 	request_id: string;
 }
@@ -1331,9 +1329,7 @@ export type PriceHistoryInterval =
 			Hour: null;
 	  };
 export type RefreshIcrcAssetMetadataError =
-	| { AssetNotFound: null }
-	| { NotAnIcrcAsset: null }
-	| { Common: CommonError };
+	{ AssetNotFound: null } | { NotAnIcrcAsset: null } | { Common: CommonError };
 export interface RefreshIcrcAssetMetadataParams {
 	asset_id: string;
 }
@@ -2145,15 +2141,13 @@ export interface UpdateAssetPriceParams {
 }
 export type UpdateAssetPriceResult = { Ok: null } | { Err: UpdateAssetPriceError };
 export type UpdateCollateralAllowedDomainsError =
-	| { AssetNotFound: null }
-	| { InvalidAllowedBalanceDomains: null };
+	{ AssetNotFound: null } | { InvalidAllowedBalanceDomains: null };
 export interface UpdateCollateralAllowedDomainsParams {
 	allowed_balance_domains: Array<BalanceDomain>;
 	asset_id: string;
 }
 export type UpdateCollateralAllowedDomainsResult =
-	| { Ok: null }
-	| { Err: UpdateCollateralAllowedDomainsError };
+	{ Ok: null } | { Err: UpdateCollateralAllowedDomainsError };
 export interface UpdateCollateralAssetParams {
 	config: CollateralAssetConfig;
 }
@@ -2236,9 +2230,7 @@ export type WithdrawCollateralResult =
 			Err: WithdrawCollateralError;
 	  };
 export type WithdrawFundError =
-	| { TransferFailed: string }
-	| { InsufficientFunds: null }
-	| { Common: CommonError };
+	{ TransferFailed: string } | { InsufficientFunds: null } | { Common: CommonError };
 export interface WithdrawFundParams {
 	to: Principal;
 	request_id: string;

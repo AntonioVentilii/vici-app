@@ -171,17 +171,17 @@ import type { _SERVICE as ClearingService } from '$declarations/clearing/clearin
   ESLint rule `local-rules/no-bare-svelte-text` flags this in components
   that already import `i18n.utils`. See [`i18n.md`](./i18n.md).
 - **Dynamic `import()` of internal (`$lib/**`) modules — avoid it.** The
-codebase intentionally has **none**, and new ones are not welcome. It was
-previously used to paper over circular dependencies; that is the wrong
-fix. **Circular references are solved by extraction, not by deferring the
-import to runtime:** a cycle means a shared symbol lives in the wrong
-module, so pull it into its own small, scoped module that both sides
-import statically. Worked example — the read-only relation queries were
-split into
-[`relation-queries.services.ts`](../../../src/lib/services/relation-queries.services.ts),
-away from the mutation layer in `relation.services.ts`, so
-`group.services`and`relation.services`no longer form a cycle. If you
-hit a circular dependency, split the module; do not reach for`await import()`. (This is a hard project preference — keep modules small
+  codebase intentionally has **none**, and new ones are not welcome. It was
+  previously used to paper over circular dependencies; that is the wrong
+  fix. **Circular references are solved by extraction, not by deferring the
+  import to runtime:** a cycle means a shared symbol lives in the wrong
+  module, so pull it into its own small, scoped module that both sides
+  import statically. Worked example — the read-only relation queries were
+  split into
+  [`relation-queries.services.ts`](../../../src/lib/services/relation-queries.services.ts),
+  away from the mutation layer in `relation.services.ts`, so
+  `group.services` and `relation.services` no longer form a cycle. If you
+  hit a circular dependency, split the module; do not reach for `await import()`. (This is a hard project preference — keep modules small
   and single-purpose rather than gigantic ones that import each other.)
 
 ## Where to put new files (decision tree)

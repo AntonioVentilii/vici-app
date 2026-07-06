@@ -225,10 +225,7 @@
 	interface StoryApp {
 		key: string;
 		labelKey:
-			| 'flow.share.instagram'
-			| 'flow.share.tiktok'
-			| 'flow.share.snapchat'
-			| 'flow.share.facebook';
+			'flow.share.instagram' | 'flow.share.tiktok' | 'flow.share.snapchat' | 'flow.share.facebook';
 		tint: string;
 		bg?: string;
 		web?: string;
@@ -267,10 +264,7 @@
 	interface LinkApp {
 		key: string;
 		labelKey:
-			| 'flow.share.whatsapp'
-			| 'flow.share.telegram'
-			| 'flow.share.twitter'
-			| 'flow.share.copy';
+			'flow.share.whatsapp' | 'flow.share.telegram' | 'flow.share.twitter' | 'flow.share.copy';
 		tint: string;
 		href?: string;
 	}

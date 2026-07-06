@@ -32,12 +32,7 @@ import type { CategoryStatsBucket } from '$lib/types/user-stats';
 export type BattleKind = 'league' | 'duel';
 
 export type BattleState =
-	| 'proposed'
-	| 'accepted'
-	| 'in_flight'
-	| 'resolved'
-	| 'declined'
-	| 'expired';
+	'proposed' | 'accepted' | 'in_flight' | 'resolved' | 'declined' | 'expired';
 
 export type BattleWinner = 'A' | 'B' | 'draw';
 

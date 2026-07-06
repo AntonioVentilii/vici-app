@@ -6,13 +6,7 @@
 import type { Theme } from '$lib/stores/theme.store';
 
 export type FlowArtCategory =
-	| 'macro'
-	| 'crypto'
-	| 'sports'
-	| 'politics'
-	| 'tech'
-	| 'culture'
-	| 'wc';
+	'macro' | 'crypto' | 'sports' | 'politics' | 'tech' | 'culture' | 'wc';
 
 export type FlowArtState = 'neutral' | 'won' | 'lost';
 // FlowArt's palette dimension is keyed by the app-wide `Theme` union;

@@ -126,8 +126,7 @@ export const resumeMyAccount = (): Promise<ResumeMyAccountResult> => functions.r
  * `{ ok, recovered?, reason? }` object this type narrows.
  */
 export type RecoverMyAccountResult =
-	| { ok: true; recovered: boolean }
-	| { ok: false; reason: 'expired' };
+	{ ok: true; recovered: boolean } | { ok: false; reason: 'expired' };
 
 /**
  * Clear a soft-delete marker, restoring the caller's account to active

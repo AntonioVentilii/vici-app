@@ -89,17 +89,16 @@ const aggregateFollowedLean = async ({
 	seriesIds: MarketId[];
 }): Promise<Partial<Record<MarketId, FollowedLeanSignal>>> => {
 	const entries = await Promise.all(
-		seriesIds.map(
-			(marketId): Promise<FollowedLeanSignal | undefined> =>
-				aggregateLeanApi({
-					identity,
-					params: { series_id: marketId, principals },
-					certified: false
-				})
-					.then((lean) => toFollowedLean({ marketId: parseMarketId(marketId), lean }))
-					// Per-market failures are non-fatal: drop this market from the
-					// lean map so the card falls back rather than blocking the deck.
-					.catch(() => undefined)
+		seriesIds.map((marketId): Promise<FollowedLeanSignal | undefined> =>
+			aggregateLeanApi({
+				identity,
+				params: { series_id: marketId, principals },
+				certified: false
+			})
+				.then((lean) => toFollowedLean({ marketId: parseMarketId(marketId), lean }))
+				// Per-market failures are non-fatal: drop this market from the
+				// lean map so the card falls back rather than blocking the deck.
+				.catch(() => undefined)
 		)
 	);
 
