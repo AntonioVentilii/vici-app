@@ -49,7 +49,25 @@
 		try {
 			const series = await listSeries({ identity: new AnonymousIdentity() });
 
-			return series.find(({ series_id }) => series_id.startsWith(suffix))?.series_id;
+			// Exactly one match or nothing: a colliding suffix must degrade to
+			// the markets board, never redirect to whichever market sorts
+			// first. Short-circuits on the second hit.
+			let match: string | undefined = undefined;
+
+			for (const { series_id } of series) {
+				if (series_id.startsWith(suffix)) {
+					if (nonNullish(match)) {
+						match = undefined;
+						break;
+					}
+
+					match = series_id;
+				}
+			}
+
+			if (nonNullish(match)) {
+				return match;
+			}
 		} catch {
 			// Registry unreachable — fall through to "unresolvable"; the
 			// caller lands on the markets board instead of a dead page.

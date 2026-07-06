@@ -10,10 +10,12 @@ import { notEmptyString } from '@dfinity/utils';
  *
  *   - Registry titles are immutable, so a slug derived from one is stable
  *     forever — but two titles can normalize to the same slug. The 8-hex
- *     suffix makes the param unique *by construction*, with no deploy-time
- *     collision bookkeeping and no coordination between the share sheet
- *     (which only has one market in hand) and the SEO generator (which has
- *     the whole catalog).
+ *     suffix disambiguates without deploy-time collision bookkeeping or
+ *     coordination between the share sheet (which only has one market in
+ *     hand) and the SEO generator (which has the whole catalog). It cannot
+ *     *guarantee* uniqueness — resolution therefore requires exactly one
+ *     catalog match and otherwise treats the link as unresolvable, so a
+ *     suffix collision can never redirect to the wrong market.
  *   - `~` separates slug from suffix: URL-unreserved (RFC 3986), never
  *     produced by the slug alphabet (`a-z0-9-`), never part of a hex id.
  *
@@ -58,10 +60,18 @@ export const marketShareParam = ({ title, seriesId }: { title: string; seriesId:
 	return `${slug}${SLUG_ID_SEPARATOR}${seriesId.slice(0, SLUG_ID_SUFFIX_LENGTH)}`;
 };
 
+// Exactly what `marketShareParam` produces: the first 8 characters of a
+// series id — a lowercase-hex hash on the registry. Anything else
+// (shorter, longer, foreign charset) is a malformed link — rejecting it
+// here keeps a crafted short fragment like `/m/foo~a` from prefix-matching
+// an arbitrary market. If the id format ever changes, a stale pattern
+// degrades to the markets board, never to a wrong redirect.
+const SLUG_ID_SUFFIX_PATTERN = new RegExp(`^[0-9a-f]{${SLUG_ID_SUFFIX_LENGTH}}$`);
+
 /**
  * The short-id suffix of a slugged share param, or `undefined` when the
- * param carries none (bare-id links). The slug half is presentation only —
- * resolution goes through the suffix.
+ * param carries none (bare-id links) or a malformed one. The slug half is
+ * presentation only — resolution goes through the suffix.
  */
 export const parseMarketShareParam = (param: string): string | undefined => {
 	const separatorAt = param.lastIndexOf(SLUG_ID_SEPARATOR);
@@ -72,5 +82,5 @@ export const parseMarketShareParam = (param: string): string | undefined => {
 
 	const suffix = param.slice(separatorAt + 1);
 
-	return notEmptyString(suffix) ? suffix : undefined;
+	return SLUG_ID_SUFFIX_PATTERN.test(suffix) ? suffix : undefined;
 };
