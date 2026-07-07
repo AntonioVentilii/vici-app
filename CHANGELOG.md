@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.8.16](https://github.com/AntonioVentilii/vici-app/compare/v1.8.15...v1.8.16) (2026-07-07)
+
+
+### Bug Fixes
+
+* **sw:** pass successful non-HTML navigations through instead of serving the shell ([#1104](https://github.com/AntonioVentilii/vici-app/issues/1104)) ([5094649](https://github.com/AntonioVentilii/vici-app/commit/50946492c6278b9b08810ba54506666ac86f1f0f))
+
+
+### Styles
+
+* **format:** reapply prettier 3.9 formatting ([#1106](https://github.com/AntonioVentilii/vici-app/issues/1106)) ([abf2714](https://github.com/AntonioVentilii/vici-app/commit/abf2714d1bad40ead60b51014787774ed9a503de))
+
+
+### Miscellaneous Chores
+
+* **github-actions:** bump actions/cache from 5.0.5 to 6.1.0 ([#1093](https://github.com/AntonioVentilii/vici-app/issues/1093)) ([2f7fade](https://github.com/AntonioVentilii/vici-app/commit/2f7fade570f0e87826d707f938a889cc5835de70))
+* **npm-deps-dev:** bump @types/node from 26.0.0 to 26.0.1 ([#1094](https://github.com/AntonioVentilii/vici-app/issues/1094)) ([fdaa13a](https://github.com/AntonioVentilii/vici-app/commit/fdaa13a2fe7677c82282489e9dca55618accae46))
+* **npm-deps-dev:** bump js-yaml from 4.2.0 to 4.3.0 ([#1097](https://github.com/AntonioVentilii/vici-app/issues/1097)) ([ecf50ec](https://github.com/AntonioVentilii/vici-app/commit/ecf50ec5d4d8f8014f5d6cea5cf85526ded13f37))
+* **npm-deps-dev:** bump prettier from 3.8.5 to 3.9.3 ([#1096](https://github.com/AntonioVentilii/vici-app/issues/1096)) ([71d1cf2](https://github.com/AntonioVentilii/vici-app/commit/71d1cf268e9496454f28673a475b28483585cd9f))
+* **npm-deps:** bump esrap from 2.2.12 to 2.2.13 ([#1095](https://github.com/AntonioVentilii/vici-app/issues/1095)) ([92cbe95](https://github.com/AntonioVentilii/vici-app/commit/92cbe9570a4dc19808b5f323ff1a1b2f4957d8b6))
+
 ## [1.8.15](https://github.com/AntonioVentilii/vici-app/compare/v1.8.14...v1.8.15) (2026-07-06)
 
 
