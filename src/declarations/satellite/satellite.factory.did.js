@@ -340,6 +340,9 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppGetAnalyticsUserStatsResult = IDL.Record({
+		registered: IDL.Float64
+	});
 	const AppGetCurrentTournamentResult = IDL.Record({
 		tournament: IDL.Opt(
 			IDL.Record({
@@ -1567,6 +1570,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppGetAnalyticsSummaryResult],
 			['query']
 		),
+		app_get_analytics_user_stats: IDL.Func([], [AppGetAnalyticsUserStatsResult], ['query']),
 		app_get_current_tournament: IDL.Func([], [AppGetCurrentTournamentResult], ['query']),
 		app_get_market_metadata: IDL.Func(
 			[AppGetMarketMetadataArgs],

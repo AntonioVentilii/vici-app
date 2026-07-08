@@ -327,6 +327,20 @@ const getAnalyticsSummary = async (
 	return AppGetAnalyticsSummaryResultSchema.parse(result);
 };
 
+const AppGetAnalyticsUserStatsResultSchema = j.strictObject({ registered: j.number() });
+
+const getAnalyticsUserStats = async (): Promise<
+	j.infer<typeof AppGetAnalyticsUserStatsResultSchema>
+> => {
+	const { app_get_analytics_user_stats } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_analytics_user_stats();
+
+	const result = schemaFromIdl({ schema: AppGetAnalyticsUserStatsResultSchema, value: idlResult });
+	return AppGetAnalyticsUserStatsResultSchema.parse(result);
+};
+
 const AppGetCurrentTournamentResultSchema = j.strictObject({
 	tournament: j.optional(
 		j.strictObject({
@@ -2401,6 +2415,7 @@ export const functions = {
 	getAffiliationStats,
 	getAnalyticsEvents,
 	getAnalyticsSummary,
+	getAnalyticsUserStats,
 	getCurrentTournament,
 	getMarketMetadata,
 	getMarketTranslation,

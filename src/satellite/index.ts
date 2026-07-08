@@ -1,6 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	AnalyticsSummarySchema,
+	AnalyticsUserStatsSchema,
 	DeleteAnalyticsEventsArgsSchema,
 	DeleteAnalyticsEventsResultSchema,
 	GetAnalyticsEventsArgsSchema,
@@ -57,6 +58,7 @@ import {
 	deleteAnalyticsEventsFn,
 	getAnalyticsEventsFn,
 	getAnalyticsSummaryFn,
+	getAnalyticsUserStatsFn,
 	onVxpAwardSetForAnalytics,
 	trackEventsFn
 } from '$satellite/services/analytics.services';
@@ -597,6 +599,16 @@ export const getAnalyticsEvents = defineQuery({
 	args: GetAnalyticsEventsArgsSchema,
 	result: GetAnalyticsEventsResultSchema,
 	handler: (args) => getAnalyticsEventsFn(args)
+});
+
+/**
+ * Admin-gated all-time registered-account count for the cockpit's
+ * "Registered" tile. Same admin gate as `getAnalyticsSummary` — restricted
+ * to the cockpit's reader principal. No args: the count is global.
+ */
+export const getAnalyticsUserStats = defineQuery({
+	result: AnalyticsUserStatsSchema,
+	handler: () => getAnalyticsUserStatsFn()
 });
 
 // The cockpit's DRAIN step — delete a page of events after the warehouse has
