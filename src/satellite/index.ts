@@ -52,7 +52,9 @@ import { assertSetActivity } from '$satellite/services/activity.services';
 import { assertSetAffiliationStats } from '$satellite/services/affiliation-stats.services';
 import {
 	assertDeleteAffiliation,
-	assertSetAffiliation
+	assertSetAffiliation,
+	onAffiliationDeleteForAnalytics,
+	onAffiliationSetForAnalytics
 } from '$satellite/services/affiliation.services';
 import {
 	deleteAnalyticsEventsFn,
@@ -1398,7 +1400,8 @@ const setDocCollections = [
 	Collection.REFERRALS,
 	Collection.LEAGUES,
 	Collection.USER_STATS,
-	Collection.VXP_AWARDS
+	Collection.VXP_AWARDS,
+	Collection.AFFILIATIONS
 ] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
@@ -1443,14 +1446,21 @@ export const onSetDoc = defineHook<OnSetDoc>({
 			[Collection.USER_STATS]: onUserStatsSetForLeagueStats,
 			// Server-side capture: every VXP payout (any award service) emits
 			// `vxp_awarded` (+ `streak_milestone`) on its pending→paid transition.
-			[Collection.VXP_AWARDS]: onVxpAwardSetForAnalytics
+			[Collection.VXP_AWARDS]: onVxpAwardSetForAnalytics,
+			// Server-side capture: a Worlds join (client `setDoc`) emits
+			// `affiliation_set` on row creation.
+			[Collection.AFFILIATIONS]: onAffiliationSetForAnalytics
 		};
 
 		await fn[context.data.collection]?.(context);
 	}
 });
 
-const deleteDocCollections = [Collection.ROLES, Collection.ACTIVITY_REACTIONS] as const;
+const deleteDocCollections = [
+	Collection.ROLES,
+	Collection.ACTIVITY_REACTIONS,
+	Collection.AFFILIATIONS
+] as const;
 
 type OnDeleteDocCollection = (typeof deleteDocCollections)[number];
 
@@ -1459,7 +1469,10 @@ export const onDeleteDoc = defineHook<OnDeleteDoc>({
 	run: async (context) => {
 		const fn: Record<OnDeleteDocCollection, RunFunction<OnDeleteDocContext>> = {
 			[Collection.ROLES]: syncRoleToEngineOnDelete,
-			[Collection.ACTIVITY_REACTIONS]: onActivityReactionDelete
+			[Collection.ACTIVITY_REACTIONS]: onActivityReactionDelete,
+			// Server-side capture: a Worlds leave (client `deleteDoc`, only
+			// reachable past the 90-day lock) emits `affiliation_removed`.
+			[Collection.AFFILIATIONS]: onAffiliationDeleteForAnalytics
 		};
 
 		await fn[context.data.collection]?.(context);

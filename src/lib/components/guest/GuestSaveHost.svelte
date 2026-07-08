@@ -9,6 +9,7 @@
 	import { guestHandle, guestMode, guestPickCount } from '$lib/derived/guest.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { track } from '$lib/services/analytics.services';
+	import { pendingOnboardingProvider } from '$lib/services/onboarding-handoff.services';
 	import { flowBeatActiveStore } from '$lib/stores/flow-beat.store';
 	import { clearGuestSession } from '$lib/stores/guest.store';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -118,7 +119,17 @@
 		const locale = $localeStore;
 		const vxp = formatVxpBalance({ value: newUserVxpAmountMilestone1BaseUnits() });
 
-		track({ name: 'signed_up', source: 'guest_convert' });
+		// `label` carries the auth method — `SignInProviderStack` stashed the
+		// provider into the pending-onboarding payload before it ran, so it is
+		// readable here without threading it through the sheet callbacks.
+		// Best-effort: absent when storage was unavailable.
+		const provider = pendingOnboardingProvider();
+
+		track({
+			name: 'signed_up',
+			source: 'guest_convert',
+			...(isNullish(provider) ? {} : { label: provider })
+		});
 
 		clearGuestSession();
 		sheetOpen = false;

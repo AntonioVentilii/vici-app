@@ -17,6 +17,7 @@
 		type LeagueResolution,
 		listMyBlockingLeagues
 	} from '$lib/services/account.services';
+	import { track } from '$lib/services/analytics.services';
 	import { listLeagueMembers, listMyLeagues } from '$lib/services/leagues.services';
 	import { cancelLimitOrder, getUserOrders } from '$lib/services/order.services';
 	import { getPositions } from '$lib/services/position.services';
@@ -427,10 +428,14 @@
 	};
 
 	// Reset to the first beat each time the sheet (re)opens so a
-	// re-entry never lands mid-flow on stale state.
+	// re-entry never lands mid-flow on stale state. Each (re)open is a
+	// genuine churn-funnel entry, so it also emits `delete_flow_opened` —
+	// the top of the delete funnel the server-side `delete_confirmed` /
+	// `delete_succeeded` events complete.
 	$effect(() => {
 		if (isOpen) {
 			resetState();
+			track({ name: 'delete_flow_opened', source: 'settings' });
 		} else {
 			clearCountdown();
 		}
@@ -730,7 +735,8 @@
 												...resolutions,
 												[league.id]: {
 													...draft,
-													transferTo: e.currentTarget.value || null
+													transferTo:
+														e.currentTarget.value.length > 0 ? e.currentTarget.value : null
 												}
 											})}
 										value={draft.transferTo ?? ''}

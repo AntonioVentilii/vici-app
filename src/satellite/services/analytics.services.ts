@@ -496,7 +496,7 @@ export const deleteAnalyticsEventsFn = ({ keys }: { keys: string[] }): { deleted
 // ─── Server-side capture ────────────────────────────────────────
 
 /** One server-originated behavioural event (no browser visit behind it). */
-interface ServerEventInput {
+export interface ServerEventInput {
 	name: AnalyticsEventName;
 	/** Recipient / actor principal text, when the event concerns one. */
 	principal?: string;
