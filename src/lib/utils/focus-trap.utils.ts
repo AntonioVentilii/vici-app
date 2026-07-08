@@ -61,7 +61,7 @@ export const createFocusTrap = (container: HTMLElement): FocusTrap => {
 
 		const [first] = focusable;
 		const last = focusable[focusable.length - 1];
-		const active = document.activeElement as HTMLElement | null;
+		const active = document.activeElement;
 
 		if (event.shiftKey) {
 			if (active === first || !container.contains(active)) {
@@ -79,7 +79,10 @@ export const createFocusTrap = (container: HTMLElement): FocusTrap => {
 	};
 
 	const activate = () => {
-		previouslyFocused = (document.activeElement as HTMLElement | null) ?? null;
+		// `instanceof` narrowing (not a cast): `document.activeElement` is an
+		// `Element`, and only an `HTMLElement` can be re-focused on deactivate.
+		const active = document.activeElement;
+		previouslyFocused = active instanceof HTMLElement ? active : null;
 		const focusable = getFocusable(container);
 		(focusable[0] ?? container).focus();
 		document.addEventListener('keydown', handleKeyDown);
