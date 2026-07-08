@@ -16,9 +16,23 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # STATIC-TOKEN AUTH ONLY — deliberately NO `id-token: write` (see
+    # deploy.yml: the OIDC automation flow mints an ephemeral access key on the
+    # satellite per step per run; the leak hit Juno's 20-key cap and failed
+    # v1.8.18 with `TooManyControllers`). JUNO_TOKEN on every juno-action step
+    # keeps the CLI on direct static-key auth — no key is ever created.
     permissions:
-      id-token: write
+      contents: read
     steps:
+      - name: Verify JUNO_TOKEN is set
+        env:
+          JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
+        run: |
+          if [ -z "$JUNO_TOKEN" ]; then
+            echo "::error::JUNO_TOKEN secret is not set. Generate an Administrator access key in the Juno Console and add it as the JUNO_TOKEN repo secret (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
       - name: Check out the repo
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
@@ -29,8 +43,12 @@ jobs:
         uses: junobuild/juno-action@full
         with:
           args: functions build
+        env:
+          JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
 
       - name: Publish
         uses: junobuild/juno-action@full
         with:
           args: functions publish
+        env:
+          JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}

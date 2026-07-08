@@ -18,9 +18,15 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # STATIC-TOKEN AUTH ONLY — deliberately NO `id-token: write`. With an OIDC
+    # token available and no JUNO_TOKEN env, juno-action's automation flow
+    # ("PrepareAutomation") mints an EPHEMERAL access key on the satellite per
+    # step per run; leaked keys accumulated to Juno's 20-key cap and deploys
+    # started failing with `TooManyControllers` (v1.8.18). Every juno-action
+    # step below passes JUNO_TOKEN instead, which the CLI uses directly — no
+    # key is ever created.
     permissions:
       contents: read
-      id-token: write
     steps:
       - name: Verify JUNO_TOKEN is set
         env:
@@ -81,6 +87,8 @@ jobs:
         uses: junobuild/juno-action@full
         with:
           args: functions build
+        env:
+          JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
 
       - name: Upgrade functions
         if: steps.satellite.outputs.upgrade == 'true'
@@ -97,3 +105,5 @@ jobs:
         uses: junobuild/juno-action@main
         with:
           args: hosting deploy --prune
+        env:
+          JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
