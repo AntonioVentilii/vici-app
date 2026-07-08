@@ -10,7 +10,7 @@ on:
 # canister so a publish never overlaps deploy.yml's `functions upgrade`
 # (which stops the canister) or its `hosting deploy`.
 concurrency:
-  group: juno-satellite-publish
+  group: juno-satellite
   cancel-in-progress: false
 
 jobs:
@@ -35,14 +35,14 @@ jobs:
         uses: ./.github/actions/prepare
 
       - name: Build
-        uses: junobuild/juno-action@full
+        uses: junobuild/juno-action@93149e31c67f45835953ed2e1abe0e910af625fc # full
         with:
           args: functions build
         env:
           JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
 
       - name: Publish
-        uses: junobuild/juno-action@full
+        uses: junobuild/juno-action@93149e31c67f45835953ed2e1abe0e910af625fc # full
         with:
           args: functions publish
         env:

@@ -12,7 +12,7 @@ on:
 # A `v*` tag fires both workflows, so the shared group serializes them.
 # cancel-in-progress: false → queue, never cancel a running one.
 concurrency:
-  group: juno-satellite-deploy
+  group: juno-satellite
   cancel-in-progress: false
 
 jobs:
@@ -77,7 +77,7 @@ jobs:
 
       - name: Build functions
         if: steps.satellite.outputs.upgrade == 'true'
-        uses: junobuild/juno-action@full
+        uses: junobuild/juno-action@93149e31c67f45835953ed2e1abe0e910af625fc # full
         with:
           args: functions build
         env:
@@ -85,7 +85,7 @@ jobs:
 
       - name: Upgrade functions
         if: steps.satellite.outputs.upgrade == 'true'
-        uses: junobuild/juno-action@full
+        uses: junobuild/juno-action@93149e31c67f45835953ed2e1abe0e910af625fc # full
         with:
           args: functions upgrade
         env:
@@ -95,7 +95,7 @@ jobs:
       # grows every deploy until asset certification exceeds the IC's
       # 40B-instruction message limit and the site 503s ("Invalid tree root hash").
       - name: Deploy to Juno
-        uses: junobuild/juno-action@main
+        uses: junobuild/juno-action@99d76780c60c023b5396298f94a7264e0c7ee2b5 # main
         with:
           args: hosting deploy --prune
         env:
