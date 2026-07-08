@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.17](https://github.com/AntonioVentilii/vici-app/compare/v1.8.16...v1.8.17) (2026-07-08)
+
+
+### Features
+
+* **wc:** add QF market deck with 7-locale translations ([#1108](https://github.com/AntonioVentilii/vici-app/issues/1108)) ([e8b9bf8](https://github.com/AntonioVentilii/vici-app/commit/e8b9bf8b12dbccb9302e172fdbf92f37b9bd54d7))
+* **wc:** schedule QF market releases ([#1107](https://github.com/AntonioVentilii/vici-app/issues/1107)) ([2cfdf0b](https://github.com/AntonioVentilii/vici-app/commit/2cfdf0b68da0cf720a5e3866d652497daa10e197))
+
 ## [1.8.16](https://github.com/AntonioVentilii/vici-app/compare/v1.8.15...v1.8.16) (2026-07-07)
 
 
