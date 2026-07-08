@@ -43,7 +43,7 @@
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { track } from '$lib/services/analytics.services';
+	import { flushEvents, track } from '$lib/services/analytics.services';
 	import { persistPreferences } from '$lib/services/profile.services';
 	import { canInstall } from '$lib/stores/a2hs.store';
 	import { localeStore, setLocale } from '$lib/stores/locale.store';
@@ -242,6 +242,13 @@
 
 	const doSignOut = async () => {
 		signOutStatus = 'pending';
+
+		// Emit + flush BEFORE the auth drop: `flushEvents` is fire-and-forget
+		// (it never blocks or fails the sign-out), but starting it while the
+		// session is still live lets the satellite stitch the principal onto
+		// the event — after `signOut()` the batch would land anonymous.
+		track({ name: 'signed_out', source: 'settings' });
+		void flushEvents();
 
 		try {
 			await dropAuth();

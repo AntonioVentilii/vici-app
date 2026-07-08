@@ -1,11 +1,13 @@
 import { browser } from '$app/environment';
 import { functions } from '$declarations/satellite/satellite.api';
+import { theme } from '$lib/stores/theme.store';
 import type {
 	AnalyticsEventName,
 	AnalyticsEventProps,
 	TrackEventInput
 } from '$lib/types/analytics-event';
 import { nonNullish } from '@dfinity/utils';
+import { get } from 'svelte/store';
 
 /**
  * Client-side product-analytics buffer (cockpit DQ-1).
@@ -26,6 +28,7 @@ import { nonNullish } from '@dfinity/utils';
 const FLUSH_INTERVAL_MS = 5_000;
 const MAX_BUFFER = 20;
 const SESSION_STORAGE_KEY = 'vici.analytics.session';
+const SESSION_STARTED_KEY = 'vici.analytics.session.started';
 
 let buffer: TrackEventInput[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | undefined;
@@ -134,6 +137,14 @@ export const track = (event: { name: AnalyticsEventName } & AnalyticsEventProps)
  * Wire the session-level listeners once, after the satellite is ready.
  * Flushes on tab-hide (the last chance to land buffered events) and emits
  * the opening `session_started` event.
+ *
+ * `session_started` fires once per SESSION (the `sessionStorage`-scoped
+ * `sessionId`), not once per JS boot: a hard reload in the same tab keeps
+ * the sessionId, so without the marker every reload would append another
+ * `session_started` and inflate the cockpit's session counts. `label`
+ * carries the active theme — the props vocabulary is a closed schema (no
+ * `theme` key without a satellite regen), and `label` is free on this
+ * event, so the theme dimension rides here for every session.
  */
 export const initAnalytics = (): void => {
 	if (!browser || initialized) {
@@ -148,5 +159,11 @@ export const initAnalytics = (): void => {
 		}
 	});
 
-	track({ name: 'session_started' });
+	const session = sessionId();
+
+	if (sessionStorage.getItem(SESSION_STARTED_KEY) !== session) {
+		sessionStorage.setItem(SESSION_STARTED_KEY, session);
+
+		track({ name: 'session_started', label: get(theme) });
+	}
 };

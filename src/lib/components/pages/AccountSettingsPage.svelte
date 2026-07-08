@@ -10,6 +10,7 @@
 	import IconPasskey from '$lib/components/icons/IconPasskey.svelte';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { flushEvents, track } from '$lib/services/analytics.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -93,6 +94,11 @@
 		}
 
 		switchingMethod = true;
+
+		// Emit + flush before the auth drop so the principal is still
+		// stitched onto the event; fire-and-forget, never blocks sign-out.
+		track({ name: 'signed_out', source: 'account_settings', label: 'switch_method' });
+		void flushEvents();
 
 		try {
 			await signOut();
