@@ -291,13 +291,16 @@ export const getAnalyticsUserStatsFn = (): { registered: number } => {
 	return { registered: Number(count) };
 };
 
-/** Hard page-size ceiling for one export call. This is an IC QUERY, bounded by the
- * ~5B-instruction message budget: reading/decoding a page of behavioural docs costs
- * instructions, and a too-large page rejects the WHOLE call with IC0522. Measured
- * against the live satellite, a 500-doc page already exceeds the budget and ~100 was
- * the safe edge — so the cockpit reader drives a smaller page (SYNC_PAGE_SIZE) and
- * this ceiling is the last line of defence against a client over-asking. Keep it
- * conservatively below the measured edge. */
+/** Hard batch ceiling for the analytics export AND its drain. `getAnalyticsEventsFn`
+ * (a QUERY) reads at most this many docs per call, and `deleteAnalyticsEventsFn` (the
+ * drain) deletes at most this many keys per call. The query is the binding
+ * constraint: it's bounded by the ~5B-instruction message budget, and reading/decoding
+ * a page of behavioural docs costs instructions — measured against the live satellite,
+ * a 500-doc page already rejects with IC0522 and ~100 was the safe edge. So the cockpit
+ * reader drives a smaller page (SYNC_PAGE_SIZE) and this ceiling is the last line of
+ * defence against a client over-asking. 100 sits conservatively below the measured
+ * query edge; the drain (an update call, ~40B budget) is comfortably within it, and a
+ * page is never larger than what was just ingested, so the two stay in lockstep. */
 const MAX_EXPORT_LIMIT = 100;
 
 /** One flat export row — mirrors AnalyticsEventExportRowSchema. */
