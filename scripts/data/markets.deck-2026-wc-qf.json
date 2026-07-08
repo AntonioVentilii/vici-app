@@ -1,0 +1,2302 @@
+[
+	{
+		"title": "Will any Quarterfinal be decided by a penalty shootout?",
+		"description": "Four ties, semifinal places on the line — the round where cagey football most often runs to spot-kicks.",
+		"resolution": "Resolves YES if 1 or more of the 4 Quarterfinal matches is decided by a penalty shootout; otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Un quarto di finale sarà deciso ai calci di rigore?",
+				"description": "Quattro sfide, posti in semifinale in palio: il turno in cui il calcio più guardingo finisce più spesso ai rigori.",
+				"resolution": "Si risolve SÌ se 1 o più delle 4 partite dei quarti di finale viene decisa ai calci di rigore; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se decidirá algún cuarto de final por una tanda de penales?",
+				"description": "Cuatro eliminatorias, con plazas de semifinales en juego: la ronda en la que el fútbol más cauteloso acaba con mayor frecuencia en los penales.",
+				"resolution": "Se resuelve SÍ si 1 o más de los 4 partidos de cuartos de final se decide por una tanda de penales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird ein Viertelfinale im Elfmeterschießen entschieden?",
+				"description": "Vier Duelle, Halbfinalplätze auf dem Spiel — die Runde, in der vorsichtiger Fußball am häufigsten ins Elfmeterschießen läuft.",
+				"resolution": "Wird mit JA aufgelöst, wenn mindestens 1 der 4 Viertelfinalspiele im Elfmeterschießen entschieden wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un quart de finale se décidera-t-il aux tirs au but ?",
+				"description": "Quatre confrontations, des places en demi-finale en jeu — le tour où le football le plus prudent finit le plus souvent aux tirs au but.",
+				"resolution": "Se résout par OUI si 1 des 4 quarts de finale ou plus est décidé aux tirs au but ; sinon NON."
+			},
+			"pt": {
+				"title": "Algum quarto de final será decidido por desempate por penáltis?",
+				"description": "Quatro confrontos, lugares nas meias-finais em jogo — a ronda em que o futebol mais cauteloso vai muitas vezes à marca de penálti.",
+				"resolution": "Resolve-se como SIM se 1 ou mais dos 4 jogos dos quartos de final for decidido por desempate por penáltis; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Algum quarto de final será decidido nos pênaltis?",
+				"description": "Quatro confrontos, vagas nas semifinais em jogo — a rodada em que o futebol mais fechado costuma acabar nos pênaltis.",
+				"resolution": "Resolve-se como SIM se 1 ou mais das 4 partidas das quartas de final for decidida por disputa de pênaltis; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "会有四分之一决赛通过点球大战分出胜负吗？",
+				"description": "四场对决，半决赛席位悬于一线——这一轮谨慎的足球最常被拖入点球决胜。",
+				"resolution": "如果4场四分之一决赛中有1场或更多通过点球大战分出胜负，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will two or more Quarterfinals be decided after ninety minutes?",
+		"description": "How many of the four ties refuse to settle inside normal time reads the tension of the round.",
+		"resolution": "Resolves YES if 2 or more of the 4 Quarterfinal ties are decided in extra time or a penalty shootout; otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Due o più quarti di finale si decideranno oltre i novanta minuti?",
+				"description": "Quante delle quattro sfide non si risolvono nei tempi regolamentari misura la tensione del turno.",
+				"resolution": "Si risolve SÌ se 2 o più delle 4 sfide dei quarti di finale si decidono ai tempi supplementari o ai calci di rigore; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se decidirán dos o más cuartos de final después de los noventa minutos?",
+				"description": "Cuántas de las cuatro eliminatorias se niegan a resolverse dentro del tiempo reglamentario mide la tensión de la ronda.",
+				"resolution": "Se resuelve SÍ si 2 o más de las 4 eliminatorias de cuartos de final se deciden en la prórroga o en una tanda de penales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Werden zwei oder mehr Viertelfinals erst nach neunzig Minuten entschieden?",
+				"description": "Wie viele der vier Duelle sich nicht in der regulären Spielzeit entscheiden, zeigt die Spannung der Runde.",
+				"resolution": "Wird mit JA aufgelöst, wenn 2 oder mehr der 4 Viertelfinal-Duelle in der Verlängerung oder im Elfmeterschießen entschieden werden; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Deux quarts de finale ou plus se décideront-ils après les quatre-vingt-dix minutes ?",
+				"description": "Le nombre de confrontations, parmi les quatre, qui refusent de se décider dans le temps réglementaire dit la tension du tour.",
+				"resolution": "Se résout par OUI si 2 des 4 quarts de finale ou plus se décident en prolongation ou aux tirs au but ; sinon NON."
+			},
+			"pt": {
+				"title": "Dois ou mais quartos de final serão decididos depois dos noventa minutos?",
+				"description": "Quantos dos quatro confrontos se recusam a decidir dentro do tempo regulamentar reflete a tensão da ronda.",
+				"resolution": "Resolve-se como SIM se 2 ou mais dos 4 confrontos dos quartos de final forem decididos no prolongamento ou em desempate por penáltis; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Dois ou mais quartos de final serão decididos após os noventa minutos?",
+				"description": "Quantos dos quatro confrontos se recusam a se resolver dentro do tempo normal revela a tensão da rodada.",
+				"resolution": "Resolve-se como SIM se 2 ou mais dos 4 confrontos das quartas de final forem decididos na prorrogação ou em disputa de pênaltis; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "会有两场或更多四分之一决赛在90分钟后才分出胜负吗？",
+				"description": "四场对决中有多少场在常规时间内无法分出胜负，正反映了这一轮的紧张程度。",
+				"resolution": "如果4场四分之一决赛中有2场或更多在加时赛或点球大战中分出胜负，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a lower-ranked team win a Quarterfinal?",
+		"description": "Morocco, Norway, Belgium and Switzerland all carry the underdog's number into the last eight.",
+		"resolution": "Resolves YES if the lower pre-tournament FIFA-ranked team wins 1 or more of the 4 ties (after extra time and, if needed, penalties); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Una squadra con ranking più basso vincerà un quarto di finale?",
+				"description": "Marocco, Norvegia, Belgio e Svizzera arrivano tutte tra le ultime otto con i panni della sfavorita.",
+				"resolution": "Si risolve SÌ se la squadra con il ranking FIFA pre-torneo più basso vince 1 o più delle 4 sfide (dopo i tempi supplementari e, se necessario, i calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Ganará un cuarto de final un equipo peor clasificado?",
+				"description": "Marruecos, Noruega, Bélgica y Suiza llegan todos a los ocho mejores con la etiqueta de menos favoritos.",
+				"resolution": "Se resuelve SÍ si el equipo con peor clasificación FIFA previa al torneo gana 1 o más de las 4 eliminatorias (tras la prórroga y, de ser necesario, los penales); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Gewinnt ein schlechter platziertes Team ein Viertelfinale?",
+				"description": "Marokko, Norwegen, Belgien und die Schweiz gehen alle als Außenseiter in die letzten acht.",
+				"resolution": "Wird mit JA aufgelöst, wenn das vor dem Turnier schlechter in der FIFA-Weltrangliste platzierte Team mindestens 1 der 4 Duelle gewinnt (nach Verlängerung und, falls nötig, Elfmeterschießen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Une équipe moins bien classée remportera-t-elle un quart de finale ?",
+				"description": "Le Maroc, la Norvège, la Belgique et la Suisse arrivent tous en quarts de finale avec l'étiquette d'outsider.",
+				"resolution": "Se résout par OUI si l'équipe la moins bien classée au classement FIFA d'avant-tournoi remporte 1 des 4 confrontations ou plus (après prolongation et, si nécessaire, tirs au but) ; sinon NON."
+			},
+			"pt": {
+				"title": "Uma equipa pior classificada vencerá um quarto de final?",
+				"description": "Marrocos, Noruega, Bélgica e Suíça chegam todas aos quartos de final com o estatuto de azarão.",
+				"resolution": "Resolve-se como SIM se a equipa com pior classificação FIFA pré-torneio vencer 1 ou mais dos 4 confrontos (após o prolongamento e, se necessário, penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Uma seleção com classificação mais baixa vencerá um quarto de final?",
+				"description": "Marrocos, Noruega, Bélgica e Suíça entram nas quartas de final todas com o status de azarão.",
+				"resolution": "Resolve-se como SIM se a seleção com classificação FIFA pré-torneio mais baixa vencer 1 ou mais dos 4 confrontos (após a prorrogação e, se necessário, os pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "会有排名较低的球队赢得四分之一决赛吗？",
+				"description": "摩洛哥、挪威、比利时和瑞士都以劣势方的身份闯入八强。",
+				"resolution": "如果赛前国际足联排名较低的球队赢得4场对决中的1场或更多（经加时赛，如有必要则点球大战后），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will any team win a Quarterfinal after trailing?",
+		"description": "Argentina just erased a two-goal deficit against Egypt; another comeback would define the round.",
+		"resolution": "Resolves YES if any team that trails at any point wins its Quarterfinal (including extra time and penalties); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Una squadra vincerà un quarto di finale dopo essere stata in svantaggio?",
+				"description": "L'Argentina ha appena rimontato due gol di svantaggio contro l'Egitto; un'altra rimonta segnerebbe il turno.",
+				"resolution": "Si risolve SÌ se una squadra che si trova in svantaggio in un qualsiasi momento vince il proprio quarto di finale (compresi i tempi supplementari e i calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Ganará algún equipo un cuarto de final tras ir perdiendo?",
+				"description": "Argentina acaba de borrar una desventaja de dos goles ante Egipto; otra remontada definiría la ronda.",
+				"resolution": "Se resuelve SÍ si algún equipo que va perdiendo en algún momento gana su cuarto de final (incluidas la prórroga y los penales); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Gewinnt ein Team ein Viertelfinale nach einem Rückstand?",
+				"description": "Argentinien hat gegen Ägypten gerade einen Zwei-Tore-Rückstand aufgeholt; ein weiteres Comeback würde die Runde prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn ein Team, das zu irgendeinem Zeitpunkt zurückliegt, sein Viertelfinale gewinnt (einschließlich Verlängerung und Elfmeterschießen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Une équipe remportera-t-elle un quart de finale après avoir été menée ?",
+				"description": "L'Argentine vient de combler un retard de deux buts face à l'Égypte ; un nouveau renversement marquerait le tour.",
+				"resolution": "Se résout par OUI si une équipe menée à un moment quelconque remporte son quart de finale (prolongation et tirs au but compris) ; sinon NON."
+			},
+			"pt": {
+				"title": "Alguma equipa vencerá um quarto de final depois de estar em desvantagem?",
+				"description": "A Argentina acabou de anular uma desvantagem de dois golos frente ao Egito; outra reviravolta definiria a ronda.",
+				"resolution": "Resolve-se como SIM se alguma equipa que esteja em desvantagem a qualquer momento vencer o seu quarto de final (incluindo prolongamento e penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Alguma seleção vencerá um quarto de final depois de estar perdendo?",
+				"description": "A Argentina acabou de apagar uma desvantagem de dois gols contra o Egito; outra virada definiria a rodada.",
+				"resolution": "Resolve-se como SIM se qualquer seleção que estiver perdendo em algum momento vencer seu quarto de final (incluindo prorrogação e pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "会有球队在落后后赢得四分之一决赛吗？",
+				"description": "阿根廷刚刚在对阵埃及时抹平两球落后；再一次逆转将定义这一轮。",
+				"resolution": "如果任何一支曾在比赛中一度落后的球队赢得其四分之一决赛（包括加时赛和点球大战），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will any player score a hat-trick in the Quarterfinals?",
+		"description": "Three goals by one player in the last eight makes an instant tournament legend.",
+		"resolution": "Resolves YES if any player scores 3+ goals in one Quarterfinal match (normal and extra time; shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Un giocatore segnerà una tripletta nei quarti di finale?",
+				"description": "Tre gol di un solo giocatore tra le ultime otto creano all'istante una leggenda del torneo.",
+				"resolution": "Si risolve SÌ se un qualsiasi giocatore segna 3 o più gol in una partita dei quarti di finale (tempi regolamentari e supplementari; esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará algún jugador un hat-trick en los cuartos de final?",
+				"description": "Tres goles de un mismo jugador en los ocho mejores crean una leyenda instantánea del torneo.",
+				"resolution": "Se resuelve SÍ si algún jugador marca 3 o más goles en un mismo partido de cuartos de final (tiempo reglamentario y prórroga; excluidos los penales de la tanda); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt ein Spieler im Viertelfinale einen Hattrick?",
+				"description": "Drei Tore eines einzelnen Spielers in den letzten acht machen sofort eine Turnierlegende.",
+				"resolution": "Wird mit JA aufgelöst, wenn ein Spieler in einem Viertelfinalspiel 3 oder mehr Tore erzielt (reguläre Spielzeit und Verlängerung; Schüsse aus dem Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un joueur marquera-t-il un triplé en quarts de finale ?",
+				"description": "Trois buts d'un même joueur en quarts de finale, et une légende du tournoi naît sur-le-champ.",
+				"resolution": "Se résout par OUI si un joueur marque 3 buts ou plus dans un même quart de finale (temps réglementaire et prolongation ; tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Algum jogador marcará um hat-trick nos quartos de final?",
+				"description": "Três golos de um só jogador nos quartos de final criam uma lenda instantânea do torneio.",
+				"resolution": "Resolve-se como SIM se algum jogador marcar 3 ou mais golos num jogo dos quartos de final (tempo regulamentar e prolongamento; excluindo os penáltis do desempate); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Algum jogador marcará um hat-trick nas quartas de final?",
+				"description": "Três gols de um mesmo jogador nas quartas de final criam uma lenda instantânea do torneio.",
+				"resolution": "Resolve-se como SIM se algum jogador marcar 3 ou mais gols em uma mesma partida das quartas de final (tempo normal e prorrogação; excluídas as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "四分之一决赛中会有球员上演帽子戏法吗？",
+				"description": "一名球员在八强战中独进三球，将立刻成为本届赛事的传奇。",
+				"resolution": "如果有任何球员在一场四分之一决赛中打入3球或更多（常规时间和加时赛，不含点球大战），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will the four Quarterfinals average more than two and a half goals?",
+		"description": "Goals-per-game across the four ties reads how open the last eight plays.",
+		"resolution": "Resolves YES if normal-time goals across all 4 Quarterfinal matches total 11 or more (average above 2.5); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "I quattro quarti di finale avranno una media di più di due gol e mezzo?",
+				"description": "La media gol delle quattro sfide misura quanto sono aperte le ultime otto.",
+				"resolution": "Si risolve SÌ se i gol nei tempi regolamentari di tutte e 4 le partite dei quarti di finale sono in totale 11 o più (media superiore a 2,5); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Promediarán los cuatro cuartos de final más de dos goles y medio?",
+				"description": "El promedio de goles por partido en las cuatro eliminatorias refleja cuán abiertos se juegan los ocho mejores.",
+				"resolution": "Se resuelve SÍ si los goles en el tiempo reglamentario de los 4 partidos de cuartos de final suman 11 o más (promedio superior a 2,5); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielen die vier Viertelfinals im Schnitt mehr als zweieinhalb Tore?",
+				"description": "Die Tore pro Spiel über die vier Duelle zeigen, wie offen die letzten acht gespielt werden.",
+				"resolution": "Wird mit JA aufgelöst, wenn die in der regulären Spielzeit erzielten Tore aller 4 Viertelfinalspiele zusammen 11 oder mehr ergeben (Schnitt über 2,5); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Les quatre quarts de finale afficheront-ils une moyenne de plus de deux buts et demi ?",
+				"description": "La moyenne de buts par match sur les quatre confrontations dit à quel point les quarts de finale sont ouverts.",
+				"resolution": "Se résout par OUI si le total des buts inscrits dans le temps réglementaire sur les 4 quarts de finale atteint 11 ou plus (moyenne supérieure à 2,5) ; sinon NON."
+			},
+			"pt": {
+				"title": "Os quatro quartos de final terão uma média superior a dois golos e meio?",
+				"description": "Os golos por jogo nos quatro confrontos revelam quão aberta é a fase dos quartos de final.",
+				"resolution": "Resolve-se como SIM se os golos no tempo regulamentar nos 4 jogos dos quartos de final somarem 11 ou mais (média superior a 2,5); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Os quatro quartos de final terão média de mais de dois gols e meio?",
+				"description": "A média de gols por jogo nos quatro confrontos revela o quão aberto se jogam as quartas de final.",
+				"resolution": "Resolve-se como SIM se os gols no tempo normal das 4 partidas das quartas de final somarem 11 ou mais (média acima de 2,5); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "四场四分之一决赛场均进球会超过两球半吗？",
+				"description": "四场对决的场均进球数，反映了八强战的开放程度。",
+				"resolution": "如果4场四分之一决赛常规时间内的总进球数达到11个或以上（场均超过2.5），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will France reach the Semifinals?",
+		"description": "A 2022 semifinal rematch a round early — France, five wins from five, against an unbeaten Morocco that has already felled the Netherlands and Canada. In single-elimination, the loser goes home.",
+		"resolution": "Resolves YES if France win the tie (result after extra time and, if needed, penalties); otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "La Francia raggiungerà le semifinali?",
+				"description": "La rivincita della semifinale del 2022 con un turno di anticipo: la Francia, cinque vittorie su cinque, contro un Marocco imbattuto che ha già eliminato i Paesi Bassi e il Canada. Nell'eliminazione diretta, chi perde torna a casa.",
+				"resolution": "Si risolve SÌ se la Francia vince la sfida (risultato dopo i tempi supplementari e, se necessario, i calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Llegará Francia a las semifinales?",
+				"description": "Una revancha de la semifinal de 2022 una ronda antes: Francia, con cinco victorias en cinco partidos, ante un Marruecos invicto que ya ha eliminado a los Países Bajos y a Canadá. En la eliminación directa, el perdedor se va a casa.",
+				"resolution": "Se resuelve SÍ si Francia gana la eliminatoria (resultado tras la prórroga y, de ser necesario, los penales); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erreicht Frankreich das Halbfinale?",
+				"description": "Eine Neuauflage des Halbfinals von 2022, eine Runde früher — Frankreich, fünf Siege aus fünf Spielen, gegen ein ungeschlagenes Marokko, das bereits die Niederlande und Kanada bezwungen hat. Im K.-o.-System geht der Verlierer nach Hause.",
+				"resolution": "Wird mit JA aufgelöst, wenn Frankreich das Duell gewinnt (Ergebnis nach Verlängerung und, falls nötig, Elfmeterschießen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "La France atteindra-t-elle les demi-finales ?",
+				"description": "Une revanche de la demi-finale de 2022 un tour plus tôt — la France, cinq victoires en cinq matchs, face à un Maroc invaincu qui a déjà fait tomber les Pays-Bas et le Canada. En élimination directe, le perdant rentre à la maison.",
+				"resolution": "Se résout par OUI si la France remporte la confrontation (résultat après prolongation et, si nécessaire, tirs au but) ; sinon NON."
+			},
+			"pt": {
+				"title": "A França chegará às meias-finais?",
+				"description": "Uma reedição da meia-final de 2022 uma ronda mais cedo — a França, cinco vitórias em cinco, frente a um Marrocos invicto que já eliminou os Países Baixos e o Canadá. Na eliminatória a jogo único, quem perde vai para casa.",
+				"resolution": "Resolve-se como SIM se a França vencer o confronto (resultado após o prolongamento e, se necessário, penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A França chegará às semifinais?",
+				"description": "Uma revanche da semifinal de 2022 uma rodada antes — a França, com cinco vitórias em cinco jogos, contra um Marrocos invicto que já derrubou os Países Baixos e o Canadá. No mata-mata, quem perde vai para casa.",
+				"resolution": "Resolve-se como SIM se a França vencer o confronto (resultado após a prorrogação e, se necessário, os pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "法国能晋级半决赛吗？",
+				"description": "2022年半决赛的提前重演——五战全胜的法国，对阵已淘汰荷兰和加拿大、保持不败的摩洛哥。在单场淘汰赛中，负者出局。",
+				"resolution": "如果法国赢得该场对决（加时赛，如有必要则点球大战后的结果），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will France vs Morocco be decided after ninety minutes?",
+		"description": "Whether France and Morocco need extra time or penalties to separate them.",
+		"resolution": "Resolves YES if the tie is not settled in normal time and goes to extra time or a penalty shootout; otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Francia-Marocco si deciderà oltre i novanta minuti?",
+				"description": "Se Francia e Marocco avranno bisogno dei tempi supplementari o dei calci di rigore per separarsi.",
+				"resolution": "Si risolve SÌ se la sfida non si decide nei tempi regolamentari e va ai tempi supplementari o ai calci di rigore; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se decidirá Francia vs Marruecos después de los noventa minutos?",
+				"description": "Si Francia y Marruecos necesitan prórroga o penales para desempatar.",
+				"resolution": "Se resuelve SÍ si la eliminatoria no se resuelve en el tiempo reglamentario y llega a la prórroga o a una tanda de penales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird Frankreich gegen Marokko erst nach neunzig Minuten entschieden?",
+				"description": "Ob Frankreich und Marokko Verlängerung oder Elfmeterschießen brauchen, um sich zu trennen.",
+				"resolution": "Wird mit JA aufgelöst, wenn das Duell nicht in der regulären Spielzeit entschieden wird und in die Verlängerung oder ins Elfmeterschießen geht; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "France - Maroc se décidera-t-il après les quatre-vingt-dix minutes ?",
+				"description": "Savoir si la France et le Maroc auront besoin de la prolongation ou des tirs au but pour se départager.",
+				"resolution": "Se résout par OUI si la confrontation n'est pas décidée dans le temps réglementaire et va en prolongation ou aux tirs au but ; sinon NON."
+			},
+			"pt": {
+				"title": "França vs Marrocos será decidido depois dos noventa minutos?",
+				"description": "Se a França e Marrocos precisarão de prolongamento ou penáltis para se separarem.",
+				"resolution": "Resolve-se como SIM se o confronto não for decidido no tempo regulamentar e for para o prolongamento ou desempate por penáltis; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "França vs Marrocos será decidido após os noventa minutos?",
+				"description": "Se França e Marrocos vão precisar de prorrogação ou pênaltis para se separar.",
+				"resolution": "Resolve-se como SIM se o confronto não for decidido no tempo normal e for para a prorrogação ou disputa de pênaltis; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "法国对摩洛哥会在90分钟后才分出胜负吗？",
+				"description": "法国和摩洛哥是否需要加时赛或点球才能分出胜负。",
+				"resolution": "如果该场对决未能在常规时间内分出胜负，并进入加时赛或点球大战，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will more than two and a half goals be scored in France vs Morocco?",
+		"description": "A read on whether France–Morocco opens up or stays controlled.",
+		"resolution": "Resolves YES if 3 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verranno segnati più di due gol e mezzo in Francia-Marocco?",
+				"description": "Un'indicazione sul fatto che Francia-Marocco si apra o resti controllata.",
+				"resolution": "Si risolve SÌ se vengono segnati 3 o più gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcarán más de dos goles y medio en Francia vs Marruecos?",
+				"description": "Una lectura de si Francia–Marruecos se abre o se mantiene controlado.",
+				"resolution": "Se resuelve SÍ si se marcan 3 o más goles en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fallen in Frankreich gegen Marokko mehr als zweieinhalb Tore?",
+				"description": "Ein Anhaltspunkt, ob Frankreich–Marokko sich öffnet oder kontrolliert bleibt.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der regulären Spielzeit (90 Minuten plus Nachspielzeit) 3 oder mehr Tore fallen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Plus de deux buts et demi seront-ils marqués dans France - Maroc ?",
+				"description": "Un aperçu de si France - Maroc s'ouvre ou reste maîtrisé.",
+				"resolution": "Se résout par OUI si 3 buts ou plus sont marqués dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Serão marcados mais de dois golos e meio em França vs Marrocos?",
+				"description": "Uma leitura sobre se França–Marrocos se abre ou se mantém controlado.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais golos no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Serão marcados mais de dois gols e meio em França vs Marrocos?",
+				"description": "Uma leitura sobre se França–Marrocos se abre ou permanece controlado.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais gols no tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "法国对摩洛哥的进球数会超过两球半吗？",
+				"description": "衡量法国对摩洛哥这场比赛会打开局面还是保持谨慎。",
+				"resolution": "如果常规时间（90分钟加补时）内打入3球或更多，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will both teams score in France vs Morocco?",
+		"description": "Whether both France and Morocco find the net.",
+		"resolution": "Resolves YES if both teams score at least one goal in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Entrambe le squadre segneranno in Francia-Marocco?",
+				"description": "Se sia la Francia sia il Marocco troveranno la rete.",
+				"resolution": "Si risolve SÌ se entrambe le squadre segnano almeno un gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcarán ambos equipos en Francia vs Marruecos?",
+				"description": "Si tanto Francia como Marruecos marcan.",
+				"resolution": "Se resuelve SÍ si ambos equipos marcan al menos un gol en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Treffen in Frankreich gegen Marokko beide Teams?",
+				"description": "Ob sowohl Frankreich als auch Marokko treffen.",
+				"resolution": "Wird mit JA aufgelöst, wenn beide Teams in der regulären Spielzeit (90 Minuten plus Nachspielzeit) mindestens ein Tor erzielen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Les deux équipes marqueront-elles dans France - Maroc ?",
+				"description": "Savoir si la France et le Maroc trouvent tous deux le chemin des filets.",
+				"resolution": "Se résout par OUI si les deux équipes marquent au moins un but dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Ambas as equipas vão marcar em França vs Marrocos?",
+				"description": "Se a França e Marrocos balançam as redes.",
+				"resolution": "Resolve-se como SIM se ambas as equipas marcarem pelo menos um golo no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Ambas as seleções vão marcar em França vs Marrocos?",
+				"description": "Se tanto a França quanto o Marrocos vão balançar as redes.",
+				"resolution": "Resolve-se como SIM se ambas as seleções marcarem pelo menos um gol no tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "法国对摩洛哥两队都会进球吗？",
+				"description": "法国和摩洛哥是否都能破门。",
+				"resolution": "如果两队在常规时间（90分钟加补时）内各自至少打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a red card be shown in France vs Morocco?",
+		"description": "Quarterfinal tension between France and Morocco raises the risk of a dismissal.",
+		"resolution": "Resolves YES if a red card (straight or second yellow) is shown to any player during the match; otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà mostrato un cartellino rosso in Francia-Marocco?",
+				"description": "La tensione da quarto di finale tra Francia e Marocco aumenta il rischio di un'espulsione.",
+				"resolution": "Si risolve SÌ se viene mostrato un cartellino rosso (diretto o per seconda ammonizione) a un qualsiasi giocatore durante la partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se mostrará una tarjeta roja en Francia vs Marruecos?",
+				"description": "La tensión de los cuartos de final entre Francia y Marruecos aumenta el riesgo de una expulsión.",
+				"resolution": "Se resuelve SÍ si se muestra una tarjeta roja (directa o segunda amarilla) a cualquier jugador durante el partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird in Frankreich gegen Marokko eine Rote Karte gezeigt?",
+				"description": "Die Viertelfinalspannung zwischen Frankreich und Marokko erhöht das Risiko eines Platzverweises.",
+				"resolution": "Wird mit JA aufgelöst, wenn während des Spiels einem Spieler eine Rote Karte (glatt oder Gelb-Rot) gezeigt wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un carton rouge sera-t-il brandi dans France - Maroc ?",
+				"description": "La tension du quart de finale entre la France et le Maroc accroît le risque d'une expulsion.",
+				"resolution": "Se résout par OUI si un carton rouge (direct ou deuxième jaune) est brandi à l'encontre d'un joueur au cours du match ; sinon NON."
+			},
+			"pt": {
+				"title": "Será mostrado um cartão vermelho em França vs Marrocos?",
+				"description": "A tensão dos quartos de final entre a França e Marrocos aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se for mostrado um cartão vermelho (direto ou segundo amarelo) a qualquer jogador durante o jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será mostrado um cartão vermelho em França vs Marrocos?",
+				"description": "A tensão do quarto de final entre França e Marrocos aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se for mostrado um cartão vermelho (direto ou segundo amarelo) a qualquer jogador durante o jogo; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "法国对摩洛哥会出现红牌吗？",
+				"description": "法国与摩洛哥之间的四分之一决赛紧张气氛，增加了球员被罚下的风险。",
+				"resolution": "如果比赛中有任何球员被出示红牌（直接红牌或两黄变红），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a penalty be awarded in France vs Morocco?",
+		"description": "A single spot-kick could settle France against Morocco.",
+		"resolution": "Resolves YES if a penalty kick is awarded to either team during normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà assegnato un rigore in Francia-Marocco?",
+				"description": "Un solo calcio di rigore potrebbe decidere Francia-Marocco.",
+				"resolution": "Si risolve SÌ se viene assegnato un calcio di rigore a una delle due squadre nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se concederá un penalti en Francia vs Marruecos?",
+				"description": "Un solo penalti podría decidir el Francia contra Marruecos.",
+				"resolution": "Se resuelve SÍ si se concede un penalti a cualquiera de los dos equipos durante el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird in Frankreich gegen Marokko ein Elfmeter verhängt?",
+				"description": "Ein einziger Elfmeter könnte Frankreich gegen Marokko entscheiden.",
+				"resolution": "Wird mit JA aufgelöst, wenn einem der beiden Teams in der regulären Spielzeit (90 Minuten plus Nachspielzeit) ein Elfmeter zugesprochen wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un penalty sera-t-il accordé dans France - Maroc ?",
+				"description": "Un seul penalty pourrait décider France - Maroc.",
+				"resolution": "Se résout par OUI si un penalty est accordé à l'une des deux équipes dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Será assinalado um penálti em França vs Marrocos?",
+				"description": "Um único penálti poderia decidir o duelo entre a França e Marrocos.",
+				"resolution": "Resolve-se como SIM se for assinalado um penálti a qualquer das equipas no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será assinalado um pênalti em França vs Marrocos?",
+				"description": "Uma única cobrança de pênalti poderia decidir França contra Marrocos.",
+				"resolution": "Resolve-se como SIM se for assinalado um pênalti para qualquer uma das seleções durante o tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "法国对摩洛哥会判罚点球吗？",
+				"description": "一次点球或许就能决定法国与摩洛哥之间的胜负。",
+				"resolution": "如果常规时间（90分钟加补时）内任意一方获判点球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the first fifteen minutes of France vs Morocco?",
+		"description": "An early goal would set the tone for France against Morocco.",
+		"resolution": "Resolves YES if a goal is scored within the first 15 minutes of the match; otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol nei primi quindici minuti di Francia-Marocco?",
+				"description": "Un gol in avvio darebbe il tono a Francia-Marocco.",
+				"resolution": "Si risolve SÌ se viene segnato un gol entro i primi 15 minuti della partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en los primeros quince minutos de Francia vs Marruecos?",
+				"description": "Un gol tempranero marcaría el tono del Francia contra Marruecos.",
+				"resolution": "Se resuelve SÍ si se marca un gol dentro de los primeros 15 minutos del partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt in den ersten fünfzehn Minuten von Frankreich gegen Marokko ein Tor?",
+				"description": "Ein frühes Tor würde den Ton für Frankreich gegen Marokko angeben.",
+				"resolution": "Wird mit JA aufgelöst, wenn innerhalb der ersten 15 Minuten des Spiels ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué dans les quinze premières minutes de France - Maroc ?",
+				"description": "Un but précoce donnerait le ton de France - Maroc.",
+				"resolution": "Se résout par OUI si un but est marqué dans les 15 premières minutes du match ; sinon NON."
+			},
+			"pt": {
+				"title": "Será marcado um golo nos primeiros quinze minutos de França vs Marrocos?",
+				"description": "Um golo madrugador daria o tom para o duelo entre a França e Marrocos.",
+				"resolution": "Resolve-se como SIM se for marcado um golo nos primeiros 15 minutos do jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol nos primeiros quinze minutos de França vs Marrocos?",
+				"description": "Um gol cedo daria o tom para França contra Marrocos.",
+				"resolution": "Resolve-se como SIM se for marcado um gol nos primeiros 15 minutos do jogo; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "法国对摩洛哥的前15分钟会有进球吗？",
+				"description": "一粒早早的进球将为法国对摩洛哥定下基调。",
+				"resolution": "如果比赛前15分钟内打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the eightieth minute or later of France vs Morocco?",
+		"description": "A late goal could settle France vs Morocco or force extra time.",
+		"resolution": "Resolves YES if a goal is scored in the 80th minute or later of normal time (including stoppage); otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol dall'ottantesimo minuto in poi di Francia-Marocco?",
+				"description": "Un gol nel finale potrebbe decidere Francia-Marocco o forzare i tempi supplementari.",
+				"resolution": "Si risolve SÌ se viene segnato un gol all'80° minuto o più tardi nei tempi regolamentari (recupero compreso); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en el minuto ochenta o después en Francia vs Marruecos?",
+				"description": "Un gol tardío podría decidir Francia vs Marruecos o forzar la prórroga.",
+				"resolution": "Se resuelve SÍ si se marca un gol en el minuto 80 o después del tiempo reglamentario (incluido el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt in der achtzigsten Minute oder später von Frankreich gegen Marokko ein Tor?",
+				"description": "Ein spätes Tor könnte Frankreich gegen Marokko entscheiden oder eine Verlängerung erzwingen.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der 80. Minute oder später der regulären Spielzeit (inklusive Nachspielzeit) ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué à la quatre-vingtième minute ou plus tard de France - Maroc ?",
+				"description": "Un but tardif pourrait décider France - Maroc ou forcer la prolongation.",
+				"resolution": "Se résout par OUI si un but est marqué à la 80e minute ou plus tard du temps réglementaire (temps additionnel compris) ; sinon NON."
+			},
+			"pt": {
+				"title": "Será marcado um golo ao minuto oitenta ou mais tarde de França vs Marrocos?",
+				"description": "Um golo tardio poderia decidir França vs Marrocos ou forçar o prolongamento.",
+				"resolution": "Resolve-se como SIM se for marcado um golo ao minuto 80 ou mais tarde do tempo regulamentar (incluindo descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol a partir do octogésimo minuto em França vs Marrocos?",
+				"description": "Um gol tardio poderia decidir França vs Marrocos ou forçar a prorrogação.",
+				"resolution": "Resolve-se como SIM se for marcado um gol a partir do minuto 80 do tempo normal (incluindo acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "法国对摩洛哥在第80分钟或之后会有进球吗？",
+				"description": "一粒晚到的进球可能决定法国对摩洛哥的胜负，或将比赛拖入加时。",
+				"resolution": "如果在常规时间第80分钟或之后（含补时）打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Kylian Mbappé score against Morocco?",
+		"description": "Kylian Mbappé of France, a Golden Boot contender, on the quarterfinal stage, chasing the goal that matters most.",
+		"resolution": "Resolves YES if Kylian Mbappé scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Kylian Mbappé segnerà contro il Marocco?",
+				"description": "Kylian Mbappé della Francia, in corsa per la Scarpa d'Oro, sul palcoscenico dei quarti di finale, a caccia del gol che conta di più.",
+				"resolution": "Si risolve SÌ se Kylian Mbappé segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Kylian Mbappé ante Marruecos?",
+				"description": "Kylian Mbappé, de Francia, aspirante a la Bota de Oro, en el escenario de los cuartos de final, a la caza del gol que más importa.",
+				"resolution": "Se resuelve SÍ si Kylian Mbappé marca en el tiempo reglamentario o en la prórroga (excluidos los penales de la tanda); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Kylian Mbappé gegen Marokko?",
+				"description": "Kylian Mbappé von Frankreich, Anwärter auf den Goldenen Schuh, auf der Viertelfinalbühne, auf der Jagd nach dem Tor, das am meisten zählt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Kylian Mbappé in der regulären Spielzeit oder der Verlängerung trifft (Schüsse aus dem Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Kylian Mbappé marquera-t-il contre le Maroc ?",
+				"description": "Kylian Mbappé, de la France, candidat au Soulier d'or, sur la scène des quarts de finale, en quête du but qui compte le plus.",
+				"resolution": "Se résout par OUI si Kylian Mbappé marque dans le temps réglementaire ou la prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Kylian Mbappé marcará frente a Marrocos?",
+				"description": "Kylian Mbappé, da França, candidato à Chuteira de Ouro, no palco dos quartos de final, à procura do golo que mais conta.",
+				"resolution": "Resolve-se como SIM se Kylian Mbappé marcar no tempo regulamentar ou no prolongamento (excluindo os penáltis do desempate); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Kylian Mbappé marcará contra o Marrocos?",
+				"description": "Kylian Mbappé, da França, candidato à Chuteira de Ouro, no palco do quarto de final, em busca do gol que mais importa.",
+				"resolution": "Resolve-se como SIM se Kylian Mbappé marcar no tempo normal ou na prorrogação (excluídas as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Kylian Mbappé会对摩洛哥进球吗？",
+				"description": "法国的Kylian Mbappé，金靴奖有力争夺者，站上四分之一决赛的舞台，追逐那粒最关键的进球。",
+				"resolution": "如果Kylian Mbappé在常规时间或加时赛内进球（不含点球大战），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Ousmane Dembélé score or assist against Morocco?",
+		"description": "Ousmane Dembélé is France's creative engine; a goal or assist would shape the tie.",
+		"resolution": "Resolves YES if Ousmane Dembélé scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Ousmane Dembélé segnerà o servirà un assist contro il Marocco?",
+				"description": "Ousmane Dembélé è il motore creativo della Francia; un gol o un assist darebbe forma alla sfida.",
+				"resolution": "Si risolve SÌ se Ousmane Dembélé segna o viene accreditato di un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o asistirá Ousmane Dembélé ante Marruecos?",
+				"description": "Ousmane Dembélé es el motor creativo de Francia; un gol o una asistencia marcaría la eliminatoria.",
+				"resolution": "Se resuelve SÍ si Ousmane Dembélé marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Ousmane Dembélé gegen Marokko ein Tor vor?",
+				"description": "Ousmane Dembélé ist Frankreichs kreativer Motor; ein Tor oder eine Vorlage würde das Duell prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Ousmane Dembélé in der regulären Spielzeit oder der Verlängerung laut offizieller Statistik ein Tor erzielt oder eine Torvorlage gutgeschrieben bekommt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Ousmane Dembélé marquera-t-il ou délivrera-t-il une passe décisive contre le Maroc ?",
+				"description": "Ousmane Dembélé est le moteur créatif de la France ; un but ou une passe décisive marquerait la confrontation.",
+				"resolution": "Se résout par OUI si Ousmane Dembélé marque ou se voit créditer une passe décisive dans le temps réglementaire ou la prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Ousmane Dembélé marcará ou assistirá frente a Marrocos?",
+				"description": "Ousmane Dembélé é o motor criativo da França; um golo ou assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Ousmane Dembélé marcar ou for creditado com uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Ousmane Dembélé marcará ou dará uma assistência contra o Marrocos?",
+				"description": "Ousmane Dembélé é o motor criativo da França; um gol ou uma assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Ousmane Dembélé marcar ou receber o crédito de uma assistência no tempo normal ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Ousmane Dembélé会对摩洛哥进球或助攻吗？",
+				"description": "Ousmane Dembélé是法国的创造力核心；一次进球或助攻将左右这场对决。",
+				"resolution": "如果根据官方数据，Ousmane Dembélé在常规时间或加时赛内进球或获得助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Youssef En-Nesyri score against France?",
+		"description": "Youssef En-Nesyri of Morocco on the quarterfinal stage, chasing the goal that matters most.",
+		"resolution": "Resolves YES if Youssef En-Nesyri scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-09T20:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Youssef En-Nesyri segnerà contro la Francia?",
+				"description": "Youssef En-Nesyri del Marocco sul palcoscenico dei quarti di finale, a caccia del gol che conta di più.",
+				"resolution": "Si risolve SÌ se Youssef En-Nesyri segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Youssef En-Nesyri ante Francia?",
+				"description": "Youssef En-Nesyri, de Marruecos, en el escenario de los cuartos de final, a la caza del gol que más importa.",
+				"resolution": "Se resuelve SÍ si Youssef En-Nesyri marca en el tiempo reglamentario o en la prórroga (excluidos los penales de la tanda); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Youssef En-Nesyri gegen Frankreich?",
+				"description": "Youssef En-Nesyri von Marokko auf der Viertelfinalbühne, auf der Jagd nach dem Tor, das am meisten zählt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Youssef En-Nesyri in der regulären Spielzeit oder der Verlängerung trifft (Schüsse aus dem Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Youssef En-Nesyri marquera-t-il contre la France ?",
+				"description": "Youssef En-Nesyri, du Maroc, sur la scène des quarts de finale, en quête du but qui compte le plus.",
+				"resolution": "Se résout par OUI si Youssef En-Nesyri marque dans le temps réglementaire ou la prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Youssef En-Nesyri marcará frente à França?",
+				"description": "Youssef En-Nesyri, de Marrocos, no palco dos quartos de final, à procura do golo que mais conta.",
+				"resolution": "Resolve-se como SIM se Youssef En-Nesyri marcar no tempo regulamentar ou no prolongamento (excluindo os penáltis do desempate); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Youssef En-Nesyri marcará contra a França?",
+				"description": "Youssef En-Nesyri, de Marrocos, no palco do quarto de final, em busca do gol que mais importa.",
+				"resolution": "Resolve-se como SIM se Youssef En-Nesyri marcar no tempo normal ou na prorrogação (excluídas as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Youssef En-Nesyri会对法国进球吗？",
+				"description": "摩洛哥的Youssef En-Nesyri站上四分之一决赛的舞台，追逐那粒最关键的进球。",
+				"resolution": "如果Youssef En-Nesyri在常规时间或加时赛内进球（不含点球大战），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Spain reach the Semifinals?",
+		"description": "An echo of the 1986 quarterfinal — Spain's possession game against a Belgium side that dismantled the USA 4-1. In single-elimination, the loser goes home.",
+		"resolution": "Resolves YES if Spain win the tie (result after extra time and, if needed, penalties); otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "La Spagna raggiungerà le semifinali?",
+				"description": "Un'eco del quarto di finale del 1986: il gioco di possesso della Spagna contro un Belgio che ha smantellato gli USA per 4-1. Nell'eliminazione diretta, chi perde torna a casa.",
+				"resolution": "Si risolve SÌ se la Spagna vince la sfida (risultato dopo i tempi supplementari e, se necessario, i calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Llegará España a las semifinales?",
+				"description": "Un eco de los cuartos de final de 1986: el juego de posesión de España frente a una Bélgica que desmanteló a los Estados Unidos por 4-1. En la eliminación directa, el perdedor se va a casa.",
+				"resolution": "Se resuelve SÍ si España gana la eliminatoria (resultado tras la prórroga y, de ser necesario, los penales); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erreicht Spanien das Halbfinale?",
+				"description": "Ein Echo des Viertelfinals von 1986 — Spaniens Ballbesitzspiel gegen eine belgische Mannschaft, die die USA mit 4:1 zerlegt hat. Im K.-o.-System geht der Verlierer nach Hause.",
+				"resolution": "Wird mit JA aufgelöst, wenn Spanien das Duell gewinnt (Ergebnis nach Verlängerung und, falls nötig, Elfmeterschießen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "L'Espagne atteindra-t-elle les demi-finales ?",
+				"description": "Un écho du quart de finale de 1986 — le jeu de possession de l'Espagne face à une Belgique qui a démantelé les États-Unis 4-1. En élimination directe, le perdant rentre à la maison.",
+				"resolution": "Se résout par OUI si l'Espagne remporte la confrontation (résultat après prolongation et, si nécessaire, tirs au but) ; sinon NON."
+			},
+			"pt": {
+				"title": "A Espanha chegará às meias-finais?",
+				"description": "Um eco dos quartos de final de 1986 — o jogo de posse de bola da Espanha frente a uma Bélgica que desmantelou os Estados Unidos por 4-1. Na eliminatória a jogo único, quem perde vai para casa.",
+				"resolution": "Resolve-se como SIM se a Espanha vencer o confronto (resultado após o prolongamento e, se necessário, penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A Espanha chegará às semifinais?",
+				"description": "Um eco do quarto de final de 1986 — o jogo de posse de bola da Espanha contra uma Bélgica que desmontou os Estados Unidos por 4 a 1. No mata-mata, quem perde vai para casa.",
+				"resolution": "Resolve-se como SIM se a Espanha vencer o confronto (resultado após a prorrogação e, se necessário, os pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙能晋级半决赛吗？",
+				"description": "1986年四分之一决赛的回响——西班牙的控球打法，对阵4比1击溃美国的比利时。在单场淘汰赛中，负者出局。",
+				"resolution": "如果西班牙赢得该场对决（加时赛，如有必要则点球大战后的结果），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Spain vs Belgium be decided after ninety minutes?",
+		"description": "Whether Spain and Belgium need extra time or penalties to separate them.",
+		"resolution": "Resolves YES if the tie is not settled in normal time and goes to extra time or a penalty shootout; otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Spagna-Belgio si deciderà oltre i novanta minuti?",
+				"description": "Se Spagna e Belgio avranno bisogno dei tempi supplementari o dei calci di rigore per separarsi.",
+				"resolution": "Si risolve SÌ se la sfida non si decide nei tempi regolamentari e va ai tempi supplementari o ai calci di rigore; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se decidirá España vs Bélgica después de los noventa minutos?",
+				"description": "Si España y Bélgica necesitan prórroga o penales para desempatar.",
+				"resolution": "Se resuelve SÍ si la eliminatoria no se resuelve en el tiempo reglamentario y llega a la prórroga o a una tanda de penales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird Spanien gegen Belgien erst nach neunzig Minuten entschieden?",
+				"description": "Ob Spanien und Belgien Verlängerung oder Elfmeterschießen brauchen, um sich zu trennen.",
+				"resolution": "Wird mit JA aufgelöst, wenn das Duell nicht in der regulären Spielzeit entschieden wird und in die Verlängerung oder ins Elfmeterschießen geht; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Espagne - Belgique se décidera-t-il après les quatre-vingt-dix minutes ?",
+				"description": "Savoir si l'Espagne et la Belgique auront besoin de la prolongation ou des tirs au but pour se départager.",
+				"resolution": "Se résout par OUI si la confrontation n'est pas décidée dans le temps réglementaire et va en prolongation ou aux tirs au but ; sinon NON."
+			},
+			"pt": {
+				"title": "Espanha vs Bélgica será decidido depois dos noventa minutos?",
+				"description": "Se a Espanha e a Bélgica precisarão de prolongamento ou penáltis para se separarem.",
+				"resolution": "Resolve-se como SIM se o confronto não for decidido no tempo regulamentar e for para o prolongamento ou desempate por penáltis; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Espanha vs Bélgica será decidido após os noventa minutos?",
+				"description": "Se Espanha e Bélgica vão precisar de prorrogação ou pênaltis para se separar.",
+				"resolution": "Resolve-se como SIM se o confronto não for decidido no tempo normal e for para a prorrogação ou disputa de pênaltis; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙对比利时会在90分钟后才分出胜负吗？",
+				"description": "西班牙和比利时是否需要加时赛或点球才能分出胜负。",
+				"resolution": "如果该场对决未能在常规时间内分出胜负，并进入加时赛或点球大战，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will more than two and a half goals be scored in Spain vs Belgium?",
+		"description": "A read on whether Spain–Belgium opens up or stays controlled.",
+		"resolution": "Resolves YES if 3 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verranno segnati più di due gol e mezzo in Spagna-Belgio?",
+				"description": "Un'indicazione sul fatto che Spagna-Belgio si apra o resti controllata.",
+				"resolution": "Si risolve SÌ se vengono segnati 3 o più gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcarán más de dos goles y medio en España vs Bélgica?",
+				"description": "Una lectura de si España–Bélgica se abre o se mantiene controlado.",
+				"resolution": "Se resuelve SÍ si se marcan 3 o más goles en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fallen in Spanien gegen Belgien mehr als zweieinhalb Tore?",
+				"description": "Ein Anhaltspunkt, ob Spanien–Belgien sich öffnet oder kontrolliert bleibt.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der regulären Spielzeit (90 Minuten plus Nachspielzeit) 3 oder mehr Tore fallen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Plus de deux buts et demi seront-ils marqués dans Espagne - Belgique ?",
+				"description": "Un aperçu de si Espagne - Belgique s'ouvre ou reste maîtrisé.",
+				"resolution": "Se résout par OUI si 3 buts ou plus sont marqués dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Serão marcados mais de dois golos e meio em Espanha vs Bélgica?",
+				"description": "Uma leitura sobre se Espanha–Bélgica se abre ou se mantém controlado.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais golos no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Serão marcados mais de dois gols e meio em Espanha vs Bélgica?",
+				"description": "Uma leitura sobre se Espanha–Bélgica se abre ou permanece controlado.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais gols no tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙对比利时的进球数会超过两球半吗？",
+				"description": "衡量西班牙对比利时这场比赛会打开局面还是保持谨慎。",
+				"resolution": "如果常规时间（90分钟加补时）内打入3球或更多，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will both teams score in Spain vs Belgium?",
+		"description": "Whether both Spain and Belgium find the net.",
+		"resolution": "Resolves YES if both teams score at least one goal in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Entrambe le squadre segneranno in Spagna-Belgio?",
+				"description": "Se sia la Spagna sia il Belgio troveranno la rete.",
+				"resolution": "Si risolve SÌ se entrambe le squadre segnano almeno un gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcarán ambos equipos en España vs Bélgica?",
+				"description": "Si tanto España como Bélgica marcan.",
+				"resolution": "Se resuelve SÍ si ambos equipos marcan al menos un gol en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Treffen in Spanien gegen Belgien beide Teams?",
+				"description": "Ob sowohl Spanien als auch Belgien treffen.",
+				"resolution": "Wird mit JA aufgelöst, wenn beide Teams in der regulären Spielzeit (90 Minuten plus Nachspielzeit) mindestens ein Tor erzielen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Les deux équipes marqueront-elles dans Espagne - Belgique ?",
+				"description": "Savoir si l'Espagne et la Belgique trouvent toutes deux le chemin des filets.",
+				"resolution": "Se résout par OUI si les deux équipes marquent au moins un but dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Ambas as equipas vão marcar em Espanha vs Bélgica?",
+				"description": "Se a Espanha e a Bélgica balançam as redes.",
+				"resolution": "Resolve-se como SIM se ambas as equipas marcarem pelo menos um golo no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Ambas as seleções vão marcar em Espanha vs Bélgica?",
+				"description": "Se tanto a Espanha quanto a Bélgica vão balançar as redes.",
+				"resolution": "Resolve-se como SIM se ambas as seleções marcarem pelo menos um gol no tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙对比利时两队都会进球吗？",
+				"description": "西班牙和比利时是否都能破门。",
+				"resolution": "如果两队在常规时间（90分钟加补时）内各自至少打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a red card be shown in Spain vs Belgium?",
+		"description": "Quarterfinal tension between Spain and Belgium raises the risk of a dismissal.",
+		"resolution": "Resolves YES if a red card (straight or second yellow) is shown to any player during the match; otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà mostrato un cartellino rosso in Spagna-Belgio?",
+				"description": "La tensione da quarto di finale tra Spagna e Belgio aumenta il rischio di un'espulsione.",
+				"resolution": "Si risolve SÌ se viene mostrato un cartellino rosso (diretto o per seconda ammonizione) a un qualsiasi giocatore durante la partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se mostrará una tarjeta roja en España vs Bélgica?",
+				"description": "La tensión de los cuartos de final entre España y Bélgica aumenta el riesgo de una expulsión.",
+				"resolution": "Se resuelve SÍ si se muestra una tarjeta roja (directa o segunda amarilla) a cualquier jugador durante el partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird in Spanien gegen Belgien eine Rote Karte gezeigt?",
+				"description": "Die Viertelfinalspannung zwischen Spanien und Belgien erhöht das Risiko eines Platzverweises.",
+				"resolution": "Wird mit JA aufgelöst, wenn während des Spiels einem Spieler eine Rote Karte (glatt oder Gelb-Rot) gezeigt wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un carton rouge sera-t-il brandi dans Espagne - Belgique ?",
+				"description": "La tension du quart de finale entre l'Espagne et la Belgique accroît le risque d'une expulsion.",
+				"resolution": "Se résout par OUI si un carton rouge (direct ou deuxième jaune) est brandi à l'encontre d'un joueur au cours du match ; sinon NON."
+			},
+			"pt": {
+				"title": "Será mostrado um cartão vermelho em Espanha vs Bélgica?",
+				"description": "A tensão dos quartos de final entre a Espanha e a Bélgica aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se for mostrado um cartão vermelho (direto ou segundo amarelo) a qualquer jogador durante o jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será mostrado um cartão vermelho em Espanha vs Bélgica?",
+				"description": "A tensão do quarto de final entre Espanha e Bélgica aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se for mostrado um cartão vermelho (direto ou segundo amarelo) a qualquer jogador durante o jogo; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙对比利时会出现红牌吗？",
+				"description": "西班牙与比利时之间的四分之一决赛紧张气氛，增加了球员被罚下的风险。",
+				"resolution": "如果比赛中有任何球员被出示红牌（直接红牌或两黄变红），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a penalty be awarded in Spain vs Belgium?",
+		"description": "A single spot-kick could settle Spain against Belgium.",
+		"resolution": "Resolves YES if a penalty kick is awarded to either team during normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà assegnato un rigore in Spagna-Belgio?",
+				"description": "Un solo calcio di rigore potrebbe decidere Spagna-Belgio.",
+				"resolution": "Si risolve SÌ se viene assegnato un calcio di rigore a una delle due squadre nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se concederá un penalti en España vs Bélgica?",
+				"description": "Un solo penalti podría decidir el España contra Bélgica.",
+				"resolution": "Se resuelve SÍ si se concede un penalti a cualquiera de los dos equipos durante el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird in Spanien gegen Belgien ein Elfmeter verhängt?",
+				"description": "Ein einziger Elfmeter könnte Spanien gegen Belgien entscheiden.",
+				"resolution": "Wird mit JA aufgelöst, wenn einem der beiden Teams in der regulären Spielzeit (90 Minuten plus Nachspielzeit) ein Elfmeter zugesprochen wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un penalty sera-t-il accordé dans Espagne - Belgique ?",
+				"description": "Un seul penalty pourrait décider Espagne - Belgique.",
+				"resolution": "Se résout par OUI si un penalty est accordé à l'une des deux équipes dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Será assinalado um penálti em Espanha vs Bélgica?",
+				"description": "Um único penálti poderia decidir o duelo entre a Espanha e a Bélgica.",
+				"resolution": "Resolve-se como SIM se for assinalado um penálti a qualquer das equipas no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será assinalado um pênalti em Espanha vs Bélgica?",
+				"description": "Uma única cobrança de pênalti poderia decidir Espanha contra Bélgica.",
+				"resolution": "Resolve-se como SIM se for assinalado um pênalti para qualquer uma das seleções durante o tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙对比利时会判罚点球吗？",
+				"description": "一次点球或许就能决定西班牙与比利时之间的胜负。",
+				"resolution": "如果常规时间（90分钟加补时）内任意一方获判点球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the first fifteen minutes of Spain vs Belgium?",
+		"description": "An early goal would set the tone for Spain against Belgium.",
+		"resolution": "Resolves YES if a goal is scored within the first 15 minutes of the match; otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol nei primi quindici minuti di Spagna-Belgio?",
+				"description": "Un gol in avvio darebbe il tono a Spagna-Belgio.",
+				"resolution": "Si risolve SÌ se viene segnato un gol entro i primi 15 minuti della partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en los primeros quince minutos de España vs Bélgica?",
+				"description": "Un gol tempranero marcaría el tono del España contra Bélgica.",
+				"resolution": "Se resuelve SÍ si se marca un gol dentro de los primeros 15 minutos del partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt in den ersten fünfzehn Minuten von Spanien gegen Belgien ein Tor?",
+				"description": "Ein frühes Tor würde den Ton für Spanien gegen Belgien angeben.",
+				"resolution": "Wird mit JA aufgelöst, wenn innerhalb der ersten 15 Minuten des Spiels ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué dans les quinze premières minutes d'Espagne - Belgique ?",
+				"description": "Un but précoce donnerait le ton d'Espagne - Belgique.",
+				"resolution": "Se résout par OUI si un but est marqué dans les 15 premières minutes du match ; sinon NON."
+			},
+			"pt": {
+				"title": "Será marcado um golo nos primeiros quinze minutos de Espanha vs Bélgica?",
+				"description": "Um golo madrugador daria o tom para o duelo entre a Espanha e a Bélgica.",
+				"resolution": "Resolve-se como SIM se for marcado um golo nos primeiros 15 minutos do jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol nos primeiros quinze minutos de Espanha vs Bélgica?",
+				"description": "Um gol cedo daria o tom para Espanha contra Bélgica.",
+				"resolution": "Resolve-se como SIM se for marcado um gol nos primeiros 15 minutos do jogo; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙对比利时的前15分钟会有进球吗？",
+				"description": "一粒早早的进球将为西班牙对比利时定下基调。",
+				"resolution": "如果比赛前15分钟内打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the eightieth minute or later of Spain vs Belgium?",
+		"description": "A late goal could settle Spain vs Belgium or force extra time.",
+		"resolution": "Resolves YES if a goal is scored in the 80th minute or later of normal time (including stoppage); otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol dall'ottantesimo minuto in poi di Spagna-Belgio?",
+				"description": "Un gol nel finale potrebbe decidere Spagna-Belgio o forzare i tempi supplementari.",
+				"resolution": "Si risolve SÌ se viene segnato un gol all'80° minuto o più tardi nei tempi regolamentari (recupero compreso); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en el minuto ochenta o después en España vs Bélgica?",
+				"description": "Un gol tardío podría decidir España vs Bélgica o forzar la prórroga.",
+				"resolution": "Se resuelve SÍ si se marca un gol en el minuto 80 o después del tiempo reglamentario (incluido el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt in der achtzigsten Minute oder später von Spanien gegen Belgien ein Tor?",
+				"description": "Ein spätes Tor könnte Spanien gegen Belgien entscheiden oder eine Verlängerung erzwingen.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der 80. Minute oder später der regulären Spielzeit (inklusive Nachspielzeit) ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué à la quatre-vingtième minute ou plus tard d'Espagne - Belgique ?",
+				"description": "Un but tardif pourrait décider Espagne - Belgique ou forcer la prolongation.",
+				"resolution": "Se résout par OUI si un but est marqué à la 80e minute ou plus tard du temps réglementaire (temps additionnel compris) ; sinon NON."
+			},
+			"pt": {
+				"title": "Será marcado um golo ao minuto oitenta ou mais tarde de Espanha vs Bélgica?",
+				"description": "Um golo tardio poderia decidir Espanha vs Bélgica ou forçar o prolongamento.",
+				"resolution": "Resolve-se como SIM se for marcado um golo ao minuto 80 ou mais tarde do tempo regulamentar (incluindo descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol a partir do octogésimo minuto em Espanha vs Bélgica?",
+				"description": "Um gol tardio poderia decidir Espanha vs Bélgica ou forçar a prorrogação.",
+				"resolution": "Resolve-se como SIM se for marcado um gol a partir do minuto 80 do tempo normal (incluindo acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙对比利时在第80分钟或之后会有进球吗？",
+				"description": "一粒晚到的进球可能决定西班牙对比利时的胜负，或将比赛拖入加时。",
+				"resolution": "如果在常规时间第80分钟或之后（含补时）打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Lamine Yamal score or assist against Belgium?",
+		"description": "Lamine Yamal is Spain's creative engine; a goal or assist would shape the tie.",
+		"resolution": "Resolves YES if Lamine Yamal scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Lamine Yamal segnerà o servirà un assist contro il Belgio?",
+				"description": "Lamine Yamal è il motore creativo della Spagna; un gol o un assist darebbe forma alla sfida.",
+				"resolution": "Si risolve SÌ se Lamine Yamal segna o viene accreditato di un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o asistirá Lamine Yamal ante Bélgica?",
+				"description": "Lamine Yamal es el motor creativo de España; un gol o una asistencia marcaría la eliminatoria.",
+				"resolution": "Se resuelve SÍ si Lamine Yamal marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Lamine Yamal gegen Belgien ein Tor vor?",
+				"description": "Lamine Yamal ist Spaniens kreativer Motor; ein Tor oder eine Vorlage würde das Duell prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Lamine Yamal in der regulären Spielzeit oder der Verlängerung laut offizieller Statistik ein Tor erzielt oder eine Torvorlage gutgeschrieben bekommt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Lamine Yamal marquera-t-il ou délivrera-t-il une passe décisive contre la Belgique ?",
+				"description": "Lamine Yamal est le moteur créatif de l'Espagne ; un but ou une passe décisive marquerait la confrontation.",
+				"resolution": "Se résout par OUI si Lamine Yamal marque ou se voit créditer une passe décisive dans le temps réglementaire ou la prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Lamine Yamal marcará ou assistirá frente à Bélgica?",
+				"description": "Lamine Yamal é o motor criativo da Espanha; um golo ou assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Lamine Yamal marcar ou for creditado com uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Lamine Yamal marcará ou dará uma assistência contra a Bélgica?",
+				"description": "Lamine Yamal é o motor criativo da Espanha; um gol ou uma assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Lamine Yamal marcar ou receber o crédito de uma assistência no tempo normal ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Lamine Yamal会对比利时进球或助攻吗？",
+				"description": "Lamine Yamal是西班牙的创造力核心；一次进球或助攻将左右这场对决。",
+				"resolution": "如果根据官方数据，Lamine Yamal在常规时间或加时赛内进球或获得助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Álvaro Morata score against Belgium?",
+		"description": "Álvaro Morata of Spain on the quarterfinal stage, chasing the goal that matters most.",
+		"resolution": "Resolves YES if Álvaro Morata scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Álvaro Morata segnerà contro il Belgio?",
+				"description": "Álvaro Morata della Spagna sul palcoscenico dei quarti di finale, a caccia del gol che conta di più.",
+				"resolution": "Si risolve SÌ se Álvaro Morata segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Álvaro Morata ante Bélgica?",
+				"description": "Álvaro Morata, de España, en el escenario de los cuartos de final, a la caza del gol que más importa.",
+				"resolution": "Se resuelve SÍ si Álvaro Morata marca en el tiempo reglamentario o en la prórroga (excluidos los penales de la tanda); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Álvaro Morata gegen Belgien?",
+				"description": "Álvaro Morata von Spanien auf der Viertelfinalbühne, auf der Jagd nach dem Tor, das am meisten zählt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Álvaro Morata in der regulären Spielzeit oder der Verlängerung trifft (Schüsse aus dem Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Álvaro Morata marquera-t-il contre la Belgique ?",
+				"description": "Álvaro Morata, de l'Espagne, sur la scène des quarts de finale, en quête du but qui compte le plus.",
+				"resolution": "Se résout par OUI si Álvaro Morata marque dans le temps réglementaire ou la prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Álvaro Morata marcará frente à Bélgica?",
+				"description": "Álvaro Morata, da Espanha, no palco dos quartos de final, à procura do golo que mais conta.",
+				"resolution": "Resolve-se como SIM se Álvaro Morata marcar no tempo regulamentar ou no prolongamento (excluindo os penáltis do desempate); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Álvaro Morata marcará contra a Bélgica?",
+				"description": "Álvaro Morata, da Espanha, no palco do quarto de final, em busca do gol que mais importa.",
+				"resolution": "Resolve-se como SIM se Álvaro Morata marcar no tempo normal ou na prorrogação (excluídas as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Álvaro Morata会对比利时进球吗？",
+				"description": "西班牙的Álvaro Morata站上四分之一决赛的舞台，追逐那粒最关键的进球。",
+				"resolution": "如果Álvaro Morata在常规时间或加时赛内进球（不含点球大战），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Kevin De Bruyne score or assist against Spain?",
+		"description": "Kevin De Bruyne is Belgium's creative engine; a goal or assist would shape the tie.",
+		"resolution": "Resolves YES if Kevin De Bruyne scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-10T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Kevin De Bruyne segnerà o servirà un assist contro la Spagna?",
+				"description": "Kevin De Bruyne è il motore creativo del Belgio; un gol o un assist darebbe forma alla sfida.",
+				"resolution": "Si risolve SÌ se Kevin De Bruyne segna o viene accreditato di un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o asistirá Kevin De Bruyne ante España?",
+				"description": "Kevin De Bruyne es el motor creativo de Bélgica; un gol o una asistencia marcaría la eliminatoria.",
+				"resolution": "Se resuelve SÍ si Kevin De Bruyne marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Kevin De Bruyne gegen Spanien ein Tor vor?",
+				"description": "Kevin De Bruyne ist Belgiens kreativer Motor; ein Tor oder eine Vorlage würde das Duell prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Kevin De Bruyne in der regulären Spielzeit oder der Verlängerung laut offizieller Statistik ein Tor erzielt oder eine Torvorlage gutgeschrieben bekommt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Kevin De Bruyne marquera-t-il ou délivrera-t-il une passe décisive contre l'Espagne ?",
+				"description": "Kevin De Bruyne est le moteur créatif de la Belgique ; un but ou une passe décisive marquerait la confrontation.",
+				"resolution": "Se résout par OUI si Kevin De Bruyne marque ou se voit créditer une passe décisive dans le temps réglementaire ou la prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Kevin De Bruyne marcará ou assistirá frente à Espanha?",
+				"description": "Kevin De Bruyne é o motor criativo da Bélgica; um golo ou assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Kevin De Bruyne marcar ou for creditado com uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Kevin De Bruyne marcará ou dará uma assistência contra a Espanha?",
+				"description": "Kevin De Bruyne é o motor criativo da Bélgica; um gol ou uma assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Kevin De Bruyne marcar ou receber o crédito de uma assistência no tempo normal ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Kevin De Bruyne会对西班牙进球或助攻吗？",
+				"description": "Kevin De Bruyne是比利时的创造力核心；一次进球或助攻将左右这场对决。",
+				"resolution": "如果根据官方数据，Kevin De Bruyne在常规时间或加时赛内进球或获得助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will England reach the Semifinals?",
+		"description": "Norway's first-ever quarterfinal, carried by Haaland, against an England side that beat Mexico 3-2 to get here. In single-elimination, the loser goes home.",
+		"resolution": "Resolves YES if England win the tie (result after extra time and, if needed, penalties); otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "L'Inghilterra raggiungerà le semifinali?",
+				"description": "Il primo quarto di finale della storia della Norvegia, trascinata da Haaland, contro un'Inghilterra che è arrivata fin qui battendo il Messico per 3-2. Nell'eliminazione diretta, chi perde torna a casa.",
+				"resolution": "Si risolve SÌ se l'Inghilterra vince la sfida (risultato dopo i tempi supplementari e, se necessario, i calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Llegará Inglaterra a las semifinales?",
+				"description": "El primer cuarto de final de la historia de Noruega, con Haaland como estandarte, frente a una Inglaterra que venció a México por 3-2 para llegar hasta aquí. En la eliminación directa, el perdedor se va a casa.",
+				"resolution": "Se resuelve SÍ si Inglaterra gana la eliminatoria (resultado tras la prórroga y, de ser necesario, los penales); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erreicht England das Halbfinale?",
+				"description": "Norwegens allererstes Viertelfinale, getragen von Haaland, gegen eine englische Mannschaft, die sich mit einem 3:2 gegen Mexiko hierher gespielt hat. Im K.-o.-System geht der Verlierer nach Hause.",
+				"resolution": "Wird mit JA aufgelöst, wenn England das Duell gewinnt (Ergebnis nach Verlängerung und, falls nötig, Elfmeterschießen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "L'Angleterre atteindra-t-elle les demi-finales ?",
+				"description": "Le tout premier quart de finale de la Norvège, portée par Haaland, face à une Angleterre qui a battu le Mexique 3-2 pour en arriver là. En élimination directe, le perdant rentre à la maison.",
+				"resolution": "Se résout par OUI si l'Angleterre remporte la confrontation (résultat après prolongation et, si nécessaire, tirs au but) ; sinon NON."
+			},
+			"pt": {
+				"title": "A Inglaterra chegará às meias-finais?",
+				"description": "Os primeiros quartos de final de sempre da Noruega, puxada por Haaland, frente a uma Inglaterra que venceu o México por 3-2 para aqui chegar. Na eliminatória a jogo único, quem perde vai para casa.",
+				"resolution": "Resolve-se como SIM se a Inglaterra vencer o confronto (resultado após o prolongamento e, se necessário, penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A Inglaterra chegará às semifinais?",
+				"description": "O primeiro quarto de final da história da Noruega, puxada por Haaland, contra uma Inglaterra que venceu o México por 3 a 2 para chegar aqui. No mata-mata, quem perde vai para casa.",
+				"resolution": "Resolve-se como SIM se a Inglaterra vencer o confronto (resultado após a prorrogação e, se necessário, os pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "英格兰能晋级半决赛吗？",
+				"description": "挪威史上首次闯入四分之一决赛，由Haaland扛起，对阵3比2击败墨西哥晋级的英格兰。在单场淘汰赛中，负者出局。",
+				"resolution": "如果英格兰赢得该场对决（加时赛，如有必要则点球大战后的结果），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Norway vs England be decided after ninety minutes?",
+		"description": "Whether Norway and England need extra time or penalties to separate them.",
+		"resolution": "Resolves YES if the tie is not settled in normal time and goes to extra time or a penalty shootout; otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Norvegia-Inghilterra si deciderà oltre i novanta minuti?",
+				"description": "Se Norvegia e Inghilterra avranno bisogno dei tempi supplementari o dei calci di rigore per separarsi.",
+				"resolution": "Si risolve SÌ se la sfida non si decide nei tempi regolamentari e va ai tempi supplementari o ai calci di rigore; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se decidirá Noruega vs Inglaterra después de los noventa minutos?",
+				"description": "Si Noruega y Inglaterra necesitan prórroga o penales para desempatar.",
+				"resolution": "Se resuelve SÍ si la eliminatoria no se resuelve en el tiempo reglamentario y llega a la prórroga o a una tanda de penales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird Norwegen gegen England erst nach neunzig Minuten entschieden?",
+				"description": "Ob Norwegen und England Verlängerung oder Elfmeterschießen brauchen, um sich zu trennen.",
+				"resolution": "Wird mit JA aufgelöst, wenn das Duell nicht in der regulären Spielzeit entschieden wird und in die Verlängerung oder ins Elfmeterschießen geht; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Norvège - Angleterre se décidera-t-il après les quatre-vingt-dix minutes ?",
+				"description": "Savoir si la Norvège et l'Angleterre auront besoin de la prolongation ou des tirs au but pour se départager.",
+				"resolution": "Se résout par OUI si la confrontation n'est pas décidée dans le temps réglementaire et va en prolongation ou aux tirs au but ; sinon NON."
+			},
+			"pt": {
+				"title": "Noruega vs Inglaterra será decidido depois dos noventa minutos?",
+				"description": "Se a Noruega e a Inglaterra precisarão de prolongamento ou penáltis para se separarem.",
+				"resolution": "Resolve-se como SIM se o confronto não for decidido no tempo regulamentar e for para o prolongamento ou desempate por penáltis; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Noruega vs Inglaterra será decidido após os noventa minutos?",
+				"description": "Se Noruega e Inglaterra vão precisar de prorrogação ou pênaltis para se separar.",
+				"resolution": "Resolve-se como SIM se o confronto não for decidido no tempo normal e for para a prorrogação ou disputa de pênaltis; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "挪威对英格兰会在90分钟后才分出胜负吗？",
+				"description": "挪威和英格兰是否需要加时赛或点球才能分出胜负。",
+				"resolution": "如果该场对决未能在常规时间内分出胜负，并进入加时赛或点球大战，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will more than two and a half goals be scored in Norway vs England?",
+		"description": "A read on whether Norway–England opens up or stays controlled.",
+		"resolution": "Resolves YES if 3 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verranno segnati più di due gol e mezzo in Norvegia-Inghilterra?",
+				"description": "Un'indicazione sul fatto che Norvegia-Inghilterra si apra o resti controllata.",
+				"resolution": "Si risolve SÌ se vengono segnati 3 o più gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcarán más de dos goles y medio en Noruega vs Inglaterra?",
+				"description": "Una lectura de si Noruega–Inglaterra se abre o se mantiene controlado.",
+				"resolution": "Se resuelve SÍ si se marcan 3 o más goles en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fallen in Norwegen gegen England mehr als zweieinhalb Tore?",
+				"description": "Ein Anhaltspunkt, ob Norwegen–England sich öffnet oder kontrolliert bleibt.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der regulären Spielzeit (90 Minuten plus Nachspielzeit) 3 oder mehr Tore fallen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Plus de deux buts et demi seront-ils marqués dans Norvège - Angleterre ?",
+				"description": "Un aperçu de si Norvège - Angleterre s'ouvre ou reste maîtrisé.",
+				"resolution": "Se résout par OUI si 3 buts ou plus sont marqués dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Serão marcados mais de dois golos e meio em Noruega vs Inglaterra?",
+				"description": "Uma leitura sobre se Noruega–Inglaterra se abre ou se mantém controlado.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais golos no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Serão marcados mais de dois gols e meio em Noruega vs Inglaterra?",
+				"description": "Uma leitura sobre se Noruega–Inglaterra se abre ou permanece controlado.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais gols no tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "挪威对英格兰的进球数会超过两球半吗？",
+				"description": "衡量挪威对英格兰这场比赛会打开局面还是保持谨慎。",
+				"resolution": "如果常规时间（90分钟加补时）内打入3球或更多，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will both teams score in Norway vs England?",
+		"description": "Whether both Norway and England find the net.",
+		"resolution": "Resolves YES if both teams score at least one goal in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Entrambe le squadre segneranno in Norvegia-Inghilterra?",
+				"description": "Se sia la Norvegia sia l'Inghilterra troveranno la rete.",
+				"resolution": "Si risolve SÌ se entrambe le squadre segnano almeno un gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcarán ambos equipos en Noruega vs Inglaterra?",
+				"description": "Si tanto Noruega como Inglaterra marcan.",
+				"resolution": "Se resuelve SÍ si ambos equipos marcan al menos un gol en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Treffen in Norwegen gegen England beide Teams?",
+				"description": "Ob sowohl Norwegen als auch England treffen.",
+				"resolution": "Wird mit JA aufgelöst, wenn beide Teams in der regulären Spielzeit (90 Minuten plus Nachspielzeit) mindestens ein Tor erzielen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Les deux équipes marqueront-elles dans Norvège - Angleterre ?",
+				"description": "Savoir si la Norvège et l'Angleterre trouvent toutes deux le chemin des filets.",
+				"resolution": "Se résout par OUI si les deux équipes marquent au moins un but dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Ambas as equipas vão marcar em Noruega vs Inglaterra?",
+				"description": "Se a Noruega e a Inglaterra balançam as redes.",
+				"resolution": "Resolve-se como SIM se ambas as equipas marcarem pelo menos um golo no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Ambas as seleções vão marcar em Noruega vs Inglaterra?",
+				"description": "Se tanto a Noruega quanto a Inglaterra vão balançar as redes.",
+				"resolution": "Resolve-se como SIM se ambas as seleções marcarem pelo menos um gol no tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "挪威对英格兰两队都会进球吗？",
+				"description": "挪威和英格兰是否都能破门。",
+				"resolution": "如果两队在常规时间（90分钟加补时）内各自至少打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a red card be shown in Norway vs England?",
+		"description": "Quarterfinal tension between Norway and England raises the risk of a dismissal.",
+		"resolution": "Resolves YES if a red card (straight or second yellow) is shown to any player during the match; otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà mostrato un cartellino rosso in Norvegia-Inghilterra?",
+				"description": "La tensione da quarto di finale tra Norvegia e Inghilterra aumenta il rischio di un'espulsione.",
+				"resolution": "Si risolve SÌ se viene mostrato un cartellino rosso (diretto o per seconda ammonizione) a un qualsiasi giocatore durante la partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se mostrará una tarjeta roja en Noruega vs Inglaterra?",
+				"description": "La tensión de los cuartos de final entre Noruega y Inglaterra aumenta el riesgo de una expulsión.",
+				"resolution": "Se resuelve SÍ si se muestra una tarjeta roja (directa o segunda amarilla) a cualquier jugador durante el partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird in Norwegen gegen England eine Rote Karte gezeigt?",
+				"description": "Die Viertelfinalspannung zwischen Norwegen und England erhöht das Risiko eines Platzverweises.",
+				"resolution": "Wird mit JA aufgelöst, wenn während des Spiels einem Spieler eine Rote Karte (glatt oder Gelb-Rot) gezeigt wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un carton rouge sera-t-il brandi dans Norvège - Angleterre ?",
+				"description": "La tension du quart de finale entre la Norvège et l'Angleterre accroît le risque d'une expulsion.",
+				"resolution": "Se résout par OUI si un carton rouge (direct ou deuxième jaune) est brandi à l'encontre d'un joueur au cours du match ; sinon NON."
+			},
+			"pt": {
+				"title": "Será mostrado um cartão vermelho em Noruega vs Inglaterra?",
+				"description": "A tensão dos quartos de final entre a Noruega e a Inglaterra aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se for mostrado um cartão vermelho (direto ou segundo amarelo) a qualquer jogador durante o jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será mostrado um cartão vermelho em Noruega vs Inglaterra?",
+				"description": "A tensão do quarto de final entre Noruega e Inglaterra aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se for mostrado um cartão vermelho (direto ou segundo amarelo) a qualquer jogador durante o jogo; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "挪威对英格兰会出现红牌吗？",
+				"description": "挪威与英格兰之间的四分之一决赛紧张气氛，增加了球员被罚下的风险。",
+				"resolution": "如果比赛中有任何球员被出示红牌（直接红牌或两黄变红），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a penalty be awarded in Norway vs England?",
+		"description": "A single spot-kick could settle Norway against England.",
+		"resolution": "Resolves YES if a penalty kick is awarded to either team during normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà assegnato un rigore in Norvegia-Inghilterra?",
+				"description": "Un solo calcio di rigore potrebbe decidere Norvegia-Inghilterra.",
+				"resolution": "Si risolve SÌ se viene assegnato un calcio di rigore a una delle due squadre nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se concederá un penalti en Noruega vs Inglaterra?",
+				"description": "Un solo penalti podría decidir el Noruega contra Inglaterra.",
+				"resolution": "Se resuelve SÍ si se concede un penalti a cualquiera de los dos equipos durante el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird in Norwegen gegen England ein Elfmeter verhängt?",
+				"description": "Ein einziger Elfmeter könnte Norwegen gegen England entscheiden.",
+				"resolution": "Wird mit JA aufgelöst, wenn einem der beiden Teams in der regulären Spielzeit (90 Minuten plus Nachspielzeit) ein Elfmeter zugesprochen wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un penalty sera-t-il accordé dans Norvège - Angleterre ?",
+				"description": "Un seul penalty pourrait décider Norvège - Angleterre.",
+				"resolution": "Se résout par OUI si un penalty est accordé à l'une des deux équipes dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Será assinalado um penálti em Noruega vs Inglaterra?",
+				"description": "Um único penálti poderia decidir o duelo entre a Noruega e a Inglaterra.",
+				"resolution": "Resolve-se como SIM se for assinalado um penálti a qualquer das equipas no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será assinalado um pênalti em Noruega vs Inglaterra?",
+				"description": "Uma única cobrança de pênalti poderia decidir Noruega contra Inglaterra.",
+				"resolution": "Resolve-se como SIM se for assinalado um pênalti para qualquer uma das seleções durante o tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "挪威对英格兰会判罚点球吗？",
+				"description": "一次点球或许就能决定挪威与英格兰之间的胜负。",
+				"resolution": "如果常规时间（90分钟加补时）内任意一方获判点球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the first fifteen minutes of Norway vs England?",
+		"description": "An early goal would set the tone for Norway against England.",
+		"resolution": "Resolves YES if a goal is scored within the first 15 minutes of the match; otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol nei primi quindici minuti di Norvegia-Inghilterra?",
+				"description": "Un gol in avvio darebbe il tono a Norvegia-Inghilterra.",
+				"resolution": "Si risolve SÌ se viene segnato un gol entro i primi 15 minuti della partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en los primeros quince minutos de Noruega vs Inglaterra?",
+				"description": "Un gol tempranero marcaría el tono del Noruega contra Inglaterra.",
+				"resolution": "Se resuelve SÍ si se marca un gol dentro de los primeros 15 minutos del partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt in den ersten fünfzehn Minuten von Norwegen gegen England ein Tor?",
+				"description": "Ein frühes Tor würde den Ton für Norwegen gegen England angeben.",
+				"resolution": "Wird mit JA aufgelöst, wenn innerhalb der ersten 15 Minuten des Spiels ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué dans les quinze premières minutes de Norvège - Angleterre ?",
+				"description": "Un but précoce donnerait le ton de Norvège - Angleterre.",
+				"resolution": "Se résout par OUI si un but est marqué dans les 15 premières minutes du match ; sinon NON."
+			},
+			"pt": {
+				"title": "Será marcado um golo nos primeiros quinze minutos de Noruega vs Inglaterra?",
+				"description": "Um golo madrugador daria o tom para o duelo entre a Noruega e a Inglaterra.",
+				"resolution": "Resolve-se como SIM se for marcado um golo nos primeiros 15 minutos do jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol nos primeiros quinze minutos de Noruega vs Inglaterra?",
+				"description": "Um gol cedo daria o tom para Noruega contra Inglaterra.",
+				"resolution": "Resolve-se como SIM se for marcado um gol nos primeiros 15 minutos do jogo; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "挪威对英格兰的前15分钟会有进球吗？",
+				"description": "一粒早早的进球将为挪威对英格兰定下基调。",
+				"resolution": "如果比赛前15分钟内打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the eightieth minute or later of Norway vs England?",
+		"description": "A late goal could settle Norway vs England or force extra time.",
+		"resolution": "Resolves YES if a goal is scored in the 80th minute or later of normal time (including stoppage); otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol dall'ottantesimo minuto in poi di Norvegia-Inghilterra?",
+				"description": "Un gol nel finale potrebbe decidere Norvegia-Inghilterra o forzare i tempi supplementari.",
+				"resolution": "Si risolve SÌ se viene segnato un gol all'80° minuto o più tardi nei tempi regolamentari (recupero compreso); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en el minuto ochenta o después en Noruega vs Inglaterra?",
+				"description": "Un gol tardío podría decidir Noruega vs Inglaterra o forzar la prórroga.",
+				"resolution": "Se resuelve SÍ si se marca un gol en el minuto 80 o después del tiempo reglamentario (incluido el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt in der achtzigsten Minute oder später von Norwegen gegen England ein Tor?",
+				"description": "Ein spätes Tor könnte Norwegen gegen England entscheiden oder eine Verlängerung erzwingen.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der 80. Minute oder später der regulären Spielzeit (inklusive Nachspielzeit) ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué à la quatre-vingtième minute ou plus tard de Norvège - Angleterre ?",
+				"description": "Un but tardif pourrait décider Norvège - Angleterre ou forcer la prolongation.",
+				"resolution": "Se résout par OUI si un but est marqué à la 80e minute ou plus tard du temps réglementaire (temps additionnel compris) ; sinon NON."
+			},
+			"pt": {
+				"title": "Será marcado um golo ao minuto oitenta ou mais tarde de Noruega vs Inglaterra?",
+				"description": "Um golo tardio poderia decidir Noruega vs Inglaterra ou forçar o prolongamento.",
+				"resolution": "Resolve-se como SIM se for marcado um golo ao minuto 80 ou mais tarde do tempo regulamentar (incluindo descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol a partir do octogésimo minuto em Noruega vs Inglaterra?",
+				"description": "Um gol tardio poderia decidir Noruega vs Inglaterra ou forçar a prorrogação.",
+				"resolution": "Resolve-se como SIM se for marcado um gol a partir do minuto 80 do tempo normal (incluindo acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "挪威对英格兰在第80分钟或之后会有进球吗？",
+				"description": "一粒晚到的进球可能决定挪威对英格兰的胜负，或将比赛拖入加时。",
+				"resolution": "如果在常规时间第80分钟或之后（含补时）打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Erling Haaland score against England?",
+		"description": "Erling Haaland, seven goals and chasing the Golden Boot, on the quarterfinal stage against England.",
+		"resolution": "Resolves YES if Erling Haaland scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Erling Haaland segnerà contro l'Inghilterra?",
+				"description": "Erling Haaland, sette gol e a caccia della Scarpa d'Oro, sul palcoscenico dei quarti di finale contro l'Inghilterra.",
+				"resolution": "Si risolve SÌ se Erling Haaland segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Erling Haaland ante Inglaterra?",
+				"description": "Erling Haaland, con siete goles y a la caza de la Bota de Oro, en el escenario de los cuartos de final ante Inglaterra.",
+				"resolution": "Se resuelve SÍ si Erling Haaland marca en el tiempo reglamentario o en la prórroga (excluidos los penales de la tanda); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Erling Haaland gegen England?",
+				"description": "Erling Haaland, sieben Tore und auf der Jagd nach dem Goldenen Schuh, auf der Viertelfinalbühne gegen England.",
+				"resolution": "Wird mit JA aufgelöst, wenn Erling Haaland in der regulären Spielzeit oder der Verlängerung trifft (Schüsse aus dem Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Erling Haaland marquera-t-il contre l'Angleterre ?",
+				"description": "Erling Haaland, sept buts et en course pour le Soulier d'or, sur la scène des quarts de finale face à l'Angleterre.",
+				"resolution": "Se résout par OUI si Erling Haaland marque dans le temps réglementaire ou la prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Erling Haaland marcará frente à Inglaterra?",
+				"description": "Erling Haaland, sete golos e a perseguir a Chuteira de Ouro, no palco dos quartos de final frente à Inglaterra.",
+				"resolution": "Resolve-se como SIM se Erling Haaland marcar no tempo regulamentar ou no prolongamento (excluindo os penáltis do desempate); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Erling Haaland marcará contra a Inglaterra?",
+				"description": "Erling Haaland, sete gols e em busca da Chuteira de Ouro, no palco do quarto de final contra a Inglaterra.",
+				"resolution": "Resolve-se como SIM se Erling Haaland marcar no tempo normal ou na prorrogação (excluídas as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Erling Haaland会对英格兰进球吗？",
+				"description": "打入七球、正追逐金靴奖的Erling Haaland，站上四分之一决赛的舞台迎战英格兰。",
+				"resolution": "如果Erling Haaland在常规时间或加时赛内进球（不含点球大战），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Harry Kane score against Norway?",
+		"description": "Harry Kane of England on the quarterfinal stage, chasing the goal that matters most.",
+		"resolution": "Resolves YES if Harry Kane scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Harry Kane segnerà contro la Norvegia?",
+				"description": "Harry Kane dell'Inghilterra sul palcoscenico dei quarti di finale, a caccia del gol che conta di più.",
+				"resolution": "Si risolve SÌ se Harry Kane segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Harry Kane ante Noruega?",
+				"description": "Harry Kane, de Inglaterra, en el escenario de los cuartos de final, a la caza del gol que más importa.",
+				"resolution": "Se resuelve SÍ si Harry Kane marca en el tiempo reglamentario o en la prórroga (excluidos los penales de la tanda); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Harry Kane gegen Norwegen?",
+				"description": "Harry Kane von England auf der Viertelfinalbühne, auf der Jagd nach dem Tor, das am meisten zählt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Harry Kane in der regulären Spielzeit oder der Verlängerung trifft (Schüsse aus dem Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Harry Kane marquera-t-il contre la Norvège ?",
+				"description": "Harry Kane, de l'Angleterre, sur la scène des quarts de finale, en quête du but qui compte le plus.",
+				"resolution": "Se résout par OUI si Harry Kane marque dans le temps réglementaire ou la prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Harry Kane marcará frente à Noruega?",
+				"description": "Harry Kane, da Inglaterra, no palco dos quartos de final, à procura do golo que mais conta.",
+				"resolution": "Resolve-se como SIM se Harry Kane marcar no tempo regulamentar ou no prolongamento (excluindo os penáltis do desempate); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Harry Kane marcará contra a Noruega?",
+				"description": "Harry Kane, da Inglaterra, no palco do quarto de final, em busca do gol que mais importa.",
+				"resolution": "Resolve-se como SIM se Harry Kane marcar no tempo normal ou na prorrogação (excluídas as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Harry Kane会对挪威进球吗？",
+				"description": "英格兰的Harry Kane站上四分之一决赛的舞台，追逐那粒最关键的进球。",
+				"resolution": "如果Harry Kane在常规时间或加时赛内进球（不含点球大战），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Jude Bellingham score or assist against Norway?",
+		"description": "Jude Bellingham is England's creative engine; a goal or assist would shape the tie.",
+		"resolution": "Resolves YES if Jude Bellingham scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-11T21:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Jude Bellingham segnerà o servirà un assist contro la Norvegia?",
+				"description": "Jude Bellingham è il motore creativo dell'Inghilterra; un gol o un assist darebbe forma alla sfida.",
+				"resolution": "Si risolve SÌ se Jude Bellingham segna o viene accreditato di un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o asistirá Jude Bellingham ante Noruega?",
+				"description": "Jude Bellingham es el motor creativo de Inglaterra; un gol o una asistencia marcaría la eliminatoria.",
+				"resolution": "Se resuelve SÍ si Jude Bellingham marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Jude Bellingham gegen Norwegen ein Tor vor?",
+				"description": "Jude Bellingham ist Englands kreativer Motor; ein Tor oder eine Vorlage würde das Duell prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Jude Bellingham in der regulären Spielzeit oder der Verlängerung laut offizieller Statistik ein Tor erzielt oder eine Torvorlage gutgeschrieben bekommt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Jude Bellingham marquera-t-il ou délivrera-t-il une passe décisive contre la Norvège ?",
+				"description": "Jude Bellingham est le moteur créatif de l'Angleterre ; un but ou une passe décisive marquerait la confrontation.",
+				"resolution": "Se résout par OUI si Jude Bellingham marque ou se voit créditer une passe décisive dans le temps réglementaire ou la prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Jude Bellingham marcará ou assistirá frente à Noruega?",
+				"description": "Jude Bellingham é o motor criativo da Inglaterra; um golo ou assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Jude Bellingham marcar ou for creditado com uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Jude Bellingham marcará ou dará uma assistência contra a Noruega?",
+				"description": "Jude Bellingham é o motor criativo da Inglaterra; um gol ou uma assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Jude Bellingham marcar ou receber o crédito de uma assistência no tempo normal ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Jude Bellingham会对挪威进球或助攻吗？",
+				"description": "Jude Bellingham是英格兰的创造力核心；一次进球或助攻将左右这场对决。",
+				"resolution": "如果根据官方数据，Jude Bellingham在常规时间或加时赛内进球或获得助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Argentina reach the Semifinals?",
+		"description": "The world champions, fresh off a two-goal comeback against Egypt, against a Switzerland side in its first quarterfinal in 72 years. In single-elimination, the loser goes home.",
+		"resolution": "Resolves YES if Argentina win the tie (result after extra time and, if needed, penalties); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "L'Argentina raggiungerà le semifinali?",
+				"description": "I campioni del mondo, reduci da una rimonta di due gol contro l'Egitto, contro una Svizzera al suo primo quarto di finale in 72 anni. Nell'eliminazione diretta, chi perde torna a casa.",
+				"resolution": "Si risolve SÌ se l'Argentina vince la sfida (risultato dopo i tempi supplementari e, se necessario, i calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Llegará Argentina a las semifinales?",
+				"description": "Los campeones del mundo, recién salidos de una remontada de dos goles ante Egipto, frente a una Suiza que disputa su primer cuarto de final en 72 años. En la eliminación directa, el perdedor se va a casa.",
+				"resolution": "Se resuelve SÍ si Argentina gana la eliminatoria (resultado tras la prórroga y, de ser necesario, los penales); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erreicht Argentinien das Halbfinale?",
+				"description": "Die Weltmeister, gerade mit einem Comeback aus zwei Toren Rückstand gegen Ägypten, gegen eine Schweizer Mannschaft in ihrem ersten Viertelfinale seit 72 Jahren. Im K.-o.-System geht der Verlierer nach Hause.",
+				"resolution": "Wird mit JA aufgelöst, wenn Argentinien das Duell gewinnt (Ergebnis nach Verlängerung und, falls nötig, Elfmeterschießen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "L'Argentine atteindra-t-elle les demi-finales ?",
+				"description": "Les champions du monde, tout juste sortis d'un renversement de deux buts face à l'Égypte, face à une Suisse disputant son premier quart de finale depuis 72 ans. En élimination directe, le perdant rentre à la maison.",
+				"resolution": "Se résout par OUI si l'Argentine remporte la confrontation (résultat après prolongation et, si nécessaire, tirs au but) ; sinon NON."
+			},
+			"pt": {
+				"title": "A Argentina chegará às meias-finais?",
+				"description": "Os campeões mundiais, vindos de uma reviravolta de dois golos frente ao Egito, contra uma Suíça no seu primeiro quarto de final em 72 anos. Na eliminatória a jogo único, quem perde vai para casa.",
+				"resolution": "Resolve-se como SIM se a Argentina vencer o confronto (resultado após o prolongamento e, se necessário, penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A Argentina chegará às semifinais?",
+				"description": "Os campeões mundiais, logo após uma virada de dois gols contra o Egito, contra uma Suíça em seu primeiro quarto de final em 72 anos. No mata-mata, quem perde vai para casa.",
+				"resolution": "Resolve-se como SIM se a Argentina vencer o confronto (resultado após a prorrogação e, se necessário, os pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "阿根廷能晋级半决赛吗？",
+				"description": "世界冠军刚刚在对阵埃及时完成两球逆转，对阵72年来首次闯入四分之一决赛的瑞士。在单场淘汰赛中，负者出局。",
+				"resolution": "如果阿根廷赢得该场对决（加时赛，如有必要则点球大战后的结果），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Argentina vs Switzerland be decided after ninety minutes?",
+		"description": "Whether Argentina and Switzerland need extra time or penalties to separate them.",
+		"resolution": "Resolves YES if the tie is not settled in normal time and goes to extra time or a penalty shootout; otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Argentina-Svizzera si deciderà oltre i novanta minuti?",
+				"description": "Se Argentina e Svizzera avranno bisogno dei tempi supplementari o dei calci di rigore per separarsi.",
+				"resolution": "Si risolve SÌ se la sfida non si decide nei tempi regolamentari e va ai tempi supplementari o ai calci di rigore; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se decidirá Argentina vs Suiza después de los noventa minutos?",
+				"description": "Si Argentina y Suiza necesitan prórroga o penales para desempatar.",
+				"resolution": "Se resuelve SÍ si la eliminatoria no se resuelve en el tiempo reglamentario y llega a la prórroga o a una tanda de penales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird Argentinien gegen die Schweiz erst nach neunzig Minuten entschieden?",
+				"description": "Ob Argentinien und die Schweiz Verlängerung oder Elfmeterschießen brauchen, um sich zu trennen.",
+				"resolution": "Wird mit JA aufgelöst, wenn das Duell nicht in der regulären Spielzeit entschieden wird und in die Verlängerung oder ins Elfmeterschießen geht; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Argentine - Suisse se décidera-t-il après les quatre-vingt-dix minutes ?",
+				"description": "Savoir si l'Argentine et la Suisse auront besoin de la prolongation ou des tirs au but pour se départager.",
+				"resolution": "Se résout par OUI si la confrontation n'est pas décidée dans le temps réglementaire et va en prolongation ou aux tirs au but ; sinon NON."
+			},
+			"pt": {
+				"title": "Argentina vs Suíça será decidido depois dos noventa minutos?",
+				"description": "Se a Argentina e a Suíça precisarão de prolongamento ou penáltis para se separarem.",
+				"resolution": "Resolve-se como SIM se o confronto não for decidido no tempo regulamentar e for para o prolongamento ou desempate por penáltis; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Argentina vs Suíça será decidido após os noventa minutos?",
+				"description": "Se Argentina e Suíça vão precisar de prorrogação ou pênaltis para se separar.",
+				"resolution": "Resolve-se como SIM se o confronto não for decidido no tempo normal e for para a prorrogação ou disputa de pênaltis; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "阿根廷对瑞士会在90分钟后才分出胜负吗？",
+				"description": "阿根廷和瑞士是否需要加时赛或点球才能分出胜负。",
+				"resolution": "如果该场对决未能在常规时间内分出胜负，并进入加时赛或点球大战，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will more than two and a half goals be scored in Argentina vs Switzerland?",
+		"description": "A read on whether Argentina–Switzerland opens up or stays controlled.",
+		"resolution": "Resolves YES if 3 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verranno segnati più di due gol e mezzo in Argentina-Svizzera?",
+				"description": "Un'indicazione sul fatto che Argentina-Svizzera si apra o resti controllata.",
+				"resolution": "Si risolve SÌ se vengono segnati 3 o più gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcarán más de dos goles y medio en Argentina vs Suiza?",
+				"description": "Una lectura de si Argentina–Suiza se abre o se mantiene controlado.",
+				"resolution": "Se resuelve SÍ si se marcan 3 o más goles en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fallen in Argentinien gegen die Schweiz mehr als zweieinhalb Tore?",
+				"description": "Ein Anhaltspunkt, ob Argentinien–Schweiz sich öffnet oder kontrolliert bleibt.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der regulären Spielzeit (90 Minuten plus Nachspielzeit) 3 oder mehr Tore fallen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Plus de deux buts et demi seront-ils marqués dans Argentine - Suisse ?",
+				"description": "Un aperçu de si Argentine - Suisse s'ouvre ou reste maîtrisé.",
+				"resolution": "Se résout par OUI si 3 buts ou plus sont marqués dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Serão marcados mais de dois golos e meio em Argentina vs Suíça?",
+				"description": "Uma leitura sobre se Argentina–Suíça se abre ou se mantém controlado.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais golos no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Serão marcados mais de dois gols e meio em Argentina vs Suíça?",
+				"description": "Uma leitura sobre se Argentina–Suíça se abre ou permanece controlado.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais gols no tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "阿根廷对瑞士的进球数会超过两球半吗？",
+				"description": "衡量阿根廷对瑞士这场比赛会打开局面还是保持谨慎。",
+				"resolution": "如果常规时间（90分钟加补时）内打入3球或更多，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will both teams score in Argentina vs Switzerland?",
+		"description": "Whether both Argentina and Switzerland find the net.",
+		"resolution": "Resolves YES if both teams score at least one goal in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Entrambe le squadre segneranno in Argentina-Svizzera?",
+				"description": "Se sia l'Argentina sia la Svizzera troveranno la rete.",
+				"resolution": "Si risolve SÌ se entrambe le squadre segnano almeno un gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcarán ambos equipos en Argentina vs Suiza?",
+				"description": "Si tanto Argentina como Suiza marcan.",
+				"resolution": "Se resuelve SÍ si ambos equipos marcan al menos un gol en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Treffen in Argentinien gegen die Schweiz beide Teams?",
+				"description": "Ob sowohl Argentinien als auch die Schweiz treffen.",
+				"resolution": "Wird mit JA aufgelöst, wenn beide Teams in der regulären Spielzeit (90 Minuten plus Nachspielzeit) mindestens ein Tor erzielen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Les deux équipes marqueront-elles dans Argentine - Suisse ?",
+				"description": "Savoir si l'Argentine et la Suisse trouvent toutes deux le chemin des filets.",
+				"resolution": "Se résout par OUI si les deux équipes marquent au moins un but dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Ambas as equipas vão marcar em Argentina vs Suíça?",
+				"description": "Se a Argentina e a Suíça balançam as redes.",
+				"resolution": "Resolve-se como SIM se ambas as equipas marcarem pelo menos um golo no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Ambas as seleções vão marcar em Argentina vs Suíça?",
+				"description": "Se tanto a Argentina quanto a Suíça vão balançar as redes.",
+				"resolution": "Resolve-se como SIM se ambas as seleções marcarem pelo menos um gol no tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "阿根廷对瑞士两队都会进球吗？",
+				"description": "阿根廷和瑞士是否都能破门。",
+				"resolution": "如果两队在常规时间（90分钟加补时）内各自至少打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a red card be shown in Argentina vs Switzerland?",
+		"description": "Quarterfinal tension between Argentina and Switzerland raises the risk of a dismissal.",
+		"resolution": "Resolves YES if a red card (straight or second yellow) is shown to any player during the match; otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà mostrato un cartellino rosso in Argentina-Svizzera?",
+				"description": "La tensione da quarto di finale tra Argentina e Svizzera aumenta il rischio di un'espulsione.",
+				"resolution": "Si risolve SÌ se viene mostrato un cartellino rosso (diretto o per seconda ammonizione) a un qualsiasi giocatore durante la partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se mostrará una tarjeta roja en Argentina vs Suiza?",
+				"description": "La tensión de los cuartos de final entre Argentina y Suiza aumenta el riesgo de una expulsión.",
+				"resolution": "Se resuelve SÍ si se muestra una tarjeta roja (directa o segunda amarilla) a cualquier jugador durante el partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird in Argentinien gegen die Schweiz eine Rote Karte gezeigt?",
+				"description": "Die Viertelfinalspannung zwischen Argentinien und der Schweiz erhöht das Risiko eines Platzverweises.",
+				"resolution": "Wird mit JA aufgelöst, wenn während des Spiels einem Spieler eine Rote Karte (glatt oder Gelb-Rot) gezeigt wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un carton rouge sera-t-il brandi dans Argentine - Suisse ?",
+				"description": "La tension du quart de finale entre l'Argentine et la Suisse accroît le risque d'une expulsion.",
+				"resolution": "Se résout par OUI si un carton rouge (direct ou deuxième jaune) est brandi à l'encontre d'un joueur au cours du match ; sinon NON."
+			},
+			"pt": {
+				"title": "Será mostrado um cartão vermelho em Argentina vs Suíça?",
+				"description": "A tensão dos quartos de final entre a Argentina e a Suíça aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se for mostrado um cartão vermelho (direto ou segundo amarelo) a qualquer jogador durante o jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será mostrado um cartão vermelho em Argentina vs Suíça?",
+				"description": "A tensão do quarto de final entre Argentina e Suíça aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se for mostrado um cartão vermelho (direto ou segundo amarelo) a qualquer jogador durante o jogo; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "阿根廷对瑞士会出现红牌吗？",
+				"description": "阿根廷与瑞士之间的四分之一决赛紧张气氛，增加了球员被罚下的风险。",
+				"resolution": "如果比赛中有任何球员被出示红牌（直接红牌或两黄变红），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a penalty be awarded in Argentina vs Switzerland?",
+		"description": "A single spot-kick could settle Argentina against Switzerland.",
+		"resolution": "Resolves YES if a penalty kick is awarded to either team during normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà assegnato un rigore in Argentina-Svizzera?",
+				"description": "Un solo calcio di rigore potrebbe decidere Argentina-Svizzera.",
+				"resolution": "Si risolve SÌ se viene assegnato un calcio di rigore a una delle due squadre nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se concederá un penalti en Argentina vs Suiza?",
+				"description": "Un solo penalti podría decidir el Argentina contra Suiza.",
+				"resolution": "Se resuelve SÍ si se concede un penalti a cualquiera de los dos equipos durante el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird in Argentinien gegen die Schweiz ein Elfmeter verhängt?",
+				"description": "Ein einziger Elfmeter könnte Argentinien gegen die Schweiz entscheiden.",
+				"resolution": "Wird mit JA aufgelöst, wenn einem der beiden Teams in der regulären Spielzeit (90 Minuten plus Nachspielzeit) ein Elfmeter zugesprochen wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un penalty sera-t-il accordé dans Argentine - Suisse ?",
+				"description": "Un seul penalty pourrait décider Argentine - Suisse.",
+				"resolution": "Se résout par OUI si un penalty est accordé à l'une des deux équipes dans le temps réglementaire (90 minutes plus temps additionnel) ; sinon NON."
+			},
+			"pt": {
+				"title": "Será assinalado um penálti em Argentina vs Suíça?",
+				"description": "Um único penálti poderia decidir o duelo entre a Argentina e a Suíça.",
+				"resolution": "Resolve-se como SIM se for assinalado um penálti a qualquer das equipas no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será assinalado um pênalti em Argentina vs Suíça?",
+				"description": "Uma única cobrança de pênalti poderia decidir Argentina contra Suíça.",
+				"resolution": "Resolve-se como SIM se for assinalado um pênalti para qualquer uma das seleções durante o tempo normal (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "阿根廷对瑞士会判罚点球吗？",
+				"description": "一次点球或许就能决定阿根廷与瑞士之间的胜负。",
+				"resolution": "如果常规时间（90分钟加补时）内任意一方获判点球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the first fifteen minutes of Argentina vs Switzerland?",
+		"description": "An early goal would set the tone for Argentina against Switzerland.",
+		"resolution": "Resolves YES if a goal is scored within the first 15 minutes of the match; otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol nei primi quindici minuti di Argentina-Svizzera?",
+				"description": "Un gol in avvio darebbe il tono a Argentina-Svizzera.",
+				"resolution": "Si risolve SÌ se viene segnato un gol entro i primi 15 minuti della partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en los primeros quince minutos de Argentina vs Suiza?",
+				"description": "Un gol tempranero marcaría el tono del Argentina contra Suiza.",
+				"resolution": "Se resuelve SÍ si se marca un gol dentro de los primeros 15 minutos del partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt in den ersten fünfzehn Minuten von Argentinien gegen die Schweiz ein Tor?",
+				"description": "Ein frühes Tor würde den Ton für Argentinien gegen die Schweiz angeben.",
+				"resolution": "Wird mit JA aufgelöst, wenn innerhalb der ersten 15 Minuten des Spiels ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué dans les quinze premières minutes d'Argentine - Suisse ?",
+				"description": "Un but précoce donnerait le ton d'Argentine - Suisse.",
+				"resolution": "Se résout par OUI si un but est marqué dans les 15 premières minutes du match ; sinon NON."
+			},
+			"pt": {
+				"title": "Será marcado um golo nos primeiros quinze minutos de Argentina vs Suíça?",
+				"description": "Um golo madrugador daria o tom para o duelo entre a Argentina e a Suíça.",
+				"resolution": "Resolve-se como SIM se for marcado um golo nos primeiros 15 minutos do jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol nos primeiros quinze minutos de Argentina vs Suíça?",
+				"description": "Um gol cedo daria o tom para Argentina contra Suíça.",
+				"resolution": "Resolve-se como SIM se for marcado um gol nos primeiros 15 minutos do jogo; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "阿根廷对瑞士的前15分钟会有进球吗？",
+				"description": "一粒早早的进球将为阿根廷对瑞士定下基调。",
+				"resolution": "如果比赛前15分钟内打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the eightieth minute or later of Argentina vs Switzerland?",
+		"description": "A late goal could settle Argentina vs Switzerland or force extra time.",
+		"resolution": "Resolves YES if a goal is scored in the 80th minute or later of normal time (including stoppage); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol dall'ottantesimo minuto in poi di Argentina-Svizzera?",
+				"description": "Un gol nel finale potrebbe decidere Argentina-Svizzera o forzare i tempi supplementari.",
+				"resolution": "Si risolve SÌ se viene segnato un gol all'80° minuto o più tardi nei tempi regolamentari (recupero compreso); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en el minuto ochenta o después en Argentina vs Suiza?",
+				"description": "Un gol tardío podría decidir Argentina vs Suiza o forzar la prórroga.",
+				"resolution": "Se resuelve SÍ si se marca un gol en el minuto 80 o después del tiempo reglamentario (incluido el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt in der achtzigsten Minute oder später von Argentinien gegen die Schweiz ein Tor?",
+				"description": "Ein spätes Tor könnte Argentinien gegen die Schweiz entscheiden oder eine Verlängerung erzwingen.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der 80. Minute oder später der regulären Spielzeit (inklusive Nachspielzeit) ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué à la quatre-vingtième minute ou plus tard d'Argentine - Suisse ?",
+				"description": "Un but tardif pourrait décider Argentine - Suisse ou forcer la prolongation.",
+				"resolution": "Se résout par OUI si un but est marqué à la 80e minute ou plus tard du temps réglementaire (temps additionnel compris) ; sinon NON."
+			},
+			"pt": {
+				"title": "Será marcado um golo ao minuto oitenta ou mais tarde de Argentina vs Suíça?",
+				"description": "Um golo tardio poderia decidir Argentina vs Suíça ou forçar o prolongamento.",
+				"resolution": "Resolve-se como SIM se for marcado um golo ao minuto 80 ou mais tarde do tempo regulamentar (incluindo descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol a partir do octogésimo minuto em Argentina vs Suíça?",
+				"description": "Um gol tardio poderia decidir Argentina vs Suíça ou forçar a prorrogação.",
+				"resolution": "Resolve-se como SIM se for marcado um gol a partir do minuto 80 do tempo normal (incluindo acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "阿根廷对瑞士在第80分钟或之后会有进球吗？",
+				"description": "一粒晚到的进球可能决定阿根廷对瑞士的胜负，或将比赛拖入加时。",
+				"resolution": "如果在常规时间第80分钟或之后（含补时）打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Lionel Messi score or assist against Switzerland?",
+		"description": "Lionel Messi leads the Golden Boot race on eight goals; a goal or assist would shape the tie.",
+		"resolution": "Resolves YES if Lionel Messi scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Lionel Messi segnerà o servirà un assist contro la Svizzera?",
+				"description": "Lionel Messi guida la corsa alla Scarpa d'Oro con otto gol; un gol o un assist darebbe forma alla sfida.",
+				"resolution": "Si risolve SÌ se Lionel Messi segna o viene accreditato di un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o asistirá Lionel Messi ante Suiza?",
+				"description": "Lionel Messi lidera la carrera por la Bota de Oro con ocho goles; un gol o una asistencia marcaría la eliminatoria.",
+				"resolution": "Se resuelve SÍ si Lionel Messi marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Lionel Messi gegen die Schweiz ein Tor vor?",
+				"description": "Lionel Messi führt das Rennen um den Goldenen Schuh mit acht Toren an; ein Tor oder eine Vorlage würde das Duell prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Lionel Messi in der regulären Spielzeit oder der Verlängerung laut offizieller Statistik ein Tor erzielt oder eine Torvorlage gutgeschrieben bekommt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Lionel Messi marquera-t-il ou délivrera-t-il une passe décisive contre la Suisse ?",
+				"description": "Lionel Messi mène la course au Soulier d'or avec huit buts ; un but ou une passe décisive marquerait la confrontation.",
+				"resolution": "Se résout par OUI si Lionel Messi marque ou se voit créditer une passe décisive dans le temps réglementaire ou la prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Lionel Messi marcará ou assistirá frente à Suíça?",
+				"description": "Lionel Messi lidera a corrida pela Chuteira de Ouro com oito golos; um golo ou assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Lionel Messi marcar ou for creditado com uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Lionel Messi marcará ou dará uma assistência contra a Suíça?",
+				"description": "Lionel Messi lidera a disputa da Chuteira de Ouro com oito gols; um gol ou uma assistência moldaria o confronto.",
+				"resolution": "Resolve-se como SIM se Lionel Messi marcar ou receber o crédito de uma assistência no tempo normal ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Lionel Messi会对瑞士进球或助攻吗？",
+				"description": "Lionel Messi以八球领跑金靴奖争夺；一次进球或助攻将左右这场对决。",
+				"resolution": "如果根据官方数据，Lionel Messi在常规时间或加时赛内进球或获得助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Julián Álvarez score against Switzerland?",
+		"description": "Julián Álvarez of Argentina on the quarterfinal stage, chasing the goal that matters most.",
+		"resolution": "Resolves YES if Julián Álvarez scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Julián Álvarez segnerà contro la Svizzera?",
+				"description": "Julián Álvarez dell'Argentina sul palcoscenico dei quarti di finale, a caccia del gol che conta di più.",
+				"resolution": "Si risolve SÌ se Julián Álvarez segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Julián Álvarez ante Suiza?",
+				"description": "Julián Álvarez, de Argentina, en el escenario de los cuartos de final, a la caza del gol que más importa.",
+				"resolution": "Se resuelve SÍ si Julián Álvarez marca en el tiempo reglamentario o en la prórroga (excluidos los penales de la tanda); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Julián Álvarez gegen die Schweiz?",
+				"description": "Julián Álvarez von Argentinien auf der Viertelfinalbühne, auf der Jagd nach dem Tor, das am meisten zählt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Julián Álvarez in der regulären Spielzeit oder der Verlängerung trifft (Schüsse aus dem Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Julián Álvarez marquera-t-il contre la Suisse ?",
+				"description": "Julián Álvarez, de l'Argentine, sur la scène des quarts de finale, en quête du but qui compte le plus.",
+				"resolution": "Se résout par OUI si Julián Álvarez marque dans le temps réglementaire ou la prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Julián Álvarez marcará frente à Suíça?",
+				"description": "Julián Álvarez, da Argentina, no palco dos quartos de final, à procura do golo que mais conta.",
+				"resolution": "Resolve-se como SIM se Julián Álvarez marcar no tempo regulamentar ou no prolongamento (excluindo os penáltis do desempate); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Julián Álvarez marcará contra a Suíça?",
+				"description": "Julián Álvarez, da Argentina, no palco do quarto de final, em busca do gol que mais importa.",
+				"resolution": "Resolve-se como SIM se Julián Álvarez marcar no tempo normal ou na prorrogação (excluídas as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Julián Álvarez会对瑞士进球吗？",
+				"description": "阿根廷的Julián Álvarez站上四分之一决赛的舞台，追逐那粒最关键的进球。",
+				"resolution": "如果Julián Álvarez在常规时间或加时赛内进球（不含点球大战），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Breel Embolo score against Argentina?",
+		"description": "Breel Embolo of Switzerland on the quarterfinal stage, chasing the goal that matters most.",
+		"resolution": "Resolves YES if Breel Embolo scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-12T01:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"translations": {
+			"it": {
+				"title": "Breel Embolo segnerà contro l'Argentina?",
+				"description": "Breel Embolo della Svizzera sul palcoscenico dei quarti di finale, a caccia del gol che conta di più.",
+				"resolution": "Si risolve SÌ se Breel Embolo segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Breel Embolo ante Argentina?",
+				"description": "Breel Embolo, de Suiza, en el escenario de los cuartos de final, a la caza del gol que más importa.",
+				"resolution": "Se resuelve SÍ si Breel Embolo marca en el tiempo reglamentario o en la prórroga (excluidos los penales de la tanda); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Breel Embolo gegen Argentinien?",
+				"description": "Breel Embolo von der Schweiz auf der Viertelfinalbühne, auf der Jagd nach dem Tor, das am meisten zählt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Breel Embolo in der regulären Spielzeit oder der Verlängerung trifft (Schüsse aus dem Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Breel Embolo marquera-t-il contre l'Argentine ?",
+				"description": "Breel Embolo, de la Suisse, sur la scène des quarts de finale, en quête du but qui compte le plus.",
+				"resolution": "Se résout par OUI si Breel Embolo marque dans le temps réglementaire ou la prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Breel Embolo marcará frente à Argentina?",
+				"description": "Breel Embolo, da Suíça, no palco dos quartos de final, à procura do golo que mais conta.",
+				"resolution": "Resolve-se como SIM se Breel Embolo marcar no tempo regulamentar ou no prolongamento (excluindo os penáltis do desempate); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Breel Embolo marcará contra a Argentina?",
+				"description": "Breel Embolo, da Suíça, no palco do quarto de final, em busca do gol que mais importa.",
+				"resolution": "Resolve-se como SIM se Breel Embolo marcar no tempo normal ou na prorrogação (excluídas as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Breel Embolo会对阿根廷进球吗？",
+				"description": "瑞士的Breel Embolo站上四分之一决赛的舞台，追逐那粒最关键的进球。",
+				"resolution": "如果Breel Embolo在常规时间或加时赛内进球（不含点球大战），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	}
+]
