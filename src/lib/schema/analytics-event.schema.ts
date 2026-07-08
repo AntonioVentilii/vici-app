@@ -262,3 +262,13 @@ export const DeleteAnalyticsEventsArgsSchema = j.strictObject({
 export const DeleteAnalyticsEventsResultSchema = j.strictObject({
 	deleted: j.number()
 });
+
+/**
+ * Result of `getAnalyticsUserStats` — the all-time registered-account
+ * count for the cockpit's "Registered" tile. `registered` counts every
+ * `profiles` doc, i.e. all accounts ever created including soft-deleted
+ * ones (see `getAnalyticsUserStatsFn`). No args: the count is global.
+ */
+export const AnalyticsUserStatsSchema = j.strictObject({
+	registered: j.number()
+});

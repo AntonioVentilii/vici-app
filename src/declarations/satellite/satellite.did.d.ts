@@ -340,6 +340,9 @@ export interface AppGetAnalyticsSummaryResult {
 		start: number;
 	}>;
 }
+export interface AppGetAnalyticsUserStatsResult {
+	registered: number;
+}
 export interface AppGetCurrentTournamentResult {
 	tournament:
 		| []
@@ -1393,6 +1396,7 @@ export interface _SERVICE {
 		[AppGetAnalyticsSummaryArgs],
 		AppGetAnalyticsSummaryResult
 	>;
+	app_get_analytics_user_stats: ActorMethod<[], AppGetAnalyticsUserStatsResult>;
 	app_get_current_tournament: ActorMethod<[], AppGetCurrentTournamentResult>;
 	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
 	app_get_market_translation: ActorMethod<

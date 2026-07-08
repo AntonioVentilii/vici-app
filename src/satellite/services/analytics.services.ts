@@ -251,6 +251,34 @@ export const getAnalyticsSummaryFn = ({ days }: { days: number }): { rows: Summa
 	return { rows };
 };
 
+/**
+ * Admin-gated all-time registered-account count for the cockpit's
+ * "Registered" tile. Counts every doc in `PROFILES` — i.e. all accounts
+ * ever created, INCLUDING soft-deleted ones: Delete account v2 only sets
+ * `deletedAtMs` and retains the doc (recoverable within the window), so a
+ * soft-deleted profile is still a registered account. This matches the
+ * tile's "all-time accounts created" semantic. Accounts hard-deleted past
+ * the recovery window are necessarily absent because their doc no longer
+ * exists. Just the doc count — no per-doc decode — so the scan stays cheap
+ * (mirrors `listLeaderboard`, which already materialises the full
+ * `PROFILES` collection with the plain caller).
+ */
+export const getAnalyticsUserStatsFn = (): { registered: number } => {
+	const caller = msgCaller();
+
+	if (!isAdmin({ caller })) {
+		throw new Error('Analytics is restricted to admins.');
+	}
+
+	const { items } = listDocsStore({
+		collection: Collection.PROFILES,
+		caller,
+		params: {}
+	});
+
+	return { registered: items.length };
+};
+
 /** Page-size cap so one export call can't scan/return an unbounded set. */
 const MAX_EXPORT_LIMIT = 1000;
 
