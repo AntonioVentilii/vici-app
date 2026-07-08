@@ -291,8 +291,14 @@ export const getAnalyticsUserStatsFn = (): { registered: number } => {
 	return { registered: Number(count) };
 };
 
-/** Page-size cap so one export call can't scan/return an unbounded set. */
-const MAX_EXPORT_LIMIT = 1000;
+/** Hard page-size ceiling for one export call. This is an IC QUERY, bounded by the
+ * ~5B-instruction message budget: reading/decoding a page of behavioural docs costs
+ * instructions, and a too-large page rejects the WHOLE call with IC0522. Measured
+ * against the live satellite, a 500-doc page already exceeds the budget and ~100 was
+ * the safe edge — so the cockpit reader drives a smaller page (SYNC_PAGE_SIZE) and
+ * this ceiling is the last line of defence against a client over-asking. Keep it
+ * conservatively below the measured edge. */
+const MAX_EXPORT_LIMIT = 100;
 
 /** One flat export row — mirrors AnalyticsEventExportRowSchema. */
 interface AnalyticsEventExportRow {
