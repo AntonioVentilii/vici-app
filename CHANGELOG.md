@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.18](https://github.com/AntonioVentilii/vici-app/compare/v1.8.17...v1.8.18) (2026-07-08)
+
+
+### Features
+
+* **analytics:** emit the silent taxonomy events on their existing write paths ([#1112](https://github.com/AntonioVentilii/vici-app/issues/1112)) ([14498ca](https://github.com/AntonioVentilii/vici-app/commit/14498ca097306981cee4d9bbb343b5e5dc02d11d))
+* **satellite:** add app_get_analytics_user_stats query ([#1110](https://github.com/AntonioVentilii/vici-app/issues/1110)) ([0f253e3](https://github.com/AntonioVentilii/vici-app/commit/0f253e39f9582541b056ce81d5083132e267997c))
+
 ## [1.8.17](https://github.com/AntonioVentilii/vici-app/compare/v1.8.16...v1.8.17) (2026-07-08)
 
 
