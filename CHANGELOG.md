@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.19](https://github.com/AntonioVentilii/vici-app/compare/v1.8.18...v1.8.19) (2026-07-08)
+
+
+### Continuous Integration
+
+* **deploy:** static JUNO_TOKEN auth only — stop the access-key bleed ([#1113](https://github.com/AntonioVentilii/vici-app/issues/1113)) ([6f3c60e](https://github.com/AntonioVentilii/vici-app/commit/6f3c60e729981804469563006d2ea3f4312a3c10))
+
 ## [1.8.18](https://github.com/AntonioVentilii/vici-app/compare/v1.8.17...v1.8.18) (2026-07-08)
 
 
