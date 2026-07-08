@@ -233,11 +233,16 @@ export const onAffiliationDeleteForAnalytics = (ctx: OnDeleteDocContext): void =
 			return;
 		}
 
-		const [member, kind, affiliationIdentifier] = key.split('/');
+		// `split` yields (possibly empty) strings, never nullish — require
+		// exactly three non-empty segments so a malformed key can't emit an
+		// event with an empty principal or dimension.
+		const segments = key.split('/');
 
-		if (isNullish(member) || isNullish(kind) || isNullish(affiliationIdentifier)) {
+		if (segments.length !== 3 || segments.some((segment) => segment.length === 0)) {
 			return;
 		}
+
+		const [member, kind, affiliationIdentifier] = segments;
 
 		captureServerEvents({
 			events: [

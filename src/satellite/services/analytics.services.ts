@@ -504,6 +504,17 @@ export interface ServerEventInput {
 }
 
 /**
+ * Monotonic per-instance sequence for server-event doc keys. `time()` is
+ * constant within a single IC message execution, so two `captureServerEvents`
+ * calls inside the same update (e.g. `delete_confirmed` then
+ * `delete_succeeded` in `deleteMyAccountFn`) would otherwise both key their
+ * first event `${stamp}-server-0` and the later write would collide with the
+ * earlier one. The sequence disambiguates calls within a message; across
+ * messages the ns stamp already differs, so keys stay chronologically sorted.
+ */
+let serverCaptureSeq = 0;
+
+/**
  * Write server-originated events into the `events` collection — the capture
  * path for behaviour that never touches a browser (VXP payouts, settlements).
  * Mirrors `trackEventsFn`'s doc write (admin caller, `${ns}-…-${index}` key
@@ -518,6 +529,8 @@ export const captureServerEvents = ({ events }: { events: ServerEventInput[] }):
 	const admin = adminCaller();
 	const tsMs = nowMs();
 	const stamp = time();
+	const seq = serverCaptureSeq;
+	serverCaptureSeq += 1;
 
 	events.forEach((event, index) => {
 		const doc: AnalyticsEventDoc = {
@@ -530,7 +543,7 @@ export const captureServerEvents = ({ events }: { events: ServerEventInput[] }):
 
 		setDocStore({
 			collection: Collection.EVENTS,
-			key: `${stamp}-server-${index}`,
+			key: `${stamp}-server-${seq}-${index}`,
 			caller: admin,
 			doc: {
 				data: encodeDocData<AnalyticsEventDoc>(doc)
