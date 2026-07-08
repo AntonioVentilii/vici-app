@@ -42,6 +42,7 @@ import { Principal } from '@icp-sdk/core/principal';
 import type { OnSetDocContext } from '@junobuild/functions';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
+	countDocsStore,
 	decodeDocData,
 	deleteDocStore,
 	encodeDocData,
@@ -259,9 +260,14 @@ export const getAnalyticsSummaryFn = ({ days }: { days: number }): { rows: Summa
  * soft-deleted profile is still a registered account. This matches the
  * tile's "all-time accounts created" semantic. Accounts hard-deleted past
  * the recovery window are necessarily absent because their doc no longer
- * exists. Just the doc count — no per-doc decode — so the scan stays cheap
- * (mirrors `listLeaderboard`, which already materialises the full
- * `PROFILES` collection with the plain caller).
+ * exists.
+ *
+ * Uses `countDocsStore` rather than `listDocsStore(...).items.length`: the
+ * latter materialises the whole collection (keys + docs) into the query
+ * just to size it, which grows unbounded with the user base and would blow
+ * the 5B-instruction query budget (IC0522) — the same trap that broke the
+ * events export. `countDocsStore` returns the count without loading a
+ * single doc.
  */
 export const getAnalyticsUserStatsFn = (): { registered: number } => {
 	const caller = msgCaller();
@@ -270,13 +276,19 @@ export const getAnalyticsUserStatsFn = (): { registered: number } => {
 		throw new Error('Analytics is restricted to admins.');
 	}
 
-	const { items } = listDocsStore({
+	const count = countDocsStore({
 		collection: Collection.PROFILES,
 		caller,
 		params: {}
 	});
 
-	return { registered: items.length };
+	// `registered` is a float64 on the wire; guard the bigint→number narrowing
+	// so an (implausibly huge) count can't silently lose precision.
+	if (count > BigInt(Number.MAX_SAFE_INTEGER)) {
+		throw new Error('registered account count exceeds MAX_SAFE_INTEGER.');
+	}
+
+	return { registered: Number(count) };
 };
 
 /** Page-size cap so one export call can't scan/return an unbounded set. */
