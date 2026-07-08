@@ -16,11 +16,6 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    # STATIC-TOKEN AUTH ONLY — deliberately NO `id-token: write` (see
-    # deploy.yml: the OIDC automation flow mints an ephemeral access key on the
-    # satellite per step per run; the leak hit Juno's 20-key cap and failed
-    # v1.8.18 with `TooManyControllers`). JUNO_TOKEN on every juno-action step
-    # keeps the CLI on direct static-key auth — no key is ever created.
     permissions:
       contents: read
     steps:
