@@ -49,7 +49,8 @@ import {
 	type SchoolSubmissionDoc
 } from '$lib/types/school-submission';
 import { spMatchEmail, spNormalize } from '$lib/utils/school-picker.utils';
-import { logInfo } from '$satellite/utils/logger.utils';
+import { captureServerEvents, type ServerEventInput } from '$satellite/services/analytics.services';
+import { logError, logInfo } from '$satellite/utils/logger.utils';
 import { escapeRegex } from '$satellite/utils/regex.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
@@ -66,6 +67,22 @@ import {
 
 const DAY_NS = 86_400_000_000_000n;
 const MANAGEMENT_CANISTER_ID = 'aaaaa-aa';
+
+/**
+ * Best-effort server-side capture for the school-verification funnel.
+ * Analytics must never block or fail a verification write, so a capture
+ * error is logged and swallowed rather than surfacing to the caller.
+ */
+const captureSchoolEvent = (event: ServerEventInput): void => {
+	try {
+		captureServerEvents({ events: [event] });
+	} catch (err) {
+		logError({
+			message: 'school verification analytics capture failed (verification unaffected)',
+			detail: { error: err instanceof Error ? err.message : `${err}` }
+		});
+	}
+};
 
 /**
  * A satellite controller principal, used as the `caller` for the
@@ -422,6 +439,15 @@ export const submitSchoolFn = async ({
 		detail: { member: memberText, school: resolved.schoolId, is_new: resolved.isNew }
 	});
 
+	// Verification funnel: a code email actually went out (the submission
+	// write + relay send above both succeeded). `label` is the school id —
+	// behavioural, never the address.
+	captureSchoolEvent({
+		name: 'school_verify_email_submitted',
+		principal: memberText,
+		props: { label: resolved.schoolId }
+	});
+
 	return { submissionId };
 };
 
@@ -597,6 +623,14 @@ export const verifySchoolCodeFn = ({
 	if (!matches) {
 		persist({ ...submission, attempts: submission.attempts + 1 });
 
+		// Verification funnel: a real code check ran and failed (`ok: false`).
+		// The authz / not-found / expired early-outs above are not attempts.
+		captureSchoolEvent({
+			name: 'school_verify_code_submitted',
+			principal: memberText,
+			props: { label: submission.schoolId, ok: false }
+		});
+
 		return { ok: false, message: 'invalid-code' };
 	}
 
@@ -621,6 +655,13 @@ export const verifySchoolCodeFn = ({
 	logInfo({
 		message: 'school_verified',
 		detail: { member: memberText, school: submission.schoolId, status }
+	});
+
+	// Verification funnel tail: the code matched (`ok: true`).
+	captureSchoolEvent({
+		name: 'school_verify_code_submitted',
+		principal: memberText,
+		props: { label: submission.schoolId, ok: true }
 	});
 
 	return { ok: true, schoolId: submission.schoolId, status };
