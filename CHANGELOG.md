@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.20](https://github.com/AntonioVentilii/vici-app/compare/v1.8.19...v1.8.20) (2026-07-08)
+
+
+### Bug Fixes
+
+* **analytics:** lower the export page ceiling to fit the IC instruction budget ([#1115](https://github.com/AntonioVentilii/vici-app/issues/1115)) ([009529f](https://github.com/AntonioVentilii/vici-app/commit/009529f80c473d47fd524574eefacd274d4287a9))
+
 ## [1.8.19](https://github.com/AntonioVentilii/vici-app/compare/v1.8.18...v1.8.19) (2026-07-08)
 
 
