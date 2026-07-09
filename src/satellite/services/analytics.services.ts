@@ -458,6 +458,71 @@ export const getAnalyticsEventsFn = ({
 	return { rows, hasMore: items.length >= cap };
 };
 
+/** One profile-created export row: the doc key (principal text) and the doc
+ * envelope's created_at in nanoseconds. Deliberately minimal — the cockpit only
+ * needs WHEN each account was created to compute window cohorts; no profile
+ * body field (nickname, pnl, …) ever leaves the satellite. */
+interface ProfileCreatedExportRow {
+	key: string;
+	createdAtNs: string;
+}
+
+/**
+ * Admin-gated profile-created export for the cockpit warehouse: the next page of
+ * `profiles` doc keys + envelope `created_at`, keyset-paged by KEY (the
+ * datastore's native indexed order — same O(page) discipline as
+ * `getAnalyticsEventsFn`; ordering/matching on `updated_at` would materialise the
+ * whole collection and blow the query budget). Key order is NOT chronological
+ * (keys are principals) — the cockpit walks ALL pages and orders by
+ * `createdAtNs` on its side. Unlike the events export this is NOT a drain:
+ * profiles stay; the cockpit re-walks to resync.
+ *
+ * Why it exists: the raw event stream only starts at capture (2026-06-06) and
+ * `signed_up` was emitted on a single path until #1112, so events cannot
+ * reconstruct the true sign-up series. The profile envelope's `created_at` can.
+ * Soft-deleted profiles (deletedAtMs set) are included — an account created in a
+ * window was created in that window; hard-deleted docs are necessarily absent.
+ */
+export const getAnalyticsProfileCreatedFn = ({
+	afterKey,
+	limit
+}: {
+	afterKey?: string;
+	limit: number;
+}): { rows: ProfileCreatedExportRow[]; hasMore: boolean } => {
+	const caller = msgCaller();
+
+	if (!isAdmin({ caller })) {
+		throw new Error('Analytics is restricted to admins.');
+	}
+
+	const admin = adminCaller();
+
+	const afterKeyText = afterKey?.trim() ?? '';
+	const safeLimit = Number.isFinite(limit) ? Math.floor(limit) : MAX_EXPORT_LIMIT;
+	const cap = Math.min(Math.max(1, safeLimit), MAX_EXPORT_LIMIT);
+
+	const { items } = listDocsStore({
+		collection: Collection.PROFILES,
+		caller: admin,
+		params: {
+			paginate: {
+				limit: BigInt(cap),
+				start_after: afterKeyText.length > 0 ? afterKeyText : undefined
+			}
+		}
+	});
+
+	const rows = items.map(([key, doc]): ProfileCreatedExportRow => ({
+		key,
+		createdAtNs: `${doc.created_at ?? ZERO}`
+	}));
+
+	// `start_after` already excluded the cursor's own key, so a full page means
+	// there may be more (mirrors `getAnalyticsEventsFn`).
+	return { rows, hasMore: items.length >= cap };
+};
+
 /**
  * Admin-gated DRAIN delete for the cockpit warehouse export. After the cockpit has
  * durably written a page of events to its own store, it passes their keys back here

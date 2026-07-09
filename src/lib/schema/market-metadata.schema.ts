@@ -48,6 +48,17 @@ export const MarketTagIndexSchema = j.strictObject({
 	updatedAtMs: j.number()
 });
 
+/** Result of `getMarketTags` — every tag bucket of the reverse index, for the
+ * cockpit's market classification (admin-gated; see `getMarketTagsFn`). */
+export const GetMarketTagsResultSchema = j.strictObject({
+	buckets: j.array(
+		j.strictObject({
+			tag: j.string(),
+			seriesIds: j.array(j.string()).default([])
+		})
+	)
+});
+
 export const UpsertMarketMetadataArgsSchema = j.strictObject({
 	seriesId: j.string(),
 	data: MarketMetadataInputSchema
