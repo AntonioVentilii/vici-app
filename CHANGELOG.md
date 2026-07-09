@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.21](https://github.com/AntonioVentilii/vici-app/compare/v1.8.20...v1.8.21) (2026-07-09)
+
+
+### Features
+
+* **satellite:** admin-gated profile-created + market-tags exports for the cockpit ([#1117](https://github.com/AntonioVentilii/vici-app/issues/1117)) ([10a04e4](https://github.com/AntonioVentilii/vici-app/commit/10a04e488b0da8121a5d854b92ddd0073fabbbff))
+
 ## [1.8.20](https://github.com/AntonioVentilii/vici-app/compare/v1.8.19...v1.8.20) (2026-07-08)
 
 
