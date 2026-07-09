@@ -6,12 +6,15 @@ import {
 	DeleteAnalyticsEventsResultSchema,
 	GetAnalyticsEventsArgsSchema,
 	GetAnalyticsEventsResultSchema,
+	GetAnalyticsProfileCreatedArgsSchema,
+	GetAnalyticsProfileCreatedResultSchema,
 	GetAnalyticsSummaryArgsSchema,
 	TrackEventsArgsSchema,
 	TrackEventsResultSchema
 } from '$lib/schema/analytics-event.schema';
 import {
 	GetMarketMetadataArgsSchema,
+	GetMarketTagsResultSchema,
 	MarketMetadataSchema,
 	UpsertMarketMetadataArgsSchema
 } from '$lib/schema/market-metadata.schema';
@@ -59,6 +62,7 @@ import {
 import {
 	deleteAnalyticsEventsFn,
 	getAnalyticsEventsFn,
+	getAnalyticsProfileCreatedFn,
 	getAnalyticsSummaryFn,
 	getAnalyticsUserStatsFn,
 	onVxpAwardSetForAnalytics,
@@ -109,7 +113,10 @@ import {
 	getMarketMetadata as getMarketMetadataFn,
 	upsertMarketMetadata as upsertMarketMetadataFn
 } from '$satellite/services/market-metadata.services';
-import { rebuildMarketTagIndexFn } from '$satellite/services/market-tag-index.services';
+import {
+	getMarketTagsFn,
+	rebuildMarketTagIndexFn
+} from '$satellite/services/market-tag-index.services';
 import {
 	getMarketTranslation as getMarketTranslationFn,
 	listMarketTranslations as listMarketTranslationsFn,
@@ -611,6 +618,19 @@ export const getAnalyticsEvents = defineQuery({
 export const getAnalyticsUserStats = defineQuery({
 	result: AnalyticsUserStatsSchema,
 	handler: () => getAnalyticsUserStatsFn()
+});
+
+/**
+ * Admin-gated profile-created export for the cockpit warehouse: doc keys +
+ * envelope `created_at` (ns), keyset-paged by key. The TRUE sign-up series —
+ * the event stream only starts at capture and `signed_up` was single-path
+ * until #1112, so window cohorts need the profile envelope, not events. Same
+ * admin gate as the other analytics exports; no profile body field leaves.
+ */
+export const getAnalyticsProfileCreated = defineQuery({
+	args: GetAnalyticsProfileCreatedArgsSchema,
+	result: GetAnalyticsProfileCreatedResultSchema,
+	handler: (args) => getAnalyticsProfileCreatedFn(args)
 });
 
 // The cockpit's DRAIN step — delete a page of events after the warehouse has
@@ -1123,6 +1143,17 @@ export const rebuildMarketTagIndex = defineUpdate({
 		series: j.number()
 	}),
 	handler: () => rebuildMarketTagIndexFn()
+});
+
+/**
+ * Admin-gated read of every `market_tag_index` bucket (`tag → seriesIds`) for
+ * the cockpit — it classifies markets (sport vs non-sport) for the campaign
+ * hypothesis register. Same admin gate as the analytics exports. Seven keyed
+ * reads, never a collection scan.
+ */
+export const getMarketTags = defineQuery({
+	result: GetMarketTagsResultSchema,
+	handler: () => getMarketTagsFn()
 });
 
 // Friend-scoped bulk read for the resolved-results digest (the consumer that

@@ -224,6 +224,36 @@ const getAnalyticsEvents = async (
 	return AppGetAnalyticsEventsResultSchema.parse(result);
 };
 
+const AppGetAnalyticsProfileCreatedArgsSchema = j.strictObject({
+	afterKey: j.optional(j.string()),
+	limit: j.number()
+});
+const AppGetAnalyticsProfileCreatedResultSchema = j.strictObject({
+	rows: j.array(j.strictObject({ key: j.string(), createdAtNs: j.string() })),
+	hasMore: j.boolean()
+});
+
+const getAnalyticsProfileCreated = async (
+	args: j.infer<typeof AppGetAnalyticsProfileCreatedArgsSchema>
+): Promise<j.infer<typeof AppGetAnalyticsProfileCreatedResultSchema>> => {
+	const parsedArgs = AppGetAnalyticsProfileCreatedArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetAnalyticsProfileCreatedArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_analytics_profile_created']>[0];
+
+	const { app_get_analytics_profile_created } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_analytics_profile_created(idlArgs);
+
+	const result = schemaFromIdl({
+		schema: AppGetAnalyticsProfileCreatedResultSchema,
+		value: idlResult
+	});
+	return AppGetAnalyticsProfileCreatedResultSchema.parse(result);
+};
+
 const AppGetAnalyticsSummaryArgsSchema = j.strictObject({ days: j.number() });
 const AppGetAnalyticsSummaryResultSchema = j.strictObject({
 	rows: j.array(
@@ -424,6 +454,18 @@ const getMarketMetadata = async (
 
 	const result = schemaFromIdl({ schema: AppGetMarketMetadataResultSchema, value: idlResult });
 	return AppGetMarketMetadataResultSchema.parse(result);
+};
+
+const AppGetMarketTagsResultSchema = j.strictObject({
+	buckets: j.array(j.strictObject({ tag: j.string(), seriesIds: j.array(j.string()) }))
+});
+
+const getMarketTags = async (): Promise<j.infer<typeof AppGetMarketTagsResultSchema>> => {
+	const { app_get_market_tags } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_get_market_tags();
+
+	const result = schemaFromIdl({ schema: AppGetMarketTagsResultSchema, value: idlResult });
+	return AppGetMarketTagsResultSchema.parse(result);
 };
 
 const AppGetMarketTranslationArgsSchema = j.strictObject({
@@ -2414,10 +2456,12 @@ export const functions = {
 	checkNicknameAvailability,
 	getAffiliationStats,
 	getAnalyticsEvents,
+	getAnalyticsProfileCreated,
 	getAnalyticsSummary,
 	getAnalyticsUserStats,
 	getCurrentTournament,
 	getMarketMetadata,
+	getMarketTags,
 	getMarketTranslation,
 	getMonthlyLeaderboard,
 	getMyBattleStats,

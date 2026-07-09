@@ -263,6 +263,26 @@ export const DeleteAnalyticsEventsResultSchema = j.strictObject({
 	deleted: j.number()
 });
 
+/** Args for `getAnalyticsProfileCreated` — the cockpit's true-sign-up export.
+ * Keyset cursor on the profile doc KEY (principal text); blank = first page. */
+export const GetAnalyticsProfileCreatedArgsSchema = j.strictObject({
+	afterKey: j.optional(j.string()),
+	limit: j.number()
+});
+
+/** One profile-created row: the doc key (principal text) + envelope
+ * `created_at` in nanoseconds (as text — nat64 exceeds JS safe-int). No profile
+ * body field leaves the satellite. */
+export const ProfileCreatedExportRowSchema = j.strictObject({
+	key: j.string(),
+	createdAtNs: j.string()
+});
+
+export const GetAnalyticsProfileCreatedResultSchema = j.strictObject({
+	rows: j.array(ProfileCreatedExportRowSchema),
+	hasMore: j.boolean()
+});
+
 /**
  * Result of `getAnalyticsUserStats` — the all-time registered-account
  * count for the cockpit's "Registered" tile. `registered` counts every

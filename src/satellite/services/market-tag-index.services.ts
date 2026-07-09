@@ -92,6 +92,33 @@ export const seriesIdsForTag = ({
 };
 
 /**
+ * Admin-gated read of EVERY tag bucket for the cockpit: `tag → seriesIds` for
+ * the whole closed {@link MARKET_TAGS} taxonomy. One keyed `getDocStore` per tag
+ * (7 O(log n) reads — never a collection scan), missing/malformed buckets read
+ * as empty. The cockpit uses it to classify markets (sport vs non-sport) for the
+ * campaign hypothesis register, so the taxonomy stays owned here and no tag
+ * string is ever hardcoded warehouse-side.
+ */
+export const getMarketTagsFn = (): {
+	buckets: { tag: string; seriesIds: string[] }[];
+} => {
+	const caller = msgCaller();
+
+	if (!isAdmin({ caller })) {
+		throw new Error('Only an admin can read the market-tag index.');
+	}
+
+	const admin = adminCaller();
+
+	return {
+		buckets: MARKET_TAGS.map((tag) => ({
+			tag,
+			seriesIds: seriesIdsForTag({ tag, caller: admin })
+		}))
+	};
+};
+
+/**
  * Add or remove `seriesId` from a single tag's bucket. Version-locked
  * read-modify-write as admin; best-effort — a rare version race under
  * concurrent metadata writes to markets sharing a tag is logged and swallowed

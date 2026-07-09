@@ -257,6 +257,14 @@ export interface AppGetAnalyticsEventsResult {
 	}>;
 	has_more: boolean;
 }
+export interface AppGetAnalyticsProfileCreatedArgs {
+	limit: number;
+	after_key: [] | [string];
+}
+export interface AppGetAnalyticsProfileCreatedResult {
+	rows: Array<{ key: string; created_at_ns: string }>;
+	has_more: boolean;
+}
 export interface AppGetAnalyticsSummaryArgs {
 	days: number;
 }
@@ -408,6 +416,9 @@ export interface AppGetMarketMetadataResult {
 					subtitle: [] | [string];
 				}
 		  ];
+}
+export interface AppGetMarketTagsResult {
+	buckets: Array<{ tag: string; series_ids: Array<string> }>;
 }
 export interface AppGetMarketTranslationArgs {
 	series_id: string;
@@ -1392,6 +1403,10 @@ export interface _SERVICE {
 		AppGetAffiliationStatsResult
 	>;
 	app_get_analytics_events: ActorMethod<[AppGetAnalyticsEventsArgs], AppGetAnalyticsEventsResult>;
+	app_get_analytics_profile_created: ActorMethod<
+		[AppGetAnalyticsProfileCreatedArgs],
+		AppGetAnalyticsProfileCreatedResult
+	>;
 	app_get_analytics_summary: ActorMethod<
 		[AppGetAnalyticsSummaryArgs],
 		AppGetAnalyticsSummaryResult
@@ -1399,6 +1414,7 @@ export interface _SERVICE {
 	app_get_analytics_user_stats: ActorMethod<[], AppGetAnalyticsUserStatsResult>;
 	app_get_current_tournament: ActorMethod<[], AppGetCurrentTournamentResult>;
 	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
+	app_get_market_tags: ActorMethod<[], AppGetMarketTagsResult>;
 	app_get_market_translation: ActorMethod<
 		[AppGetMarketTranslationArgs],
 		AppGetMarketTranslationResult

@@ -256,6 +256,14 @@ export const idlFactory = ({ IDL }) => {
 		),
 		has_more: IDL.Bool
 	});
+	const AppGetAnalyticsProfileCreatedArgs = IDL.Record({
+		limit: IDL.Float64,
+		after_key: IDL.Opt(IDL.Text)
+	});
+	const AppGetAnalyticsProfileCreatedResult = IDL.Record({
+		rows: IDL.Vec(IDL.Record({ key: IDL.Text, created_at_ns: IDL.Text })),
+		has_more: IDL.Bool
+	});
 	const AppGetAnalyticsSummaryArgs = IDL.Record({ days: IDL.Float64 });
 	const AppGetAnalyticsSummaryResult = IDL.Record({
 		rows: IDL.Vec(
@@ -413,6 +421,9 @@ export const idlFactory = ({ IDL }) => {
 				subtitle: IDL.Opt(IDL.Text)
 			})
 		)
+	});
+	const AppGetMarketTagsResult = IDL.Record({
+		buckets: IDL.Vec(IDL.Record({ tag: IDL.Text, series_ids: IDL.Vec(IDL.Text) }))
 	});
 	const AppGetMarketTranslationArgs = IDL.Record({
 		series_id: IDL.Text,
@@ -1565,6 +1576,11 @@ export const idlFactory = ({ IDL }) => {
 			[AppGetAnalyticsEventsResult],
 			['query']
 		),
+		app_get_analytics_profile_created: IDL.Func(
+			[AppGetAnalyticsProfileCreatedArgs],
+			[AppGetAnalyticsProfileCreatedResult],
+			['query']
+		),
 		app_get_analytics_summary: IDL.Func(
 			[AppGetAnalyticsSummaryArgs],
 			[AppGetAnalyticsSummaryResult],
@@ -1577,6 +1593,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppGetMarketMetadataResult],
 			['query']
 		),
+		app_get_market_tags: IDL.Func([], [AppGetMarketTagsResult], ['query']),
 		app_get_market_translation: IDL.Func(
 			[AppGetMarketTranslationArgs],
 			[AppGetMarketTranslationResult],
