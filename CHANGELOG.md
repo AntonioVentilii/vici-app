@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.23](https://github.com/AntonioVentilii/vici-app/compare/v1.8.22...v1.8.23) (2026-07-13)
+
+
+### Bug Fixes
+
+* **wc:** reveal France·Spain SF markets on 07-13 ([#1134](https://github.com/AntonioVentilii/vici-app/issues/1134)) ([1a2097b](https://github.com/AntonioVentilii/vici-app/commit/1a2097b8fa6de76e9e12e58ff23ba377d13ed4b7))
+
 ## [1.8.22](https://github.com/AntonioVentilii/vici-app/compare/v1.8.21...v1.8.22) (2026-07-13)
 
 
