@@ -1105,7 +1105,7 @@ export const WC_MARKET_SCHEDULE: Record<string, readonly string[]> = {
 		'Will a goal be scored in the first half of France vs Spain?',
 		'Will a goal be scored with a header in France vs Spain?',
 		'Will a penalty be awarded in France vs Spain?',
-		'Will a player score in both his team\'s Semifinal and an earlier knockout round?',
+		"Will a player score in both his team's Semifinal and an earlier knockout round?",
 		'Will a red card be shown across the two Semifinals?',
 		'Will a red card be shown in France vs Spain?',
 		'Will a team win a Semifinal after trailing?',
