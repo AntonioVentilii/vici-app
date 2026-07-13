@@ -1082,7 +1082,7 @@ export const WC_MARKET_SCHEDULE: Record<string, readonly string[]> = {
 		'Will more than two and a half goals be scored in Argentina vs Switzerland?',
 		'Will more than two and a half goals be scored in Norway vs England?'
 	],
-	'2026-07-14': [
+	'2026-07-13': [
 		'Will Antoine Griezmann score or assist against Spain?',
 		'Will Aurélien Tchouaméni be shown a card against Spain?',
 		'Will France keep a clean sheet against Spain?',
