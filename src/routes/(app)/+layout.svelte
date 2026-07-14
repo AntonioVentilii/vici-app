@@ -124,6 +124,7 @@
 	const authResolving = $derived(
 		!isPublicMarketsRoute &&
 			!isPublicInfoRoute &&
+			!isPublicPredictionsRoute &&
 			($authBusy || ($userSignedIn && !$userStore.profile))
 	);
 

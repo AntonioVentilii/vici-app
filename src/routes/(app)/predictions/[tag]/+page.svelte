@@ -9,8 +9,10 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { marketTags, marketTagsNotInitialized } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
+	import { minuteTick_ms } from '$lib/derived/time.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { filterScheduledWcMarkets } from '$lib/utils/wc-schedule.utils';
 
 	// `/predictions/<slug>` — the slug expands to a tag id (`world-cup` → `wc`).
 	const slug = $derived(page.params.tag ?? '');
@@ -20,8 +22,19 @@
 	);
 
 	const tagsByMarket = $derived($marketTags);
+
+	// Same visibility the discovery board applies: drop WC markets the release
+	// schedule hasn't revealed (never leak an unrevealed question, and don't
+	// inflate the count/SEO description with them), then keep only Open markets.
+	const visibleMarkets = $derived(
+		filterScheduledWcMarkets({ markets: $markets, tagsByMarket, now: $minuteTick_ms })
+	);
 	const taggedMarkets = $derived(
-		nonNullish(tag) ? $markets.filter((m) => tagsByMarket[m.id]?.includes(tag) ?? false) : []
+		nonNullish(tag)
+			? visibleMarkets.filter(
+					(m) => m.status === 'Open' && (tagsByMarket[m.id]?.includes(tag) ?? false)
+				)
+			: []
 	);
 	const marketCount = $derived(taggedMarkets.length);
 
