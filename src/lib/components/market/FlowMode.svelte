@@ -50,6 +50,7 @@
 	import { marketLanguagePreference } from '$lib/stores/market-language.store';
 	import {
 		hydrate as hydrateMarketTranslations,
+		marketDisplay,
 		marketTranslations
 	} from '$lib/stores/market-translations.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -848,7 +849,7 @@
 						locale: $localeStore,
 						key: 'flow.notification.trade_failed_message',
 						params: {
-							title: currentMarket.title.slice(0, 30),
+							title: $marketDisplay(currentMarket).title.slice(0, 30),
 							error: t({ locale: $localeStore, key, params })
 						}
 					}),
