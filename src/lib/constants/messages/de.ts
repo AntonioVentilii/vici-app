@@ -1873,6 +1873,10 @@ export const deMessages = {
 	'prediction.notification.title': 'Vorhersage platziert',
 	'prediction.payout': '+{amount} {symbol}',
 	'prediction.sign_in': 'Zum Vorhersagen anmelden',
+	'predictions.topic.empty': 'Aktuell keine Live-{category}-Märkte — schau bald wieder vorbei.',
+	'predictions.topic.h1': '{category}-Vorhersagen',
+	'predictions.topic.intro':
+		'Live-Community-Quoten für {count} {category}-Märkte. Sag Ergebnisse voraus, bau dir einen Ruf auf und verdiene XP.',
 	'profile.dashboard.achievements': 'Erfolge',
 	'profile.dashboard.affiliations.add': 'Hinzufügen',
 	'profile.dashboard.affiliations.count': '{count} von {total}',
@@ -2009,6 +2013,9 @@ export const deMessages = {
 	'seo.home.description':
 		'Handle auf binären Ergebnismärkten mit sozialen Features auf dem Internet Computer.',
 	'seo.home.title': 'VICI Social Markets | Vorhersagen. Handeln. Gewinnen.',
+	'seo.topic.description':
+		'Sag {category}-Ergebnisse auf Vici voraus — {count} Live-Vorhersagemärkte mit Echtzeit-Community-Quoten. Tippe, bau dir einen Ruf auf und verdiene XP.',
+	'seo.topic.title': '{category}-Vorhersagemarkt — Live-Community-Quoten | Vici',
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Konto',
 	'settings.account.email': 'E-Mail',

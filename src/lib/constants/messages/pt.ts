@@ -1852,6 +1852,10 @@ export const ptMessages = {
 	'prediction.notification.title': 'Previsão registada',
 	'prediction.payout': '+{amount} {symbol}',
 	'prediction.sign_in': 'Entra para prever',
+	'predictions.topic.empty': 'Nenhum mercado de {category} ao vivo agora — volta em breve.',
+	'predictions.topic.h1': 'Previsões de {category}',
+	'predictions.topic.intro':
+		'Probabilidades da comunidade ao vivo em {count} mercados de {category}. Prevê resultados, constrói a tua reputação e ganha XP.',
 	'profile.dashboard.achievements': 'Conquistas',
 	'profile.dashboard.affiliations.add': 'Adicionar',
 	'profile.dashboard.affiliations.count': '{count} de {total}',
@@ -1989,6 +1993,10 @@ export const ptMessages = {
 	'seo.home.description':
 		'Negoceia em mercados de resultado binário com recursos sociais no Internet Computer.',
 	'seo.home.title': 'VICI Social Markets | Prevê. Negoceia. Vence.',
+	'seo.topic.description':
+		'Prevê os resultados de {category} na Vici — {count} mercados de previsão ao vivo com probabilidades da comunidade em tempo real. Prevê, constrói reputação e ganha XP.',
+	'seo.topic.title':
+		'Mercado de previsão de {category} — Probabilidades da comunidade ao vivo | Vici',
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Conta',
 	'settings.account.email': 'E-mail',

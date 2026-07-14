@@ -1764,6 +1764,10 @@ export const zhHansMessages = {
 	'prediction.notification.title': '预测已下达',
 	'prediction.payout': '+{amount} {symbol}',
 	'prediction.sign_in': '登录以预测',
+	'predictions.topic.empty': '目前没有正在进行的{category}市场，请稍后再来。',
+	'predictions.topic.h1': '{category}预测',
+	'predictions.topic.intro':
+		'{count} 个{category}市场的实时社区赔率。预测结果、积累声誉并赚取 XP。',
 	'profile.dashboard.achievements': '成就',
 	'profile.dashboard.affiliations.add': '添加',
 	'profile.dashboard.affiliations.count': '{count} / {total}',
@@ -1887,6 +1891,9 @@ export const zhHansMessages = {
 	'resolution.title': '市场结果',
 	'seo.home.description': '在 Internet Computer 上交易具有社交功能的二元结果市场。',
 	'seo.home.title': 'VICI 社交市场 | 预测。交易。获胜。',
+	'seo.topic.description':
+		'在 Vici 上预测{category}结果——{count} 个实时预测市场，提供实时社区赔率。做出预测、积累声誉并赚取 XP。',
+	'seo.topic.title': '{category}预测市场 — 实时社区赔率 | Vici',
 	'settings.about': 'VICI · v{version} · 构建 {build}',
 	'settings.account': '账户',
 	'settings.account.email': '邮箱',

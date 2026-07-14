@@ -99,6 +99,11 @@
 	// public route alongside the markets exemption above.
 	const isPublicInfoRoute = $derived(page.url.pathname.startsWith('/info/'));
 
+	// SEO category landing pages (`/predictions/[tag]`) are the entry point
+	// crawlers and search visitors hit — they must render for signed-out
+	// users, same as the public markets surface above.
+	const isPublicPredictionsRoute = $derived(page.url.pathname.startsWith('/predictions/'));
+
 	// Guest preview surface — an active guest session (the onboarding Skip path)
 	// may reach Flow to predict freely with no account. Scoped to Flow: that is
 	// all the preview funnel needs, and it keeps a plain signed-out visitor (no
@@ -217,7 +222,12 @@
 			return;
 		}
 
-		if (isPublicMarketsRoute || isPublicInfoRoute || isGuestAllowedRoute) {
+		if (
+			isPublicMarketsRoute ||
+			isPublicInfoRoute ||
+			isPublicPredictionsRoute ||
+			isGuestAllowedRoute
+		) {
 			return;
 		}
 

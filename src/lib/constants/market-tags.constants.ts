@@ -43,6 +43,25 @@ export const isMarketTag = (value: string): value is MarketTag =>
 	(MARKET_TAGS as readonly string[]).includes(value);
 
 /**
+ * URL slug for each tag's SEO topic page (`/predictions/<slug>`). The
+ * `wc` code expands to the human, keyword-carrying `world-cup`; the rest
+ * are their own id. Kept here (next to the taxonomy) so the topic route
+ * and the deploy-time SEO generator resolve slugs from one source.
+ */
+export const TOPIC_SLUG_BY_TAG: Record<MarketTag, string> = {
+	wc: 'world-cup',
+	macro: 'macro',
+	crypto: 'crypto',
+	politics: 'politics',
+	tech: 'tech',
+	sports: 'sports',
+	culture: 'culture'
+};
+
+export const tagFromTopicSlug = (slug: string): MarketTag | undefined =>
+	MARKET_TAGS.find((tag) => TOPIC_SLUG_BY_TAG[tag] === slug);
+
+/**
  * De-duplicates and filters out unknown values so persisted tags always
  * belong to the hardcoded taxonomy. Order follows {@link MARKET_TAGS}
  * (not insertion order) to keep equality checks stable across writes.

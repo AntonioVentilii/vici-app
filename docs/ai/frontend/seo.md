@@ -66,3 +66,47 @@ deploy); unresolvable params land on the markets board.
   zone; do not add per-market page variants without checking this budget.
 - The script skips itself under `JUNO_EMULATOR=true` (E2E deploys have no
   mainnet registry to read).
+
+## Structured data, live odds & topic pages
+
+The generator emits three extra signals on top of the per-market head
+rewrite:
+
+- **JSON-LD.** [`src/app.html`](../../../src/app.html) carries a static
+  `Organization` + `WebSite` `@graph` on every page. The generator injects
+  an additional per-page block before `</head>`: `WebPage` +
+  `BreadcrumbList` for a market, `CollectionPage` + `BreadcrumbList` +
+  `ItemList` for a topic page. `jsonLdScript` escapes `</` so a value can
+  never close the `<script>` early. (No `SearchAction` yet — a sitelinks
+  search box needs a working in-app search endpoint, which is dead code
+  today.)
+- **Live odds in the snippet.** Per-market descriptions gain a
+  `Community odds: Yes N%` sentence, read at deploy time from the clearing
+  canister's order book (`list_orders`) and folded through a
+  `midYesProbability` helper that mirrors `calculateProbability` in
+  `$lib/utils/market.utils`. This is the script's **only soft
+  dependency**: a clearing error degrades to "no odds clause", never a
+  failed deploy (unlike the registry read, which is fatal). Reads run with
+  bounded concurrency (`ODDS_CONCURRENCY`). All figures are a **snapshot as
+  of deploy** — there is no SSR, so they age until the next deploy.
+- **Category topic pages** at `predictions/{slug}` (slug per
+  `TOPIC_SLUG_BY_TAG` in
+  [`market-tags.constants`](../../../src/lib/constants/market-tags.constants.ts)),
+  the pages that rank for category queries ("prediction market world
+  cup"). **v1 emits World Cup only**, derived from the committed decks like
+  the reveal gate — the Juno tag index (`app_get_market_tags`) that the
+  other tags would need is **admin-gated**, so this anonymous script can't
+  read it. The client route is
+  [`src/routes/(app)/predictions/[tag]/+page.svelte`](../../../src/routes/%28app%29/predictions/%5Btag%5D/+page.svelte),
+  a public route (exempted from the `(app)` sign-in gate alongside
+  `/markets/`) that renders the tag-scoped board. Adding the remaining
+  tags needs an anonymous tag source (public `MARKET_METADATA` read or an
+  admin identity in the deploy).
+
+The phrase **"prediction market"** lives only in this crawler-facing layer
+(`<title>` / meta description / JSON-LD keywords) — never in the rendered
+UI, which keeps saying "Social Markets".
+
+- **Topic pages count against the file-count budget too**, but only a
+  handful (one per revealed category), so they stay far inside the
+  proven-safe zone. Do not fan topic pages out per-market.
