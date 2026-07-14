@@ -17,11 +17,14 @@
  *     canonical link and the OG/Twitter tags, a per-market JSON-LD block,
  *     plus `window.__viciSeriesId` so the `/m/[id]` route resolves the
  *     market without a catalog lookup.
- *   - ONE topic page per revealed category at `predictions/{slug}` (v1:
- *     World Cup only, derived from the committed decks — the tag index is
- *     admin-gated and unreadable by this anonymous script). It carries
- *     category-level keywords ("prediction market world cup"), the live
- *     active-market count, and `CollectionPage` + `ItemList` JSON-LD.
+ *   - ONE topic page per non-empty category at `predictions/{slug}`, each
+ *     carrying category-level keywords ("prediction market world cup"), the
+ *     live market count, and `CollectionPage` + `ItemList` JSON-LD. Tag
+ *     membership is read anonymously from the public MARKET_METADATA
+ *     collection (the `app_get_market_tags` index is admin-gated); World Cup
+ *     stays deck-derived so its hub survives a failed tag read and honours
+ *     the reveal gate. A tag-read failure degrades to the WC hub only, never
+ *     a failed deploy.
  *
  * Exactly one page per market, deliberately: every emitted file is staged,
  * committed AND deleted again per deploy, and the satellite recomputes the
@@ -55,14 +58,21 @@ import { idlFactory as clearingIdlFactory } from '$declarations/clearing/clearin
 import type { _SERVICE as RegistryService, Series } from '$declarations/registry/registry';
 import { idlFactory as registryIdlFactory } from '$declarations/registry/registry.idl.js';
 import { CLEARING_CANISTER_ID, REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
-import { TOPIC_SLUG_BY_TAG } from '$lib/constants/market-tags.constants';
+import { Collection } from '$lib/constants/collections.constants';
+import {
+	MARKET_TAGS,
+	normalizeMarketTags,
+	TOPIC_SLUG_BY_TAG,
+	type MarketTag
+} from '$lib/constants/market-tags.constants';
 import {
 	normalizeWcQuestion,
 	WC_QUESTION_REVEAL_MS
 } from '$lib/constants/wc-market-schedule.constants';
 import { marketShareParam } from '$lib/utils/market-slug.utils';
 import { fromNullable, isNullish, nonNullish, toNullable } from '@dfinity/utils';
-import { Actor, HttpAgent, type ActorSubclass } from '@icp-sdk/core/agent';
+import { Actor, AnonymousIdentity, HttpAgent, type ActorSubclass } from '@icp-sdk/core/agent';
+import { listDocs } from '@junobuild/core';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -98,6 +108,24 @@ const DESCRIPTION_TAIL = 'Live community odds on the Vici prediction market.';
 // TITLE, like every deck pipeline step). Titles present here but absent
 // from the release schedule are not-yet-curated and must stay hidden.
 const WC_DECK_FILES = ['markets.deck-2026.json', 'markets.deck-2026-wc-r32.json'];
+
+// Prod satellite (mirrors `juno.config.ts` ids.production). Read anonymously
+// for the public MARKET_METADATA collection — the generator is already
+// prod-pinned (PROD_ORIGIN, mainnet registry), so this is consistent.
+const SATELLITE_ID = '7scay-7yaaa-aaaal-asxqa-cai';
+
+// English category names for the crawler-facing topic pages. The rendered
+// route localises these via `market.tag.<id>`; the generator emits English
+// like every other baked string here.
+const TAG_DISPLAY_NAME: Record<MarketTag, string> = {
+	wc: 'World Cup',
+	macro: 'Macro',
+	crypto: 'Crypto',
+	politics: 'Politics',
+	tech: 'Tech',
+	sports: 'Sports',
+	culture: 'Culture'
+};
 
 const escapeHtml = (value: string): string =>
 	value
@@ -211,6 +239,39 @@ const isWcMarket = ({
 	title: string;
 	wcDeckTitles: Set<string>;
 }): boolean => wcDeckTitles.has(normalizeWcQuestion(title));
+
+/**
+ * seriesId → category tags, read anonymously from the public MARKET_METADATA
+ * collection (the same source `listMarketTagsBySeries` uses in the FE — the
+ * `app_get_market_tags` reverse index is admin-gated). Soft by contract: any
+ * failure yields `{}`, which limits topic pages to the deck-derived World
+ * Cup one rather than failing the deploy.
+ */
+const loadTagsBySeries = async (): Promise<Record<string, MarketTag[]>> => {
+	try {
+		const { items } = await listDocs<{ seriesId?: string; tags?: string[] }>({
+			collection: Collection.MARKET_METADATA,
+			satellite: { identity: new AnonymousIdentity(), satelliteId: SATELLITE_ID }
+		});
+
+		return items.reduce<Record<string, MarketTag[]>>((acc, { data }) => {
+			const tags = normalizeMarketTags(data.tags ?? []);
+
+			if (nonNullish(data.seriesId) && tags.length > 0) {
+				acc[data.seriesId] = tags;
+			}
+
+			return acc;
+		}, {});
+	} catch (err) {
+		console.warn(
+			'[seo-assets] market-metadata tag read failed; topic pages limited to World Cup.',
+			err
+		);
+
+		return {};
+	}
+};
 
 const listAllSeries = async (registry: ActorSubclass<RegistryService>): Promise<Series[]> => {
 	const all: Series[] = [];
@@ -469,6 +530,7 @@ const renderSitemap = ({ paths, lastmod }: { paths: string[]; lastmod: string })
 };
 
 interface EmittedMarket {
+	seriesId: string;
 	title: string;
 	canonicalUrl: string;
 }
@@ -588,7 +650,9 @@ const main = async () => {
 		canisterId: CLEARING_CANISTER_ID
 	});
 
-	const series = await listAllSeries(registry);
+	// Tag membership is a soft dependency (public collection, `{}` on failure),
+	// so fetch it alongside the fatal registry read rather than gating on it.
+	const [series, tagsBySeries] = await Promise.all([listAllSeries(registry), loadTagsBySeries()]);
 	const viciSeries = series.filter((s) => fromNullable(s.engine_id) === ENGINE_ID);
 
 	const nowMs = Date.now();
@@ -609,7 +673,7 @@ const main = async () => {
 	});
 
 	const sitemapPaths: string[] = [];
-	const wcEmitted: EmittedMarket[] = [];
+	const emitted: EmittedMarket[] = [];
 
 	visible.forEach((market, index) => {
 		const id = market.series_id;
@@ -653,22 +717,33 @@ const main = async () => {
 		writePage({ relativeDir: join('m', shareParam), html });
 		sitemapPaths.push(`/m/${shareParam}`);
 
-		if (isWcMarket({ title: market.title, wcDeckTitles })) {
-			wcEmitted.push({ title: market.title, canonicalUrl });
-		}
+		emitted.push({ seriesId: id, title: market.title, canonicalUrl });
 	});
 
-	// Category topic page — v1 ships World Cup only (deck-derived; the tag
-	// index this anonymous script would need for the other tags is
-	// admin-gated). Skipped when nothing is revealed yet.
-	if (wcEmitted.length > 0) {
-		const slug = TOPIC_SLUG_BY_TAG.wc;
+	// One category topic page per non-empty tag. World Cup membership stays
+	// deck-derived (so its hub survives a failed tag read and honours the
+	// reveal gate baked into `visible`); every other tag reads membership
+	// from the public metadata tags. Non-WC tags carry no reveal gate.
+	const topicMembers = (tag: MarketTag): EmittedMarket[] =>
+		tag === 'wc'
+			? emitted.filter((market) => isWcMarket({ title: market.title, wcDeckTitles }))
+			: emitted.filter((market) => (tagsBySeries[market.seriesId] ?? []).includes(tag));
 
-		writePage({
-			relativeDir: join('predictions', slug),
-			html: buildTopicPage({ shell, slug, categoryName: 'World Cup', markets: wcEmitted })
-		});
-		sitemapPaths.push(`/predictions/${slug}`);
+	let topicPages = 0;
+
+	for (const tag of MARKET_TAGS) {
+		const markets = topicMembers(tag);
+
+		if (markets.length > 0) {
+			const slug = TOPIC_SLUG_BY_TAG[tag];
+
+			writePage({
+				relativeDir: join('predictions', slug),
+				html: buildTopicPage({ shell, slug, categoryName: TAG_DISPLAY_NAME[tag], markets })
+			});
+			sitemapPaths.push(`/predictions/${slug}`);
+			topicPages += 1;
+		}
 	}
 
 	const lastmod = new Date(nowMs).toISOString().slice(0, 10);
@@ -681,7 +756,7 @@ const main = async () => {
 	const hidden = viciSeries.length - visible.length;
 
 	console.log(
-		`[seo-assets] ${visible.length} market pages + ${wcEmitted.length > 0 ? '1 topic page + ' : ''}sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
+		`[seo-assets] ${visible.length} market pages + ${topicPages} topic page(s) + sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
 	);
 };
 

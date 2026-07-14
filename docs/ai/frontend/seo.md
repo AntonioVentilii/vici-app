@@ -93,15 +93,19 @@ rewrite:
   `TOPIC_SLUG_BY_TAG` in
   [`market-tags.constants`](../../../src/lib/constants/market-tags.constants.ts)),
   the pages that rank for category queries ("prediction market world
-  cup"). **v1 emits World Cup only**, derived from the committed decks like
-  the reveal gate — the Juno tag index (`app_get_market_tags`) that the
-  other tags would need is **admin-gated**, so this anonymous script can't
-  read it. The client route is
+  cup") — **one per non-empty tag**. Tag membership is read anonymously
+  from the public `MARKET_METADATA` collection via `@junobuild/core`
+  `listDocs` (the same source the FE's `listMarketTagsBySeries` uses; the
+  `app_get_market_tags` reverse index is **admin-gated**, so it's not an
+  option here). World Cup membership stays **deck-derived** so its hub
+  survives a failed tag read and honours the reveal gate. The tag read is a
+  **soft dependency**: a failure degrades to the WC hub only, never a
+  failed deploy. The client route is
   [`src/routes/(app)/predictions/[tag]/+page.svelte`](../../../src/routes/%28app%29/predictions/%5Btag%5D/+page.svelte),
-  a public route (exempted from the `(app)` sign-in gate alongside
-  `/markets/`) that renders the tag-scoped board. Adding the remaining
-  tags needs an anonymous tag source (public `MARKET_METADATA` read or an
-  admin identity in the deploy).
+  a public route (exempted from the `(app)` sign-in gate and the
+  `authResolving` spinner alongside `/markets/`) that renders the
+  tag-scoped board — it applies the same `filterScheduledWcMarkets` +
+  `status === 'Open'` visibility as the discovery board.
 
 The phrase **"prediction market"** lives only in this crawler-facing layer
 (`<title>` / meta description / JSON-LD keywords) — never in the rendered

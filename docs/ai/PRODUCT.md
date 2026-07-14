@@ -736,10 +736,10 @@ world cup": schema.org **JSON-LD** (site-wide `Organization` + `WebSite`,
 plus per-market and per-topic graphs), a **live-odds sentence** baked into
 each market's meta description ("Community odds: Yes 41%", a deploy-time
 snapshot of the order book), and **category topic pages** at
-`/predictions/{slug}` — landing pages that own a category and link its
-live markets. The first topic page is **World Cup**
-(`/predictions/world-cup`); it renders the World-Cup-tagged board for any
-visitor, including signed-out crawlers.
+`/predictions/{slug}` — one landing page per category (World Cup, crypto,
+politics, tech, sports, culture, macro) that owns that category and links
+its live markets (e.g. `/predictions/world-cup`). Each renders the
+tag-scoped board for any visitor, including signed-out crawlers.
 
 The phrase "prediction market" appears **only** in this crawler-facing
 metadata (titles, descriptions, structured data) — never in the rendered

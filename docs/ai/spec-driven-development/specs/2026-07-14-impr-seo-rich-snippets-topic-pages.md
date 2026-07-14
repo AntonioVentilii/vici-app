@@ -64,12 +64,15 @@ Four workstreams, one PR.
      **No `SearchAction`** — a sitelinks search box needs a working in-app
      search endpoint, which is dead code today (deferred with the in-app
      search work).
-   - Per-market pages: the generator injects a JSON-LD block — model each
-     market as a `Question`/`Claim`-style node (yes/no) carrying `name`
-     (title), `text` (description), `url` (canonical), and a `keywords`
-     field including "prediction market" + the market's category label.
-   - Topic pages: a `CollectionPage` node listing member markets +
-     `keywords` ("world cup prediction market", "2026 world cup odds", …).
+   - Per-market pages: the generator injects a `WebPage` +
+     `BreadcrumbList` graph carrying `name` (title), `description`, `url`
+     (canonical), and a `keywords` field including "prediction market" +
+     the title. (Chose the conservative `WebPage`/`BreadcrumbList` over a
+     `Question`/`QAPage` to avoid Rich-Results warnings for a non-standard
+     prediction entity.)
+   - Topic pages: `CollectionPage` + `BreadcrumbList` + `ItemList` of
+     member markets + `keywords` ("world cup prediction market", "world cup
+     odds", …).
 
 2. **Data-rich meta descriptions** (counts + odds; decided — no `$`
    volume in v1).
@@ -85,11 +88,13 @@ Four workstreams, one PR.
    - Generator emits a static shell at
      `build/predictions/{slug}/index.html` (slug per `TOPIC_SLUG_BY_TAG`,
      e.g. `world-cup`) with rich title / description and
-     `CollectionPage` + `BreadcrumbList` + `ItemList` JSON-LD. **v1 emits
-     World Cup only** — membership is deck-derived (as the reveal gate
-     already is), needing no tag access. The Juno tag index for the other
-     tags is admin-gated (see Decisions), so the anonymous generator can't
-     read it; other tags defer.
+     `CollectionPage` + `BreadcrumbList` + `ItemList` JSON-LD, **one per
+     non-empty tag**. Tag membership is read anonymously from the public
+     `MARKET_METADATA` collection via `@junobuild/core` `listDocs` (the
+     `app_get_market_tags` reverse index is admin-gated). World Cup
+     membership stays deck-derived so its hub survives a failed tag read
+     and honours the reveal gate; the tag read is a soft dependency (a
+     failure degrades to the WC hub only, never a failed deploy).
    - No body-HTML injection: SSR is off app-wide and Googlebot renders JS,
      so the head + JSON-LD carry the crawl signal and the real route
      renders the visible board. (Dropped the "crawlable body block" idea —
@@ -103,9 +108,10 @@ Four workstreams, one PR.
      for signed-out visitors.
 
 4. **Sitemap & shell polish**.
-   - Add the topic-page URLs to `sitemap.xml`; add `<lastmod>` (deploy
-     timestamp) and per-URL-type `<changefreq>`/`<priority>`.
-   - Enrich the static `app.html` description/OG to include "prediction
+   - Add the topic-page URLs to `sitemap.xml` and a `<lastmod>` (deploy
+     date) per URL. (Skipped `<changefreq>`/`<priority>` — Google ignores
+     them.)
+   - Enrich the static `app.html` description to include "prediction
      market" (meta only) and add the JSON-LD from workstream 1.
 
 ### Out of scope
@@ -113,13 +119,6 @@ Four workstreams, one PR.
 - **In-app search box** — the unused `src/lib/utils/search.utils.ts`,
   tag indexing, and synonym mapping. Decided: separate spec/PR. The
   JSON-LD `SearchAction` waits on this too.
-- **Topic pages for tags other than World Cup** — `MARKET_TAG_INDEX` /
-  `app_get_market_tags` is admin-gated, so the anonymous deploy script
-  can't read tag membership for macro/crypto/politics/tech/sports/culture.
-  The route + `TOPIC_SLUG_BY_TAG` already generalise to all tags; only the
-  generator's static-page emission is WC-only. Fast-follow: read public
-  `MARKET_METADATA` (anonymous) or run the generator under an admin
-  identity.
 - **`seo_topic_page_viewed` analytics** — deferred (see Analytics).
 - **`$` trading-volume in snippets** — clean cumulative volume
   (`list_series_traded_volumes`) is anonymous-guarded and would need the
@@ -215,10 +214,11 @@ deploy-time reads** to the generator:
 - [ ] Each emitted `build/m/{slug~id8}/index.html` contains valid
       per-market JSON-LD (`WebPage` + `BreadcrumbList`) and, when the order
       book has a mid, an odds clause in the meta description.
-- [ ] `build/predictions/world-cup/index.html` is emitted (when ≥1 WC
-      market is revealed) with a title/description containing "prediction
+- [ ] One `build/predictions/{slug}/index.html` per non-empty category
+      (World Cup deck-derived; others from the anonymous `MARKET_METADATA`
+      tag read), each with a title/description containing "prediction
       market" and valid `CollectionPage` + `BreadcrumbList` + `ItemList`
-      JSON-LD.
+      JSON-LD. A tag-read failure degrades to the WC hub only.
 - [ ] `sitemap.xml` lists home, static routes, every visible market, and
       the WC topic page, each with `lastmod`.
 - [ ] `/predictions/world-cup` renders a tag-scoped markets board with an
@@ -254,10 +254,13 @@ deploy-time reads** to the generator:
 - **Topic-page URL = `/predictions/{slug}`** (`world-cup`, per
   `TOPIC_SLUG_BY_TAG` next to the taxonomy) — keyword-carrying and
   namespaced; the `wc` tag id expands to the human `world-cup`.
-- **v1 topic page = World Cup only** — the tag index for the other
-  categories is admin-gated and unreadable by the anonymous deploy script;
-  WC membership is deck-derived and needs no tag access. Other tags
-  deferred (see Out of scope).
+- **Topic page per non-empty category** — tag membership read anonymously
+  from the public `MARKET_METADATA` collection (`@junobuild/core`
+  `listDocs`), since `app_get_market_tags` is admin-gated. Verified against
+  prod: the read returns all metadata docs anonymously with tags across
+  every category. World Cup stays deck-derived (survives a failed tag read
+  - honours the reveal gate); the tag read is soft (failure → WC hub only,
+    never a failed deploy).
 - **Odds are a soft dependency** — a clearing read failure degrades to "no
   odds clause", never a failed deploy; the registry read stays fatal.
 - **Analytics deferred** — avoids coupling this PR to a satellite schema
