@@ -1,4 +1,11 @@
-# Spec: SEO rich snippets, structured data & category topic pages
+# Spec: SEO rich snippets, structured data & a guest Flow funnel
+
+> **Direction changed mid-implementation** (see Decisions): the original
+> plan added dedicated `/predictions/[tag]` category topic pages. Per
+> product call, those were **dropped** — no new pages. Search intent lands
+> on existing surfaces (market detail pages; the in-app `/app` board), and
+> a guest "Try Flow free" funnel was added instead. The filename keeps its
+> original slug.
 
 This spec follows the workflow defined in
 `docs/ai/spec-driven-development/workflow.md`.
@@ -84,28 +91,17 @@ Four workstreams, one PR.
      ("Trade 23 live World Cup prediction markets on Vici. Community
      odds, updated continuously.").
 
-3. **Per-category topic pages** (new surface).
-   - Generator emits a static shell at
-     `build/predictions/{slug}/index.html` (slug per `TOPIC_SLUG_BY_TAG`,
-     e.g. `world-cup`) with rich title / description and
-     `CollectionPage` + `BreadcrumbList` + `ItemList` JSON-LD, **one per
-     non-empty tag**. Tag membership is read anonymously from the public
-     `MARKET_METADATA` collection via `@junobuild/core` `listDocs` (the
-     `app_get_market_tags` reverse index is admin-gated). World Cup
-     membership stays deck-derived so its hub survives a failed tag read
-     and honours the reveal gate; the tag read is a soft dependency (a
-     failure degrades to the WC hub only, never a failed deploy).
-   - No body-HTML injection: SSR is off app-wide and Googlebot renders JS,
-     so the head + JSON-LD carry the crawl signal and the real route
-     renders the visible board. (Dropped the "crawlable body block" idea —
-     it risked a hydration flash for no Google benefit.)
-   - New SvelteKit route
-     `src/routes/(app)/predictions/[tag]/+page.svelte` resolving the slug
-     via `tagFromTopicSlug`, rendering the existing markets board **scoped
-     to that tag** with an `<h1>` intro; unknown slug → `/app`. Placed
-     inside `(app)` and exempted from the sign-in gate (mirrors the
-     `/markets/` public exemption) so it inherits `<Loaders>` and renders
-     for signed-out visitors.
+3. **Guest Flow funnel from a market page** (replaced the topic pages).
+   - On the market detail page (`src/routes/(app)/markets/[id]/+page.svelte`),
+     a **live** market's read-only footer becomes a CTA: signed-out → "Try
+     Flow free", signed-in → "Predict in Flow". `onTryFlow` calls
+     `startGuestSession(null)` (for signed-out) then `goto(AppPath.Flow)`;
+     the `(app)` gate already exempts a guest on `/flow`
+     (`isGuestAllowedRoute`). Direct trading on the detail page stays
+     build-flag-off (`MARKET_DETAIL_DIRECT_TRADE_ENABLED`); predictions are
+     placed in Flow.
+   - i18n keys `market.detail.flow_cta.{guest,member}` across all 7 live
+     locales. No new route, no new page.
 
 4. **Sitemap & shell polish**.
    - Add the topic-page URLs to `sitemap.xml` and a `<lastmod>` (deploy
@@ -254,13 +250,22 @@ deploy-time reads** to the generator:
 - **Topic-page URL = `/predictions/{slug}`** (`world-cup`, per
   `TOPIC_SLUG_BY_TAG` next to the taxonomy) — keyword-carrying and
   namespaced; the `wc` tag id expands to the human `world-cup`.
-- **Topic page per non-empty category** — tag membership read anonymously
-  from the public `MARKET_METADATA` collection (`@junobuild/core`
-  `listDocs`), since `app_get_market_tags` is admin-gated. Verified against
-  prod: the read returns all metadata docs anonymously with tags across
-  every category. World Cup stays deck-derived (survives a failed tag read
-  - honours the reveal gate); the tag read is soft (failure → WC hub only,
-    never a failed deploy).
+- **No new pages — topic pages dropped; funnel to Flow instead.** The
+  original plan built `/predictions/[tag]` category pages (briefly shipped
+  for every tag via an anonymous `MARKET_METADATA` read). Product call
+  reversed it: don't add a new surface. Search intent lands on **existing**
+  pages — a specific market → its detail page, category browsing → the
+  in-app `/app` board — and a signed-out visitor gets a "Try Flow free"
+  guest funnel from the market page. Trade-off accepted: without a category
+  page the phrase "prediction market world cup" ranks weaker; individual WC
+  market pages (carrying "World Cup" + "prediction market" in their meta)
+  are the category presence. The route, generator topic emission, tag read,
+  and `TOPIC_SLUG_BY_TAG` were all removed.
+- **Guest Flow funnel** — a signed-out visitor's predict intent on a live
+  market page routes to a free guest Flow session
+  (`startGuestSession` + `goto(Flow)`) rather than a `/signin` wall, since
+  direct trading on the detail page is build-flag-off and predictions are
+  placed in Flow.
 - **Odds are a soft dependency** — a clearing read failure degrades to "no
   odds clause", never a failed deploy; the registry read stays fatal.
 - **Analytics deferred** — avoids coupling this PR to a satellite schema

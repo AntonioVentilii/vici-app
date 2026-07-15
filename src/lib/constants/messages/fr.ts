@@ -1538,6 +1538,8 @@ export const frMessages = {
 	'market.detail.fallback_title': 'Marché',
 	'market.detail.followed_lean.aria': '{yes} de vos suivis sur YES, {no} sur NO',
 	'market.detail.followed_lean.label': 'Prédicteurs que vous suivez',
+	'market.detail.flow_cta.guest': 'Essayez Flow gratuitement',
+	'market.detail.flow_cta.member': 'Prédire dans Flow',
 	'market.detail.head_suffix': 'Marchés Sociaux',
 	'market.detail.locked_in': 'Confirmé.',
 	'market.detail.maker.disclosure':
@@ -1863,10 +1865,6 @@ export const frMessages = {
 	'prediction.notification.title': 'Prédiction placée',
 	'prediction.payout': '+{amount} {symbol}',
 	'prediction.sign_in': 'Connectez-vous pour prédire',
-	'predictions.topic.empty': 'Aucun marché {category} en direct pour le moment — revenez bientôt.',
-	'predictions.topic.h1': 'Prédictions {category}',
-	'predictions.topic.intro':
-		'Cotes de la communauté en direct sur {count} marchés {category}. Prédisez les résultats, bâtissez votre réputation et gagnez des XP.',
 	'profile.dashboard.achievements': 'Succès',
 	'profile.dashboard.affiliations.add': 'Ajouter',
 	'profile.dashboard.affiliations.count': '{count} sur {total}',
@@ -2003,9 +2001,6 @@ export const frMessages = {
 	'seo.home.description':
 		'Tradez sur des marchés à résultat binaire avec des fonctionnalités sociales sur l’Internet Computer.',
 	'seo.home.title': 'VICI Social Markets | Prédire. Trader. Gagner.',
-	'seo.topic.description':
-		'Prédisez les résultats de {category} sur Vici : {count} marchés de prédiction en direct avec des cotes communautaires en temps réel. Pronostiquez, bâtissez votre réputation et gagnez des XP.',
-	'seo.topic.title': 'Marché de prédiction {category} — Cotes de la communauté en direct | Vici',
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Compte',
 	'settings.account.email': 'E-mail',

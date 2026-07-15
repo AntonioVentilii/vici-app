@@ -7,9 +7,8 @@
  * script runs as the second `predeploy` step (after `npm run build`, see
  * `juno.config.ts`) and emits into `build/`:
  *
- *   - `sitemap.xml` — the public static routes, one URL per visible
- *     market, and the category topic page(s), so search engines discover
- *     the catalog at all.
+ *   - `sitemap.xml` — the public static routes plus one URL per visible
+ *     market, so search engines discover the catalog at all.
  *   - ONE per-market copy of the built shell at `m/{slug~id8}` (the
  *     keyword-carrying canonical, same param the share sheet hands out —
  *     see `$lib/utils/market-slug.utils`) with the market's
@@ -17,22 +16,13 @@
  *     canonical link and the OG/Twitter tags, a per-market JSON-LD block,
  *     plus `window.__viciSeriesId` so the `/m/[id]` route resolves the
  *     market without a catalog lookup.
- *   - ONE topic page per non-empty category at `predictions/{slug}`, each
- *     carrying category-level keywords ("prediction market world cup"), the
- *     live market count, and `CollectionPage` + `ItemList` JSON-LD. Tag
- *     membership is read anonymously from the public MARKET_METADATA
- *     collection (the `app_get_market_tags` index is admin-gated); World Cup
- *     stays deck-derived so its hub survives a failed tag read and honours
- *     the reveal gate. A tag-read failure degrades to the WC hub only, never
- *     a failed deploy.
  *
  * Exactly one page per market, deliberately: every emitted file is staged,
  * committed AND deleted again per deploy, and the satellite recomputes the
  * asset certification tree across all assets on those bulk operations —
  * deleting ~6k staged assets exceeded the IC's 40B-instruction message
  * limit (see junobuild/juno#2263; deploy applied, cleanup failed). The
- * handful of topic pages stay well inside that budget; the plain-id routes
- * (`/markets/{id}`, `/m/{id}`) intentionally get no copies.
+ * plain-id routes (`/markets/{id}`, `/m/{id}`) intentionally get no copies.
  *
  * Contract with `src/app.html`: the head tags rewritten here must keep
  * matching the patterns below — the script hard-fails when a pattern stops
@@ -58,21 +48,13 @@ import { idlFactory as clearingIdlFactory } from '$declarations/clearing/clearin
 import type { _SERVICE as RegistryService, Series } from '$declarations/registry/registry';
 import { idlFactory as registryIdlFactory } from '$declarations/registry/registry.idl.js';
 import { CLEARING_CANISTER_ID, REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
-import { Collection } from '$lib/constants/collections.constants';
-import {
-	MARKET_TAGS,
-	normalizeMarketTags,
-	TOPIC_SLUG_BY_TAG,
-	type MarketTag
-} from '$lib/constants/market-tags.constants';
 import {
 	normalizeWcQuestion,
 	WC_QUESTION_REVEAL_MS
 } from '$lib/constants/wc-market-schedule.constants';
 import { marketShareParam } from '$lib/utils/market-slug.utils';
 import { fromNullable, isNullish, nonNullish, toNullable } from '@dfinity/utils';
-import { Actor, AnonymousIdentity, HttpAgent, type ActorSubclass } from '@icp-sdk/core/agent';
-import { listDocs } from '@junobuild/core';
+import { Actor, HttpAgent, type ActorSubclass } from '@icp-sdk/core/agent';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -108,24 +90,6 @@ const DESCRIPTION_TAIL = 'Live community odds on the Vici prediction market.';
 // TITLE, like every deck pipeline step). Titles present here but absent
 // from the release schedule are not-yet-curated and must stay hidden.
 const WC_DECK_FILES = ['markets.deck-2026.json', 'markets.deck-2026-wc-r32.json'];
-
-// Prod satellite (mirrors `juno.config.ts` ids.production). Read anonymously
-// for the public MARKET_METADATA collection — the generator is already
-// prod-pinned (PROD_ORIGIN, mainnet registry), so this is consistent.
-const SATELLITE_ID = '7scay-7yaaa-aaaal-asxqa-cai';
-
-// English category names for the crawler-facing topic pages. The rendered
-// route localises these via `market.tag.<id>`; the generator emits English
-// like every other baked string here.
-const TAG_DISPLAY_NAME: Record<MarketTag, string> = {
-	wc: 'World Cup',
-	macro: 'Macro',
-	crypto: 'Crypto',
-	politics: 'Politics',
-	tech: 'Tech',
-	sports: 'Sports',
-	culture: 'Culture'
-};
 
 const escapeHtml = (value: string): string =>
 	value
@@ -230,47 +194,6 @@ const isMarketVisible = ({
 	}
 
 	return !wcDeckTitles.has(key);
-};
-
-const isWcMarket = ({
-	title,
-	wcDeckTitles
-}: {
-	title: string;
-	wcDeckTitles: Set<string>;
-}): boolean => wcDeckTitles.has(normalizeWcQuestion(title));
-
-/**
- * seriesId → category tags, read anonymously from the public MARKET_METADATA
- * collection (the same source `listMarketTagsBySeries` uses in the FE — the
- * `app_get_market_tags` reverse index is admin-gated). Soft by contract: any
- * failure yields `{}`, which limits topic pages to the deck-derived World
- * Cup one rather than failing the deploy.
- */
-const loadTagsBySeries = async (): Promise<Record<string, MarketTag[]>> => {
-	try {
-		const { items } = await listDocs<{ seriesId?: string; tags?: string[] }>({
-			collection: Collection.MARKET_METADATA,
-			satellite: { identity: new AnonymousIdentity(), satelliteId: SATELLITE_ID }
-		});
-
-		return items.reduce<Record<string, MarketTag[]>>((acc, { data }) => {
-			const tags = normalizeMarketTags(data.tags ?? []);
-
-			if (nonNullish(data.seriesId) && tags.length > 0) {
-				acc[data.seriesId] = tags;
-			}
-
-			return acc;
-		}, {});
-	} catch (err) {
-		console.warn(
-			'[seo-assets] market-metadata tag read failed; topic pages limited to World Cup.',
-			err
-		);
-
-		return {};
-	}
 };
 
 const listAllSeries = async (registry: ActorSubclass<RegistryService>): Promise<Series[]> => {
@@ -529,12 +452,6 @@ const renderSitemap = ({ paths, lastmod }: { paths: string[]; lastmod: string })
 	return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 };
 
-interface EmittedMarket {
-	seriesId: string;
-	title: string;
-	canonicalUrl: string;
-}
-
 const buildMarketJsonLd = ({
 	title,
 	descriptionText,
@@ -566,68 +483,6 @@ const buildMarketJsonLd = ({
 		]
 	});
 
-const buildTopicPage = ({
-	shell,
-	slug,
-	categoryName,
-	markets
-}: {
-	shell: string;
-	slug: string;
-	categoryName: string;
-	markets: EmittedMarket[];
-}): string => {
-	const canonicalUrl = `${PROD_ORIGIN}/predictions/${slug}`;
-	const titleText = `${categoryName} Prediction Market — Live Community Odds`;
-	const descriptionText = `Predict ${categoryName} outcomes on Vici — ${markets.length} live prediction markets with real-time community odds. Forecast, build a reputation, and earn XP.`;
-
-	const jsonLd = jsonLdScript({
-		'@context': 'https://schema.org',
-		'@graph': [
-			{
-				'@type': 'CollectionPage',
-				'@id': `${canonicalUrl}#webpage`,
-				url: canonicalUrl,
-				name: `${categoryName} predictions${TITLE_SUFFIX}`,
-				description: descriptionText,
-				isPartOf: { '@id': `${PROD_ORIGIN}/#website` },
-				keywords: `${categoryName.toLowerCase()} prediction market, prediction market ${categoryName.toLowerCase()}, ${categoryName.toLowerCase()} odds, community odds`
-			},
-			{
-				'@type': 'BreadcrumbList',
-				itemListElement: [
-					{ '@type': 'ListItem', position: 1, name: 'VICI', item: `${PROD_ORIGIN}/` },
-					{
-						'@type': 'ListItem',
-						position: 2,
-						name: `${categoryName} predictions`,
-						item: canonicalUrl
-					}
-				]
-			},
-			{
-				'@type': 'ItemList',
-				itemListElement: markets.map((market, index) => ({
-					'@type': 'ListItem',
-					position: index + 1,
-					url: market.canonicalUrl,
-					name: collapseWhitespace(market.title)
-				}))
-			}
-		]
-	});
-
-	const withHead = renderShell({
-		shell,
-		titleText,
-		descriptionText,
-		canonicalUrl,
-		ogType: 'website'
-	});
-
-	return injectHeadExtras({ html: withHead, fragments: [jsonLd] });
-};
-
 const main = async () => {
 	// E2E runs deploy against the emulator satellite — no mainnet registry
 	// there, and no crawler either.
@@ -650,9 +505,7 @@ const main = async () => {
 		canisterId: CLEARING_CANISTER_ID
 	});
 
-	// Tag membership is a soft dependency (public collection, `{}` on failure),
-	// so fetch it alongside the fatal registry read rather than gating on it.
-	const [series, tagsBySeries] = await Promise.all([listAllSeries(registry), loadTagsBySeries()]);
+	const series = await listAllSeries(registry);
 	const viciSeries = series.filter((s) => fromNullable(s.engine_id) === ENGINE_ID);
 
 	const nowMs = Date.now();
@@ -673,7 +526,6 @@ const main = async () => {
 	});
 
 	const sitemapPaths: string[] = [];
-	const emitted: EmittedMarket[] = [];
 
 	visible.forEach((market, index) => {
 		const id = market.series_id;
@@ -716,35 +568,7 @@ const main = async () => {
 
 		writePage({ relativeDir: join('m', shareParam), html });
 		sitemapPaths.push(`/m/${shareParam}`);
-
-		emitted.push({ seriesId: id, title: market.title, canonicalUrl });
 	});
-
-	// One category topic page per non-empty tag. World Cup membership stays
-	// deck-derived (so its hub survives a failed tag read and honours the
-	// reveal gate baked into `visible`); every other tag reads membership
-	// from the public metadata tags. Non-WC tags carry no reveal gate.
-	const topicMembers = (tag: MarketTag): EmittedMarket[] =>
-		tag === 'wc'
-			? emitted.filter((market) => isWcMarket({ title: market.title, wcDeckTitles }))
-			: emitted.filter((market) => (tagsBySeries[market.seriesId] ?? []).includes(tag));
-
-	let topicPages = 0;
-
-	for (const tag of MARKET_TAGS) {
-		const markets = topicMembers(tag);
-
-		if (markets.length > 0) {
-			const slug = TOPIC_SLUG_BY_TAG[tag];
-
-			writePage({
-				relativeDir: join('predictions', slug),
-				html: buildTopicPage({ shell, slug, categoryName: TAG_DISPLAY_NAME[tag], markets })
-			});
-			sitemapPaths.push(`/predictions/${slug}`);
-			topicPages += 1;
-		}
-	}
 
 	const lastmod = new Date(nowMs).toISOString().slice(0, 10);
 	writeFileSync(
@@ -756,7 +580,7 @@ const main = async () => {
 	const hidden = viciSeries.length - visible.length;
 
 	console.log(
-		`[seo-assets] ${visible.length} market pages + ${topicPages} topic page(s) + sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
+		`[seo-assets] ${visible.length} market pages + sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
 	);
 };
 

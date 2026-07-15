@@ -1531,6 +1531,8 @@ export const esMessages = {
 	'market.detail.fallback_title': 'Mercado',
 	'market.detail.followed_lean.aria': '{yes} de tus seguidos en YES, {no} en NO',
 	'market.detail.followed_lean.label': 'Predictores que sigues',
+	'market.detail.flow_cta.guest': 'Prueba Flow gratis',
+	'market.detail.flow_cta.member': 'Predecir en Flow',
 	'market.detail.head_suffix': 'Mercados Sociales',
 	'market.detail.locked_in': 'Confirmado.',
 	'market.detail.maker.disclosure':
@@ -1859,10 +1861,6 @@ export const esMessages = {
 	'prediction.notification.title': 'Predicción colocada',
 	'prediction.payout': '+{amount} {symbol}',
 	'prediction.sign_in': 'Inicia sesión para predecir',
-	'predictions.topic.empty': 'No hay mercados de {category} en vivo ahora mismo; vuelve pronto.',
-	'predictions.topic.h1': 'Predicciones de {category}',
-	'predictions.topic.intro':
-		'Cuotas de la comunidad en vivo en {count} mercados de {category}. Predice resultados, gana reputación y suma XP.',
 	'profile.dashboard.achievements': 'Logros',
 	'profile.dashboard.affiliations.add': 'Añadir',
 	'profile.dashboard.affiliations.count': '{count} de {total}',
@@ -1999,9 +1997,6 @@ export const esMessages = {
 	'seo.home.description':
 		'Opera sobre mercados de resultado binario con funciones sociales en Internet Computer.',
 	'seo.home.title': 'VICI Mercados Sociales | Predice. Opera. Gana.',
-	'seo.topic.description':
-		'Predice los resultados de {category} en Vici: {count} mercados de predicción en vivo con cuotas de la comunidad en tiempo real. Pronostica, gana reputación y suma XP.',
-	'seo.topic.title': 'Mercado de predicción de {category} — Cuotas de la comunidad en vivo | Vici',
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Cuenta',
 	'settings.account.email': 'Correo',

@@ -67,19 +67,19 @@ deploy); unresolvable params land on the markets board.
 - The script skips itself under `JUNO_EMULATOR=true` (E2E deploys have no
   mainnet registry to read).
 
-## Structured data, live odds & topic pages
+## Structured data & live odds
 
-The generator emits three extra signals on top of the per-market head
-rewrite:
+The generator emits two extra signals on top of the per-market head
+rewrite. **No dedicated category/topic pages** — search intent lands on
+existing surfaces (a specific market → its detail page; category browsing
+→ the in-app `/app` board), not a new page.
 
 - **JSON-LD.** [`src/app.html`](../../../src/app.html) carries a static
   `Organization` + `WebSite` `@graph` on every page. The generator injects
-  an additional per-page block before `</head>`: `WebPage` +
-  `BreadcrumbList` for a market, `CollectionPage` + `BreadcrumbList` +
-  `ItemList` for a topic page. `jsonLdScript` escapes `</` so a value can
-  never close the `<script>` early. (No `SearchAction` yet — a sitelinks
-  search box needs a working in-app search endpoint, which is dead code
-  today.)
+  an additional per-market block before `</head>`: `WebPage` +
+  `BreadcrumbList`. `jsonLdScript` escapes `</` so a value can never close
+  the `<script>` early. (No `SearchAction` — a sitelinks search box needs a
+  working in-app search endpoint, which is dead code today.)
 - **Live odds in the snippet.** Per-market descriptions gain a
   `Community odds: Yes N%` sentence, read at deploy time from the clearing
   canister's order book (`list_orders`) and folded through a
@@ -89,28 +89,19 @@ rewrite:
   failed deploy (unlike the registry read, which is fatal). Reads run with
   bounded concurrency (`ODDS_CONCURRENCY`). All figures are a **snapshot as
   of deploy** — there is no SSR, so they age until the next deploy.
-- **Category topic pages** at `predictions/{slug}` (slug per
-  `TOPIC_SLUG_BY_TAG` in
-  [`market-tags.constants`](../../../src/lib/constants/market-tags.constants.ts)),
-  the pages that rank for category queries ("prediction market world
-  cup") — **one per non-empty tag**. Tag membership is read anonymously
-  from the public `MARKET_METADATA` collection via `@junobuild/core`
-  `listDocs` (the same source the FE's `listMarketTagsBySeries` uses; the
-  `app_get_market_tags` reverse index is **admin-gated**, so it's not an
-  option here). World Cup membership stays **deck-derived** so its hub
-  survives a failed tag read and honours the reveal gate. The tag read is a
-  **soft dependency**: a failure degrades to the WC hub only, never a
-  failed deploy. The client route is
-  [`src/routes/(app)/predictions/[tag]/+page.svelte`](../../../src/routes/%28app%29/predictions/%5Btag%5D/+page.svelte),
-  a public route (exempted from the `(app)` sign-in gate and the
-  `authResolving` spinner alongside `/markets/`) that renders the
-  tag-scoped board — it applies the same `filterScheduledWcMarkets` +
-  `status === 'Open'` visibility as the discovery board.
 
 The phrase **"prediction market"** lives only in this crawler-facing layer
 (`<title>` / meta description / JSON-LD keywords) — never in the rendered
 UI, which keeps saying "Social Markets".
 
-- **Topic pages count against the file-count budget too**, but only a
-  handful (one per revealed category), so they stay far inside the
-  proven-safe zone. Do not fan topic pages out per-market.
+## Guest Flow funnel from a market page
+
+A signed-out visitor landing on a market detail page (`/markets/[id]`,
+where `/m/{slug}` resolves) can't predict there — direct trading is
+build-flag-off (`MARKET_DETAIL_DIRECT_TRADE_ENABLED`) and predictions are
+placed in Flow. So a **live** market closes with a "Try Flow free" CTA
+(`onTryFlow`) that starts a free guest session (`startGuestSession`, the
+same no-account preview the onboarding Skip path uses) and routes to
+`/flow` — the `(app)` gate already exempts a guest there. Signed-in
+members see "Predict in Flow" and skip the guest step. This turns search
+traffic into a try-it funnel without a new page.

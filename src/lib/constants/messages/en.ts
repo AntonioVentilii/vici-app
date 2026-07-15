@@ -1505,6 +1505,8 @@ export const enMessages = {
 	'market.detail.fallback_title': 'Market',
 	'market.detail.followed_lean.aria': '{yes} of your follows on YES, {no} on NO',
 	'market.detail.followed_lean.label': 'Predictors you follow',
+	'market.detail.flow_cta.guest': 'Try Flow free',
+	'market.detail.flow_cta.member': 'Predict in Flow',
 	'market.detail.head_suffix': 'Social Markets',
 	'market.detail.locked_in': 'Locked in.',
 	'market.detail.maker.disclosure':
@@ -1843,10 +1845,6 @@ export const enMessages = {
 	'prediction.notification.title': 'Prediction placed',
 	'prediction.payout': '+{amount} {symbol}',
 	'prediction.sign_in': 'Sign in to predict',
-	'predictions.topic.empty': 'No live {category} markets right now — check back soon.',
-	'predictions.topic.h1': '{category} predictions',
-	'predictions.topic.intro':
-		'Live community odds across {count} {category} markets. Predict outcomes, build your reputation, and earn XP.',
 	'profile.dashboard.achievements': 'Achievements',
 	'profile.dashboard.affiliations.add': 'Add',
 	'profile.dashboard.affiliations.count': '{count} of {total}',
@@ -1989,9 +1987,6 @@ export const enMessages = {
 	'seo.home.description':
 		'Trade on binary outcome markets with social features on the Internet Computer.',
 	'seo.home.title': 'VICI Social Markets | Predict. Trade. Win.',
-	'seo.topic.description':
-		'Predict {category} outcomes on Vici — {count} live prediction markets with real-time community odds. Forecast, build a reputation, and earn XP.',
-	'seo.topic.title': '{category} Prediction Market — Live Community Odds | Vici',
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Account',
 	'settings.account.email': 'Email',

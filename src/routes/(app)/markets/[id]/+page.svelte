@@ -22,6 +22,7 @@
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import TradeModal from '$lib/components/market/TradeModal.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { MARKET_DETAIL_DIRECT_TRADE_ENABLED } from '$lib/constants/feature-flags.constants';
 	import { SUPPORTED_LOCALES } from '$lib/constants/locale.constants';
@@ -45,6 +46,7 @@
 	import { getMarketTopPredictors } from '$lib/services/top-predictors.services';
 	import { getSeriesTradeVolume, loadMarketPriceCandles } from '$lib/services/trade.services';
 	import { showCompanion } from '$lib/stores/companion.store';
+	import { startGuestSession } from '$lib/stores/guest.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketLanguagePreference } from '$lib/stores/market-language.store';
 	import type { CallSide, Market, MarketId } from '$lib/types/market';
@@ -685,6 +687,19 @@
 
 		selectedSide = side;
 	};
+
+	// Funnel the "predict" intent into Flow, where predictions are placed
+	// (direct trading from the detail page is off). A signed-out visitor —
+	// e.g. arriving from search — starts a free guest session first, the same
+	// no-account preview the onboarding Skip path uses, so they can try
+	// predicting immediately; the (app) gate exempts a guest on /flow.
+	const onTryFlow = () => {
+		if (!$userSignedIn) {
+			startGuestSession(null);
+		}
+
+		void goto(resolve(AppPath.Flow));
+	};
 </script>
 
 <svelte:head>
@@ -892,17 +907,26 @@
 		     and resolved markets never expose the actions. -->
 		{#if showTradeCta}
 			<MarketDetailCtaBar {noPercent} onPick={handlePick} {yesPercent} />
+		{:else if isLive}
+			<!-- Live market, direct-trade CTA off: predictions are placed in
+			     Flow, so close the page with an action into Flow rather than a
+			     read-only dead end. A signed-out visitor enters a free guest
+			     session (see `onTryFlow`), so search traffic can try predicting
+			     with no account. -->
+			<div class="flex justify-center pt-1">
+				<Button onclick={onTryFlow} variant="primary">
+					{$userSignedIn
+						? t({ locale: $localeStore, key: 'market.detail.flow_cta.member' })
+						: t({ locale: $localeStore, key: 'market.detail.flow_cta.guest' })}
+				</Button>
+			</div>
 		{:else}
-			<!-- Read-only footer — closes the page with an explicit status
-			     line instead of an empty gap where the CTA bar would sit:
-			     a live market points the viewer to Flow, a resolved one
-			     states it has settled, and an expired one notes it is
+			<!-- Read-only footer for a market no longer taking calls: a
+			     resolved one states it has settled, an expired one notes it is
 			     awaiting resolution. -->
 			<p class="market-detail-closed-foot">
 				{#if isResolved}
 					{t({ locale: $localeStore, key: 'market.detail.readonly.settled' })}
-				{:else if isLive}
-					{t({ locale: $localeStore, key: 'market.detail.readonly.live' })}
 				{:else}
 					{t({ locale: $localeStore, key: 'market.detail.closed.expired' })}
 				{/if}
