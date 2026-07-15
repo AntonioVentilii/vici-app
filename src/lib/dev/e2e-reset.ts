@@ -3,6 +3,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { isDev } from '$lib/env/app.env';
 import { userStore } from '$lib/stores/user.store';
 import type { UserProfile } from '$lib/types/profile';
+import { sleep } from '$lib/utils/async.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, signOut } from '@junobuild/core';
 import { get } from 'svelte/store';
@@ -72,8 +73,6 @@ const DELETE_RETRY_DELAY_MS = 250;
 /** How long the doc must stay absent after a delete to be considered settled. */
 const RESURRECTION_WATCH_MS = 2_000;
 const RESURRECTION_POLL_MS = 250;
-
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 const readProfileDoc = (principal: string) =>
 	getDoc<UserProfile>({ collection: Collection.PROFILES, key: principal });
