@@ -225,8 +225,15 @@ export class HomePage {
 	 * and every prior `signInAsDevUser` auto-claims the handle field's pool
 	 * suggestion and completes onboarding for it — so by the time a spec needs
 	 * a brand-new user, that principal is already a fully-onboarded returning
-	 * user. Call this (while signed in) then sign out: the next sign-in finds
-	 * no profile doc and bootstraps fresh, restoring the genuine new-user path.
+	 * user. Delete its profile so the next sign-in bootstraps fresh, restoring
+	 * the genuine new-user path.
+	 *
+	 * IMPORTANT: the delete must be the LAST signed-in action before sign-out.
+	 * Any signed-in page load afterwards (e.g. navigating to a sign-out
+	 * surface) re-runs `ensureProfile`, which finds no doc and immediately
+	 * bootstraps a fresh one — resurrecting exactly what this just deleted. Do
+	 * this while already ON the sign-out surface (see {@link gotoSignOutSurface})
+	 * and follow it with {@link confirmSignOut}, which navigates nowhere.
 	 */
 	async resetDevProfile(): Promise<void> {
 		await this.page.evaluate(async () => {
@@ -244,14 +251,42 @@ export class HomePage {
 	}
 
 	/**
-	 * Sign out via the Settings page — the only sign-out surface in the
-	 * current app (the old account dropdown is gone). The reveal button
-	 * arms an in-page confirm; the destructive confirm calls `signOut()`,
-	 * after which the (app) gate routes back to `/signin`.
+	 * Load the Settings page — the only sign-out surface in the current app
+	 * (the old account dropdown is gone). Split out from {@link confirmSignOut}
+	 * so a spec can land here, run a signed-in action that must not be followed
+	 * by another page load (e.g. {@link resetDevProfile}), then sign out in
+	 * place. Waits for the post-auth writes triggered by this load
+	 * (`calculateAndSyncStats`) to settle, so a subsequent profile delete is
+	 * the final profile mutation of the session rather than racing them.
 	 */
-	async logout(): Promise<void> {
+	async gotoSignOutSurface(): Promise<void> {
 		await this.page.goto('/settings');
+
+		// Settings runs no background polling (unlike the `/flow` landing), so
+		// `networkidle` reliably resolves once this load's post-auth profile
+		// write has landed.
+		await this.page.waitForLoadState('networkidle');
+	}
+
+	/**
+	 * Complete the sign-out from the already-loaded Settings page: the reveal
+	 * button arms an in-page confirm, and the destructive confirm calls
+	 * `signOut()`, after which the (app) gate routes back to `/signin`.
+	 * Navigates nowhere itself, so it never re-bootstraps a just-deleted
+	 * profile.
+	 */
+	async confirmSignOut(): Promise<void> {
 		await this.signOutButton.click();
 		await this.logoutButton.click();
+	}
+
+	/**
+	 * Sign out via the Settings page. Composes {@link gotoSignOutSurface} and
+	 * {@link confirmSignOut} for the common case where nothing needs to run
+	 * between landing on the surface and confirming.
+	 */
+	async logout(): Promise<void> {
+		await this.gotoSignOutSurface();
+		await this.confirmSignOut();
 	}
 }

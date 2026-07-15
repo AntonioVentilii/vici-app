@@ -3,7 +3,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { isDev } from '$lib/env/app.env';
 import { userStore } from '$lib/stores/user.store';
 import type { UserProfile } from '$lib/types/profile';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc } from '@junobuild/core';
 import { get } from 'svelte/store';
 
@@ -38,15 +38,35 @@ declare global {
  * The `profiles` collection is public-write and carries no delete assert, so
  * the owner can remove their own doc.
  *
- * The profile is written concurrently right after sign-in (the finishing
- * login's `calculateAndSyncStats`), so a delete against a just-read version
- * can lose the optimistic-concurrency race and trap
- * `juno.error.version_outdated_or_future`. Re-read fresh and retry until the
- * version is current — the write storm is finite, so this converges once it
- * settles (or the doc is already gone).
+ * Two independent races can leave the doc present after a naive delete:
+ *
+ *  1. A concurrent write bumps the version between our read and our delete, so
+ *     `deleteDoc` traps `juno.error.version_outdated_or_future`. Re-read fresh
+ *     and retry until the version is current.
+ *
+ *  2. A trailing post-sign-in write RE-CREATES the doc after our delete: the
+ *     finishing login's `calculateAndSyncStats` fetches trade history before
+ *     enqueuing its profile write, so that write can land after the delete and
+ *     go through `upsertProfile`'s versionless `setDoc` (the doc reads as
+ *     absent → create). A single delete doesn't guard against this — the doc
+ *     resurrects and the next sign-in wrongly looks like a returning user.
+ *
+ * So this deletes, then watches for a resurrecting write across a settle
+ * window and re-deletes if the doc reappears. The post-sign-in write storm is
+ * finite, so this converges once it drains. (The caller must still avoid a
+ * signed-in page load AFTER this resolves — that would re-run `ensureProfile`
+ * and bootstrap a fresh doc, which no amount of watching here can prevent.)
  */
-const DELETE_ATTEMPTS = 8;
+const DELETE_ATTEMPTS = 10;
 const DELETE_RETRY_DELAY_MS = 250;
+/** How long the doc must stay absent after a delete to be considered settled. */
+const RESURRECTION_WATCH_MS = 2_000;
+const RESURRECTION_POLL_MS = 250;
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+const readProfileDoc = (principal: string) =>
+	getDoc<UserProfile>({ collection: Collection.PROFILES, key: principal });
 
 const resetMyProfile = async (): Promise<void> => {
 	const principal = get(userStore).user?.key;
@@ -56,31 +76,55 @@ const resetMyProfile = async (): Promise<void> => {
 	}
 
 	for (let attempt = 0; attempt < DELETE_ATTEMPTS; attempt += 1) {
-		const existing = await getDoc<UserProfile>({
-			collection: Collection.PROFILES,
-			key: principal
-		});
+		const existing = await readProfileDoc(principal);
 
-		if (isNullish(existing)) {
-			return;
+		let deleted = true;
+
+		if (nonNullish(existing)) {
+			try {
+				await deleteDoc({ collection: Collection.PROFILES, doc: existing });
+			} catch (err: unknown) {
+				const message = err instanceof Error ? err.message : String(err);
+
+				if (!message.includes('version_outdated_or_future') || attempt === DELETE_ATTEMPTS - 1) {
+					throw err;
+				}
+
+				// A concurrent write bumped the version between the read and the
+				// delete; wait for it to land, then re-read and retry on the next
+				// loop pass.
+				await sleep(DELETE_RETRY_DELAY_MS);
+
+				deleted = false;
+			}
 		}
 
-		try {
-			await deleteDoc({ collection: Collection.PROFILES, doc: existing });
+		if (deleted) {
+			// The doc is gone. Confirm it STAYS gone — a trailing post-sign-in
+			// write can re-create it (see the header). If it reappears within the
+			// window, loop and delete the resurrected doc; otherwise the reset is
+			// settled.
+			let resurrected = false;
 
-			return;
-		} catch (err: unknown) {
-			const message = err instanceof Error ? err.message : String(err);
+			for (let waited = 0; waited < RESURRECTION_WATCH_MS; waited += RESURRECTION_POLL_MS) {
+				await sleep(RESURRECTION_POLL_MS);
 
-			if (!message.includes('version_outdated_or_future') || attempt === DELETE_ATTEMPTS - 1) {
-				throw err;
+				if (nonNullish(await readProfileDoc(principal))) {
+					resurrected = true;
+
+					break;
+				}
 			}
 
-			// A concurrent write bumped the version between the read and the
-			// delete; wait for it to land, then re-read and retry.
-			await new Promise((resolve) => setTimeout(resolve, DELETE_RETRY_DELAY_MS));
+			if (!resurrected) {
+				return;
+			}
 		}
 	}
+
+	throw new Error(
+		'resetMyProfile: profile doc kept being re-created after delete — the post-sign-in write storm never settled.'
+	);
 };
 
 /**
