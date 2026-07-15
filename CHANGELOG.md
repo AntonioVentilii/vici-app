@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.25](https://github.com/AntonioVentilii/vici-app/compare/v1.8.24...v1.8.25) (2026-07-15)
+
+
+### Features
+
+* **seo:** structured data, live-odds snippets & World Cup topic page ([#1136](https://github.com/AntonioVentilii/vici-app/issues/1136)) ([89e74b9](https://github.com/AntonioVentilii/vici-app/commit/89e74b91d59588bf4724c503e65ce757f0c614d4))
+
+
+### Tests
+
+* **e2e:** stop onboarding reset from being resurrected by the sign-out nav ([#1139](https://github.com/AntonioVentilii/vici-app/issues/1139)) ([5207d2b](https://github.com/AntonioVentilii/vici-app/commit/5207d2b8de19ae22917c06f67ae3276d55f8b5f6))
+
 ## [1.8.24](https://github.com/AntonioVentilii/vici-app/compare/v1.8.23...v1.8.24) (2026-07-15)
 
 
