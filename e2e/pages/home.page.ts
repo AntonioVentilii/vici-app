@@ -228,12 +228,12 @@ export class HomePage {
 	 * user. Delete its profile so the next sign-in bootstraps fresh, restoring
 	 * the genuine new-user path.
 	 *
-	 * IMPORTANT: the delete must be the LAST signed-in action before sign-out.
-	 * Any signed-in page load afterwards (e.g. navigating to a sign-out
-	 * surface) re-runs `ensureProfile`, which finds no doc and immediately
-	 * bootstraps a fresh one — resurrecting exactly what this just deleted. Do
-	 * this while already ON the sign-out surface (see {@link gotoSignOutSurface})
-	 * and follow it with {@link confirmSignOut}, which navigates nowhere.
+	 * IMPORTANT: follow this with {@link signOutDev}, NOT {@link logout}. The
+	 * delete must be the last signed-in action before sign-out — a signed-in
+	 * page load in between (navigating to the Settings sign-out surface) re-runs
+	 * `ensureProfile`, which finds no doc and immediately re-bootstraps one,
+	 * resurrecting exactly what this deleted. `signOutDev` signs out in place
+	 * with no navigation, so nothing re-bootstraps it.
 	 */
 	async resetDevProfile(): Promise<void> {
 		await this.page.evaluate(async () => {
@@ -251,42 +251,36 @@ export class HomePage {
 	}
 
 	/**
-	 * Load the Settings page — the only sign-out surface in the current app
-	 * (the old account dropdown is gone). Split out from {@link confirmSignOut}
-	 * so a spec can land here, run a signed-in action that must not be followed
-	 * by another page load (e.g. {@link resetDevProfile}), then sign out in
-	 * place. Waits for the post-auth writes triggered by this load
-	 * (`calculateAndSyncStats`) to settle, so a subsequent profile delete is
-	 * the final profile mutation of the session rather than racing them.
+	 * Sign out programmatically via the dev-only hook (Juno `signOut`), without
+	 * navigating to the Settings sign-out surface. Pairs with
+	 * {@link resetDevProfile}: no signed-in page load happens between the delete
+	 * and the sign-out, so `ensureProfile` can't re-bootstrap the deleted
+	 * profile. The (app) auth gate routes back to `/signin` afterwards.
 	 */
-	async gotoSignOutSurface(): Promise<void> {
-		await this.page.goto('/settings');
+	async signOutDev(): Promise<void> {
+		await this.page.evaluate(async () => {
+			const hooks = (window as unknown as { __viciE2E?: { signOut: () => Promise<void> } })
+				.__viciE2E;
 
-		// Settings runs no background polling (unlike the `/flow` landing), so
-		// `networkidle` reliably resolves once this load's post-auth profile
-		// write has landed.
-		await this.page.waitForLoadState('networkidle');
+			if (!hooks) {
+				throw new Error(
+					'Dev-only e2e reset hook (window.__viciE2E) is not installed — expected isDev() on the dev server.'
+				);
+			}
+
+			await hooks.signOut();
+		});
 	}
 
 	/**
-	 * Complete the sign-out from the already-loaded Settings page: the reveal
-	 * button arms an in-page confirm, and the destructive confirm calls
-	 * `signOut()`, after which the (app) gate routes back to `/signin`.
-	 * Navigates nowhere itself, so it never re-bootstraps a just-deleted
-	 * profile.
-	 */
-	async confirmSignOut(): Promise<void> {
-		await this.signOutButton.click();
-		await this.logoutButton.click();
-	}
-
-	/**
-	 * Sign out via the Settings page. Composes {@link gotoSignOutSurface} and
-	 * {@link confirmSignOut} for the common case where nothing needs to run
-	 * between landing on the surface and confirming.
+	 * Sign out via the Settings page — the only sign-out surface in the
+	 * current app (the old account dropdown is gone). The reveal button
+	 * arms an in-page confirm; the destructive confirm calls `signOut()`,
+	 * after which the (app) gate routes back to `/signin`.
 	 */
 	async logout(): Promise<void> {
-		await this.gotoSignOutSurface();
-		await this.confirmSignOut();
+		await this.page.goto('/settings');
+		await this.signOutButton.click();
+		await this.logoutButton.click();
 	}
 }

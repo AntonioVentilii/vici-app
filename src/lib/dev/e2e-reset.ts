@@ -4,7 +4,7 @@ import { isDev } from '$lib/env/app.env';
 import { userStore } from '$lib/stores/user.store';
 import type { UserProfile } from '$lib/types/profile';
 import { isNullish, nonNullish } from '@dfinity/utils';
-import { deleteDoc, getDoc } from '@junobuild/core';
+import { deleteDoc, getDoc, signOut } from '@junobuild/core';
 import { get } from 'svelte/store';
 
 /**
@@ -14,6 +14,15 @@ import { get } from 'svelte/store';
 export interface E2eHooks {
 	/** Hard-delete the signed-in principal's profile doc. Resolves once gone. */
 	resetMyProfile: () => Promise<void>;
+	/**
+	 * Sign out programmatically (Juno `signOut`), without navigating to the
+	 * Settings sign-out surface. Pairs with {@link resetMyProfile}: deleting the
+	 * profile and then signing out in place means NO signed-in page load happens
+	 * between the two, so `ensureProfile` can't re-bootstrap the doc we just
+	 * removed. Fires `onAuthStateChange(null)`; the (app) auth gate then routes
+	 * back to `/signin`.
+	 */
+	signOut: () => Promise<void>;
 }
 
 declare global {
@@ -53,9 +62,10 @@ declare global {
  *
  * So this deletes, then watches for a resurrecting write across a settle
  * window and re-deletes if the doc reappears. The post-sign-in write storm is
- * finite, so this converges once it drains. (The caller must still avoid a
- * signed-in page load AFTER this resolves — that would re-run `ensureProfile`
- * and bootstrap a fresh doc, which no amount of watching here can prevent.)
+ * finite, so this converges once it drains. The caller must then sign out
+ * WITHOUT a signed-in page load in between (use {@link E2eHooks.signOut}, not a
+ * navigation to the Settings surface) — a signed-in navigation would re-run
+ * `ensureProfile` and bootstrap a fresh doc, which no watching here can prevent.
  */
 const DELETE_ATTEMPTS = 10;
 const DELETE_RETRY_DELAY_MS = 250;
@@ -137,5 +147,5 @@ export const installE2eResetHook = (): void => {
 		return;
 	}
 
-	window.__viciE2E = { resetMyProfile };
+	window.__viciE2E = { resetMyProfile, signOut: () => signOut() };
 };
