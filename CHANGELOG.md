@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.24](https://github.com/AntonioVentilii/vici-app/compare/v1.8.23...v1.8.24) (2026-07-15)
+
+
+### Bug Fixes
+
+* **i18n:** translate market title on remaining detail-page + card surfaces ([#1137](https://github.com/AntonioVentilii/vici-app/issues/1137)) ([4a3111d](https://github.com/AntonioVentilii/vici-app/commit/4a3111dc4f836597af35009163c2fd05024a2bba))
+
 ## [1.8.23](https://github.com/AntonioVentilii/vici-app/compare/v1.8.22...v1.8.23) (2026-07-13)
 
 
