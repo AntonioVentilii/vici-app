@@ -66,3 +66,42 @@ deploy); unresolvable params land on the markets board.
   zone; do not add per-market page variants without checking this budget.
 - The script skips itself under `JUNO_EMULATOR=true` (E2E deploys have no
   mainnet registry to read).
+
+## Structured data & live odds
+
+The generator emits two extra signals on top of the per-market head
+rewrite. **No dedicated category/topic pages** — search intent lands on
+existing surfaces (a specific market → its detail page; category browsing
+→ the in-app `/app` board), not a new page.
+
+- **JSON-LD.** [`src/app.html`](../../../src/app.html) carries a static
+  `Organization` + `WebSite` `@graph` on every page. The generator injects
+  an additional per-market block before `</head>`: `WebPage` +
+  `BreadcrumbList`. `jsonLdScript` escapes `</` so a value can never close
+  the `<script>` early. (No `SearchAction` — a sitelinks search box needs a
+  working in-app search endpoint, which is dead code today.)
+- **Live odds in the snippet.** Per-market descriptions gain a
+  `Community odds: Yes N%` sentence, read at deploy time from the clearing
+  canister's order book (`list_orders`) and folded through a
+  `midYesProbability` helper that mirrors `calculateProbability` in
+  `$lib/utils/market.utils`. This is the script's **only soft
+  dependency**: a clearing error degrades to "no odds clause", never a
+  failed deploy (unlike the registry read, which is fatal). Reads run with
+  bounded concurrency (`ODDS_CONCURRENCY`). All figures are a **snapshot as
+  of deploy** — there is no SSR, so they age until the next deploy.
+
+The phrase **"prediction market"** lives only in this crawler-facing layer
+(`<title>` / meta description / JSON-LD keywords) — never in the rendered
+UI, which keeps saying "Social Markets".
+
+## Guest Flow funnel from a market page
+
+A signed-out visitor landing on a market detail page (`/markets/[id]`,
+where `/m/{slug}` resolves) can't predict there — direct trading is
+build-flag-off (`MARKET_DETAIL_DIRECT_TRADE_ENABLED`) and predictions are
+placed in Flow. So a **live** market closes with a "Try Flow free" CTA
+(`onTryFlow`) that starts a free guest session (`startGuestSession`, the
+same no-account preview the onboarding Skip path uses) and routes to
+`/flow` — the `(app)` gate already exempts a guest there. Signed-in
+members see "Predict in Flow" and skip the guest step. This turns search
+traffic into a try-it funnel without a new page.

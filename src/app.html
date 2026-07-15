@@ -63,9 +63,38 @@
 
 		<meta
 			name="description"
-			content="VICI is a consumer-first prediction platform. Forecast outcomes, build a reputation, and earn XP."
+			content="VICI is a consumer-first prediction market. Forecast World Cup, crypto, politics and culture outcomes on live community odds, build a reputation, and earn XP."
 		/>
 		<link rel="canonical" href="https://vici.market/" />
+
+		<!-- Site-wide structured data (schema.org). Organization + WebSite
+			 apply to every page; per-market and per-topic JSON-LD is injected
+			 on top by scripts/build/generate-seo-assets.ts at deploy time.
+			 Do NOT write literal head-tag markup (the title or description-meta
+			 openers) into this block or its comments: the generator counts those
+			 patterns in the built shell and hard-fails on a second match. -->
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@graph": [
+					{
+						"@type": "Organization",
+						"@id": "https://vici.market/#org",
+						"name": "VICI",
+						"url": "https://vici.market/",
+						"logo": "https://vici.market/branding/og-image.png"
+					},
+					{
+						"@type": "WebSite",
+						"@id": "https://vici.market/#website",
+						"name": "VICI",
+						"url": "https://vici.market/",
+						"publisher": { "@id": "https://vici.market/#org" },
+						"description": "VICI is a consumer-first prediction market — forecast World Cup, crypto, politics and culture outcomes on live community odds."
+					}
+				]
+			}
+		</script>
 
 		<!-- Open Graph / Twitter. The og:image is a 1200×630 raster rendered
 			 from the brand SVGs (wordmark on the ink canvas + tagline). Twitter
