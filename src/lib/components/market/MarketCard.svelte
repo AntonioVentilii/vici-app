@@ -93,7 +93,7 @@
 			return t({ locale: $localeStore, key: 'outcome.canceled' });
 		}
 
-		return market.outcomes?.find((o) => o.id === outcome)?.title ?? outcome;
+		return display.outcomeTitle(outcome) || outcome;
 	};
 </script>
 
