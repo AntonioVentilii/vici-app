@@ -1538,6 +1538,8 @@ export const frMessages = {
 	'market.detail.fallback_title': 'Marché',
 	'market.detail.followed_lean.aria': '{yes} de vos suivis sur YES, {no} sur NO',
 	'market.detail.followed_lean.label': 'Prédicteurs que vous suivez',
+	'market.detail.flow_cta.guest': 'Essayez Flow gratuitement',
+	'market.detail.flow_cta.member': 'Prédire dans Flow',
 	'market.detail.head_suffix': 'Marchés Sociaux',
 	'market.detail.locked_in': 'Confirmé.',
 	'market.detail.maker.disclosure':

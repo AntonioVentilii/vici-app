@@ -1531,6 +1531,8 @@ export const itMessages = {
 	'market.detail.fallback_title': 'Mercato',
 	'market.detail.followed_lean.aria': '{yes} dei tuoi seguiti su SÌ, {no} su NO',
 	'market.detail.followed_lean.label': 'Predittori che segui',
+	'market.detail.flow_cta.guest': 'Prova Flow gratis',
+	'market.detail.flow_cta.member': 'Prevedi in Flow',
 	'market.detail.head_suffix': 'Mercati Sociali',
 	'market.detail.locked_in': 'Confermato.',
 	'market.detail.maker.disclosure':

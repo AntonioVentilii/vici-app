@@ -1446,6 +1446,8 @@ export const zhHansMessages = {
 	'market.detail.fallback_title': '市场',
 	'market.detail.followed_lean.aria': '你关注的人中 {yes} 人选 YES,{no} 人选 NO',
 	'market.detail.followed_lean.label': '你关注的预测者',
+	'market.detail.flow_cta.guest': '免费试玩 Flow',
+	'market.detail.flow_cta.member': '在 Flow 中预测',
 	'market.detail.head_suffix': '社交市场',
 	'market.detail.locked_in': '已锁定。',
 	'market.detail.maker.disclosure':

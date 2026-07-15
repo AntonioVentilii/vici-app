@@ -725,3 +725,24 @@ originating surface and the platform. The manifest, icons, iOS meta, and
 the pre-paint standalone/iOS detection in `app.html` were already shipped;
 this layer adds only the install behaviour. Decision record:
 [`specs/2026-06-25-feat-pwa-install.md`](./spec-driven-development/specs/2026-06-25-feat-pwa-install.md).
+
+### Discoverability — search snippets & the guest Flow funnel
+
+VICI is a static SPA, so its search presence is generated **at deploy
+time** (see [`frontend/seo.md`](./frontend/seo.md)). Search intent lands on
+**existing pages, not new ones**: a specific market → its detail page
+(`/m/{slug}` resolves there), category browsing → the in-app `/app` board.
+On top of one crawlable page per market, the deploy emits schema.org
+**JSON-LD** (site-wide `Organization` + `WebSite`, plus a per-market
+`WebPage` + `BreadcrumbList`) and a **live-odds sentence** baked into each
+market's meta description ("Community odds: Yes 41%", a deploy-time
+snapshot of the order book). The phrase "prediction market" appears **only**
+in this crawler-facing metadata (titles, descriptions, structured data) —
+never in the rendered product UI, which continues to say "Social Markets".
+
+A signed-out visitor who lands on a **live** market page gets a **"Try Flow
+free"** CTA (predictions are placed in Flow, not on the detail page): it
+starts a free guest session and drops them into the Flow swipe deck with no
+account — the same guest preview the onboarding Skip path uses. Signed-in
+members see "Predict in Flow" instead. Decision record:
+[`specs/2026-07-14-impr-seo-rich-snippets-topic-pages.md`](./spec-driven-development/specs/2026-07-14-impr-seo-rich-snippets-topic-pages.md).

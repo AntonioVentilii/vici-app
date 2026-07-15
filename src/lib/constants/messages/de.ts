@@ -1546,6 +1546,8 @@ export const deMessages = {
 	'market.detail.fallback_title': 'Markt',
 	'market.detail.followed_lean.aria': '{yes} deiner Gefolgten auf YES, {no} auf NO',
 	'market.detail.followed_lean.label': 'Predictors, denen du folgst',
+	'market.detail.flow_cta.guest': 'Flow kostenlos testen',
+	'market.detail.flow_cta.member': 'In Flow vorhersagen',
 	'market.detail.head_suffix': 'Soziale Märkte',
 	'market.detail.locked_in': 'Eingebucht.',
 	'market.detail.maker.disclosure':
