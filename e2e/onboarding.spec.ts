@@ -32,9 +32,16 @@ test.describe('pre-sign-in onboarding', () => {
 
 		// Restore the pristine, pre-onboarding state for the shared dev principal
 		// (see the file header) so the handle handoff runs its new-user path.
+		//
+		// Ordering is load-bearing: the profile delete must be the LAST signed-in
+		// action, and the sign-out must NOT navigate through a signed-in page. So
+		// we delete then sign out programmatically in place (`signOutDev`) — a
+		// navigation to the Settings sign-out surface here would re-run
+		// `ensureProfile` and re-bootstrap the doc we just deleted, and the run
+		// below would (wrongly) see a returning user.
 		await home.signInAsDevUser();
 		await home.resetDevProfile();
-		await home.logout();
+		await home.signOutDev();
 
 		// Let the sign-out redirect land before navigating, otherwise the
 		// `/signup` goto races the in-flight redirect to `/signin` and aborts.
