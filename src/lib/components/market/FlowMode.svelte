@@ -50,7 +50,6 @@
 	import { marketLanguagePreference } from '$lib/stores/market-language.store';
 	import {
 		hydrate as hydrateMarketTranslations,
-		marketDisplay,
 		marketTranslations
 	} from '$lib/stores/market-translations.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -93,7 +92,7 @@
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import type { MarketPriceSeries } from '$lib/utils/market-price-history.utils';
-	import { translatedLanguageLabel } from '$lib/utils/market-translation.utils';
+	import { marketDisplayText, translatedLanguageLabel } from '$lib/utils/market-translation.utils';
 	import {
 		DAILY_HARD_CAP,
 		recordMotionSwipe,
@@ -849,7 +848,11 @@
 						locale: $localeStore,
 						key: 'flow.notification.trade_failed_message',
 						params: {
-							title: $marketDisplay(currentMarket).title.slice(0, 30),
+							title: marketDisplayText({
+								market: currentMarket,
+								translation: $marketTranslations.get(currentMarket.id),
+								showOriginal: flowShowOriginal
+							}).title.slice(0, 30),
 							error: t({ locale: $localeStore, key, params })
 						}
 					}),
