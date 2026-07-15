@@ -704,7 +704,7 @@
 
 <svelte:head>
 	<title
-		>{market ? market.title : t({ locale: $localeStore, key: 'market.detail.fallback_title' })} | Vici
+		>{market ? displayTitle : t({ locale: $localeStore, key: 'market.detail.fallback_title' })} | Vici
 		{t({ locale: $localeStore, key: 'market.detail.head_suffix' })}</title
 	>
 </svelte:head>
@@ -715,7 +715,7 @@
 	{:else if market}
 		{@const m = market}
 		{#snippet detailRight()}
-			<MarketDetailShareButton title={m.title} />
+			<MarketDetailShareButton title={displayTitle} />
 			<!-- Eye / "watch this market" save control. Same shared
 			     toggle (and same watchlist backend) as the per-card
 			     heart, here wearing the eye glyph and the faint ghost
