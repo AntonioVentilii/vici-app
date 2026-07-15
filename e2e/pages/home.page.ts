@@ -225,8 +225,15 @@ export class HomePage {
 	 * and every prior `signInAsDevUser` auto-claims the handle field's pool
 	 * suggestion and completes onboarding for it — so by the time a spec needs
 	 * a brand-new user, that principal is already a fully-onboarded returning
-	 * user. Call this (while signed in) then sign out: the next sign-in finds
-	 * no profile doc and bootstraps fresh, restoring the genuine new-user path.
+	 * user. Delete its profile so the next sign-in bootstraps fresh, restoring
+	 * the genuine new-user path.
+	 *
+	 * IMPORTANT: follow this with {@link signOutDev}, NOT {@link logout}. The
+	 * delete must be the last signed-in action before sign-out — a signed-in
+	 * page load in between (navigating to the Settings sign-out surface) re-runs
+	 * `ensureProfile`, which finds no doc and immediately re-bootstraps one,
+	 * resurrecting exactly what this deleted. `signOutDev` signs out in place
+	 * with no navigation, so nothing re-bootstraps it.
 	 */
 	async resetDevProfile(): Promise<void> {
 		await this.page.evaluate(async () => {
@@ -240,6 +247,28 @@ export class HomePage {
 			}
 
 			await hooks.resetMyProfile();
+		});
+	}
+
+	/**
+	 * Sign out programmatically via the dev-only hook (Juno `signOut`), without
+	 * navigating to the Settings sign-out surface. Pairs with
+	 * {@link resetDevProfile}: no signed-in page load happens between the delete
+	 * and the sign-out, so `ensureProfile` can't re-bootstrap the deleted
+	 * profile. The (app) auth gate routes back to `/signin` afterwards.
+	 */
+	async signOutDev(): Promise<void> {
+		await this.page.evaluate(async () => {
+			const hooks = (window as unknown as { __viciE2E?: { signOut: () => Promise<void> } })
+				.__viciE2E;
+
+			if (!hooks) {
+				throw new Error(
+					'Dev-only e2e reset hook (window.__viciE2E) is not installed — expected isDev() on the dev server.'
+				);
+			}
+
+			await hooks.signOut();
 		});
 	}
 

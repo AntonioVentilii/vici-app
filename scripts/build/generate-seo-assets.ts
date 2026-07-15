@@ -13,17 +13,16 @@
  *     keyword-carrying canonical, same param the share sheet hands out —
  *     see `$lib/utils/market-slug.utils`) with the market's
  *     title/description swapped into `<title>`, the description meta, the
- *     canonical link and the OG/Twitter tags, plus `window.__viciSeriesId`
- *     so the `/m/[id]` route resolves the market without a catalog lookup.
+ *     canonical link and the OG/Twitter tags, a per-market JSON-LD block,
+ *     plus `window.__viciSeriesId` so the `/m/[id]` route resolves the
+ *     market without a catalog lookup.
  *
  * Exactly one page per market, deliberately: every emitted file is staged,
  * committed AND deleted again per deploy, and the satellite recomputes the
  * asset certification tree across all assets on those bulk operations —
  * deleting ~6k staged assets exceeded the IC's 40B-instruction message
  * limit (see junobuild/juno#2263; deploy applied, cleanup failed). The
- * plain-id routes (`/markets/{id}`, `/m/{id}`) intentionally get no copies:
- * they serve the generic shell and the app resolves them client-side, while
- * sitemap + share links only ever point at the slug URL.
+ * plain-id routes (`/markets/{id}`, `/m/{id}`) intentionally get no copies.
  *
  * Contract with `src/app.html`: the head tags rewritten here must keep
  * matching the patterns below — the script hard-fails when a pattern stops
@@ -39,11 +38,16 @@
  *
  * Failure is fatal by design: `hosting deploy --prune` deletes any asset
  * missing from `build/`, so a silently-degraded run would wipe every
- * previously deployed market page and the sitemap.
+ * previously deployed market page and the sitemap. The one soft dependency
+ * is live odds: a slow/unreachable clearing canister must never fail a
+ * deploy, so per-market odds reads degrade to "no odds clause", never a
+ * throw.
  */
-import type { _SERVICE, Series } from '$declarations/registry/registry';
-import { idlFactory } from '$declarations/registry/registry.idl.js';
-import { REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
+import type { _SERVICE as ClearingService, LimitOrder } from '$declarations/clearing/clearing';
+import { idlFactory as clearingIdlFactory } from '$declarations/clearing/clearing.idl.js';
+import type { _SERVICE as RegistryService, Series } from '$declarations/registry/registry';
+import { idlFactory as registryIdlFactory } from '$declarations/registry/registry.idl.js';
+import { CLEARING_CANISTER_ID, REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
 import {
 	normalizeWcQuestion,
 	WC_QUESTION_REVEAL_MS
@@ -64,6 +68,11 @@ const IC_HOST = 'https://icp-api.io';
 const ENGINE_ID = process.env.VICI_ENGINE_ID ?? 'eng_0';
 const PAGE_SIZE = 200n;
 
+// Bounded fan-out for the per-market odds reads: enough to keep the deploy
+// step quick over a few hundred markets, low enough not to hammer the
+// clearing canister with one burst.
+const ODDS_CONCURRENCY = 8;
+
 // Mirrors the market-detail `<svelte:head>` title (`market.detail.head_suffix`).
 const TITLE_SUFFIX = ' | Vici Social Markets';
 
@@ -72,8 +81,10 @@ const TITLE_SUFFIX = ' | Vici Social Markets';
 const DESCRIPTION_MAX_LENGTH = 160;
 
 // Registry descriptions are often a terse one-liner ("Both-to-score
-// market") — the brand tail turns the snippet into a call to action.
-const DESCRIPTION_TAIL = 'Live community odds on Vici.';
+// market") — the brand tail turns the snippet into a call to action AND
+// seeds the "prediction market" keyword into the crawler-facing meta (the
+// phrase never appears in the rendered UI, only here in the head layer).
+const DESCRIPTION_TAIL = 'Live community odds on the Vici prediction market.';
 
 // The committed decks that registered the World-Cup catalog (matched BY
 // TITLE, like every deck pipeline step). Titles present here but absent
@@ -102,15 +113,41 @@ const truncateAtWord = (value: string): string => {
 	return `${lastSpace > 0 ? cut.slice(0, lastSpace) : cut}…`;
 };
 
-const composeDescription = (plain: string): string => {
+/**
+ * The plain-text meta description: the (truncated) registry blurb, an
+ * optional live-odds sentence, then the brand/keyword tail. Returns raw
+ * text — callers HTML-escape it for meta attributes and pass it verbatim
+ * into JSON-LD.
+ */
+const composeDescription = ({
+	plain,
+	yesProbability
+}: {
+	plain: string;
+	yesProbability?: number;
+}): string => {
 	const base = truncateAtWord(plain);
+	const sentences: string[] = [];
 
-	if (base.length === 0) {
-		return DESCRIPTION_TAIL;
+	if (base.length > 0) {
+		sentences.push(/[.!?…]$/.test(base) ? base : `${base}.`);
 	}
 
-	return `${/[.!?…]$/.test(base) ? base : `${base}.`} ${DESCRIPTION_TAIL}`;
+	if (nonNullish(yesProbability)) {
+		sentences.push(`Community odds: Yes ${Math.round(yesProbability * 100)}%.`);
+	}
+
+	sentences.push(DESCRIPTION_TAIL);
+
+	return sentences.join(' ');
 };
+
+/**
+ * Serialises a schema.org object into a `<script type="application/ld+json">`
+ * tag. `</` is escaped so a stray value can never close the script early.
+ */
+const jsonLdScript = (data: unknown): string =>
+	`<script type="application/ld+json">${JSON.stringify(data).replaceAll('</', '<\\/')}</script>`;
 
 const loadWcDeckTitles = (): Set<string> => {
 	const titles = new Set<string>();
@@ -159,7 +196,7 @@ const isMarketVisible = ({
 	return !wcDeckTitles.has(key);
 };
 
-const listAllSeries = async (registry: ActorSubclass<_SERVICE>): Promise<Series[]> => {
+const listAllSeries = async (registry: ActorSubclass<RegistryService>): Promise<Series[]> => {
 	const all: Series[] = [];
 	let cursor: string | undefined = undefined;
 
@@ -179,6 +216,94 @@ const listAllSeries = async (registry: ActorSubclass<_SERVICE>): Promise<Series[
 
 		cursor = next;
 	}
+};
+
+/**
+ * Current YES probability (0..1) from the resting order book, mirroring the
+ * FE's `calculateMarketStats` / `calculateProbability` in
+ * `$lib/utils/market.utils`: best-bid/best-ask mid when both sides exist,
+ * the single side when one-sided, `undefined` when the book is empty (never
+ * a 0.5 placeholder). NO orders are flipped to the YES perspective the same
+ * way the live UI does.
+ */
+const midYesProbability = (orders: LimitOrder[]): number | undefined => {
+	const bidPrices: number[] = [];
+	const askPrices: number[] = [];
+
+	for (const order of orders) {
+		const side = 'Buy' in order.side ? 'BUY' : 'SELL';
+		const outcomeId = fromNullable(order.outcome_id) ?? 'YES';
+		const rawPrice = Number(order.price.decimal.value) / 10 ** Number(order.price.decimal.decimals);
+
+		if (outcomeId === 'YES') {
+			(side === 'BUY' ? bidPrices : askPrices).push(rawPrice);
+		} else if (outcomeId === 'NO') {
+			// Flip the binary opposite to the YES perspective (mirrors the live
+			// UI); any other outcome is categorical and irrelevant to a Yes %.
+			(side === 'BUY' ? askPrices : bidPrices).push(1 - rawPrice);
+		}
+	}
+
+	const bestBid = bidPrices.length > 0 ? Math.max(...bidPrices) : undefined;
+	const bestAsk = askPrices.length > 0 ? Math.min(...askPrices) : undefined;
+
+	if (nonNullish(bestBid) && nonNullish(bestAsk)) {
+		return (bestBid + bestAsk) / 2;
+	}
+
+	return bestBid ?? bestAsk;
+};
+
+/**
+ * Reads one market's current YES probability. Soft by contract: any clearing
+ * error degrades to `undefined` (no odds clause) rather than failing the
+ * deploy — odds are a nice-to-have on top of the always-present title/desc.
+ */
+const fetchYesProbability = async ({
+	clearing,
+	seriesId
+}: {
+	clearing: ActorSubclass<ClearingService>;
+	seriesId: string;
+}): Promise<number | undefined> => {
+	try {
+		const orders = await clearing.list_orders({ series_id: toNullable(seriesId) });
+
+		return midYesProbability(orders);
+	} catch (err) {
+		// Soft dependency: swallow and fall through to "no odds" (returns
+		// undefined) rather than fail the deploy — odds are optional garnish.
+		console.warn(`[seo-assets] odds read failed for ${seriesId}; emitting page without odds.`, err);
+	}
+};
+
+const mapWithConcurrency = async <T, R>({
+	items,
+	limit,
+	fn
+}: {
+	items: T[];
+	limit: number;
+	fn: (item: T) => Promise<R>;
+}): Promise<R[]> => {
+	const results: R[] = new Array(items.length);
+	let next = 0;
+
+	const worker = async (): Promise<void> => {
+		for (;;) {
+			const index = next++;
+
+			if (index >= items.length) {
+				return;
+			}
+
+			results[index] = await fn(items[index]);
+		}
+	};
+
+	await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+
+	return results;
 };
 
 /**
@@ -209,19 +334,25 @@ const replaceOnce = ({
 	return html.replace(pattern, () => replacement);
 };
 
-const renderMarketShell = ({
+/**
+ * Rewrites the head tags of the built shell for one crawler-facing page.
+ * `ogType` is `article` for a single market, `website` for a topic page.
+ */
+const renderShell = ({
 	shell,
-	title,
-	description,
-	canonicalUrl
+	titleText,
+	descriptionText,
+	canonicalUrl,
+	ogType
 }: {
 	shell: string;
-	title: string;
-	description: string;
+	titleText: string;
+	descriptionText: string;
 	canonicalUrl: string;
+	ogType: 'article' | 'website';
 }): string => {
-	const safeTitle = escapeHtml(collapseWhitespace(title));
-	const safeDescription = escapeHtml(composeDescription(description));
+	const safeTitle = escapeHtml(collapseWhitespace(titleText));
+	const safeDescription = escapeHtml(descriptionText);
 	const fullTitle = `${safeTitle}${TITLE_SUFFIX}`;
 
 	// Bounded patterns only: `[^<]` / `[^>]` cannot cross a tag boundary, so
@@ -245,7 +376,7 @@ const renderMarketShell = ({
 		},
 		{
 			pattern: /<meta\s+property="og:type"[^>]*>/,
-			replacement: `<meta property="og:type" content="article" />`,
+			replacement: `<meta property="og:type" content="${ogType}" />`,
 			label: 'og:type'
 		},
 		{
@@ -289,15 +420,15 @@ const SAFE_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 const SAFE_SHARE_PARAM_PATTERN = /^[A-Za-z0-9_~-]+$/;
 
 /**
- * Lets the `/m/[id]` route resolve the market without parsing the URL: the
- * SPA reads `window.__viciSeriesId` before falling back to param parsing.
- * The id is `SAFE_ID_PATTERN`-validated, so inlining it is injection-safe.
+ * Appends the per-page extras (JSON-LD, and for markets the `__viciSeriesId`
+ * hint) just before `</head>`. Each fragment keeps `</head>` intact so the
+ * single-match contract holds if this is chained.
  */
-const embedSeriesId = ({ html, id }: { html: string; id: string }): string =>
+const injectHeadExtras = ({ html, fragments }: { html: string; fragments: string[] }): string =>
 	replaceOnce({
 		html,
 		pattern: /<\/head>/,
-		replacement: `<script>window.__viciSeriesId = ${JSON.stringify(id)};</script></head>`,
+		replacement: `${fragments.join('\n\t\t')}</head>`,
 		label: 'head close tag'
 	});
 
@@ -308,15 +439,49 @@ const writePage = ({ relativeDir, html }: { relativeDir: string; html: string })
 	writeFileSync(join(dir, 'index.html'), html, 'utf8');
 };
 
-const renderSitemap = (paths: string[]): string => {
+const renderSitemap = ({ paths, lastmod }: { paths: string[]; lastmod: string }): string => {
 	const staticPaths = ['/', '/about', '/welcome'];
 
 	const urls = [...staticPaths, ...paths]
-		.map((path) => `\t<url><loc>${escapeHtml(`${PROD_ORIGIN}${path}`)}</loc></url>`)
+		.map(
+			(path) =>
+				`\t<url><loc>${escapeHtml(`${PROD_ORIGIN}${path}`)}</loc><lastmod>${lastmod}</lastmod></url>`
+		)
 		.join('\n');
 
 	return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 };
+
+const buildMarketJsonLd = ({
+	title,
+	descriptionText,
+	canonicalUrl
+}: {
+	title: string;
+	descriptionText: string;
+	canonicalUrl: string;
+}): string =>
+	jsonLdScript({
+		'@context': 'https://schema.org',
+		'@graph': [
+			{
+				'@type': 'WebPage',
+				'@id': `${canonicalUrl}#webpage`,
+				url: canonicalUrl,
+				name: `${collapseWhitespace(title)}${TITLE_SUFFIX}`,
+				description: descriptionText,
+				isPartOf: { '@id': `${PROD_ORIGIN}/#website` },
+				keywords: `prediction market, ${collapseWhitespace(title)}, community odds, forecast`
+			},
+			{
+				'@type': 'BreadcrumbList',
+				itemListElement: [
+					{ '@type': 'ListItem', position: 1, name: 'VICI', item: `${PROD_ORIGIN}/` },
+					{ '@type': 'ListItem', position: 2, name: collapseWhitespace(title), item: canonicalUrl }
+				]
+			}
+		]
+	});
 
 const main = async () => {
 	// E2E runs deploy against the emulator satellite — no mainnet registry
@@ -331,9 +496,13 @@ const main = async () => {
 	const wcDeckTitles = loadWcDeckTitles();
 
 	const agent = await HttpAgent.create({ host: IC_HOST });
-	const registry = Actor.createActor<_SERVICE>(idlFactory, {
+	const registry = Actor.createActor<RegistryService>(registryIdlFactory, {
 		agent,
 		canisterId: REGISTRY_CANISTER_ID
+	});
+	const clearing = Actor.createActor<ClearingService>(clearingIdlFactory, {
+		agent,
+		canisterId: CLEARING_CANISTER_ID
 	});
 
 	const series = await listAllSeries(registry);
@@ -348,9 +517,17 @@ const main = async () => {
 		);
 	}
 
+	// Live YES odds per market, fetched with bounded concurrency. Soft: a
+	// clearing failure yields `undefined` and the page ships without odds.
+	const oddsByIndex = await mapWithConcurrency({
+		items: visible,
+		limit: ODDS_CONCURRENCY,
+		fn: (market) => fetchYesProbability({ clearing, seriesId: market.series_id })
+	});
+
 	const sitemapPaths: string[] = [];
 
-	for (const market of visible) {
+	visible.forEach((market, index) => {
 		const id = market.series_id;
 
 		if (!SAFE_ID_PATTERN.test(id)) {
@@ -369,22 +546,36 @@ const main = async () => {
 		// is what the share sheet hands out, the only variant whose URL
 		// carries the question's keywords, and the only URL the sitemap lists.
 		const canonicalUrl = `${PROD_ORIGIN}/m/${shareParam}`;
-		const html = embedSeriesId({
-			html: renderMarketShell({
-				shell,
-				title: market.title,
-				description: market.description.plain,
-				canonicalUrl
-			}),
-			id
+		const descriptionText = composeDescription({
+			plain: market.description.plain,
+			yesProbability: oddsByIndex[index]
+		});
+
+		const withHead = renderShell({
+			shell,
+			titleText: market.title,
+			descriptionText,
+			canonicalUrl,
+			ogType: 'article'
+		});
+		const html = injectHeadExtras({
+			html: withHead,
+			fragments: [
+				`<script>window.__viciSeriesId = ${JSON.stringify(id)};</script>`,
+				buildMarketJsonLd({ title: market.title, descriptionText, canonicalUrl })
+			]
 		});
 
 		writePage({ relativeDir: join('m', shareParam), html });
-
 		sitemapPaths.push(`/m/${shareParam}`);
-	}
+	});
 
-	writeFileSync(join(BUILD_DIR, 'sitemap.xml'), renderSitemap(sitemapPaths.sort()), 'utf8');
+	const lastmod = new Date(nowMs).toISOString().slice(0, 10);
+	writeFileSync(
+		join(BUILD_DIR, 'sitemap.xml'),
+		renderSitemap({ paths: [...sitemapPaths].sort(), lastmod }),
+		'utf8'
+	);
 
 	const hidden = viciSeries.length - visible.length;
 

@@ -1505,6 +1505,8 @@ export const enMessages = {
 	'market.detail.fallback_title': 'Market',
 	'market.detail.followed_lean.aria': '{yes} of your follows on YES, {no} on NO',
 	'market.detail.followed_lean.label': 'Predictors you follow',
+	'market.detail.flow_cta.guest': 'Try Flow free',
+	'market.detail.flow_cta.member': 'Predict in Flow',
 	'market.detail.head_suffix': 'Social Markets',
 	'market.detail.locked_in': 'Locked in.',
 	'market.detail.maker.disclosure':

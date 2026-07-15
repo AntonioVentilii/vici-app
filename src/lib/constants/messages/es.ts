@@ -1531,6 +1531,8 @@ export const esMessages = {
 	'market.detail.fallback_title': 'Mercado',
 	'market.detail.followed_lean.aria': '{yes} de tus seguidos en YES, {no} en NO',
 	'market.detail.followed_lean.label': 'Predictores que sigues',
+	'market.detail.flow_cta.guest': 'Prueba Flow gratis',
+	'market.detail.flow_cta.member': 'Predecir en Flow',
 	'market.detail.head_suffix': 'Mercados Sociales',
 	'market.detail.locked_in': 'Confirmado.',
 	'market.detail.maker.disclosure':

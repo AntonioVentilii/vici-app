@@ -1529,6 +1529,8 @@ export const ptMessages = {
 	'market.detail.fallback_title': 'Mercado',
 	'market.detail.followed_lean.aria': '{yes} de quem segues em YES, {no} em NO',
 	'market.detail.followed_lean.label': 'Previsores que segues',
+	'market.detail.flow_cta.guest': 'Experimenta o Flow grátis',
+	'market.detail.flow_cta.member': 'Prever no Flow',
 	'market.detail.head_suffix': 'Mercados Sociais',
 	'market.detail.locked_in': 'Confirmado.',
 	'market.detail.maker.disclosure':

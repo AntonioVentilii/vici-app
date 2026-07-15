@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.8.25](https://github.com/AntonioVentilii/vici-app/compare/v1.8.24...v1.8.25) (2026-07-15)
+
+
+### Features
+
+* **seo:** structured data, live-odds snippets & World Cup topic page ([#1136](https://github.com/AntonioVentilii/vici-app/issues/1136)) ([89e74b9](https://github.com/AntonioVentilii/vici-app/commit/89e74b91d59588bf4724c503e65ce757f0c614d4))
+
+
+### Tests
+
+* **e2e:** stop onboarding reset from being resurrected by the sign-out nav ([#1139](https://github.com/AntonioVentilii/vici-app/issues/1139)) ([5207d2b](https://github.com/AntonioVentilii/vici-app/commit/5207d2b8de19ae22917c06f67ae3276d55f8b5f6))
+
+## [1.8.24](https://github.com/AntonioVentilii/vici-app/compare/v1.8.23...v1.8.24) (2026-07-15)
+
+
+### Bug Fixes
+
+* **i18n:** translate market title on remaining detail-page + card surfaces ([#1137](https://github.com/AntonioVentilii/vici-app/issues/1137)) ([4a3111d](https://github.com/AntonioVentilii/vici-app/commit/4a3111dc4f836597af35009163c2fd05024a2bba))
+
+## [1.8.23](https://github.com/AntonioVentilii/vici-app/compare/v1.8.22...v1.8.23) (2026-07-13)
+
+
+### Bug Fixes
+
+* **wc:** reveal France·Spain SF markets on 07-13 ([#1134](https://github.com/AntonioVentilii/vici-app/issues/1134)) ([1a2097b](https://github.com/AntonioVentilii/vici-app/commit/1a2097b8fa6de76e9e12e58ff23ba377d13ed4b7))
+
+## [1.8.22](https://github.com/AntonioVentilii/vici-app/compare/v1.8.21...v1.8.22) (2026-07-13)
+
+
+### Features
+
+* **wc:** add SF market deck with 7-locale translations ([#1131](https://github.com/AntonioVentilii/vici-app/issues/1131)) ([679bd12](https://github.com/AntonioVentilii/vici-app/commit/679bd126f6ada703729a73366e15bb09b18b00dc))
+* **wc:** schedule SF market releases ([#1132](https://github.com/AntonioVentilii/vici-app/issues/1132)) ([803ad0b](https://github.com/AntonioVentilii/vici-app/commit/803ad0bec3096ac95c58b795fb7da39bec617df6))
+
+
+### Miscellaneous Chores
+
+* **github-actions:** bump junobuild/juno-action from 0.7.5.pre.full to 0.7.5 ([#1119](https://github.com/AntonioVentilii/vici-app/issues/1119)) ([923f70f](https://github.com/AntonioVentilii/vici-app/commit/923f70fd474ba7dbd8bdd8c9f272816139ded739))
+* **npm-deps-dev:** bump @tailwindcss/postcss from 4.3.1 to 4.3.2 ([#1129](https://github.com/AntonioVentilii/vici-app/issues/1129)) ([b73bf6b](https://github.com/AntonioVentilii/vici-app/commit/b73bf6b7f4782c9150731361b3a5df5798074cd4))
+* **npm-deps-dev:** bump @tailwindcss/vite from 4.3.1 to 4.3.2 ([#1125](https://github.com/AntonioVentilii/vici-app/issues/1125)) ([077f3f3](https://github.com/AntonioVentilii/vici-app/commit/077f3f316a01ef2e929229d19a1bc93ef7438a59))
+* **npm-deps-dev:** bump @vitest/eslint-plugin from 1.6.20 to 1.6.23 ([#1123](https://github.com/AntonioVentilii/vici-app/issues/1123)) ([d7ac68c](https://github.com/AntonioVentilii/vici-app/commit/d7ac68cb6e5f896227ee5b06de526dde5233217a))
+* **npm-deps-dev:** bump brace-expansion from 1.1.15 to 1.1.16 ([#1124](https://github.com/AntonioVentilii/vici-app/issues/1124)) ([40e6b7d](https://github.com/AntonioVentilii/vici-app/commit/40e6b7d91a5980d918fe010a7fc2c2bb9ddadb78))
+* **npm-deps-dev:** bump eslint-plugin-import-x from 4.17.0 to 4.17.1 ([#1126](https://github.com/AntonioVentilii/vici-app/issues/1126)) ([34fe224](https://github.com/AntonioVentilii/vici-app/commit/34fe2243c6f0f670ce7fb7637afe8f8e9ea64a48))
+* **npm-deps-dev:** bump rolldown from 1.1.3 to 1.1.5 ([#1130](https://github.com/AntonioVentilii/vici-app/issues/1130)) ([3ee5f4a](https://github.com/AntonioVentilii/vici-app/commit/3ee5f4a13dee7626742e5973bff2da182f0a31cf))
+* **npm-deps-dev:** bump typescript-eslint from 8.62.0 to 8.62.1 in the lint-kit group ([#1121](https://github.com/AntonioVentilii/vici-app/issues/1121)) ([718ed54](https://github.com/AntonioVentilii/vici-app/commit/718ed54590da728e7a2306433515f8d2bec9804d))
+* **npm-deps-dev:** bump vite from 8.1.0 to 8.1.3 ([#1128](https://github.com/AntonioVentilii/vici-app/issues/1128)) ([b9c73b1](https://github.com/AntonioVentilii/vici-app/commit/b9c73b1bd1f892a5a83ecee2032c13f6114732a4))
+* **npm-deps:** bump @lucide/svelte from 1.21.0 to 1.23.0 ([#1127](https://github.com/AntonioVentilii/vici-app/issues/1127)) ([4392bdf](https://github.com/AntonioVentilii/vici-app/commit/4392bdffd2db96ed3ae1d0b0f589a36324e50273))
+
 ## [1.8.21](https://github.com/AntonioVentilii/vici-app/compare/v1.8.20...v1.8.21) (2026-07-09)
 
 
