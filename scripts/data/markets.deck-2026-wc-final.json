@@ -1,0 +1,1365 @@
+[
+	{
+		"title": "Will Spain be crowned World Cup champions?",
+		"description": "The last two standing: Spain, who ousted France in the semifinal, against the holders Argentina, who saw off England. Ninety minutes, then extra time, then penalties if level — one team lifts the trophy.",
+		"resolution": "Resolves YES if Spain win the Final (result after extra time and, if needed, a penalty shootout); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.59,
+		"translations": {
+			"it": {
+				"title": "La Spagna sarà incoronata campione del mondo?",
+				"description": "Le ultime due rimaste: la Spagna, che ha eliminato la Francia in semifinale, contro l'Argentina campione in carica, che ha avuto la meglio sull'Inghilterra. Novanta minuti, poi i supplementari, poi i rigori in caso di parità: una sola squadra alzerà il trofeo.",
+				"resolution": "Si risolve SÌ se la Spagna vince la finale (risultato dopo i tempi supplementari e, se necessario, i calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se proclamará España campeona del Mundial?",
+				"description": "Las dos últimas en pie: España, que apeó a Francia en semifinales, frente a la vigente campeona Argentina, que eliminó a Inglaterra. Noventa minutos, luego prórroga y después penaltis si siguen igualadas: un equipo levantará el trofeo.",
+				"resolution": "Se resuelve SÍ si España gana la Final (resultado tras la prórroga y, si es necesario, la tanda de penaltis); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird Spanien Weltmeister?",
+				"description": "Die letzten beiden im Rennen: Spanien, das Frankreich im Halbfinale ausgeschaltet hat, gegen Titelverteidiger Argentinien, der England bezwang. Neunzig Minuten, dann Verlängerung, dann Elfmeterschießen bei Gleichstand — ein Team stemmt den Pokal in die Höhe.",
+				"resolution": "Wird mit JA aufgelöst, wenn Spanien das Finale gewinnt (Ergebnis nach Verlängerung und, falls nötig, Elfmeterschießen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "L'Espagne sera-t-elle sacrée championne du monde ?",
+				"description": "Les deux derniers survivants : l'Espagne, qui a écarté la France en demi-finale, face à l'Argentine tenante du titre, qui s'est défaite de l'Angleterre. Quatre-vingt-dix minutes, puis la prolongation, puis les tirs au but en cas d'égalité — une équipe soulèvera le trophée.",
+				"resolution": "Se résout par OUI si l'Espagne remporte la finale (résultat après prolongation et, si nécessaire, séance de tirs au but) ; sinon NON."
+			},
+			"pt": {
+				"title": "A Espanha vai sagrar-se campeã do mundo?",
+				"description": "As duas últimas sobreviventes: a Espanha, que afastou a França nas meias-finais, contra a detentora do título, a Argentina, que eliminou a Inglaterra. Noventa minutos, depois prolongamento, depois penáltis se estiverem empatadas — uma equipa vai erguer o troféu.",
+				"resolution": "Resolve-se como SIM se a Espanha vencer a final (resultado após o prolongamento e, se necessário, a marcação de penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A Espanha será campeã da Copa do Mundo?",
+				"description": "As duas últimas sobreviventes: a Espanha, que eliminou a França na semifinal, contra a atual campeã Argentina, que superou a Inglaterra. Noventa minutos, depois a prorrogação e, se persistir o empate, os pênaltis — uma seleção vai erguer o troféu.",
+				"resolution": "Resolve-se como SIM se a Espanha vencer a final (resultado após a prorrogação e, se necessário, a disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙会加冕世界杯冠军吗？",
+				"description": "最后的两支球队：半决赛淘汰法国的西班牙，对阵力克英格兰的卫冕冠军阿根廷。九十分钟，然后是加时赛，若仍战平则进入点球大战——一支球队将捧起奖杯。",
+				"resolution": "如果西班牙赢得决赛（以加时赛及必要时点球大战后的结果为准），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will the Final be decided after ninety minutes?",
+		"description": "Whether the two best teams left need extra time or penalties to separate them, as finals so often do.",
+		"resolution": "Resolves YES if the tie is not settled in normal time and goes to extra time or a penalty shootout; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.31,
+		"translations": {
+			"it": {
+				"title": "La finale si deciderà oltre i novanta minuti?",
+				"description": "Se le due migliori squadre rimaste avranno bisogno dei supplementari o dei rigori per separarsi, come accade così spesso nelle finali.",
+				"resolution": "Si risolve SÌ se la sfida non viene decisa nei tempi regolamentari e va ai tempi supplementari o ai calci di rigore; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se decidirá la Final más allá de los noventa minutos?",
+				"description": "Si los dos mejores equipos que quedan necesitarán prórroga o penaltis para separarse, como tantas veces ocurre en las finales.",
+				"resolution": "Se resuelve SÍ si el duelo no se decide en el tiempo reglamentario y llega a la prórroga o a la tanda de penaltis; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt die Entscheidung im Finale erst nach neunzig Minuten?",
+				"description": "Ob die beiden besten verbliebenen Teams Verlängerung oder Elfmeterschießen brauchen, um sich zu trennen — wie es in Finals so oft der Fall ist.",
+				"resolution": "Wird mit JA aufgelöst, wenn die Partie nicht in der regulären Spielzeit entschieden wird und in die Verlängerung oder ins Elfmeterschießen geht; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "La finale se décidera-t-elle au-delà des quatre-vingt-dix minutes ?",
+				"description": "Savoir si les deux meilleures équipes encore en lice auront besoin de la prolongation ou des tirs au but pour se départager, comme les finales l'exigent si souvent.",
+				"resolution": "Se résout par OUI si le match n'est pas décidé dans le temps réglementaire et se poursuit en prolongation ou par une séance de tirs au but ; sinon NON."
+			},
+			"pt": {
+				"title": "A final vai ser decidida depois dos noventa minutos?",
+				"description": "Saber se as duas melhores equipas em prova vão precisar de prolongamento ou de penáltis para se separarem, como tantas vezes acontece nas finais.",
+				"resolution": "Resolve-se como SIM se o confronto não ficar decidido no tempo regulamentar e for para prolongamento ou para a marcação de penáltis; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A final será decidida depois dos noventa minutos?",
+				"description": "Se as duas melhores seleções restantes vão precisar de prorrogação ou de pênaltis para se separar, como as finais tantas vezes exigem.",
+				"resolution": "Resolve-se como SIM se o confronto não for resolvido no tempo regulamentar e for para a prorrogação ou para a disputa de pênaltis; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛会在九十分钟之后才分出胜负吗？",
+				"description": "仅存的两支最强球队是否需要加时赛或点球大战才能分出高下，正如决赛常有的那样。",
+				"resolution": "如果这场对决未能在常规时间内决出胜负，并进入加时赛或点球大战，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will the Final go to a penalty shootout?",
+		"description": "Level after 120 minutes, the World Cup could come down to spot-kicks — the cruellest, most watched ending in the game.",
+		"resolution": "Resolves YES if the Final is decided by a penalty shootout; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.17,
+		"translations": {
+			"it": {
+				"title": "La finale andrà ai calci di rigore?",
+				"description": "In parità dopo 120 minuti, i Mondiali potrebbero decidersi dal dischetto: il finale più crudele e più seguito di questo sport.",
+				"resolution": "Si risolve SÌ se la finale viene decisa ai calci di rigore; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Llegará la Final a la tanda de penaltis?",
+				"description": "Igualada tras 120 minutos, el Mundial podría decidirse desde los once metros: el desenlace más cruel y más visto del fútbol.",
+				"resolution": "Se resuelve SÍ si la Final se decide por tanda de penaltis; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Geht das Finale ins Elfmeterschießen?",
+				"description": "Steht es nach 120 Minuten unentschieden, könnte die WM vom Punkt entschieden werden — das grausamste und meistgesehene Ende des Spiels.",
+				"resolution": "Wird mit JA aufgelöst, wenn das Finale im Elfmeterschießen entschieden wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "La finale ira-t-elle jusqu'aux tirs au but ?",
+				"description": "À égalité après 120 minutes, la Coupe du monde pourrait se jouer aux tirs au but — le dénouement le plus cruel et le plus regardé du football.",
+				"resolution": "Se résout par OUI si la finale est décidée par une séance de tirs au but ; sinon NON."
+			},
+			"pt": {
+				"title": "A final vai ser decidida nos penáltis?",
+				"description": "Empatadas ao fim de 120 minutos, a Copa do Mundo pode ficar entregue à marca dos onze metros — o desfecho mais cruel e mais visto do futebol.",
+				"resolution": "Resolve-se como SIM se a final for decidida na marcação de penáltis; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A final vai para a disputa de pênaltis?",
+				"description": "Empatada após 120 minutos, a Copa do Mundo pode acabar sendo decidida na marca do pênalti — o desfecho mais cruel e mais assistido do futebol.",
+				"resolution": "Resolve-se como SIM se a final for decidida por disputa de pênaltis; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛会进入点球大战吗？",
+				"description": "若120分钟后仍然战平，世界杯或将由十二码点球决定——足球场上最残酷、也最受瞩目的结局。",
+				"resolution": "如果决赛通过点球大战决出胜负，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will 3 or more goals be scored in the Final?",
+		"description": "A read on whether the Final opens up or stays locked in the caution that grips most finals.",
+		"resolution": "Resolves YES if 3 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.4,
+		"translations": {
+			"it": {
+				"title": "Verranno segnati 3 o più gol nella finale?",
+				"description": "Un'indicazione su quanto la finale si aprirà o resterà chiusa nella prudenza che avvolge quasi tutte le finali.",
+				"resolution": "Si risolve SÌ se vengono segnati 3 o più gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcarán 3 o más goles en la Final?",
+				"description": "Una lectura de si la Final se abre o se queda atrapada en la cautela que domina casi todas las finales.",
+				"resolution": "Se resuelve SÍ si se marcan 3 o más goles en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fallen im Finale 3 oder mehr Tore?",
+				"description": "Ein Gradmesser dafür, ob sich das Finale öffnet oder in der Vorsicht verharrt, die die meisten Finals prägt.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der regulären Spielzeit (90 Minuten plus Nachspielzeit) 3 oder mehr Tore fallen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Y aura-t-il 3 buts ou plus dans la finale ?",
+				"description": "Un indicateur pour savoir si la finale s'ouvrira ou restera enfermée dans la prudence qui saisit la plupart des finales.",
+				"resolution": "Se résout par OUI si 3 buts ou plus sont marqués dans le temps réglementaire (90 minutes plus arrêts de jeu) ; sinon NON."
+			},
+			"pt": {
+				"title": "Vão ser marcados 3 ou mais golos na final?",
+				"description": "Uma leitura sobre se a final se abre ou se fica presa à cautela que domina quase todas as finais.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais golos no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Serão marcados 3 ou mais gols na final?",
+				"description": "Uma leitura sobre se a final vai se abrir ou continuar presa à cautela que domina a maioria das finais.",
+				"resolution": "Resolve-se como SIM se forem marcados 3 ou mais gols no tempo regulamentar (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛会打入3球或以上吗？",
+				"description": "考验决赛是会打开局面，还是被大多数决赛特有的谨慎所笼罩。",
+				"resolution": "如果常规时间（90分钟加补时）内打入3球或以上，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will 4 or more goals be scored in the Final?",
+		"description": "Whether the Final becomes a genuinely open, high-scoring showpiece rather than a tight arm-wrestle.",
+		"resolution": "Resolves YES if 4 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.19,
+		"translations": {
+			"it": {
+				"title": "Verranno segnati 4 o più gol nella finale?",
+				"description": "Se la finale diventerà davvero una vetrina aperta e ricca di gol invece di un braccio di ferro serrato.",
+				"resolution": "Si risolve SÌ se vengono segnati 4 o più gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcarán 4 o más goles en la Final?",
+				"description": "Si la Final se convierte en un partido realmente abierto y goleador en lugar de un pulso apretado.",
+				"resolution": "Se resuelve SÍ si se marcan 4 o más goles en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fallen im Finale 4 oder mehr Tore?",
+				"description": "Ob das Finale zu einem wirklich offenen, torreichen Schaulaufen wird statt zu einem engen Ringen.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der regulären Spielzeit (90 Minuten plus Nachspielzeit) 4 oder mehr Tore fallen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Y aura-t-il 4 buts ou plus dans la finale ?",
+				"description": "Savoir si la finale deviendra une véritable fête offensive et prolifique plutôt qu'un bras de fer serré.",
+				"resolution": "Se résout par OUI si 4 buts ou plus sont marqués dans le temps réglementaire (90 minutes plus arrêts de jeu) ; sinon NON."
+			},
+			"pt": {
+				"title": "Vão ser marcados 4 ou mais golos na final?",
+				"description": "Saber se a final se torna um espetáculo verdadeiramente aberto e goleador, em vez de um braço de ferro apertado.",
+				"resolution": "Resolve-se como SIM se forem marcados 4 ou mais golos no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Serão marcados 4 ou mais gols na final?",
+				"description": "Se a final vai virar um espetáculo realmente aberto e goleador, em vez de um duelo truncado e equilibrado.",
+				"resolution": "Resolve-se como SIM se forem marcados 4 ou mais gols no tempo regulamentar (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛会打入4球或以上吗？",
+				"description": "决赛是否会成为一场真正开放、进球如潮的巅峰对决，而非一场紧绷的角力。",
+				"resolution": "如果常规时间（90分钟加补时）内打入4球或以上，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will both teams score in the Final?",
+		"description": "Whether both Spain and Argentina find the net on the night it matters most.",
+		"resolution": "Resolves YES if both teams score at least one goal in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.45,
+		"translations": {
+			"it": {
+				"title": "Entrambe le squadre segneranno nella finale?",
+				"description": "Se sia la Spagna sia l'Argentina troveranno la rete nella notte che conta di più.",
+				"resolution": "Si risolve SÌ se entrambe le squadre segnano almeno un gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcarán ambos equipos en la Final?",
+				"description": "Si tanto España como Argentina ven portería en la noche que más importa.",
+				"resolution": "Se resuelve SÍ si ambos equipos marcan al menos un gol en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Treffen im Finale beide Teams?",
+				"description": "Ob sowohl Spanien als auch Argentinien in der Nacht der Nächte den Weg ins Netz finden.",
+				"resolution": "Wird mit JA aufgelöst, wenn beide Mannschaften in der regulären Spielzeit (90 Minuten plus Nachspielzeit) jeweils mindestens ein Tor erzielen; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Les deux équipes marqueront-elles dans la finale ?",
+				"description": "Savoir si l'Espagne et l'Argentine trouveront toutes deux le chemin des filets lors du soir qui compte le plus.",
+				"resolution": "Se résout par OUI si les deux équipes marquent au moins un but dans le temps réglementaire (90 minutes plus arrêts de jeu) ; sinon NON."
+			},
+			"pt": {
+				"title": "Ambas as equipas vão marcar na final?",
+				"description": "Saber se a Espanha e a Argentina vão as duas dar com o caminho da baliza na noite que mais conta.",
+				"resolution": "Resolve-se como SIM se ambas as equipas marcarem pelo menos um golo no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Ambas as seleções vão marcar na final?",
+				"description": "Se a Espanha e a Argentina vão balançar as redes na noite que mais importa.",
+				"resolution": "Resolve-se como SIM se ambas as seleções marcarem pelo menos um gol no tempo regulamentar (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛双方都会进球吗？",
+				"description": "在最重要的这一夜，西班牙和阿根廷是否都能攻破对方球门。",
+				"resolution": "如果两队在常规时间（90分钟加补时）内均至少打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will the Final be goalless at half-time?",
+		"description": "Whether the first forty-five stays locked, as the tension of a final so often dictates.",
+		"resolution": "Resolves YES if the match is goalless at the half-time whistle; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.32,
+		"translations": {
+			"it": {
+				"title": "La finale sarà a reti inviolate all'intervallo?",
+				"description": "Se i primi quarantacinque minuti resteranno bloccati, come impone spesso la tensione di una finale.",
+				"resolution": "Si risolve SÌ se la partita è a reti inviolate al fischio di fine primo tempo; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Llegará la Final al descanso sin goles?",
+				"description": "Si los primeros cuarenta y cinco minutos se quedan cerrados, como suele dictar la tensión de una final.",
+				"resolution": "Se resuelve SÍ si el partido está sin goles cuando suena el pitido del descanso; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Steht es im Finale zur Halbzeit torlos?",
+				"description": "Ob die ersten fünfundvierzig Minuten verschlossen bleiben, wie es die Anspannung eines Finales so oft vorgibt.",
+				"resolution": "Wird mit JA aufgelöst, wenn das Spiel beim Halbzeitpfiff torlos ist; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "La finale sera-t-elle vierge de buts à la mi-temps ?",
+				"description": "Savoir si les quarante-cinq premières minutes resteront verrouillées, comme la tension d'une finale le dicte si souvent.",
+				"resolution": "Se résout par OUI si le match est vierge de tout but au coup de sifflet de la mi-temps ; sinon NON."
+			},
+			"pt": {
+				"title": "A final vai estar sem golos ao intervalo?",
+				"description": "Saber se os primeiros quarenta e cinco ficam fechados, como a tensão de uma final tantas vezes impõe.",
+				"resolution": "Resolve-se como SIM se o jogo estiver sem golos no apito do intervalo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A final estará sem gols no intervalo?",
+				"description": "Se os primeiros quarenta e cinco minutos vão ficar travados, como a tensão de uma final tantas vezes determina.",
+				"resolution": "Resolve-se como SIM se a partida estiver sem gols no apito do intervalo; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛半场结束时会是零比零吗？",
+				"description": "上半场四十五分钟是否会僵持无果，正如决赛的紧张气氛常常决定的那样。",
+				"resolution": "如果半场哨响时比赛仍是零进球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the first fifteen minutes of the Final?",
+		"description": "An early goal in a World Cup final would rip up the script and set the tone.",
+		"resolution": "Resolves YES if a goal is scored within the first 15 minutes of the match; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.18,
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol nei primi quindici minuti della finale?",
+				"description": "Un gol immediato in una finale dei Mondiali stravolgerebbe il copione e detterebbe il ritmo della gara.",
+				"resolution": "Si risolve SÌ se viene segnato un gol entro i primi 15 minuti della partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en los primeros quince minutos de la Final?",
+				"description": "Un gol temprano en una final del Mundial rompería el guion y marcaría el tono del partido.",
+				"resolution": "Se resuelve SÍ si se marca un gol dentro de los primeros 15 minutos del partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt in den ersten fünfzehn Minuten des Finales ein Tor?",
+				"description": "Ein frühes Tor in einem WM-Finale würde das Drehbuch zerreißen und den Ton vorgeben.",
+				"resolution": "Wird mit JA aufgelöst, wenn innerhalb der ersten 15 Minuten des Spiels ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué dans les quinze premières minutes de la finale ?",
+				"description": "Un but précoce dans une finale de Coupe du monde ferait voler le scénario en éclats et donnerait le ton.",
+				"resolution": "Se résout par OUI si un but est marqué dans les 15 premières minutes du match ; sinon NON."
+			},
+			"pt": {
+				"title": "Vai ser marcado um golo nos primeiros quinze minutos da final?",
+				"description": "Um golo cedo numa final da Copa do Mundo rasgaria o guião e ditaria o tom do jogo.",
+				"resolution": "Resolve-se como SIM se for marcado um golo nos primeiros 15 minutos do jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol nos primeiros quinze minutos da final?",
+				"description": "Um gol cedo numa final de Copa do Mundo rasgaria o roteiro e ditaria o tom da partida.",
+				"resolution": "Resolve-se como SIM se for marcado um gol nos primeiros 15 minutos da partida; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛开场前十五分钟内会有进球吗？",
+				"description": "世界杯决赛中的一粒早早入网的进球，会彻底改写剧本并奠定全场基调。",
+				"resolution": "如果比赛开始后的前15分钟内打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored in the eightieth minute or later of the Final?",
+		"description": "A late goal could win the World Cup outright or drag the Final into extra time.",
+		"resolution": "Resolves YES if a goal is scored in the 80th minute or later of normal time (including stoppage); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.35,
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol dall'ottantesimo minuto in poi nella finale?",
+				"description": "Un gol nel finale potrebbe vincere i Mondiali di colpo oppure trascinare la finale ai tempi supplementari.",
+				"resolution": "Si risolve SÌ se viene segnato un gol dall'80° minuto in poi dei tempi regolamentari (recupero incluso); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol en el minuto ochenta o después en la Final?",
+				"description": "Un gol tardío podría ganar el Mundial de forma directa o arrastrar la Final a la prórroga.",
+				"resolution": "Se resuelve SÍ si se marca un gol en el minuto 80 o después del tiempo reglamentario (incluido el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt im Finale ab der achtzigsten Minute ein Tor?",
+				"description": "Ein spätes Tor könnte die WM direkt entscheiden oder das Finale in die Verlängerung zwingen.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der 80. Minute oder später der regulären Spielzeit (einschließlich Nachspielzeit) ein Tor fällt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué à la quatre-vingtième minute ou après dans la finale ?",
+				"description": "Un but tardif pourrait offrir la Coupe du monde sur-le-champ ou entraîner la finale en prolongation.",
+				"resolution": "Se résout par OUI si un but est marqué à la 80e minute ou après dans le temps réglementaire (arrêts de jeu inclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Vai ser marcado um golo ao minuto oitenta ou depois na final?",
+				"description": "Um golo tardio pode ganhar a Copa do Mundo de imediato ou arrastar a final para o prolongamento.",
+				"resolution": "Resolve-se como SIM se for marcado um golo ao minuto 80 ou mais tarde do tempo regulamentar (incluindo os descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol aos oitenta minutos ou depois na final?",
+				"description": "Um gol no fim pode ganhar a Copa do Mundo de vez ou arrastar a final para a prorrogação.",
+				"resolution": "Resolve-se como SIM se for marcado um gol aos 80 minutos ou depois no tempo regulamentar (incluindo os acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛第八十分钟或之后会有进球吗？",
+				"description": "一粒压哨进球可能直接锁定世界杯冠军，也可能把决赛拖入加时赛。",
+				"resolution": "如果常规时间第80分钟或之后（含补时）打入一球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a red card be shown in the Final?",
+		"description": "The weight of a World Cup final, and everything riding on one moment, raises the risk of a dismissal.",
+		"resolution": "Resolves YES if a red card (straight or second yellow) is shown to any player during the match; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.15,
+		"translations": {
+			"it": {
+				"title": "Verrà mostrato un cartellino rosso nella finale?",
+				"description": "Il peso di una finale dei Mondiali, con tutto ciò che si gioca in un singolo istante, aumenta il rischio di un'espulsione.",
+				"resolution": "Si risolve SÌ se viene mostrato un cartellino rosso (diretto o per doppia ammonizione) a un qualsiasi giocatore durante la partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se mostrará una tarjeta roja en la Final?",
+				"description": "El peso de una final del Mundial, y todo lo que se juega en un solo instante, eleva el riesgo de expulsión.",
+				"resolution": "Se resuelve SÍ si se muestra una tarjeta roja (directa o por doble amarilla) a algún jugador durante el partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird im Finale eine Rote Karte gezeigt?",
+				"description": "Das Gewicht eines WM-Finales und alles, was an einem einzigen Moment hängt, erhöhen das Risiko eines Platzverweises.",
+				"resolution": "Wird mit JA aufgelöst, wenn einem Spieler während des Spiels eine Rote Karte gezeigt wird (glatt Rot oder Gelb-Rot); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un carton rouge sera-t-il brandi dans la finale ?",
+				"description": "Le poids d'une finale de Coupe du monde, et tout ce qui se joue sur un seul instant, augmente le risque d'une expulsion.",
+				"resolution": "Se résout par OUI si un carton rouge (direct ou deuxième jaune) est brandi à l'encontre d'un joueur pendant le match ; sinon NON."
+			},
+			"pt": {
+				"title": "Vai ser mostrado um cartão vermelho na final?",
+				"description": "O peso de uma final da Copa do Mundo, e tudo o que depende de um único momento, aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se for mostrado um cartão vermelho (direto ou por segundo amarelo) a qualquer jogador durante o jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será mostrado um cartão vermelho na final?",
+				"description": "O peso de uma final de Copa do Mundo, e tudo o que depende de um único lance, aumenta o risco de uma expulsão.",
+				"resolution": "Resolve-se como SIM se um cartão vermelho (direto ou por segundo amarelo) for mostrado a algum jogador durante a partida; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛会出现红牌吗？",
+				"description": "世界杯决赛的分量，以及系于一瞬之间的一切，都提升了有人被罚下的风险。",
+				"resolution": "如果比赛中有任何球员被出示红牌（直接红牌或两黄变一红），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will five or more yellow cards be shown in the Final?",
+		"description": "A tight, high-stakes final can pile up the cautions as both sides fight for every yard.",
+		"resolution": "Resolves YES if 5 or more yellow cards are shown across both teams during the match; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.56,
+		"translations": {
+			"it": {
+				"title": "Verranno mostrati cinque o più cartellini gialli nella finale?",
+				"description": "Una finale equilibrata e ad altissima posta in gioco può far accumulare le ammonizioni mentre le due squadre si contendono ogni metro.",
+				"resolution": "Si risolve SÌ se vengono mostrati 5 o più cartellini gialli complessivi alle due squadre durante la partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se mostrarán cinco o más tarjetas amarillas en la Final?",
+				"description": "Una final apretada y de máxima exigencia puede acumular amonestaciones mientras ambos equipos pelean cada palmo de campo.",
+				"resolution": "Se resuelve SÍ si se muestran 5 o más tarjetas amarillas entre los dos equipos durante el partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Werden im Finale fünf oder mehr Gelbe Karten gezeigt?",
+				"description": "Ein enges Finale mit höchstem Einsatz kann die Verwarnungen anhäufen, während beide Seiten um jeden Meter kämpfen.",
+				"resolution": "Wird mit JA aufgelöst, wenn während des Spiels bei beiden Mannschaften zusammen 5 oder mehr Gelbe Karten gezeigt werden; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Cinq cartons jaunes ou plus seront-ils brandis dans la finale ?",
+				"description": "Une finale serrée aux enjeux élevés peut faire grimper le total des avertissements, les deux équipes se disputant le moindre mètre.",
+				"resolution": "Se résout par OUI si 5 cartons jaunes ou plus sont brandis toutes équipes confondues pendant le match ; sinon NON."
+			},
+			"pt": {
+				"title": "Vão ser mostrados cinco ou mais cartões amarelos na final?",
+				"description": "Uma final apertada e de tão alto risco pode acumular advertências, com as duas equipas a lutar por cada metro.",
+				"resolution": "Resolve-se como SIM se forem mostrados 5 ou mais cartões amarelos no conjunto das duas equipas durante o jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Serão mostrados cinco ou mais cartões amarelos na final?",
+				"description": "Uma final apertada e de altíssimo risco pode acumular cartões enquanto as duas seleções brigam por cada palmo do campo.",
+				"resolution": "Resolve-se como SIM se forem mostrados 5 ou mais cartões amarelos no total das duas seleções durante a partida; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛会出现五张或以上黄牌吗？",
+				"description": "一场胶着且事关重大的决赛，随着双方寸土必争，黄牌可能不断累积。",
+				"resolution": "如果比赛中两队合计被出示5张或以上黄牌，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a penalty be awarded in the Final?",
+		"description": "A single spot-kick could decide the World Cup — every duel in the box carries the trophy.",
+		"resolution": "Resolves YES if a penalty kick is awarded to either team during normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.28,
+		"translations": {
+			"it": {
+				"title": "Verrà assegnato un rigore nella finale?",
+				"description": "Un solo tiro dal dischetto potrebbe decidere i Mondiali: ogni duello in area porta con sé il trofeo.",
+				"resolution": "Si risolve SÌ se viene assegnato un calcio di rigore a una delle due squadre nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se concederá un penalti en la Final?",
+				"description": "Un solo lanzamiento desde los once metros podría decidir el Mundial: cada duelo en el área lleva el trofeo dentro.",
+				"resolution": "Se resuelve SÍ si se concede un penalti a cualquiera de los dos equipos durante el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Wird im Finale ein Elfmeter verhängt?",
+				"description": "Ein einziger Strafstoß könnte die WM entscheiden — an jedem Zweikampf im Strafraum hängt der Pokal.",
+				"resolution": "Wird mit JA aufgelöst, wenn einer der beiden Mannschaften während der regulären Spielzeit (90 Minuten plus Nachspielzeit) ein Elfmeter zugesprochen wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un penalty sera-t-il accordé dans la finale ?",
+				"description": "Un seul penalty pourrait décider de la Coupe du monde — chaque duel dans la surface porte le trophée.",
+				"resolution": "Se résout par OUI si un penalty est accordé à l'une des deux équipes dans le temps réglementaire (90 minutes plus arrêts de jeu) ; sinon NON."
+			},
+			"pt": {
+				"title": "Vai ser assinalado um penálti na final?",
+				"description": "Um só penálti pode decidir a Copa do Mundo — cada duelo dentro da área carrega o troféu.",
+				"resolution": "Resolve-se como SIM se for assinalado um penálti a qualquer das equipas durante o tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um pênalti na final?",
+				"description": "Uma única cobrança pode decidir a Copa do Mundo — cada duelo dentro da área carrega o troféu.",
+				"resolution": "Resolve-se como SIM se um pênalti for assinalado para qualquer uma das seleções no tempo regulamentar (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛会判罚点球吗？",
+				"description": "一次十二码罚球就可能决定世界杯归属——禁区内的每一次对抗都关乎奖杯。",
+				"resolution": "如果常规时间（90分钟加补时）内任意一方获判点球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored from outside the penalty area in the Final?",
+		"description": "Whether the Final is unlocked by a strike from distance — the kind of goal a final is remembered for.",
+		"resolution": "Resolves YES if a goal is scored from outside the penalty area in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.14,
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol da fuori area nella finale?",
+				"description": "Se la finale verrà sbloccata da una conclusione dalla distanza: il tipo di gol per cui una finale viene ricordata.",
+				"resolution": "Si risolve SÌ se viene segnato un gol da fuori area nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol desde fuera del área en la Final?",
+				"description": "Si la Final se desbloquea con un disparo lejano: el tipo de gol por el que se recuerda una final.",
+				"resolution": "Se resuelve SÍ si se marca un gol desde fuera del área en el tiempo reglamentario o en la prórroga (sin contar los lanzamientos de la tanda de penaltis); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt im Finale ein Tor von außerhalb des Strafraums?",
+				"description": "Ob das Finale durch einen Distanzschuss aufgebrochen wird — die Art Tor, für die ein Finale in Erinnerung bleibt.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der regulären Spielzeit oder in der Verlängerung ein Tor von außerhalb des Strafraums erzielt wird (Schüsse im Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué de l'extérieur de la surface dans la finale ?",
+				"description": "Savoir si la finale sera débloquée par une frappe de loin — le genre de but dont une finale se souvient.",
+				"resolution": "Se résout par OUI si un but est marqué de l'extérieur de la surface de réparation dans le temps réglementaire ou en prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Vai ser marcado um golo de fora da grande área na final?",
+				"description": "Saber se a final é desbloqueada por um remate de longe — o tipo de golo pelo qual uma final fica na memória.",
+				"resolution": "Resolve-se como SIM se for marcado um golo de fora da grande área no tempo regulamentar ou no prolongamento (excluindo a marcação de penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol de fora da área na final?",
+				"description": "Se a final vai ser destravada por um chute de longe — o tipo de gol pelo qual uma final fica na memória.",
+				"resolution": "Resolve-se como SIM se for marcado um gol de fora da área no tempo regulamentar ou na prorrogação (excluindo as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛会有禁区外的进球吗？",
+				"description": "决赛是否会被一记远射打破僵局——那种让一场决赛被永远铭记的进球。",
+				"resolution": "如果在常规时间或加时赛内有一球自禁区外攻入（不含点球大战的罚球），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will a goal be scored with a header in the Final?",
+		"description": "Whether a cross or set piece is converted with the head on the biggest stage.",
+		"resolution": "Resolves YES if a goal is scored with a header in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.2,
+		"translations": {
+			"it": {
+				"title": "Verrà segnato un gol di testa nella finale?",
+				"description": "Se un cross o un calcio piazzato verrà trasformato di testa sul palcoscenico più grande di tutti.",
+				"resolution": "Si risolve SÌ se viene segnato un gol di testa nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Se marcará un gol de cabeza en la Final?",
+				"description": "Si un centro o una jugada a balón parado acaba en gol de cabeza en el escenario más grande.",
+				"resolution": "Se resuelve SÍ si se marca un gol de cabeza en el tiempo reglamentario o en la prórroga (sin contar los lanzamientos de la tanda de penaltis); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Fällt im Finale ein Tor per Kopfball?",
+				"description": "Ob eine Flanke oder ein Standard auf der größten Bühne per Kopf verwertet wird.",
+				"resolution": "Wird mit JA aufgelöst, wenn in der regulären Spielzeit oder in der Verlängerung ein Tor per Kopfball erzielt wird (Schüsse im Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Un but sera-t-il marqué de la tête dans la finale ?",
+				"description": "Savoir si un centre ou un coup de pied arrêté sera converti de la tête sur la plus grande des scènes.",
+				"resolution": "Se résout par OUI si un but est marqué de la tête dans le temps réglementaire ou en prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Vai ser marcado um golo de cabeça na final?",
+				"description": "Saber se um cruzamento ou uma bola parada é convertido de cabeça no maior palco de todos.",
+				"resolution": "Resolve-se como SIM se for marcado um golo de cabeça no tempo regulamentar ou no prolongamento (excluindo a marcação de penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Será marcado um gol de cabeça na final?",
+				"description": "Se um cruzamento ou uma bola parada vai ser convertido de cabeça no maior palco de todos.",
+				"resolution": "Resolve-se como SIM se for marcado um gol de cabeça no tempo regulamentar ou na prorrogação (excluindo as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "决赛会有头球破门吗？",
+				"description": "在最大的舞台上，一次传中或定位球是否会被头球送入网窝。",
+				"resolution": "如果在常规时间或加时赛内有一球以头球攻入（不含点球大战的罚球），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Spain keep a clean sheet in the Final?",
+		"description": "Whether Spain shut out an Argentina attack led by Messi and Julián Álvarez to win the World Cup.",
+		"resolution": "Resolves YES if Spain concede no goals in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.36,
+		"translations": {
+			"it": {
+				"title": "La Spagna manterrà la porta inviolata nella finale?",
+				"description": "Se la Spagna riuscirà a imbrigliare un attacco dell'Argentina guidato da Messi e Julián Álvarez e a vincere i Mondiali.",
+				"resolution": "Si risolve SÌ se la Spagna non subisce gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Dejará España la portería a cero en la Final?",
+				"description": "Si España consigue dejar sin goles a un ataque de Argentina liderado por Messi y Julián Álvarez para ganar el Mundial.",
+				"resolution": "Se resuelve SÍ si España no encaja ningún gol en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Bleibt Spanien im Finale ohne Gegentor?",
+				"description": "Ob Spanien einen Angriff Argentiniens um Messi und Julián Álvarez zunullt und die WM gewinnt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Spanien in der regulären Spielzeit (90 Minuten plus Nachspielzeit) kein Gegentor kassiert; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "L'Espagne gardera-t-elle sa cage inviolée dans la finale ?",
+				"description": "Savoir si l'Espagne muselera une attaque argentine emmenée par Messi et Julián Álvarez pour remporter la Coupe du monde.",
+				"resolution": "Se résout par OUI si l'Espagne n'encaisse aucun but dans le temps réglementaire (90 minutes plus arrêts de jeu) ; sinon NON."
+			},
+			"pt": {
+				"title": "A Espanha vai manter a baliza a zero na final?",
+				"description": "Saber se a Espanha consegue travar um ataque da Argentina comandado por Messi e Julián Álvarez para ganhar a Copa do Mundo.",
+				"resolution": "Resolve-se como SIM se a Espanha não sofrer golos no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A Espanha vai ficar sem sofrer gols na final?",
+				"description": "Se a Espanha vai anular um ataque da Argentina comandado por Messi e Julián Álvarez para conquistar a Copa do Mundo.",
+				"resolution": "Resolve-se como SIM se a Espanha não sofrer gols no tempo regulamentar (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "西班牙会在决赛中零封对手吗？",
+				"description": "西班牙能否封锁由Messi和Julián Álvarez领衔的阿根廷进攻，从而赢得世界杯。",
+				"resolution": "如果西班牙在常规时间（90分钟加补时）内不失球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Argentina keep a clean sheet in the Final?",
+		"description": "Whether Argentina shut out a Spain attack led by Lamine Yamal to retain the World Cup.",
+		"resolution": "Resolves YES if Argentina concede no goals in normal time (90 minutes plus stoppage); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.28,
+		"translations": {
+			"it": {
+				"title": "L'Argentina manterrà la porta inviolata nella finale?",
+				"description": "Se l'Argentina riuscirà a imbrigliare un attacco della Spagna guidato da Lamine Yamal e a confermarsi campione del mondo.",
+				"resolution": "Si risolve SÌ se l'Argentina non subisce gol nei tempi regolamentari (90 minuti più recupero); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Dejará Argentina la portería a cero en la Final?",
+				"description": "Si Argentina consigue dejar sin goles a un ataque de España liderado por Lamine Yamal para revalidar el Mundial.",
+				"resolution": "Se resuelve SÍ si Argentina no encaja ningún gol en el tiempo reglamentario (90 minutos más el descuento); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Bleibt Argentinien im Finale ohne Gegentor?",
+				"description": "Ob Argentinien einen von Lamine Yamal angeführten Angriff Spaniens zunullt und den WM-Titel verteidigt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Argentinien in der regulären Spielzeit (90 Minuten plus Nachspielzeit) kein Gegentor kassiert; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "L'Argentine gardera-t-elle sa cage inviolée dans la finale ?",
+				"description": "Savoir si l'Argentine muselera une attaque espagnole emmenée par Lamine Yamal pour conserver la Coupe du monde.",
+				"resolution": "Se résout par OUI si l'Argentine n'encaisse aucun but dans le temps réglementaire (90 minutes plus arrêts de jeu) ; sinon NON."
+			},
+			"pt": {
+				"title": "A Argentina vai manter a baliza a zero na final?",
+				"description": "Saber se a Argentina consegue travar um ataque da Espanha comandado por Lamine Yamal para revalidar o título mundial.",
+				"resolution": "Resolve-se como SIM se a Argentina não sofrer golos no tempo regulamentar (90 minutos mais descontos); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "A Argentina vai ficar sem sofrer gols na final?",
+				"description": "Se a Argentina vai anular um ataque da Espanha comandado por Lamine Yamal para manter a Copa do Mundo.",
+				"resolution": "Resolve-se como SIM se a Argentina não sofrer gols no tempo regulamentar (90 minutos mais acréscimos); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "阿根廷会在决赛中零封对手吗？",
+				"description": "阿根廷能否封锁由Lamine Yamal领衔的西班牙进攻，从而卫冕世界杯。",
+				"resolution": "如果阿根廷在常规时间（90分钟加补时）内不失球，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Lamine Yamal score or assist against Argentina?",
+		"description": "Lamine Yamal, Spain's teenage creative engine, one game from a World Cup winner's medal — a goal or assist would define the Final.",
+		"resolution": "Resolves YES if Lamine Yamal scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.4,
+		"translations": {
+			"it": {
+				"title": "Lamine Yamal segnerà o servirà un assist contro l'Argentina?",
+				"description": "Lamine Yamal, il giovanissimo motore creativo della Spagna, a una partita dalla medaglia di campione del mondo: un gol o un assist segnerebbe la finale.",
+				"resolution": "Si risolve SÌ se Lamine Yamal segna o gli viene accreditato un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o dará una asistencia Lamine Yamal ante Argentina?",
+				"description": "Lamine Yamal, el motor creativo adolescente de España, a un partido de la medalla de campeón del mundo: un gol o una asistencia definirían la Final.",
+				"resolution": "Se resuelve SÍ si Lamine Yamal marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Lamine Yamal gegen Argentinien ein Tor vor?",
+				"description": "Lamine Yamal, Spaniens jugendlicher Kreativmotor, ein Spiel von der Weltmeistermedaille entfernt — ein Tor oder eine Vorlage würde das Finale prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Lamine Yamal in der regulären Spielzeit oder in der Verlängerung ein Tor erzielt oder ihm laut offizieller Statistik eine Torvorlage gutgeschrieben wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Lamine Yamal marquera-t-il ou délivrera-t-il une passe décisive contre l'Argentine ?",
+				"description": "Lamine Yamal, le moteur créatif adolescent de l'Espagne, à un match d'une médaille de champion du monde — un but ou une passe décisive définirait la finale.",
+				"resolution": "Se résout par OUI si Lamine Yamal marque ou se voit créditer d'une passe décisive dans le temps réglementaire ou en prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Lamine Yamal vai marcar ou fazer uma assistência contra a Argentina?",
+				"description": "Lamine Yamal, o motor criativo adolescente da Espanha, a um jogo de uma medalha de campeão do mundo — um golo ou uma assistência marcariam a final.",
+				"resolution": "Resolve-se como SIM se Lamine Yamal marcar ou lhe for creditada uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Lamine Yamal vai marcar ou dar assistência contra a Argentina?",
+				"description": "Lamine Yamal, o motor criativo adolescente da Espanha, a um jogo da medalha de campeão do mundo — um gol ou uma assistência definiria a final.",
+				"resolution": "Resolve-se como SIM se Lamine Yamal marcar ou receber o crédito de uma assistência no tempo regulamentar ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Lamine Yamal对阵阿根廷会进球或助攻吗？",
+				"description": "Lamine Yamal，西班牙少年成名的创造力引擎，距离世界杯冠军奖牌只差一场——一粒进球或一次助攻将定义这场决赛。",
+				"resolution": "如果根据官方统计，Lamine Yamal在常规时间或加时赛内进球或被记录一次助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Nico Williams score or assist against Argentina?",
+		"description": "Nico Williams stretches Argentina down Spain's left; a goal or assist would shape the Final.",
+		"resolution": "Resolves YES if Nico Williams scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.22,
+		"translations": {
+			"it": {
+				"title": "Nico Williams segnerà o servirà un assist contro l'Argentina?",
+				"description": "Nico Williams allunga l'Argentina sulla fascia sinistra della Spagna; un gol o un assist darebbe forma alla finale.",
+				"resolution": "Si risolve SÌ se Nico Williams segna o gli viene accreditato un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o dará una asistencia Nico Williams ante Argentina?",
+				"description": "Nico Williams estira a Argentina por la izquierda de España; un gol o una asistencia marcarían la Final.",
+				"resolution": "Se resuelve SÍ si Nico Williams marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Nico Williams gegen Argentinien ein Tor vor?",
+				"description": "Nico Williams zieht Argentinien über Spaniens linke Seite auseinander; ein Tor oder eine Vorlage würde das Finale prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Nico Williams in der regulären Spielzeit oder in der Verlängerung ein Tor erzielt oder ihm laut offizieller Statistik eine Torvorlage gutgeschrieben wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Nico Williams marquera-t-il ou délivrera-t-il une passe décisive contre l'Argentine ?",
+				"description": "Nico Williams étire la défense argentine sur le côté gauche espagnol ; un but ou une passe décisive façonnerait la finale.",
+				"resolution": "Se résout par OUI si Nico Williams marque ou se voit créditer d'une passe décisive dans le temps réglementaire ou en prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Nico Williams vai marcar ou fazer uma assistência contra a Argentina?",
+				"description": "Nico Williams estica a Argentina pela esquerda da Espanha; um golo ou uma assistência moldariam a final.",
+				"resolution": "Resolve-se como SIM se Nico Williams marcar ou lhe for creditada uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Nico Williams vai marcar ou dar assistência contra a Argentina?",
+				"description": "Nico Williams estica a Argentina pela esquerda da Espanha; um gol ou uma assistência moldaria a final.",
+				"resolution": "Resolve-se como SIM se Nico Williams marcar ou receber o crédito de uma assistência no tempo regulamentar ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Nico Williams对阵阿根廷会进球或助攻吗？",
+				"description": "Nico Williams在西班牙左路撕扯阿根廷防线；一粒进球或一次助攻将左右这场决赛。",
+				"resolution": "如果根据官方统计，Nico Williams在常规时间或加时赛内进球或被记录一次助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Álvaro Morata score against Argentina?",
+		"description": "Álvaro Morata leads the Spain line in the World Cup final, chasing the goal that matters most.",
+		"resolution": "Resolves YES if Álvaro Morata scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.12,
+		"translations": {
+			"it": {
+				"title": "Álvaro Morata segnerà contro l'Argentina?",
+				"description": "Álvaro Morata guida l'attacco della Spagna nella finale dei Mondiali, a caccia del gol che conta più di tutti.",
+				"resolution": "Si risolve SÌ se Álvaro Morata segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Álvaro Morata ante Argentina?",
+				"description": "Álvaro Morata lidera el ataque de España en la final del Mundial, a la caza del gol que más importa.",
+				"resolution": "Se resuelve SÍ si Álvaro Morata marca en el tiempo reglamentario o en la prórroga (sin contar los lanzamientos de la tanda de penaltis); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Álvaro Morata gegen Argentinien?",
+				"description": "Álvaro Morata führt Spaniens Angriff im WM-Finale an, auf der Jagd nach dem Tor, das am meisten zählt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Álvaro Morata in der regulären Spielzeit oder in der Verlängerung trifft (Schüsse im Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Álvaro Morata marquera-t-il contre l'Argentine ?",
+				"description": "Álvaro Morata mène l'attaque espagnole en finale de Coupe du monde, en quête du but qui compte le plus.",
+				"resolution": "Se résout par OUI si Álvaro Morata marque dans le temps réglementaire ou en prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Álvaro Morata vai marcar contra a Argentina?",
+				"description": "Álvaro Morata lidera a frente de ataque da Espanha na final da Copa do Mundo, à procura do golo que mais conta.",
+				"resolution": "Resolve-se como SIM se Álvaro Morata marcar no tempo regulamentar ou no prolongamento (excluindo a marcação de penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Álvaro Morata vai marcar contra a Argentina?",
+				"description": "Álvaro Morata comanda o ataque da Espanha na final da Copa do Mundo, atrás do gol que mais importa.",
+				"resolution": "Resolve-se como SIM se Álvaro Morata marcar no tempo regulamentar ou na prorrogação (excluindo as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Álvaro Morata对阵阿根廷会进球吗？",
+				"description": "Álvaro Morata在世界杯决赛中领衔西班牙锋线，追逐那粒最重要的进球。",
+				"resolution": "如果Álvaro Morata在常规时间或加时赛内进球（不含点球大战的罚球），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Mikel Merino score against Argentina?",
+		"description": "Mikel Merino, Spain's late-goal specialist through the knockouts, arriving in the box again with the trophy on the line.",
+		"resolution": "Resolves YES if Mikel Merino scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.1,
+		"translations": {
+			"it": {
+				"title": "Mikel Merino segnerà contro l'Argentina?",
+				"description": "Mikel Merino, specialista dei gol nel finale per la Spagna lungo tutta la fase a eliminazione diretta, di nuovo in area con il trofeo in palio.",
+				"resolution": "Si risolve SÌ se Mikel Merino segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Mikel Merino ante Argentina?",
+				"description": "Mikel Merino, especialista en goles tardíos durante las eliminatorias, vuelve a llegar al área con el trofeo en juego.",
+				"resolution": "Se resuelve SÍ si Mikel Merino marca en el tiempo reglamentario o en la prórroga (sin contar los lanzamientos de la tanda de penaltis); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Mikel Merino gegen Argentinien?",
+				"description": "Mikel Merino, Spaniens Spezialist für späte Tore in der K.-o.-Runde, taucht erneut im Strafraum auf — mit dem Pokal auf dem Spiel.",
+				"resolution": "Wird mit JA aufgelöst, wenn Mikel Merino in der regulären Spielzeit oder in der Verlängerung trifft (Schüsse im Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Mikel Merino marquera-t-il contre l'Argentine ?",
+				"description": "Mikel Merino, spécialiste des buts tardifs de l'Espagne tout au long des phases à élimination directe, de nouveau à l'affût dans la surface avec le trophée en jeu.",
+				"resolution": "Se résout par OUI si Mikel Merino marque dans le temps réglementaire ou en prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Mikel Merino vai marcar contra a Argentina?",
+				"description": "Mikel Merino, o especialista em golos tardios da Espanha ao longo da fase a eliminar, a aparecer outra vez na área com o troféu em jogo.",
+				"resolution": "Resolve-se como SIM se Mikel Merino marcar no tempo regulamentar ou no prolongamento (excluindo a marcação de penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Mikel Merino vai marcar contra a Argentina?",
+				"description": "Mikel Merino, especialista da Espanha em gols no fim ao longo do mata-mata, chegando de novo à área com o troféu em jogo.",
+				"resolution": "Resolve-se como SIM se Mikel Merino marcar no tempo regulamentar ou na prorrogação (excluindo as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Mikel Merino对阵阿根廷会进球吗？",
+				"description": "Mikel Merino，西班牙淘汰赛阶段的绝杀专家，在奖杯归属未定之时再度前插进入禁区。",
+				"resolution": "如果Mikel Merino在常规时间或加时赛内进球（不含点球大战的罚球），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Rodri score or assist against Argentina?",
+		"description": "Rodri anchors and orchestrates Spain from deep; a goal or assist from him would swing the Final.",
+		"resolution": "Resolves YES if Rodri scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.16,
+		"translations": {
+			"it": {
+				"title": "Rodri segnerà o servirà un assist contro l'Argentina?",
+				"description": "Rodri fa da equilibratore e regista della Spagna da dietro; un suo gol o assist sposterebbe gli equilibri della finale.",
+				"resolution": "Si risolve SÌ se Rodri segna o gli viene accreditato un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o dará una asistencia Rodri ante Argentina?",
+				"description": "Rodri sostiene y dirige a España desde atrás; un gol o una asistencia suya decantarían la Final.",
+				"resolution": "Se resuelve SÍ si Rodri marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Rodri gegen Argentinien ein Tor vor?",
+				"description": "Rodri sichert ab und lenkt Spaniens Spiel aus der Tiefe; ein Tor oder eine Vorlage von ihm würde das Finale kippen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Rodri in der regulären Spielzeit oder in der Verlängerung ein Tor erzielt oder ihm laut offizieller Statistik eine Torvorlage gutgeschrieben wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Rodri marquera-t-il ou délivrera-t-il une passe décisive contre l'Argentine ?",
+				"description": "Rodri stabilise et orchestre l'Espagne depuis la base du milieu ; un but ou une passe décisive de sa part ferait basculer la finale.",
+				"resolution": "Se résout par OUI si Rodri marque ou se voit créditer d'une passe décisive dans le temps réglementaire ou en prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Rodri vai marcar ou fazer uma assistência contra a Argentina?",
+				"description": "Rodri equilibra e orquestra a Espanha a partir de trás; um golo ou uma assistência dele fariam pender a final.",
+				"resolution": "Resolve-se como SIM se Rodri marcar ou lhe for creditada uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Rodri vai marcar ou dar assistência contra a Argentina?",
+				"description": "Rodri equilibra e organiza a Espanha desde o setor mais recuado; um gol ou uma assistência dele mudaria a final.",
+				"resolution": "Resolve-se como SIM se Rodri marcar ou receber o crédito de uma assistência no tempo regulamentar ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Rodri对阵阿根廷会进球或助攻吗？",
+				"description": "Rodri在后腰位置为西班牙定盘并串联全队；他的一粒进球或一次助攻将扭转这场决赛。",
+				"resolution": "如果根据官方统计，Rodri在常规时间或加时赛内进球或被记录一次助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Pedri be shown a card against Argentina?",
+		"description": "Spain's metronome will see plenty of the ball — and plenty of Argentina's pressing fouls in a final.",
+		"resolution": "Resolves YES if Pedri is shown a yellow or red card during the match; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.18,
+		"translations": {
+			"it": {
+				"title": "Pedri riceverà un cartellino contro l'Argentina?",
+				"description": "Il metronomo della Spagna toccherà moltissimi palloni, e subirà altrettanti falli dal pressing dell'Argentina in una finale.",
+				"resolution": "Si risolve SÌ se a Pedri viene mostrato un cartellino giallo o rosso durante la partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Verá Pedri una tarjeta ante Argentina?",
+				"description": "El metrónomo de España tocará muchos balones, y sufrirá muchas faltas de la presión argentina en una final.",
+				"resolution": "Se resuelve SÍ si a Pedri se le muestra una tarjeta amarilla o roja durante el partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Sieht Pedri gegen Argentinien eine Karte?",
+				"description": "Spaniens Taktgeber wird viele Ballkontakte haben — und in einem Finale ebenso viele Pressingfouls Argentiniens abbekommen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Pedri während des Spiels eine Gelbe oder Rote Karte gezeigt bekommt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Pedri recevra-t-il un carton contre l'Argentine ?",
+				"description": "Le métronome espagnol touchera beaucoup de ballons — et subira beaucoup de fautes du pressing argentin en finale.",
+				"resolution": "Se résout par OUI si Pedri reçoit un carton jaune ou rouge pendant le match ; sinon NON."
+			},
+			"pt": {
+				"title": "Pedri vai ver um cartão contra a Argentina?",
+				"description": "O metrónomo da Espanha vai ter muita bola — e muitas faltas da pressão argentina numa final.",
+				"resolution": "Resolve-se como SIM se for mostrado a Pedri um cartão amarelo ou vermelho durante o jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Pedri vai receber um cartão contra a Argentina?",
+				"description": "O metrônomo da Espanha vai tocar muito na bola — e sofrer muitas faltas da pressão da Argentina numa final.",
+				"resolution": "Resolve-se como SIM se Pedri receber um cartão amarelo ou vermelho durante a partida; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Pedri对阵阿根廷会被出示牌吗？",
+				"description": "西班牙的节拍器将大量触球——在决赛中也将大量承受阿根廷的逼抢犯规。",
+				"resolution": "如果Pedri在比赛中被出示黄牌或红牌，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Lionel Messi score or assist against Spain?",
+		"description": "Lionel Messi, chasing a second World Cup and the perfect farewell, one game from immortality — a goal or assist would define the Final.",
+		"resolution": "Resolves YES if Lionel Messi scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.54,
+		"translations": {
+			"it": {
+				"title": "Lionel Messi segnerà o servirà un assist contro la Spagna?",
+				"description": "Lionel Messi, a caccia del secondo Mondiale e dell'addio perfetto, a una partita dall'immortalità: un gol o un assist segnerebbe la finale.",
+				"resolution": "Si risolve SÌ se Lionel Messi segna o gli viene accreditato un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o dará una asistencia Lionel Messi ante España?",
+				"description": "Lionel Messi, a la caza de un segundo Mundial y de la despedida perfecta, a un partido de la inmortalidad: un gol o una asistencia definirían la Final.",
+				"resolution": "Se resuelve SÍ si Lionel Messi marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Lionel Messi gegen Spanien ein Tor vor?",
+				"description": "Lionel Messi, auf der Jagd nach einem zweiten WM-Titel und dem perfekten Abschied, ein Spiel von der Unsterblichkeit entfernt — ein Tor oder eine Vorlage würde das Finale prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Lionel Messi in der regulären Spielzeit oder in der Verlängerung ein Tor erzielt oder ihm laut offizieller Statistik eine Torvorlage gutgeschrieben wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Lionel Messi marquera-t-il ou délivrera-t-il une passe décisive contre l'Espagne ?",
+				"description": "Lionel Messi, en quête d'une deuxième Coupe du monde et de l'adieu parfait, à un match de l'immortalité — un but ou une passe décisive définirait la finale.",
+				"resolution": "Se résout par OUI si Lionel Messi marque ou se voit créditer d'une passe décisive dans le temps réglementaire ou en prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Lionel Messi vai marcar ou fazer uma assistência contra a Espanha?",
+				"description": "Lionel Messi, à procura de uma segunda Copa do Mundo e da despedida perfeita, a um jogo da imortalidade — um golo ou uma assistência marcariam a final.",
+				"resolution": "Resolve-se como SIM se Lionel Messi marcar ou lhe for creditada uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Lionel Messi vai marcar ou dar assistência contra a Espanha?",
+				"description": "Lionel Messi, em busca de uma segunda Copa do Mundo e da despedida perfeita, a um jogo da imortalidade — um gol ou uma assistência definiria a final.",
+				"resolution": "Resolve-se como SIM se Lionel Messi marcar ou receber o crédito de uma assistência no tempo regulamentar ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Lionel Messi对阵西班牙会进球或助攻吗？",
+				"description": "Lionel Messi，追逐第二座世界杯与完美告别，距离不朽只差一场——一粒进球或一次助攻将定义这场决赛。",
+				"resolution": "如果根据官方统计，Lionel Messi在常规时间或加时赛内进球或被记录一次助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Julián Álvarez score against Spain?",
+		"description": "Julián Álvarez, Argentina's relentless finisher, chasing the goal that wins a World Cup final.",
+		"resolution": "Resolves YES if Julián Álvarez scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.27,
+		"translations": {
+			"it": {
+				"title": "Julián Álvarez segnerà contro la Spagna?",
+				"description": "Julián Álvarez, il finalizzatore instancabile dell'Argentina, a caccia del gol che vince una finale dei Mondiali.",
+				"resolution": "Si risolve SÌ se Julián Álvarez segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Julián Álvarez ante España?",
+				"description": "Julián Álvarez, el rematador incansable de Argentina, va a por el gol que gana una final del Mundial.",
+				"resolution": "Se resuelve SÍ si Julián Álvarez marca en el tiempo reglamentario o en la prórroga (sin contar los lanzamientos de la tanda de penaltis); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Julián Álvarez gegen Spanien?",
+				"description": "Julián Álvarez, Argentiniens unermüdlicher Vollstrecker, auf der Jagd nach dem Tor, das ein WM-Finale gewinnt.",
+				"resolution": "Wird mit JA aufgelöst, wenn Julián Álvarez in der regulären Spielzeit oder in der Verlängerung trifft (Schüsse im Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Julián Álvarez marquera-t-il contre l'Espagne ?",
+				"description": "Julián Álvarez, le finisseur infatigable de l'Argentine, en quête du but qui remporte une finale de Coupe du monde.",
+				"resolution": "Se résout par OUI si Julián Álvarez marque dans le temps réglementaire ou en prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Julián Álvarez vai marcar contra a Espanha?",
+				"description": "Julián Álvarez, o finalizador incansável da Argentina, à procura do golo que ganha uma final da Copa do Mundo.",
+				"resolution": "Resolve-se como SIM se Julián Álvarez marcar no tempo regulamentar ou no prolongamento (excluindo a marcação de penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Julián Álvarez vai marcar contra a Espanha?",
+				"description": "Julián Álvarez, o finalizador incansável da Argentina, atrás do gol que ganha uma final de Copa do Mundo.",
+				"resolution": "Resolve-se como SIM se Julián Álvarez marcar no tempo regulamentar ou na prorrogação (excluindo as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Julián Álvarez对阵西班牙会进球吗？",
+				"description": "Julián Álvarez，阿根廷不知疲倦的终结者，追逐那粒赢下世界杯决赛的进球。",
+				"resolution": "如果Julián Álvarez在常规时间或加时赛内进球（不含点球大战的罚球），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Lautaro Martínez score against Spain?",
+		"description": "Lautaro Martínez gives Argentina a second penalty-box finisher off the bench or from the start.",
+		"resolution": "Resolves YES if Lautaro Martínez scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.18,
+		"translations": {
+			"it": {
+				"title": "Lautaro Martínez segnerà contro la Spagna?",
+				"description": "Lautaro Martínez dà all'Argentina un secondo finalizzatore d'area, dalla panchina o dal primo minuto.",
+				"resolution": "Si risolve SÌ se Lautaro Martínez segna nei tempi regolamentari o supplementari (esclusi i tiri dei calci di rigore); altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará Lautaro Martínez ante España?",
+				"description": "Lautaro Martínez le da a Argentina un segundo rematador de área, desde el banquillo o desde el inicio.",
+				"resolution": "Se resuelve SÍ si Lautaro Martínez marca en el tiempo reglamentario o en la prórroga (sin contar los lanzamientos de la tanda de penaltis); de lo contrario, NO."
+			},
+			"de": {
+				"title": "Trifft Lautaro Martínez gegen Spanien?",
+				"description": "Lautaro Martínez gibt Argentinien einen zweiten Vollstrecker im Strafraum — von Beginn an oder von der Bank.",
+				"resolution": "Wird mit JA aufgelöst, wenn Lautaro Martínez in der regulären Spielzeit oder in der Verlängerung trifft (Schüsse im Elfmeterschießen ausgenommen); andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Lautaro Martínez marquera-t-il contre l'Espagne ?",
+				"description": "Lautaro Martínez offre à l'Argentine un second finisseur dans la surface, en sortie de banc ou d'entrée de jeu.",
+				"resolution": "Se résout par OUI si Lautaro Martínez marque dans le temps réglementaire ou en prolongation (tirs au but exclus) ; sinon NON."
+			},
+			"pt": {
+				"title": "Lautaro Martínez vai marcar contra a Espanha?",
+				"description": "Lautaro Martínez dá à Argentina um segundo finalizador de área, a titular ou saído do banco.",
+				"resolution": "Resolve-se como SIM se Lautaro Martínez marcar no tempo regulamentar ou no prolongamento (excluindo a marcação de penáltis); caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Lautaro Martínez vai marcar contra a Espanha?",
+				"description": "Lautaro Martínez dá à Argentina um segundo finalizador de área, saindo do banco ou já como titular.",
+				"resolution": "Resolve-se como SIM se Lautaro Martínez marcar no tempo regulamentar ou na prorrogação (excluindo as cobranças da disputa de pênaltis); caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Lautaro Martínez对阵西班牙会进球吗？",
+				"description": "无论首发还是替补登场，Lautaro Martínez都为阿根廷提供了又一位禁区终结者。",
+				"resolution": "如果Lautaro Martínez在常规时间或加时赛内进球（不含点球大战的罚球），则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Alexis Mac Allister score or assist against Spain?",
+		"description": "Alexis Mac Allister sets Argentina's midfield tempo; a goal or assist would shape the Final.",
+		"resolution": "Resolves YES if Alexis Mac Allister scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.2,
+		"translations": {
+			"it": {
+				"title": "Alexis Mac Allister segnerà o servirà un assist contro la Spagna?",
+				"description": "Alexis Mac Allister detta i tempi del centrocampo dell'Argentina; un gol o un assist darebbe forma alla finale.",
+				"resolution": "Si risolve SÌ se Alexis Mac Allister segna o gli viene accreditato un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o dará una asistencia Alexis Mac Allister ante España?",
+				"description": "Alexis Mac Allister marca el ritmo del centro del campo de Argentina; un gol o una asistencia marcarían la Final.",
+				"resolution": "Se resuelve SÍ si Alexis Mac Allister marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Alexis Mac Allister gegen Spanien ein Tor vor?",
+				"description": "Alexis Mac Allister gibt im Mittelfeld Argentiniens den Takt vor; ein Tor oder eine Vorlage würde das Finale prägen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Alexis Mac Allister in der regulären Spielzeit oder in der Verlängerung ein Tor erzielt oder ihm laut offizieller Statistik eine Torvorlage gutgeschrieben wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Alexis Mac Allister marquera-t-il ou délivrera-t-il une passe décisive contre l'Espagne ?",
+				"description": "Alexis Mac Allister donne le tempo au milieu de terrain argentin ; un but ou une passe décisive façonnerait la finale.",
+				"resolution": "Se résout par OUI si Alexis Mac Allister marque ou se voit créditer d'une passe décisive dans le temps réglementaire ou en prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Alexis Mac Allister vai marcar ou fazer uma assistência contra a Espanha?",
+				"description": "Alexis Mac Allister impõe o ritmo do meio-campo da Argentina; um golo ou uma assistência moldariam a final.",
+				"resolution": "Resolve-se como SIM se Alexis Mac Allister marcar ou lhe for creditada uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Alexis Mac Allister vai marcar ou dar assistência contra a Espanha?",
+				"description": "Alexis Mac Allister dita o ritmo do meio-campo da Argentina; um gol ou uma assistência moldaria a final.",
+				"resolution": "Resolve-se como SIM se Alexis Mac Allister marcar ou receber o crédito de uma assistência no tempo regulamentar ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Alexis Mac Allister对阵西班牙会进球或助攻吗？",
+				"description": "Alexis Mac Allister掌控着阿根廷中场的节奏；一粒进球或一次助攻将左右这场决赛。",
+				"resolution": "如果根据官方统计，Alexis Mac Allister在常规时间或加时赛内进球或被记录一次助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Enzo Fernández score or assist against Spain?",
+		"description": "Enzo Fernández drives Argentina from midfield; a goal or assist from him would tilt the Final.",
+		"resolution": "Resolves YES if Enzo Fernández scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.16,
+		"translations": {
+			"it": {
+				"title": "Enzo Fernández segnerà o servirà un assist contro la Spagna?",
+				"description": "Enzo Fernández trascina l'Argentina dal centrocampo; un suo gol o assist farebbe pendere la finale da una parte.",
+				"resolution": "Si risolve SÌ se Enzo Fernández segna o gli viene accreditato un assist nei tempi regolamentari o supplementari, secondo le statistiche ufficiali; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Marcará o dará una asistencia Enzo Fernández ante España?",
+				"description": "Enzo Fernández empuja a Argentina desde el centro del campo; un gol o una asistencia suya inclinarían la Final.",
+				"resolution": "Se resuelve SÍ si Enzo Fernández marca o se le acredita una asistencia en el tiempo reglamentario o en la prórroga, según las estadísticas oficiales; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Erzielt oder bereitet Enzo Fernández gegen Spanien ein Tor vor?",
+				"description": "Enzo Fernández treibt Argentinien aus dem Mittelfeld an; ein Tor oder eine Vorlage von ihm würde das Finale kippen.",
+				"resolution": "Wird mit JA aufgelöst, wenn Enzo Fernández in der regulären Spielzeit oder in der Verlängerung ein Tor erzielt oder ihm laut offizieller Statistik eine Torvorlage gutgeschrieben wird; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Enzo Fernández marquera-t-il ou délivrera-t-il une passe décisive contre l'Espagne ?",
+				"description": "Enzo Fernández propulse l'Argentine depuis le milieu de terrain ; un but ou une passe décisive de sa part ferait pencher la finale.",
+				"resolution": "Se résout par OUI si Enzo Fernández marque ou se voit créditer d'une passe décisive dans le temps réglementaire ou en prolongation, selon les statistiques officielles ; sinon NON."
+			},
+			"pt": {
+				"title": "Enzo Fernández vai marcar ou fazer uma assistência contra a Espanha?",
+				"description": "Enzo Fernández puxa a Argentina a partir do meio-campo; um golo ou uma assistência dele fariam pender a final.",
+				"resolution": "Resolve-se como SIM se Enzo Fernández marcar ou lhe for creditada uma assistência no tempo regulamentar ou no prolongamento, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Enzo Fernández vai marcar ou dar assistência contra a Espanha?",
+				"description": "Enzo Fernández conduz a Argentina a partir do meio-campo; um gol ou uma assistência dele inclinaria a final.",
+				"resolution": "Resolve-se como SIM se Enzo Fernández marcar ou receber o crédito de uma assistência no tempo regulamentar ou na prorrogação, segundo as estatísticas oficiais; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Enzo Fernández对阵西班牙会进球或助攻吗？",
+				"description": "Enzo Fernández从中场推动着阿根廷全队；他的一粒进球或一次助攻将令这场决赛的天平倾斜。",
+				"resolution": "如果根据官方统计，Enzo Fernández在常规时间或加时赛内进球或被记录一次助攻，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Rodrigo De Paul be shown a card against Spain?",
+		"description": "Argentina's combative midfielder is a perennial caution risk in a tight, physical final.",
+		"resolution": "Resolves YES if Rodrigo De Paul is shown a yellow or red card during the match; otherwise NO.",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.34,
+		"translations": {
+			"it": {
+				"title": "Rodrigo De Paul riceverà un cartellino contro la Spagna?",
+				"description": "Il combattivo centrocampista dell'Argentina è un eterno candidato all'ammonizione in una finale serrata e fisica.",
+				"resolution": "Si risolve SÌ se a Rodrigo De Paul viene mostrato un cartellino giallo o rosso durante la partita; altrimenti NO."
+			},
+			"es": {
+				"title": "¿Verá Rodrigo De Paul una tarjeta ante España?",
+				"description": "El combativo centrocampista de Argentina siempre es candidato a la amonestación en una final apretada y física.",
+				"resolution": "Se resuelve SÍ si a Rodrigo De Paul se le muestra una tarjeta amarilla o roja durante el partido; de lo contrario, NO."
+			},
+			"de": {
+				"title": "Sieht Rodrigo De Paul gegen Spanien eine Karte?",
+				"description": "Argentiniens kampfstarker Mittelfeldspieler ist in einem engen, körperbetonten Finale ein Dauerkandidat für eine Verwarnung.",
+				"resolution": "Wird mit JA aufgelöst, wenn Rodrigo De Paul während des Spiels eine Gelbe oder Rote Karte gezeigt bekommt; andernfalls NEIN."
+			},
+			"fr": {
+				"title": "Rodrigo De Paul recevra-t-il un carton contre l'Espagne ?",
+				"description": "Le milieu de terrain combatif de l'Argentine est un éternel candidat à l'avertissement dans une finale serrée et physique.",
+				"resolution": "Se résout par OUI si Rodrigo De Paul reçoit un carton jaune ou rouge pendant le match ; sinon NON."
+			},
+			"pt": {
+				"title": "Rodrigo De Paul vai ver um cartão contra a Espanha?",
+				"description": "O combativo médio da Argentina é um eterno candidato a advertência numa final apertada e física.",
+				"resolution": "Resolve-se como SIM se for mostrado a Rodrigo De Paul um cartão amarelo ou vermelho durante o jogo; caso contrário, NÃO."
+			},
+			"pt-BR": {
+				"title": "Rodrigo De Paul vai receber um cartão contra a Espanha?",
+				"description": "O combativo meio-campista da Argentina é um risco permanente de cartão numa final apertada e física.",
+				"resolution": "Resolve-se como SIM se Rodrigo De Paul receber um cartão amarelo ou vermelho durante a partida; caso contrário, NÃO."
+			},
+			"zh-Hans": {
+				"title": "Rodrigo De Paul对阵西班牙会被出示牌吗？",
+				"description": "在一场胶着而激烈的决赛中，这位好斗的阿根廷中场始终是吃牌的高危人选。",
+				"resolution": "如果Rodrigo De Paul在比赛中被出示黄牌或红牌，则结算为「是」；否则结算为「否」。"
+			}
+		}
+	},
+	{
+		"title": "Will Lionel Messi finish as the tournament's top scorer?",
+		"description": "Messi goes into the Final level at the top of the scoring chart; the Golden Boot is decided by the Final's last goals.",
+		"resolution": "Resolves YES if Lionel Messi is awarded, or finishes level on goals for, the tournament Golden Boot after the Final; otherwise NO. Ties broken by the official FIFA criteria (assists, then fewer minutes).",
+		"expiryDate": "2026-07-19T19:00:00.000Z",
+		"categories": ["wc"],
+		"balanceDomain": "ViciXp",
+		"locale": "en",
+		"consensus": 0.16,
+		"translations": {
+			"it": {
+				"title": "Lionel Messi chiuderà come capocannoniere del torneo?",
+				"description": "Messi arriva alla finale in testa alla classifica marcatori a pari merito; la Scarpa d'Oro si decide con gli ultimi gol della finale.",
+				"resolution": "Si risolve SÌ se a Lionel Messi viene assegnata la Scarpa d'Oro del torneo dopo la finale, o se chiude a pari merito per gol; altrimenti NO. Le parità sono decise secondo i criteri ufficiali FIFA (assist, poi meno minuti giocati)."
+			},
+			"es": {
+				"title": "¿Terminará Lionel Messi como máximo goleador del torneo?",
+				"description": "Messi llega a la Final igualado en lo más alto de la tabla de goleadores; la Bota de Oro se decidirá con los últimos goles de la Final.",
+				"resolution": "Se resuelve SÍ si Lionel Messi obtiene la Bota de Oro del torneo, o termina igualado a goles con el ganador, tras la Final; de lo contrario, NO. Los empates se deciden según los criterios oficiales de la FIFA (asistencias y, después, menos minutos jugados)."
+			},
+			"de": {
+				"title": "Beendet Lionel Messi das Turnier als Torschützenkönig?",
+				"description": "Messi geht punktgleich an der Spitze der Torjägerliste ins Finale; der Goldene Schuh wird von den letzten Toren des Finales entschieden.",
+				"resolution": "Wird mit JA aufgelöst, wenn Lionel Messi nach dem Finale der Goldene Schuh des Turniers zuerkannt wird oder er torgleich an der Spitze abschließt; andernfalls NEIN. Gleichstände werden nach den offiziellen FIFA-Kriterien entschieden (Torvorlagen, dann weniger Spielminuten)."
+			},
+			"fr": {
+				"title": "Lionel Messi terminera-t-il meilleur buteur du tournoi ?",
+				"description": "Messi aborde la finale à égalité en tête du classement des buteurs ; le Soulier d'or se jouera sur les derniers buts de la finale.",
+				"resolution": "Se résout par OUI si Lionel Messi remporte le Soulier d'or du tournoi, ou termine à égalité de buts pour celui-ci, à l'issue de la finale ; sinon NON. Les égalités sont départagées selon les critères officiels de la FIFA (passes décisives, puis moins de minutes jouées)."
+			},
+			"pt": {
+				"title": "Lionel Messi vai terminar como melhor marcador do torneio?",
+				"description": "Messi chega à final empatado no topo da tabela de marcadores; a Chuteira de Ouro será decidida pelos últimos golos da final.",
+				"resolution": "Resolve-se como SIM se Lionel Messi receber a Chuteira de Ouro do torneio, ou terminar empatado em golos com o vencedor, após a final; caso contrário, NÃO. Os empates são desempatados pelos critérios oficiais da FIFA (assistências e, depois, menos minutos jogados)."
+			},
+			"pt-BR": {
+				"title": "Lionel Messi vai terminar como artilheiro do torneio?",
+				"description": "Messi chega à final empatado na liderança da artilharia; a Chuteira de Ouro será decidida pelos últimos gols da final.",
+				"resolution": "Resolve-se como SIM se Lionel Messi receber a Chuteira de Ouro do torneio, ou terminar empatado em gols na liderança, após a final; caso contrário, NÃO. Empates são decididos pelos critérios oficiais da FIFA (assistências e, depois, menos minutos)."
+			},
+			"zh-Hans": {
+				"title": "Lionel Messi会成为本届赛事最佳射手吗？",
+				"description": "Messi以并列射手榜首的身份进入决赛；金靴奖将由决赛的最后几粒进球决定。",
+				"resolution": "如果决赛结束后Lionel Messi获得本届赛事金靴奖，或以并列进球数位居榜首，则结算为「是」；否则结算为「否」。并列时按国际足联官方标准裁定（先看助攻，再看出场时间更少者）。"
+			}
+		}
+	}
+]
