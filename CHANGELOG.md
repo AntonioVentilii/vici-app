@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.26](https://github.com/AntonioVentilii/vici-app/compare/v1.8.25...v1.8.26) (2026-07-19)
+
+
+### Features
+
+* **wc:** add Final market deck with 7-locale translations ([#1154](https://github.com/AntonioVentilii/vici-app/issues/1154)) ([821abbd](https://github.com/AntonioVentilii/vici-app/commit/821abbd23bdadcbecf0404601748f790ee7c1d25))
+* **wc:** schedule Final market releases ([#1153](https://github.com/AntonioVentilii/vici-app/issues/1153)) ([7d813b5](https://github.com/AntonioVentilii/vici-app/commit/7d813b588661aac86fd867561a751893e06e14ad))
+
+
+### Miscellaneous Chores
+
+* **github-actions:** bump dorny/paths-filter from 4.0.1 to 4.0.2 ([#1120](https://github.com/AntonioVentilii/vici-app/issues/1120)) ([0baaa39](https://github.com/AntonioVentilii/vici-app/commit/0baaa39bd718535840e01cb07aa654508a471284))
+
 ## [1.8.25](https://github.com/AntonioVentilii/vici-app/compare/v1.8.24...v1.8.25) (2026-07-15)
 
 
