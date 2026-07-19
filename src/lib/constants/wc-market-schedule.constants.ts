@@ -1147,6 +1147,37 @@ export const WC_MARKET_SCHEDULE: Record<string, readonly string[]> = {
 		'Will five or more yellow cards be shown in England vs Argentina?',
 		'Will more than three and a half goals be scored in England vs Argentina?',
 		'Will more than two and a half goals be scored in England vs Argentina?'
+	],
+	'2026-07-19': [
+		'Will 3 or more goals be scored in the Final?',
+		'Will 4 or more goals be scored in the Final?',
+		'Will Alexis Mac Allister score or assist against Spain?',
+		'Will Argentina keep a clean sheet in the Final?',
+		'Will Enzo Fernández score or assist against Spain?',
+		'Will Julián Álvarez score against Spain?',
+		'Will Lamine Yamal score or assist against Argentina?',
+		'Will Lautaro Martínez score against Spain?',
+		"Will Lionel Messi finish as the tournament's top scorer?",
+		'Will Lionel Messi score or assist against Spain?',
+		'Will Mikel Merino score against Argentina?',
+		'Will Nico Williams score or assist against Argentina?',
+		'Will Pedri be shown a card against Argentina?',
+		'Will Rodri score or assist against Argentina?',
+		'Will Rodrigo De Paul be shown a card against Spain?',
+		'Will Spain be crowned World Cup champions?',
+		'Will Spain keep a clean sheet in the Final?',
+		'Will a goal be scored from outside the penalty area in the Final?',
+		'Will a goal be scored in the eightieth minute or later of the Final?',
+		'Will a goal be scored in the first fifteen minutes of the Final?',
+		'Will a goal be scored with a header in the Final?',
+		'Will a penalty be awarded in the Final?',
+		'Will a red card be shown in the Final?',
+		'Will both teams score in the Final?',
+		'Will five or more yellow cards be shown in the Final?',
+		'Will the Final be decided after ninety minutes?',
+		'Will the Final be goalless at half-time?',
+		'Will the Final go to a penalty shootout?',
+		'Will Álvaro Morata score against Argentina?'
 	]
 };
 
