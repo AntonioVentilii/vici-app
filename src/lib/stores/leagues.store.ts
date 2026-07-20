@@ -1,12 +1,4 @@
-import {
-	listFriendRecommendedLeagues,
-	listLeagueBattles,
-	listLeagueMembers,
-	listMyLeagues,
-	type FriendRecommendedLeague,
-	type LeagueWithRole
-} from '$lib/services/leagues.services';
-import { loadProfilesByPrincipals } from '$lib/services/profile.services';
+import type { FriendRecommendedLeague, LeagueWithRole } from '$lib/services/leagues.services';
 import type { BattleDoc } from '$lib/types/battle';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
 import { writable } from 'svelte/store';
@@ -64,6 +56,12 @@ export const leaguesLoadedStore = writable<boolean>(false);
 export const leaguesErrorStore = writable<boolean>(false);
 
 const runRefresh = async (): Promise<void> => {
+	// Services load on demand: this store sits in the auth boot graph
+	// (`Authn` imports `clearLeagues`), and a static service import would
+	// drag the satellite API + zod cluster into every first paint.
+	const { listFriendRecommendedLeagues, listLeagueBattles, listLeagueMembers, listMyLeagues } =
+		await import('$lib/services/leagues.services');
+
 	// Recommendations refresh in parallel with the caller's own leagues —
 	// a flaky recommendation fetch falls back to an empty row rather than
 	// tanking the whole list.
@@ -134,7 +132,9 @@ const runRefresh = async (): Promise<void> => {
 	}
 
 	if (allMembers.size > 0) {
-		void loadProfilesByPrincipals({ principals: [...allMembers] });
+		void import('$lib/services/profile.services').then(({ loadProfilesByPrincipals }) =>
+			loadProfilesByPrincipals({ principals: [...allMembers] })
+		);
 	}
 };
 

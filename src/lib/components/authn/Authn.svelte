@@ -7,11 +7,7 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { reconcileIdentityScopedStorage } from '$lib/services/identity-storage.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import {
-		ensureProfile,
-		calculateAndSyncStats,
-		forgetBootstrappedThisSession
-	} from '$lib/services/profile.services';
+	import type * as ProfileServices from '$lib/services/profile.services';
 	import { receivedReactionsStore } from '$lib/stores/activity-reactions.store';
 	import { clearAffiliations } from '$lib/stores/affiliations.store';
 	import { followingStore } from '$lib/stores/following.store';
@@ -86,6 +82,20 @@
 
 	const { children }: Props = $props();
 
+	// Loaded on demand: `profile.services` pulls the satellite API + zod
+	// cluster, and a static import here would put it in the boot graph of
+	// every route — including the pre-auth surfaces (signup, invite
+	// landings) where nothing profile-shaped can run yet. The signed-in
+	// branch awaits the import (the fetch overlaps the handshake's own
+	// network round-trips); the signed-out branch only needs
+	// `forgetBootstrappedThisSession`, whose module-level capture set is
+	// trivially empty while the module was never loaded — so it consults the
+	// cached handle instead of forcing the fetch.
+	let profileServices: typeof ProfileServices | undefined;
+
+	const loadProfileServices = async (): Promise<typeof ProfileServices> =>
+		(profileServices ??= await import('$lib/services/profile.services'));
+
 	const updateUserStore = async (user: User | null) => {
 		userStore.update((data) => ({ ...data, authBusy: true }));
 
@@ -117,7 +127,7 @@
 				// Drop the new-user capture: the next sign-in (even same principal,
 				// same tab) must be judged fresh, so a returning user isn't re-run
 				// through the onboarding drain's new-user branch.
-				forgetBootstrappedThisSession();
+				profileServices?.forgetBootstrappedThisSession();
 
 				userStore.set({
 					user: undefined,
@@ -134,7 +144,7 @@
 			if (isNullish(userText)) {
 				setSignedInFlag(false);
 
-				forgetBootstrappedThisSession();
+				profileServices?.forgetBootstrappedThisSession();
 
 				userStore.set({
 					user: undefined,
@@ -146,6 +156,8 @@
 				return;
 			}
 
+			const { ensureProfile } = await loadProfileServices();
+
 			const { profile, existed } = await ensureProfile(user);
 
 			setSignedInFlag(true);
@@ -154,7 +166,10 @@
 			userStore.set({ user, profile, authBusy: false, profileExisted: existed });
 
 			try {
-				const identity = await safeGetIdentityOnce();
+				const [{ calculateAndSyncStats }, identity] = await Promise.all([
+					loadProfileServices(),
+					safeGetIdentityOnce()
+				]);
 
 				await calculateAndSyncStats({ identity, domain: $balanceDomain });
 			} catch (e: unknown) {

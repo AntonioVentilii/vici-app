@@ -1,4 +1,3 @@
-import { listMyAffiliations } from '$lib/services/worlds.services';
 import type { AffiliationDoc } from '$lib/types/affiliation';
 import { writable } from 'svelte/store';
 
@@ -35,6 +34,10 @@ export const myAffiliationsStore = writable<MyAffiliations>({});
 export const affiliationsLoadedStore = writable<boolean>(false);
 
 const runRefresh = async (): Promise<void> => {
+	// Loaded on demand: this store sits in the auth boot graph (`Authn`
+	// imports `clearAffiliations`), and a static service import would drag
+	// the satellite API + zod cluster into every first paint.
+	const { listMyAffiliations } = await import('$lib/services/worlds.services');
 	const { university, country } = await listMyAffiliations();
 
 	myAffiliationsStore.set({ university, country });

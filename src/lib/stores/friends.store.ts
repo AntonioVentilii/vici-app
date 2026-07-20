@@ -1,9 +1,3 @@
-import { loadProfilesByPrincipals } from '$lib/services/profile.services';
-import {
-	getFriendRequests,
-	getFriends,
-	getSentFriendRequests
-} from '$lib/services/relation-queries.services';
 import { userStore } from '$lib/stores/user.store';
 import type { Relation } from '$lib/types/relation';
 import type { Doc } from '@junobuild/core';
@@ -70,6 +64,15 @@ let inFlight: Promise<void> | undefined;
 let queued = false;
 
 const runRefresh = async (): Promise<void> => {
+	// Services load on demand: this store sits in the auth boot graph
+	// (`Authn` imports `clearFriendRelations`), and a static service import
+	// would drag the satellite API + zod cluster into every first paint.
+	const [{ getFriendRequests, getFriends, getSentFriendRequests }, { loadProfilesByPrincipals }] =
+		await Promise.all([
+			import('$lib/services/relation-queries.services'),
+			import('$lib/services/profile.services')
+		]);
+
 	const [friends, requests, sent] = await Promise.all([
 		getFriends().catch(() => []),
 		getFriendRequests().catch(() => []),

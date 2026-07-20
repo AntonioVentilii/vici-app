@@ -4,11 +4,11 @@
 	import { browser } from '$app/environment';
 	import { afterNavigate } from '$app/navigation';
 	import Authn from '$lib/components/authn/Authn.svelte';
-	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
+	import type TweaksPanelComponent from '$lib/components/dev/TweaksPanel.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import MaintenanceOverlay from '$lib/components/ui/MaintenanceOverlay.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
-	import { initAnalytics } from '$lib/services/analytics.services';
+	import { isDev } from '$lib/env/app.env';
 	import {
 		initMaintenanceWatch,
 		reportMaintenanceCandidate
@@ -27,6 +27,21 @@
 
 	let satelliteInitialized = $state(false);
 
+	// Dev-only panel, mounted from a lazy chunk: the static import shipped
+	// its whole subtree (appearance picker, tweak stores) inside the prod
+	// boot graph even though `isDev()` never renders it there.
+	let TweaksPanel = $state<typeof TweaksPanelComponent>();
+
+	onMount(() => {
+		if (!isDev()) {
+			return;
+		}
+
+		void import('$lib/components/dev/TweaksPanel.svelte').then((module) => {
+			TweaksPanel = module.default;
+		});
+	});
+
 	const init = async () => {
 		await initSatellite({
 			workers: {
@@ -38,7 +53,12 @@
 		satelliteInitialized = true;
 
 		// Start product-analytics capture once the satellite is ready (sets up
-		// the tab-hide flush + emits `session_started`). Fire-and-forget.
+		// the tab-hide flush + emits `session_started`). Fire-and-forget, and
+		// imported on demand: the analytics service pulls the satellite API +
+		// zod cluster, which must not sit in the boot graph ahead of first
+		// paint.
+		const { initAnalytics } = await import('$lib/services/analytics.services');
+
 		initAnalytics();
 	};
 
@@ -103,4 +123,6 @@
 
 <MaintenanceOverlay />
 
-<TweaksPanel />
+{#if TweaksPanel}
+	<TweaksPanel />
+{/if}

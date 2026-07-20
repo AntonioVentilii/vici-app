@@ -1,4 +1,3 @@
-import { listMyReferrals } from '$lib/services/referral.services';
 import type { ReferralListItem } from '$lib/types/referral';
 import { writable } from 'svelte/store';
 
@@ -35,6 +34,10 @@ let epoch = 0;
 const runRefresh = async (): Promise<void> => {
 	const startedAt = epoch;
 
+	// Loaded on demand: this store sits in the auth boot graph (`Authn`
+	// imports `clearMyReferrals`), and a static service import would drag
+	// the satellite API + zod cluster into every first paint.
+	const { listMyReferrals } = await import('$lib/services/referral.services');
 	const items = await listMyReferrals();
 
 	if (epoch !== startedAt) {
