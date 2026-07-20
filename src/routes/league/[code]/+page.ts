@@ -48,5 +48,5 @@ export const load = ({ params, url }: LoadEvent): void => {
 
 	stashLeagueInviteForSignup({ inviteCode, referralCode });
 
-	redirect(307, resolve(PublicPath.SignUp));
+	throw redirect(307, resolve(PublicPath.SignUp));
 };
