@@ -30,16 +30,18 @@
 	// Dev-only panel, mounted from a lazy chunk: the static import shipped
 	// its whole subtree (appearance picker, tweak stores) inside the prod
 	// boot graph even though `isDev()` never renders it there.
-	let TweaksPanel = $state<typeof TweaksPanelComponent>();
+	let TweaksPanel = $state<typeof TweaksPanelComponent | undefined>();
 
 	onMount(() => {
 		if (!isDev()) {
 			return;
 		}
 
-		void import('$lib/components/dev/TweaksPanel.svelte').then((module) => {
-			TweaksPanel = module.default;
-		});
+		void import('$lib/components/dev/TweaksPanel.svelte')
+			.then((module) => {
+				TweaksPanel = module.default;
+			})
+			.catch((err: unknown) => console.warn('Tweaks panel failed to load', err));
 	});
 
 	const init = async () => {
@@ -56,10 +58,12 @@
 		// the tab-hide flush + emits `session_started`). Fire-and-forget, and
 		// imported on demand: the analytics service pulls the satellite API +
 		// zod cluster, which must not sit in the boot graph ahead of first
-		// paint.
-		const { initAnalytics } = await import('$lib/services/analytics.services');
-
-		initAnalytics();
+		// paint. Caught locally — a failed chunk fetch is an analytics loss,
+		// not a boot failure, and must not reach `init()`'s maintenance
+		// detection.
+		void import('$lib/services/analytics.services')
+			.then(({ initAnalytics }) => initAnalytics())
+			.catch((err: unknown) => console.warn('Analytics init failed', err));
 	};
 
 	$effect(() => {

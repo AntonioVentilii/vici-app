@@ -132,9 +132,11 @@ const runRefresh = async (): Promise<void> => {
 	}
 
 	if (allMembers.size > 0) {
-		void import('$lib/services/profile.services').then(({ loadProfilesByPrincipals }) =>
-			loadProfilesByPrincipals({ principals: [...allMembers] })
-		);
+		void import('$lib/services/profile.services')
+			.then(({ loadProfilesByPrincipals }) =>
+				loadProfilesByPrincipals({ principals: [...allMembers] })
+			)
+			.catch((err: unknown) => console.warn('leagues.store: profile hydration failed', err));
 	}
 };
 

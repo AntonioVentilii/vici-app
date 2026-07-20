@@ -1,3 +1,5 @@
+import type * as ProfileServices from '$lib/services/profile.services';
+import type * as RelationQueries from '$lib/services/relation-queries.services';
 import { userStore } from '$lib/stores/user.store';
 import type { Relation } from '$lib/types/relation';
 import type { Doc } from '@junobuild/core';
@@ -67,11 +69,24 @@ const runRefresh = async (): Promise<void> => {
 	// Services load on demand: this store sits in the auth boot graph
 	// (`Authn` imports `clearFriendRelations`), and a static service import
 	// would drag the satellite API + zod cluster into every first paint.
-	const [{ getFriendRequests, getFriends, getSentFriendRequests }, { loadProfilesByPrincipals }] =
-		await Promise.all([
+	// Fails open on a chunk-load failure (log + keep the current cache):
+	// callers fire `void refreshFriendRelations()`, so a rejection here
+	// would surface as an unhandled rejection instead of a retryable miss.
+	let services: [typeof RelationQueries, typeof ProfileServices];
+
+	try {
+		services = await Promise.all([
 			import('$lib/services/relation-queries.services'),
 			import('$lib/services/profile.services')
 		]);
+	} catch (err: unknown) {
+		console.warn('friends.store: services failed to load', err);
+
+		return;
+	}
+
+	const [{ getFriendRequests, getFriends, getSentFriendRequests }, { loadProfilesByPrincipals }] =
+		services;
 
 	const [friends, requests, sent] = await Promise.all([
 		getFriends().catch(() => []),
