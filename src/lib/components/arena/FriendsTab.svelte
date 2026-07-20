@@ -42,7 +42,7 @@
 		sentFriendRequestsStore
 	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { displayMarkets } from '$lib/stores/market-translations.store';
+	import { marketDisplay } from '$lib/stores/market-translations.store';
 	import { notificationsStore, type NotificationType } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import { myReferralsStore, refreshMyReferrals } from '$lib/stores/referrals.store';
@@ -808,9 +808,16 @@
 					standout: nonNullish(standoutRow)
 						? {
 								marketId: standoutRow.marketId,
-								// Localize via the translated catalog; the denormalized English
-								// title is the durable fallback for pruned/expired markets.
-								title: $displayMarkets.get(standoutRow.marketId)?.title ?? standoutRow.title
+								// Localize via the translation overlay (not `displayMarkets`,
+								// which would couple the digest to price ticks); the
+								// denormalized English title is the durable fallback for
+								// pruned/expired markets and only the title is displayed.
+								title: $marketDisplay({
+									id: standoutRow.marketId,
+									title: standoutRow.title,
+									description: '',
+									resolution: ''
+								}).title
 							}
 						: undefined
 				};
