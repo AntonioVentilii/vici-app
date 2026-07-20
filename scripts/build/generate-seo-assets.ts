@@ -36,12 +36,20 @@
  * the script needs no satellite access. An unrevealed market must never
  * leak here: its question would be public before its Show Date.
  *
+ * Resolved markets get an ANSWER page, not a stale trading page: clearing is
+ * the source of truth for resolution (`list_settled_series` +
+ * `get_settlement_status`), and a settled market's outcome goes into the
+ * title, the head of the description and the JSON-LD. Without it the page
+ * advertises "Live community odds" over an empty book — thin content that
+ * reads identically to a market nobody has traded yet, on exactly the pages
+ * whose search demand peaks *after* the event.
+ *
  * Failure is fatal by design: `hosting deploy --prune` deletes any asset
  * missing from `build/`, so a silently-degraded run would wipe every
- * previously deployed market page and the sitemap. The one soft dependency
- * is live odds: a slow/unreachable clearing canister must never fail a
- * deploy, so per-market odds reads degrade to "no odds clause", never a
- * throw.
+ * previously deployed market page and the sitemap. The soft dependencies are
+ * the clearing reads — live odds and resolution: a slow/unreachable clearing
+ * canister must never fail a deploy, so they degrade to "no odds clause" and
+ * "treat as unresolved" respectively, never a throw.
  */
 import type { _SERVICE as ClearingService, LimitOrder } from '$declarations/clearing/clearing';
 import { idlFactory as clearingIdlFactory } from '$declarations/clearing/clearing.idl.js';
@@ -52,9 +60,12 @@ import {
 	normalizeWcQuestion,
 	WC_QUESTION_REVEAL_MS
 } from '$lib/constants/wc-market-schedule.constants';
+import type { Outcome } from '$lib/types/market';
 import { marketShareParam } from '$lib/utils/market-slug.utils';
+import { settlementInputOutcome } from '$lib/utils/payoff.utils';
 import { fromNullable, isNullish, nonNullish, toNullable } from '@dfinity/utils';
 import { Actor, HttpAgent, type ActorSubclass } from '@icp-sdk/core/agent';
+import { Ed25519KeyIdentity } from '@icp-sdk/core/identity';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -86,6 +97,11 @@ const DESCRIPTION_MAX_LENGTH = 160;
 // phrase never appears in the rendered UI, only here in the head layer).
 const DESCRIPTION_TAIL = 'Live community odds on the Vici prediction market.';
 
+// A settled market has no live book, so the open-market tail would promise
+// odds the page cannot show. Point at the catalog instead: the resolved page
+// is an answer page whose job is to hand the reader an open market next.
+const DESCRIPTION_TAIL_RESOLVED = 'See the result and open markets on Vici.';
+
 // The committed decks that registered the World-Cup catalog (matched BY
 // TITLE, like every deck pipeline step). Titles present here but absent
 // from the release schedule are not-yet-curated and must stay hidden.
@@ -114,33 +130,72 @@ const truncateAtWord = (value: string): string => {
 };
 
 /**
- * The plain-text meta description: the (truncated) registry blurb, an
- * optional live-odds sentence, then the brand/keyword tail. Returns raw
- * text — callers HTML-escape it for meta attributes and pass it verbatim
- * into JSON-LD.
+ * What the crawler is told about a market's state. `resolved` without an
+ * `outcome` is a real case: a categorical or non-canonical settlement price
+ * that {@link settlementInputOutcome} refuses to label (see
+ * `binaryPayoffLabel`) — the page then says "resolved" without naming a
+ * winner rather than guessing one.
+ */
+type Resolution =
+	{ resolved: false; yesProbability?: number } | { resolved: true; outcome?: Outcome };
+
+/**
+ * The plain-text meta description: for an open market the (truncated)
+ * registry blurb, an optional live-odds sentence, then the brand/keyword
+ * tail. Returns raw text — callers HTML-escape it for meta attributes and
+ * pass it verbatim into JSON-LD.
+ *
+ * A resolved market leads with the outcome instead. Search engines cut the
+ * snippet around {@link DESCRIPTION_MAX_LENGTH}, and the registry blurb alone
+ * can fill that budget — so the answer goes in the one slot guaranteed to
+ * survive truncation. This is the whole point of the resolved page: the
+ * query it wins ("who won X") wants the result, not the question.
  */
 const composeDescription = ({
 	plain,
-	yesProbability
+	resolution
 }: {
 	plain: string;
-	yesProbability?: number;
+	resolution: Resolution;
 }): string => {
 	const base = truncateAtWord(plain);
 	const sentences: string[] = [];
+
+	if (resolution.resolved) {
+		sentences.push(
+			nonNullish(resolution.outcome)
+				? `Resolved: ${resolution.outcome}.`
+				: 'This market has resolved.'
+		);
+	}
 
 	if (base.length > 0) {
 		sentences.push(/[.!?…]$/.test(base) ? base : `${base}.`);
 	}
 
-	if (nonNullish(yesProbability)) {
-		sentences.push(`Community odds: Yes ${Math.round(yesProbability * 100)}%.`);
+	if (!resolution.resolved && nonNullish(resolution.yesProbability)) {
+		sentences.push(`Community odds: Yes ${Math.round(resolution.yesProbability * 100)}%.`);
 	}
 
-	sentences.push(DESCRIPTION_TAIL);
+	sentences.push(resolution.resolved ? DESCRIPTION_TAIL_RESOLVED : DESCRIPTION_TAIL);
 
 	return sentences.join(' ');
 };
+
+/**
+ * The `<title>` / OG headline. The market question stays in front so it still
+ * keyword-matches the query; the outcome is appended as the differentiator.
+ */
+const composeHeadline = ({
+	title,
+	resolution
+}: {
+	title: string;
+	resolution: Resolution;
+}): string =>
+	resolution.resolved && nonNullish(resolution.outcome)
+		? `${title} — Resolved: ${resolution.outcome}`
+		: title;
 
 /**
  * Serialises a schema.org object into a `<script type="application/ld+json">`
@@ -274,6 +329,69 @@ const fetchYesProbability = async ({
 		// Soft dependency: swallow and fall through to "no odds" (returns
 		// undefined) rather than fail the deploy — odds are optional garnish.
 		console.warn(`[seo-assets] odds read failed for ${seriesId}; emitting page without odds.`, err);
+	}
+};
+
+/**
+ * The authoritative set of settled series ids, draining clearing's exclusive
+ * cursor. Soft by the same contract as the odds read: an unreachable clearing
+ * canister yields an empty set, so every market is emitted as unresolved —
+ * today's behaviour — rather than failing the deploy.
+ */
+const listSettledSeriesIds = async (
+	clearing: ActorSubclass<ClearingService>
+): Promise<Set<string>> => {
+	const ids = new Set<string>();
+	let startAfter: string | undefined = undefined;
+
+	try {
+		for (;;) {
+			const page = await clearing.list_settled_series({
+				start_after: toNullable(startAfter),
+				limit: toNullable(PAGE_SIZE),
+				balance_domain: toNullable()
+			});
+
+			for (const id of page.items) {
+				ids.add(id);
+			}
+
+			const next = fromNullable(page.next_cursor);
+
+			if (isNullish(next) || page.items.length === 0) {
+				return ids;
+			}
+
+			startAfter = next;
+		}
+	} catch (err) {
+		console.warn(
+			'[seo-assets] settled-series read failed; emitting all markets as unresolved.',
+			err
+		);
+
+		return new Set();
+	}
+};
+
+/**
+ * One settled market's winning outcome. Soft: a failed read degrades to
+ * "resolved, winner unnamed" — the page still tells the crawler the market is
+ * over, which is the part that stops it reading as a live-odds page.
+ */
+const fetchSettlementOutcome = async ({
+	clearing,
+	seriesId
+}: {
+	clearing: ActorSubclass<ClearingService>;
+	seriesId: string;
+}): Promise<Outcome | undefined> => {
+	try {
+		const status = fromNullable(await clearing.get_settlement_status(seriesId));
+
+		return nonNullish(status) ? settlementInputOutcome(status.settlement) : undefined;
+	} catch (err) {
+		console.warn(`[seo-assets] settlement read failed for ${seriesId}; omitting outcome.`, err);
 	}
 };
 
@@ -454,12 +572,16 @@ const renderSitemap = ({ paths, lastmod }: { paths: string[]; lastmod: string })
 
 const buildMarketJsonLd = ({
 	title,
+	headline,
 	descriptionText,
-	canonicalUrl
+	canonicalUrl,
+	resolution
 }: {
 	title: string;
+	headline: string;
 	descriptionText: string;
 	canonicalUrl: string;
+	resolution: Resolution;
 }): string =>
 	jsonLdScript({
 		'@context': 'https://schema.org',
@@ -468,10 +590,14 @@ const buildMarketJsonLd = ({
 				'@type': 'WebPage',
 				'@id': `${canonicalUrl}#webpage`,
 				url: canonicalUrl,
-				name: `${collapseWhitespace(title)}${TITLE_SUFFIX}`,
+				name: `${collapseWhitespace(headline)}${TITLE_SUFFIX}`,
 				description: descriptionText,
 				isPartOf: { '@id': `${PROD_ORIGIN}/#website` },
-				keywords: `prediction market, ${collapseWhitespace(title)}, community odds, forecast`
+				// Resolved pages compete for result queries ("who won…"), open ones
+				// for forecast queries — the keyword set follows the intent.
+				keywords: resolution.resolved
+					? `prediction market, ${collapseWhitespace(title)}, result, resolved, outcome`
+					: `prediction market, ${collapseWhitespace(title)}, community odds, forecast`
 			},
 			{
 				'@type': 'BreadcrumbList',
@@ -495,7 +621,14 @@ const main = async () => {
 	const shell = readFileSync(join(BUILD_DIR, 'index.html'), 'utf8');
 	const wcDeckTitles = loadWcDeckTitles();
 
-	const agent = await HttpAgent.create({ host: IC_HOST });
+	// Clearing's settlement queries reject the anonymous principal (IC0406,
+	// "Anonymous caller not authorised") while accepting ANY authenticated
+	// one — the guard is a spam gate, not an authorisation check, and every
+	// endpoint read here is public information. So the deploy signs with a
+	// throwaway keypair rather than a managed key: nothing to store, nothing
+	// to rotate, no privileged principal in CI. Registry reads and the odds
+	// read work anonymously and are unaffected by the change.
+	const agent = await HttpAgent.create({ host: IC_HOST, identity: Ed25519KeyIdentity.generate() });
 	const registry = Actor.createActor<RegistryService>(registryIdlFactory, {
 		agent,
 		canisterId: REGISTRY_CANISTER_ID
@@ -517,12 +650,24 @@ const main = async () => {
 		);
 	}
 
-	// Live YES odds per market, fetched with bounded concurrency. Soft: a
-	// clearing failure yields `undefined` and the page ships without odds.
-	const oddsByIndex = await mapWithConcurrency({
+	// Resolution first: it decides which per-market read is worth making. A
+	// settled market's book is empty, so the odds call would spend a round trip
+	// to return `undefined` — ask for its outcome instead.
+	const settledIds = await listSettledSeriesIds(clearing);
+
+	const resolutionByIndex = await mapWithConcurrency<Series, Resolution>({
 		items: visible,
 		limit: ODDS_CONCURRENCY,
-		fn: (market) => fetchYesProbability({ clearing, seriesId: market.series_id })
+		fn: async (market) =>
+			settledIds.has(market.series_id)
+				? {
+						resolved: true,
+						outcome: await fetchSettlementOutcome({ clearing, seriesId: market.series_id })
+					}
+				: {
+						resolved: false,
+						yesProbability: await fetchYesProbability({ clearing, seriesId: market.series_id })
+					}
 	});
 
 	const sitemapPaths: string[] = [];
@@ -546,14 +691,16 @@ const main = async () => {
 		// is what the share sheet hands out, the only variant whose URL
 		// carries the question's keywords, and the only URL the sitemap lists.
 		const canonicalUrl = `${PROD_ORIGIN}/m/${shareParam}`;
+		const resolution = resolutionByIndex[index];
 		const descriptionText = composeDescription({
 			plain: market.description.plain,
-			yesProbability: oddsByIndex[index]
+			resolution
 		});
+		const headline = composeHeadline({ title: market.title, resolution });
 
 		const withHead = renderShell({
 			shell,
-			titleText: market.title,
+			titleText: headline,
 			descriptionText,
 			canonicalUrl,
 			ogType: 'article'
@@ -562,7 +709,13 @@ const main = async () => {
 			html: withHead,
 			fragments: [
 				`<script>window.__viciSeriesId = ${JSON.stringify(id)};</script>`,
-				buildMarketJsonLd({ title: market.title, descriptionText, canonicalUrl })
+				buildMarketJsonLd({
+					title: market.title,
+					headline,
+					descriptionText,
+					canonicalUrl,
+					resolution
+				})
 			]
 		});
 
@@ -578,9 +731,11 @@ const main = async () => {
 	);
 
 	const hidden = viciSeries.length - visible.length;
+	const resolved = resolutionByIndex.filter((r) => r.resolved).length;
+	const unlabelled = resolutionByIndex.filter((r) => r.resolved && isNullish(r.outcome)).length;
 
 	console.log(
-		`[seo-assets] ${visible.length} market pages + sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
+		`[seo-assets] ${visible.length} market pages (${resolved} resolved, ${unlabelled} without a named outcome) + sitemap.xml written; ${hidden} unrevealed markets withheld; ${series.length - viciSeries.length} non-${ENGINE_ID} series ignored.`
 	);
 };
 
