@@ -320,14 +320,20 @@ const resolvePendingReferral = async ({
 
 /**
  * Substrings of the deterministic league-join rejections surfaced by `joinLeagueByInvite`
- * (malformed code, no league behind the code). Terminal — retrying can't change the outcome —
- * so a match resolves the slot rather than re-stashing it. Anything NOT in this set (a thrown
- * agent / replica error) is treated as transient and kept for a bounded retry.
+ * (malformed code, no league behind the code), each mapped to the toast copy the signed-in
+ * `/league/[code]` landing uses for the same case. Terminal — retrying can't change the
+ * outcome — so a match resolves the slot rather than re-stashing it. Anything NOT in this set
+ * (a thrown agent / replica error) is treated as transient and kept for a bounded retry.
  */
-const TERMINAL_LEAGUE_REASONS = ['Invite code is malformed', 'No league found for that invite'];
+const TERMINAL_LEAGUE_REASONS = [
+	{ match: 'Invite code is malformed', toast: 'invalid' },
+	{ match: 'No league found for that invite', toast: 'unknown' }
+] as const;
 
-const isTerminalLeagueReason = (reason: string): boolean =>
-	TERMINAL_LEAGUE_REASONS.some((terminal) => reason.includes(terminal));
+const terminalLeagueReason = (
+	reason: string
+): (typeof TERMINAL_LEAGUE_REASONS)[number] | undefined =>
+	TERMINAL_LEAGUE_REASONS.find(({ match }) => reason.includes(match));
 
 /**
  * Post-signin auto-join of the pre-auth league invite (stashed by `/league/[code]` when the
@@ -372,21 +378,26 @@ const joinPendingLeagueIfAny = async ({
 		}
 
 		// Deterministic rejection — retrying can't help, so tell the user which kind it was
-		// (the invitee otherwise lands in the app believing they joined). Same copy the
-		// signed-in `/league/[code]` landing uses.
-		if (isTerminalLeagueReason(message)) {
-			console.warn('joinPendingLeagueIfAny terminally failed', message);
+		// (the invitee otherwise lands in the app believing they joined).
+		const terminal = terminalLeagueReason(message);
 
-			const unknownCode = message.includes('No league found');
+		if (nonNullish(terminal)) {
+			console.warn('joinPendingLeagueIfAny terminally failed', message);
 
 			notificationsStore.add({
 				title: t({
 					locale,
-					key: unknownCode ? 'league_invite.unknown_title' : 'league_invite.invalid_title'
+					key:
+						terminal.toast === 'unknown'
+							? 'league_invite.unknown_title'
+							: 'league_invite.invalid_title'
 				}),
 				message: t({
 					locale,
-					key: unknownCode ? 'league_invite.unknown_body' : 'league_invite.invalid_body'
+					key:
+						terminal.toast === 'unknown'
+							? 'league_invite.unknown_body'
+							: 'league_invite.invalid_body'
 				}),
 				type: 'error'
 			});
@@ -454,9 +465,9 @@ export const pendingOnboardingProvider = (): OnboardingProvider | undefined => {
  * The profile picks are intentionally dropped from the retry payload: the profile is already
  * applied.
  *
- * Abandoning a league invite (retry budget exhausted on a still-transient failure) surfaces a
- * toast — the user believes they joined, and the generic copy points them at retrying manually
- * with the code.
+ * Abandoning a league invite (retry budget exhausted on a still-transient failure) surfaces the
+ * generic join-failure toast — without it the user would believe they joined. They can still
+ * join manually with the code afterwards.
  */
 const settlePendingSlot = ({
 	pending,
