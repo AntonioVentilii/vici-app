@@ -104,8 +104,10 @@ existing surfaces (a specific market → its detail page; category browsing
   the traffic that matters. A settled market's book is empty, so the
   open-market treatment would advertise "Live community odds" over nothing
   and read identically to an untraded market. Instead the outcome goes into
-  the `<title>` (`{question} — Resolved: YES`), the **head** of the meta
-  description (search engines truncate around 160 chars and the registry
+  the `<title>` (`{question} — Resolved: YES`, falling back to
+  `{question} — Resolved` when the winner can't be named), the **head** of
+  the meta description (search engines truncate around 160 chars and the
+  registry
   blurb alone can fill that, so the answer takes the one slot guaranteed to
   survive), and the JSON-LD keywords (result/resolved intent instead of
   odds/forecast). Resolution comes from clearing — `list_settled_series` for

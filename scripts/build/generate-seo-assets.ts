@@ -192,10 +192,19 @@ const composeHeadline = ({
 }: {
 	title: string;
 	resolution: Resolution;
-}): string =>
-	resolution.resolved && nonNullish(resolution.outcome)
+}): string => {
+	if (!resolution.resolved) {
+		return title;
+	}
+
+	// A resolved market is marked resolved even when the winner can't be
+	// named: without this the degraded page would carry a title identical to
+	// an open market's, which is the one thing the resolved page exists to
+	// avoid. "Resolved" alone is still an accurate, differentiating headline.
+	return nonNullish(resolution.outcome)
 		? `${title} — Resolved: ${resolution.outcome}`
-		: title;
+		: `${title} — Resolved`;
+};
 
 /**
  * Serialises a schema.org object into a `<script type="application/ld+json">`
@@ -626,8 +635,12 @@ const main = async () => {
 	// one — the guard is a spam gate, not an authorisation check, and every
 	// endpoint read here is public information. So the deploy signs with a
 	// throwaway keypair rather than a managed key: nothing to store, nothing
-	// to rotate, no privileged principal in CI. Registry reads and the odds
-	// read work anonymously and are unaffected by the change.
+	// to rotate, no privileged principal in CI.
+	//
+	// One signed agent serves every actor below. The registry reads and the
+	// odds read do not *require* an identity, but signing them costs nothing
+	// (they stay query calls) and a second anonymous agent would buy only the
+	// chance of the two drifting apart.
 	const agent = await HttpAgent.create({ host: IC_HOST, identity: Ed25519KeyIdentity.generate() });
 	const registry = Actor.createActor<RegistryService>(registryIdlFactory, {
 		agent,
