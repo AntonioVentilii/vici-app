@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.8.27](https://github.com/AntonioVentilii/vici-app/compare/v1.8.26...v1.8.27) (2026-07-20)
+
+
+### Features
+
+* **seo:** turn resolved market pages into answer pages ([#1156](https://github.com/AntonioVentilii/vici-app/issues/1156)) ([b390ae4](https://github.com/AntonioVentilii/vici-app/commit/b390ae410557f49d2a49eb507adccec88e2cacb2))
+
+
+### Bug Fixes
+
+* **arena:** localize friends digest standout call title ([#1157](https://github.com/AntonioVentilii/vici-app/issues/1157)) ([8894857](https://github.com/AntonioVentilii/vici-app/commit/88948571335f36fe170a38f995783fca06ce496b))
+* **onboarding:** retry league invite auto-join on transient drain failure ([#1159](https://github.com/AntonioVentilii/vici-app/issues/1159)) ([8bf5edc](https://github.com/AntonioVentilii/vici-app/commit/8bf5edc10ceec05740149716ac681acf5305c33c))
+* **onboarding:** surface league invite drain failures to the user ([#1160](https://github.com/AntonioVentilii/vici-app/issues/1160)) ([677da1f](https://github.com/AntonioVentilii/vici-app/commit/677da1fa410b25b3f97bf6f519828c88d61ed738))
+* **profile:** translate oracle record market title ([#1158](https://github.com/AntonioVentilii/vici-app/issues/1158)) ([f0ae137](https://github.com/AntonioVentilii/vici-app/commit/f0ae1374dba8841af6783d4dac79e35ddcaa1037))
+
+
+### Performance Improvements
+
+* **fonts:** drop the Google Fonts stylesheet in favor of the self-hosted faces ([#1164](https://github.com/AntonioVentilii/vici-app/issues/1164)) ([3ebdf1e](https://github.com/AntonioVentilii/vici-app/commit/3ebdf1ea691724cc91af6786b720212f94881ee9))
+* **i18n:** load locale catalogs on demand instead of bundling all locales ([#1161](https://github.com/AntonioVentilii/vici-app/issues/1161)) ([5883dda](https://github.com/AntonioVentilii/vici-app/commit/5883dda890f4a99e772350aa22c66e6a61e81037))
+* **league:** fast-path signed-out invitees to signup before the auth handshake ([#1162](https://github.com/AntonioVentilii/vici-app/issues/1162)) ([9a15aa8](https://github.com/AntonioVentilii/vici-app/commit/9a15aa80d849dd418aafdffed90f3df7b1c544ff))
+
+
+### Miscellaneous Chores
+
+* **npm-deps-dev:** bump @sveltejs/kit from 2.68.0 to 2.69.2 ([#1144](https://github.com/AntonioVentilii/vici-app/issues/1144)) ([f38c9f3](https://github.com/AntonioVentilii/vici-app/commit/f38c9f3e96c70c053aed54f5fbd99d94cd5b541c))
+* **npm-deps-dev:** bump @sveltejs/vite-plugin-svelte from 7.1.2 to 7.2.0 ([#1149](https://github.com/AntonioVentilii/vici-app/issues/1149)) ([d41b7e9](https://github.com/AntonioVentilii/vici-app/commit/d41b7e95002341e13679c5f1699fccc01a59c0da))
+* **npm-deps-dev:** bump @types/node from 26.0.1 to 26.1.1 ([#1151](https://github.com/AntonioVentilii/vici-app/issues/1151)) ([13a4101](https://github.com/AntonioVentilii/vici-app/commit/13a41010505c624210852f3df3bb677d8cf008c6))
+* **npm-deps-dev:** bump picomatch from 4.0.4 to 4.0.5 ([#1148](https://github.com/AntonioVentilii/vici-app/issues/1148)) ([9ff71f0](https://github.com/AntonioVentilii/vici-app/commit/9ff71f0c834e21c5c0087e35cdf3bfb2415d72bd))
+* **npm-deps-dev:** bump set-cookie-parser from 3.1.1 to 3.1.2 ([#1145](https://github.com/AntonioVentilii/vici-app/issues/1145)) ([2ad001b](https://github.com/AntonioVentilii/vici-app/commit/2ad001bf574785c1e0606331b58523630aeebb9b))
+* **npm-deps-dev:** bump the lint-kit group across 1 directory with 2 updates ([#1143](https://github.com/AntonioVentilii/vici-app/issues/1143)) ([e296ca2](https://github.com/AntonioVentilii/vici-app/commit/e296ca236296c9195f4fbe8294c9c49d17610a46))
+* **npm-deps:** bump @lucide/svelte from 1.23.0 to 1.24.0 ([#1147](https://github.com/AntonioVentilii/vici-app/issues/1147)) ([f05fcb8](https://github.com/AntonioVentilii/vici-app/commit/f05fcb8d9b4fc931e2a55aca51c25e6d2cbfc760))
+* **npm-deps:** bump @sveltejs/acorn-typescript from 1.0.10 to 1.0.11 ([#1150](https://github.com/AntonioVentilii/vici-app/issues/1150)) ([4a9a4d7](https://github.com/AntonioVentilii/vici-app/commit/4a9a4d7e33932cde66938be2471d949c98461a8b))
+
 ## [1.8.26](https://github.com/AntonioVentilii/vici-app/compare/v1.8.25...v1.8.26) (2026-07-19)
 
 
