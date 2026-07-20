@@ -64,6 +64,17 @@ deploy); unresolvable params land on the markets board.
   applied, cleanup failed → red CI + ~94 MB of orphaned staged assets on
   the prod satellite). The pre-SEO ~3k-file baseline is the proven-safe
   zone; do not add per-market page variants without checking this budget.
+- **The deploy signs with a throwaway keypair, and must keep doing so.**
+  Clearing's settlement queries (`list_settled_series`,
+  `get_settlement_status`) reject the anonymous principal with IC0406
+  `Anonymous caller not authorised`, while accepting **any** authenticated
+  one — the guard is a spam gate, not an authorisation check, and both
+  endpoints return public information. The script therefore builds its
+  `HttpAgent` with an ephemeral `Ed25519KeyIdentity.generate()`: no key to
+  store, rotate, or grant. Dropping back to an anonymous agent does not fail
+  the deploy — it silently degrades every market to "unresolved" (see the
+  soft-dependency contract below), which is the failure mode to watch for if
+  resolved pages ever stop carrying outcomes.
 - The script skips itself under `JUNO_EMULATOR=true` (E2E deploys have no
   mainnet registry to read).
 
@@ -84,11 +95,34 @@ existing surfaces (a specific market → its detail page; category browsing
   `Community odds: Yes N%` sentence, read at deploy time from the clearing
   canister's order book (`list_orders`) and folded through a
   `midYesProbability` helper that mirrors `calculateProbability` in
-  `$lib/utils/market.utils`. This is the script's **only soft
-  dependency**: a clearing error degrades to "no odds clause", never a
-  failed deploy (unlike the registry read, which is fatal). Reads run with
-  bounded concurrency (`ODDS_CONCURRENCY`). All figures are a **snapshot as
-  of deploy** — there is no SSR, so they age until the next deploy.
+  `$lib/utils/market.utils`. Reads run with bounded concurrency
+  (`ODDS_CONCURRENCY`). All figures are a **snapshot as of deploy** — there
+  is no SSR, so they age until the next deploy.
+- **Resolved markets are answer pages, not stale trading pages.** The vast
+  majority of the SEO surface is settled (1062 of 1094 pages at the time of
+  writing) — an event's search demand peaks _after_ it resolves, so this is
+  the traffic that matters. A settled market's book is empty, so the
+  open-market treatment would advertise "Live community odds" over nothing
+  and read identically to an untraded market. Instead the outcome goes into
+  the `<title>` (`{question} — Resolved: YES`, falling back to
+  `{question} — Resolved` when the winner can't be named), the **head** of
+  the meta description (search engines truncate around 160 chars and the
+  registry
+  blurb alone can fill that, so the answer takes the one slot guaranteed to
+  survive), and the JSON-LD keywords (result/resolved intent instead of
+  odds/forecast). Resolution comes from clearing — `list_settled_series` for
+  the id set, `get_settlement_status` + `settlementInputOutcome` for the
+  winner — so a market is "resolved" here on exactly the same rule the
+  detail page uses. Settled markets are read for their outcome _instead of_
+  their odds, not in addition.
+- **Clearing is a soft dependency throughout** (unlike the registry read,
+  which is fatal). An odds error degrades to "no odds clause"; a
+  settled-series error degrades to "everything unresolved" (today's
+  pre-resolution behaviour); a per-market settlement error degrades to
+  "resolved, winner unnamed". A non-canonical settlement price also yields
+  an unnamed winner by design — `binaryPayoffLabel` refuses to call a
+  mid-market settlement for a side, so the page says the market resolved
+  without inventing an outcome. The deploy log reports both counts.
 
 The phrase **"prediction market"** lives only in this crawler-facing layer
 (`<title>` / meta description / JSON-LD keywords) — never in the rendered

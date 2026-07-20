@@ -219,26 +219,30 @@
 
 		<title>VICI</title>
 
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<!-- Fonts are fully self-hosted (see the `@font-face` block in
+			 `app.css` — files under `static/fonts/`). No Google Fonts
+			 stylesheet: the extra origin's DNS/TLS + render-blocking CSS
+			 fetch cost ~600ms on a cold mobile load, and its declarations
+			 shadowed the self-hosted faces for overlapping weights. -->
 		<link
-			href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-			rel="stylesheet"
+			rel="preload"
+			href="/fonts/hanken-grotesk-variable-latin.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin
 		/>
-
-		<!-- Font preloads -->
 		<link
 			rel="preload"
 			href="/fonts/jetbrainsmono-regular.woff2"
 			as="font"
-			type="font/woff"
+			type="font/woff2"
 			crossorigin
 		/>
 		<link
 			rel="preload"
 			href="/fonts/jetbrainsmono-bold.woff2"
 			as="font"
-			type="font/woff"
+			type="font/woff2"
 			crossorigin
 		/>
 	</head>
