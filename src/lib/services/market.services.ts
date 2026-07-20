@@ -30,7 +30,11 @@ import {
 import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
-import { getSettledSeriesIds } from '$lib/services/resolution.services';
+import {
+	getSettledSeriesIds,
+	loadSettlementOutcomes,
+	type SettlementDetails
+} from '$lib/services/resolution.services';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
 import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { Activity } from '$lib/types/social';
@@ -43,7 +47,7 @@ import {
 	mapMarketData,
 	parseSettlementOutcome
 } from '$lib/utils/market.utils';
-import { settlementInputOutcome } from '$lib/utils/payoff.utils';
+import { settlementInputOutcome, settlementInputTimestamp } from '$lib/utils/payoff.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isEmptyString, isNullish, nonNullish, notEmptyString, toNullable } from '@dfinity/utils';
@@ -273,9 +277,9 @@ const fetchMarkets = async ({
 			// made markets "un-resolve" once newer activity pushed the row out
 			// of the window.
 			const status: MarketStatus = isResolved ? 'Resolved' : isExpired ? 'Expired' : 'Open';
-			const outcome: Outcome | undefined = isResolved
-				? resolutionMap[s.series_id]?.outcome
-				: undefined;
+			const { outcome, resolvedAt } = isResolved
+				? (resolutionMap[s.series_id] ?? {})
+				: { outcome: undefined, resolvedAt: undefined };
 
 			// Lite mode: callers that only filter by the market set don't need
 			// book-derived prices. Leave probability unknown (no 0.5 placeholder)
@@ -285,7 +289,8 @@ const fetchMarkets = async ({
 				return mapMarketData({
 					series: s,
 					status,
-					outcome
+					outcome,
+					resolvedAt
 				});
 			}
 
@@ -305,6 +310,7 @@ const fetchMarkets = async ({
 					priceLoaded: true,
 					status,
 					outcome,
+					resolvedAt,
 					categoricalProbabilities
 				});
 			}
@@ -333,7 +339,8 @@ const fetchMarkets = async ({
 				bestBidQty: bids[0]?.totalQty,
 				bestAskQty: asks[0]?.totalQty,
 				status,
-				outcome
+				outcome,
+				resolvedAt
 			});
 		})
 	);
@@ -358,7 +365,7 @@ const fetchMarkets = async ({
 					return;
 				}
 
-				const resolvedOutcome = resolutionMap[id]?.outcome;
+				const { outcome: resolvedOutcome, resolvedAt } = resolutionMap[id] ?? {};
 				const yesWon = resolvedOutcome === 'YES';
 
 				return mapMarketData({
@@ -367,7 +374,8 @@ const fetchMarkets = async ({
 					noProbability: nonNullish(resolvedOutcome) ? (yesWon ? 0 : 1) : undefined,
 					priceLoaded: true,
 					status: 'Resolved',
-					outcome: resolvedOutcome
+					outcome: resolvedOutcome,
+					resolvedAt
 				});
 			})
 	);
@@ -525,25 +533,31 @@ const enrichMarketsWithOrderBook = async ({
 };
 
 /**
- * Extracts a `seriesId -> { outcome }` label map from Juno SETTLEMENT
- * activities. Details are expected to be stringified JSON (`{ outcome, price }`).
+ * Extracts a `seriesId -> { outcome, resolvedAt }` label map from Juno
+ * SETTLEMENT activities. Details are expected to be stringified JSON
+ * (`{ outcome, price }`); `resolvedAt` is the activity's own timestamp.
  *
- * Only the outcome *label* comes from here — the resolved predicate itself is
- * clearing's `list_settled_series` (see {@link fetchMarkets}) — so a missing
- * or malformed row degrades to `Resolved` with no winner badge, never to an
- * unresolved market.
+ * Only the outcome *label* and its time come from here — the resolved predicate
+ * itself is clearing's `list_settled_series` (see {@link fetchMarkets}) — so a
+ * missing or malformed row degrades to `Resolved` with no winner badge, never to
+ * an unresolved market. Rows are absent entirely for series settled outside this
+ * app's admin flow, and the page is bounded; {@link backfillResolutionOutcomes}
+ * repairs both cases from clearing.
  */
-const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: Outcome }> =>
+const buildResolutionMap = (activities: Activity[]): Record<string, SettlementDetails> =>
 	activities
 		.filter((a) => a.type === ActivityType.SETTLEMENT && nonNullish(a.marketId))
-		.reduce<Record<string, { outcome?: Outcome }>>((acc, a) => {
-			const { marketId, details } = a;
+		.reduce<Record<string, SettlementDetails>>((acc, a) => {
+			const { marketId, details, timestamp } = a;
 
 			if (!nonNullish(marketId)) {
 				return acc;
 			}
 
-			acc[marketId] = { outcome: parseSettlementOutcome(details) };
+			acc[marketId] = {
+				outcome: parseSettlementOutcome(details),
+				resolvedAt: BigInt(timestamp)
+			};
 
 			return acc;
 		}, {});
@@ -697,6 +711,66 @@ const MARKETS_ENRICH_BATCH_SIZE = 8;
  * `isStale` lets the caller abort a run superseded by a balance-domain switch
  * before it writes a stale slice.
  */
+/**
+ * Fills in the winning outcome for resolved markets the `SETTLEMENT` activity
+ * log left unlabelled, reading clearing's authoritative settlement input.
+ *
+ * Without this a market settled outside the admin UI — or one whose activity row
+ * aged out of the bounded page — renders as a permanent "Unknown" badge, and its
+ * holders' settled positions can't be priced (`position.utils` needs the
+ * outcome). Scoped to the unlabelled subset, so the common case costs nothing;
+ * fails open, returning the input rows unchanged when clearing can't be read.
+ *
+ * Also pins the resolved market's probabilities to its recovered outcome, the
+ * same way the phase-1 seeding does for markets that arrived already labelled.
+ */
+const backfillResolutionOutcomes = async ({
+	markets,
+	identity,
+	certified
+}: {
+	markets: Market[];
+	identity: Identity;
+	certified: boolean;
+}): Promise<Market[]> => {
+	const unlabelled = markets.filter(
+		({ status, outcome }) => status === 'Resolved' && isNullish(outcome)
+	);
+
+	if (unlabelled.length === 0) {
+		return markets;
+	}
+
+	const details = await loadSettlementOutcomes({
+		seriesIds: unlabelled.map(({ id }) => id),
+		identity,
+		certified
+	});
+
+	if (details.size === 0) {
+		return markets;
+	}
+
+	return markets.map((market) => {
+		const detail = details.get(market.id);
+
+		if (isNullish(detail) || isNullish(detail.outcome)) {
+			return market;
+		}
+
+		const yesWon = detail.outcome === 'YES';
+
+		return {
+			...market,
+			outcome: detail.outcome,
+			resolvedAt: detail.resolvedAt ?? market.resolvedAt,
+			yesProbability: yesWon ? 1 : 0,
+			noProbability: yesWon ? 0 : 1,
+			priceLoaded: true
+		};
+	});
+};
+
 export const loadMarketsProgressive = async ({
 	domain,
 	onUpdate,
@@ -779,14 +853,29 @@ export const loadMarketsProgressive = async ({
 
 	onUpdate(withVolume);
 
+	// Phase 1.75 — repair resolved markets the activity log couldn't label, from
+	// clearing. Runs behind the painted list and only over the unlabelled subset,
+	// so a healthy catalog pays nothing.
+	const repaired = await backfillResolutionOutcomes({
+		markets: withVolume,
+		identity,
+		certified: false
+	});
+
+	if (isStale?.()) {
+		return;
+	}
+
+	onUpdate(repaired);
+
 	// Phase 2 — background book enrichment for every non-resolved market (open
 	// *and* expired-but-unresolved both carry a live/last book the list prices
 	// off). Resolved markets are skipped: they're already pinned to their
 	// outcome above. Built on the volume-enriched set, whose `totalVolume` the
 	// book enrichment preserves (it only overlays price/book fields).
-	const enriched = [...withVolume];
-	const indexById = new Map(withVolume.map((market, index) => [market.id, index]));
-	const pending = withVolume.filter((market) => market.status !== 'Resolved');
+	const enriched = [...repaired];
+	const indexById = new Map(repaired.map((market, index) => [market.id, index]));
+	const pending = repaired.filter((market) => market.status !== 'Resolved');
 
 	for (let start = 0; start < pending.length; start += MARKETS_ENRICH_BATCH_SIZE) {
 		if (isStale?.()) {
@@ -868,6 +957,9 @@ const fetchMarket = async ({
 	const outcome: Outcome | undefined = nonNullish(settlementStatus)
 		? settlementInputOutcome(settlementStatus.settlement)
 		: undefined;
+	const resolvedAt = nonNullish(settlementStatus)
+		? settlementInputTimestamp(settlementStatus.settlement)
+		: undefined;
 
 	// Resolved markets pin to their outcome (YES won → 1, NO won → 0); everything
 	// else uses the live book mid, left unknown for an empty book (no 0.5
@@ -887,6 +979,7 @@ const fetchMarket = async ({
 		bestAskQty,
 		status,
 		outcome,
+		resolvedAt,
 		categoricalProbabilities
 	});
 };
