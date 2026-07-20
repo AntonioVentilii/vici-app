@@ -42,6 +42,7 @@
 		sentFriendRequestsStore
 	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import { notificationsStore, type NotificationType } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import { myReferralsStore, refreshMyReferrals } from '$lib/stores/referrals.store';
@@ -805,7 +806,12 @@
 							})
 						: undefined,
 					standout: nonNullish(standoutRow)
-						? { marketId: standoutRow.marketId, title: standoutRow.title }
+						? {
+								marketId: standoutRow.marketId,
+								// Localize via the translated catalog; the denormalized English
+								// title is the durable fallback for pruned/expired markets.
+								title: $displayMarkets.get(standoutRow.marketId)?.title ?? standoutRow.title
+							}
 						: undefined
 				};
 			})
