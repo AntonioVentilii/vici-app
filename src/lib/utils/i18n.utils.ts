@@ -71,9 +71,11 @@ const loadCatalog = (locale: AppLocale): Promise<void> => {
 /**
  * Load the catalogs `t()` needs to render `locale` — the locale itself plus
  * its whole fallback chain, since a partial catalog (e.g. `es-MX`) resolves
- * most keys through its ancestors. Idempotent and memoized; resolves (never
- * rejects) once every reachable catalog is in memory, so callers can gate
- * a locale switch on it without racing `t()` into the `en` fallback.
+ * most keys through its ancestors. Idempotent and memoized; never rejects.
+ * Resolution means every reachable catalog either landed in memory or had
+ * its fetch fail (see `loadCatalog`) — in the failure case `t()` keeps
+ * rendering the bundled `en` copy and the next call retries the fetch, so
+ * callers gating a locale switch on this can't deadlock on a flaky network.
  */
 export const ensureLocaleCatalogs = async (locale: AppLocale): Promise<void> => {
 	await Promise.all(localeFallbackChain(locale).map(loadCatalog));

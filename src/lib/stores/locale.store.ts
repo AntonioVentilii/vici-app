@@ -66,6 +66,10 @@ const switchLocale = ({ locale, commit }: { locale: AppLocale; commit: () => voi
 	// Load the catalog chain BEFORE flipping the store — the flip is what
 	// re-renders every `t()` consumer, and a flip that beats the chunk fetch
 	// would paint the `en` fallback with no later re-render to correct it.
+	// (`ensureLocaleCatalogs` resolves even when a chunk fetch fails — the
+	// switch still commits and renders `en` copy until a later retry — but
+	// that trades a wrong-language paint on a flaky network for never
+	// wedging the picker.)
 	void ensureLocaleCatalogs(locale).then(() => {
 		if (token === localeSwitchToken) {
 			commit();
@@ -76,8 +80,10 @@ const switchLocale = ({ locale, commit }: { locale: AppLocale; commit: () => voi
 /**
  * Apply an explicit locale choice from the picker: persist the locale and mark
  * it as a deliberate pick so the "Use automatic" reset becomes available.
- * The switch commits once the locale's catalogs are in memory (see
- * `ensureLocaleCatalogs`), so the UI never paints the fallback copy.
+ * The switch commits once `ensureLocaleCatalogs` settles, so on a healthy
+ * network the UI never paints the fallback copy mid-switch; if a catalog
+ * chunk fails to fetch, the switch still commits and `t()` renders `en`
+ * until a later load retries.
  */
 export const setLocale = (locale: AppLocale): void => {
 	switchLocale({
