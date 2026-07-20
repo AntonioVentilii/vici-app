@@ -371,8 +371,25 @@ const joinPendingLeagueIfAny = async ({
 			return true;
 		}
 
+		// Deterministic rejection — retrying can't help, so tell the user which kind it was
+		// (the invitee otherwise lands in the app believing they joined). Same copy the
+		// signed-in `/league/[code]` landing uses.
 		if (isTerminalLeagueReason(message)) {
 			console.warn('joinPendingLeagueIfAny terminally failed', message);
+
+			const unknownCode = message.includes('No league found');
+
+			notificationsStore.add({
+				title: t({
+					locale,
+					key: unknownCode ? 'league_invite.unknown_title' : 'league_invite.invalid_title'
+				}),
+				message: t({
+					locale,
+					key: unknownCode ? 'league_invite.unknown_body' : 'league_invite.invalid_body'
+				}),
+				type: 'error'
+			});
 
 			return true;
 		}
@@ -436,15 +453,21 @@ export const pendingOnboardingProvider = (): OnboardingProvider | undefined => {
  *
  * The profile picks are intentionally dropped from the retry payload: the profile is already
  * applied.
+ *
+ * Abandoning a league invite (retry budget exhausted on a still-transient failure) surfaces a
+ * toast — the user believes they joined, and the generic copy points them at retrying manually
+ * with the code.
  */
 const settlePendingSlot = ({
 	pending,
 	referralResolved,
-	leagueResolved
+	leagueResolved,
+	locale
 }: {
 	pending: PendingOnboarding;
 	referralResolved: boolean;
 	leagueResolved: boolean;
+	locale: AppLocale;
 }): void => {
 	if (!browser) {
 		return;
@@ -459,6 +482,14 @@ const settlePendingSlot = ({
 		referralAttempts + 1 < MAX_DRAIN_ATTEMPTS;
 	const keepLeague =
 		!leagueResolved && nonNullish(pending.leagueInvite) && leagueAttempts + 1 < MAX_DRAIN_ATTEMPTS;
+
+	if (!leagueResolved && nonNullish(pending.leagueInvite) && !keepLeague) {
+		notificationsStore.add({
+			title: t({ locale, key: 'league_invite.error_title' }),
+			message: t({ locale, key: 'league_invite.error_body' }),
+			type: 'error'
+		});
+	}
 
 	if (!keepReferral && !keepLeague) {
 		localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
@@ -557,7 +588,7 @@ export const drainPendingOnboarding = async ({
 				source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
 			})
 		]);
-		settlePendingSlot({ pending, referralResolved, leagueResolved });
+		settlePendingSlot({ pending, referralResolved, leagueResolved, locale });
 
 		return { kind: 'account_exists', nickname: profile.nickname };
 	}
@@ -629,7 +660,7 @@ export const drainPendingOnboarding = async ({
 				source: nonNullish(pending.leagueInvite) ? 'league_invite' : 'onboarding'
 			})
 		]);
-		settlePendingSlot({ pending, referralResolved, leagueResolved });
+		settlePendingSlot({ pending, referralResolved, leagueResolved, locale });
 
 		// Activation milestone. `label` carries the finishing provider (bounded
 		// vocab, stashed pre-redirect) and `ok` whether a team was persisted —
