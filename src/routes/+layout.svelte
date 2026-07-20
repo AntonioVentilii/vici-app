@@ -15,7 +15,7 @@
 	} from '$lib/services/maintenance.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { previousPathStore } from '$lib/stores/previous-path.store';
-	import { t } from '$lib/utils/i18n.utils';
+	import { ensureLocaleCatalogs, t } from '$lib/utils/i18n.utils';
 	// eslint-disable-next-line import/no-relative-parent-imports
 	import '../app.css';
 
@@ -26,6 +26,19 @@
 	const { children }: Props = $props();
 
 	let satelliteInitialized = $state(false);
+	// Non-`en` catalogs load on demand (see `ensureLocaleCatalogs`); holding
+	// the boot gate until the active locale's chain is in memory keeps the
+	// first paint from flashing the `en` fallback. Resolves immediately for
+	// `en`, and the fetch runs concurrently with `initSatellite` otherwise.
+	let localeCatalogsReady = $state(false);
+
+	$effect(() => {
+		const locale = $localeStore;
+
+		void ensureLocaleCatalogs(locale).then(() => {
+			localeCatalogsReady = true;
+		});
+	});
 
 	const init = async () => {
 		await initSatellite({
@@ -84,7 +97,7 @@
 	});
 </script>
 
-{#if !satelliteInitialized}
+{#if !satelliteInitialized || !localeCatalogsReady}
 	<div
 		class="flex h-screen items-center justify-center"
 		aria-label={t({ locale: $localeStore, key: 'ui.loading' })}
