@@ -21,6 +21,7 @@ export const mapMarketData = ({
 	bestAskQty = undefined,
 	status = 'Open',
 	outcome = undefined,
+	resolvedAt = undefined,
 	categoricalProbabilities = undefined
 }: {
 	series: RegistryDid.Series;
@@ -33,6 +34,7 @@ export const mapMarketData = ({
 	bestAskQty?: bigint;
 	status?: MarketStatus;
 	outcome?: Outcome;
+	resolvedAt?: bigint;
 	categoricalProbabilities?: Record<string, number>;
 }): Market | undefined => {
 	const {
@@ -79,6 +81,7 @@ export const mapMarketData = ({
 		createdAt: series.created_at_ns / MILLISECOND_IN_NANOSECONDS,
 		status,
 		outcome,
+		resolvedAt,
 		outcomes: outcomes?.[0]?.map((o) => ({
 			id: o.id,
 			title: o.title,
