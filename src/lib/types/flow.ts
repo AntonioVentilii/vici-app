@@ -28,11 +28,13 @@ export interface ResolutionItem {
  * `count` of 0 means there is nothing new to settle — the Flow entry falls
  * back to the deck-shuffle loading state and the Dashboard banner hides.
  *
- * `marketsLoading` is true when the resolved positions are known but the
- * markets catalog they join against has not loaded yet — the counts and net
- * VXP are already correct (they come straight off the positions), but the
- * per-row titles can't resolve, so the reveal shows a title skeleton instead
- * of the `Unknown Market` fallback until the catalog arrives.
+ * `titlesLoading` is true while the per-row market titles are still
+ * resolving: the markets catalog hasn't loaded yet, or — for a non-English
+ * reader with the translated preference — the translation overlay hasn't
+ * answered for every settled market. The counts and net VXP are already
+ * correct (they come straight off the positions), so the reveals only hold
+ * or skeleton the titles instead of rendering the `Unknown Market` fallback
+ * or flashing the untranslated original.
  */
 export interface ResolutionRevealData {
 	items: ResolutionItem[];
@@ -41,7 +43,7 @@ export interface ResolutionRevealData {
 	losses: number;
 	neutrals: number;
 	netVxp: number;
-	marketsLoading: boolean;
+	titlesLoading: boolean;
 }
 
 /**
