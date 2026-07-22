@@ -17,6 +17,7 @@ export const enMessages = {
 	'trade.error.self_trading_not_allowed': "You can't take the other side of your own order.",
 	'trade.error.series_already_settled': 'This market has already settled — predictions are closed.',
 	'trade.error.series_not_found': 'This market is no longer available.',
+	'trade.error.series_not_started': "This market hasn't opened for predictions yet.",
 	'a11y.appearance': 'Appearance',
 	'a11y.banner_juno_console': 'Open the Juno Console to create a new Satellite for testing',
 	'a11y.checking_signin': 'Checking sign-in status',

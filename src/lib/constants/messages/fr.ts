@@ -20,6 +20,7 @@ export const frMessages = {
 		'Tu ne peux pas prendre la position inverse de ton propre ordre.',
 	'trade.error.series_already_settled': 'Ce marché est déjà réglé — les prédictions sont closes.',
 	'trade.error.series_not_found': "Ce marché n'est plus disponible.",
+	'trade.error.series_not_started': "Ce marché n'est pas encore ouvert aux prédictions.",
 	'a11y.appearance': 'Apparence',
 	'a11y.banner_juno_console': 'Ouvrir la console Juno pour créer un nouveau Satellite de test',
 	'a11y.checking_signin': 'Vérification de la connexion',

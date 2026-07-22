@@ -127,6 +127,14 @@ export const mapTradeError = (err: ClearingDid.TradeError): TradeErrorMessage =>
 		return { key: 'trade.error.series_already_settled' };
 	}
 
+	if ('SeriesNotStarted' in err) {
+		return { key: 'trade.error.series_not_started' };
+	}
+
+	if ('SeriesExpired' in err) {
+		return { key: 'trade.error.market_closed' };
+	}
+
 	if ('NotAuthorizedToTrade' in err) {
 		return { key: 'trade.error.not_authorized_to_trade' };
 	}

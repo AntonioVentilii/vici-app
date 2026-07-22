@@ -28,6 +28,7 @@ export const ptBRMessages = {
 	'trade.error.series_already_settled':
 		'Este mercado já foi liquidado — as previsões estão encerradas.',
 	'trade.error.series_not_found': 'Este mercado não está mais disponível.',
+	'trade.error.series_not_started': 'Este mercado ainda não está aberto a previsões.',
 	'a11y.appearance': 'Aparência',
 	'a11y.banner_juno_console': 'Abra o Juno Console para criar um novo Satellite para testes',
 	'a11y.checking_signin': 'Verificando status de login',

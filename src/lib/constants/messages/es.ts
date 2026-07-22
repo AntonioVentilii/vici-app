@@ -22,6 +22,7 @@ export const esMessages = {
 	'trade.error.series_already_settled':
 		'Este mercado ya se liquidó — las predicciones están cerradas.',
 	'trade.error.series_not_found': 'Este mercado ya no está disponible.',
+	'trade.error.series_not_started': 'Este mercado aún no está abierto a predicciones.',
 	'a11y.appearance': 'Apariencia',
 	'a11y.banner_juno_console': 'Abrir la Consola de Juno para crear un nuevo Satellite de pruebas',
 	'a11y.checking_signin': 'Comprobando estado de inicio de sesión',

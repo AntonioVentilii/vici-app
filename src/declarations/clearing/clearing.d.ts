@@ -1411,6 +1411,25 @@ export interface Series {
 	 */
 	banner_url: [] | [string];
 	/**
+	 * Optional timestamp in nanoseconds since UNIX epoch at which trading opens.
+	 *
+	 * `None` means the series is tradeable from the moment it is registered —
+	 * the historical behavior, and the canonical way to express "live now".
+	 * `Some(t)` schedules the series: it is listed and discoverable immediately
+	 * but trading is rejected until `t`. The window is inclusive at the open
+	 * (`now >= start_ns` is live) and exclusive at the close (`now < expiry_ns`
+	 * is unexpired), so a series is tradeable over `[start_ns, expiry_ns)`.
+	 *
+	 * Participates in `series_id` hashing (see [`Series::generate_id`]): two
+	 * series that differ only in their trading window are distinct contracts,
+	 * so a scheduled series can never silently collide with an already-live one
+	 * and inherit a start date its creator did not ask for. To keep that
+	 * guarantee meaningful `None` is the only encoding of "already live" —
+	 * `add_series` rejects a `start_ns` at or before the current time, so the
+	 * same market cannot exist under two ids.
+	 */
+	start_ns: [] | [bigint];
+	/**
 	 * Unique identifier computed from series parameters.
 	 */
 	series_id: string;
@@ -1999,6 +2018,26 @@ export type TradeError =
 	  }
 	| {
 			/**
+			 * The series is scheduled and its trading window has not opened yet, so no
+			 * trades, orders, or transfers can be initiated on it.
+			 *
+			 * Returned whenever a trade-initiating path sees a series whose `start_ns`
+			 * is still in the future. Carries the open so the caller can render a
+			 * countdown or retry at the right moment instead of polling blindly.
+			 */
+			SeriesNotStarted: {
+				/**
+				 * The timestamp (nanoseconds since the UNIX epoch) at which it opens.
+				 */
+				start_ns: bigint;
+				/**
+				 * The series that is not yet open.
+				 */
+				series_id: string;
+			};
+	  }
+	| {
+			/**
 			 * The trade would violate the no-arbitrage principle (e.g., sum of outcome prices > 1.0).
 			 */
 			ArbitrageLimitExceeded: {
@@ -2017,6 +2056,27 @@ export type TradeError =
 			 * Failed to communicate with the registry canister.
 			 */
 			RegistryError: string;
+	  }
+	| {
+			/**
+			 * The series' trading window has closed, so no new exposure can be opened
+			 * on it.
+			 *
+			 * Returned to exposure-opening paths only. Redeeming a complete set and
+			 * accepting a transferred position stay available after expiry, because they
+			 * only release exposure that already exists and settlement may not run for
+			 * some time after the window closes.
+			 */
+			SeriesExpired: {
+				/**
+				 * The timestamp (nanoseconds since the UNIX epoch) at which it closed.
+				 */
+				expiry_ns: bigint;
+				/**
+				 * The series whose window has closed.
+				 */
+				series_id: string;
+			};
 	  }
 	| {
 			/**
