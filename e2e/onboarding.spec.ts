@@ -23,8 +23,9 @@ import { HomePage } from './pages/home.page';
  * earlier `signInAsDevUser` auto-claims the handle field's pool suggestion
  * and completes onboarding for it — so without a reset this principal is a
  * fully-onboarded returning user and the handoff is (correctly) a no-op. We
- * therefore sign in, hard-delete its profile via the dev-only reset hook,
- * and sign back out first, so the run below exercises a genuine new user.
+ * therefore sign in, hard-delete its profile via the dev-only reset hook, wipe
+ * the persisted session in place, then cold-load `/signup` — so the run below
+ * exercises a genuine new user.
  */
 test.describe('pre-sign-in onboarding', () => {
 	test('claims a handle and applies it after dev sign-in', async ({ page }) => {
@@ -34,18 +35,17 @@ test.describe('pre-sign-in onboarding', () => {
 		// (see the file header) so the handle handoff runs its new-user path.
 		//
 		// Ordering is load-bearing: the profile delete must be the LAST signed-in
-		// action, and the sign-out must NOT navigate through a signed-in page. So
-		// we delete then sign out programmatically in place (`signOutDev`) — a
-		// navigation to the Settings sign-out surface here would re-run
-		// `ensureProfile` and re-bootstrap the doc we just deleted, and the run
-		// below would (wrongly) see a returning user.
+		// action, and no signed-in page LOAD may happen before the signed-out
+		// `/signup`. So we delete, then wipe the persisted session in place
+		// (`clearDevSession`) while still on `/flow`, then cold-load `/signup`.
+		// We deliberately do NOT call Juno `signOut()`: it re-saves the dev
+		// identity Juno persists in `juno-dev-identifiers`, which would auto-
+		// restore on the next load and bounce `/signup` back to `/flow` (see
+		// `clearDevSession`). The full `goto` below tears down the in-memory
+		// session and the wiped storage makes the fresh load signed-out.
 		await home.signInAsDevUser();
 		await home.resetDevProfile();
-		await home.signOutDev();
-
-		// Let the sign-out redirect land before navigating, otherwise the
-		// `/signup` goto races the in-flight redirect to `/signin` and aborts.
-		await page.waitForURL('**/signin');
+		await home.clearDevSession();
 
 		await page.goto('/signup');
 

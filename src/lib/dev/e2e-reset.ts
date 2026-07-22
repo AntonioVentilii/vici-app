@@ -5,7 +5,7 @@ import { userStore } from '$lib/stores/user.store';
 import type { UserProfile } from '$lib/types/profile';
 import { sleep } from '$lib/utils/async.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
-import { deleteDoc, getDoc, signOut } from '@junobuild/core';
+import { deleteDoc, getDoc } from '@junobuild/core';
 import { get } from 'svelte/store';
 
 /**
@@ -16,29 +16,15 @@ export interface E2eHooks {
 	/** Hard-delete the signed-in principal's profile doc. Resolves once gone. */
 	resetMyProfile: () => Promise<void>;
 	/**
-	 * Sign out programmatically (Juno `signOut`), without navigating to the
-	 * Settings sign-out surface. Pairs with {@link resetMyProfile}: deleting the
-	 * profile and then signing out in place means NO signed-in page load happens
-	 * between the two, so `ensureProfile` can't re-bootstrap the doc we just
-	 * removed. Fires `onAuthStateChange(null)`; the (app) auth gate then routes
-	 * back to `/signin`.
+	 * DURABLY wipe every persisted browser store so the next full page load is
+	 * signed-out. Call this while still on an `(app)` route (this hook only
+	 * exists inside the `(app)` layout) and then cold-load the target page.
 	 *
-	 * Kept deliberately thin — it resolves before the sign-out navigation
-	 * commits. The durable session clear is a SEPARATE step ({@link clearSession})
-	 * the caller runs AFTER the nav settles: doing extra async work in this same
-	 * evaluate would run into the navigation and destroy the execution context.
-	 */
-	signOut: () => Promise<void>;
-	/**
-	 * DURABLY clear the persisted delegation so the next full page load is
-	 * unambiguously signed-out. Call this BEFORE {@link signOut}, while still on
-	 * an `(app)` route: this hook only exists inside the `(app)` layout, and
-	 * `signOut()` reloads to /signin (no hook there). `signOut()` clears the
-	 * delegation too, but not necessarily flushed before the onboarding spec's
-	 * immediate `goto('/signup')` re-reads it — when that read wins, the fresh
-	 * load rehydrates a signed-in session and /signup bounces to /flow. Runs
-	 * while signed-in (in-memory identity untouched), so the shell keeps working
-	 * until `signOut()` tears it down. Idempotent.
+	 * Deliberately paired with a plain navigation rather than Juno `signOut()`:
+	 * `signOut()` re-saves the dev identity Juno keeps in `juno-dev-identifiers`,
+	 * so the next load auto-restores the session and /signup bounces to /flow.
+	 * Runs while signed-in (in-memory identity untouched), so the shell keeps
+	 * working until the caller navigates away. Idempotent.
 	 */
 	clearSession: () => Promise<void>;
 }
@@ -155,10 +141,11 @@ const waitForLoginSyncSettled = async (): Promise<void> => {
  *     reappears.
  *
  * The post-sign-in write storm is finite, so this converges once it drains.
- * The caller must then sign out
- * WITHOUT a signed-in page load in between (use {@link E2eHooks.signOut}, not a
- * navigation to the Settings surface) — a signed-in navigation would re-run
- * `ensureProfile` and bootstrap a fresh doc, which no watching here can prevent.
+ * The caller must then reach the signed-out surface WITHOUT a signed-in page
+ * load in between (use {@link E2eHooks.clearSession} in place + a cold nav, not
+ * a navigation to the Settings sign-out surface) — a signed-in navigation would
+ * re-run `ensureProfile` and bootstrap a fresh doc, which no watching here can
+ * prevent.
  */
 const DELETE_ATTEMPTS = 10;
 const DELETE_RETRY_DELAY_MS = 250;
@@ -351,17 +338,14 @@ const clearAllPersistedSession = async (): Promise<void> => {
 
 /**
  * Durably clear the persisted session so the next full page load is
- * unambiguously signed-out. Runs as its own step BEFORE `signOut()`, while still
- * on an `(app)` route (see {@link E2eHooks.clearSession}) — never chained AFTER
- * `signOut()`, whose reload to /signin both leaves the page without this hook
- * and destroys the execution context mid-work.
+ * unambiguously signed-out. Runs on an `(app)` route (see
+ * {@link E2eHooks.clearSession}) while still signed-in; the caller then
+ * cold-loads the target page, which reads the wiped storage as signed-out.
  *
- * `signOut()` fires `onAuthStateChange(null)` and clears the delegation, but not
- * necessarily flushed before the onboarding spec's immediate `goto('/signup')`
- * re-reads it — and the dev session isn't even in `auth-client-db`. When that
- * read wins the race, the fresh load rehydrates a still-signed-in session and
- * /signup bounces to /flow — the exact flake this defeats. So we wipe every
- * persisted store ourselves and await it.
+ * We do NOT use Juno `signOut()` to reach signed-out: it re-saves the dev
+ * identity in `juno-dev-identifiers`, so the next load auto-restores the session
+ * and /signup bounces to /flow — the exact flake this defeats. Wiping every
+ * persisted store and then navigating avoids the re-persist entirely.
  */
 const clearSession = (): Promise<void> => clearAllPersistedSession();
 
@@ -375,5 +359,5 @@ export const installE2eResetHook = (): void => {
 		return;
 	}
 
-	window.__viciE2E = { resetMyProfile, signOut: () => signOut(), clearSession };
+	window.__viciE2E = { resetMyProfile, clearSession };
 };
