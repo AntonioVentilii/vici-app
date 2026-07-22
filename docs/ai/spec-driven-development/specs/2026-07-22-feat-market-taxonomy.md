@@ -41,6 +41,7 @@ Re-classify **every** deck row's `categories` to the correct micro: WC rows → 
 
 ### Out of scope
 
+- **Surfacing Layer-3 tags in the UI** (tag pills on cards/detail, a browsable/searchable tag filter — Polymarket-style long-tail like `gta-6`). Decided to defer: the browse nav stays macro + micro only this PR; free tags remain per-market metadata (used by the admin editor and the WC skill gate, not rendered to users). Revisit in a follow-up.
 - Structured `classifications` object field on the wire (stays flat `string[]`). Revisit only if per-path tag scoping is needed.
 - NLP auto-classification; deck authors assign micros.
 - Any change inside the separate `vici-cockpit` repo — the derived `sports` macro bucket keeps it working without edits.
