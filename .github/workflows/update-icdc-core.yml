@@ -1,30 +1,8 @@
 name: Update icdc-core
 
-# Keeps this repo in sync with the upstream `AntonioVentilii/icdc-core` canister
-# surface. Two things drift over time and this workflow bumps both to the latest:
-#
-#   1. `ICDC_CORE_VERSION` in `scripts/build/download.icdc.common.sh` — the pinned
-#      GitHub *release tag* the immutable wasm/did artifacts are downloaded from.
-#      Bumped to the latest published release of icdc-core.
-#   2. `src/declarations/**` — the generated Candid bindings (`.did` + idl.js /
-#      d.ts). Regenerated via `npm run did`, which re-imports the `.did` files
-#      from icdc-core and recompiles the IDL factories.
-#
-# It runs `npm run quality` before opening a PR, and only opens a PR when there
-# is an actual diff (peter-evans/create-pull-request is a no-op otherwise). The
-# PR branch is stable, so a weekly run updates the same standing PR rather than
-# stacking new ones.
-#
-# TOKEN: prefer `RELEASE_PLEASE_PAT` (a fine-grained PAT with `contents: write` +
-# `pull-requests: write`) so the opened PR triggers downstream CI. Falls back to
-# the default `GITHUB_TOKEN`, in which case the bump PR's own checks need a manual
-# nudge (close/reopen or an empty commit) and the repo setting "Allow GitHub
-# Actions to create and approve pull requests" must be enabled.
-
 on:
   workflow_dispatch:
   schedule:
-    # Weekly — Mondays 04:00 UTC.
     - cron: '0 4 * * 1'
 
 concurrency:
