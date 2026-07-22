@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { SIGNED_IN_FLAG_KEY } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { isDev } from '$lib/env/app.env';
 import { userStore } from '$lib/stores/user.store';
@@ -17,11 +18,12 @@ export interface E2eHooks {
 	resetMyProfile: () => Promise<void>;
 	/**
 	 * Sign out programmatically (Juno `signOut`), without navigating to the
-	 * Settings sign-out surface. Pairs with {@link resetMyProfile}: deleting the
-	 * profile and then signing out in place means NO signed-in page load happens
-	 * between the two, so `ensureProfile` can't re-bootstrap the doc we just
-	 * removed. Fires `onAuthStateChange(null)`; the (app) auth gate then routes
-	 * back to `/signin`.
+	 * Settings sign-out surface, then DURABLY clear the persisted delegation so
+	 * the next full page load is unambiguously signed-out. Pairs with
+	 * {@link resetMyProfile}: deleting the profile and then signing out in place
+	 * means NO signed-in page load happens between the two, so `ensureProfile`
+	 * can't re-bootstrap the doc we just removed. Fires `onAuthStateChange(null)`;
+	 * the (app) auth gate then routes back to `/signin`.
 	 */
 	signOut: () => Promise<void>;
 }
@@ -201,6 +203,125 @@ const resetMyProfile = async (): Promise<void> => {
 };
 
 /**
+ * The IC auth-client persists the delegation in this dedicated IndexedDB
+ * database (its documented default, `ic-keyval` object store).
+ * `onAuthStateChange` rehydrates the session from here on every cold load. Juno
+ * routes every provider — including the `dev` mock identity — through the
+ * auth-client, so the dev session lives here too.
+ */
+const AUTH_CLIENT_DB_NAME = 'auth-client-db';
+
+/**
+ * Empty every object store in one IndexedDB database, resolving once the
+ * transaction commits (or on any error / a missing store). Clearing rather than
+ * `deleteDatabase` on purpose: the auth-client keeps its own connection open,
+ * which would leave a `deleteDatabase` blocked indefinitely; a `readwrite`
+ * transaction on a second connection is serialized normally and completes.
+ * Awaiting the commit is what makes the clear durable, unlike a fire-and-forget
+ * delete.
+ */
+const clearDatabaseStores = (dbName: string): Promise<void> =>
+	new Promise((resolve) => {
+		let settled = false;
+
+		const done = (db?: IDBDatabase): void => {
+			db?.close();
+
+			if (!settled) {
+				settled = true;
+
+				resolve();
+			}
+		};
+
+		try {
+			const open = indexedDB.open(dbName);
+
+			open.onerror = () => done();
+
+			open.onsuccess = () => {
+				const db = open.result;
+				const storeNames = Array.from(db.objectStoreNames);
+
+				if (storeNames.length === 0) {
+					done(db);
+
+					return;
+				}
+
+				try {
+					const tx = db.transaction(storeNames, 'readwrite');
+
+					for (const name of storeNames) {
+						tx.objectStore(name).clear();
+					}
+
+					tx.oncomplete = () => done(db);
+					tx.onerror = () => done(db);
+					tx.onabort = () => done(db);
+				} catch {
+					done(db);
+				}
+			};
+		} catch {
+			done();
+		}
+	});
+
+/**
+ * Durably clear the persisted delegation so the NEXT full page load resolves as
+ * signed-out. Clears `auth-client-db` explicitly, plus any other DB whose name
+ * looks auth-related (belt-and-braces against a differently-named auth store) —
+ * scoped to auth so datastore / market caches are left intact. `databases()` is
+ * Chromium-only among engines, which is all the e2e matrix runs on; a missing
+ * API just falls back to the known name.
+ */
+const clearAuthDelegation = async (): Promise<void> => {
+	const names = new Set<string>([AUTH_CLIENT_DB_NAME]);
+
+	try {
+		if (typeof indexedDB.databases === 'function') {
+			const dbs = await indexedDB.databases();
+
+			for (const { name } of dbs) {
+				if (nonNullish(name) && /auth/i.test(name)) {
+					names.add(name);
+				}
+			}
+		}
+	} catch {
+		// `databases()` unavailable or threw — the explicit name below still runs.
+	}
+
+	await Promise.all(Array.from(names, (name) => clearDatabaseStores(name)));
+};
+
+/**
+ * Sign out for e2e, then DURABLY clear the persisted session so the next full
+ * page load is unambiguously signed-out.
+ *
+ * `signOut()` fires `onAuthStateChange(null)` (routing the app back to /signin),
+ * but its delegation clear in `auth-client-db` is not guaranteed to be flushed
+ * before the onboarding spec's immediate `goto('/signup')` re-reads it. When
+ * that read wins the race, the fresh load rehydrates a still-signed-in session
+ * and /signup bounces to /flow — the exact flake this hook exists to defeat. So
+ * we clear the delegation store ourselves and await it; the stale signed-in
+ * hint is dropped too so nothing re-paints signed-in optimistically.
+ */
+const signOutForE2e = async (): Promise<void> => {
+	await signOut();
+
+	try {
+		localStorage.removeItem(SIGNED_IN_FLAG_KEY);
+	} catch {
+		// localStorage may be unavailable; the delegation clear below is what
+		// actually gates the signed-in state on the next load.
+	}
+
+	await clearAuthDelegation();
+};
+
+/**
  * Install the e2e reset hook on `window` — DEV ONLY. A no-op in production
  * (and any non-browser context), so it never adds a profile-deletion surface
  * to a real build. Called once from the `(app)` layout on mount.
@@ -210,5 +331,5 @@ export const installE2eResetHook = (): void => {
 		return;
 	}
 
-	window.__viciE2E = { resetMyProfile, signOut: () => signOut() };
+	window.__viciE2E = { resetMyProfile, signOut: signOutForE2e };
 };
