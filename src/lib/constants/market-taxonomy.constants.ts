@@ -1,0 +1,268 @@
+import type { MessageKey } from '$lib/utils/i18n.utils';
+import { isNullish } from '@dfinity/utils';
+
+/**
+ * Three-layer market taxonomy.
+ *
+ * - **Layer 1 — macro** (`MacroId`): the coarse bucket rendered as the top
+ *   category bar. Closed set. A market resolves to 1..N macros, but exactly
+ *   one is *primary* (drives card accent, artwork, detail chip, stats).
+ * - **Layer 2 — micro** (`MicroId`): the subcategory chip. Closed set; every
+ *   micro belongs to exactly one macro, so a market's macros are *derived*
+ *   from its micros — there is no separate stored macro field.
+ * - **Layer 3 — tag**: open, optional free tags (event/entity level, e.g.
+ *   `world-cup`, `bitcoin-etf`). Not enumerated here; they live alongside
+ *   micro ids in the same `MarketMetadata.tags` array and are distinguished
+ *   by *not* being a known micro id ({@link isMicroId}).
+ *
+ * Storage stays a flat `string[]` on `MarketMetadata.tags`: `[<micro>…,
+ * <free-tag>…]` with the first micro as the primary. This keeps the wire
+ * shape (and the satellite `market_tag_index`) unchanged while layering the
+ * hierarchy on top in the frontend.
+ *
+ * This module is bundled into the satellite wasm (the satellite imports the
+ * classification helpers), so — like `market-tags.constants.ts` — it must
+ * stay free of VALUE imports of frontend-only modules; only the type-only
+ * `MessageKey` import is allowed (erased at compile time). Rendering helpers
+ * that need `t` belong in `$lib/utils/market-tags.utils.ts`.
+ *
+ * To add a micro: extend the relevant macro's `micros` below and add
+ * `market.micro.<id>` to every LIVE locale catalog under
+ * `src/lib/constants/messages/`. To add a macro: add an entry here, a color
+ * in {@link MACRO_COLORS}, and `market.macro.<id>` to every live catalog.
+ */
+export const MARKET_TAXONOMY = [
+	{
+		id: 'politics',
+		micros: [
+			'trump',
+			'us-elections',
+			'congress',
+			'us-policy',
+			'appointments',
+			'courts-legal',
+			'polls',
+			'politics-other'
+		]
+	},
+	{
+		id: 'world',
+		micros: [
+			'geopolitics',
+			'middle-east',
+			'russia-ukraine',
+			'china',
+			'europe',
+			'asia',
+			'latin-america',
+			'africa',
+			'global-elections',
+			'foreign-policy',
+			'world-other'
+		]
+	},
+	{
+		id: 'economy',
+		micros: [
+			'fed-rates',
+			'inflation',
+			'growth-recession',
+			'jobs',
+			'stocks',
+			'commodities',
+			'housing',
+			'trade',
+			'economy-other'
+		]
+	},
+	{
+		id: 'crypto',
+		micros: [
+			'bitcoin',
+			'ethereum',
+			'solana',
+			'altcoins',
+			'memecoins',
+			'etfs',
+			'defi',
+			'nfts',
+			'crypto-other'
+		]
+	},
+	{
+		id: 'tech',
+		micros: [
+			'ai',
+			'elon-musk',
+			'big-tech',
+			'space',
+			'product-releases',
+			'science',
+			'cybersecurity',
+			'tech-other'
+		]
+	},
+	{
+		id: 'culture',
+		micros: [
+			'movies',
+			'music',
+			'awards',
+			'celebrities',
+			'tv-streaming',
+			'gaming',
+			'mentions',
+			'weather',
+			'novelty',
+			'culture-other'
+		]
+	},
+	{
+		id: 'sports',
+		micros: [
+			'soccer',
+			'nfl',
+			'nba',
+			'mlb',
+			'nhl',
+			'tennis',
+			'mma-boxing',
+			'golf',
+			'motorsport',
+			'cricket',
+			'college',
+			'esports',
+			'olympics',
+			'sports-other'
+		]
+	}
+] as const satisfies ReadonlyArray<{ id: string; micros: readonly string[] }>;
+
+export type MacroId = (typeof MARKET_TAXONOMY)[number]['id'];
+export type MicroId = (typeof MARKET_TAXONOMY)[number]['micros'][number];
+
+/** Macro ids in canonical (category-bar) order. */
+export const MACRO_IDS = MARKET_TAXONOMY.map(({ id }) => id);
+
+/** All micro ids in canonical order (macro order, then within-macro order). */
+export const MICRO_IDS = MARKET_TAXONOMY.flatMap(({ micros }) => micros);
+
+/** micro → its parent macro. The hierarchy is derived from this, never stored. */
+export const MICRO_TO_MACRO = Object.fromEntries(
+	MARKET_TAXONOMY.flatMap(({ id, micros }) => micros.map((micro) => [micro, id]))
+) as Record<MicroId, MacroId>;
+
+export const isMacroId = (value: string): value is MacroId =>
+	(MACRO_IDS as readonly string[]).includes(value);
+
+export const isMicroId = (value: string): value is MicroId =>
+	(MICRO_IDS as readonly string[]).includes(value);
+
+/** Parent macro of a micro. */
+export const macroOfMicro = (micro: MicroId): MacroId => MICRO_TO_MACRO[micro];
+
+/** Micros belonging to a macro, in canonical order. */
+export const microsOfMacro = (macro: MacroId): MicroId[] =>
+	MARKET_TAXONOMY.find(({ id }) => id === macro)?.micros.slice() ?? [];
+
+/**
+ * i18n key for a macro / micro label. The `check:i18n` gate guarantees the
+ * referenced keys exist in `en.ts` (and every live catalog), so the cast is
+ * safe. Labels themselves are rendered via `$lib/utils/market-tags.utils.ts`.
+ */
+export const macroLabelKey = (macro: MacroId): MessageKey => `market.macro.${macro}` as MessageKey;
+export const microLabelKey = (micro: MicroId): MessageKey => `market.micro.${micro}` as MessageKey;
+
+// Per-macro brand accent. Micros inherit their macro's color — the chip's
+// meaning is carried by the macro family, not per-micro hues. Six values are
+// reused verbatim from the legacy `TAG_COLORS`; `world` takes the laurel-gold
+// that `wc` used to own (World Cup now lives under sports/soccer).
+export const MACRO_COLORS = {
+	politics: '#FF6B6B',
+	world: '#E2B842',
+	economy: '#7EB6FF',
+	crypto: '#F7931A',
+	tech: '#B49CFF',
+	culture: '#FFB066',
+	sports: '#6FE0B6'
+} as const satisfies Record<MacroId, string>;
+
+export const macroColor = (macro: MacroId): string => MACRO_COLORS[macro];
+
+export const microColor = (micro: MicroId): string => MACRO_COLORS[macroOfMicro(micro)];
+
+/**
+ * Split a stored `tags` array into its structured layers. Order is
+ * significant: the first micro is the market's *primary* classification.
+ * Micros are de-duplicated preserving first-seen order; anything that is not
+ * a known micro id is treated as a Layer-3 free tag.
+ */
+export const splitClassification = (
+	values: readonly string[]
+): { micros: MicroId[]; tags: string[] } => {
+	const micros: MicroId[] = [];
+	const tags: string[] = [];
+
+	for (const value of values) {
+		if (isMicroId(value)) {
+			if (!micros.includes(value)) {
+				micros.push(value);
+			}
+		} else {
+			tags.push(value);
+		}
+	}
+
+	return { micros, tags };
+};
+
+/** Micro ids carried by a market, primary first. */
+export const classificationMicros = (values: readonly string[]): MicroId[] =>
+	splitClassification(values).micros;
+
+/** Layer-3 free tags carried by a market (non-micro values). */
+export const classificationTags = (values: readonly string[]): string[] =>
+	splitClassification(values).tags;
+
+/** Primary micro (first) — the single home used by card art / detail chip. */
+export const primaryMicro = (values: readonly string[]): MicroId | undefined =>
+	classificationMicros(values)[0];
+
+/** Primary macro — the macro of the primary micro. */
+export const primaryMacro = (values: readonly string[]): MacroId | undefined => {
+	const micro = primaryMicro(values);
+
+	return isNullish(micro) ? undefined : macroOfMicro(micro);
+};
+
+/** All macros a market belongs to (derived from its micros), primary first. */
+export const classificationMacros = (values: readonly string[]): MacroId[] => {
+	const macros: MacroId[] = [];
+
+	for (const micro of classificationMicros(values)) {
+		const macro = macroOfMicro(micro);
+
+		if (!macros.includes(macro)) {
+			macros.push(macro);
+		}
+	}
+
+	return macros;
+};
+
+/**
+ * Legacy migration map: the previous flat 7-tag taxonomy → the new
+ * `{ macro (implied by micro), micro, tags }`. Consumed by the Spec-B data
+ * migration that rewrites existing `MarketMetadata.tags` and re-tags the
+ * decks. `wc` becomes soccer + a `world-cup` free tag; `macro` becomes the
+ * economy catch-all.
+ */
+export const LEGACY_TAG_MIGRATION: Record<string, { micro: MicroId; tags: string[] }> = {
+	politics: { micro: 'politics-other', tags: [] },
+	macro: { micro: 'economy-other', tags: [] },
+	crypto: { micro: 'crypto-other', tags: [] },
+	tech: { micro: 'tech-other', tags: [] },
+	sports: { micro: 'sports-other', tags: [] },
+	culture: { micro: 'culture-other', tags: [] },
+	wc: { micro: 'soccer', tags: ['world-cup'] }
+};

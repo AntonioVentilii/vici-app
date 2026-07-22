@@ -1,0 +1,204 @@
+{
+	"version": 1,
+	"note": "3-layer market taxonomy. Layer 1 (macro) and Layer 2 (micro) are CLOSED enums; a market resolves to 1..N macros with exactly one PRIMARY. Layer 3 (tags) is OPEN and OPTIONAL. Every micro belongs to exactly one macro, so macro is derived from micro — never stored. Runtime source of truth is src/lib/constants/market-taxonomy.constants.ts; this JSON mirrors it for review and is the design artifact for the deck-validation work in Spec B. The UI renders only macros/micros whose market_tag_index bucket is non-empty.",
+	"layers": {
+		"1": {
+			"name": "macro",
+			"cardinality": "one-or-more (one primary)",
+			"required": true,
+			"closed": true
+		},
+		"2": {
+			"name": "micro",
+			"cardinality": "one-or-more (first = primary)",
+			"required": true,
+			"closed": true
+		},
+		"3": { "name": "tag", "cardinality": "zero-or-more", "required": false, "closed": false }
+	},
+	"legacyTagMigration": {
+		"politics": { "macro": "politics", "micro": "politics-other", "tags": [] },
+		"macro": { "macro": "economy", "micro": "economy-other", "tags": [] },
+		"crypto": { "macro": "crypto", "micro": "crypto-other", "tags": [] },
+		"tech": { "macro": "tech", "micro": "tech-other", "tags": [] },
+		"sports": { "macro": "sports", "micro": "sports-other", "tags": [] },
+		"culture": { "macro": "culture", "micro": "culture-other", "tags": [] },
+		"wc": { "macro": "sports", "micro": "soccer", "tags": ["world-cup"] }
+	},
+	"macros": [
+		{
+			"id": "politics",
+			"label": "Politics",
+			"color": "#FF6B6B",
+			"micros": [
+				{
+					"id": "trump",
+					"label": "Trump",
+					"tags": ["trump-presidency", "trump-approval", "trump-legal"]
+				},
+				{
+					"id": "us-elections",
+					"label": "US Elections",
+					"tags": ["presidential-election", "midterms", "primaries", "house-races", "senate-races"]
+				},
+				{
+					"id": "congress",
+					"label": "Congress",
+					"tags": ["government-shutdown", "legislation", "speaker-vote"]
+				},
+				{
+					"id": "us-policy",
+					"label": "US Policy",
+					"tags": ["executive-orders", "immigration", "tariffs"]
+				},
+				{
+					"id": "appointments",
+					"label": "Appointments",
+					"tags": ["cabinet", "confirmations", "nominations"]
+				},
+				{
+					"id": "courts-legal",
+					"label": "Courts & Legal",
+					"tags": ["supreme-court", "indictments"]
+				},
+				{ "id": "polls", "label": "Polls", "tags": ["approval-rating", "generic-ballot"] },
+				{ "id": "politics-other", "label": "Other Politics", "tags": [] }
+			]
+		},
+		{
+			"id": "world",
+			"label": "World",
+			"color": "#E2B842",
+			"micros": [
+				{ "id": "geopolitics", "label": "Geopolitics", "tags": ["nato", "united-nations"] },
+				{
+					"id": "middle-east",
+					"label": "Middle East",
+					"tags": ["israel", "iran", "gaza", "hostage-crisis"]
+				},
+				{
+					"id": "russia-ukraine",
+					"label": "Russia & Ukraine",
+					"tags": ["ukraine-war", "putin", "zelensky"]
+				},
+				{ "id": "china", "label": "China", "tags": ["taiwan", "xi-jinping"] },
+				{ "id": "europe", "label": "Europe", "tags": ["eu", "uk-politics"] },
+				{ "id": "asia", "label": "Asia", "tags": ["india", "korea", "japan-politics"] },
+				{
+					"id": "latin-america",
+					"label": "Latin America",
+					"tags": ["argentina", "brazil-politics", "venezuela"]
+				},
+				{ "id": "africa", "label": "Africa", "tags": ["nigeria", "south-africa"] },
+				{
+					"id": "global-elections",
+					"label": "Global Elections",
+					"tags": ["uk-election", "france-election", "thailand-election"]
+				},
+				{ "id": "foreign-policy", "label": "Foreign Policy", "tags": ["sanctions", "treaties"] },
+				{ "id": "world-other", "label": "Other World", "tags": [] }
+			]
+		},
+		{
+			"id": "economy",
+			"label": "Economy",
+			"color": "#7EB6FF",
+			"micros": [
+				{ "id": "fed-rates", "label": "Fed & Rates", "tags": ["fomc", "interest-rates"] },
+				{ "id": "inflation", "label": "Inflation", "tags": ["cpi", "pce"] },
+				{ "id": "growth-recession", "label": "Growth & Recession", "tags": ["gdp", "recession"] },
+				{ "id": "jobs", "label": "Jobs", "tags": ["jobs-report", "unemployment"] },
+				{ "id": "stocks", "label": "Stocks & Indices", "tags": ["sp500", "nasdaq", "earnings"] },
+				{ "id": "commodities", "label": "Commodities", "tags": ["oil", "gold"] },
+				{ "id": "housing", "label": "Housing", "tags": ["mortgage-rates", "home-prices"] },
+				{ "id": "trade", "label": "Trade & Tariffs", "tags": ["tariffs", "trade-deals"] },
+				{ "id": "economy-other", "label": "Other Economy", "tags": [] }
+			]
+		},
+		{
+			"id": "crypto",
+			"label": "Crypto",
+			"color": "#F7931A",
+			"micros": [
+				{ "id": "bitcoin", "label": "Bitcoin", "tags": ["bitcoin-price", "bitcoin-etf"] },
+				{ "id": "ethereum", "label": "Ethereum", "tags": ["eth-price", "eth-etf"] },
+				{ "id": "solana", "label": "Solana", "tags": ["sol-price"] },
+				{ "id": "altcoins", "label": "Altcoins", "tags": ["xrp", "cardano", "bnb"] },
+				{ "id": "memecoins", "label": "Memecoins", "tags": ["dogecoin", "pepe"] },
+				{ "id": "etfs", "label": "ETFs", "tags": ["spot-etf"] },
+				{ "id": "defi", "label": "DeFi", "tags": ["stablecoins", "tvl"] },
+				{ "id": "nfts", "label": "NFTs", "tags": ["opensea"] },
+				{ "id": "crypto-other", "label": "Other Crypto", "tags": [] }
+			]
+		},
+		{
+			"id": "tech",
+			"label": "Tech",
+			"color": "#B49CFF",
+			"micros": [
+				{ "id": "ai", "label": "AI", "tags": ["openai", "claude", "gpt-5", "agi"] },
+				{ "id": "elon-musk", "label": "Elon Musk", "tags": ["tesla", "spacex", "x-twitter"] },
+				{ "id": "big-tech", "label": "Big Tech", "tags": ["apple", "google", "meta", "nvidia"] },
+				{ "id": "space", "label": "Space", "tags": ["nasa", "starship"] },
+				{ "id": "product-releases", "label": "Product Releases", "tags": ["gta-6", "iphone"] },
+				{ "id": "science", "label": "Science", "tags": ["physics", "math-discovery"] },
+				{ "id": "cybersecurity", "label": "Cybersecurity", "tags": ["hacks", "outages"] },
+				{ "id": "tech-other", "label": "Other Tech", "tags": [] }
+			]
+		},
+		{
+			"id": "culture",
+			"label": "Culture",
+			"color": "#FFB066",
+			"micros": [
+				{ "id": "movies", "label": "Movies", "tags": ["box-office", "marvel"] },
+				{ "id": "music", "label": "Music", "tags": ["billboard", "album-release"] },
+				{
+					"id": "awards",
+					"label": "Awards",
+					"tags": ["oscars", "grammys", "emmys", "nobel-prize"]
+				},
+				{ "id": "celebrities", "label": "Celebrities", "tags": ["taylor-swift", "kanye-west"] },
+				{ "id": "tv-streaming", "label": "TV & Streaming", "tags": ["netflix", "hbo"] },
+				{ "id": "gaming", "label": "Gaming", "tags": ["game-awards", "steam"] },
+				{ "id": "mentions", "label": "Mentions", "tags": ["elon-tweets", "trump-mentions"] },
+				{
+					"id": "weather",
+					"label": "Weather",
+					"tags": ["hurricane", "snowfall", "temperature-record"]
+				},
+				{ "id": "novelty", "label": "Novelty", "tags": ["viral", "oddities"] },
+				{ "id": "culture-other", "label": "Other Culture", "tags": [] }
+			]
+		},
+		{
+			"id": "sports",
+			"label": "Sports",
+			"color": "#6FE0B6",
+			"micros": [
+				{
+					"id": "soccer",
+					"label": "Soccer",
+					"tags": ["world-cup", "champions-league", "premier-league", "la-liga", "serie-a"]
+				},
+				{ "id": "nfl", "label": "NFL", "tags": ["super-bowl", "nfl-mvp"] },
+				{ "id": "nba", "label": "NBA", "tags": ["nba-finals", "nba-mvp"] },
+				{ "id": "mlb", "label": "MLB", "tags": ["world-series"] },
+				{ "id": "nhl", "label": "NHL", "tags": ["stanley-cup"] },
+				{
+					"id": "tennis",
+					"label": "Tennis",
+					"tags": ["wimbledon", "us-open", "roland-garros", "atp", "wta"]
+				},
+				{ "id": "mma-boxing", "label": "MMA & Boxing", "tags": ["ufc", "boxing"] },
+				{ "id": "golf", "label": "Golf", "tags": ["masters", "pga"] },
+				{ "id": "motorsport", "label": "Motorsport", "tags": ["f1", "nascar"] },
+				{ "id": "cricket", "label": "Cricket", "tags": ["ipl", "cricket-world-cup"] },
+				{ "id": "college", "label": "College", "tags": ["cfb", "march-madness"] },
+				{ "id": "esports", "label": "Esports", "tags": ["cs2", "league-of-legends", "valorant"] },
+				{ "id": "olympics", "label": "Olympics", "tags": ["summer-olympics", "winter-olympics"] },
+				{ "id": "sports-other", "label": "Other Sports", "tags": [] }
+			]
+		}
+	]
+}
