@@ -290,17 +290,17 @@ const clearDatabaseStores = (dbName: string): Promise<void> =>
 /**
  * Durably wipe EVERY persisted browser store so the next full page load is
  * unambiguously signed-out — localStorage, sessionStorage, and every IndexedDB
- * database. Deliberately unscoped: the Juno dev mock identity does NOT persist
- * its delegation under `auth-client-db` (clearing only that left the session
- * intact and /signup still bounced to /flow), and pinning down its exact store
- * is fragile, so we clear the lot. Safe here because it runs while signed-in on
- * `(app)`: only persisted bytes are touched (the in-memory identity survives for
- * `signOut()`), and the next cold load re-fetches any datastore cache.
+ * database. Deliberately unscoped: the Juno dev mock identity persists under
+ * `juno-dev-identifiers` (NOT `auth-client-db`, which is empty for the dev
+ * provider — clearing only that left the session intact and /signup still
+ * bounced to /flow), alongside the `icp-sdk-*` agent caches, and clearing the
+ * lot is simpler and more robust than tracking each. Safe here because it runs
+ * while signed-in on `(app)`: only persisted bytes are touched (the in-memory
+ * identity survives until the caller navigates), and the next cold load
+ * re-fetches any datastore cache.
  *
  * `databases()` is Chromium-only among engines, which is all the e2e matrix
- * runs on; a missing API falls back to the known `auth-client-db` name. The
- * enumerated names are logged so the persisted stores are visible in the
- * Playwright trace console if this ever needs revisiting.
+ * runs on; a missing API falls back to the known `auth-client-db` name.
  */
 const clearAllPersistedSession = async (): Promise<void> => {
 	try {
@@ -330,8 +330,6 @@ const clearAllPersistedSession = async (): Promise<void> => {
 	} catch {
 		// `databases()` unavailable or threw — the explicit name below still runs.
 	}
-
-	console.warn('[e2e clearSession] clearing persisted stores:', Array.from(names));
 
 	await Promise.all(Array.from(names, (name) => clearDatabaseStores(name)));
 };
