@@ -5,6 +5,7 @@
 	import { browser } from '$app/environment';
 	import { SIGNED_IN_FLAG_KEY } from '$lib/constants/app.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { trackLoginSyncSettled } from '$lib/dev/e2e-reset';
 	import { reconcileIdentityScopedStorage } from '$lib/services/identity-storage.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
@@ -153,10 +154,19 @@
 
 			userStore.set({ user, profile, authBusy: false, profileExisted: existed });
 
-			try {
+			const syncRun = (async () => {
 				const identity = await safeGetIdentityOnce();
 
 				await calculateAndSyncStats({ identity, domain: $balanceDomain });
+			})();
+
+			// Register the sync (dev-only no-op in prod) so the e2e reset hook can
+			// wait for it to settle before deleting the profile — otherwise this
+			// sync's trailing profile write would resurrect the deleted doc.
+			trackLoginSyncSettled(syncRun);
+
+			try {
+				await syncRun;
 			} catch (e: unknown) {
 				console.error('Failed to sync stats on login', e);
 			}

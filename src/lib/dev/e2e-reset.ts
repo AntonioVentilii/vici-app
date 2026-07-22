@@ -33,6 +33,60 @@ declare global {
 }
 
 /**
+ * Tail of the in-flight post-sign-in stats syncs (`calculateAndSyncStats`),
+ * chained so a single await covers every sync registered so far. DEV ONLY —
+ * stays `Promise.resolve()` in production because {@link trackLoginSyncSettled}
+ * no-ops there.
+ *
+ * Why this exists: `calculateAndSyncStats` ends by writing the profile through
+ * `patchProfile` → `upsertProfile`, a versionless `setDoc` that CREATES the doc
+ * when it reads as absent. So if {@link resetMyProfile} deletes the doc while
+ * that sync is still running, the sync's trailing write re-creates it and the
+ * next sign-in wrongly looks like a returning user. The sync is a long async
+ * chain (trade history + leagues + battles + rank + monthly stats before the
+ * write), so its write can land well after any fixed post-delete watch window —
+ * which is why watching for resurrection alone was flaky. The deterministic fix
+ * is to wait for the sync to fully settle BEFORE deleting.
+ */
+let loginSyncChain: Promise<void> = Promise.resolve();
+
+/**
+ * Register a post-sign-in stats sync so {@link resetMyProfile} can await it
+ * before deleting the profile. Called by the auth boundary (`Authn.svelte`) as
+ * each sync starts. DEV ONLY (and browser-only): a no-op elsewhere, so it never
+ * adds bookkeeping to a real session. Never rejects — a failed sync still
+ * settles the chain (a delete after a failed sync is safe).
+ */
+export const trackLoginSyncSettled = (run: Promise<unknown>): void => {
+	if (!browser || !isDev()) {
+		return;
+	}
+
+	const settled = run.then(
+		() => undefined,
+		() => undefined
+	);
+
+	loginSyncChain = Promise.all([loginSyncChain, settled]).then(() => undefined);
+};
+
+/**
+ * Resolve once no tracked login sync is in flight. Re-awaits until the chain
+ * reference stops changing, so a sync registered by a second
+ * `onAuthStateChange` pass mid-await (the double-fire race) is covered too. The
+ * post-sign-in write storm is finite, so this converges.
+ */
+const waitForLoginSyncSettled = async (): Promise<void> => {
+	let awaited: Promise<void> | undefined;
+
+	while (awaited !== loginSyncChain) {
+		awaited = loginSyncChain;
+
+		await awaited;
+	}
+};
+
+/**
  * Hard-delete the signed-in principal's profile doc so the NEXT sign-in is
  * seen as a brand-new user — `ensureProfile` finds no versioned doc and
  * bootstraps fresh.
@@ -48,22 +102,28 @@ declare global {
  * The `profiles` collection is public-write and carries no delete assert, so
  * the owner can remove their own doc.
  *
- * Two independent races can leave the doc present after a naive delete:
+ * The chief resurrector is the finishing login's `calculateAndSyncStats`: it
+ * fetches trade history (and leagues / battles / rank / monthly stats) before
+ * writing the profile through `upsertProfile`'s versionless `setDoc` (absent
+ * doc → create). If that write lands after our delete, the doc resurrects and
+ * the next sign-in wrongly looks like a returning user. Because its write can
+ * come well after any fixed post-delete watch window, we first
+ * {@link waitForLoginSyncSettled} — the sync is tracked by `Authn.svelte` via
+ * {@link trackLoginSyncSettled} — so the delete has nothing racing it.
+ *
+ * Two further races can still leave the doc present after a naive delete:
  *
  *  1. A concurrent write bumps the version between our read and our delete, so
  *     `deleteDoc` traps `juno.error.version_outdated_or_future`. Re-read fresh
  *     and retry until the version is current.
  *
- *  2. A trailing post-sign-in write RE-CREATES the doc after our delete: the
- *     finishing login's `calculateAndSyncStats` fetches trade history before
- *     enqueuing its profile write, so that write can land after the delete and
- *     go through `upsertProfile`'s versionless `setDoc` (the doc reads as
- *     absent → create). A single delete doesn't guard against this — the doc
- *     resurrects and the next sign-in wrongly looks like a returning user.
+ *  2. A stray write re-creates the doc just after our delete. Belt-and-braces
+ *     for anything the sync-settle wait didn't cover, we watch for a
+ *     resurrecting write across a settle window and re-delete if the doc
+ *     reappears.
  *
- * So this deletes, then watches for a resurrecting write across a settle
- * window and re-deletes if the doc reappears. The post-sign-in write storm is
- * finite, so this converges once it drains. The caller must then sign out
+ * The post-sign-in write storm is finite, so this converges once it drains.
+ * The caller must then sign out
  * WITHOUT a signed-in page load in between (use {@link E2eHooks.signOut}, not a
  * navigation to the Settings surface) — a signed-in navigation would re-run
  * `ensureProfile` and bootstrap a fresh doc, which no watching here can prevent.
@@ -83,6 +143,10 @@ const resetMyProfile = async (): Promise<void> => {
 	if (isNullish(principal)) {
 		return;
 	}
+
+	// Let the post-sign-in stats sync finish its profile write FIRST, so it
+	// can't resurrect the doc we're about to delete (see the header).
+	await waitForLoginSyncSettled();
 
 	for (let attempt = 0; attempt < DELETE_ATTEMPTS; attempt += 1) {
 		const existing = await readProfileDoc(principal);
