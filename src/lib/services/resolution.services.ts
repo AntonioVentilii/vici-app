@@ -1,5 +1,9 @@
 import type { ClearingDid } from '$declarations';
-import { listSettledSeries, settleSeries as settleSeriesApi } from '$lib/api/clearing.api';
+import {
+	getSettlementStatus,
+	listSettledSeries,
+	settleSeries as settleSeriesApi
+} from '$lib/api/clearing.api';
 import { PRICE_DECIMALS, VICI_ORACLE_V1, ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
@@ -7,8 +11,12 @@ import { logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
 import type { Outcome } from '$lib/types/market';
-import { binaryPayoffLabel } from '$lib/utils/payoff.utils';
-import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
+import {
+	binaryPayoffLabel,
+	settlementInputOutcome,
+	settlementInputTimestamp
+} from '$lib/utils/payoff.utils';
+import { nonNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
 /**
@@ -58,6 +66,90 @@ export const getSettledSeriesIds = async ({
 	});
 
 	return new Set(ids);
+};
+
+/**
+ * Resolution label + settlement time for one series, read from clearing rather
+ * than from the `SETTLEMENT` activity log.
+ */
+export interface SettlementDetails {
+	outcome?: Outcome;
+	/** Settlement timestamp in ms, when the on-chain input carries one. */
+	resolvedAt?: bigint;
+}
+
+/**
+ * How many `get_settlement_status` queries run concurrently in
+ * {@link loadSettlementOutcomes}. Mirrors the order-book enrichment batch size:
+ * the backfill runs in the background behind an already-painted list, so it
+ * trades completion latency for not saturating the agent's request queue.
+ */
+const SETTLEMENT_STATUS_BATCH_SIZE = 8;
+
+/**
+ * Authoritative resolution labels for the given settled series, straight from
+ * clearing's `get_settlement_status`.
+ *
+ * The bulk label source is the Juno `SETTLEMENT` activity log, which is only
+ * *best-effort*: it holds a bounded page, and a row exists at all only when the
+ * settlement went through this app's admin flow — a series settled by a script
+ * or by a controller call has none. Both cases render as "settled, outcome
+ * unknown". This reads the winning outcome from the same on-chain
+ * `SettlementInput` the payouts were computed from, so the label can't drift
+ * from the money.
+ *
+ * Per-series and unbatchable (clearing exposes no bulk status endpoint), so
+ * callers should scope this to the series they actually need labels for and run
+ * it off the critical path. Fails open per series: an unreadable status yields
+ * no entry rather than failing the batch.
+ */
+export const loadSettlementOutcomes = async ({
+	seriesIds,
+	identity,
+	certified = false
+}: {
+	seriesIds: string[];
+	identity?: Identity;
+	certified?: boolean;
+}): Promise<Map<string, SettlementDetails>> => {
+	const resolvedIdentity = identity ?? (await getIdentityOrAnonymous());
+	const details = new Map<string, SettlementDetails>();
+
+	// Same anonymous-caller constraint as `getSettledSeriesIds`: clearing rejects
+	// anonymous reads, so a signed-out preview keeps the activity-derived labels.
+	if (resolvedIdentity.getPrincipal().isAnonymous()) {
+		return details;
+	}
+
+	for (let start = 0; start < seriesIds.length; start += SETTLEMENT_STATUS_BATCH_SIZE) {
+		const batch = seriesIds.slice(start, start + SETTLEMENT_STATUS_BATCH_SIZE);
+
+		const statuses = await Promise.all(
+			batch.map(async (seriesId) => {
+				try {
+					return await getSettlementStatus({
+						identity: resolvedIdentity,
+						certified,
+						seriesId
+					});
+				} catch (err: unknown) {
+					// One unreadable series must not cost the batch its other labels:
+					// fall through with no entry, leaving that market's existing
+					// (activity-derived or absent) label untouched.
+					console.error('Failed to read settlement status', seriesId, err);
+				}
+			})
+		);
+
+		for (const status of statuses.filter(nonNullish)) {
+			details.set(status.series_id, {
+				outcome: settlementInputOutcome(status.settlement),
+				resolvedAt: settlementInputTimestamp(status.settlement)
+			});
+		}
+	}
+
+	return details;
 };
 
 /**
