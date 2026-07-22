@@ -17,7 +17,7 @@ Today: a closed set of 7 tags — `wc, macro, crypto, politics, tech, sports, cu
 
 ### Model (`src/lib/constants/market-taxonomy.constants.ts`)
 
-Closed **7 macros / 69 micros** (each micro → one macro), `MacroId`/`MicroId`, `MICRO_TO_MACRO`, guards, `macroColor`/`microColor` (6 hexes reused from `TAG_COLORS`; `world` inherits `wc`'s gold), `macroLabelKey`/`microLabelKey`, classification helpers over the stored flat array (`splitClassification`, `classificationMicros/Tags/Macros`, `primaryMicro`/`primaryMacro` — **first micro = primary**), `normalizeStoredTags`, `LEGACY_TAG_MIGRATION`. Wasm-safe (type-only `MessageKey` import).
+Closed **7 macros / 69 micros** (each micro → one macro), `MacroId`/`MicroId`, `MICRO_TO_MACRO`, guards, `macroColor`/`microColor` (6 hexes reused from `TAG_COLORS`; `world` inherits `wc`'s gold), `macroLabelKey`/`microLabelKey`, classification helpers over the stored flat array (`splitClassification`, `classificationMicros/Tags/Macros`, `primaryMicro`/`primaryMacro` — **first micro = primary**), `normalizeStoredTags`. Wasm-safe (type-only `MessageKey` import). (Backfill re-classifies decks by title to the correct micro, so no old→catch-all legacy map is needed.)
 
 ### Storage (no wire change)
 
@@ -77,7 +77,7 @@ Add `market_category_filter` (macro/micro chip select). Props `macro: MacroId`, 
 
 ## Acceptance criteria
 
-- [ ] Taxonomy module exports the 7/69 model with guards, colors, label-key + classification helpers, `normalizeStoredTags`, `LEGACY_TAG_MIGRATION`; wasm-safe.
+- [ ] Taxonomy module exports the 7/69 model with guards, colors, label-key + classification helpers, `normalizeStoredTags`; wasm-safe.
 - [ ] `market.macro.*` + `market.micro.*` in all 7 live catalogs; `check:i18n` passes.
 - [ ] Satellite index writes micro + macro buckets; upsert keeps micro ids; `sports` bucket stays populated (cockpit intact).
 - [ ] Markets browse shows a macro bar + populated micro chips; filtering works; cards/detail show the primary micro label + macro color.

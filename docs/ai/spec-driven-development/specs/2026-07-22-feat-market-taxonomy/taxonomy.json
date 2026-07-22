@@ -16,15 +16,6 @@
 		},
 		"3": { "name": "tag", "cardinality": "zero-or-more", "required": false, "closed": false }
 	},
-	"legacyTagMigration": {
-		"politics": { "macro": "politics", "micro": "politics-other", "tags": [] },
-		"macro": { "macro": "economy", "micro": "economy-other", "tags": [] },
-		"crypto": { "macro": "crypto", "micro": "crypto-other", "tags": [] },
-		"tech": { "macro": "tech", "micro": "tech-other", "tags": [] },
-		"sports": { "macro": "sports", "micro": "sports-other", "tags": [] },
-		"culture": { "macro": "culture", "micro": "culture-other", "tags": [] },
-		"wc": { "macro": "sports", "micro": "soccer", "tags": ["world-cup"] }
-	},
 	"macros": [
 		{
 			"id": "politics",

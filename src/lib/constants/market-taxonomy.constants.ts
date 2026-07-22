@@ -275,20 +275,3 @@ export const normalizeStoredTags = (values: readonly string[]): string[] => {
 
 	return out;
 };
-
-/**
- * Legacy migration map: the previous flat 7-tag taxonomy → the new
- * `{ macro (implied by micro), micro, tags }`. Consumed by the Spec-B data
- * migration that rewrites existing `MarketMetadata.tags` and re-tags the
- * decks. `wc` becomes soccer + a `world-cup` free tag; `macro` becomes the
- * economy catch-all.
- */
-export const LEGACY_TAG_MIGRATION: Record<string, { micro: MicroId; tags: string[] }> = {
-	politics: { micro: 'politics-other', tags: [] },
-	macro: { micro: 'economy-other', tags: [] },
-	crypto: { micro: 'crypto-other', tags: [] },
-	tech: { micro: 'tech-other', tags: [] },
-	sports: { micro: 'sports-other', tags: [] },
-	culture: { micro: 'culture-other', tags: [] },
-	wc: { micro: 'soccer', tags: ['world-cup'] }
-};
