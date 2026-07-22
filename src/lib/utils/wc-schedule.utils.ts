@@ -1,38 +1,41 @@
 import { WORLD_CUP_2026 } from '$lib/constants/featured-event.constants';
-import {
-	normalizeWcQuestion,
-	WC_QUESTION_REVEAL_MS
-} from '$lib/constants/wc-market-schedule.constants';
 import type { Market } from '$lib/types/market';
-import { nonNullish } from '@dfinity/utils';
+import { isNullish } from '@dfinity/utils';
 
 /**
- * Applies the temporary hardcoded World-Cup release schedule
- * (`$lib/constants/wc-market-schedule.constants`) to the live feed.
+ * Release gating driven by each market's on-chain trading-window start
+ * (`start_ns`, surfaced as {@link Market.startDate}). A scheduled market is
+ * discoverable on-chain but withheld from every feed surface (Flow deck, Markets
+ * board) until its start instant; a market with no start is live and always
+ * shown.
  *
  * Both helpers gate **only** World-Cup markets — identified by the featured
- * event's category tag — so they are safe to run over any mixed-category
- * list: non-WC markets always pass through.
+ * event's category tag — so they are safe to run over any mixed-category list:
+ * non-WC markets always pass through. The WC scope is deliberate for now; the
+ * underlying `startDate` check is general and could drop the tag once scheduled
+ * starts are used beyond the World Cup.
  */
 
 const WC_TAG = WORLD_CUP_2026.categoryTag;
 
 /**
- * Whether a World-Cup market is visible right now under the release
- * schedule. A market is eligible only once its Show Date has arrived
- * (00:00 UTC); WC markets absent from the schedule are never revealed and
- * stay hidden until curated.
+ * Whether a market is revealed right now under its release start. Reveal is
+ * inclusive at the start (`now >= startDate` is live), matching the on-chain
+ * trading gate, so the feed never shows a market a beat before it can be traded.
+ * A market with no `startDate` is live from registration and always revealed.
  */
-export const isWcMarketRevealed = ({ title, now }: { title: string; now: number }): boolean => {
-	const revealMs = WC_QUESTION_REVEAL_MS.get(normalizeWcQuestion(title));
-
-	return nonNullish(revealMs) && now >= revealMs;
-};
+export const isMarketRevealed = ({
+	startDate,
+	now
+}: {
+	startDate?: bigint;
+	now: number;
+}): boolean => isNullish(startDate) || now >= Number(startDate);
 
 /**
- * Drops World-Cup markets the release schedule hasn't revealed yet (or
- * doesn't cover at all). Non-WC markets pass through untouched, so this is
- * safe to apply to any mixed-category list before further filtering.
+ * Drops World-Cup markets whose release start hasn't arrived yet. Non-WC markets
+ * pass through untouched, so this is safe to apply to any mixed-category list
+ * before further filtering.
  */
 export const filterScheduledWcMarkets = ({
 	markets,
@@ -50,5 +53,5 @@ export const filterScheduledWcMarkets = ({
 			return true;
 		}
 
-		return isWcMarketRevealed({ title: market.title, now });
+		return isMarketRevealed({ startDate: market.startDate, now });
 	});

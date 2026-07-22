@@ -46,6 +46,13 @@ export interface Market {
 	resolution: string;
 	creator: PrincipalText;
 	expiryDate: bigint; // timestamp in ms
+	/**
+	 * When trading opens, in ms — `undefined` when the market is live from
+	 * registration (on-chain `start_ns: None`). When set and still in the future,
+	 * the market is scheduled: discoverable on-chain but not yet tradeable, and
+	 * withheld from the feeds until this instant (see `wc-schedule.utils`).
+	 */
+	startDate?: bigint; // timestamp in ms
 	createdAt: bigint; // timestamp in ms
 	status: MarketStatus;
 	outcome?: Outcome;

@@ -70,11 +70,19 @@ export const idlFactory = ({ IDL }) => {
 	const TradeError = IDL.Variant({
 		SelfTradingNotAllowed: IDL.Null,
 		OrderNotFound: IDL.Text,
+		SeriesNotStarted: IDL.Record({
+			start_ns: IDL.Nat64,
+			series_id: IDL.Text
+		}),
 		ArbitrageLimitExceeded: IDL.Record({
 			limit_usd: IDL.Nat,
 			sum_usd: IDL.Nat
 		}),
 		RegistryError: IDL.Text,
+		SeriesExpired: IDL.Record({
+			expiry_ns: IDL.Nat64,
+			series_id: IDL.Text
+		}),
 		InsufficientMargin: IDL.Record({
 			balance: IDL.Nat,
 			user: IDL.Principal,
@@ -427,6 +435,7 @@ export const idlFactory = ({ IDL }) => {
 		payout_unit: PayoutUnit,
 		expiry_ns: IDL.Nat64,
 		banner_url: IDL.Opt(IDL.Text),
+		start_ns: IDL.Opt(IDL.Nat64),
 		series_id: IDL.Text,
 		underlying: IDL.Text,
 		locale: IDL.Opt(IDL.Text),

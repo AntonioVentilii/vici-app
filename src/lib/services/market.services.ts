@@ -173,6 +173,8 @@ export const createMarket = async ({
 		},
 		resolution: { clause: resolutionClause },
 		expiry_ns: expiryDate * MILLISECOND_IN_NANOSECONDS,
+		// FE-created markets are tradeable immediately; scheduling is not exposed here.
+		start_ns: toNullable(),
 		payout_unit: payoutUnit,
 		strike: STRIKE,
 		icon_url: toNullable(),
@@ -401,6 +403,8 @@ const unexpiredSeriesParams = (): RegistryDid.ListSeriesParams => ({
 	pagination: toNullable(),
 	underlying: toNullable(),
 	only_unexpired: toNullable(true),
+	// Leave the trading-window filter open; `only_unexpired` already scopes the set.
+	tradeable_now: toNullable(),
 	search_term: toNullable(),
 	balance_domain: toNullable(),
 	oracle_source: toNullable()

@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 74f25cf393e1e8726d61618868017d46e93c62e7 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit 6a079695a0d3715cf401fa50027b4c5c3b9b2b70 for file 'src/clearing/clearing.did'
 
 // Outcome of a position transfer acceptance.
 type AcceptPositionTransferResult = variant {
@@ -809,6 +809,23 @@ type Series = record {
 	expiry_ns : nat64;
 	// An optional banner URL for the market.
 	banner_url : opt text;
+	// Optional timestamp in nanoseconds since UNIX epoch at which trading opens.
+	//
+	// `None` means the series is tradeable from the moment it is registered —
+	// the historical behavior, and the canonical way to express "live now".
+	// `Some(t)` schedules the series: it is listed and discoverable immediately
+	// but trading is rejected until `t`. The window is inclusive at the open
+	// (`now >= start_ns` is live) and exclusive at the close (`now < expiry_ns`
+	// is unexpired), so a series is tradeable over `[start_ns, expiry_ns)`.
+	//
+	// Participates in `series_id` hashing (see [`Series::generate_id`]): two
+	// series that differ only in their trading window are distinct contracts,
+	// so a scheduled series can never silently collide with an already-live one
+	// and inherit a start date its creator did not ask for. To keep that
+	// guarantee meaningful `None` is the only encoding of "already live" —
+	// `add_series` rejects a `start_ns` at or before the current time, so the
+	// same market cannot exist under two ids.
+	start_ns : opt nat64;
 	// Unique identifier computed from series parameters.
 	series_id : text;
 	// The underlying asset ticker or identifier (e.g., "ICP/USD").
@@ -1151,6 +1168,18 @@ type TradeError = variant {
 	SelfTradingNotAllowed;
 	// The specified order was not found.
 	OrderNotFound : text;
+	// The series is scheduled and its trading window has not opened yet, so no
+	// trades, orders, or transfers can be initiated on it.
+	//
+	// Returned whenever a trade-initiating path sees a series whose `start_ns`
+	// is still in the future. Carries the open so the caller can render a
+	// countdown or retry at the right moment instead of polling blindly.
+	SeriesNotStarted : record {
+		// The timestamp (nanoseconds since the UNIX epoch) at which it opens.
+		start_ns : nat64;
+		// The series that is not yet open.
+		series_id : text
+	};
 	// The trade would violate the no-arbitrage principle (e.g., sum of outcome prices > 1.0).
 	ArbitrageLimitExceeded : record {
 		// The hard limit (usually 1.0 USD).
@@ -1160,6 +1189,19 @@ type TradeError = variant {
 	};
 	// Failed to communicate with the registry canister.
 	RegistryError : text;
+	// The series' trading window has closed, so no new exposure can be opened
+	// on it.
+	//
+	// Returned to exposure-opening paths only. Redeeming a complete set and
+	// accepting a transferred position stay available after expiry, because they
+	// only release exposure that already exists and settlement may not run for
+	// some time after the window closes.
+	SeriesExpired : record {
+		// The timestamp (nanoseconds since the UNIX epoch) at which it closed.
+		expiry_ns : nat64;
+		// The series whose window has closed.
+		series_id : text
+	};
 	// The user has insufficient margin to open or maintain the position.
 	InsufficientMargin : record {
 		// Current margin balance.
