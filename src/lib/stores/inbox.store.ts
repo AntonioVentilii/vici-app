@@ -11,7 +11,7 @@ import {
 	INBOX_READ_STORAGE_KEY,
 	INBOX_SETTLED_READ_STORAGE_KEY
 } from '$lib/constants/inbox.constants';
-import type { AppLocale } from '$lib/constants/locale.constants';
+import { DEFAULT_LOCALE, type AppLocale } from '$lib/constants/locale.constants';
 import { AppPath } from '$lib/constants/routes.constants';
 import { marketsNotInitialized } from '$lib/derived/markets.derived';
 import {
@@ -23,7 +23,8 @@ import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/fr
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
 import { leagueBattlesStore, leaguesLoadedStore, myLeaguesStore } from '$lib/stores/leagues.store';
 import { localeStore } from '$lib/stores/locale.store';
-import { displayMarkets } from '$lib/stores/market-translations.store';
+import { marketLanguagePreference } from '$lib/stores/market-language.store';
+import { displayMarkets, marketTranslations } from '$lib/stores/market-translations.store';
 import { preferencesStore } from '$lib/stores/preferences.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { userStore } from '$lib/stores/user.store';
@@ -442,8 +443,24 @@ const resolvedSide = ({
  * win reads "<1" rather than a broken "+0" — see `formatWholeVxpMagnitude`).
  */
 export const maturedResolutions: Readable<ResolutionRevealData> = derived(
-	[resolvedPositions, displayMarkets, marketsNotInitialized, settledReadStore, localeStore],
-	([$resolved, $displayMarkets, $marketsNotInitialized, $read, $locale]) => {
+	[
+		resolvedPositions,
+		displayMarkets,
+		marketsNotInitialized,
+		settledReadStore,
+		localeStore,
+		marketTranslations,
+		marketLanguagePreference
+	],
+	([
+		$resolved,
+		$displayMarkets,
+		$marketsNotInitialized,
+		$read,
+		$locale,
+		$translations,
+		$preference
+	]) => {
 		const unseen = $resolved.filter((entry) => !$read.has(entry.eventId));
 
 		const items: ResolutionItem[] = unseen.map((entry) => {
@@ -474,6 +491,20 @@ export const maturedResolutions: Readable<ResolutionRevealData> = derived(
 		const neutrals = items.filter((it) => it.result === 'neutral').length;
 		const netVxp = items.reduce((sum, it) => sum + it.net, 0);
 
+		// For a non-English reader showing translations, a title is only final
+		// once the translation overlay has answered for its market — the overlay
+		// gains an entry per series when its locale chain has been fetched,
+		// translation and confirmed-absent alike, so a missing key means the
+		// lookup is still in flight. Only markets the catalog knows about count:
+		// an id the catalog itself can't resolve is a genuine `Unknown Market`,
+		// not a pending one.
+		const translationsPending =
+			$locale !== DEFAULT_LOCALE &&
+			$preference === 'translated' &&
+			unseen.some(
+				(entry) => $displayMarkets.has(entry.marketId) && !$translations.has(entry.marketId)
+			);
+
 		return {
 			items,
 			count: items.length,
@@ -482,10 +513,12 @@ export const maturedResolutions: Readable<ResolutionRevealData> = derived(
 			neutrals,
 			netVxp,
 			// Counts and net VXP above come straight off the positions and are
-			// already correct; only the per-row titles depend on the catalog. The
-			// reveal renders a title skeleton while this holds, rather than the
-			// `Unknown Market` fallback (a genuine miss once the catalog is in).
-			marketsLoading: $marketsNotInitialized
+			// already correct; only the per-row titles depend on the catalog and
+			// the translation overlay. The reveals hold or skeleton the titles
+			// while this is true, rather than rendering the `Unknown Market`
+			// fallback (a genuine miss once the catalog is in) or flashing the
+			// untranslated original.
+			titlesLoading: $marketsNotInitialized || translationsPending
 		};
 	}
 );
