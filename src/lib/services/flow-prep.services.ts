@@ -109,10 +109,10 @@ export const prepareFlow = async ({
 		const tagsByMarket = tagMap;
 		const excludeSet = new Set(exclude);
 
-		// Release gating: ANY market with a scheduled on-chain trading start
-		// (`start_ns`) is withheld until that instant; markets with no start are
-		// live. Applied to the whole queue up front so withheld markets can't
-		// leak back in through the featured-scope fallback below.
+		// World-Cup release gating: a WC market is withheld until its on-chain
+		// trading start (`start_ns`); WC markets with no start are live. Applied
+		// to the whole queue up front so withheld markets can't leak back in
+		// through the featured-scope fallback below. Non-WC markets pass through.
 		const visibleQueue = filterScheduledWcMarkets({
 			markets: queue,
 			tagsByMarket,
