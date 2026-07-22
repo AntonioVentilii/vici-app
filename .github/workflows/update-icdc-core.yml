@@ -1,0 +1,94 @@
+name: Update icdc-core
+
+# Keeps this repo in sync with the upstream `AntonioVentilii/icdc-core` canister
+# surface. Two things drift over time and this workflow bumps both to the latest:
+#
+#   1. `ICDC_CORE_VERSION` in `scripts/build/download.icdc.common.sh` — the pinned
+#      GitHub *release tag* the immutable wasm/did artifacts are downloaded from.
+#      Bumped to the latest published release of icdc-core.
+#   2. `src/declarations/**` — the generated Candid bindings (`.did` + idl.js /
+#      d.ts). Regenerated via `npm run did`, which re-imports the `.did` files
+#      from icdc-core and recompiles the IDL factories.
+#
+# It runs `npm run quality` before opening a PR, and only opens a PR when there
+# is an actual diff (peter-evans/create-pull-request is a no-op otherwise). The
+# PR branch is stable, so a weekly run updates the same standing PR rather than
+# stacking new ones.
+#
+# TOKEN: prefer `RELEASE_PLEASE_PAT` (a fine-grained PAT with `contents: write` +
+# `pull-requests: write`) so the opened PR triggers downstream CI. Falls back to
+# the default `GITHUB_TOKEN`, in which case the bump PR's own checks need a manual
+# nudge (close/reopen or an empty commit) and the repo setting "Allow GitHub
+# Actions to create and approve pull requests" must be enabled.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly — Mondays 06:00 UTC.
+    - cron: '0 6 * * 1'
+
+concurrency:
+  group: update-icdc-core
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-icdc-core:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Prepare
+        uses: ./.github/actions/prepare
+
+      - name: Bump ICDC_CORE_VERSION to latest release
+        id: bump
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          common="scripts/build/download.icdc.common.sh"
+
+          latest="$(curl -sSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/AntonioVentilii/icdc-core/releases/latest \
+            | jq -r '.tag_name')"
+
+          if [[ -z "$latest" || "$latest" == "null" ]]; then
+            echo "::error::Could not resolve the latest icdc-core release tag."
+            exit 1
+          fi
+
+          current="$(grep -oE 'ICDC_CORE_VERSION="[^"]+"' "$common" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+          echo "Current: $current — Latest: $latest"
+
+          sed -i -E "s|^ICDC_CORE_VERSION=\"[^\"]*\"|ICDC_CORE_VERSION=\"$latest\"|" "$common"
+
+          echo "version=$latest" >> "$GITHUB_OUTPUT"
+
+      - name: Regenerate Candid bindings
+        run: npm run did
+
+      - name: Quality
+        run: npm run quality
+
+      - name: Create Pull Request
+        uses: ./.github/actions/create-pr
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_PAT || secrets.GITHUB_TOKEN }}
+          branch: bot-update-icdc-core
+          title: 'chore(icdc-core): sync bindings and bump version to ${{ steps.bump.outputs.version }}'
+          body: |
+            Automated sync with upstream [`AntonioVentilii/icdc-core`](https://github.com/AntonioVentilii/icdc-core).
+
+            - Bumped `ICDC_CORE_VERSION` in `scripts/build/download.icdc.common.sh` to the latest release (`${{ steps.bump.outputs.version }}`).
+            - Regenerated the Candid bindings under `src/declarations/**` via `npm run did`.
+            - Ran `npm run quality`.
+
+            Opened automatically by the `Update icdc-core` workflow. Review the regenerated `.did` surface before merging.
