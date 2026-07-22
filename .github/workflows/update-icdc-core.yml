@@ -24,8 +24,8 @@ name: Update icdc-core
 on:
   workflow_dispatch:
   schedule:
-    # Weekly — Mondays 06:00 UTC.
-    - cron: '0 6 * * 1'
+    # Weekly — Mondays 04:00 UTC.
+    - cron: '0 4 * * 1'
 
 concurrency:
   group: update-icdc-core
