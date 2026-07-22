@@ -142,10 +142,10 @@ export type MacroId = (typeof MARKET_TAXONOMY)[number]['id'];
 export type MicroId = (typeof MARKET_TAXONOMY)[number]['micros'][number];
 
 /** Macro ids in canonical (category-bar) order. */
-export const MACRO_IDS = MARKET_TAXONOMY.map(({ id }) => id);
+export const MACRO_IDS: readonly MacroId[] = MARKET_TAXONOMY.map(({ id }) => id);
 
 /** All micro ids in canonical order (macro order, then within-macro order). */
-export const MICRO_IDS = MARKET_TAXONOMY.flatMap(({ micros }) => micros);
+export const MICRO_IDS: readonly MicroId[] = MARKET_TAXONOMY.flatMap(({ micros }) => micros);
 
 /** micro → its parent macro. The hierarchy is derived from this, never stored. */
 export const MICRO_TO_MACRO = Object.fromEntries(
@@ -201,11 +201,13 @@ export const splitClassification = (
 	values: readonly string[]
 ): { micros: MicroId[]; tags: string[] } => {
 	const micros: MicroId[] = [];
+	const seen = new Set<MicroId>();
 	const tags: string[] = [];
 
 	for (const value of values) {
 		if (isMicroId(value)) {
-			if (!micros.includes(value)) {
+			if (!seen.has(value)) {
+				seen.add(value);
 				micros.push(value);
 			}
 		} else {
