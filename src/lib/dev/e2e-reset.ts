@@ -18,14 +18,28 @@ export interface E2eHooks {
 	resetMyProfile: () => Promise<void>;
 	/**
 	 * Sign out programmatically (Juno `signOut`), without navigating to the
-	 * Settings sign-out surface, then DURABLY clear the persisted delegation so
-	 * the next full page load is unambiguously signed-out. Pairs with
-	 * {@link resetMyProfile}: deleting the profile and then signing out in place
-	 * means NO signed-in page load happens between the two, so `ensureProfile`
-	 * can't re-bootstrap the doc we just removed. Fires `onAuthStateChange(null)`;
-	 * the (app) auth gate then routes back to `/signin`.
+	 * Settings sign-out surface. Pairs with {@link resetMyProfile}: deleting the
+	 * profile and then signing out in place means NO signed-in page load happens
+	 * between the two, so `ensureProfile` can't re-bootstrap the doc we just
+	 * removed. Fires `onAuthStateChange(null)`; the (app) auth gate then routes
+	 * back to `/signin`.
+	 *
+	 * Kept deliberately thin — it resolves before the sign-out navigation
+	 * commits. The durable session clear is a SEPARATE step ({@link clearSession})
+	 * the caller runs AFTER the nav settles: doing extra async work in this same
+	 * evaluate would run into the navigation and destroy the execution context.
 	 */
 	signOut: () => Promise<void>;
+	/**
+	 * DURABLY clear the persisted delegation so the next full page load is
+	 * unambiguously signed-out. Call this AFTER {@link signOut} has landed on
+	 * /signin (a stable page): `signOut()` clears the delegation, but not
+	 * necessarily flushed before the onboarding spec's immediate
+	 * `goto('/signup')` re-reads it — when that read wins, the fresh load
+	 * rehydrates a signed-in session and /signup bounces to /flow. Idempotent, so
+	 * a no-op when the delegation is already gone.
+	 */
+	clearSession: () => Promise<void>;
 }
 
 declare global {
@@ -314,20 +328,20 @@ const clearAuthDelegation = async (): Promise<void> => {
 };
 
 /**
- * Sign out for e2e, then DURABLY clear the persisted session so the next full
- * page load is unambiguously signed-out.
+ * Durably clear the persisted session so the next full page load is
+ * unambiguously signed-out. Runs as its own step AFTER the sign-out navigation
+ * has settled (see {@link E2eHooks.clearSession}) — never chained onto
+ * `signOut()`, whose navigation would destroy the execution context while this
+ * async work is still running.
  *
- * `signOut()` fires `onAuthStateChange(null)` (routing the app back to /signin),
- * but its delegation clear in `auth-client-db` is not guaranteed to be flushed
- * before the onboarding spec's immediate `goto('/signup')` re-reads it. When
- * that read wins the race, the fresh load rehydrates a still-signed-in session
- * and /signup bounces to /flow — the exact flake this hook exists to defeat. So
- * we clear the delegation store ourselves and await it; the stale signed-in
- * hint is dropped too so nothing re-paints signed-in optimistically.
+ * `signOut()` fires `onAuthStateChange(null)` and clears the delegation, but not
+ * necessarily flushed to `auth-client-db` before the onboarding spec's immediate
+ * `goto('/signup')` re-reads it. When that read wins the race, the fresh load
+ * rehydrates a still-signed-in session and /signup bounces to /flow — the exact
+ * flake this defeats. So we clear the delegation store ourselves and await it;
+ * the stale signed-in hint is dropped too so nothing re-paints signed-in.
  */
-const signOutForE2e = async (): Promise<void> => {
-	await signOut();
-
+const clearSession = async (): Promise<void> => {
 	try {
 		localStorage.removeItem(SIGNED_IN_FLAG_KEY);
 	} catch {
@@ -348,5 +362,5 @@ export const installE2eResetHook = (): void => {
 		return;
 	}
 
-	window.__viciE2E = { resetMyProfile, signOut: signOutForE2e };
+	window.__viciE2E = { resetMyProfile, signOut: () => signOut(), clearSession };
 };

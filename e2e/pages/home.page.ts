@@ -252,10 +252,19 @@ export class HomePage {
 
 	/**
 	 * Sign out programmatically via the dev-only hook (Juno `signOut`), without
-	 * navigating to the Settings sign-out surface. Pairs with
-	 * {@link resetDevProfile}: no signed-in page load happens between the delete
-	 * and the sign-out, so `ensureProfile` can't re-bootstrap the deleted
-	 * profile. The (app) auth gate routes back to `/signin` afterwards.
+	 * navigating to the Settings sign-out surface, then DURABLY clear the
+	 * persisted session so the next full page load is unambiguously signed-out.
+	 * Pairs with {@link resetDevProfile}: no signed-in page load happens between
+	 * the delete and the sign-out, so `ensureProfile` can't re-bootstrap the
+	 * deleted profile.
+	 *
+	 * Two separate `evaluate`s on purpose. `signOut()` fires
+	 * `onAuthStateChange(null)`, and the (app) auth gate routes to `/signin` — a
+	 * navigation that destroys the execution context. Doing the session clear in
+	 * the SAME evaluate would run into that navigation ("Execution context was
+	 * destroyed"). So we sign out, wait for `/signin` to settle, then clear the
+	 * delegation on that stable page — which is also the last write to the auth
+	 * store, so nothing re-persists it before the caller's `goto('/signup')`.
 	 */
 	async signOutDev(): Promise<void> {
 		await this.page.evaluate(async () => {
@@ -269,6 +278,21 @@ export class HomePage {
 			}
 
 			await hooks.signOut();
+		});
+
+		await this.page.waitForURL('**/signin');
+
+		await this.page.evaluate(async () => {
+			const hooks = (window as unknown as { __viciE2E?: { clearSession: () => Promise<void> } })
+				.__viciE2E;
+
+			if (!hooks) {
+				throw new Error(
+					'Dev-only e2e reset hook (window.__viciE2E) is not installed — expected isDev() on the dev server.'
+				);
+			}
+
+			await hooks.clearSession();
 		});
 	}
 
