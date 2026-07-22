@@ -1,5 +1,4 @@
 import { browser } from '$app/environment';
-import { SIGNED_IN_FLAG_KEY } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { isDev } from '$lib/env/app.env';
 import { userStore } from '$lib/stores/user.store';
@@ -302,14 +301,33 @@ const clearDatabaseStores = (dbName: string): Promise<void> =>
 	});
 
 /**
- * Durably clear the persisted delegation so the NEXT full page load resolves as
- * signed-out. Clears `auth-client-db` explicitly, plus any other DB whose name
- * looks auth-related (belt-and-braces against a differently-named auth store) —
- * scoped to auth so datastore / market caches are left intact. `databases()` is
- * Chromium-only among engines, which is all the e2e matrix runs on; a missing
- * API just falls back to the known name.
+ * Durably wipe EVERY persisted browser store so the next full page load is
+ * unambiguously signed-out — localStorage, sessionStorage, and every IndexedDB
+ * database. Deliberately unscoped: the Juno dev mock identity does NOT persist
+ * its delegation under `auth-client-db` (clearing only that left the session
+ * intact and /signup still bounced to /flow), and pinning down its exact store
+ * is fragile, so we clear the lot. Safe here because it runs while signed-in on
+ * `(app)`: only persisted bytes are touched (the in-memory identity survives for
+ * `signOut()`), and the next cold load re-fetches any datastore cache.
+ *
+ * `databases()` is Chromium-only among engines, which is all the e2e matrix
+ * runs on; a missing API falls back to the known `auth-client-db` name. The
+ * enumerated names are logged so the persisted stores are visible in the
+ * Playwright trace console if this ever needs revisiting.
  */
-const clearAuthDelegation = async (): Promise<void> => {
+const clearAllPersistedSession = async (): Promise<void> => {
+	try {
+		localStorage.clear();
+	} catch {
+		// localStorage may be unavailable (private mode / disabled).
+	}
+
+	try {
+		sessionStorage.clear();
+	} catch {
+		// sessionStorage may be unavailable.
+	}
+
 	const names = new Set<string>([AUTH_CLIENT_DB_NAME]);
 
 	try {
@@ -317,7 +335,7 @@ const clearAuthDelegation = async (): Promise<void> => {
 			const dbs = await indexedDB.databases();
 
 			for (const { name } of dbs) {
-				if (nonNullish(name) && /auth/i.test(name)) {
+				if (nonNullish(name)) {
 					names.add(name);
 				}
 			}
@@ -325,6 +343,8 @@ const clearAuthDelegation = async (): Promise<void> => {
 	} catch {
 		// `databases()` unavailable or threw — the explicit name below still runs.
 	}
+
+	console.warn('[e2e clearSession] clearing persisted stores:', Array.from(names));
 
 	await Promise.all(Array.from(names, (name) => clearDatabaseStores(name)));
 };
@@ -337,22 +357,13 @@ const clearAuthDelegation = async (): Promise<void> => {
  * and destroys the execution context mid-work.
  *
  * `signOut()` fires `onAuthStateChange(null)` and clears the delegation, but not
- * necessarily flushed to `auth-client-db` before the onboarding spec's immediate
- * `goto('/signup')` re-reads it. When that read wins the race, the fresh load
- * rehydrates a still-signed-in session and /signup bounces to /flow — the exact
- * flake this defeats. So we clear the delegation store ourselves and await it;
- * the stale signed-in hint is dropped too so nothing re-paints signed-in.
+ * necessarily flushed before the onboarding spec's immediate `goto('/signup')`
+ * re-reads it — and the dev session isn't even in `auth-client-db`. When that
+ * read wins the race, the fresh load rehydrates a still-signed-in session and
+ * /signup bounces to /flow — the exact flake this defeats. So we wipe every
+ * persisted store ourselves and await it.
  */
-const clearSession = async (): Promise<void> => {
-	try {
-		localStorage.removeItem(SIGNED_IN_FLAG_KEY);
-	} catch {
-		// localStorage may be unavailable; the delegation clear below is what
-		// actually gates the signed-in state on the next load.
-	}
-
-	await clearAuthDelegation();
-};
+const clearSession = (): Promise<void> => clearAllPersistedSession();
 
 /**
  * Install the e2e reset hook on `window` — DEV ONLY. A no-op in production
