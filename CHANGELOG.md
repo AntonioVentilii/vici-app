@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.28](https://github.com/AntonioVentilii/vici-app/compare/v1.8.27...v1.8.28) (2026-07-22)
+
+
+### Bug Fixes
+
+* **admin:** source resolution outcomes from clearing and sort history by settlement time ([#1165](https://github.com/AntonioVentilii/vici-app/issues/1165)) ([5eacaa0](https://github.com/AntonioVentilii/vici-app/commit/5eacaa05547c1d8d5048660505a5eb866d0665d2))
+* **flow:** hold the away recap until market titles resolve instead of flashing Unknown Market ([#1166](https://github.com/AntonioVentilii/vici-app/issues/1166)) ([5e54227](https://github.com/AntonioVentilii/vici-app/commit/5e54227f698855b046e5854aa10b8ffacc0c1f34))
+
 ## [1.8.27](https://github.com/AntonioVentilii/vici-app/compare/v1.8.26...v1.8.27) (2026-07-20)
 
 
