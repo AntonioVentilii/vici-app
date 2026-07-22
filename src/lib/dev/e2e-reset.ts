@@ -32,12 +32,14 @@ export interface E2eHooks {
 	signOut: () => Promise<void>;
 	/**
 	 * DURABLY clear the persisted delegation so the next full page load is
-	 * unambiguously signed-out. Call this AFTER {@link signOut} has landed on
-	 * /signin (a stable page): `signOut()` clears the delegation, but not
-	 * necessarily flushed before the onboarding spec's immediate
-	 * `goto('/signup')` re-reads it — when that read wins, the fresh load
-	 * rehydrates a signed-in session and /signup bounces to /flow. Idempotent, so
-	 * a no-op when the delegation is already gone.
+	 * unambiguously signed-out. Call this BEFORE {@link signOut}, while still on
+	 * an `(app)` route: this hook only exists inside the `(app)` layout, and
+	 * `signOut()` reloads to /signin (no hook there). `signOut()` clears the
+	 * delegation too, but not necessarily flushed before the onboarding spec's
+	 * immediate `goto('/signup')` re-reads it — when that read wins, the fresh
+	 * load rehydrates a signed-in session and /signup bounces to /flow. Runs
+	 * while signed-in (in-memory identity untouched), so the shell keeps working
+	 * until `signOut()` tears it down. Idempotent.
 	 */
 	clearSession: () => Promise<void>;
 }
@@ -329,10 +331,10 @@ const clearAuthDelegation = async (): Promise<void> => {
 
 /**
  * Durably clear the persisted session so the next full page load is
- * unambiguously signed-out. Runs as its own step AFTER the sign-out navigation
- * has settled (see {@link E2eHooks.clearSession}) — never chained onto
- * `signOut()`, whose navigation would destroy the execution context while this
- * async work is still running.
+ * unambiguously signed-out. Runs as its own step BEFORE `signOut()`, while still
+ * on an `(app)` route (see {@link E2eHooks.clearSession}) — never chained AFTER
+ * `signOut()`, whose reload to /signin both leaves the page without this hook
+ * and destroys the execution context mid-work.
  *
  * `signOut()` fires `onAuthStateChange(null)` and clears the delegation, but not
  * necessarily flushed to `auth-client-db` before the onboarding spec's immediate
