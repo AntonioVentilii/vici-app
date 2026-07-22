@@ -75,19 +75,40 @@ jobs:
           echo "base=${base:-<none>} upgrade=${upgrade}"
           echo "upgrade=${upgrade}" >> "$GITHUB_OUTPUT"
 
+      # Build + upgrade the satellite functions with the npm-installed CLI
+      # running against our own `node_modules`, NOT the `junobuild/juno-action`
+      # docker image. That image ships no `@icp-sdk/bindgen`, so `functions
+      # build` cannot generate the custom-function bindings — and instead of
+      # failing it prompts "install bindgen? [no/yes]", auto-answers **no** in
+      # non-interactive CI, emits a gutted `service : {}` satellite, and exits
+      # 0. Every step then goes green while `functions upgrade` ships a wasm
+      # with all `app_*` endpoints stripped. The npm-global CLI picks up the
+      # pinned bindgen from `node_modules` and reproduces the local build (same
+      # approach as the `satellite-schema` job in checks.yml). Pin matches it;
+      # bump deliberately.
+      - name: Install Juno CLI
+        if: steps.satellite.outputs.upgrade == 'true'
+        run: npm i -g @junobuild/cli@0.15.6
+
       - name: Build functions
         if: steps.satellite.outputs.upgrade == 'true'
-        uses: junobuild/juno-action@99d76780c60c023b5396298f94a7264e0c7ee2b5 # full
-        with:
-          args: functions build
-        env:
-          JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
+        run: npm run juno:functions:build
+
+      # Belt-and-braces against the silent-degrade above: refuse to upgrade if
+      # the freshly built Candid surface carries no custom methods (a
+      # bindgen-less build collapses it to `service : {}`). Fail loud instead
+      # of shipping a gutted satellite.
+      - name: Assert custom functions survived the build
+        if: steps.satellite.outputs.upgrade == 'true'
+        run: |
+          if ! grep -qE 'app_[a-z0-9_]+[[:space:]]*:' src/satellite/satellite_extension.did; then
+            echo "::error::functions build produced no custom methods (missing @icp-sdk/bindgen?). Refusing to upgrade a gutted satellite."
+            exit 1
+          fi
 
       - name: Upgrade functions
         if: steps.satellite.outputs.upgrade == 'true'
-        uses: junobuild/juno-action@99d76780c60c023b5396298f94a7264e0c7ee2b5 # full
-        with:
-          args: functions upgrade
+        run: juno functions upgrade
         env:
           JUNO_TOKEN: ${{ secrets.JUNO_TOKEN }}
 
