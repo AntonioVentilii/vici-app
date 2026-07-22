@@ -750,7 +750,7 @@ members see "Predict in Flow" instead. Decision record:
 ### Market categories — three-layer taxonomy
 
 Markets are classified in three layers: a **macro** category (7: Politics,
-World, Economy, Crypto, Tech, Culture, Sports), a **micro** subcategory (69,
+World, Economy, Crypto, Tech, Culture, Sports), a **micro** subcategory (127,
 each belonging to one macro — e.g. Crypto → Bitcoin, Sports → Soccer), and
 optional free **tags** (event/entity level, e.g. `world-cup`, `bitcoin-etf`).
 A market carries one or more micros — the first is its **primary** (driving

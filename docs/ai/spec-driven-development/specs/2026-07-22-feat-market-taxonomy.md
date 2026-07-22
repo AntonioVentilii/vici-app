@@ -17,7 +17,7 @@ Today: a closed set of 7 tags — `wc, macro, crypto, politics, tech, sports, cu
 
 ### Model (`src/lib/constants/market-taxonomy.constants.ts`)
 
-Closed **7 macros / 69 micros** (each micro → one macro), `MacroId`/`MicroId`, `MICRO_TO_MACRO`, guards, `macroColor`/`microColor` (6 hexes reused from `TAG_COLORS`; `world` inherits `wc`'s gold), `macroLabelKey`/`microLabelKey`, classification helpers over the stored flat array (`splitClassification`, `classificationMicros/Tags/Macros`, `primaryMicro`/`primaryMacro` — **first micro = primary**), `normalizeStoredTags`. Wasm-safe (type-only `MessageKey` import). (Backfill re-classifies decks by title to the correct micro, so no old→catch-all legacy map is needed.)
+Closed **7 macros / 127 micros** (each micro → one macro), `MacroId`/`MicroId`, `MICRO_TO_MACRO`, guards, `macroColor`/`microColor` (6 hexes reused from `TAG_COLORS`; `world` inherits `wc`'s gold), `macroLabelKey`/`microLabelKey`, classification helpers over the stored flat array (`splitClassification`, `classificationMicros/Tags/Macros`, `primaryMicro`/`primaryMacro` — **first micro = primary**), `normalizeStoredTags`. Wasm-safe (type-only `MessageKey` import). (Backfill re-classifies decks by title to the correct micro, so no old→catch-all legacy map is needed.)
 
 ### Storage (no wire change)
 
@@ -33,7 +33,7 @@ Repoint color/label/art/card/detail/portfolio surfaces at the taxonomy helpers. 
 
 ### i18n
 
-`market.macro.*` (7) + `market.micro.*` (69) in all 7 live catalogs (done); plus any new `market.category.*` UI strings.
+`market.macro.*` (7) + `market.micro.*` (127) in all 7 live catalogs (done); plus any new `market.category.*` UI strings.
 
 ### Backfill (all markets — old and current)
 
@@ -55,12 +55,12 @@ Add `market_category_filter` (macro/micro chip select). Props `macro: MacroId`, 
 
 ## Design artifacts
 
-`./2026-07-22-feat-market-taxonomy/taxonomy.json` — full taxonomy incl. seed Layer-3 tags per micro (mirror of the TS source).
+`./2026-07-22-feat-market-taxonomy/taxonomy.json` — full macro/micro taxonomy (mirror of the TS source).
 
 ## Technical requirements (satellite / backend)
 
 - **Performance:** no new hooks/endpoints. `updateMarketTagIndex` still diffs per write; index keys per market grow from ≤2 to ≤ (micros + their macros). `rebuild` is one admin scan (unchanged profile).
-- **Memory & storage:** `market_tag_index` grows from ≤7 to ≤76 buckets (≤69 micro + ≤7 macro), one small doc each — negligible. Doc shape `{ tag, seriesIds[], updatedAtMs }` unchanged. No new collection.
+- **Memory & storage:** `market_tag_index` grows from ≤7 to ≤134 buckets (≤127 micro + ≤7 macro), one small doc each — negligible. Doc shape `{ tag, seriesIds[], updatedAtMs }` unchanged. No new collection.
 - **Scalability:** bucket count bounded by the closed set. Macro-scoped reads hit a single macro bucket (no fan-out over markets).
 - **Upgrade & compatibility:** **non-breaking** — no `.did` / bindings change (flat `string[]`, same collections/endpoints). Only data migrates (deck re-tag + `tag:markets` re-seed + index rebuild).
 - **Security:** unchanged — `market_metadata` writes stay creator/admin-gated; `market_tag_index` stays controller/endpoint-written.
@@ -68,7 +68,7 @@ Add `market_category_filter` (macro/micro chip select). Props `macro: MacroId`, 
 
 ## Implementation outline
 
-1. Model + `normalizeStoredTags` in `market-taxonomy.constants.ts`; 76 live-locale labels.
+1. Model + `normalizeStoredTags` in `market-taxonomy.constants.ts`; 134 live-locale labels (7 macro + 127 micro).
 2. Satellite: index micro+macro buckets; upsert `normalizeStoredTags`; battle-resolution accepts micro|macro; `CategoryStatsBucket` → `MacroId`.
 3. FE: repoint utils/cards/detail; `populatedMacros/Micros`; `MarketsCategoryChips` → `MarketsPage`; admin cascading picker; `market_category_filter`.
 4. Backfill: re-classify all `scripts/data/*.json`; (ops) `npm run tag:markets` per deck → prod; (ops) `app_rebuild_market_tag_index`.
@@ -77,7 +77,7 @@ Add `market_category_filter` (macro/micro chip select). Props `macro: MacroId`, 
 
 ## Acceptance criteria
 
-- [ ] Taxonomy module exports the 7/69 model with guards, colors, label-key + classification helpers, `normalizeStoredTags`; wasm-safe.
+- [ ] Taxonomy module exports the 7/127 model with guards, colors, label-key + classification helpers, `normalizeStoredTags`; wasm-safe.
 - [ ] `market.macro.*` + `market.micro.*` in all 7 live catalogs; `check:i18n` passes.
 - [ ] Satellite index writes micro + macro buckets; upsert keeps micro ids; `sports` bucket stays populated (cockpit intact).
 - [ ] Markets browse shows a macro bar + populated micro chips; filtering works; cards/detail show the primary micro label + macro color.
