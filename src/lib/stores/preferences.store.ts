@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { MARKET_TAGS } from '$lib/constants/market-tags.constants';
+import { MACRO_IDS } from '$lib/constants/market-taxonomy.constants';
 import { PREFERENCES_STORAGE_KEY } from '$lib/constants/settings.constants';
 import { authPrincipal } from '$lib/derived/user.derived';
 import { track } from '$lib/services/analytics.services';
@@ -48,7 +48,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 		leaderboardOptIn: true,
 		worldsOptIn: true
 	},
-	flowTags: [...MARKET_TAGS],
+	flowTags: [...MACRO_IDS],
 	worldCupMode: false,
 	savedMarketIds: [],
 	favoriteParticipantId: '',
@@ -147,7 +147,7 @@ const hydrateShape = ({
 	flowTags:
 		Array.isArray(partial?.flowTags) && partial.flowTags.length > 0
 			? partial.flowTags
-			: [...MARKET_TAGS],
+			: [...MACRO_IDS],
 	worldCupMode: partial?.worldCupMode ?? DEFAULT_PREFERENCES.worldCupMode,
 	savedMarketIds: Array.isArray(partial?.savedMarketIds) ? partial.savedMarketIds : [],
 	favoriteParticipantId:

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import MarketsFeaturedCard from '$lib/components/market/MarketsFeaturedCard.svelte';
-	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { primaryMicro } from '$lib/constants/market-taxonomy.constants';
 	import type { Market } from '$lib/types/market';
 
 	/**
@@ -10,7 +10,7 @@
 	interface Props {
 		title: string;
 		markets: Market[];
-		tagsBySeries?: Record<string, MarketTag[]>;
+		tagsBySeries?: Record<string, string[]>;
 		moreLabel?: string;
 		onMore?: () => void;
 	}
@@ -31,6 +31,6 @@
 	class="no-scrollbar"
 >
 	{#each markets as market (market.id)}
-		<MarketsFeaturedCard {market} tag={primaryMarketTag(tagsBySeries?.[market.id])} />
+		<MarketsFeaturedCard {market} tag={primaryMicro(tagsBySeries?.[market.id] ?? [])} />
 	{/each}
 </div>

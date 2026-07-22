@@ -497,8 +497,8 @@ nobody types it.** Each side's score is its **current members'**
 settled-call win rate inside the battle window, read from the clearing
 canister's settlement history — every settled position a side's members
 held in `[kickoff, settle)`, scoped to the battle's category (`'all'`, or
-a single market tag whose series the satellite resolves from market
-metadata): `accuracy = wins / settled`, as a percentage, where a **win**
+a single **macro** category whose series the satellite resolves from
+market metadata): `accuracy = wins / settled`, as a percentage, where a **win**
 is a net-positive settlement. Higher accuracy wins; an equal-accuracy tie
 breaks toward the side with **more** settled calls; a remaining tie — or
 both sides settling nothing in the window (a **void** face-off) — is a
@@ -746,3 +746,18 @@ starts a free guest session and drops them into the Flow swipe deck with no
 account — the same guest preview the onboarding Skip path uses. Signed-in
 members see "Predict in Flow" instead. Decision record:
 [`specs/2026-07-14-impr-seo-rich-snippets-topic-pages.md`](./spec-driven-development/specs/2026-07-14-impr-seo-rich-snippets-topic-pages.md).
+
+### Market categories — three-layer taxonomy
+
+Markets are classified in three layers: a **macro** category (7: Politics,
+World, Economy, Crypto, Tech, Culture, Sports), a **micro** subcategory (69,
+each belonging to one macro — e.g. Crypto → Bitcoin, Sports → Soccer), and
+optional free **tags** (event/entity level, e.g. `world-cup`, `bitcoin-etf`).
+A market carries one or more micros — the first is its **primary** (driving
+card accent, artwork, detail chip, and category stats); its macros are
+derived. The markets board shows a macro bar with micro sub-chips, and a chip
+appears **only** when at least one live market populates it, so the taxonomy
+can define categories long before markets grow into them. Category accents
+come from the macro; per-user "category" accuracy stats and battle scopes are
+keyed by macro. Decision record:
+[`specs/2026-07-22-feat-market-taxonomy.md`](./spec-driven-development/specs/2026-07-22-feat-market-taxonomy.md).

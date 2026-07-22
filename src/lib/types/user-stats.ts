@@ -1,9 +1,8 @@
-import type { MarketTag } from '$lib/constants/market-tags.constants';
 import type { PrincipalText } from '@junobuild/schema';
 
 /**
  * Per-category accuracy bucket. The Dash renders one of these per
- * market tag the user has called on.
+ * market category the user has called on.
  */
 export interface CategoryStatsBucket {
 	calls: number;
@@ -17,8 +16,13 @@ export interface CategoryStatsBucket {
 export interface RecentSettlementSnapshot {
 	/** Series / market id the user called on. */
 	marketId: string;
-	/** Market category tag (one of `MARKET_TAGS`). `''` if untagged. */
-	tag: MarketTag | '';
+	/**
+	 * Market category key — the primary macro of the market's taxonomy
+	 * (see `primaryMacro`). `''` if the market carries no classifying micro.
+	 * Kept as an open `string` while the frontend transitions from the legacy
+	 * flat tags to the macro/micro taxonomy.
+	 */
+	tag: string;
 	/** `true` if the user's side matched the resolved outcome. */
 	win: boolean;
 	/** UTC ms timestamp of the settlement event. */
@@ -47,8 +51,8 @@ export interface RecentSettlementSnapshot {
  * caller's principal. The FE writes this from `calculateAndSyncStats`
  * after re-aggregating the user's clearing history.
  *
- * `categoryStats` is keyed by market tag; missing tags render as
- * "0 calls" on the Dash. `recentSettlements` is capped at
+ * `categoryStats` is keyed by market category (macro id); missing
+ * categories render as "0 calls" on the Dash. `recentSettlements` is capped at
  * {@link USER_STATS_RECENT_LIMIT} so the doc stays bounded.
  */
 export interface UserStatsDoc {

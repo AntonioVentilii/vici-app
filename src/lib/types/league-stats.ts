@@ -1,4 +1,4 @@
-import type { MarketTag } from '$lib/constants/market-tags.constants';
+import type { MacroId } from '$lib/constants/market-taxonomy.constants';
 import type { CategoryStatsBucket } from '$lib/types/user-stats';
 import { isNullish } from '@dfinity/utils';
 
@@ -29,13 +29,16 @@ export interface LeagueStatsDoc {
 	/** Lifetime correct calls (the numerator for accuracy) — the `'all'` scope aggregate. */
 	wins: number;
 	/**
-	 * Per market-category counters, keyed by {@link MarketTag}. Mirror of
-	 * the aggregate above split by category so a battle scoped to one tag
+	 * Per market-category counters, keyed by macro category id. Mirror of
+	 * the aggregate above split by category so a battle scoped to one category
 	 * can read just that bucket. Sourced exactly from
 	 * `UserStatsDoc.categoryStats` deltas; absent on legacy rows written
-	 * before the picker shipped — callers fall back to a zero bucket.
+	 * before the picker shipped — callers fall back to a zero bucket. Typed as
+	 * an open `string` map: the hook only ever writes macro ids (validated by
+	 * `assertSetLeagueStats`), but legacy rows may still carry the old flat tag
+	 * keys until a data migration rewrites them.
 	 */
-	categories?: Partial<Record<MarketTag, CategoryStatsBucket>>;
+	categories?: Partial<Record<string, CategoryStatsBucket>>;
 	/** Last hook-write timestamp (ms). */
 	updatedAtMs: number;
 }
@@ -52,7 +55,7 @@ export const EMPTY_LEAGUE_STATS_BUCKET: CategoryStatsBucket = { calls: 0, wins: 
 
 /**
  * Resolve the `(calls, wins)` bucket a battle scope reads from a stats
- * doc: `'all'` → the lifetime aggregate; a {@link MarketTag} → that
+ * doc: `'all'` → the lifetime aggregate; a {@link MacroId} → that
  * category's bucket (zero when the league has never called in it).
  * `undefined` doc (no stats yet) → a zero bucket.
  */
@@ -61,7 +64,7 @@ export const leagueStatsBucket = ({
 	scope
 }: {
 	doc: LeagueStatsDoc | undefined;
-	scope: 'all' | MarketTag;
+	scope: 'all' | MacroId;
 }): CategoryStatsBucket => {
 	if (isNullish(doc)) {
 		return { ...EMPTY_LEAGUE_STATS_BUCKET };

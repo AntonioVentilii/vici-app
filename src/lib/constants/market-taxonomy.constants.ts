@@ -21,7 +21,7 @@ import { isNullish } from '@dfinity/utils';
  * hierarchy on top in the frontend.
  *
  * This module is bundled into the satellite wasm (the satellite imports the
- * classification helpers), so — like `market-tags.constants.ts` — it must
+ * classification helpers), so it must
  * stay free of VALUE imports of frontend-only modules; only the type-only
  * `MessageKey` import is allowed (erased at compile time). Rendering helpers
  * that need `t` belong in `$lib/utils/market-tags.utils.ts`.
@@ -250,6 +250,30 @@ export const classificationMacros = (values: readonly string[]): MacroId[] => {
 	}
 
 	return macros;
+};
+
+/**
+ * Normalize a stored `tags` array before persisting: trim, drop blanks, and
+ * de-duplicate while preserving order (the first micro stays primary). Both
+ * micro ids and Layer-3 free tags are kept — the taxonomy is closed at the
+ * micro layer but open at the tag layer, so unknown values are retained as
+ * free tags rather than dropped. Replaces the legacy `normalizeMarketTags`,
+ * which filtered to the old closed 7-tag set.
+ */
+export const normalizeStoredTags = (values: readonly string[]): string[] => {
+	const seen = new Set<string>();
+	const out: string[] = [];
+
+	for (const raw of values) {
+		const value = raw.trim();
+
+		if (value.length > 0 && !seen.has(value)) {
+			seen.add(value);
+			out.push(value);
+		}
+	}
+
+	return out;
 };
 
 /**

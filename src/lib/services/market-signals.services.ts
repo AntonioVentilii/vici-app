@@ -1,5 +1,4 @@
 import type { ClearingDid, RegistryDid } from '$declarations';
-import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { getFollowedLean } from '$lib/services/followed-lean.services';
 import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
 import { getFollowing } from '$lib/services/relation-queries.services';
@@ -36,7 +35,7 @@ export const getUserMarketSignals = async ({
 }: {
 	domain: RegistryDid.BalanceDomain;
 	marketIds: MarketId[] | Promise<MarketId[]>;
-	tagMappings?: Record<string, MarketTag[]> | Promise<Record<string, MarketTag[]>>;
+	tagMappings?: Record<string, string[]> | Promise<Record<string, string[]>>;
 	tradeHistory?: ClearingDid.Event[] | Promise<ClearingDid.Event[]>;
 }): Promise<UserMarketSignals> => {
 	const [events, resolvedTags, following] = await Promise.all([

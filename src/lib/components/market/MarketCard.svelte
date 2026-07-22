@@ -12,7 +12,6 @@
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
-	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { track } from '$lib/services/analytics.services';
@@ -35,13 +34,14 @@
 		index?: number;
 		metadata?: MarketMetadata;
 		/**
-		 * Primary category tag for this market (e.g. `macro`, `crypto`).
-		 * When supplied, renders a colored category chip at the start of the
-		 * header strip — mirrors the MarketRow pattern so the category
-		 * accent reads at a glance on the list. Optional so call sites that
-		 * don't have tags hydrated yet stay backward-compatible.
+		 * Primary category id for this market — a taxonomy micro (e.g.
+		 * `bitcoin`, `soccer`) or macro. When supplied, renders a colored
+		 * category chip at the start of the header strip — mirrors the
+		 * MarketRow pattern so the category accent reads at a glance on the
+		 * list. Optional so call sites that don't have tags hydrated yet stay
+		 * backward-compatible.
 		 */
-		tag?: MarketTag;
+		tag?: string;
 	}
 
 	const { market, index = 0, metadata, tag }: Props = $props();

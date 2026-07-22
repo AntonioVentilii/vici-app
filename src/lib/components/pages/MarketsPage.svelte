@@ -1,10 +1,18 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import MarketsBeyondCupCard from '$lib/components/market/MarketsBeyondCupCard.svelte';
 	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
+	import MarketsCategoryChips from '$lib/components/market/MarketsCategoryChips.svelte';
 	import MarketsListRow from '$lib/components/market/MarketsListRow.svelte';
 	import WorldCupRecapCard from '$lib/components/market/WorldCupRecapCard.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
+	import {
+		classificationMacros,
+		classificationMicros,
+		primaryMicro,
+		type MacroId,
+		type MicroId
+	} from '$lib/constants/market-taxonomy.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { marketTags, marketTagsNotInitialized } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
@@ -19,11 +27,12 @@
 	import { filterScheduledWcMarkets } from '$lib/utils/wc-schedule.utils';
 
 	/**
-	 * Markets screen — a section-based board (no filter chips). The World Cup
-	 * is the in-focus category; every other category stays locked behind the
-	 * "Beyond the Cup" skill gate (`MarketsBeyondCupCard`), surfaced high. The
-	 * board itself is three sections: Saved (the viewer's watchlist), Resolving
-	 * soon (the soonest-closing available lines), and Available predictions.
+	 * Markets screen — a section-based board with a category browse nav. The
+	 * macro bar (+ micro sub-chips) filters every board section; the World-Cup
+	 * arc chrome (eyebrow, recap, and the "Beyond the Cup" skill gate,
+	 * `MarketsBeyondCupCard`) still rides on top. The board itself is three
+	 * sections: Saved (the viewer's watchlist), Resolving soon (the
+	 * soonest-closing available lines), and Available predictions.
 	 *
 	 * Placing a call happens in Flow — this board has no buy path; rows deep-link
 	 * to market detail. Saved-ids persist under `vici.saved-markets` via
@@ -68,8 +77,37 @@
 
 	const tagsByMarket = $derived($marketTags);
 
-	const matchesTag = ({ market, tag }: { market: Market; tag: MarketTag }): boolean =>
-		tagsByMarket[market.id]?.includes(tag) ?? false;
+	// Category browse selection. `undefined` macro = the "All" board;
+	// selecting a macro narrows to it and (optionally) to one of its micros.
+	let selectedMacro = $state<MacroId | undefined>(undefined);
+	let selectedMicro = $state<MicroId | undefined>(undefined);
+
+	const onSelectMacro = (macro: MacroId | undefined): void => {
+		selectedMacro = macro;
+		// A macro switch resets any drilled-in micro so the sub-filter never
+		// dangles under a different (or the "All") macro.
+		selectedMicro = undefined;
+	};
+
+	const onSelectMicro = (micro: MicroId | undefined): void => {
+		selectedMicro = micro;
+	};
+
+	// Does a market pass the active category selection? Micro wins when set;
+	// otherwise the macro; otherwise (All) everything passes.
+	const matchesSelection = (market: Market): boolean => {
+		const tags = tagsByMarket[market.id] ?? [];
+
+		if (nonNullish(selectedMicro)) {
+			return classificationMicros(tags).includes(selectedMicro);
+		}
+
+		if (nonNullish(selectedMacro)) {
+			return classificationMacros(tags).includes(selectedMacro);
+		}
+
+		return true;
+	};
 
 	// Temporary hardcoded World-Cup release schedule: WC markets surface only
 	// once their Show Date (00:00 UTC) has arrived, and WC markets absent from
@@ -92,26 +130,14 @@
 		return b.totalVolume > a.totalVolume ? 1 : -1;
 	};
 
-	// The "available" board. While the World Cup is in focus the board is the WC
-	// category only (the single open event); once the arc opens up (`open` /
-	// `off`) it's every market — so the page keeps working past the Cup. Gated
-	// on tag metadata being initialized so a WC filter doesn't collapse the board
-	// to empty before tags load. Both branches list only `Open` (callable) lines
-	// — matching the section label and the Open-only Trending rail — so resolved
-	// / expired markets never surface under "Available predictions".
-	const availableMarkets = $derived.by((): Market[] => {
-		const openMarkets = visibleMarkets.filter((m) => m.status === 'Open');
-
-		if (!wcFocus) {
-			return [...openMarkets].sort(byVolumeDesc);
-		}
-
-		if ($marketTagsNotInitialized) {
-			return [];
-		}
-
-		return openMarkets.filter((m) => matchesTag({ market: m, tag: 'wc' }));
-	});
+	// The "available" board — every open (callable) line, narrowed by the
+	// active category selection. Listing only `Open` lines matches the section
+	// label and the Open-only Trending rail, so resolved / expired markets
+	// never surface under "Available predictions". The board is volume-sorted
+	// for a stable deck that doesn't reshuffle as the user scans it.
+	const availableMarkets = $derived.by((): Market[] =>
+		[...visibleMarkets.filter((m) => m.status === 'Open' && matchesSelection(m))].sort(byVolumeDesc)
+	);
 
 	// Resolving soon: available lines closing within the window, soonest first.
 	const resolvingSoon = $derived.by((): Market[] => {
@@ -134,11 +160,12 @@
 		[...availableMarkets].filter((m) => !resolvingSoonIds.has(m.id)).sort(byVolumeDesc)
 	);
 
-	// Trending rail: highest-volume open markets. Our backend carries no curated
-	// "hot" flag, so volume is the proxy.
+	// Trending rail: highest-volume open markets within the active category
+	// selection. Our backend carries no curated "hot" flag, so volume is the
+	// proxy.
 	const trendingMarkets = $derived(
 		[...visibleMarkets]
-			.filter((m) => m.status === 'Open')
+			.filter((m) => m.status === 'Open' && matchesSelection(m))
 			.sort(byVolumeDesc)
 			.slice(0, TRENDING_LIMIT)
 	);
@@ -197,6 +224,9 @@
 		tagsInitialized={!$marketTagsNotInitialized}
 	/>
 
+	<!-- Category browse nav — macro bar + micro sub-chips (populated only). -->
+	<MarketsCategoryChips {onSelectMacro} {onSelectMicro} {selectedMacro} {selectedMicro} />
+
 	<!-- Trending rail. -->
 	{#if trendingMarkets.length > 0}
 		<MarketsCarousel
@@ -238,7 +268,7 @@
 	{:else}
 		<div style="gap: 0; padding: 0 20px 20px;" class="col">
 			{#each savedMarkets as m (m.id)}
-				<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+				<MarketsListRow market={m} tag={primaryMicro(tagsByMarket[m.id] ?? [])} />
 			{/each}
 		</div>
 	{/if}
@@ -251,7 +281,7 @@
 		</div>
 		<div style="gap: 0; padding: 0 20px 20px;" class="col">
 			{#each resolvingSoon as m (m.id)}
-				<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+				<MarketsListRow market={m} tag={primaryMicro(tagsByMarket[m.id] ?? [])} />
 			{/each}
 		</div>
 	{/if}
@@ -281,7 +311,7 @@
 	{:else}
 		<div style="gap: 0; padding: 0 20px calc(96px + env(safe-area-inset-bottom, 0px));" class="col">
 			{#each restMarkets as m (m.id)}
-				<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+				<MarketsListRow market={m} tag={primaryMicro(tagsByMarket[m.id] ?? [])} />
 			{/each}
 		</div>
 	{/if}

@@ -3,7 +3,7 @@
 // `flow-art.utils.ts` to keep the renderer module readable.
 
 import type {
-	FlowArtCategory,
+	FlowArtBucket,
 	FlowArtPalette,
 	FlowArtState,
 	FlowArtTheme
@@ -12,7 +12,7 @@ import type {
 type CategoryPalettes = Record<FlowArtState, FlowArtPalette>;
 type ThemePalettes = Record<FlowArtTheme, Partial<CategoryPalettes> & { neutral: FlowArtPalette }>;
 
-export const PAL: Record<FlowArtCategory, ThemePalettes> = {
+export const PAL: Record<FlowArtBucket | 'wc', ThemePalettes> = {
 	macro: {
 		dark: {
 			neutral: {

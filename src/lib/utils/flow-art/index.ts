@@ -12,6 +12,11 @@
 // access, no I/O — pure helper.
 
 import { PAL } from '$lib/constants/flow-art-palettes.constants';
+import {
+	classificationTags,
+	isMacroId,
+	primaryMacro
+} from '$lib/constants/market-taxonomy.constants';
 import { renderCrypto } from '$lib/utils/flow-art/renderers/crypto';
 import { renderCulture } from '$lib/utils/flow-art/renderers/culture';
 import { renderMacro } from '$lib/utils/flow-art/renderers/macro';
@@ -22,22 +27,31 @@ import { hashStr, makeRng } from '$lib/utils/flow-art/rng';
 import { bgRect, frameInset, svgClose, svgOpen, svgOpenWC } from '$lib/utils/flow-art/svg';
 import {
 	FLOW_ART_CATEGORIES,
-	FLOW_ART_CATEGORY_SET,
+	MACRO_ART_BUCKET,
+	type FlowArtBucket,
 	type FlowArtCategory,
 	type FlowArtRenderOptions,
 	type RenderArgs
 } from '$lib/utils/flow-art/types';
 import { renderWC } from '$lib/utils/flow-art/wc/render';
+import { nonNullish } from '@dfinity/utils';
 
-const RENDERERS: Record<FlowArtCategory, (args: RenderArgs) => string> = {
+const RENDERERS: Record<FlowArtBucket, (args: RenderArgs) => string> = {
 	macro: renderMacro,
 	crypto: renderCrypto,
 	sports: renderSports,
 	politics: renderPolitics,
 	tech: renderTech,
-	culture: renderCulture,
-	wc: renderWC
+	culture: renderCulture
 };
+
+/**
+ * Resolve the render bucket + palette key for a public category. `wc` is the
+ * editorial tentpole (its own renderer + palette); every macro folds onto one
+ * of the six bespoke visual languages via {@link MACRO_ART_BUCKET}.
+ */
+const artBucket = (category: FlowArtCategory): FlowArtBucket | 'wc' =>
+	category === 'wc' ? 'wc' : MACRO_ART_BUCKET[category];
 
 // =============================================================
 //   Public API
@@ -52,8 +66,9 @@ export const renderFlowArt = ({
 	frame = false,
 	title
 }: FlowArtRenderOptions): string => {
-	const renderer = RENDERERS[category] ?? renderMacro;
-	const categoryPalettes = PAL[category] ?? PAL.macro;
+	const bucket = artBucket(category);
+	const renderer = bucket === 'wc' ? renderWC : RENDERERS[bucket];
+	const categoryPalettes = PAL[bucket] ?? PAL.macro;
 	const themePalettes = categoryPalettes[theme] ?? categoryPalettes.dark;
 	const pal = themePalettes[state] ?? themePalettes.neutral;
 	const seedKey = `${category}::${seed}::${state}::${theme}`;
@@ -85,24 +100,43 @@ export const renderFlowArt = ({
 };
 
 /**
- * Resolve a `FlowArtCategory` for a market with optional admin-tagged
- * `categoryId`. When the tagged category matches one of the six
- * canonical languages, use it; otherwise hash the `seed` (typically
- * `market.id`) to deterministically pick one. Mirrors the resolution
- * FlowCard does inline so untagged markets still render artwork
- * stably across renders.
+ * Resolve a `FlowArtCategory` for a market from its stored `tags`:
+ *
+ * 1. A `world-cup` free tag pins the FIFA-themed `wc` editorial variant,
+ *    preserving the tentpole look independent of the market's micros.
+ * 2. Otherwise the market's {@link primaryMacro} drives the artwork.
+ * 3. Untagged markets (no micros) fall back to a deterministic
+ *    hash-of-`seed` bucket so they still render stable artwork.
+ *
+ * `seed` is typically `market.id`. Passing a bare macro id as a single-
+ * element `tags` array (e.g. `[macro]`) is also supported for the surfaces
+ * that only hold a resolved macro.
  */
 export const resolveFlowArtCategory = ({
-	categoryId,
+	tags,
 	seed
 }: {
-	categoryId?: string | null;
+	tags?: readonly string[] | null;
 	seed: string | number;
 }): FlowArtCategory => {
-	const canonical = (categoryId ?? '').toString().toLowerCase();
+	const values = tags ?? [];
 
-	if (FLOW_ART_CATEGORY_SET.has(canonical)) {
-		return canonical as FlowArtCategory;
+	if (classificationTags(values).includes('world-cup')) {
+		return 'wc';
+	}
+
+	const macro = primaryMacro(values);
+
+	if (nonNullish(macro)) {
+		return macro;
+	}
+
+	// No micros: some surfaces pass a bare macro id (not a micro) they
+	// resolved elsewhere — honour it before the hash fallback.
+	const bare = values.find((value) => isMacroId(value));
+
+	if (nonNullish(bare)) {
+		return bare;
 	}
 
 	const idx = hashStr(String(seed)) % FLOW_ART_CATEGORIES.length;
@@ -111,8 +145,13 @@ export const resolveFlowArtCategory = ({
 };
 
 export { flowArtViewBox } from '$lib/utils/flow-art/svg';
-export { FLOW_ART_CATEGORIES, FLOW_ART_CATEGORY_SET } from '$lib/utils/flow-art/types';
+export {
+	FLOW_ART_CATEGORIES,
+	FLOW_ART_CATEGORY_SET,
+	MACRO_ART_BUCKET
+} from '$lib/utils/flow-art/types';
 export type {
+	FlowArtBucket,
 	FlowArtCategory,
 	FlowArtPalette,
 	FlowArtRenderOptions,

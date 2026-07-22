@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import type { ClearingDid } from '$declarations';
 	import MarketTitleSkeleton from '$lib/components/market/MarketTitleSkeleton.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
-	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
+	import { primaryMicro } from '$lib/constants/market-taxonomy.constants';
 	import {
 		PORTFOLIO_DEFAULT_DECIMALS,
 		PORTFOLIO_PAGE_SIZE
@@ -50,15 +50,15 @@
 
 	/** Category accent color for the row tag chip; mirrors PortfolioPage. */
 	const categoryAccent = (marketId: MarketId): string => {
-		const tag = primaryMarketTag($marketTags[marketId]);
+		const micro = primaryMicro($marketTags[marketId] ?? []);
 
-		return tagColor(tag ?? '');
+		return tagColor(micro ?? '');
 	};
 
 	const categoryLabel = (marketId: MarketId): string | null => {
-		const tag = primaryMarketTag($marketTags[marketId]);
+		const micro = primaryMicro($marketTags[marketId] ?? []);
 
-		return tag ? tag.toUpperCase() : null;
+		return nonNullish(micro) ? micro.toUpperCase() : null;
 	};
 
 	const handleCancel = async ({

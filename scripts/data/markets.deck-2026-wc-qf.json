@@ -4,7 +4,7 @@
 		"description": "Four ties, semifinal places on the line — the round where cagey football most often runs to spot-kicks.",
 		"resolution": "Resolves YES if 1 or more of the 4 Quarterfinal matches is decided by a penalty shootout; otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -50,7 +50,7 @@
 		"description": "How many of the four ties refuse to settle inside normal time reads the tension of the round.",
 		"resolution": "Resolves YES if 2 or more of the 4 Quarterfinal ties are decided in extra time or a penalty shootout; otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -96,7 +96,7 @@
 		"description": "Morocco, Norway, Belgium and Switzerland all carry the underdog's number into the last eight.",
 		"resolution": "Resolves YES if the lower pre-tournament FIFA-ranked team wins 1 or more of the 4 ties (after extra time and, if needed, penalties); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -142,7 +142,7 @@
 		"description": "Argentina just erased a two-goal deficit against Egypt; another comeback would define the round.",
 		"resolution": "Resolves YES if any team that trails at any point wins its Quarterfinal (including extra time and penalties); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -188,7 +188,7 @@
 		"description": "Three goals by one player in the last eight makes an instant tournament legend.",
 		"resolution": "Resolves YES if any player scores 3+ goals in one Quarterfinal match (normal and extra time; shootout kicks excluded); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -234,7 +234,7 @@
 		"description": "Goals-per-game across the four ties reads how open the last eight plays.",
 		"resolution": "Resolves YES if normal-time goals across all 4 Quarterfinal matches total 11 or more (average above 2.5); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -280,7 +280,7 @@
 		"description": "A 2022 semifinal rematch a round early — France, five wins from five, against an unbeaten Morocco that has already felled the Netherlands and Canada. In single-elimination, the loser goes home.",
 		"resolution": "Resolves YES if France win the tie (result after extra time and, if needed, penalties); otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -326,7 +326,7 @@
 		"description": "Whether France and Morocco need extra time or penalties to separate them.",
 		"resolution": "Resolves YES if the tie is not settled in normal time and goes to extra time or a penalty shootout; otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -372,7 +372,7 @@
 		"description": "A read on whether France–Morocco opens up or stays controlled.",
 		"resolution": "Resolves YES if 3 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -418,7 +418,7 @@
 		"description": "Whether both France and Morocco find the net.",
 		"resolution": "Resolves YES if both teams score at least one goal in normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -464,7 +464,7 @@
 		"description": "Quarterfinal tension between France and Morocco raises the risk of a dismissal.",
 		"resolution": "Resolves YES if a red card (straight or second yellow) is shown to any player during the match; otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -510,7 +510,7 @@
 		"description": "A single spot-kick could settle France against Morocco.",
 		"resolution": "Resolves YES if a penalty kick is awarded to either team during normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -556,7 +556,7 @@
 		"description": "An early goal would set the tone for France against Morocco.",
 		"resolution": "Resolves YES if a goal is scored within the first 15 minutes of the match; otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -602,7 +602,7 @@
 		"description": "A late goal could settle France vs Morocco or force extra time.",
 		"resolution": "Resolves YES if a goal is scored in the 80th minute or later of normal time (including stoppage); otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -648,7 +648,7 @@
 		"description": "Kylian Mbappé of France, a Golden Boot contender, on the quarterfinal stage, chasing the goal that matters most.",
 		"resolution": "Resolves YES if Kylian Mbappé scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -694,7 +694,7 @@
 		"description": "Ousmane Dembélé is France's creative engine; a goal or assist would shape the tie.",
 		"resolution": "Resolves YES if Ousmane Dembélé scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -740,7 +740,7 @@
 		"description": "Youssef En-Nesyri of Morocco on the quarterfinal stage, chasing the goal that matters most.",
 		"resolution": "Resolves YES if Youssef En-Nesyri scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
 		"expiryDate": "2026-07-09T20:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -786,7 +786,7 @@
 		"description": "An echo of the 1986 quarterfinal — Spain's possession game against a Belgium side that dismantled the USA 4-1. In single-elimination, the loser goes home.",
 		"resolution": "Resolves YES if Spain win the tie (result after extra time and, if needed, penalties); otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -832,7 +832,7 @@
 		"description": "Whether Spain and Belgium need extra time or penalties to separate them.",
 		"resolution": "Resolves YES if the tie is not settled in normal time and goes to extra time or a penalty shootout; otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -878,7 +878,7 @@
 		"description": "A read on whether Spain–Belgium opens up or stays controlled.",
 		"resolution": "Resolves YES if 3 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -924,7 +924,7 @@
 		"description": "Whether both Spain and Belgium find the net.",
 		"resolution": "Resolves YES if both teams score at least one goal in normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -970,7 +970,7 @@
 		"description": "Quarterfinal tension between Spain and Belgium raises the risk of a dismissal.",
 		"resolution": "Resolves YES if a red card (straight or second yellow) is shown to any player during the match; otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1016,7 +1016,7 @@
 		"description": "A single spot-kick could settle Spain against Belgium.",
 		"resolution": "Resolves YES if a penalty kick is awarded to either team during normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1062,7 +1062,7 @@
 		"description": "An early goal would set the tone for Spain against Belgium.",
 		"resolution": "Resolves YES if a goal is scored within the first 15 minutes of the match; otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1108,7 +1108,7 @@
 		"description": "A late goal could settle Spain vs Belgium or force extra time.",
 		"resolution": "Resolves YES if a goal is scored in the 80th minute or later of normal time (including stoppage); otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1154,7 +1154,7 @@
 		"description": "Lamine Yamal is Spain's creative engine; a goal or assist would shape the tie.",
 		"resolution": "Resolves YES if Lamine Yamal scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1200,7 +1200,7 @@
 		"description": "Álvaro Morata of Spain on the quarterfinal stage, chasing the goal that matters most.",
 		"resolution": "Resolves YES if Álvaro Morata scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1246,7 +1246,7 @@
 		"description": "Kevin De Bruyne is Belgium's creative engine; a goal or assist would shape the tie.",
 		"resolution": "Resolves YES if Kevin De Bruyne scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
 		"expiryDate": "2026-07-10T19:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1292,7 +1292,7 @@
 		"description": "Norway's first-ever quarterfinal, carried by Haaland, against an England side that beat Mexico 3-2 to get here. In single-elimination, the loser goes home.",
 		"resolution": "Resolves YES if England win the tie (result after extra time and, if needed, penalties); otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1338,7 +1338,7 @@
 		"description": "Whether Norway and England need extra time or penalties to separate them.",
 		"resolution": "Resolves YES if the tie is not settled in normal time and goes to extra time or a penalty shootout; otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1384,7 +1384,7 @@
 		"description": "A read on whether Norway–England opens up or stays controlled.",
 		"resolution": "Resolves YES if 3 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1430,7 +1430,7 @@
 		"description": "Whether both Norway and England find the net.",
 		"resolution": "Resolves YES if both teams score at least one goal in normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1476,7 +1476,7 @@
 		"description": "Quarterfinal tension between Norway and England raises the risk of a dismissal.",
 		"resolution": "Resolves YES if a red card (straight or second yellow) is shown to any player during the match; otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1522,7 +1522,7 @@
 		"description": "A single spot-kick could settle Norway against England.",
 		"resolution": "Resolves YES if a penalty kick is awarded to either team during normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1568,7 +1568,7 @@
 		"description": "An early goal would set the tone for Norway against England.",
 		"resolution": "Resolves YES if a goal is scored within the first 15 minutes of the match; otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1614,7 +1614,7 @@
 		"description": "A late goal could settle Norway vs England or force extra time.",
 		"resolution": "Resolves YES if a goal is scored in the 80th minute or later of normal time (including stoppage); otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1660,7 +1660,7 @@
 		"description": "Erling Haaland, seven goals and chasing the Golden Boot, on the quarterfinal stage against England.",
 		"resolution": "Resolves YES if Erling Haaland scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1706,7 +1706,7 @@
 		"description": "Harry Kane of England on the quarterfinal stage, chasing the goal that matters most.",
 		"resolution": "Resolves YES if Harry Kane scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1752,7 +1752,7 @@
 		"description": "Jude Bellingham is England's creative engine; a goal or assist would shape the tie.",
 		"resolution": "Resolves YES if Jude Bellingham scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
 		"expiryDate": "2026-07-11T21:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1798,7 +1798,7 @@
 		"description": "The world champions, fresh off a two-goal comeback against Egypt, against a Switzerland side in its first quarterfinal in 72 years. In single-elimination, the loser goes home.",
 		"resolution": "Resolves YES if Argentina win the tie (result after extra time and, if needed, penalties); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1844,7 +1844,7 @@
 		"description": "Whether Argentina and Switzerland need extra time or penalties to separate them.",
 		"resolution": "Resolves YES if the tie is not settled in normal time and goes to extra time or a penalty shootout; otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1890,7 +1890,7 @@
 		"description": "A read on whether Argentina–Switzerland opens up or stays controlled.",
 		"resolution": "Resolves YES if 3 or more goals are scored in normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1936,7 +1936,7 @@
 		"description": "Whether both Argentina and Switzerland find the net.",
 		"resolution": "Resolves YES if both teams score at least one goal in normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -1982,7 +1982,7 @@
 		"description": "Quarterfinal tension between Argentina and Switzerland raises the risk of a dismissal.",
 		"resolution": "Resolves YES if a red card (straight or second yellow) is shown to any player during the match; otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -2028,7 +2028,7 @@
 		"description": "A single spot-kick could settle Argentina against Switzerland.",
 		"resolution": "Resolves YES if a penalty kick is awarded to either team during normal time (90 minutes plus stoppage); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -2074,7 +2074,7 @@
 		"description": "An early goal would set the tone for Argentina against Switzerland.",
 		"resolution": "Resolves YES if a goal is scored within the first 15 minutes of the match; otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -2120,7 +2120,7 @@
 		"description": "A late goal could settle Argentina vs Switzerland or force extra time.",
 		"resolution": "Resolves YES if a goal is scored in the 80th minute or later of normal time (including stoppage); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -2166,7 +2166,7 @@
 		"description": "Lionel Messi leads the Golden Boot race on eight goals; a goal or assist would shape the tie.",
 		"resolution": "Resolves YES if Lionel Messi scores or is credited with an assist in normal or extra time, per official statistics; otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -2212,7 +2212,7 @@
 		"description": "Julián Álvarez of Argentina on the quarterfinal stage, chasing the goal that matters most.",
 		"resolution": "Resolves YES if Julián Álvarez scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {
@@ -2258,7 +2258,7 @@
 		"description": "Breel Embolo of Switzerland on the quarterfinal stage, chasing the goal that matters most.",
 		"resolution": "Resolves YES if Breel Embolo scores in normal or extra time (penalty-shootout kicks excluded); otherwise NO.",
 		"expiryDate": "2026-07-12T01:00:00.000Z",
-		"categories": ["wc"],
+		"categories": ["soccer", "world-cup"],
 		"balanceDomain": "ViciXp",
 		"locale": "en",
 		"translations": {

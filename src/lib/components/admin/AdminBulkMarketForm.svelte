@@ -32,7 +32,7 @@
 			description: "Bitcoin's run at a six-figure price before 2027.",
 			expiryDate: '2027-01-01T00:00:00Z',
 			balanceDomain: 'ViciXp',
-			tags: ['crypto', 'macro']
+			tags: ['bitcoin']
 		},
 		{
 			title: 'Who will win the 2026 FIFA World Cup?',
@@ -40,7 +40,7 @@
 			expiryDate: '2026-07-20T21:59:59.000Z',
 			balanceDomain: 'ViciXp',
 			outcomes: ['Italy', 'Brazil', 'France', 'Argentina', 'England', 'Spain', 'Germany', 'Other'],
-			tags: ['sports']
+			tags: ['soccer', 'world-cup']
 		}
 	];
 

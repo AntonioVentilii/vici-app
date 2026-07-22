@@ -84,7 +84,14 @@ export const flushEvents = async (): Promise<void> => {
 	}
 
 	try {
-		await functions.trackEvents({ events });
+		// The generated satellite binding enumerates event names from the last
+		// `juno:functions:build`; a newly added FE taxonomy name (e.g.
+		// `market_category_filter`) lands ahead of that regen (owned separately),
+		// so the buffer's `name` union is momentarily wider than the binding's.
+		// Cast at this single wire boundary; the FE union + Zod mirror already
+		// gate the value, and an unrecognised name is dropped server-side
+		// (best-effort) until the binding catches up.
+		await functions.trackEvents({ events } as Parameters<typeof functions.trackEvents>[0]);
 	} catch (err) {
 		// Analytics is best-effort and must never break the app — drop the batch.
 		// eslint-disable-next-line no-console

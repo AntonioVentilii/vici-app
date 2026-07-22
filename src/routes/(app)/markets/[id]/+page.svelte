@@ -26,6 +26,7 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import { MARKET_DETAIL_DIRECT_TRADE_ENABLED } from '$lib/constants/feature-flags.constants';
 	import { SUPPORTED_LOCALES } from '$lib/constants/locale.constants';
+	import { primaryMicro } from '$lib/constants/market-taxonomy.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
@@ -473,7 +474,7 @@
 	};
 
 	const tags = $derived(nonNullish(market) ? ($marketTags[market.id] ?? []) : []);
-	const primaryTag = $derived(tags[0]);
+	const primaryTag = $derived(primaryMicro(tags));
 
 	// Curated metadata for this market — the editorial subtitle (the
 	// context line under the title) and the "why this card now" cue.
