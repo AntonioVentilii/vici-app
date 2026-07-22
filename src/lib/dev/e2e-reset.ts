@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { SIGNED_IN_FLAG_KEY } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { isDev } from '$lib/env/app.env';
 import { userStore } from '$lib/stores/user.store';
@@ -16,9 +17,9 @@ export interface E2eHooks {
 	/** Hard-delete the signed-in principal's profile doc. Resolves once gone. */
 	resetMyProfile: () => Promise<void>;
 	/**
-	 * DURABLY wipe every persisted browser store so the next full page load is
-	 * signed-out. Call this while still on an `(app)` route (this hook only
-	 * exists inside the `(app)` layout) and then cold-load the target page.
+	 * DURABLY clear the persisted authenticated identity so the next full page
+	 * load is signed-out. Call this while still on an `(app)` route (this hook
+	 * only exists inside the `(app)` layout) and then cold-load the target page.
 	 *
 	 * Deliberately paired with a plain navigation rather than Juno `signOut()`:
 	 * `signOut()` re-saves the dev identity Juno keeps in `juno-dev-identifiers`,
@@ -222,13 +223,21 @@ const resetMyProfile = async (): Promise<void> => {
 };
 
 /**
- * The IC auth-client persists the delegation in this dedicated IndexedDB
- * database (its documented default, `ic-keyval` object store).
- * `onAuthStateChange` rehydrates the session from here on every cold load. Juno
- * routes every provider — including the `dev` mock identity — through the
- * auth-client, so the dev session lives here too.
+ * The two IndexedDB databases that persist the AUTHENTICATED IDENTITY, which
+ * `onAuthStateChange` rehydrates on every cold load:
+ *  - `juno-dev-identifiers` — the Juno `dev` mock identity (the store the
+ *    onboarding spec actually needs cleared; the CI e2e matrix signs in with it).
+ *  - `auth-client-db` — the IC auth-client delegation store (real II/OpenID
+ *    providers); empty for the dev provider but cleared for completeness.
+ *
+ * We clear ONLY these — NOT the `icp-sdk-*` agent caches (root key / query
+ * verification). Wiping those forced a cold agent re-init that made the post-
+ * sign-in `calculateAndSyncStats` slow enough on the low-end mobile project for
+ * the onboarding-handoff drain (serialized behind it on the profile patch queue)
+ * to miss the spec's poll window. Dropping the identity is all that's needed to
+ * sign the next cold load out.
  */
-const AUTH_CLIENT_DB_NAME = 'auth-client-db';
+const IDENTITY_DB_NAMES = ['juno-dev-identifiers', 'auth-client-db'] as const;
 
 /**
  * Empty every object store in one IndexedDB database, resolving once the
@@ -288,64 +297,31 @@ const clearDatabaseStores = (dbName: string): Promise<void> =>
 	});
 
 /**
- * Durably wipe EVERY persisted browser store so the next full page load is
- * unambiguously signed-out — localStorage, sessionStorage, and every IndexedDB
- * database. Deliberately unscoped: the Juno dev mock identity persists under
- * `juno-dev-identifiers` (NOT `auth-client-db`, which is empty for the dev
- * provider — clearing only that left the session intact and /signup still
- * bounced to /flow), alongside the `icp-sdk-*` agent caches, and clearing the
- * lot is simpler and more robust than tracking each. Safe here because it runs
- * while signed-in on `(app)`: only persisted bytes are touched (the in-memory
- * identity survives until the caller navigates), and the next cold load
- * re-fetches any datastore cache.
+ * Durably clear the persisted authenticated identity so the next full page load
+ * is signed-out. Scoped to {@link IDENTITY_DB_NAMES} plus the signed-in localStorage
+ * hint — deliberately NOT the `icp-sdk-*` agent caches or datastore caches (see
+ * {@link IDENTITY_DB_NAMES} for why: wiping them slowed post-sign-in hydration and
+ * broke the handoff drain's poll window).
  *
- * `databases()` is Chromium-only among engines, which is all the e2e matrix
- * runs on; a missing API falls back to the known `auth-client-db` name.
- */
-const clearAllPersistedSession = async (): Promise<void> => {
-	try {
-		localStorage.clear();
-	} catch {
-		// localStorage may be unavailable (private mode / disabled).
-	}
-
-	try {
-		sessionStorage.clear();
-	} catch {
-		// sessionStorage may be unavailable.
-	}
-
-	const names = new Set<string>([AUTH_CLIENT_DB_NAME]);
-
-	try {
-		if (typeof indexedDB.databases === 'function') {
-			const dbs = await indexedDB.databases();
-
-			for (const { name } of dbs) {
-				if (nonNullish(name)) {
-					names.add(name);
-				}
-			}
-		}
-	} catch {
-		// `databases()` unavailable or threw — the explicit name below still runs.
-	}
-
-	await Promise.all(Array.from(names, (name) => clearDatabaseStores(name)));
-};
-
-/**
- * Durably clear the persisted session so the next full page load is
- * unambiguously signed-out. Runs on an `(app)` route (see
- * {@link E2eHooks.clearSession}) while still signed-in; the caller then
- * cold-loads the target page, which reads the wiped storage as signed-out.
+ * Runs on an `(app)` route (see {@link E2eHooks.clearSession}) while still
+ * signed-in; the caller then cold-loads the target page, which reads the wiped
+ * identity as signed-out.
  *
  * We do NOT use Juno `signOut()` to reach signed-out: it re-saves the dev
  * identity in `juno-dev-identifiers`, so the next load auto-restores the session
- * and /signup bounces to /flow — the exact flake this defeats. Wiping every
- * persisted store and then navigating avoids the re-persist entirely.
+ * and /signup bounces to /flow — the exact flake this defeats. Clearing the
+ * identity store and then navigating avoids the re-persist entirely.
  */
-const clearSession = (): Promise<void> => clearAllPersistedSession();
+const clearSession = async (): Promise<void> => {
+	try {
+		localStorage.removeItem(SIGNED_IN_FLAG_KEY);
+	} catch {
+		// localStorage may be unavailable (private mode / disabled); the identity
+		// clear below is what actually gates the signed-in state on the next load.
+	}
+
+	await Promise.all(IDENTITY_DB_NAMES.map((name) => clearDatabaseStores(name)));
+};
 
 /**
  * Install the e2e reset hook on `window` — DEV ONLY. A no-op in production

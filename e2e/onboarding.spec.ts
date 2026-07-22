@@ -76,9 +76,14 @@ test.describe('pre-sign-in onboarding', () => {
 		// the handoff. Waiting on the slot can't mask a real failure: every
 		// drain outcome clears it, so a failed upsert still fails the handle
 		// assertion below.
+		//
+		// Generous timeout: the drain's profile write is serialized behind this
+		// finishing login's `calculateAndSyncStats` on the shared patch queue, and
+		// that sync fans out to many canister reads/writes — on the low-end mobile
+		// project against the CI emulator it can take a while to drain.
 		await expect
 			.poll(() => page.evaluate(() => localStorage.getItem('vici:pending-onboarding')), {
-				timeout: 30_000
+				timeout: 60_000
 			})
 			.toBeNull();
 
