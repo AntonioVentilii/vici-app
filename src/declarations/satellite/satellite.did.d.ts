@@ -188,6 +188,7 @@ export interface AppGetAnalyticsEventsResult {
 			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
+			| { market_category_filter: null }
 			| { watchlist_removed: null }
 			| { delete_succeeded: null }
 			| { friend_feed_reaction: null }
@@ -289,6 +290,7 @@ export interface AppGetAnalyticsSummaryResult {
 			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
+			| { market_category_filter: null }
 			| { watchlist_removed: null }
 			| { delete_succeeded: null }
 			| { friend_feed_reaction: null }
@@ -1183,6 +1185,7 @@ export interface AppTrackEventsArgs {
 			| { notification_opened: null }
 			| { position_taken: null }
 			| { flow_abandoned: null }
+			| { market_category_filter: null }
 			| { watchlist_removed: null }
 			| { delete_succeeded: null }
 			| { friend_feed_reaction: null }

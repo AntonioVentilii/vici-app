@@ -71,6 +71,15 @@ export type AnalyticsEventName =
 	 * target view (`original | translated`).
 	 */
 	| 'market_translation_toggled'
+	/**
+	 * A market-board category chip was selected; `label` carries the bounded
+	 * selection — the taxonomy macro id, or `macro:micro` when the viewer
+	 * drilled into a subcategory. Closed vocab (taxonomy ids), no PII. (The
+	 * dimension rides `label` rather than dedicated `macro`/`micro` fields
+	 * because the props vocabulary is a closed schema shared with the
+	 * satellite — new dimensions need a satellite regen; `label` is free here.)
+	 */
+	| 'market_category_filter'
 	// ── Trading ───────────────────────────────────────────────────────
 	/** A position was taken (cockpit's `position_taken`). */
 	| 'position_taken'

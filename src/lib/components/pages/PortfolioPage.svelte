@@ -10,7 +10,7 @@
 	import PortfolioHero from '$lib/components/portfolio/PortfolioHero.svelte';
 	import PortfolioPerformanceCard from '$lib/components/portfolio/PortfolioPerformanceCard.svelte';
 	import { EM_DASH, MILLISECOND_IN_NANOSECONDS, USD_DECIMALS } from '$lib/constants/app.constants';
-	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
+	import { primaryMicro } from '$lib/constants/market-taxonomy.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -192,20 +192,20 @@
 	};
 
 	const categoryLabel = (marketId: string): string | null => {
-		const tag = primaryMarketTag($marketTags[marketId]);
+		const micro = primaryMicro($marketTags[marketId] ?? []);
 
-		return tag ? tag.toUpperCase() : null;
+		return nonNullish(micro) ? micro.toUpperCase() : null;
 	};
 
 	/**
 	 * Per-category accent for the row tag chip. Falls back to the
-	 * laurel-gold default when the market has no recognised tag — same
+	 * laurel-gold default when the market has no recognised micro — same
 	 * fallback `tagColor()` uses internally.
 	 */
 	const categoryAccent = (marketId: string): string => {
-		const tag = primaryMarketTag($marketTags[marketId]);
+		const micro = primaryMicro($marketTags[marketId] ?? []);
 
-		return tagColor(tag ?? '');
+		return tagColor(micro ?? '');
 	};
 
 	// Current implied probability for the position's side, or `undefined` when

@@ -106,7 +106,7 @@ export const prepareFlow = async ({
 			tagsPromise,
 			priorCallIdsPromise
 		]);
-		const tagsByMarket = tagMap as Record<string, string[]>;
+		const tagsByMarket = tagMap;
 		const excludeSet = new Set(exclude);
 
 		// Temporary hardcoded World-Cup release schedule: a WC market is
@@ -189,7 +189,7 @@ export const prepareFlow = async ({
 		metadataPromise
 	]);
 
-	const tagsByMarket = tagMap as Record<string, string[]>;
+	const tagsByMarket = tagMap;
 	const markets = await enrichFlowMarketsWithOrderBook(deck);
 
 	const metadataById = new Map<MarketId, MarketMetadata>();

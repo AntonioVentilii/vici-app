@@ -76,7 +76,7 @@
 	// Category for the card artwork accent + tag. Falls back to a
 	// deterministic per-market resolution when the host didn't supply one.
 	const cardCategory = $derived<FlowArtCategory>(
-		category ?? resolveFlowArtCategory({ categoryId: undefined, seed: market.id })
+		category ?? resolveFlowArtCategory({ tags: [], seed: market.id })
 	);
 
 	const handle = $derived(

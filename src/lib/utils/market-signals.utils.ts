@@ -1,17 +1,12 @@
 import type { ClearingDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
-import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 import type { CallSide, MarketId } from '$lib/types/market';
 import type {
 	CategoryAccuracySignal,
 	PriorCallSignal,
 	UserMarketSignals
 } from '$lib/types/market-signals';
-import {
-	FLOW_ART_CATEGORY_SET,
-	resolveFlowArtCategory,
-	type FlowArtCategory
-} from '$lib/utils/flow-art.utils';
+import { resolveFlowArtCategory, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 import {
 	eventExecutionPrice,
 	isExecutedEvent,
@@ -19,7 +14,7 @@ import {
 	isWinningSettledEvent
 } from '$lib/utils/resolved-position.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
-import { isNullish, nonNullish } from '@dfinity/utils';
+import { isNullish } from '@dfinity/utils';
 
 const eventSide = (event: ClearingDid.Event): CallSide => (event.qty >= ZERO ? 'YES' : 'NO');
 
@@ -28,16 +23,11 @@ const eventCategory = ({
 	tagsBySeries
 }: {
 	event: ClearingDid.Event;
-	tagsBySeries: Record<string, MarketTag[]>;
+	tagsBySeries: Record<string, string[]>;
 }): FlowArtCategory => {
 	const marketId = parseMarketId(event.series_id);
-	const primary = primaryMarketTag(tagsBySeries[marketId]);
 
-	if (nonNullish(primary) && FLOW_ART_CATEGORY_SET.has(primary)) {
-		return primary;
-	}
-
-	return resolveFlowArtCategory({ categoryId: primary, seed: marketId });
+	return resolveFlowArtCategory({ tags: tagsBySeries[marketId], seed: marketId });
 };
 
 const formatWhen = (timestampNs: bigint): string => {
@@ -65,7 +55,7 @@ export const deriveCategoryAccuracySignals = ({
 	tagMappings
 }: {
 	events: ClearingDid.Event[];
-	tagMappings: Record<string, MarketTag[]>;
+	tagMappings: Record<string, string[]>;
 }): Partial<Record<FlowArtCategory, CategoryAccuracySignal>> => {
 	const bucket = new Map<FlowArtCategory, { calls: number; wins: number }>();
 
@@ -153,7 +143,7 @@ export const deriveUserMarketSignals = ({
 	tagMappings
 }: {
 	events: ClearingDid.Event[];
-	tagMappings: Record<string, MarketTag[]>;
+	tagMappings: Record<string, string[]>;
 }): Omit<UserMarketSignals, 'followedLean'> => ({
 	categoryAcc: deriveCategoryAccuracySignals({ events, tagMappings }),
 	priorCalls: derivePriorCallSignals(events)

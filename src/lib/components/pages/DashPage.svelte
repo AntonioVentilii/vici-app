@@ -32,7 +32,7 @@
 	import DashStackSheet from '$lib/components/dash/DashStackSheet.svelte';
 	import ResolutionReveal from '$lib/components/market/ResolutionReveal.svelte';
 	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
-	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { primaryMicro } from '$lib/constants/market-taxonomy.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -65,6 +65,7 @@
 		probabilityToPercent
 	} from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { categoryLabel } from '$lib/utils/market-tags.utils';
 	import { formatVxpBalance, formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
@@ -109,10 +110,10 @@
 	};
 
 	const categoryOf = (market: Market): string => {
-		const [tag]: (MarketTag | undefined)[] = $marketTags[market.id] ?? [];
+		const micro = primaryMicro($marketTags[market.id] ?? []);
 
-		return nonNullish(tag) && nonNullish(MARKET_TAG_LABEL_KEYS[tag])
-			? t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })
+		return nonNullish(micro)
+			? categoryLabel({ category: micro, variant: 'full', locale: $localeStore })
 			: t({ locale: $localeStore, key: 'dash.build.category_fallback' });
 	};
 

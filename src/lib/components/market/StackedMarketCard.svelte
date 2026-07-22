@@ -5,7 +5,7 @@
 	import { resolve } from '$app/paths';
 	import MarketCard from '$lib/components/market/MarketCard.svelte';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
-	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { primaryMicro } from '$lib/constants/market-taxonomy.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -19,15 +19,15 @@
 		index?: number;
 		userPrincipal?: string;
 		metadataBySeries?: Record<string, MarketMetadata>;
-		/** Per-series tag lookup; the root market's primary tag is resolved
+		/** Per-series tag lookup; the root market's primary micro is resolved
 		 *  here and forwarded to the inner MarketCard so the colored
 		 *  category chip renders consistently with the rest of the page. */
-		tagsBySeries?: Record<string, MarketTag[]>;
+		tagsBySeries?: Record<string, string[]>;
 	}
 
 	const { group, index = 0, userPrincipal, metadataBySeries, tagsBySeries }: Props = $props();
 
-	const rootTag = $derived(primaryMarketTag(tagsBySeries?.[group.root.id]));
+	const rootTag = $derived(primaryMicro(tagsBySeries?.[group.root.id] ?? []));
 
 	const forks = $derived(group.forks);
 	const ghostLayers = $derived(Math.min(forks.length, 2));

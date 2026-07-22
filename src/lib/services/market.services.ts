@@ -18,7 +18,7 @@ import {
 import { CURRENT_FEATURED_EVENT } from '$lib/constants/featured-event.constants';
 import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
 import type { AppLocale } from '$lib/constants/locale.constants';
-import type { MarketTag } from '$lib/constants/market-tags.constants';
+import { classificationMacros } from '$lib/constants/market-taxonomy.constants';
 import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
 import { getSettlementActivities, logActivity } from '$lib/services/activity.services';
@@ -1129,7 +1129,7 @@ export const rankMarkets = ({
 }: {
 	markets: Market[];
 	userInterests: Set<string>;
-	tagMappings: Record<string, MarketTag[]>;
+	tagMappings: Record<string, string[]>;
 	metadataBySeries?: Record<string, MarketMetadata>;
 	favoriteMarketIds?: ReadonlySet<string>;
 }): Market[] => {
@@ -1140,9 +1140,13 @@ export const rankMarkets = ({
 
 		const suggested = suggestedScore({ market: m, metadata: metadataBySeries[m.id], nowMs });
 
-		const interestScore = tags.some((tag) => userInterests.has(tag)) ? 1000 : 0;
+		const macros = classificationMacros(tags);
+		const interestScore =
+			tags.some((tag) => userInterests.has(tag)) || macros.some((macro) => userInterests.has(macro))
+				? 1000
+				: 0;
 
-		const hasCultureTag = tags.includes('culture');
+		const hasCultureTag = macros.includes('culture');
 		const cultureScore =
 			hasCultureTag && (userInterests.size === 0 || userInterests.has('culture')) ? 500 : 0;
 
@@ -1194,7 +1198,7 @@ export const getFlowQueue = async ({
 	metadataBySeries
 }: {
 	domain: RegistryDid.BalanceDomain;
-	tagMappings?: Record<string, MarketTag[]> | Promise<Record<string, MarketTag[]>>;
+	tagMappings?: Record<string, string[]> | Promise<Record<string, string[]>>;
 	metadataBySeries?: Record<string, MarketMetadata> | Promise<Record<string, MarketMetadata>>;
 }): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();

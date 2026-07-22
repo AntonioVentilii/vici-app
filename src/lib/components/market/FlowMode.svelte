@@ -24,7 +24,6 @@
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import A2hsSheet from '$lib/components/pwa/A2hsSheet.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
@@ -67,11 +66,7 @@
 		rolloverDailyGoal,
 		writeDailyGoalMirror
 	} from '$lib/utils/daily-goal.utils';
-	import {
-		FLOW_ART_CATEGORY_SET,
-		resolveFlowArtCategory,
-		type FlowArtCategory
-	} from '$lib/utils/flow-art.utils';
+	import { resolveFlowArtCategory } from '$lib/utils/flow-art.utils';
 	import { consumePinnedFlowMarket } from '$lib/utils/flow-pin.utils';
 	import {
 		canExtendSession,
@@ -130,20 +125,6 @@
 	// re-entered today. See `flow-session.utils` for the arithmetic.
 	const sittingGoal = $derived(sittingGoalFor({ baseline: sessionBaseline, pushedToOvertime }));
 	const maxBets = $derived(maxBetsFor({ sittingGoal, baseline: sessionBaseline }));
-
-	const resolveFlowCategory = ({
-		categoryId,
-		marketId
-	}: {
-		categoryId: string | undefined;
-		marketId: string;
-	}): FlowArtCategory => {
-		if (categoryId && FLOW_ART_CATEGORY_SET.has(categoryId)) {
-			return categoryId as FlowArtCategory;
-		}
-
-		return resolveFlowArtCategory({ categoryId, seed: marketId });
-	};
 
 	let markets = $state<Market[]>([]);
 	let currentIndex = $state(0);
@@ -219,9 +200,9 @@
 
 		nowMs = $minuteTick_ms;
 	});
-	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
-	// the FlowCard render loop to drive the per-card generative artwork
-	// (which uses the *primary* tag — see `primaryMarketTag`).
+	// `seriesId → stored tags` lookup loaded once on mount; consumed by the
+	// FlowCard render loop to drive the per-card generative artwork (which
+	// resolves the primary macro — see `resolveFlowArtCategory`).
 	let marketTagMap = $state<Record<string, string[]>>({});
 	let marketMetadataMap = $state<Map<MarketId, MarketMetadata>>(new Map());
 	// Real, market-wide 7d price history (0–100 YES series + time-axis
@@ -1423,12 +1404,9 @@
 				     empty slot; that removal also triggers the `out:fly` throw of
 				     the just-committed card. -->
 				{#if currentCard}
-					{@const primaryTag = primaryMarketTag(
-						(marketTagMap[currentCard.id] ?? []) as ReadonlyArray<MarketTag>
-					)}
-					{@const flowCategory = resolveFlowCategory({
-						categoryId: primaryTag,
-						marketId: currentCard.id
+					{@const flowCategory = resolveFlowArtCategory({
+						tags: marketTagMap[currentCard.id] ?? [],
+						seed: currentCard.id
 					})}
 					{@const metadata = marketMetadataMap.get(currentCard.id)}
 					{@const priceSeries = priceHistoryById.get(currentCard.id)}

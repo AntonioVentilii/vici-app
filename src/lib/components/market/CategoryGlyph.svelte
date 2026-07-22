@@ -1,5 +1,10 @@
 <script lang="ts">
-	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
+	import { isMacroId } from '$lib/constants/market-taxonomy.constants';
+	import {
+		MACRO_ART_BUCKET,
+		type FlowArtBucket,
+		type FlowArtCategory
+	} from '$lib/utils/flow-art.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
@@ -16,9 +21,11 @@
 	 * is a valid static composition for every category.
 	 */
 	interface Props {
-		// Visual language. Reuses the FlowArt category union; the `wc`
-		// tentpole has no dedicated motif and falls through to the pulsing
-		// dot fallback (its identity lives in the editorial artwork band).
+		// Visual language — a taxonomy macro (or the `wc` tentpole). Macros
+		// fold onto one of the six bespoke motif languages via
+		// `MACRO_ART_BUCKET`; the `wc` tentpole has no dedicated motif and
+		// falls through to the pulsing dot fallback (its identity lives in
+		// the editorial artwork band).
 		category: FlowArtCategory | string;
 		// Stroke / fill accent. Pass the resolved category colour.
 		accent: string;
@@ -27,6 +34,13 @@
 	}
 
 	const { category, accent, size = 56 }: Props = $props();
+
+	// Fold the incoming macro onto its motif bucket so the six bespoke
+	// glyph languages cover all seven macros; unknown ids and the `wc`
+	// tentpole resolve to `undefined` → the pulsing-dot fallback.
+	const motif = $derived<FlowArtBucket | undefined>(
+		isMacroId(category) ? MACRO_ART_BUCKET[category] : undefined
+	);
 
 	const w = $derived(size);
 	const h = $derived(size);
@@ -140,7 +154,7 @@
 	width={w}
 	xmlns="http://www.w3.org/2000/svg"
 >
-	{#if category === 'macro'}
+	{#if motif === 'macro'}
 		<path
 			d={`M ${macro.cx - macro.r} ${macro.cy} A ${macro.r} ${macro.r} 0 0 1 ${macro.cx + macro.r} ${macro.cy}`}
 			fill="none"
@@ -164,7 +178,7 @@
 			y2={macro.y2}
 		/>
 		<circle cx={macro.cx} cy={macro.cy} fill={accent} r="2.2" />
-	{:else if category === 'crypto'}
+	{:else if motif === 'crypto'}
 		{#each cryptoBlocks as i (i)}
 			{@const x = 6 + i * 12}
 			{@const y = h / 2 - 5}
@@ -190,7 +204,7 @@
 				{y}
 			/>
 		{/each}
-	{:else if category === 'tech'}
+	{:else if motif === 'tech'}
 		{@const cx = w / 2}
 		{@const cy = h / 2}
 		<rect
@@ -224,7 +238,7 @@
 		{/each}
 		<circle cx={cx - 12 + 24 * techPulse} cy={cy - 12} fill={accent} r="1.6" />
 		<circle cx={cx + 12 - 24 * ((techPulse + 0.5) % 1)} cy={cy + 12} fill={accent} r="1.6" />
-	{:else if category === 'sports'}
+	{:else if motif === 'sports'}
 		<rect
 			fill="none"
 			height="24"
@@ -243,7 +257,7 @@
 				r="1.7"
 			/>
 		{/each}
-	{:else if category === 'politics'}
+	{:else if motif === 'politics'}
 		{#each politicsBars as bar (bar.i)}
 			<rect
 				fill={withAlpha(accent, '66')}
@@ -262,7 +276,7 @@
 				y={h - 8 - bar.bh}
 			/>
 		{/each}
-	{:else if category === 'culture'}
+	{:else if motif === 'culture'}
 		{#each cultureRings as ring (ring.i)}
 			<circle
 				cx={w / 2}

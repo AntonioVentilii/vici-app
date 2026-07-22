@@ -5,7 +5,6 @@
 	import { resolve } from '$app/paths';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { track } from '$lib/services/analytics.services';
 	import {
@@ -70,13 +69,12 @@
 	const DURATIONS = [7, 14, 30] as const;
 	type Duration = (typeof DURATIONS)[number];
 
-	// Scope options surfaced in the picker — `all` plus the two
-	// category narrowings the design highlights. Labels reuse the
-	// canonical market-tag catalog so they never drift.
+	// Scope options surfaced in the picker — `all` plus the two macro
+	// narrowings the design highlights, labelled via the macro catalog.
 	const SCOPE_OPTIONS: readonly { value: BattleScope; key: MessageKey }[] = [
 		{ value: 'all', key: 'battles.create.scope_all' },
-		{ value: 'wc', key: MARKET_TAG_LABEL_KEYS.wc },
-		{ value: 'macro', key: MARKET_TAG_LABEL_KEYS.macro }
+		{ value: 'sports', key: 'market.macro.sports' },
+		{ value: 'economy', key: 'market.macro.economy' }
 	];
 
 	// Start as 'loading' so the first open shows the spinner immediately

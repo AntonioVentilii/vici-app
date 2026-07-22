@@ -1,10 +1,10 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
-	isMarketTag,
-	MARKET_TAGS,
-	normalizeMarketTags,
-	type MarketTag
-} from '$lib/constants/market-tags.constants';
+	classificationMacros,
+	classificationMicros,
+	MACRO_IDS,
+	MICRO_IDS
+} from '$lib/constants/market-taxonomy.constants';
 import type { MarketMetadata, MarketTagIndex } from '$lib/types/market-metadata';
 import { isAdmin } from '$satellite/services/_authz';
 import { logError } from '$satellite/utils/logger.utils';
@@ -20,15 +20,34 @@ import {
 } from '@junobuild/functions/sdk';
 
 /**
- * Server-side reverse index `market tag → seriesId[]`, one doc per tag of the
- * closed {@link MARKET_TAGS} taxonomy keyed by the tag id. It exists so battle
- * scoping ({@link seriesIdsForTag}) reads a single bucket instead of scanning
- * the whole `market_metadata` collection on every resolve / live-standings
- * read. The buckets are maintained inline by `upsertMarketMetadata` (Juno hooks
- * don't fire on serverless `setDocStore`, so the upsert endpoint diffs a
- * market's old vs new tags and updates the affected buckets itself) and can be
- * rebuilt from scratch by the admin {@link rebuildMarketTagIndexFn}.
+ * Server-side reverse index `bucket key → seriesId[]`, one doc per bucket keyed
+ * by the bucket id. A market's stored `tags` classify it under the 3-layer
+ * taxonomy, and it is indexed into a bucket for each of its micro ids AND each
+ * derived macro id (see {@link indexKeysForTags}) — so a macro bucket like
+ * `sports` aggregates every market of any of its micros, while a micro bucket
+ * like `soccer` holds just that subcategory. Layer-3 free tags are not indexed.
+ *
+ * The index exists so battle scoping ({@link seriesIdsForTag}) reads a single
+ * bucket instead of scanning the whole `market_metadata` collection on every
+ * resolve / live-standings read. Buckets are created on demand per key and are
+ * maintained inline by `upsertMarketMetadata` (Juno hooks don't fire on
+ * serverless `setDocStore`, so the upsert endpoint diffs a market's old vs new
+ * bucket keys and updates the affected buckets itself); they can be rebuilt
+ * from scratch by the admin {@link rebuildMarketTagIndexFn}.
  */
+
+/** Every bucket key the index can hold: one per micro id and one per macro id. */
+const ALL_INDEX_KEYS: readonly string[] = [...MICRO_IDS, ...MACRO_IDS];
+
+/**
+ * The bucket keys a market belongs to, derived from its stored tags: its micro
+ * ids plus the macro ids those micros roll up to. De-duplicated (a macro can be
+ * derived once even from several of its micros). Layer-3 free tags contribute
+ * no bucket.
+ */
+const indexKeysForTags = (tags: readonly string[]): string[] => [
+	...new Set<string>([...classificationMicros(tags), ...classificationMacros(tags)])
+];
 
 const MS_PER_NS = 1_000_000n;
 
@@ -70,18 +89,14 @@ const decodeSeriesIds = (doc: ReturnType<typeof getDocStore>): string[] => {
 };
 
 /**
- * The series carrying `tag`, read straight from its index bucket. Returns an
- * empty array when no bucket exists yet (no market has the tag, or the index
+ * The series carrying `tag`, read straight from its index bucket. `tag` is any
+ * bucket key — a micro id (`soccer`), a macro id (`sports`), or a legacy tag —
+ * buckets are created on demand, so an unknown key simply reads empty. Returns
+ * an empty array when no bucket exists yet (no market has the key, or the index
  * hasn't been rebuilt) — which correctly scores a battle on that scope as a
  * void face-off rather than silently counting every market.
  */
-export const seriesIdsForTag = ({
-	tag,
-	caller
-}: {
-	tag: MarketTag;
-	caller: Uint8Array;
-}): string[] => {
+export const seriesIdsForTag = ({ tag, caller }: { tag: string; caller: Uint8Array }): string[] => {
 	const doc = getDocStore({
 		collection: Collection.MARKET_TAG_INDEX,
 		key: tag,
@@ -92,12 +107,13 @@ export const seriesIdsForTag = ({
 };
 
 /**
- * Admin-gated read of EVERY tag bucket for the cockpit: `tag → seriesIds` for
- * the whole closed {@link MARKET_TAGS} taxonomy. One keyed `getDocStore` per tag
- * (7 O(log n) reads — never a collection scan), missing/malformed buckets read
- * as empty. The cockpit uses it to classify markets (sport vs non-sport) for the
- * campaign hypothesis register, so the taxonomy stays owned here and no tag
- * string is ever hardcoded warehouse-side.
+ * Admin-gated read of every populated bucket for the cockpit: `bucket → seriesIds`
+ * over the closed micro+macro taxonomy. One keyed `getDocStore` per possible key
+ * (O(log n) reads — never a collection scan); missing/malformed buckets read as
+ * empty and are dropped from the result. The cockpit uses it to classify markets
+ * (e.g. sport vs non-sport via the `sports` macro bucket) for the campaign
+ * hypothesis register, so the taxonomy stays owned here and no key is hardcoded
+ * warehouse-side.
  */
 export const getMarketTagsFn = (): {
 	buckets: { tag: string; seriesIds: string[] }[];
@@ -111,17 +127,17 @@ export const getMarketTagsFn = (): {
 	const admin = adminCaller();
 
 	return {
-		buckets: MARKET_TAGS.map((tag) => ({
+		buckets: ALL_INDEX_KEYS.map((tag) => ({
 			tag,
 			seriesIds: seriesIdsForTag({ tag, caller: admin })
-		}))
+		})).filter(({ seriesIds }) => seriesIds.length > 0)
 	};
 };
 
 /**
- * Add or remove `seriesId` from a single tag's bucket. Version-locked
+ * Add or remove `seriesId` from a single bucket. Version-locked
  * read-modify-write as admin; best-effort — a rare version race under
- * concurrent metadata writes to markets sharing a tag is logged and swallowed
+ * concurrent metadata writes to markets sharing a bucket is logged and swallowed
  * (the admin {@link rebuildMarketTagIndexFn} re-derives the exact buckets).
  */
 const mutateBucket = ({
@@ -130,7 +146,7 @@ const mutateBucket = ({
 	op,
 	admin
 }: {
-	tag: MarketTag;
+	tag: string;
 	seriesId: string;
 	op: 'add' | 'remove';
 	admin: Uint8Array;
@@ -181,10 +197,12 @@ const mutateBucket = ({
 
 /**
  * Reconcile the index for a single market after its metadata is (re-)written:
- * drop the series from every tag it no longer carries and add it to every tag
- * it newly carries. Tags it still carries are left untouched (the series is
- * already in those buckets). Both inputs are normalized to the closed taxonomy
- * here so no unknown tag reaches a bucket and a since-removed tag is dropped.
+ * drop the series from every bucket it no longer belongs to and add it to every
+ * bucket it newly belongs to. Buckets it still belongs to are left untouched (the
+ * series is already in them). Bucket keys — its micros plus derived macros — are
+ * re-derived from the tags here (see {@link indexKeysForTags}), so a since-removed
+ * micro drops the series and, if it was that micro's macro's last market, the
+ * macro bucket too.
  */
 export const updateMarketTagIndex = ({
 	seriesId,
@@ -195,8 +213,8 @@ export const updateMarketTagIndex = ({
 	oldTags: readonly string[];
 	newTags: readonly string[];
 }): void => {
-	const previous = normalizeMarketTags(oldTags);
-	const current = normalizeMarketTags(newTags);
+	const previous = indexKeysForTags(oldTags);
+	const current = indexKeysForTags(newTags);
 
 	const removed = previous.filter((tag) => !current.includes(tag));
 	const added = current.filter((tag) => !previous.includes(tag));
@@ -227,7 +245,7 @@ export const updateMarketTagIndex = ({
 };
 
 /**
- * Admin-only corrective: re-derive every tag bucket from a single scan of
+ * Admin-only corrective: re-derive every bucket from a single scan of
  * `market_metadata` and overwrite the index. Backfills the index for markets
  * that predate it and heals any drift from a concurrent-write version race.
  * Admin-gated (mirrors `recomputeActivityReactionCounts`).
@@ -251,7 +269,7 @@ export const rebuildMarketTagIndexFn = (): { buckets: number; series: number } =
 		params: {}
 	});
 
-	const buckets = new Map<MarketTag, string[]>(MARKET_TAGS.map((tag) => [tag, []]));
+	const buckets = new Map<string, string[]>(ALL_INDEX_KEYS.map((tag) => [tag, []]));
 	let series = 0;
 
 	for (const [, item] of items) {
@@ -274,12 +292,10 @@ export const rebuildMarketTagIndexFn = (): { buckets: number; series: number } =
 			const { seriesId, tags } = metadata;
 
 			if (typeof seriesId === 'string' && Array.isArray(tags)) {
-				for (const tag of tags) {
-					// Guard against an unknown value so a stray tag can't create a
-					// bucket outside the taxonomy.
-					if (isMarketTag(tag)) {
-						buckets.get(tag)?.push(seriesId);
-					}
+				// Bucket keys come from the taxonomy (micros + derived macros), so a
+				// stray free tag can never create a bucket outside it.
+				for (const tag of indexKeysForTags(tags)) {
+					buckets.get(tag)?.push(seriesId);
 				}
 			}
 		}
@@ -287,11 +303,11 @@ export const rebuildMarketTagIndexFn = (): { buckets: number; series: number } =
 
 	const now = nowMs();
 
-	// Reconcile every tag bucket — including ones that now resolve to empty, so
-	// a stale membership is cleared rather than left behind.
-	for (const tag of MARKET_TAGS) {
+	// Reconcile every possible bucket — including ones that now resolve to empty,
+	// so a stale membership is cleared rather than left behind.
+	for (const tag of ALL_INDEX_KEYS) {
 		// De-duplicate before persisting — the bucket's documented invariant is a
-		// set, and a series defensively can't appear twice in one tag's list.
+		// set, and a series defensively can't appear twice in one bucket's list.
 		const seriesIds = [...new Set(buckets.get(tag) ?? [])];
 
 		const existing = getDocStore({
@@ -313,5 +329,5 @@ export const rebuildMarketTagIndexFn = (): { buckets: number; series: number } =
 		});
 	}
 
-	return { buckets: MARKET_TAGS.length, series };
+	return { buckets: ALL_INDEX_KEYS.length, series };
 };

@@ -58,7 +58,7 @@ const previewMarket = ({
 export const WELCOME_MARKET_PREVIEWS: readonly WelcomeMarketPreview[] = [
 	previewMarket({
 		id: 'fed-jun',
-		category: 'macro',
+		category: 'economy',
 		question: 'Will the Fed cut rates in June?',
 		yesProbability: 0.64,
 		closesLabel: 'June 18',

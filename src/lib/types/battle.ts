@@ -26,7 +26,7 @@
  */
 
 import { DAY_IN_MS } from '$lib/constants/app.constants';
-import { MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
+import { MACRO_IDS, type MacroId } from '$lib/constants/market-taxonomy.constants';
 import type { CategoryStatsBucket } from '$lib/types/user-stats';
 
 export type BattleKind = 'league' | 'duel';
@@ -45,17 +45,14 @@ export const BATTLE_TERMINAL_STATES: ReadonlySet<BattleState> = new Set<BattleSt
 
 /**
  * Which calls count toward a battle's scoreline. `'all'` counts every
- * settled call regardless of category; any {@link MarketTag} narrows the
- * battle to a single market category (e.g. `'wc'`, `'macro'`). Picked
+ * settled call regardless of category; any {@link MacroId} narrows the
+ * battle to a single macro category (e.g. `'sports'`, `'economy'`). Picked
  * once at proposal time and frozen alongside the other identity fields.
  */
-export type BattleScope = 'all' | MarketTag;
+export type BattleScope = 'all' | MacroId;
 
-/** Allowed scope values: `'all'` plus every market category tag. */
-export const BATTLE_SCOPES: ReadonlySet<BattleScope> = new Set<BattleScope>([
-	'all',
-	...MARKET_TAGS
-]);
+/** Allowed scope values: `'all'` plus every macro category. */
+export const BATTLE_SCOPES: ReadonlySet<BattleScope> = new Set<BattleScope>(['all', ...MACRO_IDS]);
 
 /** Default scope when the proposer doesn't narrow the category. */
 export const BATTLE_SCOPE_DEFAULT: BattleScope = 'all';
@@ -115,7 +112,7 @@ export interface BattleDoc {
 	settleMs: number;
 	/**
 	 * Which market category the battle counts. `'all'` (the default)
-	 * counts every settled call; a {@link MarketTag} narrows to one
+	 * counts every settled call; a {@link MacroId} narrows to one
 	 * category. Chosen at proposal time and immutable thereafter.
 	 * Absent on legacy rows written before the picker shipped — callers
 	 * fall back to {@link BATTLE_SCOPE_DEFAULT}.

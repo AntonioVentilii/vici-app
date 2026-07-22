@@ -8,7 +8,8 @@
 	} from '$lib/utils/flow-art.utils';
 
 	interface Props {
-		// Visual language. One of the six prediction-market categories.
+		// Visual language — a taxonomy macro (folded onto one of the six
+		// bespoke render buckets) or the `wc` tentpole editorial variant.
 		category: FlowArtCategory;
 		// Stable seed — pass `market.id` or any deterministic string /
 		// number. Same seed + state always produces the same composition.

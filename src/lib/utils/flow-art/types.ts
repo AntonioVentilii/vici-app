@@ -3,10 +3,36 @@
 // Extracted from the original flow-art.utils.ts during the structural
 // split; behaviour-identical, no logic here.
 
+import { MACRO_IDS, type MacroId } from '$lib/constants/market-taxonomy.constants';
 import type { Theme } from '$lib/stores/theme.store';
 
-export type FlowArtCategory =
-	'macro' | 'crypto' | 'sports' | 'politics' | 'tech' | 'culture' | 'wc';
+/**
+ * Public artwork category: the seven taxonomy macros plus the opt-in `wc`
+ * tentpole editorial variant. `wc` is not a macro — it's the FIFA-themed
+ * World-Cup composition preserved from the tentpole deck, resolved from a
+ * `world-cup` free tag rather than derived from a micro.
+ */
+export type FlowArtCategory = MacroId | 'wc';
+
+/**
+ * Internal render bucket: the six bespoke generative visual languages. Each
+ * macro maps onto exactly one bucket via {@link MACRO_ART_BUCKET} — macros
+ * without a bespoke language (e.g. `world`, `economy`) share the closest
+ * relative — so the renderer / palette tables stay keyed by these six plus
+ * the separately-dispatched `wc`.
+ */
+export type FlowArtBucket = 'macro' | 'crypto' | 'sports' | 'politics' | 'tech' | 'culture';
+
+/** Macro → render bucket. `wc` is handled outside this map (editorial). */
+export const MACRO_ART_BUCKET: Record<MacroId, FlowArtBucket> = {
+	politics: 'politics',
+	world: 'politics',
+	economy: 'macro',
+	crypto: 'crypto',
+	tech: 'tech',
+	culture: 'culture',
+	sports: 'sports'
+};
 
 export type FlowArtState = 'neutral' | 'won' | 'lost';
 // FlowArt's palette dimension is keyed by the app-wide `Theme` union;
@@ -14,26 +40,19 @@ export type FlowArtState = 'neutral' | 'won' | 'lost';
 export type FlowArtTheme = Theme;
 
 /**
- * Canonical category set used for random category assignment when a
- * market has no admin-tagged category. `wc` is intentionally excluded
- * — it's a tentpole-only language and must be opt-in via an explicit
- * `category: 'wc'` (typically driven by the FeaturedEvent abstraction).
+ * Canonical category set used for random category assignment when a market
+ * has no micro tags. The seven macros, in canonical order. `wc` is
+ * intentionally excluded — it's a tentpole-only language and must be opt-in
+ * via a `world-cup` free tag (typically driven by the FeaturedEvent
+ * abstraction).
  */
-export const FLOW_ART_CATEGORIES: readonly Exclude<FlowArtCategory, 'wc'>[] = [
-	'macro',
-	'crypto',
-	'sports',
-	'politics',
-	'tech',
-	'culture'
-] as const;
+export const FLOW_ART_CATEGORIES: readonly MacroId[] = MACRO_IDS;
 
 /**
  * Pre-built lookup set for `FLOW_ART_CATEGORIES` plus the opt-in `wc`
- * tentpole. Three Flow surfaces (FlowCard, FlowMode, market-signals)
- * need to test whether an arbitrary string is a known category —
- * exporting the Set once avoids each consumer rebuilding it on module
- * load.
+ * tentpole. Three Flow surfaces (FlowCard, FlowMode, market-signals) need
+ * to test whether an arbitrary string is a known category — exporting the
+ * Set once avoids each consumer rebuilding it on module load.
  */
 export const FLOW_ART_CATEGORY_SET: ReadonlySet<string> = new Set<FlowArtCategory>([
 	...FLOW_ART_CATEGORIES,
