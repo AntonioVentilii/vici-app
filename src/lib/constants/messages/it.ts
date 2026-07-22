@@ -21,6 +21,7 @@ export const itMessages = {
 	'trade.error.series_already_settled':
 		'Questo mercato è già stato liquidato — le previsioni sono chiuse.',
 	'trade.error.series_not_found': 'Questo mercato non è più disponibile.',
+	'trade.error.series_not_started': 'Questo mercato non è ancora aperto alle previsioni.',
 	'a11y.appearance': 'Aspetto',
 	'a11y.banner_juno_console': 'Apri la Juno Console per creare un nuovo Satellite di test',
 	'a11y.checking_signin': 'Verifica dello stato di accesso',

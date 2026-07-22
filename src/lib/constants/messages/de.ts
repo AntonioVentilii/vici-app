@@ -27,6 +27,7 @@ export const deMessages = {
 	'trade.error.series_already_settled':
 		'Dieser Markt ist bereits abgerechnet — Vorhersagen sind geschlossen.',
 	'trade.error.series_not_found': 'Dieser Markt ist nicht mehr verfügbar.',
+	'trade.error.series_not_started': 'Dieser Markt ist noch nicht für Vorhersagen geöffnet.',
 	'a11y.appearance': 'Erscheinungsbild',
 	'a11y.banner_juno_console':
 		'Juno Console öffnen, um einen neuen Satellite zum Testen zu erstellen',
