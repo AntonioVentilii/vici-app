@@ -53,9 +53,6 @@ jobs:
       - name: Regenerate Candid bindings
         run: npm run did
 
-      - name: Quality
-        run: npm run quality
-
       - name: Create Pull Request
         uses: ./.github/actions/create-pr
         with:
@@ -66,7 +63,6 @@ jobs:
             Automated sync with upstream [`AntonioVentilii/icdc-core`](https://github.com/AntonioVentilii/icdc-core).
 
             - Bumped `ICDC_CORE_VERSION` in `scripts/build/download.icdc.common.sh` to the latest release (`${{ steps.bump.outputs.version }}`).
-            - Regenerated the Candid bindings under `src/declarations/**` via `npm run did`.
-            - Ran `npm run quality`.
+            - Regenerated the Candid bindings under `src/declarations/**` via `npm run did` (which also runs format + lint).
 
             Opened automatically by the `Update icdc-core` workflow. Review the regenerated `.did` surface before merging.
