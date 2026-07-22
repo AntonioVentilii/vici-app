@@ -18,7 +18,12 @@
 	 *    confetti, "shake it off"), the actual resolved calls (win/loss list,
 	 *    capped at 5 + "+N more"). There is no short auto-enter here — the user
 	 *    reads the digest and continues via tap-anywhere or the CTA. A ~30 s
-	 *    safety net still prevents an indefinite linger.
+	 *    safety net still prevents an indefinite linger. While the per-row
+	 *    market titles are still resolving (catalog and/or translations —
+	 *    `digest.titlesLoading`) the recap holds behind the deck beat instead
+	 *    of flashing `Unknown Market` rows, and every enter path is blocked so
+	 *    the recap can't be skipped unseen; a bounded cap guarantees it still
+	 *    shows even if the titles never settle.
 	 *
 	 * `ready` carries the REAL first-card fetch state, so neither the dwell
 	 * auto-enter, the safety auto-enter, nor a tap ever reveals a deck that has
@@ -43,6 +48,12 @@
 	// Safety-net ceiling for the digest wait — if the user never acts, the
 	// surface still enters once both this has elapsed and the deck is ready.
 	const SAFETY_AUTO_ENTER_MS = 30_000;
+	// Ceiling on how long the digest may hold for its per-row titles. Past it
+	// the recap shows with whatever resolved (fallback titles included) — a
+	// failed catalog or translation fetch can delay the recap, never swallow
+	// it. Must stay well under SAFETY_AUTO_ENTER_MS so the safety net can only
+	// fire on a recap the user actually saw.
+	const TITLES_WAIT_CAP_MS = 8_000;
 
 	interface Props {
 		/** The away-digest; `count === 0` falls back to deck-shuffle mode. */
@@ -69,6 +80,17 @@
 	const hasDigest = $derived(digest.count > 0);
 	const positive = $derived(digest.netVxp >= 0);
 
+	// Set when the titles wait-cap fires — from then on the recap shows with
+	// whatever titles resolved rather than holding any longer.
+	let titlesWaitElapsed = $state(false);
+
+	// The recap is pending while its row titles are still resolving (bounded
+	// by the cap). While pending the surface renders the deck beat and every
+	// enter path is blocked, so the unseen recap can neither flash `Unknown
+	// Market` nor be skipped.
+	const digestPending = $derived(hasDigest && digest.titlesLoading && !titlesWaitElapsed);
+	const showDigest = $derived(hasDigest && !digestPending);
+
 	// Rotating Oracle copy for the deck-shuffle mode. One line reads, fades,
 	// and the next takes its place — continuously, with no empty frames. Each
 	// line plays the 1.1s `flowFade` (in → hold → out) and the swap is driven
@@ -93,8 +115,9 @@
 	// The "Enter Flow →" CTA is an optional tap-to-skip — the entry beat
 	// auto-enters on its own (see below), so the CTA arms as soon as the real
 	// first-card fetch (`ready`) lands. It never reveals a deck that hasn't
-	// arrived, but it imposes no read-beat of its own.
-	const ctaReady = $derived(ready);
+	// arrived, and it holds its arming state while the recap is still pending
+	// so a tap can't dismiss a digest the user never saw.
+	const ctaReady = $derived(ready && !digestPending);
 
 	// Whether `onEnter` already ran (any path), so the ready-gated auto-enter
 	// timers never double-fire once the deck becomes ready.
@@ -149,7 +172,7 @@
 		// flips before the 360 ms fires.
 		let revealCue: ReturnType<typeof setTimeout> | undefined;
 
-		if (hasDigest && !reduce) {
+		if (showDigest && !reduce) {
 			revealCue = setTimeout(() => {
 				revealCue = undefined;
 
@@ -192,6 +215,24 @@
 		};
 	});
 
+	// DIGEST-mode titles wait-cap: while the recap is held for its row titles,
+	// arm the ceiling after which it shows regardless. Restarted if the digest
+	// flips back into loading; the flag is one-way, matching the "show it and
+	// keep it shown" intent.
+	$effect(() => {
+		if (!hasDigest || !digest.titlesLoading) {
+			return;
+		}
+
+		const cap = setTimeout(() => {
+			titlesWaitElapsed = true;
+		}, TITLES_WAIT_CAP_MS);
+
+		return () => {
+			clearTimeout(cap);
+		};
+	});
+
 	// DIGEST-mode safety net: after ~30 s, flag that the wait has run long.
 	// Kept in its OWN effect with NO dependency on `prefersReducedMotion()`, so
 	// the timer starts once and isn't cleared/restarted when the OS
@@ -225,10 +266,12 @@
 
 	// Reveal the deck. Idempotent (the `entered` latch) so the dwell / safety
 	// auto-enter, a tap-anywhere, and the CTA can't double-fire. Gated on
-	// `ready` so no path ever reveals a deck that hasn't arrived. `entry`
-	// records whether this was a deliberate tap or a timer-driven auto-enter.
+	// `ready` so no path ever reveals a deck that hasn't arrived, and on the
+	// pending recap so no path (tap, CTA, or timer) settles a digest the user
+	// never saw — entering marks its calls seen. `entry` records whether this
+	// was a deliberate tap or a timer-driven auto-enter.
 	const enterFlow = (entry: FlowEntryMethod) => {
-		if (!ready || entered) {
+		if (!ready || entered || digestPending) {
 			return;
 		}
 
@@ -295,7 +338,7 @@
 </script>
 
 <div class="flow-loading" aria-live="polite" role="status">
-	{#if hasDigest}
+	{#if showDigest}
 		<!-- DIGEST MODE — focused on the resolved calls; no deck animation
 		     competing for attention. -->
 		<div class="away-view {positive ? 'win' : 'loss'}">
@@ -357,7 +400,8 @@
 			</button>
 		</div>
 	{:else}
-		<!-- DECK MODE — the shuffle, when there's nothing to settle. -->
+		<!-- DECK MODE — the shuffle, when there's nothing to settle. Also the
+		     holding beat while a pending digest waits for its titles. -->
 		<div class="deckwrap" aria-hidden="true">
 			<div class="pc a"><i class="t"></i><i class="m"></i><i class="s"></i></div>
 			<div class="pc c"><i class="t"></i><i class="m"></i><i class="s"></i></div>
