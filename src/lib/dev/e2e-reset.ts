@@ -73,19 +73,34 @@ export const trackLoginSyncSettled = (run: Promise<unknown>): void => {
 };
 
 /**
- * Resolve once no tracked login sync is in flight. Re-awaits until the chain
- * reference stops changing, so a sync registered by a second
- * `onAuthStateChange` pass mid-await (the double-fire race) is covered too. The
- * post-sign-in write storm is finite, so this converges.
+ * Upper bound on the pre-delete sync wait. The wait is an optimisation (it lets
+ * the delete run cleanly instead of relying on the resurrection watch), so it
+ * must never be able to hang the Playwright run: if `calculateAndSyncStats` (or
+ * anything it awaits) stalls, we time out and fall through to the delete +
+ * bounded resurrection watch below. Comfortably above the normal sync time on
+ * the emulator (a handful of sequential canister reads).
+ */
+const LOGIN_SYNC_SETTLE_TIMEOUT_MS = 15_000;
+
+/**
+ * Resolve once no tracked login sync is in flight, OR the timeout elapses —
+ * whichever comes first. Re-awaits until the chain reference stops changing, so
+ * a sync registered by a second `onAuthStateChange` pass mid-await (the
+ * double-fire race) is covered too. The post-sign-in write storm is finite, so
+ * the settle path converges; the timeout is the safety valve for a hung sync.
  */
 const waitForLoginSyncSettled = async (): Promise<void> => {
-	let awaited: Promise<void> | undefined;
+	const settled = (async () => {
+		let awaited: Promise<void> | undefined;
 
-	while (awaited !== loginSyncChain) {
-		awaited = loginSyncChain;
+		while (awaited !== loginSyncChain) {
+			awaited = loginSyncChain;
 
-		await awaited;
-	}
+			await awaited;
+		}
+	})();
+
+	await Promise.race([settled, sleep(LOGIN_SYNC_SETTLE_TIMEOUT_MS)]);
 };
 
 /**
@@ -147,7 +162,9 @@ const resetMyProfile = async (): Promise<void> => {
 	}
 
 	// Let the post-sign-in stats sync finish its profile write FIRST, so it
-	// can't resurrect the doc we're about to delete (see the header).
+	// can't resurrect the doc we're about to delete (see the header). Bounded:
+	// on a hung sync this times out and the resurrection watch below takes over,
+	// so the reset can never hang the Playwright run.
 	await waitForLoginSyncSettled();
 
 	for (let attempt = 0; attempt < DELETE_ATTEMPTS; attempt += 1) {
