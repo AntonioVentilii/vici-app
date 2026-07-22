@@ -49,6 +49,16 @@ export interface Market {
 	createdAt: bigint; // timestamp in ms
 	status: MarketStatus;
 	outcome?: Outcome;
+	/**
+	 * When settlement happened, in ms — `undefined` for an unresolved market, and
+	 * also for a resolved one whose settlement carries no timestamp (a
+	 * categorical `Outcome` input, or a price input settled without one). Sourced
+	 * from clearing's on-chain `SettlementInput` where present, otherwise from the
+	 * `SETTLEMENT` activity row. The only recency key a resolved market has:
+	 * `createdAt` / `expiryDate` say nothing about *when it was called*, so any
+	 * "most recently resolved" ordering must sort on this.
+	 */
+	resolvedAt?: bigint;
 	outcomes?: {
 		id: OutcomeId;
 		title: string;
