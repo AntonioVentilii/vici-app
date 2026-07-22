@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.8.29](https://github.com/AntonioVentilii/vici-app/compare/v1.8.28...v1.8.29) (2026-07-22)
+
+
+### Bug Fixes
+
+* **ci:** restore junobuild/juno-action -full variant (Dependabot dropped the toolchain) ([#1174](https://github.com/AntonioVentilii/vici-app/issues/1174)) ([1a57721](https://github.com/AntonioVentilii/vici-app/commit/1a57721530fcbad68bbfb5f5759ea69d2c652747))
+
+
+### Miscellaneous Chores
+
+* **icdc-core:** sync bindings and bump version to v0.1.6 ([#1172](https://github.com/AntonioVentilii/vici-app/issues/1172)) ([6148137](https://github.com/AntonioVentilii/vici-app/commit/61481372743a012dc84c2fbb2d85027f11d8c610))
+
+
+### Continuous Integration
+
+* **icdc-core:** weekly workflow to bump version and regenerate bindings ([#1170](https://github.com/AntonioVentilii/vici-app/issues/1170)) ([64517ea](https://github.com/AntonioVentilii/vici-app/commit/64517eaf63dde2790c7c5d2bdae76ce92340708d))
+
 ## [1.8.28](https://github.com/AntonioVentilii/vici-app/compare/v1.8.27...v1.8.28) (2026-07-22)
 
 
