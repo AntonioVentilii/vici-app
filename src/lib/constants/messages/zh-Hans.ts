@@ -16,6 +16,7 @@ export const zhHansMessages = {
 	'trade.error.self_trading_not_allowed': '你不能与自己的订单对手成交。',
 	'trade.error.series_already_settled': '此市场已结算——预测已关闭。',
 	'trade.error.series_not_found': '此市场已不再可用。',
+	'trade.error.series_not_started': '此市场尚未开放预测。',
 	'a11y.appearance': '外观',
 	'a11y.banner_juno_console': '打开 Juno 控制台以创建用于测试的新卫星',
 	'a11y.checking_signin': '正在检查登录状态',

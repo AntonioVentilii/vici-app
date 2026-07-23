@@ -127,12 +127,8 @@ export const mapTradeError = (err: ClearingDid.TradeError): TradeErrorMessage =>
 		return { key: 'trade.error.series_already_settled' };
 	}
 
-	// On-chain trading-window rejections. The feed already withholds not-yet-open
-	// markets, so `SeriesNotStarted` is a defensive edge (direct link / start-boundary
-	// race) — a neutral message, not the misleading "just closed". A dedicated
-	// "opens at {time}" copy across locales is a follow-up.
 	if ('SeriesNotStarted' in err) {
-		return { key: 'trade.error.generic' };
+		return { key: 'trade.error.series_not_started' };
 	}
 
 	if ('SeriesExpired' in err) {

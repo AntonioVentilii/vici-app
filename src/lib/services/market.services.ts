@@ -173,7 +173,8 @@ export const createMarket = async ({
 		},
 		resolution: { clause: resolutionClause },
 		expiry_ns: expiryDate * MILLISECOND_IN_NANOSECONDS,
-		// FE-created markets are tradeable immediately; scheduling is not exposed here.
+		// `None` registers the series as already live (no future trading-open gate);
+		// Vici markets open immediately and close at `expiry_ns`.
 		start_ns: toNullable(),
 		payout_unit: payoutUnit,
 		strike: STRIKE,
@@ -403,7 +404,8 @@ const unexpiredSeriesParams = (): RegistryDid.ListSeriesParams => ({
 	pagination: toNullable(),
 	underlying: toNullable(),
 	only_unexpired: toNullable(true),
-	// Leave the trading-window filter open; `only_unexpired` already scopes the set.
+	// `None` applies no extra window filter — `only_unexpired` already drops
+	// expired series, and Vici series carry no future start gate.
 	tradeable_now: toNullable(),
 	search_term: toNullable(),
 	balance_domain: toNullable(),
