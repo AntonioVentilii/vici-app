@@ -18,9 +18,11 @@ import { isNullish } from '@dfinity/utils';
 
 /**
  * Whether a market is revealed right now under its release start. Reveal is
- * inclusive at the start (`now >= startDate` is live), matching the on-chain
- * trading gate, so the feed never shows a market a beat before it can be traded.
- * A market with no `startDate` is live from registration and always revealed.
+ * inclusive at the start (`now >= startDate`). `now` is the client clock, so
+ * this best-effort tracks the on-chain trading gate rather than guaranteeing it:
+ * under clock skew or a near-boundary race the UI can reveal a beat early, and a
+ * trade then rejects with `SeriesNotStarted`. A market with no `startDate` is
+ * live from registration and always revealed.
  */
 export const isMarketRevealed = ({
 	startDate,
