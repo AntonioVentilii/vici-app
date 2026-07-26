@@ -81,7 +81,7 @@ export const mapMarketData = ({
 		resolution,
 		creator: creator.toText(),
 		expiryDate: expiryDate / MILLISECOND_IN_NANOSECONDS,
-		startDate: nonNullish(startNsOpt[0]) ? startNsOpt[0] / MILLISECOND_IN_NANOSECONDS : undefined,
+		startDate: nonNullish(startNs) ? startNs / MILLISECOND_IN_NANOSECONDS : undefined,
 		createdAt: series.created_at_ns / MILLISECOND_IN_NANOSECONDS,
 		status,
 		outcome,
