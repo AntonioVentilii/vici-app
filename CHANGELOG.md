@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.30](https://github.com/AntonioVentilii/vici-app/compare/v1.8.29...v1.8.30) (2026-07-26)
+
+
+### Bug Fixes
+
+* **markets:** generalize scheduled reveal beyond WC + start_ns in deploy-markets ([#1188](https://github.com/AntonioVentilii/vici-app/issues/1188)) ([e11aa0b](https://github.com/AntonioVentilii/vici-app/commit/e11aa0bfff49e1af59c1212889e2329d8280c6c2))
+
 ## [1.8.29](https://github.com/AntonioVentilii/vici-app/compare/v1.8.28...v1.8.29) (2026-07-22)
 
 
