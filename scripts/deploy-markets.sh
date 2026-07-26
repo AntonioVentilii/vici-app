@@ -105,6 +105,17 @@ for ((i = 0; i < length; i++)); do
 	expiration_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$expiration_iso" "+%s" 2>/dev/null || date -d "$expiration_iso" "+%s")
 	expiration_ns=$((expiration_seconds * 1000000000))
 
+	# Optional `startDate` (ISO): trading opens at this instant (registry
+	# `start_ns` — a staggered release schedule lives in the deck, not in cron).
+	# Omitted => null => live immediately. add_series rejects a start in the past.
+	start_iso=$(jq -r '.startDate // empty' <<<"$market")
+	if [ -n "$start_iso" ]; then
+		start_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$start_iso" "+%s" 2>/dev/null || date -d "$start_iso" "+%s")
+		start_ns_candid="opt $((start_seconds * 1000000000))"
+	else
+		start_ns_candid="null"
+	fi
+
 	echo "Adding market: $title ($underlying)"
 
 	outcomes_list=$(jq -r '.outcomes[]?' <<<"$market" | sed 's/"/\\"/g' | awk '{id=tolower($0); gsub(/[^a-z0-9]+/, "-", id); gsub(/^-+|-+$/, "", id); printf "record { id=\"%s\"; title=\"%s\"; description=null; icon_url=null }; ", id, $0}')
@@ -134,6 +145,7 @@ for ((i = 0; i < length; i++)); do
         trading_access = vec { variant { Open } };
         engine_id = opt \"$VICI_ENGINE_ID\";
         locale = opt \"$locale\";
+        start_ns = $start_ns_candid;
     })"
 done
 
