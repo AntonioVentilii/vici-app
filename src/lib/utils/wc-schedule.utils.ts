@@ -45,13 +45,13 @@ export const filterScheduledWcMarkets = ({
 	markets: Market[];
 	tagsByMarket: Record<string, string[]>;
 	now: number;
-}): Market[] => {
-	// Retained for call-site compatibility; tags no longer affect gating.
-	void tagsByMarket;
-
-		if (!isWc) {
-			return true;
-		}
+}): Market[] =>
+	markets.filter((market) => {
+		// Generalized 2026-07-26: scheduled starts are no longer WC-only (topical
+		// drops carry per-wave start_ns) — ANY market with a future startDate stays
+		// hidden until its release, whatever its tags. `tagsByMarket` is kept for
+		// call-site compatibility; the WC tag no longer changes behaviour.
+		void tagsByMarket;
 
 		return isMarketRevealed({ startDate: market.startDate, now });
 	});

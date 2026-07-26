@@ -110,11 +110,7 @@ for ((i = 0; i < length; i++)); do
 	# Omitted => null => live immediately. add_series rejects a start in the past.
 	start_iso=$(jq -r '.startDate // empty' <<<"$market")
 	if [ -n "$start_iso" ]; then
-		start_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$start_iso" "+%s" 2>/dev/null || date -d "$start_iso" "+%s" 2>/dev/null)
-		if ! [[ "$start_seconds" =~ ^[0-9]+$ ]]; then
-			echo "Error: unparseable startDate '$start_iso' for market: $title" >&2
-			exit 1
-		fi
+		start_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$start_iso" "+%s" 2>/dev/null || date -d "$start_iso" "+%s")
 		start_ns_candid="opt $((start_seconds * 1000000000))"
 	else
 		start_ns_candid="null"
