@@ -109,11 +109,10 @@ export const prepareFlow = async ({
 		const tagsByMarket = tagMap;
 		const excludeSet = new Set(exclude);
 
-		// Temporary hardcoded World-Cup release schedule: a WC market is
-		// withheld until its Show Date (00:00 UTC), and WC markets absent
-		// from the calendar stay hidden entirely. Applied to the whole
-		// queue up front so withheld markets can't leak back in through the
-		// featured-scope fallback below. Non-WC markets pass through.
+		// Release gating: ANY market with a scheduled on-chain trading start
+		// (`start_ns`) is withheld until that instant; markets with no start are
+		// live. Applied to the whole queue up front so withheld markets can't
+		// leak back in through the featured-scope fallback below.
 		const visibleQueue = filterScheduledWcMarkets({
 			markets: queue,
 			tagsByMarket,

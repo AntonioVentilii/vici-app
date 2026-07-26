@@ -109,12 +109,11 @@
 		return true;
 	};
 
-	// Temporary hardcoded World-Cup release schedule: WC markets surface only
-	// once their Show Date (00:00 UTC) has arrived, and WC markets absent from
-	// the calendar stay hidden. Applied to the discovery feeds (available +
-	// trending) below; non-WC markets pass through, and the viewer's explicit
-	// Saved watchlist is intentionally left ungated. Re-derives on the minute
-	// tick so a market appears the moment its release lands.
+	// Release gating: any scheduled market surfaces only once its on-chain
+	// trading start (`start_ns`) has arrived; markets with no start are live.
+	// Applied to the discovery feeds (available + trending) below; the viewer's
+	// explicit Saved watchlist is intentionally left ungated. Re-derives on the
+	// minute tick so a market appears the moment its release lands.
 	const visibleMarkets = $derived(
 		filterScheduledWcMarkets({ markets: $markets, tagsByMarket, now: $minuteTick_ms })
 	);
