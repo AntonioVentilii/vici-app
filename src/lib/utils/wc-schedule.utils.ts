@@ -1,4 +1,3 @@
-import { WORLD_CUP_2026 } from '$lib/constants/featured-event.constants';
 import type { Market } from '$lib/types/market';
 import { isNullish } from '@dfinity/utils';
 
@@ -9,20 +8,19 @@ import { isNullish } from '@dfinity/utils';
  * board) until its start instant; a market with no start is live and always
  * shown.
  *
- * Both helpers gate **only** World-Cup markets — identified by the featured
- * event's category tag — so they are safe to run over any mixed-category list:
- * non-WC markets always pass through. The WC scope is deliberate for now; the
- * underlying `startDate` check is general and could drop the tag once scheduled
- * starts are used beyond the World Cup.
+ * Generalized 2026-07-26: scheduled starts are no longer WC-only (topical drops
+ * carry per-wave `start_ns`), so the gate applies to ANY market with a future
+ * `startDate`, whatever its tags.
  */
 
 /**
  * Whether a market is revealed right now under its release start. Reveal is
- * inclusive at the start (`now >= startDate`). `now` is the client clock, so
- * this best-effort tracks the on-chain trading gate rather than guaranteeing it:
- * under clock skew or a near-boundary race the UI can reveal a beat early, and a
- * trade then rejects with `SeriesNotStarted`. A market with no `startDate` is
- * live from registration and always revealed.
+ * inclusive at the start (`now >= startDate`). `now` is the client clock (ms),
+ * so this best-effort tracks the on-chain trading gate rather than guaranteeing
+ * it: under clock skew or a near-boundary race the UI can reveal a beat early,
+ * and a trade then rejects with `SeriesNotStarted`. A market with no `startDate`
+ * is live from registration and always revealed. Compared as `bigint` so a
+ * far-future timestamp can never lose precision through a `Number` round-trip.
  */
 export const isMarketRevealed = ({
 	startDate,
@@ -30,12 +28,13 @@ export const isMarketRevealed = ({
 }: {
 	startDate?: bigint;
 	now: number;
-}): boolean => isNullish(startDate) || now >= Number(startDate);
+}): boolean => isNullish(startDate) || BigInt(Math.trunc(now)) >= startDate;
 
 /**
- * Drops World-Cup markets whose release start hasn't arrived yet. Non-WC markets
- * pass through untouched, so this is safe to apply to any mixed-category list
- * before further filtering.
+ * Drops any market whose release start hasn't arrived yet (see module doc —
+ * applies to every market, not just World-Cup ones). Safe over any
+ * mixed-category list. `tagsByMarket` is retained for call-site compatibility
+ * only; tags no longer change gating behaviour.
  */
 export const filterScheduledWcMarkets = ({
 	markets,
@@ -45,13 +44,9 @@ export const filterScheduledWcMarkets = ({
 	markets: Market[];
 	tagsByMarket: Record<string, string[]>;
 	now: number;
-}): Market[] =>
-	markets.filter((market) => {
-		// Generalized 2026-07-26: scheduled starts are no longer WC-only (topical
-		// drops carry per-wave start_ns) — ANY market with a future startDate stays
-		// hidden until its release, whatever its tags. `tagsByMarket` is kept for
-		// call-site compatibility; the WC tag no longer changes behaviour.
-		void tagsByMarket;
+}): Market[] => {
+	// Retained for call-site compatibility; tags no longer affect gating.
+	void tagsByMarket;
 
-		return isMarketRevealed({ startDate: market.startDate, now });
-	});
+	return markets.filter((market) => isMarketRevealed({ startDate: market.startDate, now }));
+};
