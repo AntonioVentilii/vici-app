@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.8.31](https://github.com/AntonioVentilii/vici-app/compare/v1.8.30...v1.8.31) (2026-07-27)
+
+
+### Bug Fixes
+
+* **seo:** gate SEO asset visibility on start_ns, not deleted deck files ([#1192](https://github.com/AntonioVentilii/vici-app/issues/1192)) ([63475f4](https://github.com/AntonioVentilii/vici-app/commit/63475f45de52e514717adacd98bd14d53ab635f1))
+
+
+### Miscellaneous Chores
+
+* **github-actions:** bump actions/checkout from 7.0.0 to 7.0.1 ([#1178](https://github.com/AntonioVentilii/vici-app/issues/1178)) ([2426554](https://github.com/AntonioVentilii/vici-app/commit/242655472381375bdd2bc284841d4de05ec58d78))
+* **github-actions:** bump junobuild/juno-action from 0.7.5.pre.full to 0.7.5 ([#1175](https://github.com/AntonioVentilii/vici-app/issues/1175)) ([e9e4619](https://github.com/AntonioVentilii/vici-app/commit/e9e4619a2a5542a9260a3825ce6576b4508d6f28))
+* **npm-deps-dev:** bump @eslint/eslintrc from 3.3.5 to 3.3.6 ([#1182](https://github.com/AntonioVentilii/vici-app/issues/1182)) ([7b97ba5](https://github.com/AntonioVentilii/vici-app/commit/7b97ba5801aa5abdc92cba8582ed3a28c4514814))
+* **npm-deps-dev:** bump @sveltejs/kit from 2.69.2 to 2.70.1 ([#1183](https://github.com/AntonioVentilii/vici-app/issues/1183)) ([f4314c1](https://github.com/AntonioVentilii/vici-app/commit/f4314c1ebca704ba0f44c15f86930add875663fa))
+* **npm-deps-dev:** bump obug from 2.1.3 to 2.1.4 ([#1185](https://github.com/AntonioVentilii/vici-app/issues/1185)) ([7056675](https://github.com/AntonioVentilii/vici-app/commit/705667550bbbe206b7cc4d165392bcd2993c5141))
+* **npm-deps-dev:** bump svelte from 5.56.4 to 5.56.6 ([#1180](https://github.com/AntonioVentilii/vici-app/issues/1180)) ([e86ef0c](https://github.com/AntonioVentilii/vici-app/commit/e86ef0ca8c189b5649cbe199fec811ac80cf90fc))
+* **npm-deps-dev:** bump svelte-check from 4.7.1 to 4.7.3 ([#1184](https://github.com/AntonioVentilii/vici-app/issues/1184)) ([4ae9f39](https://github.com/AntonioVentilii/vici-app/commit/4ae9f398c4987fbc27007ee5c7df3c9474e6a05f))
+* **npm-deps-dev:** bump the lint-kit group across 1 directory with 2 updates ([#1190](https://github.com/AntonioVentilii/vici-app/issues/1190)) ([de84e13](https://github.com/AntonioVentilii/vici-app/commit/de84e13ec94e31ec728460c274807dcabeca4730))
+* **npm-deps-dev:** bump tsx from 4.23.0 to 4.23.1 ([#1181](https://github.com/AntonioVentilii/vici-app/issues/1181)) ([ce3c86d](https://github.com/AntonioVentilii/vici-app/commit/ce3c86db3024dac18590174503ea63f4946ca5b0))
+* **npm-deps:** bump nanoid from 5.1.16 to 6.0.0 ([#1187](https://github.com/AntonioVentilii/vici-app/issues/1187)) ([a2bcdea](https://github.com/AntonioVentilii/vici-app/commit/a2bcdea6765c3ed79701d973b84801eb0096d975))
+
 ## [1.8.30](https://github.com/AntonioVentilii/vici-app/compare/v1.8.29...v1.8.30) (2026-07-26)
 
 
