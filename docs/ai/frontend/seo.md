@@ -117,6 +117,20 @@ existing surfaces (a specific market → its detail page; category browsing
   winner — so a market is "resolved" here on exactly the same rule the
   detail page uses. Settled markets are read for their outcome _instead of_
   their odds, not in addition.
+- **No `$` traded-volume in the snippet — rejected on the figure, not on
+  access.** `list_series_traded_volumes` is readable at deploy time: it
+  carries the same spam gate as the settlement queries (anonymous rejected,
+  the ephemeral keypair accepted), so the earlier "anonymous-guarded, needs
+  a controller identity" reasoning is wrong — do not re-derive the feature
+  from it. Two things the access question doesn't touch keep it out. The
+  figure is **`ViciXp` notional, not dollars** (every series is
+  `balance_domain = ViciXp`; `formatVolume` renders it as `N VXP` and the
+  UI never prints a `$` on it), so baking "$X traded" into meta would state
+  something false on a public page. And the amounts are too thin to earn
+  the space: across the 1167 emitted pages on 2026-07-27, 40% had zero
+  volume, the median was ~46 VXP and the median `trade_count` was **1**
+  (open markets: 74% zero). Revisit only if a real-money balance domain
+  ships or per-market depth grows — not on access grounds.
 - **Clearing is a soft dependency throughout** (unlike the registry read,
   which is fatal). An odds error degrades to "no odds clause"; a
   settled-series error degrades to "everything unresolved" (today's
