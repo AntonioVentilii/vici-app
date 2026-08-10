@@ -251,15 +251,26 @@ export class HomePage {
 	}
 
 	/**
-	 * Sign out programmatically via the dev-only hook (Juno `signOut`), without
-	 * navigating to the Settings sign-out surface. Pairs with
-	 * {@link resetDevProfile}: no signed-in page load happens between the delete
-	 * and the sign-out, so `ensureProfile` can't re-bootstrap the deleted
-	 * profile. The (app) auth gate routes back to `/signin` afterwards.
+	 * Durably wipe the persisted session via the dev-only hook so the NEXT full
+	 * page load is signed-out. Deliberately does NOT call Juno `signOut()`.
+	 *
+	 * Juno persists the dev mock identity in `juno-dev-identifiers`, and its
+	 * `signOut()` RE-SAVES that identity (for next-time convenience) — so clearing
+	 * and then signing out just puts the identity back, and the following
+	 * `/signin` reload auto-restores the session and bounces to `/flow`, racing
+	 * the caller's `goto('/signup')`. Skipping `signOut()` avoids that re-persist
+	 * entirely: we wipe every persisted store while still on `/flow` (where the
+	 * hook, installed by the `(app)` layout, exists and the page is stable), and
+	 * the caller's full `goto('/signup')` then tears down the in-memory session
+	 * and cold-loads signed-out.
+	 *
+	 * Pairs with {@link resetDevProfile}: no signed-in page LOAD happens between
+	 * the delete and the signed-out `/signup`, so `ensureProfile` can't
+	 * re-bootstrap the deleted profile.
 	 */
-	async signOutDev(): Promise<void> {
+	async clearDevSession(): Promise<void> {
 		await this.page.evaluate(async () => {
-			const hooks = (window as unknown as { __viciE2E?: { signOut: () => Promise<void> } })
+			const hooks = (window as unknown as { __viciE2E?: { clearSession: () => Promise<void> } })
 				.__viciE2E;
 
 			if (!hooks) {
@@ -268,7 +279,7 @@ export class HomePage {
 				);
 			}
 
-			await hooks.signOut();
+			await hooks.clearSession();
 		});
 	}
 
