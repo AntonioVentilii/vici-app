@@ -22,15 +22,16 @@ const PAGES = [
 ] as const;
 
 /**
- * Per-page "this surface has finished hydrating" gate, awaited after
+ * "This surface has finished hydrating" gate, awaited after
  * {@link waitForSignedInPage} and before the screenshot.
  *
- * `networkidle` alone proved insufficient for Arena: its invite copyfield and
- * friends-rank row are painted from a profile-derived fetch that can settle
- * after the network goes quiet, so the baseline alternated between the
- * hydrated tab and one missing both blocks. Only Arena needs a gate today —
- * the other three pages' run-varying content is text, which
- * {@link HomePage.stabilizeForSnapshot} pins.
+ * `networkidle` alone proved insufficient: these pages paint several blocks
+ * from state that resolves after the last response, so consecutive runs
+ * captured different mixes of skeleton / loaded / absent content and each
+ * rewrote its baseline. {@link HomePage.waitForRenderSettled} closes that
+ * window generically; Arena additionally waits on its invite copyfield, whose
+ * code arrives from a profile-derived fetch and which anchors the block the
+ * friends-rank list renders beneath.
  */
 const settleForSnapshot = async ({
 	home,
@@ -42,6 +43,8 @@ const settleForSnapshot = async ({
 	if (name === 'arena') {
 		await expect(home.arenaInviteLink).toBeVisible();
 	}
+
+	await home.waitForRenderSettled();
 };
 
 /**

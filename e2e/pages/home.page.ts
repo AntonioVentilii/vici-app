@@ -9,6 +9,11 @@ import { TestId } from '../../src/lib/constants/test-ids.constants';
  */
 const ARENA_INVITE_LINK_SELECTOR = '.invite-copyurl';
 
+/** How long the DOM must stay unmutated to count as settled. */
+const DOM_QUIET_MS = 500;
+/** Upper bound on the quiet wait — see {@link HomePage.waitForRenderSettled}. */
+const DOM_QUIET_TIMEOUT_MS = 10_000;
+
 /**
  * Text that is genuinely different on every CI run and therefore rewrites its
  * own baseline whenever it lands in a screenshot. Pinned (not masked) for the
@@ -107,6 +112,65 @@ export class HomePage {
 
 	async goto(): Promise<void> {
 		await this.page.goto('/');
+	}
+
+	/**
+	 * Wait until the page has stopped rendering, so a screenshot can't catch a
+	 * surface mid-hydration.
+	 *
+	 * `networkidle` is not sufficient on the signed-in pages: several sections
+	 * (Arena's friends-rank list, the Portfolio positions list, the Profile
+	 * header) paint from state that resolves after the last response lands, so
+	 * consecutive runs captured different mixes of skeleton / loaded / absent
+	 * blocks and each rewrote the baseline. Two conditions close that window:
+	 *
+	 * 1. No skeleton placeholder is left in the DOM. Their class names are
+	 *    per-component (`portfolio-skeleton`, `detail-skeleton-block`, …) but
+	 *    all contain `skeleton`, so one substring match covers them.
+	 * 2. No DOM mutation for {@link DOM_QUIET_MS}. This catches the blocks that
+	 *    have no skeleton at all and simply appear late — naming each one would
+	 *    be endless and would rot as the UI changes.
+	 *
+	 * The quiet wait is bounded and its timeout swallowed: a surface with a
+	 * permanent ticker (a countdown, a poll) would never go quiet, and hanging
+	 * the spec is worse than the drift this reduces. The skeleton check is a
+	 * real assertion — a placeholder still present after the wait means the page
+	 * genuinely never finished loading, which should fail loudly.
+	 */
+	async waitForRenderSettled(): Promise<void> {
+		await expect(this.page.locator('[class*="skeleton"]')).toHaveCount(0);
+
+		try {
+			await this.page.waitForFunction(
+				(quietMs) => {
+					const marker = window as unknown as {
+						__viciDomSettleLast?: number;
+						__viciDomSettleObserver?: MutationObserver;
+					};
+
+					if (!marker.__viciDomSettleObserver) {
+						marker.__viciDomSettleLast = performance.now();
+						marker.__viciDomSettleObserver = new MutationObserver(() => {
+							marker.__viciDomSettleLast = performance.now();
+						});
+						marker.__viciDomSettleObserver.observe(document.body, {
+							attributes: true,
+							characterData: true,
+							childList: true,
+							subtree: true
+						});
+					}
+
+					return performance.now() - (marker.__viciDomSettleLast ?? 0) >= quietMs;
+				},
+				DOM_QUIET_MS,
+				{ timeout: DOM_QUIET_TIMEOUT_MS }
+			);
+		} catch (err: unknown) {
+			if (!(err instanceof Error) || err.name !== 'TimeoutError') {
+				throw err;
+			}
+		}
 	}
 
 	/**
