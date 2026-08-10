@@ -29,12 +29,12 @@
  * matching, so an app.html refactor can't silently strip the SEO layer.
  *
  * Visibility mirrors the live feed: only markets attributed to the Vici
- * engine, and World-Cup markets only once the release schedule
- * (`$lib/constants/wc-market-schedule.constants`) has revealed them. WC
- * membership is derived from the committed deck files (the same
- * title-keyed source that registered the markets), not from Juno tags, so
- * the script needs no satellite access. An unrevealed market must never
- * leak here: its question would be public before its Show Date.
+ * engine, and only once their on-chain `start_ns` has passed (mirrors
+ * `$lib/utils/wc-schedule.utils`'s reveal gate, generalized beyond World Cup
+ * markets — a staggered drop with a future start stays hidden here too). A
+ * market with no `start_ns` is live from registration and always visible.
+ * An unrevealed market must never leak here: its question would be public
+ * before its release.
  *
  * Resolved markets get an ANSWER page, not a stale trading page: clearing is
  * the source of truth for resolution (`list_settled_series` +
@@ -55,14 +55,12 @@ import type { _SERVICE as ClearingService, LimitOrder } from '$declarations/clea
 import { idlFactory as clearingIdlFactory } from '$declarations/clearing/clearing.idl.js';
 import type { _SERVICE as RegistryService, Series } from '$declarations/registry/registry';
 import { idlFactory as registryIdlFactory } from '$declarations/registry/registry.idl.js';
+import { MILLISECOND_IN_NANOSECONDS } from '$lib/constants/app.constants';
 import { CLEARING_CANISTER_ID, REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
-import {
-	normalizeWcQuestion,
-	WC_QUESTION_REVEAL_MS
-} from '$lib/constants/wc-market-schedule.constants';
 import type { Outcome } from '$lib/types/market';
 import { marketShareParam } from '$lib/utils/market-slug.utils';
 import { settlementInputOutcome } from '$lib/utils/payoff.utils';
+import { isMarketRevealed } from '$lib/utils/wc-schedule.utils';
 import { fromNullable, isNullish, nonNullish, toNullable } from '@dfinity/utils';
 import { Actor, HttpAgent, type ActorSubclass } from '@icp-sdk/core/agent';
 import { Ed25519KeyIdentity } from '@icp-sdk/core/identity';
@@ -72,7 +70,6 @@ import { fileURLToPath } from 'node:url';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const BUILD_DIR = join(SCRIPT_DIR, '..', '..', 'build');
-const DATA_DIR = join(SCRIPT_DIR, '..', 'data');
 
 const PROD_ORIGIN = 'https://vici.market';
 const IC_HOST = 'https://icp-api.io';
@@ -101,11 +98,6 @@ const DESCRIPTION_TAIL = 'Live community odds on the Vici prediction market.';
 // odds the page cannot show. Point at the catalog instead: the resolved page
 // is an answer page whose job is to hand the reader an open market next.
 const DESCRIPTION_TAIL_RESOLVED = 'See the result and open markets on Vici.';
-
-// The committed decks that registered the World-Cup catalog (matched BY
-// TITLE, like every deck pipeline step). Titles present here but absent
-// from the release schedule are not-yet-curated and must stay hidden.
-const WC_DECK_FILES = ['markets.deck-2026.json', 'markets.deck-2026-wc-r32.json'];
 
 const escapeHtml = (value: string): string =>
 	value
@@ -212,53 +204,6 @@ const composeHeadline = ({
  */
 const jsonLdScript = (data: unknown): string =>
 	`<script type="application/ld+json">${JSON.stringify(data).replaceAll('</', '<\\/')}</script>`;
-
-const loadWcDeckTitles = (): Set<string> => {
-	const titles = new Set<string>();
-
-	for (const file of WC_DECK_FILES) {
-		const rows: unknown = JSON.parse(readFileSync(join(DATA_DIR, file), 'utf8'));
-
-		if (!Array.isArray(rows)) {
-			throw new Error(`Deck file ${file} is not a JSON array`);
-		}
-
-		for (const row of rows) {
-			const { title } = row as Record<string, unknown>;
-
-			if (typeof title === 'string' && title.length > 0) {
-				titles.add(normalizeWcQuestion(title));
-			}
-		}
-	}
-
-	return titles;
-};
-
-/**
- * Replicates the FE reveal gate without Juno tag access: a title on the
- * release schedule is visible from its Show Date; a title known only to the
- * WC decks is not-yet-curated and stays hidden; anything else is a non-WC
- * market and passes through.
- */
-const isMarketVisible = ({
-	title,
-	wcDeckTitles,
-	nowMs
-}: {
-	title: string;
-	wcDeckTitles: Set<string>;
-	nowMs: number;
-}): boolean => {
-	const key = normalizeWcQuestion(title);
-	const revealMs = WC_QUESTION_REVEAL_MS.get(key);
-
-	if (nonNullish(revealMs)) {
-		return nowMs >= revealMs;
-	}
-
-	return !wcDeckTitles.has(key);
-};
 
 const listAllSeries = async (registry: ActorSubclass<RegistryService>): Promise<Series[]> => {
 	const all: Series[] = [];
@@ -628,7 +573,6 @@ const main = async () => {
 	}
 
 	const shell = readFileSync(join(BUILD_DIR, 'index.html'), 'utf8');
-	const wcDeckTitles = loadWcDeckTitles();
 
 	// Clearing's settlement queries reject the anonymous principal (IC0406,
 	// "Anonymous caller not authorised") while accepting ANY authenticated
@@ -655,7 +599,12 @@ const main = async () => {
 	const viciSeries = series.filter((s) => fromNullable(s.engine_id) === ENGINE_ID);
 
 	const nowMs = Date.now();
-	const visible = viciSeries.filter(({ title }) => isMarketVisible({ title, wcDeckTitles, nowMs }));
+	const visible = viciSeries.filter((s) => {
+		const startNs = fromNullable(s.start_ns);
+		const startDate = nonNullish(startNs) ? startNs / MILLISECOND_IN_NANOSECONDS : undefined;
+
+		return isMarketRevealed({ startDate, now: nowMs });
+	});
 
 	if (visible.length === 0) {
 		throw new Error(

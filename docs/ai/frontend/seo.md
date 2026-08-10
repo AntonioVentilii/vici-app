@@ -45,12 +45,14 @@ deploy); unresolvable params land on the markets board.
 - **`app.html` head tags are a contract.** The script rewrites them by
   pattern; rename/restructure them only together with the patterns in the
   script (it fails loudly when they drift, see the comment in `app.html`).
-- **The WC reveal gate is replicated, not shared.** Visibility mirrors the
-  feed gate (`$lib/utils/wc-schedule.utils`) but derives WC membership from
-  the committed deck files (`scripts/data/markets.deck-2026*.json`, matched
-  by normalized title) instead of Juno tags, so the script needs no
-  satellite access. An unrevealed market's question must never appear in
-  the emitted pages or sitemap — that would leak it before its Show Date.
+- **The reveal gate is shared, not replicated.** Visibility calls the same
+  `isMarketRevealed` from `$lib/utils/wc-schedule.utils` that gates the FE
+  feed: a series with a future on-chain `start_ns` stays hidden from the
+  emitted pages and sitemap, whatever its tags. No Juno access and no
+  committed deck files needed — decks are operational/ephemeral inputs to
+  the deploy scripts, never read by the SEO generator. An unrevealed
+  market's question must never appear in the emitted pages or sitemap —
+  that would leak it before its release.
 - **Client rendering is unchanged.** The injected pages are byte-identical
   to the shell apart from head tags; the SPA hydrates them like any other
   entry URL. Per-market head content is English (registry `title` /
