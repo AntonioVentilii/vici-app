@@ -124,21 +124,25 @@ export class HomePage {
 	 * consecutive runs captured different mixes of skeleton / loaded / absent
 	 * blocks and each rewrote the baseline. Two conditions close that window:
 	 *
-	 * 1. No skeleton placeholder is left in the DOM. Their class names are
-	 *    per-component (`portfolio-skeleton`, `detail-skeleton-block`, …) but
-	 *    all contain `skeleton`, so one substring match covers them.
-	 * 2. No DOM mutation for {@link DOM_QUIET_MS}. This catches the blocks that
-	 *    have no skeleton at all and simply appear late — naming each one would
-	 *    be endless and would rot as the UI changes.
+	 * 1. No placeholder is left in the DOM. This is the load-bearing one: a page
+	 *    waiting on a response is perfectly quiet, so condition 2 alone happily
+	 *    photographs a half-loaded screen. Placeholder class names are
+	 *    per-component and abbreviate inconsistently — `portfolio-skeleton` and
+	 *    `detail-skeleton-block`, but `ar-skel-block` on the Arena hero — so the
+	 *    match is on `skel`, the longest shared prefix. Matching only `skeleton`
+	 *    silently skipped the Arena hero and left it drifting.
+	 * 2. No DOM mutation for {@link DOM_QUIET_MS}, which catches blocks that
+	 *    have no placeholder at all and simply appear late. Naming each one
+	 *    would be endless and would rot as the UI changes.
 	 *
 	 * The quiet wait is bounded and its timeout swallowed: a surface with a
 	 * permanent ticker (a countdown, a poll) would never go quiet, and hanging
-	 * the spec is worse than the drift this reduces. The skeleton check is a
-	 * real assertion — a placeholder still present after the wait means the page
-	 * genuinely never finished loading, which should fail loudly.
+	 * the spec is worse than the drift this reduces. The placeholder check is a
+	 * real assertion — one still present after the wait means the page genuinely
+	 * never finished loading, which should fail loudly.
 	 */
 	async waitForRenderSettled(): Promise<void> {
-		await expect(this.page.locator('[class*="skeleton"]')).toHaveCount(0);
+		await expect(this.page.locator('[class*="skel"]')).toHaveCount(0);
 
 		try {
 			await this.page.waitForFunction(
