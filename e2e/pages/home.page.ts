@@ -2,19 +2,6 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import { TestId } from '../../src/lib/constants/test-ids.constants';
 
 /**
- * Page object for the Vici signed-in surfaces and the auth / onboarding
- * flow that reaches them.
- *
- * The (app) layout gates every route on a resolved session — anonymous
- * visits to `/app`, `/portfolio`, etc. redirect to `/signin`. Sign-in
- * itself routes a brand-new principal through the `/signup` one-screen
- * onboarding before the app shell, so the helpers below drive that flow
- * end-to-end rather than expecting a bare sign-in to land in the app.
- *
- * Tests should prefer this object over reaching into selectors so that
- * structural changes only have to be reflected in one place.
- */
-/**
  * The Arena referral link (`FriendsTab`). Rendered only once the invite code
  * resolves, which makes it both the thing to pin (see
  * {@link PINNED_SNAPSHOT_TEXT}) and the signal that the tab's profile-derived
@@ -56,6 +43,19 @@ const PINNED_SNAPSHOT_TEXT: { selector: string; text: string }[] = [
 	{ selector: '.portfolio-hero-stat dd.num', text: '000' }
 ];
 
+/**
+ * Page object for the Vici signed-in surfaces and the auth / onboarding
+ * flow that reaches them.
+ *
+ * The (app) layout gates every route on a resolved session — anonymous
+ * visits to `/app`, `/portfolio`, etc. redirect to `/signin`. Sign-in
+ * itself routes a brand-new principal through the `/signup` one-screen
+ * onboarding before the app shell, so the helpers below drive that flow
+ * end-to-end rather than expecting a bare sign-in to land in the app.
+ *
+ * Tests should prefer this object over reaching into selectors so that
+ * structural changes only have to be reflected in one place.
+ */
 export class HomePage {
 	readonly page: Page;
 	readonly appMain: Locator;
