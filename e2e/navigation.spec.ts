@@ -22,6 +22,32 @@ const PAGES = [
 ] as const;
 
 /**
+ * "This surface has finished hydrating" gate, awaited after
+ * {@link waitForSignedInPage} and before the screenshot.
+ *
+ * `networkidle` alone proved insufficient: these pages paint several blocks
+ * from state that resolves after the last response, so consecutive runs
+ * captured different mixes of skeleton / loaded / absent content and each
+ * rewrote its baseline. {@link HomePage.waitForRenderSettled} closes that
+ * window generically; Arena additionally waits on its invite copyfield, whose
+ * code arrives from a profile-derived fetch and which anchors the block the
+ * friends-rank list renders beneath.
+ */
+const settleForSnapshot = async ({
+	home,
+	name
+}: {
+	home: HomePage;
+	name: (typeof PAGES)[number]['name'];
+}): Promise<void> => {
+	if (name === 'arena') {
+		await expect(home.arenaInviteLink).toBeVisible();
+	}
+
+	await home.waitForRenderSettled();
+};
+
+/**
  * Wait for the page chrome AND every initial data fetch to settle before
  * screenshotting:
  *
@@ -96,6 +122,7 @@ test.describe('navigation (signed in)', () => {
 
 			await page.goto(path);
 			await waitForSignedInPage({ page });
+			await settleForSnapshot({ home, name });
 
 			// Mask only the account control: dev sign-in mints a fresh
 			// principal per run, so the derived handle genuinely differs.

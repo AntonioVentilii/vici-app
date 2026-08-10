@@ -2,6 +2,53 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import { TestId } from '../../src/lib/constants/test-ids.constants';
 
 /**
+ * The Arena referral link (`FriendsTab`). Rendered only once the invite code
+ * resolves, which makes it both the thing to pin (see
+ * {@link PINNED_SNAPSHOT_TEXT}) and the signal that the tab's profile-derived
+ * content has hydrated — see {@link HomePage.arenaInviteLink}.
+ */
+const ARENA_INVITE_LINK_SELECTOR = '.invite-copyurl';
+
+/** How long the DOM must stay unmutated to count as settled. */
+const DOM_QUIET_MS = 500;
+/** Upper bound on the quiet wait — see {@link HomePage.waitForRenderSettled}. */
+const DOM_QUIET_TIMEOUT_MS = 10_000;
+
+/**
+ * Text that is genuinely different on every CI run and therefore rewrites its
+ * own baseline whenever it lands in a screenshot. Pinned (not masked) for the
+ * reason spelled out in {@link HomePage.stabilizeForSnapshot}: a mask is sized
+ * from the element box, so variable-width text drifts even behind one.
+ *
+ * Each entry was confirmed by diffing the baselines two consecutive CI runs of
+ * the same commit produced:
+ *
+ * - `.profile-hero-handle` — the signed-in principal's handle. Every run signs
+ *   in as a fresh dev principal, and the handle is either its shortened
+ *   principal default or a handle an earlier spec claimed for it, so it reads
+ *   e.g. `@e2ems32iwxz` then `@e2ems33k1re`.
+ * - `.invite-copyurl` — the referral link. Its code is minted per profile by
+ *   the satellite hook, so a fresh principal always gets a new one
+ *   (`/i/JH3T2JAF` then `/i/5PBJ6STF`).
+ * - `.portfolio-hero-stat dd.num` — the Portfolio hero stat figures (unrealized
+ *   PnL, accuracy, rank). Accuracy is the observed offender: it reads `0.0%`
+ *   until the profile hydrates and `100.0%` after, because `displayAccuracyPct`
+ *   shows an optimistic 100% for a user with no settled predictions — so it
+ *   flips on a hydration race. Its siblings are pinned with it because they
+ *   derive from the same per-run trading state and would drift the same way
+ *   once the seeded state stops being empty.
+ *
+ * Pinning trades away pixel-level regression cover on these specific values.
+ * That cover was never real: the values are non-deterministic in CI, which is
+ * exactly why the gate could not stay green.
+ */
+const PINNED_SNAPSHOT_TEXT: { selector: string; text: string }[] = [
+	{ selector: '.profile-hero-handle', text: '@xxxxxxxxxxx' },
+	{ selector: ARENA_INVITE_LINK_SELECTOR, text: 'xxxxxxxxxxxxxxxxx/i/XXXXXXXX' },
+	{ selector: '.portfolio-hero-stat dd.num', text: '000' }
+];
+
+/**
  * Page object for the Vici signed-in surfaces and the auth / onboarding
  * flow that reaches them.
  *
@@ -32,6 +79,14 @@ export class HomePage {
 	readonly userMenu: Locator;
 	readonly signOutButton: Locator;
 	readonly logoutButton: Locator;
+	/**
+	 * The Arena referral link. Present only after the invite code resolves, so
+	 * awaiting it is how an Arena snapshot avoids capturing the tab
+	 * mid-hydration — the state where the whole invite copyfield (and the
+	 * friends-rank row beneath it) is still missing, which is what made the
+	 * Arena baseline rewrite itself on consecutive runs.
+	 */
+	readonly arenaInviteLink: Locator;
 	readonly onboarding: Locator;
 	readonly onboardingHandleInput: Locator;
 	readonly onboardingHandleSkip: Locator;
@@ -48,6 +103,7 @@ export class HomePage {
 		this.userMenu = page.locator(`[data-tid="${TestId.UserMenu}"]:visible`);
 		this.signOutButton = page.getByTestId(TestId.SignOutButton);
 		this.logoutButton = page.getByTestId(TestId.Logout);
+		this.arenaInviteLink = page.locator(ARENA_INVITE_LINK_SELECTOR);
 		this.onboarding = page.getByTestId(TestId.Onboarding);
 		this.onboardingHandleInput = page.getByTestId(TestId.OnboardingHandleInput);
 		this.onboardingHandleSkip = page.getByTestId(TestId.OnboardingHandleSkip);
@@ -56,6 +112,69 @@ export class HomePage {
 
 	async goto(): Promise<void> {
 		await this.page.goto('/');
+	}
+
+	/**
+	 * Wait until the page has stopped rendering, so a screenshot can't catch a
+	 * surface mid-hydration.
+	 *
+	 * `networkidle` is not sufficient on the signed-in pages: several sections
+	 * (Arena's friends-rank list, the Portfolio positions list, the Profile
+	 * header) paint from state that resolves after the last response lands, so
+	 * consecutive runs captured different mixes of skeleton / loaded / absent
+	 * blocks and each rewrote the baseline. Two conditions close that window:
+	 *
+	 * 1. No placeholder is left in the DOM. This is the load-bearing one: a page
+	 *    waiting on a response is perfectly quiet, so condition 2 alone happily
+	 *    photographs a half-loaded screen. Placeholder class names are
+	 *    per-component and abbreviate inconsistently — `portfolio-skeleton` and
+	 *    `detail-skeleton-block`, but `ar-skel-block` on the Arena hero — so the
+	 *    match is on `skel`, the longest shared prefix. Matching only `skeleton`
+	 *    silently skipped the Arena hero and left it drifting.
+	 * 2. No DOM mutation for {@link DOM_QUIET_MS}, which catches blocks that
+	 *    have no placeholder at all and simply appear late. Naming each one
+	 *    would be endless and would rot as the UI changes.
+	 *
+	 * The quiet wait is bounded and its timeout swallowed: a surface with a
+	 * permanent ticker (a countdown, a poll) would never go quiet, and hanging
+	 * the spec is worse than the drift this reduces. The placeholder check is a
+	 * real assertion — one still present after the wait means the page genuinely
+	 * never finished loading, which should fail loudly.
+	 */
+	async waitForRenderSettled(): Promise<void> {
+		await expect(this.page.locator('[class*="skel"]')).toHaveCount(0);
+
+		try {
+			await this.page.waitForFunction(
+				(quietMs) => {
+					const marker = window as unknown as {
+						__viciDomSettleLast?: number;
+						__viciDomSettleObserver?: MutationObserver;
+					};
+
+					if (!marker.__viciDomSettleObserver) {
+						marker.__viciDomSettleLast = performance.now();
+						marker.__viciDomSettleObserver = new MutationObserver(() => {
+							marker.__viciDomSettleLast = performance.now();
+						});
+						marker.__viciDomSettleObserver.observe(document.body, {
+							attributes: true,
+							characterData: true,
+							childList: true,
+							subtree: true
+						});
+					}
+
+					return performance.now() - (marker.__viciDomSettleLast ?? 0) >= quietMs;
+				},
+				DOM_QUIET_MS,
+				{ timeout: DOM_QUIET_TIMEOUT_MS }
+			);
+		} catch (err: unknown) {
+			if (!(err instanceof Error) || err.name !== 'TimeoutError') {
+				throw err;
+			}
+		}
 	}
 
 	/**
@@ -96,6 +215,9 @@ export class HomePage {
 	 *   the profile page body. Same byte-stability rationale as the time
 	 *   chip: pinning the text is the only fix that doesn't trade one
 	 *   variable-width drift for another.
+	 * - Replaces the remaining per-run identities and figures listed in
+	 *   {@link PINNED_SNAPSHOT_TEXT}, each of which was observed rewriting its
+	 *   baseline on consecutive CI runs of the same commit.
 	 *
 	 * Call this immediately before any `toHaveScreenshot` in a spec that
 	 * renders market cards or signed-in profile content.
@@ -106,7 +228,7 @@ export class HomePage {
 		});
 
 		await this.page.evaluate(
-			({ timeRemainingSel, principalSel }) => {
+			({ timeRemainingSel, principalSel, pinned }) => {
 				for (const el of document.querySelectorAll<HTMLElement>(timeRemainingSel)) {
 					el.textContent = '-- remaining';
 				}
@@ -114,10 +236,17 @@ export class HomePage {
 				for (const el of document.querySelectorAll<HTMLElement>(principalSel)) {
 					el.textContent = 'xxxxxxx…xxxxxxx';
 				}
+
+				for (const { selector, text } of pinned) {
+					for (const el of document.querySelectorAll<HTMLElement>(selector)) {
+						el.textContent = text;
+					}
+				}
 			},
 			{
 				timeRemainingSel: `[data-tid="${TestId.MarketTimeRemaining}"]`,
-				principalSel: `[data-tid="${TestId.PrincipalDisplay}"]`
+				principalSel: `[data-tid="${TestId.PrincipalDisplay}"]`,
+				pinned: PINNED_SNAPSHOT_TEXT
 			}
 		);
 	}
