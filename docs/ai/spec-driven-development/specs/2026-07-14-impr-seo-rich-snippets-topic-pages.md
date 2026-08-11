@@ -12,6 +12,21 @@ This spec follows the workflow defined in
 
 Status: Implemented (#1136)
 
+> **Erratum (2026-07-27) — one technical premise below is false.** This
+> spec twice defers `$` trading volume on the grounds that
+> `list_series_traded_volumes` is "anonymous-guarded" and would need the
+> deploy to run under a controller identity. It is not an authorisation
+> check: the endpoint rejects only the anonymous principal and accepts
+> **any** authenticated one, verified with an unprivileged identity. Since
+> #1156 the generator already signs with an ephemeral
+> `Ed25519KeyIdentity`, so the access cost is zero — which also makes the
+> "all reads are public/anonymous; no controller identity introduced"
+> line under Technical requirements stale. The decision to leave volume
+> out still stands, but for reasons this spec never considered (the figure
+> is `ViciXp` notional, not dollars, and the amounts are negligible) —
+> see the volume bullet in [`seo.md`](../../frontend/seo.md). The frozen
+> text is left as written; this note is the correction.
+
 ## Goal
 
 Make Vici reachable and attractive in external search results and link
