@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.32](https://github.com/AntonioVentilii/vici-app/compare/v1.8.31...v1.8.32) (2026-08-10)
+
+
+### Bug Fixes
+
+* **e2e:** make onboarding reset deterministic by awaiting login stats sync ([#1169](https://github.com/AntonioVentilii/vici-app/issues/1169)) ([d45c4c3](https://github.com/AntonioVentilii/vici-app/commit/d45c4c3e70861d0180fc60045b092391f5e65c47))
+
+
+### Tests
+
+* **e2e:** stabilize the drifting signed-in snapshots ([#1205](https://github.com/AntonioVentilii/vici-app/issues/1205)) ([e030bc6](https://github.com/AntonioVentilii/vici-app/commit/e030bc6b2c2ddf3964d684136aee58c71292c194))
+
 ## [1.8.31](https://github.com/AntonioVentilii/vici-app/compare/v1.8.30...v1.8.31) (2026-07-27)
 
 
