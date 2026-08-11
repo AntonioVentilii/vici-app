@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.8.33](https://github.com/AntonioVentilii/vici-app/compare/v1.8.32...v1.8.33) (2026-08-11)
+
+
+### Documentation
+
+* **seo:** correct the volume-deferral premise; record why it stays out ([#1193](https://github.com/AntonioVentilii/vici-app/issues/1193)) ([f17da16](https://github.com/AntonioVentilii/vici-app/commit/f17da16ceaddd191a185a713ae983238427055fc))
+
+
+### Miscellaneous Chores
+
+* **npm-deps-dev:** bump brace-expansion from 1.1.16 to 1.1.18 ([#1196](https://github.com/AntonioVentilii/vici-app/issues/1196)) ([db1cbd2](https://github.com/AntonioVentilii/vici-app/commit/db1cbd210f51dee4dbb47f9d69b17c9d73105cb0))
+* **npm-deps-dev:** bump js-yaml from 4.3.0 to 4.3.1 ([#1195](https://github.com/AntonioVentilii/vici-app/issues/1195)) ([0ad03d0](https://github.com/AntonioVentilii/vici-app/commit/0ad03d029015fbfe69675330656a85d91ea3c534))
+* **npm-deps-dev:** bump postcss from 8.5.18 to 8.5.26 ([#1207](https://github.com/AntonioVentilii/vici-app/issues/1207)) ([7a4baa1](https://github.com/AntonioVentilii/vici-app/commit/7a4baa19a0da3e00a68998d7de54581394734040))
+* **npm-deps-dev:** bump prettier-plugin-tailwindcss from 0.8.0 to 0.8.1 ([#1199](https://github.com/AntonioVentilii/vici-app/issues/1199)) ([1c0f239](https://github.com/AntonioVentilii/vici-app/commit/1c0f239a5b403025e3ebed44eb63aacaad98971e))
+* **npm-deps-dev:** bump the lint-kit group across 1 directory with 4 updates ([#1203](https://github.com/AntonioVentilii/vici-app/issues/1203)) ([bbd208a](https://github.com/AntonioVentilii/vici-app/commit/bbd208a4a68e675a7ddfe5edab0512ed0e2c1e06))
+* **npm-deps:** bump devalue from 5.8.1 to 5.9.0 ([#1198](https://github.com/AntonioVentilii/vici-app/issues/1198)) ([e68a95f](https://github.com/AntonioVentilii/vici-app/commit/e68a95f67fd1a3c0eb864598927636276cf285d9))
+* **npm-deps:** bump idb-keyval from 6.2.5 to 6.3.0 ([#1197](https://github.com/AntonioVentilii/vici-app/issues/1197)) ([23c81a9](https://github.com/AntonioVentilii/vici-app/commit/23c81a905faad379b052628dafc586b8b27a087b))
+
 ## [1.8.32](https://github.com/AntonioVentilii/vici-app/compare/v1.8.31...v1.8.32) (2026-08-10)
 
 
