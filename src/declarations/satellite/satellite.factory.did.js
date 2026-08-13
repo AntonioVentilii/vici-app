@@ -353,6 +353,24 @@ export const idlFactory = ({ IDL }) => {
 	const AppGetAnalyticsUserStatsResult = IDL.Record({
 		registered: IDL.Float64
 	});
+	const AppGetAuthIdentitiesArgs = IDL.Record({
+		limit: IDL.Float64,
+		after_key: IDL.Opt(IDL.Text)
+	});
+	const AppGetAuthIdentitiesResult = IDL.Record({
+		rows: IDL.Vec(
+			IDL.Record({
+				key: IDL.Text,
+				provider: IDL.Opt(IDL.Text),
+				updated_at_ns: IDL.Text,
+				created_at_ns: IDL.Text,
+				openid_email: IDL.Opt(IDL.Text),
+				profile_email: IDL.Opt(IDL.Text),
+				openid_name: IDL.Opt(IDL.Text)
+			})
+		),
+		has_more: IDL.Bool
+	});
 	const AppGetCurrentTournamentResult = IDL.Record({
 		tournament: IDL.Opt(
 			IDL.Record({
@@ -1590,6 +1608,11 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_get_analytics_user_stats: IDL.Func([], [AppGetAnalyticsUserStatsResult], ['query']),
+		app_get_auth_identities: IDL.Func(
+			[AppGetAuthIdentitiesArgs],
+			[AppGetAuthIdentitiesResult],
+			['query']
+		),
 		app_get_current_tournament: IDL.Func([], [AppGetCurrentTournamentResult], ['query']),
 		app_get_market_metadata: IDL.Func(
 			[AppGetMarketMetadataArgs],
