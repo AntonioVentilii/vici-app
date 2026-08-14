@@ -79,7 +79,7 @@ styles.
 
 ## Linked issues
 
-Searched the repo's open issues (`AntonioVentilii/vici-app`) for
+Searched the repo's open issues (`ViciApp/vici-app`) for
 "friends rank", "you row", "leaderboard sticky" — **no related open
 issue**. Product-driven design work, not a tracked bug.
 

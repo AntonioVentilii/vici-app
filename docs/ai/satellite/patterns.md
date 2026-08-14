@@ -579,7 +579,7 @@ state). The pattern, as built for school-email verification
   receiving relay also dedupes on an `idempotency-key` header for the
   belt-and-braces case.
 - **Outcall a thin off-chain relay, not the vendor.** The relay
-  ([`vici-courier`](https://github.com/AntonioVentilii/vici-courier), a
+  ([`vici-courier`](https://github.com/ViciApp/vici-courier), a
   Bun/Elysia app on Fly.io) holds the real vendor key and is
   IPv6-reachable (IC outcalls are IPv6-only; many vendor APIs are not).
   The satellite holds only a **rotatable bearer token**, read at call

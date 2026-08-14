@@ -180,7 +180,7 @@ UI guard.
 
 ## Linked issues
 
-Searched open issues on `AntonioVentilii/vici-app` for
+Searched open issues on `ViciApp/vici-app` for
 "league admin battle challenge" and "admin role" — **no related issue**
 found. (Search terms: `league admin battle challenge`, `admin role`.)
 

@@ -150,7 +150,7 @@ leagueDirectoryStore, userStore, localeStore]`. For each league the
 
 ## Linked issues
 
-Searched `AntonioVentilii/vici-app` open issues for "battle",
+Searched `ViciApp/vici-app` open issues for "battle",
 "notification", "challenge", "opponent" — no related issue found. No
 related issue.
 

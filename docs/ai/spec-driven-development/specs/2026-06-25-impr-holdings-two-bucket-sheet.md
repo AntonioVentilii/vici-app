@@ -168,7 +168,7 @@ only surface still on the old layout is the **sheet**.
 
 ## Linked issues
 
-Searched the repo's open issues (`AntonioVentilii/vici-app`) for
+Searched the repo's open issues (`ViciApp/vici-app`) for
 "holdings sheet", "dash holdings", "in play / available" — **no related
 open issue**. This is product-driven design work, not a tracked bug.
 
