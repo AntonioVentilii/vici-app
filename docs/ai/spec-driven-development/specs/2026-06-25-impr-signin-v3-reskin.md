@@ -176,7 +176,7 @@ provider/copy/social-proof drift.
 ## Linked issues
 
 Searched the repository's open issues
-(`repo:AntonioVentilii/vici-app`) for sign-in / signin / auth / passkey
+(`repo:ViciApp/vici-app`) for sign-in / signin / auth / passkey
 / Google — **0 open issues**. No related issue; this is a sign-in
 re-skin improvement with no tracking issue to close.
 

@@ -161,7 +161,7 @@ jobs:
 
       - name: Deploy icdc-core canisters
         # Mirrors the local `npm run deploy` flow: dfx pulls the icdc-core
-        # WASMs from the AntonioVentilii/icdc-core / vici-points / vici-icrc
+        # WASMs from the AntonioVentilii/icdc-core and ViciApp vici-points / vici-icrc
         # GitHub releases (see scripts/build/download.*.sh) and installs
         # them into the PocketIC instance the emulator is already running.
         # After this, the registry / clearing / vUSD / VXP / vici / cketh /
