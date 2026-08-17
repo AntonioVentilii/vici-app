@@ -497,7 +497,6 @@ export const idlFactory = ({ IDL }) => {
 				),
 				bouts_won: IDL.Float64,
 				handle_last_change_ms: IDL.Opt(IDL.Float64),
-				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Record({
 					favorite_participant_id: IDL.Text,
@@ -580,7 +579,6 @@ export const idlFactory = ({ IDL }) => {
 				),
 				bouts_won: IDL.Float64,
 				handle_last_change_ms: IDL.Opt(IDL.Float64),
-				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Record({
 					favorite_participant_id: IDL.Text,
@@ -857,7 +855,6 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
-				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({
@@ -1155,6 +1152,12 @@ export const idlFactory = ({ IDL }) => {
 	const AppLookupReferralCodeResult = IDL.Record({
 		owner: IDL.Opt(IDL.Text)
 	});
+	const AppMigrateProfileEmailsResult = IDL.Record({
+		skipped: IDL.Float64,
+		scanned: IDL.Float64,
+		migrated: IDL.Float64,
+		cleared: IDL.Float64
+	});
 	const AppPruneResolvedResultsResult = IDL.Record({ pruned: IDL.Float64 });
 	const AppReadBattleLiveScoreArgs = IDL.Record({ battle_id: IDL.Text });
 	const AppReadBattleLiveScoreResult = IDL.Record({
@@ -1263,7 +1266,6 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
-				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({
@@ -1689,6 +1691,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppLookupReferralCodeResult],
 			['query']
 		),
+		app_migrate_profile_emails: IDL.Func([], [AppMigrateProfileEmailsResult], []),
 		app_prune_resolved_results: IDL.Func([], [AppPruneResolvedResultsResult], []),
 		app_read_battle_live_score: IDL.Func(
 			[AppReadBattleLiveScoreArgs],

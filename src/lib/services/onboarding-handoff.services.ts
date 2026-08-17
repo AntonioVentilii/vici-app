@@ -11,6 +11,7 @@ import { joinLeagueByInvite } from '$lib/services/leagues.services';
 import {
 	applyOnboardingPicks,
 	checkNicknameAvailability,
+	saveMyEmail,
 	wasBootstrappedThisSession
 } from '$lib/services/profile.services';
 import { claimReferralFriendship, redeemReferralCode } from '$lib/services/referral.services';
@@ -645,7 +646,6 @@ export const drainPendingOnboarding = async ({
 			handle: pending.handle,
 			setHandle,
 			interests: pending.interests,
-			email: pending.email,
 			favoriteParticipantId: participantPreference,
 			favoriteSide: sidePreference
 		});
@@ -655,6 +655,21 @@ export const drainPendingOnboarding = async ({
 		}
 
 		userStore.update((curr) => ({ ...curr, profile: nextProfile }));
+
+		// The stashed email (passkey-backed email sign-up) goes to the
+		// owner-private `profile_private` doc, never the public profile.
+		// Best-effort like every other drain side-flow: a failed write
+		// must not sink the picks that already landed.
+		const pendingEmail = pending.email;
+
+		if (nonNullish(pendingEmail)) {
+			try {
+				await saveMyEmail({ principal: profile.owner, email: pendingEmail });
+				userStore.update((curr) => ({ ...curr, email: pendingEmail }));
+			} catch (err: unknown) {
+				console.warn('Onboarding handoff: email persist failed', err);
+			}
+		}
 
 		// Redeem after the profile is in place so the satellite assertion (which requires an
 		// existing profile) passes. Await both side-flows so the slot is only cleared once each

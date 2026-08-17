@@ -490,7 +490,6 @@ export interface AppGetMyRivalResult {
 						[] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 					bouts_won: number;
 					handle_last_change_ms: [] | [number];
-					email: string;
 					level: number;
 					preferences: {
 						favorite_participant_id: string;
@@ -564,7 +563,6 @@ export interface AppGetProfileResult {
 						[] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 					bouts_won: number;
 					handle_last_change_ms: [] | [number];
-					email: string;
 					level: number;
 					preferences: {
 						favorite_participant_id: string;
@@ -750,7 +748,6 @@ export interface AppListLeaderboardResult {
 		owner: string;
 		interests: Array<string>;
 		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		email: string;
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 		archetype: string;
@@ -997,6 +994,12 @@ export interface AppLookupReferralCodeArgs {
 export interface AppLookupReferralCodeResult {
 	owner: [] | [string];
 }
+export interface AppMigrateProfileEmailsResult {
+	skipped: number;
+	scanned: number;
+	migrated: number;
+	cleared: number;
+}
 export interface AppPruneResolvedResultsResult {
 	pruned: number;
 }
@@ -1108,7 +1111,6 @@ export interface AppSearchProfilesResult {
 		owner: string;
 		interests: Array<string>;
 		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		email: string;
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 		archetype: string;
@@ -1480,6 +1482,7 @@ export interface _SERVICE {
 		AppLookupLeagueByInviteResult
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
+	app_migrate_profile_emails: ActorMethod<[], AppMigrateProfileEmailsResult>;
 	app_prune_resolved_results: ActorMethod<[], AppPruneResolvedResultsResult>;
 	app_read_battle_live_score: ActorMethod<
 		[AppReadBattleLiveScoreArgs],

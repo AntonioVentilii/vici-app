@@ -819,6 +819,11 @@ export const hardDeleteAccountFn = ({
 
 	docsDeleted += deleteOwnProfile({ callerText, callerBytes });
 	docsDeleted += deletePrefixedDocs({
+		collection: Collection.PROFILE_PRIVATE,
+		callerText,
+		callerBytes
+	});
+	docsDeleted += deletePrefixedDocs({
 		collection: Collection.VXP_AWARDS,
 		callerText,
 		callerBytes

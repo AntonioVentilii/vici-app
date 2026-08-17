@@ -124,6 +124,10 @@ import {
 	upsertMarketTranslation as upsertMarketTranslationFn
 } from '$satellite/services/market-translation.services';
 import {
+	assertSetProfilePrivate,
+	migrateProfileEmailsFn
+} from '$satellite/services/profile-private.services';
+import {
 	assertDailyGoalMonotonic,
 	assertValidNickname,
 	checkNicknameAvailabilityFn,
@@ -1104,6 +1108,21 @@ export const sweepExpiredDeletions = defineUpdate({
 	handler: sweepExpiredDeletionsFn
 });
 
+// One-time migration for the email-exposure fix: moves every legacy
+// `email` still stored on a public `profiles` doc into the owner-only
+// `profile_private` collection and rewrites the public doc without the
+// field. Admin-gated, idempotent (re-runs only retry failed rows).
+// Remove in a follow-up PR after the prod run.
+export const migrateProfileEmails = defineUpdate({
+	result: j.strictObject({
+		scanned: j.number(),
+		migrated: j.number(),
+		cleared: j.number(),
+		skipped: j.number()
+	}),
+	handler: migrateProfileEmailsFn
+});
+
 // Admin-only corrective for the friend-feed like counts: re-derives every
 // activity's exact like count from `activity_reactions` and overwrites the
 // `activity_reaction_counts` rollup docs. Heals any drift from a
@@ -1355,6 +1374,7 @@ const assertSetDocCollections = [
 	Collection.ACTIVITIES,
 	Collection.ACTIVITY_REACTIONS,
 	Collection.PROFILES,
+	Collection.PROFILE_PRIVATE,
 	Collection.ROLES,
 	Collection.REFERRAL_CODES,
 	Collection.REFERRALS,
@@ -1381,6 +1401,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.ACTIVITIES]: assertSetActivity,
 			[Collection.ACTIVITY_REACTIONS]: assertSetActivityReaction,
 			[Collection.PROFILES]: assertProfile,
+			[Collection.PROFILE_PRIVATE]: assertSetProfilePrivate,
 			[Collection.ROLES]: assertSetRole,
 			[Collection.REFERRAL_CODES]: assertSetReferralCode,
 			[Collection.REFERRALS]: assertSetReferral,

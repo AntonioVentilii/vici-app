@@ -578,7 +578,6 @@ const AppGetMyRivalResultSchema = j.strictObject({
 			nickname: j.string(),
 			avatar: j.string(),
 			avatarParts: j.string(),
-			email: j.string(),
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
 			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
@@ -657,7 +656,6 @@ const AppGetProfileResultSchema = j.strictObject({
 			nickname: j.string(),
 			avatar: j.string(),
 			avatarParts: j.string(),
-			email: j.string(),
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
 			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
@@ -1023,7 +1021,6 @@ const AppListLeaderboardResultSchema = j.strictObject({
 			nickname: j.string(),
 			avatar: j.string(),
 			avatarParts: j.string(),
-			email: j.string(),
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
 			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
@@ -1498,7 +1495,6 @@ const AppSearchProfilesResultSchema = j.strictObject({
 			nickname: j.string(),
 			avatar: j.string(),
 			avatarParts: j.string(),
-			email: j.string(),
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
 			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
@@ -1808,6 +1804,25 @@ const hibernateMyAccount = async (): Promise<j.infer<typeof AppHibernateMyAccoun
 
 	const result = schemaFromIdl({ schema: AppHibernateMyAccountResultSchema, value: idlResult });
 	return AppHibernateMyAccountResultSchema.parse(result);
+};
+
+const AppMigrateProfileEmailsResultSchema = j.strictObject({
+	scanned: j.number(),
+	migrated: j.number(),
+	cleared: j.number(),
+	skipped: j.number()
+});
+
+const migrateProfileEmails = async (): Promise<
+	j.infer<typeof AppMigrateProfileEmailsResultSchema>
+> => {
+	const { app_migrate_profile_emails } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_migrate_profile_emails();
+
+	const result = schemaFromIdl({ schema: AppMigrateProfileEmailsResultSchema, value: idlResult });
+	return AppMigrateProfileEmailsResultSchema.parse(result);
 };
 
 const AppPruneResolvedResultsResultSchema = j.strictObject({ pruned: j.number() });
@@ -2508,6 +2523,7 @@ export const functions = {
 	deleteMyAccount,
 	followUser,
 	hibernateMyAccount,
+	migrateProfileEmails,
 	pruneResolvedResults,
 	readBattleLiveScore,
 	rebuildMarketTagIndex,
