@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.8.34](https://github.com/ViciApp/vici-app/compare/v1.8.33...v1.8.34) (2026-08-17)
+
+
+### Features
+
+* **satellite:** admin-gated auth-identity export (principal ⇄ sign-in identity) ([#1208](https://github.com/ViciApp/vici-app/issues/1208)) ([643463f](https://github.com/ViciApp/vici-app/commit/643463ffb727191fdd36eb8435e0b212c7f0b7b3))
+
+
+### Bug Fixes
+
+* **privacy:** move account email off the public profiles doc into profile_private ([#1224](https://github.com/ViciApp/vici-app/issues/1224)) ([cedd3b3](https://github.com/ViciApp/vici-app/commit/cedd3b3d818c3b36cf0dfb165ef35f5a5ef060ff))
+
+
+### Miscellaneous Chores
+
+* **repo:** point repo links at the ViciApp org ([#1220](https://github.com/ViciApp/vici-app/issues/1220)) ([bbaca0d](https://github.com/ViciApp/vici-app/commit/bbaca0d28ff77d82e9dd91e144d0a3aca507df62))
+
 ## [1.8.33](https://github.com/AntonioVentilii/vici-app/compare/v1.8.32...v1.8.33) (2026-08-11)
 
 
