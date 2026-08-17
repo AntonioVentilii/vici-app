@@ -373,6 +373,43 @@ const getAnalyticsUserStats = async (): Promise<
 	return AppGetAnalyticsUserStatsResultSchema.parse(result);
 };
 
+const AppGetAuthIdentitiesArgsSchema = j.strictObject({
+	afterKey: j.optional(j.string()),
+	limit: j.number()
+});
+const AppGetAuthIdentitiesResultSchema = j.strictObject({
+	rows: j.array(
+		j.strictObject({
+			key: j.string(),
+			createdAtNs: j.string(),
+			updatedAtNs: j.string(),
+			provider: j.optional(j.string()),
+			openidEmail: j.optional(j.string()),
+			openidName: j.optional(j.string()),
+			profileEmail: j.optional(j.string())
+		})
+	),
+	hasMore: j.boolean()
+});
+
+const getAuthIdentities = async (
+	args: j.infer<typeof AppGetAuthIdentitiesArgsSchema>
+): Promise<j.infer<typeof AppGetAuthIdentitiesResultSchema>> => {
+	const parsedArgs = AppGetAuthIdentitiesArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetAuthIdentitiesArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_auth_identities']>[0];
+
+	const { app_get_auth_identities } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_auth_identities(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetAuthIdentitiesResultSchema, value: idlResult });
+	return AppGetAuthIdentitiesResultSchema.parse(result);
+};
+
 const AppGetCurrentTournamentResultSchema = j.strictObject({
 	tournament: j.optional(
 		j.strictObject({
@@ -2462,6 +2499,7 @@ export const functions = {
 	getAnalyticsProfileCreated,
 	getAnalyticsSummary,
 	getAnalyticsUserStats,
+	getAuthIdentities,
 	getCurrentTournament,
 	getMarketMetadata,
 	getMarketTags,
