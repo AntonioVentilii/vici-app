@@ -122,6 +122,11 @@ describe.if(dbAvailable)('tournament', () => {
 		// would tie into the ranking; the cascade drops their memberships too.
 		await query(`delete from leagues where id like 'tlg-%'`);
 
+		// Far-future tournaments from previous local runs shrink the anchor
+		// space uniqueMonth draws from; a repeat anchor would answer
+		// already_drawn instead of drawing.
+		await query(`delete from tournaments where id >= '2300-'`);
+
 		for (let i = 0; i < TOURNAMENT_BRACKET_SIZE; i += 1) {
 			leagueIds.push(await seedLeagueWithMembers(60 - i));
 			calls.push(0);

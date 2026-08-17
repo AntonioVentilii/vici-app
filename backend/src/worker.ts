@@ -5,13 +5,12 @@
 // is a named async function that must be IDEMPOTENT (safe to re-run at any
 // cadence; dedupe lives in the domain, e.g. the vxp_awards unique key or the
 // deposits tx_ref key) and must isolate its own failures (a throw is caught
-// and logged per job, it never stalls the others). Later phases drop their
-// functions into the placeholder slots: replace the no-op `run` with the
-// domain's exported job function, keep the name stable for the logs.
+// and logged per job, it never stalls the others).
 //
 // `everyNthTick` throttles a job to every Nth pass of the env-driven poll
 // interval (WORKER_POLL_INTERVAL_MS), for sweeps that are cheap to skip.
 
+import { sweepExpiredDeletions } from './account/lifecycle';
 import { tickDepositWatchers } from './chains/watchers';
 import { applyAssetAllowlist } from './custody/assets';
 import { env } from './env';
@@ -29,10 +28,6 @@ export interface WorkerJob {
 	/** Run only every Nth tick (default 1 = every tick). */
 	everyNthTick?: number;
 }
-
-const noop = async (): Promise<void> => {
-	// Placeholder slot: the owning phase replaces this with its job function.
-};
 
 const HOURLY_TICKS = Math.max(1, Math.round((60 * 60 * 1000) / env.workerPollIntervalMs));
 
@@ -87,9 +82,16 @@ export const jobs: WorkerJob[] = [
 		everyNthTick: HOURLY_TICKS
 	},
 	{
-		// Account-lifecycle phase: soft-delete retention sweep.
+		// Hard-deletes soft-deleted accounts whose recovery window elapsed;
+		// purged accounts carry no profile row, so re-runs are no-ops.
 		name: 'deletion-sweep',
-		run: noop,
+		run: async () => {
+			const { swept } = await sweepExpiredDeletions();
+
+			if (swept > 0) {
+				logger.info(`deletion sweep purged ${swept} expired accounts`);
+			}
+		},
 		everyNthTick: HOURLY_TICKS
 	},
 	{
