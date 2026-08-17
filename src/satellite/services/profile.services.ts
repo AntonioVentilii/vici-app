@@ -537,35 +537,34 @@ export const assertValidNickname = ({
 
 	// A first write (no stored doc) seeds the handle; an update where the
 	// normalized nickname differs sets a NEW handle. Both must clear the
-	// charset/format guard. An update that leaves the nickname untouched
-	// must NOT — so a legacy profile whose stored nickname predates this
-	// rule (e.g. one already containing a space) can still edit unrelated
-	// fields without being locked out. They are only forced to clean it up
-	// the moment they actually change the handle.
+	// validity + uniqueness guard. An update that leaves the nickname
+	// untouched must NOT — the stored handle is grandfathered (it already
+	// passed, or predates, these rules), and the uniqueness probe is a FULL
+	// collection scan, so running it on every routine profile write (streak
+	// bumps, stats syncs, the email migration's rewrites) made each write
+	// O(collection) for no protective value.
 	const settingNewHandle =
 		isNullish(currentProfile) ||
 		normalizeNickname(proposedProfile.nickname) !== normalizeNickname(currentProfile.nickname);
 
-	const result = checkNicknameAvailabilityFn({ nickname, excludeKey: documentKey });
+	if (settingNewHandle) {
+		const result = checkNicknameAvailabilityFn({ nickname, excludeKey: documentKey });
 
-	if (!result.available) {
-		if (result.reason === 'required') {
-			throw new Error('Nickname is required.');
-		}
+		if (!result.available) {
+			if (result.reason === 'required') {
+				throw new Error('Nickname is required.');
+			}
 
-		if (result.reason === 'too_short') {
-			throw new Error(`Nickname must be at least ${MIN_NICKNAME_LENGTH} characters.`);
-		}
+			if (result.reason === 'too_short') {
+				throw new Error(`Nickname must be at least ${MIN_NICKNAME_LENGTH} characters.`);
+			}
 
-		if (result.reason === 'invalid') {
-			// Grandfather an unchanged legacy nickname; reject only when this
-			// write actually sets the bad handle.
-			if (settingNewHandle) {
+			if (result.reason === 'invalid') {
 				throw new Error(
 					`The handle "${nickname}" contains invalid characters — use lowercase letters, numbers and . _ - only (no spaces).`
 				);
 			}
-		} else {
+
 			throw new Error(`The nickname "${nickname}" is already taken.`);
 		}
 	}
