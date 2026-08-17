@@ -207,6 +207,17 @@ export const aggregateLean = async (
 	return await actor.aggregate_lean(params);
 };
 
+/** The per-participant settlement plan for a resolved series. Uncached: it
+ * is read once per settlement to fan out resolved-result rows, and a stale
+ * plan would fan out against superseded positions. */
+export const getSettlementPlan = async (
+	seriesId: string
+): Promise<ClearingDid.SettlementPlan | undefined> => {
+	const actor = await anonymousClearing();
+
+	return fromNullable(await actor.get_settlement_plan(seriesId));
+};
+
 export const getSettlementStatus = (
 	seriesId: string
 ): Promise<ClearingDid.SettlementStatusView | undefined> =>
