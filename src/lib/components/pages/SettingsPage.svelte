@@ -138,7 +138,9 @@
 
 	const profile = $derived($userStore.profile);
 	const nickname = $derived(profile?.nickname ?? '');
-	const email = $derived(profile?.email ?? '');
+	// The address lives on the owner-private `profile_private` doc (hydrated
+	// into the store at sign-in), never on the public profile.
+	const email = $derived($userStore.email);
 	const hasEmail = $derived(email.length > 0);
 
 	// Sign-in method sub — derived from the provider Juno records on the

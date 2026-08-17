@@ -3,7 +3,7 @@ import { SIGNED_IN_FLAG_KEY } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { isDev } from '$lib/env/app.env';
 import { userStore } from '$lib/stores/user.store';
-import type { UserProfile } from '$lib/types/profile';
+import type { ProfilePrivate, UserProfile } from '$lib/types/profile';
 import { sleep } from '$lib/utils/async.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc } from '@junobuild/core';
@@ -157,6 +157,23 @@ const RESURRECTION_POLL_MS = 250;
 const readProfileDoc = (principal: string) =>
 	getDoc<UserProfile>({ collection: Collection.PROFILES, key: principal });
 
+/**
+ * Drop the shared dev principal's owner-private `profile_private` doc so a
+ * later spec's "new user" doesn't inherit an email persisted by an earlier
+ * one. Single-writer (no post-sign-in storm touches this collection), so a
+ * plain read-then-delete suffices — no retry / resurrection watch needed.
+ */
+const resetMyPrivateProfile = async (principal: string): Promise<void> => {
+	const existing = await getDoc<ProfilePrivate>({
+		collection: Collection.PROFILE_PRIVATE,
+		key: principal
+	});
+
+	if (nonNullish(existing)) {
+		await deleteDoc({ collection: Collection.PROFILE_PRIVATE, doc: existing });
+	}
+};
+
 const resetMyProfile = async (): Promise<void> => {
 	const principal = get(userStore).user?.key;
 
@@ -169,6 +186,8 @@ const resetMyProfile = async (): Promise<void> => {
 	// on a hung sync this times out and the resurrection watch below takes over,
 	// so the reset can never hang the Playwright run.
 	await waitForLoginSyncSettled();
+
+	await resetMyPrivateProfile(principal);
 
 	for (let attempt = 0; attempt < DELETE_ATTEMPTS; attempt += 1) {
 		const existing = await readProfileDoc(principal);
