@@ -11,6 +11,27 @@
 
 export type EnvSource = Record<string, string | undefined>;
 
+export interface GoogleEnv {
+	enabled: boolean;
+	clientId: string;
+	clientSecret: string;
+	redirectUri: string;
+}
+
+export interface AppleEnv {
+	enabled: boolean;
+	clientId: string;
+	teamId: string;
+	keyId: string;
+	privateKey: string;
+	redirectUri: string;
+}
+
+export interface EmailEnv {
+	resendApiKey: string;
+	from: string;
+}
+
 export interface Env {
 	isProd: boolean;
 	port: number;
@@ -18,8 +39,13 @@ export interface Env {
 	publicAppUrl: string;
 	apiBaseUrl: string;
 	sessionSecret: string;
+	sessionTtlHours: number;
+	cookieDomain: string;
 	logLevel: string;
 	workerPollIntervalMs: number;
+	google: GoogleEnv;
+	apple: AppleEnv;
+	email: EmailEnv;
 }
 
 /** Build a validated env object from a raw source. Exported separately from
@@ -70,8 +96,43 @@ export const loadEnv = (source: EnvSource): Env => {
 		// Where THIS server is reachable, for building absolute callback URLs.
 		apiBaseUrl: optional('API_BASE_URL', `http://localhost:${port}`),
 		sessionSecret: requiredInProd('SESSION_SECRET', 'dev-secret-do-not-use-in-prod'),
+		sessionTtlHours: positiveInt('SESSION_TTL_HOURS', '720'),
+		// Empty means host-only cookies (dev). In prod set the registrable domain
+		// so the session rides between the app and api hostnames.
+		cookieDomain: optional('COOKIE_DOMAIN', ''),
 		logLevel: optional('LOG_LEVEL', 'info'),
-		workerPollIntervalMs: positiveInt('WORKER_POLL_INTERVAL_MS', '60000')
+		workerPollIntervalMs: positiveInt('WORKER_POLL_INTERVAL_MS', '60000'),
+		google: (() => {
+			const clientId = optional('GOOGLE_CLIENT_ID', '');
+			const clientSecret = optional('GOOGLE_CLIENT_SECRET', '');
+
+			return {
+				enabled: clientId !== '' && clientSecret !== '',
+				clientId,
+				clientSecret,
+				redirectUri: optional('GOOGLE_REDIRECT_URI', '')
+			};
+		})(),
+		apple: (() => {
+			const clientId = optional('APPLE_CLIENT_ID', '');
+			const teamId = optional('APPLE_TEAM_ID', '');
+			const keyId = optional('APPLE_KEY_ID', '');
+			// The .p8 PKCS#8 private key, PEM text with literal or \n-escaped newlines.
+			const privateKey = optional('APPLE_PRIVATE_KEY', '').replace(/\\n/g, '\n');
+
+			return {
+				enabled: clientId !== '' && teamId !== '' && keyId !== '' && privateKey !== '',
+				clientId,
+				teamId,
+				keyId,
+				privateKey,
+				redirectUri: optional('APPLE_REDIRECT_URI', '')
+			};
+		})(),
+		email: {
+			resendApiKey: optional('RESEND_API_KEY', ''),
+			from: optional('EMAIL_FROM', 'VICI <no-reply@vici.app>')
+		}
 	};
 };
 
