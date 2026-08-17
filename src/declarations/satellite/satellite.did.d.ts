@@ -1087,7 +1087,10 @@ export interface AppLookupLeagueByInviteResult {
 }
 export interface AppLookupReferralCodeArgs { 'code' : string }
 export interface AppLookupReferralCodeResult { 'owner' : [] | [string] }
-export interface AppMigrateProfileEmailsArgs { 'after_key' : [] | [string] }
+export interface AppMigrateProfileEmailsArgs {
+  'limit' : [] | [number],
+  'after_key' : [] | [string],
+}
 export interface AppMigrateProfileEmailsResult {
   'next_key' : [] | [string],
   'skipped' : number,

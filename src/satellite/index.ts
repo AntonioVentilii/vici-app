@@ -1137,7 +1137,8 @@ export const sweepExpiredDeletions = defineUpdate({
 // Remove in a follow-up PR after the prod run.
 export const migrateProfileEmails = defineUpdate({
 	args: j.strictObject({
-		afterKey: j.optional(j.string())
+		afterKey: j.optional(j.string()),
+		limit: j.optional(j.number())
 	}),
 	result: j.strictObject({
 		scanned: j.number(),

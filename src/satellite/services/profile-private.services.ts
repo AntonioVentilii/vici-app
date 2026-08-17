@@ -61,13 +61,15 @@ export const assertSetProfilePrivate = ({
 };
 
 /**
- * Page ceiling for {@link migrateProfileEmailsFn}. Every `profiles` rewrite
- * re-runs the set-doc asserts, and the nickname-uniqueness assert scans the
- * whole collection per write — so an unpaged migration is quadratic and
- * blew the 40B-instruction message limit on the first prod run. A page of
- * 10 keeps each call comfortably inside the budget.
+ * Page ceiling for {@link migrateProfileEmailsFn}. Serverless `setDocStore`
+ * writes carry a multi-billion-instruction overhead on this satellite (the
+ * unpaged migration trapped at 40B instructions, and even 10 docs/page did
+ * — while a 100-doc read-only query fits in the 5B query budget), so the
+ * page size is caller-tunable down to a single doc. Default and ceiling
+ * stay small; the migration loop is off-chain and cheap to iterate.
  */
 const MAX_MIGRATION_LIMIT = 10;
+const DEFAULT_MIGRATION_LIMIT = 2;
 
 /** Outcome of one {@link migrateProfileEmailsFn} page. */
 export interface MigrateProfileEmailsResult {
@@ -108,9 +110,11 @@ export interface MigrateProfileEmailsResult {
  * assert) is counted in `skipped` and logged for manual follow-up.
  */
 export const migrateProfileEmailsFn = ({
-	afterKey
+	afterKey,
+	limit
 }: {
 	afterKey?: string;
+	limit?: number;
 }): MigrateProfileEmailsResult => {
 	const caller = msgCaller();
 
@@ -119,13 +123,15 @@ export const migrateProfileEmailsFn = ({
 	}
 
 	const afterKeyText = afterKey?.trim() ?? '';
+	const safeLimit = Number.isFinite(limit) ? Math.floor(limit as number) : DEFAULT_MIGRATION_LIMIT;
+	const cap = Math.min(Math.max(1, safeLimit), MAX_MIGRATION_LIMIT);
 
 	const { items } = listDocsStore({
 		collection: Collection.PROFILES,
 		caller,
 		params: {
 			paginate: {
-				limit: BigInt(MAX_MIGRATION_LIMIT),
+				limit: BigInt(cap),
 				start_after: afterKeyText.length > 0 ? afterKeyText : undefined
 			}
 		}
@@ -204,6 +210,6 @@ export const migrateProfileEmailsFn = ({
 		cleared,
 		skipped,
 		nextKey: items.length > 0 ? items[items.length - 1][0] : undefined,
-		hasMore: items.length >= MAX_MIGRATION_LIMIT
+		hasMore: items.length >= cap
 	};
 };

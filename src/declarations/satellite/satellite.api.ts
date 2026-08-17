@@ -671,7 +671,7 @@ const hibernateMyAccount = async (): Promise<j.infer<typeof AppHibernateMyAccoun
 	return AppHibernateMyAccountResultSchema.parse(result);
 };
 
-const AppMigrateProfileEmailsArgsSchema = j.strictObject({afterKey: j.optional(j.string())});
+const AppMigrateProfileEmailsArgsSchema = j.strictObject({afterKey: j.optional(j.string()), limit: j.optional(j.number())});
 const AppMigrateProfileEmailsResultSchema = j.strictObject({scanned: j.number(), migrated: j.number(), cleared: j.number(), skipped: j.number(), nextKey: j.optional(j.string()), hasMore: j.boolean()});
 
 const migrateProfileEmails = async (args: j.infer<typeof AppMigrateProfileEmailsArgsSchema>): Promise<j.infer<typeof AppMigrateProfileEmailsResultSchema>> => {

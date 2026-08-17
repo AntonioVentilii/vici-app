@@ -1189,6 +1189,7 @@ export const idlFactory = ({ IDL }) => {
     'owner' : IDL.Opt(IDL.Text),
   });
   const AppMigrateProfileEmailsArgs = IDL.Record({
+    'limit' : IDL.Opt(IDL.Float64),
     'after_key' : IDL.Opt(IDL.Text),
   });
   const AppMigrateProfileEmailsResult = IDL.Record({
