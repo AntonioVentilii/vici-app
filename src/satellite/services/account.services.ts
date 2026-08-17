@@ -444,6 +444,39 @@ const deleteOwnProfile = ({
 	});
 
 /**
+ * Drop the caller's owner-private `profile_private` doc (the account
+ * email). Exactly one doc keyed by the principal, so this is a direct
+ * versioned read + delete — no collection scan. Silently no-ops when the
+ * account never stored one.
+ */
+const deleteOwnPrivateProfile = ({
+	callerText,
+	callerBytes
+}: {
+	callerText: string;
+	callerBytes: Uint8Array;
+}): number => {
+	const doc = getDocStore({
+		collection: Collection.PROFILE_PRIVATE,
+		key: callerText,
+		caller: callerBytes
+	});
+
+	if (isNullish(doc)) {
+		return 0;
+	}
+
+	deleteDocStore({
+		collection: Collection.PROFILE_PRIVATE,
+		key: callerText,
+		caller: callerBytes,
+		doc: { version: doc.version }
+	});
+
+	return 1;
+};
+
+/**
  * Drop the caller's relations (friend / follow rows) — keyed by
  * relation id, not principal, so we scan + filter by
  * `participants[*] === callerText`. Deletes the row entirely; the
@@ -818,11 +851,7 @@ export const hardDeleteAccountFn = ({
 	let docsDeleted = 0;
 
 	docsDeleted += deleteOwnProfile({ callerText, callerBytes });
-	docsDeleted += deletePrefixedDocs({
-		collection: Collection.PROFILE_PRIVATE,
-		callerText,
-		callerBytes
-	});
+	docsDeleted += deleteOwnPrivateProfile({ callerText, callerBytes });
 	docsDeleted += deletePrefixedDocs({
 		collection: Collection.VXP_AWARDS,
 		callerText,

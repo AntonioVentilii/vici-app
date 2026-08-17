@@ -379,14 +379,14 @@ export const upsertProfile = async (
 		key
 	});
 
-	// A stored doc that predates the email migration still carries a legacy
-	// `email` field the schema no longer declares; spreading it forward would
-	// re-persist the address onto the public doc. Drop it so every write from
-	// here on leaves the profile clean (the address lives in `profile_private`).
-	const { email: _legacyEmail, ...base } = (existing?.data ?? profileDoc.data) as UserProfile & {
-		email?: string;
-	};
-	const data: UserProfile = {
+	const base = existing?.data ?? profileDoc.data;
+	// Strip the legacy `email` field AFTER the merge: both the stored doc and
+	// the caller's payload can still carry it at runtime (pre-migration rows,
+	// snapshots built from raw `getDoc` reads) even though the schema no
+	// longer declares it, and re-spreading it would re-persist the address
+	// onto the public doc. Every write from here on leaves the profile clean —
+	// the address lives in `profile_private`.
+	const { email: _legacyEmail, ...data } = {
 		...base,
 		...profileDoc.data,
 		// Leaf-merge `preferences` onto the freshest stored slice rather than
@@ -396,7 +396,7 @@ export const upsertProfile = async (
 		// after onboarding would replace `preferences` and drop the just-picked
 		// `favoriteParticipantId`.
 		preferences: { ...base.preferences, ...profileDoc.data.preferences }
-	};
+	} as UserProfile & { email?: string };
 
 	if (isNullish(existing)) {
 		await setDoc({

@@ -660,9 +660,9 @@ export const drainPendingOnboarding = async ({
 		// owner-private `profile_private` doc, never the public profile.
 		// Best-effort like every other drain side-flow: a failed write
 		// must not sink the picks that already landed.
-		const pendingEmail = pending.email;
+		const pendingEmail = pending.email?.trim() ?? '';
 
-		if (nonNullish(pendingEmail)) {
+		if (pendingEmail.length > 0) {
 			try {
 				await saveMyEmail({ principal: profile.owner, email: pendingEmail });
 				userStore.update((curr) => ({ ...curr, email: pendingEmail }));
