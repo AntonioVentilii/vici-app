@@ -75,6 +75,9 @@ export interface Env {
 	rootSecret: string;
 	treasuryPem: string;
 	adminPem: string;
+	/** Record-only mode for the VXP economy: awards are recorded but no
+	 * ledger transfer fires (parallel-run safety before cutover). */
+	vxpTreasuryDisabled: boolean;
 	/** Comma-separated `symbol` or `chain:symbol` allowlist; null means the
 	 * default (every ic asset enabled, other chains disabled). */
 	custodyEnabledAssets: string[] | null;
@@ -177,6 +180,7 @@ export const loadEnv = (source: EnvSource): Env => {
 		// the svc-scoped derivation from ROOT_SECRET.
 		treasuryPem: optional('TREASURY_PEM', '').replace(/\\n/g, '\n'),
 		adminPem: optional('ADMIN_PEM', '').replace(/\\n/g, '\n'),
+		vxpTreasuryDisabled: optional('VXP_TREASURY_DISABLED', '') === '1',
 		custodyEnabledAssets: (() => {
 			const raw = optional('CUSTODY_ENABLED_ASSETS', '');
 

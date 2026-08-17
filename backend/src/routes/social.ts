@@ -33,6 +33,7 @@ import {
 	unfriendUser
 } from '../social/relations';
 import { listFriendResolvedResults, pruneResolvedResults } from '../social/resolved-results';
+import { runTradeActivityTriggers } from '../vxp/triggers';
 
 interface StatusContext {
 	status?: number | string;
@@ -291,6 +292,13 @@ export const socialRoutes = new Elysia({ prefix: '/api/v1/social' })
 					details: body.details,
 					timestamp: body.timestamp
 				});
+
+				// A trade activity is the economy's first-prediction signal: the
+				// onboarding call-count milestones and the referral settlement run
+				// off it, best-effort, after the write commits.
+				if (activity.type === 'trade') {
+					await runTradeActivityTriggers({ userId: user.id });
+				}
 
 				set.status = 201;
 

@@ -17,6 +17,8 @@ import {
 	upsertMyProfile
 } from '../profiles/profile';
 import { getUserStats, upsertMonthlyStats, upsertUserStats } from '../profiles/stats';
+import { mintFlowOvertime } from '../vxp/flow';
+import { runProfileAwardTriggers } from '../vxp/triggers';
 
 interface StatusContext {
 	status?: number | string;
@@ -48,9 +50,32 @@ export const profilesRoutes = new Elysia({ prefix: '/api/v1/profiles' })
 		}
 
 		try {
+			// Snapshot the stored slice BEFORE the write: the award triggers run
+			// off the before/after delta, mirroring the post-write hook model
+			// (only client writes fire awards; internal server writes never do).
+			const before = await getProfileRow({ userId: user.id });
+
 			const profile = await upsertMyProfile({
 				userId: user.id,
 				body: (body ?? {}) as Record<string, unknown>
+			});
+
+			await runProfileAwardTriggers({
+				userId: user.id,
+				before: isNullish(before)
+					? undefined
+					: {
+							dailyStreak: before.daily_streak ?? 0,
+							totalTrades: before.total_trades ?? 0,
+							unlockedAchievements: before.unlocked_achievements ?? [],
+							lastActiveDay: before.last_active_day ?? undefined
+						},
+				after: {
+					dailyStreak: profile.dailyStreak,
+					totalTrades: profile.totalTrades,
+					unlockedAchievements: profile.unlockedAchievements,
+					lastActiveDay: profile.lastActiveDay
+				}
 			});
 
 			return { profile };
@@ -94,7 +119,16 @@ export const profilesRoutes = new Elysia({ prefix: '/api/v1/profiles' })
 			}
 
 			try {
-				return await recordFlowSwipe({ userId: user.id, dayKey: body.dayKey });
+				const result = await recordFlowSwipe({ userId: user.id, dayKey: body.dayKey });
+
+				// The overtime bonus fires at the daily hard cap, inline with the
+				// counter write. Never throws; a payout hiccup leaves the counter
+				// result intact.
+				if (result.capReached) {
+					await mintFlowOvertime({ userId: user.id, dayKey: result.dailyGoalDate });
+				}
+
+				return result;
 			} catch (err) {
 				if (err instanceof NoProfileError) {
 					set.status = 409;

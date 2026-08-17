@@ -16,6 +16,7 @@ import { leaderboardRoutes } from './routes/leaderboard';
 import { marketsRoutes } from './routes/markets';
 import { profilesRoutes } from './routes/profiles';
 import { socialRoutes } from './routes/social';
+import { vxpRoutes } from './routes/vxp';
 import { walletRoutes } from './routes/wallet';
 
 // Baseline hardening headers on every response. The API serves JSON only, so a
@@ -144,6 +145,7 @@ export const app = new Elysia()
 	.use(socialRoutes)
 	.use(marketsRoutes)
 	.use(eventsRoutes)
+	.use(vxpRoutes)
 	// Liveness + DB connectivity. Bounded probe; three consecutive failures exit
 	// the process for a supervised restart with a fresh pool.
 	.get('/health', async ({ set }) => {
