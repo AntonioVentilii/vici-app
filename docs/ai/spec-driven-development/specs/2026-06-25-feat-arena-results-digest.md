@@ -217,10 +217,10 @@ windowLabel, standoutMarketId? }`:
 
 ## Linked issues
 
-No related open issue. Searched `AntonioVentilii/vici-app` open issues
+No related open issue. Searched `ViciApp/vici-app` open issues
 for `friends` / `arena` / `activity` / `feed` / `digest` / `results` /
 `resolution outcome` — the only open Arena issue is
-[#970](https://github.com/AntonioVentilii/vici-app/issues/970)
+[#970](https://github.com/ViciApp/vici-app/issues/970)
 ("I see battles duplicated in Arena"), which concerns the Battles tab,
 not the Friends feed. No closing keyword.
 

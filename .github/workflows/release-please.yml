@@ -22,10 +22,9 @@ name: Release Please
 # TOKEN: for the cut tag to trigger deploy.yml/publish.yml, release-please
 # must create it with a token OTHER than the default GITHUB_TOKEN — tags
 # (and PRs) created with GITHUB_TOKEN do not trigger further workflow runs.
-# Add a fine-grained PAT with `contents: write` + `pull-requests: write` as
-# the `RELEASE_PLEASE_PAT` repo secret. Without it this still works (the
-# fallback below uses GITHUB_TOKEN), but you must then run deploy.yml /
-# publish.yml via manual dispatch after the release tag lands.
+# The vici-release-bot GitHub App (owned by the ViciApp org) mints a
+# short-lived installation token per run; release-please creates the tag
+# with it. Needs the `RELEASE_BOT_PRIVATE_KEY` repo secret.
 
 on:
   push:
@@ -44,12 +43,19 @@ jobs:
   release-please:
     runs-on: ubuntu-24.04
     steps:
+      - name: Mint vici-release-bot token
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: 4594605
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
       # When updating this action, also bump the $schema version in
       # release-please-config.json to match the bundled release-please version
       # (check the action's release notes).
       - uses: googleapis/release-please-action@0b6b3fc0186a2f7118bfd88fab9ea481e1839504 # v4.4.0
         with:
-          token: ${{ secrets.RELEASE_PLEASE_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           # Pinned to main, not github.ref_name: workflow_dispatch can run from

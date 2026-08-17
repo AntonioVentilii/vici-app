@@ -136,7 +136,7 @@ Probability consumers that must tolerate "unknown" (from the audit):
 
 ## Linked issues
 
-Searched open issues on `AntonioVentilii/vici-app` — no existing issue
+Searched open issues on `ViciApp/vici-app` — no existing issue
 tracks the 50% placeholder. No `Closes`/`Part of`.
 
 ## Analytics

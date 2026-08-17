@@ -126,7 +126,7 @@ unchanged.
 ## Linked issues
 
 Searched the repo's open issues
-(`AntonioVentilii/vici-app`) for league / privacy / visibility / create
+(`ViciApp/vici-app`) for league / privacy / visibility / create
 terms — **no related open issue**. (Search terms used: `league
 privacy visibility`, `league create`, `league`.)
 
