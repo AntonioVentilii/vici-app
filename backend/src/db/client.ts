@@ -90,7 +90,15 @@ export const tx = async <T>(fn: (q: TxQuery) => Promise<T>): Promise<T> => {
 
 		return result;
 	} catch (err) {
-		await client.query('rollback');
+		// The failed statement is the actionable error; if the rollback itself
+		// also throws (e.g. the connection already died, which aborts the
+		// transaction anyway) it must not mask it.
+		try {
+			await client.query('rollback');
+		} catch (rollbackErr) {
+			console.debug('rollback failed (original error rethrown):', rollbackErr);
+		}
+
 		throw err;
 	} finally {
 		client.release();
