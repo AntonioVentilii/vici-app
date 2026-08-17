@@ -1170,11 +1170,16 @@ export const idlFactory = ({ IDL }) => {
 	const AppLookupReferralCodeResult = IDL.Record({
 		owner: IDL.Opt(IDL.Text)
 	});
+	const AppMigrateProfileEmailsArgs = IDL.Record({
+		after_key: IDL.Opt(IDL.Text)
+	});
 	const AppMigrateProfileEmailsResult = IDL.Record({
+		next_key: IDL.Opt(IDL.Text),
 		skipped: IDL.Float64,
 		scanned: IDL.Float64,
 		migrated: IDL.Float64,
-		cleared: IDL.Float64
+		cleared: IDL.Float64,
+		has_more: IDL.Bool
 	});
 	const AppPruneResolvedResultsResult = IDL.Record({ pruned: IDL.Float64 });
 	const AppReadBattleLiveScoreArgs = IDL.Record({ battle_id: IDL.Text });
@@ -1714,7 +1719,11 @@ export const idlFactory = ({ IDL }) => {
 			[AppLookupReferralCodeResult],
 			['query']
 		),
-		app_migrate_profile_emails: IDL.Func([], [AppMigrateProfileEmailsResult], []),
+		app_migrate_profile_emails: IDL.Func(
+			[AppMigrateProfileEmailsArgs],
+			[AppMigrateProfileEmailsResult],
+			[]
+		),
 		app_prune_resolved_results: IDL.Func([], [AppPruneResolvedResultsResult], []),
 		app_read_battle_live_score: IDL.Func(
 			[AppReadBattleLiveScoreArgs],

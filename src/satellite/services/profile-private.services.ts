@@ -60,9 +60,18 @@ export const assertSetProfilePrivate = ({
 	}
 };
 
-/** Outcome of {@link migrateProfileEmailsFn}. */
+/**
+ * Page ceiling for {@link migrateProfileEmailsFn}. Every `profiles` rewrite
+ * re-runs the set-doc asserts, and the nickname-uniqueness assert scans the
+ * whole collection per write — so an unpaged migration is quadratic and
+ * blew the 40B-instruction message limit on the first prod run. A page of
+ * 10 keeps each call comfortably inside the budget.
+ */
+const MAX_MIGRATION_LIMIT = 10;
+
+/** Outcome of one {@link migrateProfileEmailsFn} page. */
 export interface MigrateProfileEmailsResult {
-	/** Total `profiles` docs scanned. */
+	/** `profiles` docs scanned in this page. */
 	scanned: number;
 	/** Non-empty addresses copied into `profile_private`. */
 	migrated: number;
@@ -70,6 +79,10 @@ export interface MigrateProfileEmailsResult {
 	cleared: number;
 	/** Docs left untouched because a step failed (logged; re-run to retry). */
 	skipped: number;
+	/** Cursor for the next page — absent once the collection is exhausted. */
+	nextKey?: string;
+	/** `true` while another page may remain. */
+	hasMore: boolean;
 }
 
 /**
@@ -80,6 +93,11 @@ export interface MigrateProfileEmailsResult {
  * skipped, and a stored private address is never overwritten (the public
  * copy is still cleared), so a re-run only retries previously-failed rows.
  *
+ * Keyset-paged (same discipline as the analytics exports): each call
+ * processes at most {@link MAX_MIGRATION_LIMIT} docs after `afterKey` in
+ * the datastore's native key order; the caller loops with the returned
+ * `nextKey` until `hasMore` is `false`.
+ *
  * Both writes pass the OWNER's principal as the store caller, so the
  * private doc lands owner-owned (the user can read/update it under the
  * `managed` rule and {@link assertSetProfilePrivate} holds) and the
@@ -89,17 +107,28 @@ export interface MigrateProfileEmailsResult {
  * still fails (e.g. a legacy nickname collision vetoed by the nickname
  * assert) is counted in `skipped` and logged for manual follow-up.
  */
-export const migrateProfileEmailsFn = (): MigrateProfileEmailsResult => {
+export const migrateProfileEmailsFn = ({
+	afterKey
+}: {
+	afterKey?: string;
+}): MigrateProfileEmailsResult => {
 	const caller = msgCaller();
 
 	if (!isAdmin({ caller })) {
 		throw new Error('Only an admin can migrate profile emails.');
 	}
 
+	const afterKeyText = afterKey?.trim() ?? '';
+
 	const { items } = listDocsStore({
 		collection: Collection.PROFILES,
 		caller,
-		params: {}
+		params: {
+			paginate: {
+				limit: BigInt(MAX_MIGRATION_LIMIT),
+				start_after: afterKeyText.length > 0 ? afterKeyText : undefined
+			}
+		}
 	});
 
 	let migrated = 0;
@@ -169,5 +198,12 @@ export const migrateProfileEmailsFn = (): MigrateProfileEmailsResult => {
 		}
 	}
 
-	return { scanned: items.length, migrated, cleared, skipped };
+	return {
+		scanned: items.length,
+		migrated,
+		cleared,
+		skipped,
+		nextKey: items.length > 0 ? items[items.length - 1][0] : undefined,
+		hasMore: items.length >= MAX_MIGRATION_LIMIT
+	};
 };

@@ -1010,11 +1010,16 @@ export interface AppLookupReferralCodeArgs {
 export interface AppLookupReferralCodeResult {
 	owner: [] | [string];
 }
+export interface AppMigrateProfileEmailsArgs {
+	after_key: [] | [string];
+}
 export interface AppMigrateProfileEmailsResult {
+	next_key: [] | [string];
 	skipped: number;
 	scanned: number;
 	migrated: number;
 	cleared: number;
+	has_more: boolean;
 }
 export interface AppPruneResolvedResultsResult {
 	pruned: number;
@@ -1499,7 +1504,10 @@ export interface _SERVICE {
 		AppLookupLeagueByInviteResult
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
-	app_migrate_profile_emails: ActorMethod<[], AppMigrateProfileEmailsResult>;
+	app_migrate_profile_emails: ActorMethod<
+		[AppMigrateProfileEmailsArgs],
+		AppMigrateProfileEmailsResult
+	>;
 	app_prune_resolved_results: ActorMethod<[], AppPruneResolvedResultsResult>;
 	app_read_battle_live_score: ActorMethod<
 		[AppReadBattleLiveScoreArgs],
