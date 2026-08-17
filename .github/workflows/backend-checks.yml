@@ -1,0 +1,75 @@
+name: Backend Checks
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-checks.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-checks.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    # Pinned Bun image for a reproducible runtime matching the Dockerfile base;
+    # module resolution is part of what this job asserts.
+    container: oven/bun:1.3
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: backend
+    # The tests exercise real migrations and transactions, so they need a real
+    # Postgres rather than a mock. Reachable as `postgres` from the job container.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: vici
+          POSTGRES_PASSWORD: vici
+          POSTGRES_DB: vici
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Full frozen install so the typecheck has its devDependencies.
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      # REQUIRE_DB_TESTS turns a missing database into a red build: without it
+      # a misconfigured URL would skip every DB-backed suite and CI would go
+      # green having asserted nothing.
+      - name: Test
+        env:
+          TEST_DATABASE_URL: postgres://vici:vici@postgres:5432/vici
+          REQUIRE_DB_TESTS: '1'
+        run: bun test
+
+      # Re-install exactly what the Fly image does (frozen AND --production),
+      # then resolve every boot-time import from that pruned tree. A phantom
+      # dep hoisted from devDependencies fails here instead of crash-looping
+      # the api machine in production.
+      - name: Install production dependencies (frozen, no dev)
+        run: bun install --frozen-lockfile --production
+
+      - name: Resolve smoke (entrypoints must build)
+        run: |
+          bun build src/index.ts --target=bun --outdir "$RUNNER_TEMP/backend-build-check"
+          bun build src/worker.ts --target=bun --outdir "$RUNNER_TEMP/backend-build-check"
