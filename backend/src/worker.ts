@@ -3,16 +3,26 @@
 // domain jobs (sweeps, pruning, scheduled awards) land with their phases; a
 // tick with no registered jobs is a deliberate no-op.
 
+import { tickDepositWatchers } from './chains/watchers';
+import { applyAssetAllowlist } from './custody/assets';
 import { env } from './env';
 import { logger } from './lib/logger';
 
 let stopping = false;
+let allowlistApplied = false;
 
 /** One worker pass. Job functions register here as the domains are ported;
  * each must be idempotent and isolate its own failures so one bad job cannot
  * stall the others. */
 export const tick = async (): Promise<void> => {
-	// no jobs yet
+	if (!allowlistApplied) {
+		await applyAssetAllowlist();
+		allowlistApplied = true;
+	}
+
+	// Adapter-enabled gating happens inside the tick: disabled chains are
+	// skipped, so an unconfigured deploy stays a clean no-op.
+	await tickDepositWatchers();
 };
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));

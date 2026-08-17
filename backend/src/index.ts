@@ -5,10 +5,13 @@
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { cors } from '@elysiajs/cors';
 import { Elysia } from 'elysia';
+import { applyAssetAllowlist } from './custody/assets';
 import { isDbUnavailable, query } from './db/client';
 import { env } from './env';
 import { logger } from './lib/logger';
 import { authRoutes } from './routes/auth';
+import { engineRoutes } from './routes/engine';
+import { walletRoutes } from './routes/wallet';
 
 // Baseline hardening headers on every response. The API serves JSON only, so a
 // deny-all framing posture is safe.
@@ -129,6 +132,8 @@ export const app = new Elysia()
 	// Credentialed CORS scoped to the SPA origins so the session cookie rides along.
 	.use(cors({ origin: allowedOrigins, credentials: true }))
 	.use(authRoutes)
+	.use(walletRoutes)
+	.use(engineRoutes)
 	// Liveness + DB connectivity. Bounded probe; three consecutive failures exit
 	// the process for a supervised restart with a fresh pool.
 	.get('/health', async ({ set }) => {
@@ -165,6 +170,13 @@ if (import.meta.main) {
 	selfExitArmed = true;
 	app.listen(env.port);
 	logger.info(`vici backend listening on :${env.port}`);
+
+	// Env is the source of truth for which custody assets are live; re-applied
+	// at boot so a config change lands with the deploy. Non-fatal on failure
+	// (the DB may still be coming up; /health covers that path).
+	applyAssetAllowlist().catch((err) => {
+		logger.error('custody asset allowlist sync failed at boot:', err);
+	});
 }
 
 export type App = typeof app;
