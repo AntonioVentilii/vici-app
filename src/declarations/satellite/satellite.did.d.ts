@@ -353,6 +353,22 @@ export interface AppGetAnalyticsSummaryResult {
 export interface AppGetAnalyticsUserStatsResult {
 	registered: number;
 }
+export interface AppGetAuthIdentitiesArgs {
+	limit: number;
+	after_key: [] | [string];
+}
+export interface AppGetAuthIdentitiesResult {
+	rows: Array<{
+		key: string;
+		provider: [] | [string];
+		updated_at_ns: string;
+		created_at_ns: string;
+		openid_email: [] | [string];
+		profile_email: [] | [string];
+		openid_name: [] | [string];
+	}>;
+	has_more: boolean;
+}
 export interface AppGetCurrentTournamentResult {
 	tournament:
 		| []
@@ -1417,6 +1433,7 @@ export interface _SERVICE {
 		AppGetAnalyticsSummaryResult
 	>;
 	app_get_analytics_user_stats: ActorMethod<[], AppGetAnalyticsUserStatsResult>;
+	app_get_auth_identities: ActorMethod<[AppGetAuthIdentitiesArgs], AppGetAuthIdentitiesResult>;
 	app_get_current_tournament: ActorMethod<[], AppGetCurrentTournamentResult>;
 	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
 	app_get_market_tags: ActorMethod<[], AppGetMarketTagsResult>;
