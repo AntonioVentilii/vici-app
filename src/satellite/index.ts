@@ -13,6 +13,10 @@ import {
 	TrackEventsResultSchema
 } from '$lib/schema/analytics-event.schema';
 import {
+	GetAuthIdentitiesArgsSchema,
+	GetAuthIdentitiesResultSchema
+} from '$lib/schema/auth-identity.schema';
+import {
 	GetMarketMetadataArgsSchema,
 	GetMarketTagsResultSchema,
 	MarketMetadataSchema,
@@ -68,6 +72,7 @@ import {
 	onVxpAwardSetForAnalytics,
 	trackEventsFn
 } from '$satellite/services/analytics.services';
+import { getAuthIdentitiesFn } from '$satellite/services/auth-identity-export.services';
 import {
 	readBattleLiveScoreFn,
 	resolveBattleFromSettlementsFn
@@ -644,6 +649,19 @@ export const deleteAnalyticsEvents = defineUpdate({
 	args: DeleteAnalyticsEventsArgsSchema,
 	result: DeleteAnalyticsEventsResultSchema,
 	handler: (args) => deleteAnalyticsEventsFn(args)
+});
+
+/**
+ * Admin-gated export of the principal ⇄ sign-in-identity mapping: one row per
+ * `#user` doc (provider + consented OpenID email/name) joined with the
+ * best-effort `profiles.email`, keyset-paged by key. Exists so an off-chain
+ * system can match accounts to the same login elsewhere. Same admin gate as
+ * the analytics exports; deliberately exports addresses, admin-only.
+ */
+export const getAuthIdentities = defineQuery({
+	args: GetAuthIdentitiesArgsSchema,
+	result: GetAuthIdentitiesResultSchema,
+	handler: (args) => getAuthIdentitiesFn(args)
 });
 
 // ─── Social cohorts ─────────────────────────────────────────────

@@ -27,6 +27,10 @@ type AppGetAnalyticsSummaryResult = record { rows : vec record { day : float64; 
 
 type AppGetAnalyticsUserStatsResult = record { registered : float64 };
 
+type AppGetAuthIdentitiesArgs = record { after_key : opt text; limit : float64 };
+
+type AppGetAuthIdentitiesResult = record { rows : vec record { key : text; created_at_ns : text; updated_at_ns : text; provider : opt text; openid_email : opt text; openid_name : opt text; profile_email : opt text }; has_more : bool };
+
 type AppGetCurrentTournamentResult = record { tournament : opt record { id : text; month_start_ms : float64; month_end_ms : float64; bracket_size : float64; state : variant { in_flight; concluded }; seeded_league_ids : vec text; created_at_ms : float64 }; matches : vec record { tournament_id : text; round : variant { r1; quarter; semifinal; final }; index : float64; from_league_id : opt text; to_league_id : opt text; from_start_calls : opt float64; from_start_wins : opt float64; to_start_calls : opt float64; to_start_wins : opt float64; from_acc : opt float64; to_acc : opt float64; winner_league_id : opt text; start_ms : float64; end_ms : float64 } };
 
 type AppGetMarketMetadataArgs = record { series_id : text };
@@ -243,6 +247,7 @@ service : {
 	app_get_analytics_profile_created : (AppGetAnalyticsProfileCreatedArgs) -> (AppGetAnalyticsProfileCreatedResult) query;
 	app_get_analytics_summary : (AppGetAnalyticsSummaryArgs) -> (AppGetAnalyticsSummaryResult) query;
 	app_get_analytics_user_stats : () -> (AppGetAnalyticsUserStatsResult) query;
+	app_get_auth_identities : (AppGetAuthIdentitiesArgs) -> (AppGetAuthIdentitiesResult) query;
 	app_get_current_tournament : () -> (AppGetCurrentTournamentResult) query;
 	app_get_market_metadata : (AppGetMarketMetadataArgs) -> (AppGetMarketMetadataResult) query;
 	app_get_market_tags : () -> (AppGetMarketTagsResult) query;
