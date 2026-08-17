@@ -204,12 +204,16 @@ export const migrateProfileEmailsFn = ({
 		}
 	}
 
+	const hasMore = items.length >= cap;
+
 	return {
 		scanned: items.length,
 		migrated,
 		cleared,
 		skipped,
-		nextKey: items.length > 0 ? items[items.length - 1][0] : undefined,
-		hasMore: items.length >= cap
+		// Cursor only while another page may exist — a final (short) page
+		// returns no cursor, so `nextKey` presence alone also means "continue".
+		nextKey: hasMore && items.length > 0 ? items[items.length - 1][0] : undefined,
+		hasMore
 	};
 };
