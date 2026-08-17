@@ -1,0 +1,346 @@
+// Monthly tournament: deterministic seeding (member count desc, league id as
+// the tie-break; the same roster always draws the same bracket), the
+// idempotent draw, round resolution with the forfeit floor and write-once
+// winner propagation, and the prize claim tiers in record-only mode.
+
+import { isNullish } from '@dfinity/utils';
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { randomBytes, randomInt } from 'node:crypto';
+import { query } from '../src/db/client';
+import {
+	claimTournamentPrize,
+	resolveTournamentRound,
+	TOURNAMENT_BRACKET_SIZE,
+	TOURNAMENT_MIN_CALLS_PER_MATCH,
+	TOURNAMENT_ROUND_DURATION_MS,
+	TOURNAMENT_ROUNDS,
+	triggerTournamentDraw
+} from '../src/tournaments/tournaments';
+import { setVxpTreasuryDisabled } from '../src/vxp/awards';
+import { ensureMigrated } from './helpers/auth';
+import { dbAvailable } from './helpers/setup';
+
+const uniqueLeagueId = (): string => `tlg-${randomBytes(6).toString('hex')}`;
+
+/** A far-future month so draws never collide across suites or runs. */
+const uniqueMonth = (): { monthAnchor: string; startMs: number } => {
+	const year = 2300 + randomInt(0, 400);
+	const month = randomInt(1, 12);
+
+	return {
+		monthAnchor: `${year}-${String(month).padStart(2, '0')}`,
+		startMs: Date.UTC(year, month - 1, 1)
+	};
+};
+
+/** A league with `memberCount` synthetic members, bulk-inserted. */
+const seedLeagueWithMembers = async (memberCount: number): Promise<string> => {
+	const leagueId = uniqueLeagueId();
+	const ownerRows = await query<{ id: string }>(
+		`insert into users (role) values ('user') returning id`
+	);
+	const ownerId = ownerRows[0]?.id ?? '';
+
+	await query(
+		`insert into leagues (id, name, invite_code, owner_user_id, created_at_ms)
+		 values ($1, $2, $3, $4, $5)`,
+		[
+			leagueId,
+			`League ${leagueId}`,
+			randomBytes(3).toString('hex').toUpperCase(),
+			ownerId,
+			Date.now()
+		]
+	);
+	await query(
+		`insert into league_members (league_id, member_user_id, joined_at_ms, role)
+		 values ($1, $2, $3, 'owner')`,
+		[leagueId, ownerId, Date.now()]
+	);
+	await query(
+		`with new_users as (
+		   insert into users (role) select 'user' from generate_series(1, $3::int) returning id
+		 )
+		 insert into league_members (league_id, member_user_id, joined_at_ms, role)
+		 select $1, id, $2, 'member' from new_users`,
+		[leagueId, Date.now(), memberCount - 1]
+	);
+
+	return leagueId;
+};
+
+describe.if(dbAvailable)('tournament', () => {
+	// Record-only mode: prize claims must not attempt real treasury
+	// transfers from the test suite.
+	const restoreTreasury = setVxpTreasuryDisabled(true);
+
+	// Seeded once for the whole suite: 16 leagues with strictly decreasing
+	// member counts (60 down to 45) so they deterministically outrank any
+	// league other suites create.
+	const leagueIds: string[] = [];
+
+	// Cumulative counters mirrored into league_stats; each "window" adds a
+	// qualifying, seed-graded delta so the higher seed wins every match it
+	// plays (except the deliberately forfeiting bottom seed).
+	const calls: number[] = [];
+	const wins: number[] = [];
+
+	const writeStats = async (index: number): Promise<void> => {
+		await query(
+			`insert into league_stats (league_id, total_calls, wins, updated_at_ms)
+			 values ($1, $2, $3, $4)
+			 on conflict (league_id) do update set
+			   total_calls = excluded.total_calls, wins = excluded.wins,
+			   updated_at_ms = excluded.updated_at_ms`,
+			[leagueIds[index] ?? '', calls[index] ?? 0, wins[index] ?? 0, Date.now()]
+		);
+	};
+
+	/** One activity window for every league: seed i gains 500 calls at a
+	 * strictly seed-graded accuracy; the bottom seed stays under the forfeit
+	 * floor when `forfeitBottomSeed` is set. */
+	const addWindowForAll = async ({ forfeitBottomSeed }: { forfeitBottomSeed: boolean }) => {
+		for (let i = 0; i < leagueIds.length; i += 1) {
+			const bottomSeed = i === leagueIds.length - 1;
+
+			if (bottomSeed && forfeitBottomSeed) {
+				calls[i] = (calls[i] ?? 0) + TOURNAMENT_MIN_CALLS_PER_MATCH - 1;
+				wins[i] = (wins[i] ?? 0) + TOURNAMENT_MIN_CALLS_PER_MATCH - 1;
+			} else {
+				calls[i] = (calls[i] ?? 0) + 500;
+				wins[i] = (wins[i] ?? 0) + 500 - i * 10;
+			}
+
+			await writeStats(i);
+		}
+	};
+
+	beforeAll(async () => {
+		await ensureMigrated();
+
+		// Leagues from previous local runs carry the same member counts and
+		// would tie into the ranking; the cascade drops their memberships too.
+		await query(`delete from leagues where id like 'tlg-%'`);
+
+		for (let i = 0; i < TOURNAMENT_BRACKET_SIZE; i += 1) {
+			leagueIds.push(await seedLeagueWithMembers(60 - i));
+			calls.push(0);
+			wins.push(0);
+			await writeStats(i);
+		}
+	});
+
+	afterAll(() => {
+		restoreTreasury();
+	});
+
+	test('the draw is deterministic and idempotent', async () => {
+		const { monthAnchor, startMs } = uniqueMonth();
+		const nowMs = startMs + 1000;
+
+		const early = await triggerTournamentDraw({ monthAnchor, nowMs: startMs - 1000 });
+
+		expect(early.reason).toBe('month_not_started');
+
+		const drawn = await triggerTournamentDraw({ monthAnchor, nowMs });
+
+		expect(drawn.ok).toBe(true);
+
+		const again = await triggerTournamentDraw({ monthAnchor, nowMs });
+
+		expect(again.reason).toBe('already_drawn');
+
+		const rows = await query<{ seeded_league_ids: string[] }>(
+			`select seeded_league_ids from tournaments where id = $1`,
+			[monthAnchor]
+		);
+
+		// Member-count ranking: exactly the 16 seeded leagues, biggest first.
+		expect(rows[0]?.seeded_league_ids).toEqual(leagueIds);
+
+		// A second draw over the same roster (different month) produces the
+		// identical seeding: the bracket is a pure function of the data.
+		const second = uniqueMonth();
+
+		await triggerTournamentDraw({ monthAnchor: second.monthAnchor, nowMs: second.startMs + 1000 });
+
+		const secondRows = await query<{ seeded_league_ids: string[] }>(
+			`select seeded_league_ids from tournaments where id = $1`,
+			[second.monthAnchor]
+		);
+
+		expect(secondRows[0]?.seeded_league_ids).toEqual(leagueIds);
+	});
+
+	test('round 1 pairs seed 1 with seed 16 and stamps start snapshots; later rounds are TBD', async () => {
+		const { monthAnchor, startMs } = uniqueMonth();
+
+		await triggerTournamentDraw({ monthAnchor, nowMs: startMs + 1000 });
+
+		const matches = await query<{
+			round: string;
+			index: number;
+			from_league_id: string | null;
+			to_league_id: string | null;
+			from_start_calls: number | null;
+		}>(
+			`select round, index, from_league_id, to_league_id, from_start_calls
+			 from tournament_matches where tournament_id = $1 order by round, index`,
+			[monthAnchor]
+		);
+
+		const r1 = matches.filter((m) => m.round === 'r1');
+
+		expect(r1.length).toBe(8);
+		expect(r1.find((m) => m.index === 0)?.from_league_id).toBe(leagueIds[0] ?? '');
+		expect(r1.find((m) => m.index === 0)?.to_league_id).toBe(leagueIds[15] ?? '');
+		expect(r1.find((m) => m.index === 0)?.from_start_calls).toBe(calls[0] ?? -1);
+
+		const quarters = matches.filter((m) => m.round === 'quarter');
+
+		expect(quarters.length).toBe(4);
+		expect(quarters.every((m) => isNullish(m.from_league_id) && isNullish(m.to_league_id))).toBe(
+			true
+		);
+	});
+
+	test('resolution applies the forfeit floor, propagates write-once, concludes, and pays the prize tiers', async () => {
+		const { monthAnchor, startMs } = uniqueMonth();
+
+		await triggerTournamentDraw({ monthAnchor, nowMs: startMs + 1000 });
+
+		// Mid-window refusals.
+		const early = await resolveTournamentRound({
+			tournamentId: monthAnchor,
+			round: 'r1',
+			nowMs: startMs + 1000
+		});
+
+		expect(early.reason).toBe('round_not_yet_closed');
+
+		const outOfOrder = await resolveTournamentRound({
+			tournamentId: monthAnchor,
+			round: 'quarter',
+			nowMs: startMs + 2 * TOURNAMENT_ROUND_DURATION_MS + 1000
+		});
+
+		expect(outOfOrder.reason).toBe('previous_round_not_resolved');
+
+		expect(
+			(await resolveTournamentRound({ tournamentId: monthAnchor, round: 'nope', nowMs: startMs }))
+				.reason
+		).toBe('invalid_input');
+
+		// Resolve round by round, adding one qualifying seed-graded activity
+		// window before each so every window delta orders by seed. The bottom
+		// seed stays under the floor in round 1 and forfeits.
+		const afterAllRounds = startMs + TOURNAMENT_ROUNDS.length * TOURNAMENT_ROUND_DURATION_MS + 1000;
+
+		await addWindowForAll({ forfeitBottomSeed: true });
+
+		const r1 = await resolveTournamentRound({
+			tournamentId: monthAnchor,
+			round: 'r1',
+			nowMs: afterAllRounds
+		});
+
+		expect(r1.ok).toBe(true);
+		expect(r1.matchesResolved).toBe(8);
+
+		// Seed 16 forfeited match 0 to seed 1 despite its perfect accuracy.
+		const match0 = await query<{ winner_league_id: string | null; to_acc: number | null }>(
+			`select winner_league_id, to_acc from tournament_matches
+			 where tournament_id = $1 and round = 'r1' and index = 0`,
+			[monthAnchor]
+		);
+
+		expect(match0[0]?.winner_league_id).toBe(leagueIds[0] ?? '');
+		expect(match0[0]?.to_acc).toBeNull();
+
+		// Idempotent re-run: nothing left to resolve, nothing overwritten.
+		const r1Again = await resolveTournamentRound({
+			tournamentId: monthAnchor,
+			round: 'r1',
+			nowMs: afterAllRounds
+		});
+
+		expect(r1Again.matchesResolved).toBe(0);
+
+		for (const round of ['quarter', 'semifinal', 'final'] as const) {
+			await addWindowForAll({ forfeitBottomSeed: false });
+
+			const result = await resolveTournamentRound({
+				tournamentId: monthAnchor,
+				round,
+				nowMs: afterAllRounds
+			});
+
+			expect(result.ok).toBe(true);
+		}
+
+		// Bracket arithmetic: winners 1..8 out of r1; quarters 1,3,5,7; semis
+		// 1 and 5; final winner seed 1; semifinal losers seeds 3 and 7.
+		const finalRows = await query<{ winner_league_id: string | null; state: string }>(
+			`select m.winner_league_id, t.state from tournament_matches m
+			 join tournaments t on t.id = m.tournament_id
+			 where m.tournament_id = $1 and m.round = 'final'`,
+			[monthAnchor]
+		);
+
+		expect(finalRows[0]?.winner_league_id).toBe(leagueIds[0] ?? '');
+		expect(finalRows[0]?.state).toBe('concluded');
+
+		// Prize claims: gold for a member of the winner, silver for the other
+		// finalist (seed 5), bronze for a semifinal loser (seed 3); an
+		// outsider gets nothing; a re-claim collides.
+		const memberOf = async (index: number): Promise<string> => {
+			const rows = await query<{ member_user_id: string }>(
+				`select member_user_id from league_members where league_id = $1 limit 1`,
+				[leagueIds[index] ?? '']
+			);
+
+			return rows[0]?.member_user_id ?? '';
+		};
+
+		const gold = await claimTournamentPrize({
+			tournamentId: monthAnchor,
+			userId: await memberOf(0)
+		});
+
+		expect(gold.ok).toBe(true);
+		expect(gold.awardsCreated).toBe(1);
+		expect(gold.totalVxpCredited).toBe(5000);
+
+		const goldAgain = await claimTournamentPrize({
+			tournamentId: monthAnchor,
+			userId: await memberOf(0)
+		});
+
+		expect(goldAgain.awardsAlreadyClaimed).toBe(1);
+
+		const silver = await claimTournamentPrize({
+			tournamentId: monthAnchor,
+			userId: await memberOf(4)
+		});
+
+		expect(silver.totalVxpCredited).toBe(2500);
+
+		const bronze = await claimTournamentPrize({
+			tournamentId: monthAnchor,
+			userId: await memberOf(2)
+		});
+
+		expect(bronze.totalVxpCredited).toBe(1000);
+
+		const outsider = await query<{ id: string }>(
+			`insert into users (role) values ('user') returning id`
+		);
+		const none = await claimTournamentPrize({
+			tournamentId: monthAnchor,
+			userId: outsider[0]?.id ?? ''
+		});
+
+		expect(none.ok).toBe(false);
+		expect(none.reason).toBe('not_member_of_top_league');
+	});
+});

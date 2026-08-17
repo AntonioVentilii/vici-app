@@ -33,3 +33,6 @@ target
 
 
 
+
+# Backend local-disk upload fallback (dev/test artifacts)
+/backend/uploads/

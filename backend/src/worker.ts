@@ -17,8 +17,10 @@ import { applyAssetAllowlist } from './custody/assets';
 import { env } from './env';
 import { logger } from './lib/logger';
 import { pruneResolvedResults } from './social/resolved-results';
+import { tournamentDrawTick, tournamentResolveTick } from './tournaments/tournaments';
 import { isVxpTreasuryDisabled, reconcileUnpaidAwards } from './vxp/awards';
 import { backfillStreakUnderpayments } from './vxp/streak';
+import { freezeClosedMonth } from './worlds/affiliation-stats';
 
 export interface WorkerJob {
 	name: string;
@@ -91,15 +93,31 @@ export const jobs: WorkerJob[] = [
 		everyNthTick: HOURLY_TICKS
 	},
 	{
-		// Tournaments phase: monthly bracket draw tick.
+		// Draws the current month's bracket once enough leagues exist; the
+		// tournament primary-key collision keeps every later pass a no-op.
 		name: 'tournament-draw',
-		run: noop,
+		run: () => tournamentDrawTick(),
 		everyNthTick: HOURLY_TICKS
 	},
 	{
-		// Tournaments phase: round-resolution tick.
+		// Resolves every closed, still-open round of the latest in-flight
+		// tournament; write-once winners make re-runs no-ops.
 		name: 'tournament-resolve',
-		run: noop,
+		run: () => tournamentResolveTick(),
+		everyNthTick: HOURLY_TICKS
+	},
+	{
+		// Freezes the just-closed Worlds month for both kinds; shares the
+		// all-or-nothing month gate with the lazy claim-time freeze, so
+		// whichever path runs first owns the month.
+		name: 'affiliation-monthly-freeze',
+		run: async () => {
+			const { monthAnchor, frozen } = await freezeClosedMonth();
+
+			if (frozen > 0) {
+				logger.info(`worlds month ${monthAnchor} frozen (${frozen} snapshot rows)`);
+			}
+		},
 		everyNthTick: HOURLY_TICKS
 	}
 ];
