@@ -10,6 +10,7 @@ import { logger } from './lib/logger';
 
 let stopping = false;
 let allowlistApplied = false;
+let wake: (() => void) | undefined;
 
 /** One worker pass. Job functions register here as the domains are ported;
  * each must be idempotent and isolate its own failures so one bad job cannot
@@ -25,7 +26,21 @@ export const tick = async (): Promise<void> => {
 	await tickDepositWatchers();
 };
 
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+/** A sleep the shutdown signal can cut short, so a stop/deploy never waits
+ * out the remainder of the poll interval. */
+const sleep = (ms: number): Promise<void> =>
+	new Promise((resolve) => {
+		const timer = setTimeout(() => {
+			wake = undefined;
+			resolve();
+		}, ms);
+
+		wake = () => {
+			clearTimeout(timer);
+			wake = undefined;
+			resolve();
+		};
+	});
 
 const run = async (): Promise<void> => {
 	logger.info(`worker started (poll interval ${env.workerPollIntervalMs}ms)`);
@@ -43,14 +58,15 @@ const run = async (): Promise<void> => {
 	logger.info('worker stopped');
 };
 
-// Fly sends SIGINT/SIGTERM on stop/deploy: finish the in-flight tick, skip the
-// next one, exit cleanly.
-process.on('SIGTERM', () => {
+// Fly sends SIGINT/SIGTERM on stop/deploy: finish the in-flight tick,
+// interrupt any pending sleep, exit cleanly.
+const stop = (): void => {
 	stopping = true;
-});
-process.on('SIGINT', () => {
-	stopping = true;
-});
+	wake?.();
+};
+
+process.on('SIGTERM', stop);
+process.on('SIGINT', stop);
 
 if (import.meta.main) {
 	void run();
