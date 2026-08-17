@@ -48,6 +48,47 @@ const assertSafeId = (leagueId: string): void => {
 };
 
 /**
+ * Decode a raster, downscale it to the square 256px cover JPEG, persist it,
+ * and return the serving URL. Shared between the owner upload route and the
+ * data-migration tooling; callers own their access checks and the row write.
+ */
+export const storeLeagueCoverBytes = async ({
+	leagueId,
+	bytes
+}: {
+	leagueId: string;
+	bytes: ArrayBuffer | Uint8Array;
+}): Promise<string> => {
+	assertSafeId(leagueId);
+
+	let thumbnail: Buffer;
+
+	try {
+		thumbnail = await sharp(bytes instanceof Uint8Array ? bytes : Buffer.from(bytes))
+			.rotate()
+			.resize(LEAGUE_IMAGE_SIZE_PX, LEAGUE_IMAGE_SIZE_PX, { fit: 'cover' })
+			.jpeg({ quality: LEAGUE_IMAGE_JPEG_QUALITY, mozjpeg: true })
+			.toBuffer();
+	} catch {
+		// Sharp rejects anything that is not a decodable raster image, which
+		// also keeps SVG/HTML payloads out of storage entirely.
+		throw new LeagueError('leagues cover image must be a decodable raster image.');
+	}
+
+	if (nonNullish(s3)) {
+		await s3.write(storageKey(leagueId), thumbnail, { type: 'image/jpeg' });
+	} else {
+		if (!existsSync(uploadsDir)) {
+			mkdirSync(uploadsDir, { recursive: true });
+		}
+
+		await Bun.write(diskPath(leagueId), thumbnail);
+	}
+
+	return `${env.apiBaseUrl}/api/v1/leagues/${leagueId}/image`;
+};
+
+/**
  * Store a league's cover: decode whatever raster the client sent, downscale
  * to a square 256px cover JPEG with sharp, persist it, and stamp the serving
  * URL on the league row. Owner-only.
@@ -77,31 +118,7 @@ export const uploadLeagueImage = async ({
 		throw new LeagueError('leagues cover image must be a non-empty file up to 5 MB.');
 	}
 
-	let thumbnail: Buffer;
-
-	try {
-		thumbnail = await sharp(bytes instanceof Uint8Array ? bytes : Buffer.from(bytes))
-			.rotate()
-			.resize(LEAGUE_IMAGE_SIZE_PX, LEAGUE_IMAGE_SIZE_PX, { fit: 'cover' })
-			.jpeg({ quality: LEAGUE_IMAGE_JPEG_QUALITY, mozjpeg: true })
-			.toBuffer();
-	} catch {
-		// Sharp rejects anything that is not a decodable raster image, which
-		// also keeps SVG/HTML payloads out of storage entirely.
-		throw new LeagueError('leagues cover image must be a decodable raster image.');
-	}
-
-	if (nonNullish(s3)) {
-		await s3.write(storageKey(leagueId), thumbnail, { type: 'image/jpeg' });
-	} else {
-		if (!existsSync(uploadsDir)) {
-			mkdirSync(uploadsDir, { recursive: true });
-		}
-
-		await Bun.write(diskPath(leagueId), thumbnail);
-	}
-
-	const imageUrl = `${env.apiBaseUrl}/api/v1/leagues/${leagueId}/image`;
+	const imageUrl = await storeLeagueCoverBytes({ leagueId, bytes });
 
 	return await tx(async (q) => {
 		const rows = await q<Parameters<typeof shapeLeague>[0]>(
