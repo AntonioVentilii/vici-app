@@ -32,8 +32,10 @@ const WINDOWS: Record<string, ClearingDid.LeaderboardWindow> = {
 	all_time: { AllTime: null }
 };
 
+// Total parse: a malformed query value degrades to "not provided" instead of
+// a thrown BigInt error surfacing as a 500.
 const optionalBigInt = (value: string | undefined): bigint | undefined =>
-	isNullish(value) || value === '' ? undefined : BigInt(value);
+	isNullish(value) || !/^\d+$/.test(value) ? undefined : BigInt(value);
 
 export const engineRoutes = new Elysia({ prefix: '/api/v1/engine' })
 	// Public market catalog + market-wide reads

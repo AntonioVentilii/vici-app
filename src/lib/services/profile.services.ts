@@ -22,7 +22,7 @@ import { computeUserStatsSnapshot, persistMyUserStats } from '$lib/services/user
 import { marketMetadataStore } from '$lib/stores/market-metadata.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { userStore } from '$lib/stores/user.store';
-import type { Nickname, UserProfile } from '$lib/types/profile';
+import type { Nickname, ProfilePrivate, UserProfile } from '$lib/types/profile';
 import type { UserStatsDoc } from '$lib/types/user-stats';
 import {
 	CONTRARIAN_PRICE_THRESHOLD,
@@ -61,7 +61,6 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				nickname: shortenWithMiddleEllipsis({ text: principal, splitLength: 5 }),
 				avatar: '',
 				avatarParts: '',
-				email: '',
 				pnl: 0,
 				visibility: ProfileVisibility.FRIENDS_ONLY,
 				totalTrades: 0,
@@ -381,7 +380,13 @@ export const upsertProfile = async (
 	});
 
 	const base = existing?.data ?? profileDoc.data;
-	const data: UserProfile = {
+	// Strip the legacy `email` field AFTER the merge: both the stored doc and
+	// the caller's payload can still carry it at runtime (pre-migration rows,
+	// snapshots built from raw `getDoc` reads) even though the schema no
+	// longer declares it, and re-spreading it would re-persist the address
+	// onto the public doc. Every write from here on leaves the profile clean —
+	// the address lives in `profile_private`.
+	const { email: _legacyEmail, ...data } = {
 		...base,
 		...profileDoc.data,
 		// Leaf-merge `preferences` onto the freshest stored slice rather than
@@ -391,7 +396,7 @@ export const upsertProfile = async (
 		// after onboarding would replace `preferences` and drop the just-picked
 		// `favoriteParticipantId`.
 		preferences: { ...base.preferences, ...profileDoc.data.preferences }
-	};
+	} as UserProfile & { email?: string };
 
 	if (isNullish(existing)) {
 		await setDoc({
@@ -444,7 +449,6 @@ export const applyOnboardingPicks = async ({
 	handle,
 	setHandle,
 	interests,
-	email,
 	favoriteParticipantId,
 	favoriteSide
 }: {
@@ -452,7 +456,6 @@ export const applyOnboardingPicks = async ({
 	handle: string | null;
 	setHandle: boolean;
 	interests?: string[];
-	email?: string;
 	favoriteParticipantId: string;
 	favoriteSide: string;
 }): Promise<{ profile: UserProfile; handleApplied: boolean }> => {
@@ -472,10 +475,6 @@ export const applyOnboardingPicks = async ({
 
 			if (nonNullish(interests)) {
 				patch.interests = interests;
-			}
-
-			if (nonNullish(email) && email.length > 0) {
-				patch.email = email;
 			}
 
 			if (includeHandle && nonNullish(handle)) {
@@ -568,15 +567,96 @@ export const checkNicknameAvailability = async ({
 };
 
 /**
+ * Reads the signed-in user's own on-file email from the owner-private
+ * `profile_private` doc. The collection is `managed` (owner +
+ * controllers), so this only resolves for the caller's own principal —
+ * never call it for a counterpart. Returns the empty string when no doc
+ * (or no address) is stored.
+ */
+export const getMyEmail = async (principal: PrincipalText): Promise<string> => {
+	const doc = await getDoc<ProfilePrivate>({
+		collection: Collection.PROFILE_PRIVATE,
+		key: principal
+	});
+
+	return doc?.data.email.trim() ?? '';
+};
+
+/**
+ * Persists the signed-in user's email onto their owner-private
+ * `profile_private` doc (version-safe upsert). The satellite assert
+ * binds both the doc key and the embedded `owner` to the caller, so
+ * this can only ever write the caller's own doc.
+ */
+export const saveMyEmail = async ({
+	principal,
+	email
+}: {
+	principal: PrincipalText;
+	email: string;
+}): Promise<void> => {
+	const existing = await getDoc<ProfilePrivate>({
+		collection: Collection.PROFILE_PRIVATE,
+		key: principal
+	});
+
+	await setDoc({
+		collection: Collection.PROFILE_PRIVATE,
+		doc: {
+			key: principal,
+			...(nonNullish(existing?.version) && { version: existing.version }),
+			data: { owner: principal, email }
+		}
+	});
+};
+
+/**
+ * Post-sign-in email hydration + provider backfill. Reads the stored
+ * private address; when there is none and the IdP shared one this
+ * sign-in, captures it onto the private doc. Never overwrites an
+ * address already on file (a manually-entered one, or one from an
+ * earlier provider), so switching IdPs can't silently replace it.
+ * Best-effort — a failed read/write never blocks sign-in; the resolved
+ * on-file address (possibly '') is returned for the user store.
+ */
+const hydrateMyEmail = async ({
+	principal,
+	providerEmail
+}: {
+	principal: PrincipalText;
+	providerEmail: string;
+}): Promise<string> => {
+	try {
+		const stored = await getMyEmail(principal);
+
+		if (stored.length > 0 || providerEmail.length === 0) {
+			return stored;
+		}
+
+		await saveMyEmail({ principal, email: providerEmail });
+
+		return providerEmail;
+	} catch (err: unknown) {
+		console.warn('profile email hydration failed', err);
+
+		return '';
+	}
+};
+
+/**
  * Result of `ensureProfile` — `existed` flags whether the satellite
  * already held a profile doc for this principal at sign-in time. The
  * post-sign-in handoff in `(app)/+layout.svelte` uses this to decide
  * whether to apply a pending pre-auth onboarding payload (new user)
- * or preserve the existing profile (returning user).
+ * or preserve the existing profile (returning user). `email` is the
+ * user's own on-file address from the owner-private `profile_private`
+ * doc (possibly just backfilled from the IdP), hydrated here so the
+ * user store never has to read it from the public profile.
  */
 export interface EnsureProfileResult {
 	profile: UserProfile;
 	existed: boolean;
+	email: string;
 }
 
 /**
@@ -663,34 +743,12 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	});
 
 	if (nonNullish(existing) && nonNullish(existing.version)) {
-		// Backfill the provider email onto a returning user whose profile
-		// has none yet — e.g. they signed up before we captured it, or via a
-		// provider that didn't expose one then. Only when currently empty:
-		// never overwrite an address the user already has (a manually-entered
-		// one, or one from an earlier provider), so switching IdPs can't
-		// silently replace it. Best-effort — a failed backfill never blocks
-		// sign-in.
-		if (providerEmail.length > 0 && (existing.data.email ?? '').trim().length === 0) {
-			const backfilled: UserProfile = { ...existing.data, email: providerEmail };
+		// The address lives on the owner-private `profile_private` doc, never
+		// on the public profile — hydrate it (and backfill the provider email
+		// when nothing is on file yet) without touching the profile doc.
+		const email = await hydrateMyEmail({ principal, providerEmail });
 
-			try {
-				// Write against the version we just read (optimistic concurrency)
-				// rather than via `upsertProfile`, which re-reads and overlays this
-				// full snapshot onto the latest doc — that would clobber any other
-				// field changed in between. A stale version makes `setDoc` fail, so
-				// a concurrent write wins; this best-effort backfill just no-ops.
-				await setDoc({
-					collection: Collection.PROFILES,
-					doc: { key: principal, version: existing.version, data: backfilled }
-				});
-
-				return { profile: backfilled, existed: true };
-			} catch (err: unknown) {
-				console.warn('profile email backfill failed', err);
-			}
-		}
-
-		return { profile: existing.data, existed: true };
+		return { profile: existing.data, existed: true, email };
 	}
 
 	const fullName = nonNullish(openid)
@@ -709,8 +767,8 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	const sanitizedSeed = sanitizeNickname(seedSource);
 	const nickname = sanitizedSeed.length >= MIN_NICKNAME_LENGTH ? sanitizedSeed : principal;
 
-	// First-touch bootstrap. Seed the nickname (and provider email when present)
-	// through the SAME serialized `patchProfile` queue that `calculateAndSyncStats`
+	// First-touch bootstrap. Seed the nickname through the SAME serialized
+	// `patchProfile` queue that `calculateAndSyncStats`
 	// — awaited right after sign-in on this finishing login — and the onboarding
 	// drain use. A direct full-snapshot `upsertProfile` here is NOT serialized
 	// against that concurrent stats write, so its read-then-write loses the
@@ -723,10 +781,7 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	// with another provider's shortened principal — fall back to the unshortened
 	// principal so the assertion cannot veto this implicit write. The user can
 	// change it later from the profile dashboard.
-	const seedPatch: ProfilePatch = {
-		nickname,
-		...(providerEmail.length > 0 && { email: providerEmail })
-	};
+	const seedPatch: ProfilePatch = { nickname };
 
 	// Record the bootstrap BEFORE the write awaits. A fresh sign-in can fire a
 	// second `onAuthStateChange` pass whose profile read resolves after the
@@ -738,15 +793,20 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	// `existed: false` (the new-user path) on any retry.
 	bootstrappedThisSession.add(principal);
 
+	// Capture the provider email (when shared) onto the owner-private doc —
+	// same best-effort semantics as the returning-user hydration above.
+	const email = await hydrateMyEmail({ principal, providerEmail });
+
 	try {
-		return { profile: await patchProfile({ principal, patch: seedPatch }), existed: false };
+		return { profile: await patchProfile({ principal, patch: seedPatch }), existed: false, email };
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : '';
 
 		if (message.includes('already taken')) {
 			return {
 				profile: await patchProfile({ principal, patch: { ...seedPatch, nickname: principal } }),
-				existed: false
+				existed: false,
+				email
 			};
 		}
 
