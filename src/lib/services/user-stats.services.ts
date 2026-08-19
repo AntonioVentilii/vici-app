@@ -12,6 +12,8 @@ import {
 import { CONTRARIAN_PRICE_THRESHOLD } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { eventExecutionPrice, isSettledEvent } from '$lib/utils/resolved-position.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import { getUserStats as getUserStatsWeb2 } from '$lib/web2/client';
 import { isNullish } from '@dfinity/utils';
 import { getDoc, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
@@ -185,6 +187,10 @@ export const persistMyUserStats = async (snapshot: UserStatsDoc): Promise<void> 
 export const loadMyUserStats = async (
 	principal: PrincipalText
 ): Promise<UserStatsDoc | undefined> => {
+	if (isWeb2Backend()) {
+		return getUserStatsWeb2();
+	}
+
 	const doc = await getDoc<UserStatsDoc>({
 		collection: Collection.USER_STATS,
 		key: principal

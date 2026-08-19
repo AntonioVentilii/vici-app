@@ -1,5 +1,10 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import type { UserProfile } from '$lib/types/profile';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	getMyRival as getMyRivalWeb2,
+	listLeaderboard as listLeaderboardWeb2
+} from '$lib/web2/client';
 import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 
 /**
@@ -16,6 +21,10 @@ import { fromWireProfile } from '$satellite/utils/wire-format.utils';
  * sort happens satellite-side too so client and server agree on rank.
  */
 export const getLeaderboard = async (): Promise<UserProfile[]> => {
+	if (isWeb2Backend()) {
+		return listLeaderboardWeb2();
+	}
+
 	const { items } = await functions.listLeaderboard();
 
 	return items.map(fromWireProfile);
@@ -35,6 +44,10 @@ export const getLeaderboard = async (): Promise<UserProfile[]> => {
 export const getMyRival = async (): Promise<
 	{ profile: UserProfile; isTrailing: boolean } | undefined
 > => {
+	if (isWeb2Backend()) {
+		return getMyRivalWeb2();
+	}
+
 	const { rival, rivalIsTrailing } = await functions.getMyRival();
 
 	return rival ? { profile: rival as UserProfile, isTrailing: rivalIsTrailing } : undefined;
