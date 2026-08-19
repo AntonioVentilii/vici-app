@@ -53,6 +53,7 @@ Validated fail-fast in `src/env.ts`. In production the required vars abort boot 
 | `TREASURY_PEM`            | no              | empty (svc-derived key)                      | PEM override for the treasury IC identity                                                   |
 | `ADMIN_PEM`               | no              | empty (svc-derived key)                      | PEM override for the admin IC identity                                                      |
 | `CUSTODY_ENABLED_ASSETS`  | no              | empty (all ic assets)                        | Comma list of `symbol` or `chain:symbol` to enable                                          |
+| `VXP_TREASURY_DISABLED`   | no              | empty (transfers live)                       | `1` = record-only mode: awards are recorded, no ledger transfer fires                       |
 | `IC_HOST`                 | no              | `https://icp-api.io`                         | IC API host (adapter enabled by default)                                                    |
 | `CLEARING_CANISTER_ID`    | no              | mainnet id                                   | Clearing canister id                                                                        |
 | `REGISTRY_CANISTER_ID`    | no              | mainnet id                                   | Registry canister id                                                                        |
@@ -97,6 +98,18 @@ Chain adapters live under `src/chains/` behind one interface (`chains/types.ts`)
 
 `src/analytics/` is the behavioural event pipeline: `POST /api/v1/events` ingests client batches (public: anonymous visitors track too; a session adds the pseudonymous user link), capped at 100 events per call with server-authoritative timestamps, and bumps the per-day rollup counters in the same transaction. `captureServerEvents` is the internal bridge other domains call for server-originated events (VXP payouts, settlements). Admin endpoints mirror the warehouse contract: daily summary, keyset event export with an idempotent drain delete, the registered-account count, and the profile-created export.
 
+## VXP economy
+
+`src/vxp/` is the server-fired award economy. Every award funnels through one grant path (`vxp/awards.ts`): a `vxp_awards` row is inserted `pending` under the `(user, award_type, award_key)` unique index, so a duplicate trigger collides instead of double-crediting; the treasury then transfers real VXP (ICRC-1, signed by the treasury identity, one automatic retry on `BadFee` with the ledger-reported fee) and the row transitions `paid` (with `paid_at_ms` + `block_index`) or `failed` (terminal, with the error recorded). The pending-to-paid transition emits `vxp_awarded` (and `streak_milestone` for streaks) through the analytics bridge, exactly once per award.
+
+With `VXP_TREASURY_DISABLED=1` the economy runs record-only: awards are recorded `pending` and no transfer fires, the parallel-run safety before cutover. `reconcileUnpaidAwards` (worker job + `POST /api/v1/vxp/admin/reconcile`) pays recorded-unpaid awards once the treasury is live, and doubles as the retry for grants that died between insert and transfer.
+
+Award triggers mirror the post-write hook model: routes fire them AFTER the domain write commits, best-effort (an award hiccup never fails the write), and only for client-driven writes. Profile upserts drive the onboarding registration grant (m1, the full 1,500 VXP starter), streak milestones (3/7/14/30 at 50/150/400/1000 VXP), flow lifetime milestones (10/100/500/1000 at 50/100/250/500 VXP), achievement unlocks (catalog XP as real VXP) and the one-time comeback restore (top-up to 250 VXP after a 7-day absence below the 100 VXP floor, ledger-balance gated). Trade activities drive the onboarding call-count milestones and the referral settlement (flat 500 VXP referee bonus + the diminishing referrer curve 500/250/100/50 with the 1000-redemption hard cap, nothing pays before the referee's first prediction). The flow-swipe endpoint mints the 25 VXP overtime bonus at the daily hard cap, once per day key, bounded by a rolling 7-day cap of 8 counted off server-stamped creation times. The calibration claim (`POST /api/v1/vxp/calibration/claim`) pays 20 VXP for a correct call on a finalised Vici binary market while the caller's balance sits below the 100 VXP recovery floor, rate-limited 6/hour and 15/day. `grantLeagueFounderAward` / `settleFounderAwards` (100 VXP per league, 100 per account) and the worlds-podium / tournament-prize grant helpers (`vxp/prizes.ts`) expose the payment side for the leagues, worlds and tournaments domain.
+
+## Worker
+
+`src/worker.ts` (the Fly `worker` process) is a single poll loop over a registry of named jobs, interval-driven by `WORKER_POLL_INTERVAL_MS`. Each entry is a `WorkerJob { name, run, everyNthTick? }`: `run` must be idempotent (dedupe lives in the domain, e.g. the `vxp_awards` unique key or the deposits `tx_ref` key) and failures are caught and logged per job so one bad job never stalls the rest; `everyNthTick` throttles cheap-to-skip sweeps. A later phase adds a job by replacing its no-op placeholder slot with the domain's exported function, keeping the name stable for the logs. Current registry: deposit watchers (every tick), VXP award reconciliation (every tick, no-op in record-only mode), resolved-results pruning and the streak underpayment backfill (hourly), plus placeholder slots for the deletion sweep and the tournament draw/resolve ticks.
+
 ## Deploy (Fly.io)
 
 Two Fly apps, both in `ams`:
@@ -122,13 +135,14 @@ Deploys go through `.github/workflows/web2-deploy.yml` (manual `workflow_dispatc
 backend/
   src/
     index.ts        # Elysia app: security headers, CORS, error mapping, /health
-    worker.ts       # background loop (deposit watcher ticks; domain jobs land per phase)
+    worker.ts       # background job loop (registry of idempotent named jobs)
     env.ts          # validated environment
     analytics/      # behavioural event ingest, rollups, warehouse export + drain
     auth/           # sessions, guards, identity resolution, OTP, Google, Apple
     chains/         # chain adapters (ic/evm/sol/btc) + registry + deposit watchers
     custody/        # assets, custody accounts, double-entry ledger, withdrawals
     markets/        # market metadata, translations, tag index, curator gate
+    vxp/            # award economy: grant core, payout, triggers, calibration, referral settlement
     declarations/   # vendored candid bindings for clearing + registry (generated, never hand-edited)
     engine/         # actor provider, TTL cache, typed clearing/registry wrappers
     routes/         # /api/v1 route modules (auth, wallet, engine, markets, events, ...)
