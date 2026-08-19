@@ -44,7 +44,9 @@
 
 	const EMAIL_CHANGE_ENABLED = false;
 
-	const email = $derived($userStore.profile?.email ?? '');
+	// The address lives on the owner-private `profile_private` doc (hydrated
+	// into the store at sign-in), never on the public profile.
+	const email = $derived($userStore.email);
 	const hasEmail = $derived(email.length > 0);
 
 	const method = $derived(resolveSignInMethod({ user: $userStore.user, hasEmail }));

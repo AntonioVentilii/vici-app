@@ -6,6 +6,13 @@ export interface UserStoreData {
 	user: User | undefined;
 	profile: UserProfile | undefined;
 	/**
+	 * The signed-in user's own on-file email, hydrated from the
+	 * owner-private `profile_private` doc at sign-in (`ensureProfile`).
+	 * Never sourced from the public profile doc — the address must not
+	 * exist there. Empty string = no address on file.
+	 */
+	email: string;
+	/**
 	 * True while we are resolving the authentication state (initial session
 	 * check on load, sign-in in progress, sign-out in progress, or profile
 	 * hydration). Consumers should treat this as "we don't know yet" and
@@ -25,6 +32,7 @@ export interface UserStoreData {
 export const userStore = writable<UserStoreData>({
 	user: undefined,
 	profile: undefined,
+	email: '',
 	authBusy: true,
 	profileExisted: false
 });
