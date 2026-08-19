@@ -252,7 +252,11 @@ describe.if(dbAvailable)('legacy nickname grandfathering', () => {
 	});
 });
 
-describe('email privacy split', () => {
+describe.if(dbAvailable)('email privacy split', () => {
+	beforeAll(async () => {
+		await ensureMigrated();
+	});
+
 	test('public shapes carry no email; owner surfaces do', async () => {
 		const { userId, profile } = await createTestProfile();
 
