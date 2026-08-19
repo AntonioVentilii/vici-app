@@ -9,15 +9,23 @@ import { applyAssetAllowlist } from './custody/assets';
 import { isDbUnavailable, query } from './db/client';
 import { env } from './env';
 import { logger } from './lib/logger';
+import { accountRoutes } from './routes/account';
+import { adminRoutes } from './routes/admin';
 import { authRoutes } from './routes/auth';
+import { battlesRoutes } from './routes/battles';
 import { engineRoutes } from './routes/engine';
 import { eventsRoutes } from './routes/events';
 import { leaderboardRoutes } from './routes/leaderboard';
+import { leaguesRoutes } from './routes/leagues';
 import { marketsRoutes } from './routes/markets';
 import { profilesRoutes } from './routes/profiles';
+import { referralsRoutes } from './routes/referrals';
+import { schoolRoutes } from './routes/school';
 import { socialRoutes } from './routes/social';
+import { tournamentsRoutes } from './routes/tournaments';
 import { vxpRoutes } from './routes/vxp';
 import { walletRoutes } from './routes/wallet';
+import { worldsRoutes } from './routes/worlds';
 
 // Baseline hardening headers on every response. The API serves JSON only, so a
 // deny-all framing posture is safe.
@@ -146,6 +154,14 @@ export const app = new Elysia()
 	.use(marketsRoutes)
 	.use(eventsRoutes)
 	.use(vxpRoutes)
+	.use(leaguesRoutes)
+	.use(battlesRoutes)
+	.use(worldsRoutes)
+	.use(tournamentsRoutes)
+	.use(accountRoutes)
+	.use(referralsRoutes)
+	.use(schoolRoutes)
+	.use(adminRoutes)
 	// Liveness + DB connectivity. Bounded probe; three consecutive failures exit
 	// the process for a supervised restart with a fresh pool.
 	.get('/health', async ({ set }) => {

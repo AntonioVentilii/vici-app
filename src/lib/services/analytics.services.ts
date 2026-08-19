@@ -6,6 +6,8 @@ import type {
 	AnalyticsEventProps,
 	TrackEventInput
 } from '$lib/types/analytics-event';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import { postEvents } from '$lib/web2/client';
 import { nonNullish } from '@dfinity/utils';
 import { get } from 'svelte/store';
 
@@ -84,7 +86,13 @@ export const flushEvents = async (): Promise<void> => {
 	}
 
 	try {
-		await functions.trackEvents({ events });
+		// The batch shape is identical on both transports; only the destination
+		// switches (see $lib/web2/backend-mode). Default stays the satellite call.
+		if (isWeb2Backend()) {
+			await postEvents({ events });
+		} else {
+			await functions.trackEvents({ events });
+		}
 	} catch (err) {
 		// Analytics is best-effort and must never break the app — drop the batch.
 		// eslint-disable-next-line no-console

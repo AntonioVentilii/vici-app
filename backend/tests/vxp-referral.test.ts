@@ -4,7 +4,9 @@
 // and the settle endpoint's caller scoping.
 
 import { afterEach, beforeAll, describe, expect, test } from 'bun:test';
+import { hardDeleteAccount } from '../src/account/lifecycle';
 import { createSession } from '../src/auth/sessions';
+import { query } from '../src/db/client';
 import { app } from '../src/index';
 import { createActivity } from '../src/social/activities';
 import { parseVxp, referrerRewardBaseUnits } from '../src/vxp/constants';
@@ -257,5 +259,43 @@ describe('trade-activity trigger', () => {
 		expect(
 			await readAwardRow({ userId: referee, awardType: 'onboarding', awardKey: 'm2' })
 		).toBeUndefined();
+	});
+});
+
+describe('hard-deleted referrer', () => {
+	test('settlement still pays the referee and decides the cap slot, but never the dead referrer', async () => {
+		stub = stubVxpLedger();
+		const referrer = await createTestUser();
+		const referee = await createTestUser();
+
+		await recordReferralRedemption({
+			refereeUserId: referee,
+			referrerUserId: referrer,
+			code: 'CODE0DEL'
+		});
+		await recordTrade(referee);
+		await hardDeleteAccount(referrer);
+
+		expect(await settleReferralPayout({ refereeUserId: referee })).toEqual({ settled: true });
+
+		const refereeAward = await readAwardRow({
+			userId: referee,
+			awardType: 'referral',
+			awardKey: referee
+		});
+		const referrerAward = await readAwardRow({
+			userId: referrer,
+			awardType: 'referral',
+			awardKey: referee
+		});
+		const capRows = await query<{ within_referrer_cap: boolean | null }>(
+			`select within_referrer_cap from referrals where referee_user_id = $1`,
+			[referee]
+		);
+
+		expect(refereeAward?.status).toBe('paid');
+		expect(referrerAward).toBeUndefined();
+		expect(capRows[0]?.within_referrer_cap).toBeTrue();
+		expect(stub.transfers).toHaveLength(1);
 	});
 });

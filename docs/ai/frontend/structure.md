@@ -36,7 +36,12 @@ src/
 │   ├── utils/              Pure helpers — no I/O, no DOM
 │   ├── actors/             Generic actor helpers
 │   ├── actions/            Svelte `use:` actions (e.g. click-outside)
-│   └── env/                Runtime env types
+│   ├── env/                Runtime env types
+│   └── web2/               HTTP-backend seam (approved, migration-scoped: mode
+│                           flag + typed /api/v1 client; grows one adapter per
+│                           swapped domain and is absorbed into api/ + services/
+│                           when the satellite is decommissioned — see
+│                           web2-backend-mode.md)
 │
 ├── satellite/              Juno satellite (TS canister functions). See ../satellite/.
 └── declarations/           Generated bindings (DO NOT hand-edit)

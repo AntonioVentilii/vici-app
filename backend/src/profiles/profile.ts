@@ -4,6 +4,7 @@
 
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { query, tx, type TxQuery } from '../db/client';
+import { fanoutProfileDeltaToLeagueStats } from '../leagues/stats';
 import { DAILY_HARD_CAP } from './flow';
 import {
 	checkNicknameAvailability,
@@ -793,6 +794,20 @@ export const upsertMyProfile = async ({
 		if (isNullish(row)) {
 			throw new Error('profile upsert returned no row');
 		}
+
+		// League counters ride the same transaction as the profile write: an
+		// advance in totalTrades fans the trade/win delta out to every league
+		// the user belongs to. Hibernated accounts never move shared stats.
+		await fanoutProfileDeltaToLeagueStats({
+			q,
+			userId,
+			before: nonNullish(current)
+				? { totalTrades: current.total_trades, winRate: current.win_rate }
+				: undefined,
+			after: { totalTrades: proposed.totalTrades, winRate: proposed.winRate },
+			afterHibernated: nonNullish(row.hibernated_at_ms),
+			nowMs
+		});
 
 		return shapeProfile(row);
 	});

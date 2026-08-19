@@ -207,6 +207,17 @@ export const aggregateLean = async (
 	return await actor.aggregate_lean(params);
 };
 
+/** Per-principal settled-position win/total counts over an arbitrary
+ * half-open window: the source of truth league-battle scoring reads.
+ * Uncached: each battle resolve/live read scores a bespoke window. */
+export const aggregateSettlementAccuracy = async (
+	params: ClearingDid.AggregateSettlementAccuracyParams
+): Promise<ClearingDid.SettlementAccuracyEntry[]> => {
+	const actor = await anonymousClearing();
+
+	return await actor.aggregate_settlement_accuracy(params);
+};
+
 /** The per-participant settlement plan for a resolved series. Uncached: it
  * is read once per settlement to fan out resolved-result rows, and a stale
  * plan would fan out against superseded positions. */
