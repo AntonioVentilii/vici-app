@@ -26,11 +26,22 @@ describe('loadEnv', () => {
 		);
 	});
 
-	test('production boots with the required pair and passes values through', () => {
+	test('production fails fast without ROOT_SECRET', () => {
+		expect(() =>
+			loadEnv({
+				NODE_ENV: 'production',
+				DATABASE_URL: 'postgres://x/y',
+				SESSION_SECRET: 's3cret'
+			})
+		).toThrow('ROOT_SECRET');
+	});
+
+	test('production boots with the required set and passes values through', () => {
 		const env = loadEnv({
 			NODE_ENV: 'production',
 			DATABASE_URL: 'postgres://prod-host/vici',
 			SESSION_SECRET: 's3cret',
+			ROOT_SECRET: 'r00t',
 			PUBLIC_APP_URL: 'https://vici.app',
 			PORT: '9000'
 		});

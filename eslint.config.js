@@ -14,6 +14,9 @@ export default ts.config(
 			'dist/',
 			'static/',
 			'src/declarations/',
+			// Vendored copies of the generated candid bindings (see
+			// backend/src/declarations/index.ts): generated code, not linted.
+			'backend/src/declarations/',
 			'.claude/worktrees/'
 		]
 	},

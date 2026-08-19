@@ -12,6 +12,10 @@ const url = process.env.TEST_DATABASE_URL ?? 'postgres://vici:vici@localhost:543
 
 process.env.DATABASE_URL = url;
 
+// The key-derivation suites assert known outputs for a FIXED root secret, so
+// pin it before src/env.ts is first imported.
+process.env.ROOT_SECRET = 'test-root-secret';
+
 /** Whether the DB-backed suites can run: probed once with a short timeout so
  * a missing local Postgres degrades to skipped suites instead of a hang. */
 export const dbAvailable = await (async () => {

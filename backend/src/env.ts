@@ -32,6 +32,32 @@ export interface EmailEnv {
 	from: string;
 }
 
+export interface IcEnv {
+	host: string;
+	clearingCanisterId: string;
+	registryCanisterId: string;
+}
+
+export interface EvmEnv {
+	enabled: boolean;
+	rpcUrl: string;
+	chainId: number;
+	confirmations: number;
+}
+
+export interface SolEnv {
+	enabled: boolean;
+	rpcUrl: string;
+	commitment: string;
+}
+
+export interface BtcEnv {
+	enabled: boolean;
+	esploraUrl: string;
+	network: 'mainnet' | 'testnet' | 'regtest';
+	confirmations: number;
+}
+
 export interface Env {
 	isProd: boolean;
 	port: number;
@@ -46,6 +72,16 @@ export interface Env {
 	google: GoogleEnv;
 	apple: AppleEnv;
 	email: EmailEnv;
+	rootSecret: string;
+	treasuryPem: string;
+	adminPem: string;
+	/** Comma-separated `symbol` or `chain:symbol` allowlist; null means the
+	 * default (every ic asset enabled, other chains disabled). */
+	custodyEnabledAssets: string[] | null;
+	ic: IcEnv;
+	evm: EvmEnv;
+	sol: SolEnv;
+	btc: BtcEnv;
 }
 
 /** Build a validated env object from a raw source. Exported separately from
@@ -132,7 +168,66 @@ export const loadEnv = (source: EnvSource): Env => {
 		email: {
 			resendApiKey: optional('RESEND_API_KEY', ''),
 			from: optional('EMAIL_FROM', 'VICI <no-reply@vici.app>')
-		}
+		},
+		// Root of the per-user per-chain key derivation (see src/lib/keys.ts).
+		// Rotating it rotates EVERY custodial address, so treat it like a ledger
+		// key, not like a session pepper.
+		rootSecret: requiredInProd('ROOT_SECRET', 'dev-root-secret-do-not-use-in-prod'),
+		// Optional PEM overrides for the service identities; unset falls back to
+		// the svc-scoped derivation from ROOT_SECRET.
+		treasuryPem: optional('TREASURY_PEM', '').replace(/\\n/g, '\n'),
+		adminPem: optional('ADMIN_PEM', '').replace(/\\n/g, '\n'),
+		custodyEnabledAssets: (() => {
+			const raw = optional('CUSTODY_ENABLED_ASSETS', '');
+
+			if (raw === '') {
+				return null;
+			}
+
+			return raw
+				.split(',')
+				.map((entry) => entry.trim())
+				.filter((entry) => entry !== '');
+		})(),
+		ic: {
+			host: optional('IC_HOST', 'https://icp-api.io'),
+			clearingCanisterId: optional('CLEARING_CANISTER_ID', 'g2or7-caaaa-aaaaj-qqhoa-cai'),
+			registryCanisterId: optional('REGISTRY_CANISTER_ID', 'g5pxl-pyaaa-aaaaj-qqhoq-cai')
+		},
+		evm: (() => {
+			const rpcUrl = optional('EVM_RPC_URL', '');
+
+			return {
+				enabled: rpcUrl !== '',
+				rpcUrl,
+				chainId: positiveInt('EVM_CHAIN_ID', '1'),
+				confirmations: positiveInt('EVM_CONFIRMATIONS', '12')
+			};
+		})(),
+		sol: (() => {
+			const rpcUrl = optional('SOL_RPC_URL', '');
+
+			return {
+				enabled: rpcUrl !== '',
+				rpcUrl,
+				commitment: optional('SOL_COMMITMENT', 'finalized')
+			};
+		})(),
+		btc: (() => {
+			const esploraUrl = optional('BTC_ESPLORA_URL', '');
+			const network = optional('BTC_NETWORK', 'mainnet');
+
+			if (network !== 'mainnet' && network !== 'testnet' && network !== 'regtest') {
+				throw new Error('Invalid env var BTC_NETWORK: expected mainnet, testnet or regtest');
+			}
+
+			return {
+				enabled: esploraUrl !== '',
+				esploraUrl,
+				network,
+				confirmations: positiveInt('BTC_CONFIRMATIONS', '2')
+			};
+		})()
 	};
 };
 
