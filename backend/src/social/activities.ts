@@ -27,6 +27,14 @@ export const ACTIVITY_REACTION_TITLE_MAX_LENGTH = 500;
 
 export class ActivityValidationError extends Error {}
 
+/** Typed failure for a reaction addressed at an activity that does not
+ * exist, so the route can answer it as a 404 rather than a fault. */
+export class ActivityNotFoundError extends Error {
+	constructor() {
+		super('Activity does not exist.');
+	}
+}
+
 export interface Activity {
 	key: string;
 	type: ActivityType;
@@ -258,6 +266,7 @@ const validateReaction = ({
  * Records one like per (activity, liker) and moves the rollup counter in
  * the SAME transaction. Only a genuine create bumps the count: re-liking an
  * already-liked activity is a no-op, so a double-like cannot double-count.
+ * The liked activity must exist ({@link ActivityNotFoundError} otherwise).
  */
 export const likeActivity = async ({
 	likerId,
@@ -275,6 +284,15 @@ export const likeActivity = async ({
 	validateReaction({ activityKey: key, timestamp, activityTitle });
 
 	await tx(async (q) => {
+		// A structurally valid key can still address an activity that never
+		// existed; guard inside the transaction so no reaction row or rollup
+		// increment can ever be created for a phantom activity.
+		const existing = await q<{ key: string }>(`select key from activities where key = $1`, [key]);
+
+		if (isNullish(existing[0])) {
+			throw new ActivityNotFoundError();
+		}
+
 		const inserted = await q<{ activity_key: string }>(
 			`insert into activity_reactions (activity_key, liker, timestamp_ms, activity_title, market_id)
 			 values ($1, $2, $3, $4, $5)

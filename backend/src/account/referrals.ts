@@ -5,7 +5,7 @@
 // wire messages clients already match on.
 
 import { isNullish, nonNullish } from '@dfinity/utils';
-import { randomBytes } from 'node:crypto';
+import { randomInt } from 'node:crypto';
 import { query } from '../db/client';
 import { logger } from '../lib/logger';
 import { friendRelationKey } from '../social/relations';
@@ -37,11 +37,12 @@ export const REFERRAL_EXISTING_USER_REASON = 'existing_user_no_bonus';
 const CODE_GENERATION_MAX_RETRIES = 8;
 
 const generateReferralCode = (): string => {
-	const bytes = randomBytes(REFERRAL_CODE_LENGTH);
 	let code = '';
 
+	// randomInt rejection-samples, so the draw stays uniform even if the
+	// alphabet ever stops being a power-of-two length.
 	for (let i = 0; i < REFERRAL_CODE_LENGTH; i++) {
-		code += REFERRAL_CODE_ALPHABET.charAt((bytes[i] ?? 0) % REFERRAL_CODE_ALPHABET.length);
+		code += REFERRAL_CODE_ALPHABET.charAt(randomInt(REFERRAL_CODE_ALPHABET.length));
 	}
 
 	return code;
@@ -312,7 +313,9 @@ export const listMyReferrals = async (userId: string): Promise<ReferralListItem[
 		referee: row.referee_user_id,
 		code: row.code,
 		redeemedAtMs: Number(row.redeemed_at_ms),
-		withinReferrerCap: row.within_referrer_cap === true,
+		// Undecided (null) reads as within-cap pending, matching the payout
+		// mapping below; settlement flips it to false only when over cap.
+		withinReferrerCap: row.within_referrer_cap !== false,
 		// The referee bonus is owed unconditionally from redemption on; the
 		// referrer side stays 'none' until the cap slot is decided in its favor.
 		refereePayout: sidePayout({

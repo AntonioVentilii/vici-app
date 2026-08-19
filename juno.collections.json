@@ -1,6 +1,7 @@
 {
 	"ROLES": "roles",
 	"PROFILES": "profiles",
+	"PROFILE_PRIVATE": "profile_private",
 	"RELATIONS": "relations",
 	"CHATS": "chats",
 	"COMMENTS": "comments",

@@ -99,8 +99,10 @@ create table if not exists deposits (
 
 create index if not exists deposits_state_idx on deposits (state);
 
--- Per-chain watcher cursors (last scanned block / signature), so a restart
--- resumes instead of rescanning from genesis.
+-- Watcher cursors keyed by an adapter-chosen string: one row per chain for
+-- block-scanning adapters (key = chain name), one row per watched address
+-- where the chain needs it (e.g. sol:<address>). A restart resumes from the
+-- stored cursor instead of rescanning from genesis.
 create table if not exists chain_cursors (
   chain text primary key,
   cursor text not null,

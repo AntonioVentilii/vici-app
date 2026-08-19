@@ -100,7 +100,9 @@ const assertVerificationEnabled = async (): Promise<void> => {
 		throw new SchoolVerificationError('School email verification is not configured.');
 	}
 
-	if (setting.enabled === false) {
+	// Fail closed: only an explicit `enabled: true` turns the feature on, so a
+	// malformed or partial setting can never silently enable it.
+	if (setting.enabled !== true) {
 		throw new SchoolVerificationError('School email verification is disabled.');
 	}
 };
@@ -193,16 +195,29 @@ const sendCodeEmail = async ({
 	code: string;
 	schoolName: string;
 }): Promise<void> => {
+	// The add-your-own path makes schoolName user input: escape it for the
+	// HTML body and strip header-breaking control chars from the subject.
+	const safeSubjectName = schoolName.replace(/[\r\n\t]+/g, ' ').trim();
+	const safeHtmlName = escapeHtml(schoolName);
+
 	await sendEmail({
 		to: email,
-		subject: `Your VICI verification code for ${schoolName}`,
+		subject: `Your VICI verification code for ${safeSubjectName}`,
 		text: `Your VICI school verification code is ${code}. It expires in 30 minutes. If you didn't request it, ignore this email.`,
 		html:
-			`<p>Your VICI verification code for <strong>${schoolName}</strong> is:</p>` +
+			`<p>Your VICI verification code for <strong>${safeHtmlName}</strong> is:</p>` +
 			`<p style="font-size:24px;font-weight:700;letter-spacing:4px">${code}</p>` +
 			`<p style="color:#888">It expires in 30 minutes. If you didn't request it, ignore this email.</p>`
 	});
 };
+
+export const escapeHtml = (value: string): string =>
+	value
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&#39;');
 
 /**
  * Submit a school + school email: re-runs the domain gate server-side (any

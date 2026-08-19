@@ -1,11 +1,17 @@
-// Award-core semantics: structural idempotency, the pending/paid/failed
-// lifecycle, the BadFee single retry, record-only mode with reconciliation,
-// and the analytics bridge on the pending-to-paid transition.
+// Award-core semantics: structural idempotency, the claim-gated
+// pending/processing/paid/failed lifecycle, the BadFee single retry,
+// record-only mode with reconciliation, and the analytics bridge on the
+// pending-to-paid transition.
 
 import { IcrcTransferError } from '@icp-sdk/canisters/ledger/icrc';
 import { afterEach, beforeAll, describe, expect, test } from 'bun:test';
 import { query } from '../src/db/client';
-import { grantAward, reconcileUnpaidAwards, setVxpTreasuryDisabled } from '../src/vxp/awards';
+import {
+	grantAward,
+	PROCESSING_STALE_MS,
+	reconcileUnpaidAwards,
+	setVxpTreasuryDisabled
+} from '../src/vxp/awards';
 import { parseVxp } from '../src/vxp/constants';
 import { createTestUser, ensureMigrated } from './helpers/auth';
 import { readAwardRow, stubVxpLedger, type LedgerStub } from './helpers/vxp';
@@ -196,6 +202,82 @@ describe('record-only mode + reconciliation', () => {
 		expect(
 			(await readAwardRow({ userId, awardType: 'streak', awardKey: 'streak_14' }))?.status
 		).toBe('paid');
+	});
+});
+
+describe('settlement claim', () => {
+	test('two concurrent settle runs on one pending award transfer exactly once', async () => {
+		stub = stubVxpLedger({
+			// Hold the transfer long enough that the losing runner reaches its
+			// claim while the winner is mid-transfer, so the race is real.
+			transferImpl: async () => {
+				await new Promise((resolve) => setTimeout(resolve, 50));
+
+				return BigInt(77);
+			}
+		});
+		const userId = await createTestUser();
+
+		await query(
+			`insert into vxp_awards (user_id, award_type, award_key, amount_base_units, status, earned_at_ms)
+			 values ($1, 'achievement', 'race-claim', $2, 'pending', $3)`,
+			[userId, parseVxp(500).toString(), Date.now()]
+		);
+
+		await Promise.all([
+			reconcileUnpaidAwards({ graceMs: 0 }),
+			reconcileUnpaidAwards({ graceMs: 0 })
+		]);
+
+		expect(stub.transfers.filter(({ memo }) => memo === 'vxp:achievement:race-claim')).toHaveLength(
+			1
+		);
+		expect(
+			(await readAwardRow({ userId, awardType: 'achievement', awardKey: 'race-claim' }))?.status
+		).toBe('paid');
+	});
+
+	test('a stale processing claim is reclaimed and paid; a fresh claim is left alone', async () => {
+		stub = stubVxpLedger();
+		const userId = await createTestUser();
+
+		await query(
+			`insert into vxp_awards (user_id, award_type, award_key, amount_base_units, status, earned_at_ms, processing_at)
+			 values
+			   ($1, 'achievement', 'stale-claim', $2, 'processing', $3,
+			    now() - make_interval(secs => $4::double precision / 1000)),
+			   ($1, 'achievement', 'fresh-claim', $2, 'processing', $3, now())`,
+			[userId, parseVxp(100).toString(), Date.now(), PROCESSING_STALE_MS + 60_000]
+		);
+
+		await reconcileUnpaidAwards({ graceMs: 0 });
+
+		expect(
+			(await readAwardRow({ userId, awardType: 'achievement', awardKey: 'stale-claim' }))?.status
+		).toBe('paid');
+		expect(
+			stub.transfers.filter(({ memo }) => memo === 'vxp:achievement:stale-claim')
+		).toHaveLength(1);
+		expect(
+			(await readAwardRow({ userId, awardType: 'achievement', awardKey: 'fresh-claim' }))?.status
+		).toBe('processing');
+		expect(
+			stub.transfers.filter(({ memo }) => memo === 'vxp:achievement:fresh-claim')
+		).toHaveLength(0);
+	});
+});
+
+describe('schema guards', () => {
+	test('a fractional base-unit amount is rejected outright', async () => {
+		const userId = await createTestUser();
+
+		await expect(
+			query(
+				`insert into vxp_awards (user_id, award_type, award_key, amount_base_units, status, earned_at_ms)
+				 values ($1, 'streak', 'fractional', 12.5, 'pending', $2)`,
+				[userId, Date.now()]
+			)
+		).rejects.toThrow(/check constraint/);
 	});
 });
 

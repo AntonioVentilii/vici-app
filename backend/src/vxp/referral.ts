@@ -43,13 +43,16 @@ const refereeHasTraded = async (refereeUserId: string): Promise<boolean> => {
 };
 
 /**
- * The referrer's authoritative prior credited count for one redemption:
- * armed redemptions (within_referrer_cap decided true) redeemed strictly
- * BEFORE this row, tie-broken by referee id. The prior-only ordering makes a
- * row's diminishing-curve tier stable regardless of when settlement runs; a
- * later redemption can never retroactively shrink an earlier row's reward.
+ * The referrer's authoritative prior count for one redemption: every
+ * redemption redeemed strictly BEFORE this row, tie-broken by referee id,
+ * regardless of whether or when it settles. Counting by redemption order
+ * alone makes a row's diminishing-curve tier a pure function of its
+ * redemption index: settlements can run in any order (or never) without
+ * moving any row's reward. Filtering on settlement state instead would let
+ * an earlier-but-unsettled redemption go uncounted, so tiers would depend on
+ * WHEN settlements happen to run.
  */
-const countPriorReferrerCredits = async ({
+const countPriorReferrerRedemptions = async ({
 	referrerUserId,
 	refereeUserId,
 	redeemedAtMs
@@ -61,7 +64,6 @@ const countPriorReferrerCredits = async ({
 	const rows = await query<{ count: string }>(
 		`select count(*)::text as count from referrals
 		 where referrer_user_id = $1
-		   and within_referrer_cap = true
 		   and referee_user_id <> $2
 		   and (redeemed_at_ms < $3 or (redeemed_at_ms = $3 and referee_user_id::text < $2::text))`,
 		[referrerUserId, refereeUserId, redeemedAtMs]
@@ -107,8 +109,8 @@ export const settleReferralPayout = async ({
 	});
 
 	// Referrer side: decide the cap slot once (write-once via the null guard),
-	// then pay the curve reward for this row's stable prior count.
-	const priorCount = await countPriorReferrerCredits({
+	// then pay the curve reward for this row's redemption-order tier.
+	const priorCount = await countPriorReferrerRedemptions({
 		referrerUserId: row.referrer_user_id,
 		refereeUserId,
 		redeemedAtMs: Number(row.redeemed_at_ms)
@@ -132,13 +134,24 @@ export const settleReferralPayout = async ({
 	const decided = await getReferralRow(refereeUserId);
 
 	if (decided?.within_referrer_cap === true && reward > ZERO) {
-		await grantAward({
-			userId: row.referrer_user_id,
-			awardType: 'referral',
-			awardKey: refereeUserId,
-			amountBaseUnits: reward,
-			memo: 'vxp:referral:referrer'
-		});
+		// A hard-deleted referrer keeps its users row as the identity anchor;
+		// paying VXP to that account would strand the tokens on an
+		// unreachable custodial address. The cap slot above is still decided
+		// so later referees keep deterministic tiers.
+		const referrerAlive = await query<{ id: string }>(
+			`select id from users where id = $1 and hard_deleted_at is null`,
+			[row.referrer_user_id]
+		);
+
+		if (referrerAlive.length > 0) {
+			await grantAward({
+				userId: row.referrer_user_id,
+				awardType: 'referral',
+				awardKey: refereeUserId,
+				amountBaseUnits: reward,
+				memo: 'vxp:referral:referrer'
+			});
+		}
 	}
 
 	return { settled: true };

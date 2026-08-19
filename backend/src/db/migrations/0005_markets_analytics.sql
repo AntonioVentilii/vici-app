@@ -41,14 +41,12 @@ create table if not exists market_translations (
   primary key (series_id, locale)
 );
 
-create index if not exists market_translations_series_idx
-  on market_translations (series_id);
-
--- Append-only behavioural event log. `key` keeps the chronologically sorted
--- '${ns}-${sessionId}-${seq}-${index}' shape so the warehouse keyset export
--- pages by key exactly like the drain contract expects. user_id is the
--- pseudonymous link to the session user (absent before sign-in); rows carry
--- no PII beyond it.
+-- Append-only behavioural event log. `key` starts with a monotonic ns stamp
+-- ('${stamp}-${sessionId}-${index}' from client ingest,
+-- '${stamp}-server-${seq}-${index}' from server capture), so key order is
+-- chronological and the warehouse keyset export pages by key exactly like the
+-- drain contract expects. user_id is the pseudonymous link to the session
+-- user (absent before sign-in); rows carry no PII beyond it.
 create table if not exists analytics_events (
   key text primary key,
   name text not null,

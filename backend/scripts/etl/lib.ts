@@ -29,6 +29,7 @@ import { query, type TxQuery } from '../../src/db/client';
 export const SATELLITE_COLLECTIONS = [
 	'roles',
 	'profiles',
+	'profile_private',
 	'relations',
 	'chats',
 	'comments',
