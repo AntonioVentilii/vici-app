@@ -123,6 +123,7 @@
 				userStore.set({
 					user: undefined,
 					profile: undefined,
+					email: '',
 					authBusy: false,
 					profileExisted: false
 				});
@@ -140,6 +141,7 @@
 				userStore.set({
 					user: undefined,
 					profile: undefined,
+					email: '',
 					authBusy: false,
 					profileExisted: false
 				});
@@ -147,12 +149,12 @@
 				return;
 			}
 
-			const { profile, existed } = await ensureProfile(user);
+			const { profile, existed, email } = await ensureProfile(user);
 
 			setSignedInFlag(true);
 			requestPersistentStorage();
 
-			userStore.set({ user, profile, authBusy: false, profileExisted: existed });
+			userStore.set({ user, profile, email, authBusy: false, profileExisted: existed });
 
 			const syncRun = (async () => {
 				const identity = await safeGetIdentityOnce();
