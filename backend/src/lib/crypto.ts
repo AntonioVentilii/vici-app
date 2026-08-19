@@ -2,7 +2,7 @@
 // values; whatever lands in the database is peppered with the server secret so
 // a database leak alone cannot forge a session cookie or replay a code.
 
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { env } from '../env';
 
 /** A URL-safe random token. 32 bytes = 256 bits of entropy. */
@@ -25,12 +25,13 @@ export const constantTimeEqual = (a: string, b: string): boolean => {
 	return timingSafeEqual(ab, bb);
 };
 
-/** A zero-padded numeric one-time code. */
+/** A zero-padded numeric one-time code. `randomInt` rejection-samples, so
+ * every code in the range is equally likely (a plain modulo would bias the
+ * low codes). */
 export const generateOtp = (digits = 6): string => {
 	const ceiling = 10 ** digits;
-	const value = randomBytes(4).readUInt32BE(0) % ceiling;
 
-	return value.toString().padStart(digits, '0');
+	return randomInt(ceiling).toString().padStart(digits, '0');
 };
 
 /** Sign an OAuth state value for the round-trip cookie: `state.hmac(state)`.
