@@ -24,6 +24,8 @@
 	import { clearMyReferrals } from '$lib/stores/referrals.store';
 	import { tradeHistoryStore } from '$lib/stores/trade-history.store';
 	import { userStore } from '$lib/stores/user.store';
+	import { isWeb2Backend } from '$lib/web2/backend-mode';
+	import { loadWeb2Session } from '$lib/web2/session';
 
 	/**
 	 * Write (or clear) the `SIGNED_IN_FLAG_KEY` hint that this device has an
@@ -178,6 +180,16 @@
 	};
 
 	onMount(() => {
+		// Web2 mode has no on-chain identity to observe: the session is a cookie,
+		// so "signed in" is a `/me` probe mirrored into `web2SessionStore`, not a
+		// Juno auth transition. The on-chain path below is left exactly as is and
+		// runs whenever the flag is off (the default).
+		if (isWeb2Backend()) {
+			void loadWeb2Session();
+
+			return;
+		}
+
 		const unsubscribe = onAuthStateChange(updateUserStore);
 
 		return () => {

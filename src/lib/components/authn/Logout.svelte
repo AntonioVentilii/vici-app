@@ -4,6 +4,8 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { ButtonStatus } from '$lib/types/components';
 	import { t } from '$lib/utils/i18n.utils';
+	import { isWeb2Backend } from '$lib/web2/backend-mode';
+	import { clearWeb2Session } from '$lib/web2/session';
 
 	let status = $state<ButtonStatus>('enabled');
 
@@ -11,7 +13,14 @@
 		status = 'pending';
 
 		try {
-			await signOut();
+			// Web2 revokes the cookie session server-side then clears the local
+			// store; the on-chain path drops the Juno delegation. Default stays
+			// on-chain when the flag is off.
+			if (isWeb2Backend()) {
+				await clearWeb2Session();
+			} else {
+				await signOut();
+			}
 		} finally {
 			status = 'enabled';
 		}

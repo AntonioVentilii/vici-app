@@ -4,6 +4,7 @@
 	import { ChevronRight, Mail } from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
+	import SignInProviderStackWeb2 from '$lib/components/authn/SignInProviderStackWeb2.svelte';
 	import IconApple from '$lib/components/icons/IconApple.svelte';
 	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import IconIc from '$lib/components/icons/IconIC.svelte';
@@ -18,6 +19,7 @@
 	import { AppleSignInCancelledError, signInWithApple } from '$lib/services/apple-signin.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { isWeb2Backend } from '$lib/web2/backend-mode';
 
 	interface Props {
 		onSuccess?: () => void;
@@ -335,191 +337,199 @@
 	};
 </script>
 
-<div class="signin-providers signin-providers-equal">
-	<!-- Apple — live via Internet Identity 2.0 OpenID one-click. -->
-	{#if APPLE_LOGIN_ENABLED}
-		<button
-			class="signin-provider-btn is-onboarding ob-dark"
-			class:is-faded={isFaded}
-			class:is-loading={signingIn === 'apple'}
-			aria-busy={signingIn === 'apple'}
-			disabled={blocked}
-			onclick={onApple}
-			type="button"
-		>
-			<span class="signin-provider-icon" aria-hidden="true">
-				<IconApple size="18px" />
-			</span>
-			<span class="signin-provider-label">
-				{signingIn === 'apple'
-					? t({ locale: $localeStore, key: 'signin.loading.apple' })
-					: t({ locale: $localeStore, key: 'signin.provider.apple' })}
-			</span>
-			{#if signingIn === 'apple'}
-				<span class="signin-spinner" aria-hidden="true"></span>
-			{/if}
-		</button>
-	{/if}
-
-	<!-- Google — live. -->
-	{#if GOOGLE_LOGIN_ENABLED}
-		<button
-			class="signin-provider-btn is-onboarding ob-dark"
-			class:is-faded={isFaded}
-			class:is-loading={signingIn === 'google'}
-			aria-busy={signingIn === 'google'}
-			disabled={blocked}
-			onclick={onGoogle}
-			type="button"
-		>
-			<span class="signin-provider-icon" aria-hidden="true">
-				<IconGoogle size="18px" />
-			</span>
-			<span class="signin-provider-label">
-				{signingIn === 'google'
-					? t({ locale: $localeStore, key: 'signin.loading.google' })
-					: t({ locale: $localeStore, key: 'signin.provider.google' })}
-			</span>
-			{#if signingIn === 'google'}
-				<span class="signin-spinner" aria-hidden="true"></span>
-			{/if}
-		</button>
-	{/if}
-
-	<!-- Email — progressive disclosure. Passkey-backed (no magic link),
-			 so it shares the WebAuthn capability + production gating. -->
-	{#if EMAIL_LOGIN_ENABLED && passkeyAvailable}
-		{#if !emailOpen}
+{#if isWeb2Backend()}
+	<!-- Web2 backend: cookie sessions replace the on-chain identity flow, so the
+			 provider handlers are entirely different (email one-time code, API-driven
+			 Google redirect, coming-soon Apple/Passkey). The on-chain stack below is
+			 left untouched and renders whenever the flag is off (the default). -->
+	<SignInProviderStackWeb2 {disabled} {onSuccess} />
+{:else}
+	<div class="signin-providers signin-providers-equal">
+		<!-- Apple — live via Internet Identity 2.0 OpenID one-click. -->
+		{#if APPLE_LOGIN_ENABLED}
 			<button
-				class="signin-provider-btn email is-onboarding ob-faint"
+				class="signin-provider-btn is-onboarding ob-dark"
 				class:is-faded={isFaded}
+				class:is-loading={signingIn === 'apple'}
+				aria-busy={signingIn === 'apple'}
 				disabled={blocked}
-				onclick={onEmailOpen}
+				onclick={onApple}
 				type="button"
 			>
 				<span class="signin-provider-icon" aria-hidden="true">
-					<Mail size={18} strokeWidth={1.8} />
+					<IconApple size="18px" />
 				</span>
 				<span class="signin-provider-label">
-					{t({ locale: $localeStore, key: 'signin.provider.email' })}
+					{signingIn === 'apple'
+						? t({ locale: $localeStore, key: 'signin.loading.apple' })
+						: t({ locale: $localeStore, key: 'signin.provider.apple' })}
 				</span>
+				{#if signingIn === 'apple'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{/if}
 			</button>
-		{:else}
-			<form class="signin-email-inline" onsubmit={onEmailSubmit}>
-				<div class="signin-email-row">
-					<span class="signin-email-icon" aria-hidden="true">
-						<Mail size={16} strokeWidth={1.8} />
-					</span>
-					<!-- svelte-ignore a11y_autofocus -->
-					<input
-						id="signin-email-input"
-						class="signin-email-input num"
-						autocapitalize="off"
-						autocomplete="email webauthn"
-						autofocus
-						disabled={blocked || !productionAvailable}
-						inputmode="email"
-						placeholder={t({ locale: $localeStore, key: 'signin.email.placeholder' })}
-						spellcheck="false"
-						type="email"
-						bind:value={email}
-					/>
-				</div>
-				<button
-					class="signin-email-submit"
-					disabled={!emailValid || blocked || !productionAvailable}
-					type="submit"
-				>
-					{signingIn === 'email'
-						? t({ locale: $localeStore, key: 'signin.loading.email' })
-						: t({ locale: $localeStore, key: 'signin.email.cta' })}
-					{#if signingIn !== 'email'}
-						<ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
-					{/if}
-				</button>
-				<p class="signin-fineprint">
-					{t({ locale: $localeStore, key: 'signin.email.fineprint' })}
-				</p>
-			</form>
 		{/if}
-	{/if}
 
-	<!-- Internet Identity — production-need. Uses the shared
+		<!-- Google — live. -->
+		{#if GOOGLE_LOGIN_ENABLED}
+			<button
+				class="signin-provider-btn is-onboarding ob-dark"
+				class:is-faded={isFaded}
+				class:is-loading={signingIn === 'google'}
+				aria-busy={signingIn === 'google'}
+				disabled={blocked}
+				onclick={onGoogle}
+				type="button"
+			>
+				<span class="signin-provider-icon" aria-hidden="true">
+					<IconGoogle size="18px" />
+				</span>
+				<span class="signin-provider-label">
+					{signingIn === 'google'
+						? t({ locale: $localeStore, key: 'signin.loading.google' })
+						: t({ locale: $localeStore, key: 'signin.provider.google' })}
+				</span>
+				{#if signingIn === 'google'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{/if}
+			</button>
+		{/if}
+
+		<!-- Email — progressive disclosure. Passkey-backed (no magic link),
+			 so it shares the WebAuthn capability + production gating. -->
+		{#if EMAIL_LOGIN_ENABLED && passkeyAvailable}
+			{#if !emailOpen}
+				<button
+					class="signin-provider-btn email is-onboarding ob-faint"
+					class:is-faded={isFaded}
+					disabled={blocked}
+					onclick={onEmailOpen}
+					type="button"
+				>
+					<span class="signin-provider-icon" aria-hidden="true">
+						<Mail size={18} strokeWidth={1.8} />
+					</span>
+					<span class="signin-provider-label">
+						{t({ locale: $localeStore, key: 'signin.provider.email' })}
+					</span>
+				</button>
+			{:else}
+				<form class="signin-email-inline" onsubmit={onEmailSubmit}>
+					<div class="signin-email-row">
+						<span class="signin-email-icon" aria-hidden="true">
+							<Mail size={16} strokeWidth={1.8} />
+						</span>
+						<!-- svelte-ignore a11y_autofocus -->
+						<input
+							id="signin-email-input"
+							class="signin-email-input num"
+							autocapitalize="off"
+							autocomplete="email webauthn"
+							autofocus
+							disabled={blocked || !productionAvailable}
+							inputmode="email"
+							placeholder={t({ locale: $localeStore, key: 'signin.email.placeholder' })}
+							spellcheck="false"
+							type="email"
+							bind:value={email}
+						/>
+					</div>
+					<button
+						class="signin-email-submit"
+						disabled={!emailValid || blocked || !productionAvailable}
+						type="submit"
+					>
+						{signingIn === 'email'
+							? t({ locale: $localeStore, key: 'signin.loading.email' })
+							: t({ locale: $localeStore, key: 'signin.email.cta' })}
+						{#if signingIn !== 'email'}
+							<ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
+						{/if}
+					</button>
+					<p class="signin-fineprint">
+						{t({ locale: $localeStore, key: 'signin.email.fineprint' })}
+					</p>
+				</form>
+			{/if}
+		{/if}
+
+		<!-- Internet Identity — production-need. Uses the shared
 			 `signin-provider-btn` style. -->
-	{#if INTERNET_IDENTITY_LOGIN_ENABLED}
-		<button
-			class="signin-provider-btn is-onboarding ob-faint"
-			class:is-faded={isFaded}
-			class:is-loading={signingIn === 'ii'}
-			aria-busy={signingIn === 'ii'}
-			disabled={blocked || !productionAvailable}
-			onclick={onIi}
-			type="button"
-		>
-			<span class="signin-provider-icon" aria-hidden="true">
-				<IconIc size="18px" />
-			</span>
-			<span class="signin-provider-label">
-				{signingIn === 'ii'
-					? t({ locale: $localeStore, key: 'signin.loading.ii' })
-					: t({ locale: $localeStore, key: 'authn.signin_with.ii' })}
-			</span>
-			{#if signingIn === 'ii'}
-				<span class="signin-spinner" aria-hidden="true"></span>
-			{/if}
-		</button>
-	{/if}
+		{#if INTERNET_IDENTITY_LOGIN_ENABLED}
+			<button
+				class="signin-provider-btn is-onboarding ob-faint"
+				class:is-faded={isFaded}
+				class:is-loading={signingIn === 'ii'}
+				aria-busy={signingIn === 'ii'}
+				disabled={blocked || !productionAvailable}
+				onclick={onIi}
+				type="button"
+			>
+				<span class="signin-provider-icon" aria-hidden="true">
+					<IconIc size="18px" />
+				</span>
+				<span class="signin-provider-label">
+					{signingIn === 'ii'
+						? t({ locale: $localeStore, key: 'signin.loading.ii' })
+						: t({ locale: $localeStore, key: 'authn.signin_with.ii' })}
+				</span>
+				{#if signingIn === 'ii'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{/if}
+			</button>
+		{/if}
 
-	<!-- Passkey — production-need (C-8 keep). -->
-	{#if PASSKEY_LOGIN_ENABLED && passkeyAvailable}
-		<button
-			class="signin-provider-btn is-onboarding ob-faint"
-			class:is-faded={isFaded}
-			class:is-loading={signingIn === 'passkey'}
-			aria-busy={signingIn === 'passkey'}
-			disabled={blocked || !productionAvailable}
-			onclick={onPasskey}
-			type="button"
-		>
-			<span class="signin-provider-icon" aria-hidden="true">
-				<IconPasskey size="18px" />
-			</span>
-			<span class="signin-provider-label">
-				{signingIn === 'passkey'
-					? t({ locale: $localeStore, key: 'signin.loading.passkey' })
-					: isSignUp
-						? t({ locale: $localeStore, key: 'authn.passkey.create_button' })
-						: t({ locale: $localeStore, key: 'authn.passkey.signin_button' })}
-			</span>
-			{#if signingIn === 'passkey'}
-				<span class="signin-spinner" aria-hidden="true"></span>
-			{/if}
-		</button>
-	{/if}
+		<!-- Passkey — production-need (C-8 keep). -->
+		{#if PASSKEY_LOGIN_ENABLED && passkeyAvailable}
+			<button
+				class="signin-provider-btn is-onboarding ob-faint"
+				class:is-faded={isFaded}
+				class:is-loading={signingIn === 'passkey'}
+				aria-busy={signingIn === 'passkey'}
+				disabled={blocked || !productionAvailable}
+				onclick={onPasskey}
+				type="button"
+			>
+				<span class="signin-provider-icon" aria-hidden="true">
+					<IconPasskey size="18px" />
+				</span>
+				<span class="signin-provider-label">
+					{signingIn === 'passkey'
+						? t({ locale: $localeStore, key: 'signin.loading.passkey' })
+						: isSignUp
+							? t({ locale: $localeStore, key: 'authn.passkey.create_button' })
+							: t({ locale: $localeStore, key: 'authn.passkey.signin_button' })}
+				</span>
+				{#if signingIn === 'passkey'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{/if}
+			</button>
+		{/if}
 
-	<!-- Dev shortcut — dev-only. -->
-	{#if DEV_LOGIN_ENABLED && isDev()}
-		<button
-			class="signin-provider-btn is-onboarding ob-faint"
-			class:is-faded={isFaded}
-			class:is-loading={signingIn === 'dev'}
-			aria-busy={signingIn === 'dev'}
-			data-tid={TestId.SignInDev}
-			disabled={blocked}
-			onclick={onDev}
-			type="button"
-		>
-			<span class="signin-provider-icon" aria-hidden="true">
-				<IconRobot size="18px" />
-			</span>
-			<span class="signin-provider-label">
-				{signingIn === 'dev'
-					? t({ locale: $localeStore, key: 'signin.loading.dev' })
-					: t({ locale: $localeStore, key: 'signin.provider.dev' })}
-			</span>
-			{#if signingIn === 'dev'}
-				<span class="signin-spinner" aria-hidden="true"></span>
-			{/if}
-		</button>
-	{/if}
-</div>
+		<!-- Dev shortcut — dev-only. -->
+		{#if DEV_LOGIN_ENABLED && isDev()}
+			<button
+				class="signin-provider-btn is-onboarding ob-faint"
+				class:is-faded={isFaded}
+				class:is-loading={signingIn === 'dev'}
+				aria-busy={signingIn === 'dev'}
+				data-tid={TestId.SignInDev}
+				disabled={blocked}
+				onclick={onDev}
+				type="button"
+			>
+				<span class="signin-provider-icon" aria-hidden="true">
+					<IconRobot size="18px" />
+				</span>
+				<span class="signin-provider-label">
+					{signingIn === 'dev'
+						? t({ locale: $localeStore, key: 'signin.loading.dev' })
+						: t({ locale: $localeStore, key: 'signin.provider.dev' })}
+				</span>
+				{#if signingIn === 'dev'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{/if}
+			</button>
+		{/if}
+	</div>
+{/if}
