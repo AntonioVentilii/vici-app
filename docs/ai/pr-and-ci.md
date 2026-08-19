@@ -146,10 +146,17 @@ release event** — it cascades into `deploy.yml` + `publish.yml`. release-pleas
 keeps `package.json#version` and `package.json#juno.functions.version` in
 lockstep (config `extra-files`), so from the first release on, the two numbers
 are identical. For the cut tag to actually trigger the two deploy workflows,
-release-please must run with the `RELEASE_PLEASE_PAT` secret (a tag created with
-the default `GITHUB_TOKEN` does not trigger further workflows); without it, the
-release PR still works but you must dispatch `deploy.yml` / `publish.yml`
-manually after the tag lands.
+release-please must run with a token other than the default `GITHUB_TOKEN` (a
+tag created with `GITHUB_TOKEN` does not trigger further workflows). It mints a
+short-lived installation token from the **vici-release-bot** GitHub App via the
+`RELEASE_BOT_PRIVATE_KEY` secret; without that secret the release PR still works
+but you must dispatch `deploy.yml` / `publish.yml` manually after the tag lands.
+The same reasoning applies to every workflow that pushes a commit or opens a PR
+that CI must then run on, so `checks.yml` (`format`), `update-icdc-core.yml`,
+`e2e.yml` and `dependabot-bun-lock.yml` all mint the same token. The app id is
+the `PR_AUTOMATION_BOT_APP_ID` repository variable; only the private key is a
+secret. If you add another such workflow, mint the token too, or its bot commits
+will land with no checks attached.
 
 `config apply` (**applies** `juno.config.ts` — collection rules + authentication
 config — to the production satellite) is **run manually**, not in CI. Use
