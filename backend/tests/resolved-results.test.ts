@@ -122,4 +122,31 @@ describe.if(dbAvailable)('resolved results', () => {
 
 		expect(remaining.map((row) => row.market_id)).toEqual(['srs_keep']);
 	});
+
+	test('the friend read orders most-recent-first with a deterministic tiebreak', async () => {
+		const friend = await createTestUser();
+		const now = Date.now();
+
+		const seed = async (marketId: string, resolvedAtMs: number): Promise<void> =>
+			await upsertResolvedResult({
+				userId: friend,
+				marketId,
+				title: marketId,
+				side: 'YES',
+				outcome: 'win',
+				netVxp: 1,
+				resolvedAtMs
+			});
+
+		// Inserted out of order on purpose; the tie between srs_b and srs_a
+		// must break on the primary key, not on insertion order.
+		await seed('srs_b', now);
+		await seed('srs_old', now - 1_000);
+		await seed('srs_new', now + 1_000);
+		await seed('srs_a', now);
+
+		const rows = await listFriendResolvedResults({ friendIds: [friend] });
+
+		expect(rows.map((row) => row.marketId)).toEqual(['srs_new', 'srs_a', 'srs_b', 'srs_old']);
+	});
 });

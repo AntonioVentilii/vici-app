@@ -6,7 +6,7 @@
 // ownership first).
 
 import { isNullish, nonNullish } from '@dfinity/utils';
-import { query, tx } from '../db/client';
+import { query, tx, type TxQuery } from '../db/client';
 import {
 	LeagueError,
 	getLeague,
@@ -31,14 +31,17 @@ const shapeMember = (row: LeagueMemberRow): LeagueMember => ({
 	role: row.role
 });
 
-export const getLeagueMember = async ({
-	leagueId,
-	memberUserId
-}: {
-	leagueId: string;
-	memberUserId: string;
-}): Promise<LeagueMember | undefined> => {
-	const rows = await query<LeagueMemberRow>(
+export const getLeagueMember = async (
+	{
+		leagueId,
+		memberUserId
+	}: {
+		leagueId: string;
+		memberUserId: string;
+	},
+	q: TxQuery = query
+): Promise<LeagueMember | undefined> => {
+	const rows = await q<LeagueMemberRow>(
 		`select league_id, member_user_id, joined_at_ms::text, role from league_members
 		 where league_id = $1 and member_user_id = $2`,
 		[leagueId, memberUserId]

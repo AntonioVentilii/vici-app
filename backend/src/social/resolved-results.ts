@@ -75,7 +75,8 @@ export const upsertResolvedResult = async (result: ResolvedResult): Promise<void
 
 /**
  * Friend-scoped bulk read for the results digest: the given friends' rows
- * over the active retention window in one bounded query.
+ * over the active retention window in one bounded query, most recent first
+ * with the primary key as tiebreak so the order is deterministic.
  */
 export const listFriendResolvedResults = async ({
 	friendIds
@@ -91,7 +92,8 @@ export const listFriendResolvedResults = async ({
 	const rows = await query<ResolvedResultRow>(
 		`select user_id, market_id, title, side, outcome, net_vxp::text, resolved_at_ms::text
 		 from resolved_results
-		 where user_id = any($1) and resolved_at_ms >= $2`,
+		 where user_id = any($1) and resolved_at_ms >= $2
+		 order by resolved_at_ms desc, user_id asc, market_id asc`,
 		[friendIds, cutoffMs]
 	);
 

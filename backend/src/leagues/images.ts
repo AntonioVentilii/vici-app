@@ -22,7 +22,12 @@ export const LEAGUE_IMAGE_JPEG_QUALITY = 82;
  * is not a legitimate cover. */
 export const LEAGUE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
-const uploadsDir = join(dirname(fileURLToPath(import.meta.url)), '../../uploads/league-images');
+// Anchored to the backend package root through this module's own location
+// (src/leagues -> backend), never the process cwd, so the dev uploads land in
+// backend/uploads/league-images no matter which directory bun runs from.
+const backendRoot = join(dirname(fileURLToPath(import.meta.url)), '../..');
+
+const uploadsDir = join(backendRoot, 'uploads/league-images');
 
 const s3 = env.s3.enabled
 	? new Bun.S3Client({

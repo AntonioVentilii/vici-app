@@ -128,6 +128,7 @@ import {
 	listMarketTranslationsForLocales as listMarketTranslationsForLocalesFn,
 	upsertMarketTranslation as upsertMarketTranslationFn
 } from '$satellite/services/market-translation.services';
+import { assertSetProfilePrivate } from '$satellite/services/profile-private.services';
 import {
 	assertDailyGoalMonotonic,
 	assertValidNickname,
@@ -1373,6 +1374,7 @@ const assertSetDocCollections = [
 	Collection.ACTIVITIES,
 	Collection.ACTIVITY_REACTIONS,
 	Collection.PROFILES,
+	Collection.PROFILE_PRIVATE,
 	Collection.ROLES,
 	Collection.REFERRAL_CODES,
 	Collection.REFERRALS,
@@ -1399,6 +1401,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.ACTIVITIES]: assertSetActivity,
 			[Collection.ACTIVITY_REACTIONS]: assertSetActivityReaction,
 			[Collection.PROFILES]: assertProfile,
+			[Collection.PROFILE_PRIVATE]: assertSetProfilePrivate,
 			[Collection.ROLES]: assertSetRole,
 			[Collection.REFERRAL_CODES]: assertSetReferralCode,
 			[Collection.REFERRALS]: assertSetReferral,
