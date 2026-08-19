@@ -79,3 +79,9 @@ the auth basics for that moment: `getProviders()`, `getMe()`, `logout()`.
   services (and, for auth at cutover, the identity layer).
 - Analytics event payloads stay behavioural and pseudonymous on both
   transports; the server stamps time and identity in both modes.
+- Constants mirrored between `src/` and `backend/` (locales, market
+  taxonomy, analytics taxonomy, VXP tunables, vendored declarations,
+  custody asset seeds) are pinned by the drift suite in
+  `backend/tests/shared-drift/` - see "Mirrored constants" in
+  [`backend/README.md`](../../../backend/README.md). Editing either side
+  of a pair triggers the backend checks; keep both sides in the same PR.
