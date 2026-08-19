@@ -180,7 +180,7 @@ const isLeagueOwnerOrAdmin = async ({
 		return true;
 	}
 
-	const member = await getLeagueMember({ leagueId, memberUserId: userId });
+	const member = await getLeagueMember({ leagueId, memberUserId: userId }, q);
 
 	return member?.role === 'admin';
 };
@@ -204,11 +204,13 @@ const isSideOwner = async ({
 
 const isMemberOfSide = async ({
 	leagueId,
-	userId
+	userId,
+	q
 }: {
 	leagueId: string;
 	userId: string;
-}): Promise<boolean> => nonNullish(await getLeagueMember({ leagueId, memberUserId: userId }));
+	q: TxQuery;
+}): Promise<boolean> => nonNullish(await getLeagueMember({ leagueId, memberUserId: userId }, q));
 
 const readBaseline = async ({
 	leagueId,
@@ -318,7 +320,7 @@ export const proposeBattle = async ({
 
 			const challengeable =
 				sideBLeague.privacy === 'open' ||
-				(await isMemberOfSide({ leagueId: sideB, userId: proposerUserId }));
+				(await isMemberOfSide({ leagueId: sideB, userId: proposerUserId, q }));
 
 			if (!challengeable) {
 				throw new BattleError(
@@ -572,8 +574,8 @@ export const restartBattle = async ({
 		}
 
 		const isMember =
-			(await isMemberOfSide({ leagueId: battle.sideA, userId: callerId })) ||
-			(await isMemberOfSide({ leagueId: battle.sideB, userId: callerId }));
+			(await isMemberOfSide({ leagueId: battle.sideA, userId: callerId, q })) ||
+			(await isMemberOfSide({ leagueId: battle.sideB, userId: callerId, q }));
 
 		if (!isMember) {
 			throw new BattleError('battles restart requires a sideA or sideB member.');

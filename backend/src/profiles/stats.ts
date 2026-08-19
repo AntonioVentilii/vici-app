@@ -50,9 +50,9 @@ const shapeUserStats = (row: UserStatsRow): UserStats => ({
 
 /**
  * Structural guard for a user_stats write, mirroring the write-time
- * assertions: non-negative counters with wins bounded by calls, a bounded
- * recent list, and per-settlement payloads with a finite non-negative vxp
- * and a real boolean contrarian flag.
+ * assertions: non-negative safe-integer counters with wins bounded by
+ * calls, a bounded recent list, and per-settlement payloads with a finite
+ * non-negative vxp and a real boolean contrarian flag.
  */
 const validateUserStats = ({
 	categoryStats,
@@ -63,13 +63,13 @@ const validateUserStats = ({
 }): void => {
 	for (const [tag, bucket] of Object.entries(categoryStats)) {
 		if (
-			typeof bucket.calls !== 'number' ||
-			typeof bucket.wins !== 'number' ||
+			!Number.isSafeInteger(bucket.calls) ||
+			!Number.isSafeInteger(bucket.wins) ||
 			bucket.calls < 0 ||
 			bucket.wins < 0
 		) {
 			throw new ProfileValidationError(
-				`user_stats categoryStats[${tag}] counters must be non-negative.`
+				`user_stats categoryStats[${tag}] counters must be non-negative safe integers (NaN / Infinity not allowed).`
 			);
 		}
 

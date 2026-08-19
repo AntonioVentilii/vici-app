@@ -36,7 +36,6 @@ export const UserProfileWireSchema = j.strictObject({
 	// every surface renders the owner's saved face, not a principal-seeded
 	// fallback. Empty = never customised.
 	avatarParts: j.string().default(''),
-	email: j.string().default(''),
 	pnl: j.number().default(0),
 	visibility: j.enum(ProfileVisibility).default(ProfileVisibility.FRIENDS_ONLY),
 	role: j.enum(UserRole).optional(),
@@ -74,7 +73,6 @@ interface AppProfileLike {
 	nickname?: string;
 	avatar?: string;
 	avatarParts?: string;
-	email?: string;
 	pnl?: number;
 	visibility: WireUserProfile['visibility'];
 	role?: WireUserProfile['role'];
@@ -98,7 +96,6 @@ export const toWireProfile = (profile: AppProfileLike): WireUserProfile => ({
 	nickname: profile.nickname ?? '',
 	avatar: profile.avatar ?? '',
 	avatarParts: profile.avatarParts ?? '',
-	email: profile.email ?? '',
 	pnl: profile.pnl ?? 0,
 	visibility: profile.visibility,
 	role: profile.role,
@@ -139,7 +136,6 @@ export interface ApiWireProfile {
 	nickname: string;
 	avatar: string;
 	avatarParts: string;
-	email: string;
 	pnl: number;
 	visibility: `${ProfileVisibility}`;
 	role?: `${UserRole}`;
@@ -173,7 +169,6 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	nickname: profile.nickname,
 	avatar: profile.avatar,
 	avatarParts: profile.avatarParts,
-	email: profile.email,
 	pnl: profile.pnl,
 	visibility: profile.visibility as ProfileVisibility,
 	role: profile.role as UserRole | undefined,

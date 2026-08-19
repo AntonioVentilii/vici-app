@@ -8,6 +8,7 @@ import { beforeAll, describe, expect, test } from 'bun:test';
 import { upsertAppSetting } from '../src/admin/settings';
 import { query } from '../src/db/client';
 import {
+	escapeHtml,
 	hashSchoolCode,
 	SCHOOL_CODE_MAX_ATTEMPTS,
 	SCHOOL_VERIFICATION_SETTING_KEY,
@@ -83,7 +84,23 @@ describe('feature gate', () => {
 			submitSchool({ userId, name: 'MIT', country: null, email: `${uniqueLocal()}@mit.edu` })
 		).rejects.toThrow('School email verification is not configured.');
 
+		// Fail closed: a present but malformed setting (no explicit true) must
+		// stay disabled.
+		await upsertAppSetting({ key: SCHOOL_VERIFICATION_SETTING_KEY, value: {} });
+
+		expect(
+			submitSchool({ userId, name: 'MIT', country: null, email: `${uniqueLocal()}@mit.edu` })
+		).rejects.toThrow('School email verification is disabled.');
+
 		await upsertAppSetting({ key: SCHOOL_VERIFICATION_SETTING_KEY, value: { enabled: true } });
+	});
+});
+
+describe('email body safety', () => {
+	test('escapeHtml neutralizes markup in a user-provided school name', () => {
+		expect(escapeHtml(`<img src=x onerror=alert(1)>"Uni" & 'Co'`)).toBe(
+			'&lt;img src=x onerror=alert(1)&gt;&quot;Uni&quot; &amp; &#39;Co&#39;'
+		);
 	});
 });
 

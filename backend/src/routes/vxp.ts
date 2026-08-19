@@ -79,8 +79,10 @@ export const vxpRoutes = new Elysia({ prefix: '/api/v1/vxp' })
 	// Manual retry path for a referral settlement whose triggering activity
 	// did not complete. Recipients and amounts come entirely from the stored
 	// row plus server constants, and every step is idempotent, so a caller can
-	// at most complete a legitimate, one-time payout; still session-gated
-	// here since there is no anonymous surface to serve.
+	// at most complete a legitimate, one-time payout. Still scoped: the
+	// result reveals whether a user has a referral and has traded, so a
+	// non-admin may only target their own referee row; admins keep the
+	// operator-backfill reach.
 	.post(
 		'/referral/settle',
 		async ({ request, set, body }) => {
@@ -90,7 +92,13 @@ export const vxpRoutes = new Elysia({ prefix: '/api/v1/vxp' })
 				return unauthenticated(set);
 			}
 
-			return await settleReferralPayout({ refereeUserId: body.refereeUserId ?? user.id });
+			const refereeUserId = body.refereeUserId ?? user.id;
+
+			if (refereeUserId !== user.id && user.role !== 'admin') {
+				return forbidden(set);
+			}
+
+			return await settleReferralPayout({ refereeUserId });
 		},
 		{ body: t.Object({ refereeUserId: t.Optional(t.String({ format: 'uuid' })) }) }
 	)

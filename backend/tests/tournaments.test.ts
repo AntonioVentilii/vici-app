@@ -177,6 +177,40 @@ describe.if(dbAvailable)('tournament', () => {
 		expect(secondRows[0]?.seeded_league_ids).toEqual(leagueIds);
 	});
 
+	test('two concurrent draws of the same month: one draws, the other reports already_drawn', async () => {
+		const { monthAnchor, startMs } = uniqueMonth();
+		const nowMs = startMs + 1000;
+
+		// Both callers pass the pre-check before either commits; the insert's
+		// conflict clause must hand exactly one of them the draw.
+		const [a, b] = await Promise.all([
+			triggerTournamentDraw({ monthAnchor, nowMs }),
+			triggerTournamentDraw({ monthAnchor, nowMs })
+		]);
+
+		const outcomes = [a, b].map(({ ok, reason }) => ({ ok, reason }));
+
+		expect(outcomes).toContainEqual({ ok: true, reason: undefined });
+		expect(outcomes).toContainEqual({ ok: false, reason: 'already_drawn' });
+
+		const tournaments = await query<{ id: string }>(`select id from tournaments where id = $1`, [
+			monthAnchor
+		]);
+
+		expect(tournaments.length).toBe(1);
+
+		// The bracket was written exactly once: 8 r1 + 4 quarter + 2 semifinal
+		// + 1 final slots.
+		const matchCounts = await query<{ round: string; count: string }>(
+			`select round, count(*)::text as count from tournament_matches
+			 where tournament_id = $1 group by round`,
+			[monthAnchor]
+		);
+		const byRound = Object.fromEntries(matchCounts.map((m) => [m.round, Number(m.count)]));
+
+		expect(byRound).toEqual({ r1: 8, quarter: 4, semifinal: 2, final: 1 });
+	});
+
 	test('round 1 pairs seed 1 with seed 16 and stamps start snapshots; later rounds are TBD', async () => {
 		const { monthAnchor, startMs } = uniqueMonth();
 

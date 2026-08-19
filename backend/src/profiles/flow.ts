@@ -25,6 +25,14 @@ export class NoProfileError extends Error {
 	}
 }
 
+/** Typed failure for a malformed local-day key, so the route can map it to
+ * a 400 without matching on the message text. */
+export class InvalidDayKeyError extends Error {
+	constructor() {
+		super('dayKey must be a well-formed YYYY-MM-DD local-day key.');
+	}
+}
+
 export interface RecordFlowSwipeResult {
 	/** The authoritative count of Flow swipes recorded for `dailyGoalDate`. */
 	dailyGoalDone: number;
@@ -78,7 +86,7 @@ export const recordFlowSwipe = async ({
 	dayKey: string;
 }): Promise<RecordFlowSwipeResult> => {
 	if (!isWellFormedDayKey(dayKey)) {
-		throw new Error('dayKey must be a well-formed YYYY-MM-DD local-day key.');
+		throw new InvalidDayKeyError();
 	}
 
 	return await tx(async (q) => {

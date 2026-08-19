@@ -171,6 +171,8 @@ describe('referral list', () => {
 		expect(items.map((item) => item.referee)).toEqual([refereeB, refereeA]);
 		expect(items[0]?.refereePayout).toEqual({ status: 'owed', amountBaseUnits: '0' });
 		expect(items[0]?.referrerPayout).toEqual({ status: 'none', amountBaseUnits: '0' });
-		expect(items[0]?.withinReferrerCap).toBeFalse();
+		// Undecided cap slots read as within-cap pending until settlement
+		// decides them, mirroring the pending referrerPayout above.
+		expect(items[0]?.withinReferrerCap).toBeTrue();
 	});
 });

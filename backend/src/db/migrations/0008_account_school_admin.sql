@@ -8,6 +8,11 @@ alter table users drop constraint if exists users_role_check;
 alter table users
   add constraint users_role_check check (role in ('user', 'admin', 'solver', 'creator'));
 
+-- The users row survives hard deletion as the identity anchor; this stamp is
+-- the explicit terminal marker so payout paths can refuse a dead account
+-- without conflating it with a never-onboarded one.
+alter table users add column if not exists hard_deleted_at timestamptz;
+
 -- Referral codes: reverse-indexed like the original collection (the code is
 -- the key, the owner the value); one code per user, write-once. The format
 -- is 8 chars of Crockford base32 (no I, L, O, U).
