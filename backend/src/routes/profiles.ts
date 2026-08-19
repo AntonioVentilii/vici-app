@@ -6,7 +6,7 @@
 import { isNullish } from '@dfinity/utils';
 import { Elysia, t } from 'elysia';
 import { requireUser, unauthenticated } from '../auth/guard';
-import { NoProfileError, recordFlowSwipe } from '../profiles/flow';
+import { InvalidDayKeyError, NoProfileError, recordFlowSwipe } from '../profiles/flow';
 import { checkNicknameAvailability } from '../profiles/nickname';
 import {
 	getProfileRow,
@@ -102,7 +102,7 @@ export const profilesRoutes = new Elysia({ prefix: '/api/v1/profiles' })
 					return { error: 'no_profile' };
 				}
 
-				if (err instanceof Error && err.message.includes('well-formed')) {
+				if (err instanceof InvalidDayKeyError) {
 					return badRequest(set, 'invalid_day_key');
 				}
 
