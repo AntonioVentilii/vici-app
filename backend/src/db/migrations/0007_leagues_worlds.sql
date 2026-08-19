@@ -86,15 +86,17 @@ create index if not exists battles_side_b_idx on battles (side_b);
 create index if not exists battles_state_idx on battles (state);
 
 -- Worlds affiliations: one university and/or one country slot per user, each
--- carrying the 90-day switch lock. The key mirrors the (member, kind,
--- identifier) triple; the leave path is gated on locked_until_ms.
+-- carrying the 90-day switch lock. The (member, kind) primary key enforces the
+-- one-slot-per-kind model at the schema level: switching identifiers is a
+-- delete-then-insert of the single slot, never a second row. The leave path is
+-- gated on locked_until_ms.
 create table if not exists affiliations (
   member_user_id uuid not null references users (id) on delete cascade,
   kind text not null check (kind in ('university', 'country')),
   affiliation_identifier text not null check (affiliation_identifier <> ''),
   joined_at_ms bigint not null,
   locked_until_ms bigint not null,
-  primary key (member_user_id, kind, affiliation_identifier)
+  primary key (member_user_id, kind)
 );
 
 create index if not exists affiliations_kind_identifier_idx

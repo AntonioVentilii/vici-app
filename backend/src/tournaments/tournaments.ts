@@ -234,10 +234,16 @@ export const triggerTournamentDraw = async ({
 			.slice(0, TOURNAMENT_BRACKET_SIZE)
 			.map(({ league_id }) => league_id);
 
-		await q(
+		// The do-nothing conflict clause closes the race the pre-check leaves
+		// open: a concurrent draw that committed between the check and this
+		// insert wins the month, and this caller observes the same already_drawn
+		// outcome as if the pre-check had caught it.
+		const inserted = await q<{ id: string }>(
 			`insert into tournaments (id, month_start_ms, month_end_ms, bracket_size, state,
 			   seeded_league_ids, created_at_ms)
-			 values ($1, $2, $3, $4, 'in_flight', $5, $6)`,
+			 values ($1, $2, $3, $4, 'in_flight', $5, $6)
+			 on conflict (id) do nothing
+			 returning id`,
 			[
 				monthAnchor,
 				startMs,
@@ -247,6 +253,10 @@ export const triggerTournamentDraw = async ({
 				nowMs
 			]
 		);
+
+		if (isNullish(inserted[0])) {
+			return { ok: false, reason: 'already_drawn', tournamentId: monthAnchor };
+		}
 
 		// Round 1 slots carry each side's league_stats snapshot so resolution
 		// can score the window delta later.
