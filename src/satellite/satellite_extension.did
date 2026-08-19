@@ -169,7 +169,9 @@ type AppFollowUserArgs = record { target : text };
 
 type AppHibernateMyAccountResult = record { ok : bool; reason : opt variant { no_profile; deleted } };
 
-type AppMigrateProfileEmailsResult = record { scanned : float64; migrated : float64; cleared : float64; skipped : float64 };
+type AppMigrateProfileEmailsArgs = record { after_key : opt text; limit : opt float64 };
+
+type AppMigrateProfileEmailsResult = record { scanned : float64; migrated : float64; cleared : float64; skipped : float64; next_key : opt text; has_more : bool };
 
 type AppPruneResolvedResultsResult = record { pruned : float64 };
 
@@ -294,7 +296,7 @@ service : {
 	app_delete_my_account : (AppDeleteMyAccountArgs) -> (AppDeleteMyAccountResult);
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_hibernate_my_account : () -> (AppHibernateMyAccountResult);
-	app_migrate_profile_emails : () -> (AppMigrateProfileEmailsResult);
+	app_migrate_profile_emails : (AppMigrateProfileEmailsArgs) -> (AppMigrateProfileEmailsResult);
 	app_prune_resolved_results : () -> (AppPruneResolvedResultsResult);
 	app_read_battle_live_score : (AppReadBattleLiveScoreArgs) -> (AppReadBattleLiveScoreResult);
 	app_rebuild_market_tag_index : () -> (AppRebuildMarketTagIndexResult);

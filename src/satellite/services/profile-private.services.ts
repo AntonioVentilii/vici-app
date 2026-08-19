@@ -60,9 +60,20 @@ export const assertSetProfilePrivate = ({
 	}
 };
 
-/** Outcome of {@link migrateProfileEmailsFn}. */
+/**
+ * Page ceiling for {@link migrateProfileEmailsFn}. Serverless `setDocStore`
+ * writes carry a multi-billion-instruction overhead on this satellite (the
+ * unpaged migration trapped at 40B instructions, and even 10 docs/page did
+ * — while a 100-doc read-only query fits in the 5B query budget), so the
+ * page size is caller-tunable down to a single doc. Default and ceiling
+ * stay small; the migration loop is off-chain and cheap to iterate.
+ */
+const MAX_MIGRATION_LIMIT = 10;
+const DEFAULT_MIGRATION_LIMIT = 2;
+
+/** Outcome of one {@link migrateProfileEmailsFn} page. */
 export interface MigrateProfileEmailsResult {
-	/** Total `profiles` docs scanned. */
+	/** `profiles` docs scanned in this page. */
 	scanned: number;
 	/** Non-empty addresses copied into `profile_private`. */
 	migrated: number;
@@ -70,6 +81,10 @@ export interface MigrateProfileEmailsResult {
 	cleared: number;
 	/** Docs left untouched because a step failed (logged; re-run to retry). */
 	skipped: number;
+	/** Cursor for the next page — absent once the collection is exhausted. */
+	nextKey?: string;
+	/** `true` while another page may remain. */
+	hasMore: boolean;
 }
 
 /**
@@ -80,6 +95,11 @@ export interface MigrateProfileEmailsResult {
  * skipped, and a stored private address is never overwritten (the public
  * copy is still cleared), so a re-run only retries previously-failed rows.
  *
+ * Keyset-paged (same discipline as the analytics exports): each call
+ * processes at most {@link MAX_MIGRATION_LIMIT} docs after `afterKey` in
+ * the datastore's native key order; the caller loops with the returned
+ * `nextKey` until `hasMore` is `false`.
+ *
  * Both writes pass the OWNER's principal as the store caller, so the
  * private doc lands owner-owned (the user can read/update it under the
  * `managed` rule and {@link assertSetProfilePrivate} holds) and the
@@ -89,17 +109,32 @@ export interface MigrateProfileEmailsResult {
  * still fails (e.g. a legacy nickname collision vetoed by the nickname
  * assert) is counted in `skipped` and logged for manual follow-up.
  */
-export const migrateProfileEmailsFn = (): MigrateProfileEmailsResult => {
+export const migrateProfileEmailsFn = ({
+	afterKey,
+	limit
+}: {
+	afterKey?: string;
+	limit?: number;
+}): MigrateProfileEmailsResult => {
 	const caller = msgCaller();
 
 	if (!isAdmin({ caller })) {
 		throw new Error('Only an admin can migrate profile emails.');
 	}
 
+	const afterKeyText = afterKey?.trim() ?? '';
+	const safeLimit = Number.isFinite(limit) ? Math.floor(limit as number) : DEFAULT_MIGRATION_LIMIT;
+	const cap = Math.min(Math.max(1, safeLimit), MAX_MIGRATION_LIMIT);
+
 	const { items } = listDocsStore({
 		collection: Collection.PROFILES,
 		caller,
-		params: {}
+		params: {
+			paginate: {
+				limit: BigInt(cap),
+				start_after: afterKeyText.length > 0 ? afterKeyText : undefined
+			}
+		}
 	});
 
 	let migrated = 0;
@@ -169,5 +204,16 @@ export const migrateProfileEmailsFn = (): MigrateProfileEmailsResult => {
 		}
 	}
 
-	return { scanned: items.length, migrated, cleared, skipped };
+	const hasMore = items.length >= cap;
+
+	return {
+		scanned: items.length,
+		migrated,
+		cleared,
+		skipped,
+		// Cursor only while another page may exist — a final (short) page
+		// returns no cursor, so `nextKey` presence alone also means "continue".
+		nextKey: hasMore && items.length > 0 ? items[items.length - 1][0] : undefined,
+		hasMore
+	};
 };

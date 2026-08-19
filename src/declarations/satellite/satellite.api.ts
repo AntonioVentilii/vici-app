@@ -1843,20 +1843,32 @@ const hibernateMyAccount = async (): Promise<j.infer<typeof AppHibernateMyAccoun
 	return AppHibernateMyAccountResultSchema.parse(result);
 };
 
+const AppMigrateProfileEmailsArgsSchema = j.strictObject({
+	afterKey: j.optional(j.string()),
+	limit: j.optional(j.number())
+});
 const AppMigrateProfileEmailsResultSchema = j.strictObject({
 	scanned: j.number(),
 	migrated: j.number(),
 	cleared: j.number(),
-	skipped: j.number()
+	skipped: j.number(),
+	nextKey: j.optional(j.string()),
+	hasMore: j.boolean()
 });
 
-const migrateProfileEmails = async (): Promise<
-	j.infer<typeof AppMigrateProfileEmailsResultSchema>
-> => {
+const migrateProfileEmails = async (
+	args: j.infer<typeof AppMigrateProfileEmailsArgsSchema>
+): Promise<j.infer<typeof AppMigrateProfileEmailsResultSchema>> => {
+	const parsedArgs = AppMigrateProfileEmailsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppMigrateProfileEmailsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_migrate_profile_emails']>[0];
+
 	const { app_migrate_profile_emails } = await getSatelliteExtendedActor<SatelliteActor>({
 		idlFactory
 	});
-	const idlResult = await app_migrate_profile_emails();
+	const idlResult = await app_migrate_profile_emails(idlArgs);
 
 	const result = schemaFromIdl({ schema: AppMigrateProfileEmailsResultSchema, value: idlResult });
 	return AppMigrateProfileEmailsResultSchema.parse(result);
