@@ -174,11 +174,6 @@ describe.if(dbAvailable)('analytics ingest', () => {
 describe.if(dbAvailable)('analytics export and drain', () => {
 	beforeAll(async () => {
 		await ensureMigrated();
-
-		// The pagination walk below pages the whole table, so a long-lived
-		// local database accumulating rows across runs would blow the test
-		// timeout. Start from an empty log to keep the walk bounded.
-		await query(`truncate analytics_events, analytics_event_rollups`);
 	});
 
 	/** Seed `count` events in one session and return their keys in key order. */
@@ -199,7 +194,10 @@ describe.if(dbAvailable)('analytics export and drain', () => {
 
 		const collected: string[] = [];
 		let afterUpdatedAtNs: string | undefined;
-		let afterKey: string | undefined;
+		// Keys are monotonic and the walk is key-ordered, so cursoring in just
+		// below the first seeded key bounds the walk to this test's own rows
+		// instead of the whole log a long-lived local database accumulates.
+		let afterKey: string | undefined = keys[0]?.slice(0, -1);
 
 		for (;;) {
 			const { rows, hasMore } = await getAnalyticsEvents({ afterUpdatedAtNs, afterKey, limit: 2 });
@@ -210,7 +208,7 @@ describe.if(dbAvailable)('analytics export and drain', () => {
 				}
 			}
 
-			if (!hasMore || rows.length === 0) {
+			if (collected.length === keys.length || !hasMore || rows.length === 0) {
 				break;
 			}
 
