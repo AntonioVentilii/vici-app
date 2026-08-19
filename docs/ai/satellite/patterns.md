@@ -622,9 +622,15 @@ collection keys themselves, plus the clearing leaderboard). The pattern:
   regardless. Strip the field from the doc schema, the wire schemas, and
   the read projections in the same PR.
 - **Serverless writes on behalf of the owner pass the OWNER's principal
-  as the store `caller`** (e.g. the `migrateProfileEmails` migration), so
-  the doc lands owner-owned and the caller-binding assert still holds —
-  asserts run on `setDocStore` too.
+  as the store `caller`** (the one-time email migration that populated
+  `profile_private` worked this way), so the doc lands owner-owned and
+  the caller-binding assert still holds — asserts run on `setDocStore`
+  too. Budget warning for such bulk rewrites: serverless `setDocStore`
+  writes cost multiple BILLION instructions each on the Sputnik
+  satellite (a 100-doc read-only query fits the 5B query budget, but
+  ~10 writes exceed the 40B update limit), so any admin endpoint that
+  rewrites docs in bulk MUST be keyset-paged with a page size tunable
+  down to a single doc.
 - **Add the collection to the hard-delete cascade**
   (`hardDeleteAccountFn`) — a private doc must not outlive its account.
 

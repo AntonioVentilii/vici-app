@@ -128,10 +128,7 @@ import {
 	listMarketTranslationsForLocales as listMarketTranslationsForLocalesFn,
 	upsertMarketTranslation as upsertMarketTranslationFn
 } from '$satellite/services/market-translation.services';
-import {
-	assertSetProfilePrivate,
-	migrateProfileEmailsFn
-} from '$satellite/services/profile-private.services';
+import { assertSetProfilePrivate } from '$satellite/services/profile-private.services';
 import {
 	assertDailyGoalMonotonic,
 	assertValidNickname,
@@ -1124,31 +1121,6 @@ export const sweepExpiredDeletions = defineUpdate({
 		swept: j.number()
 	}),
 	handler: sweepExpiredDeletionsFn
-});
-
-// One-time migration for the email-exposure fix: moves every legacy
-// `email` still stored on a public `profiles` doc into the owner-only
-// `profile_private` collection and rewrites the public doc without the
-// field. Admin-gated, idempotent (re-runs only retry failed rows), and
-// keyset-paged — every `profiles` rewrite re-runs the nickname-uniqueness
-// assert (a full collection scan per write), so an unpaged run is
-// quadratic and exceeds the 40B-instruction message limit. The caller
-// loops with the returned `nextKey` until `hasMore` is `false`.
-// Remove in a follow-up PR after the prod run.
-export const migrateProfileEmails = defineUpdate({
-	args: j.strictObject({
-		afterKey: j.optional(j.string()),
-		limit: j.optional(j.number())
-	}),
-	result: j.strictObject({
-		scanned: j.number(),
-		migrated: j.number(),
-		cleared: j.number(),
-		skipped: j.number(),
-		nextKey: j.optional(j.string()),
-		hasMore: j.boolean()
-	}),
-	handler: migrateProfileEmailsFn
 });
 
 // Admin-only corrective for the friend-feed like counts: re-derives every
