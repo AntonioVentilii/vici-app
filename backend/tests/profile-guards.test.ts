@@ -2,11 +2,19 @@
 // the handle-change cooldown with its ~now stamp requirement, and the
 // grandfather clause for legacy nicknames.
 
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { query } from '../src/db/client';
 import { DAILY_HARD_CAP } from '../src/profiles/flow';
 import { MAX_NICKNAME_LENGTH, nicknameUniqueKey } from '../src/profiles/nickname';
-import { upsertMyProfile } from '../src/profiles/profile';
+import {
+	getProfileRow,
+	getProfileView,
+	searchProfiles,
+	shapeOwnProfile,
+	shapeProfile,
+	upsertMyProfile
+} from '../src/profiles/profile';
 import { createTestUser, ensureMigrated } from './helpers/auth';
 import { createTestProfile, uniqueNickname } from './helpers/profiles';
 import { dbAvailable } from './helpers/setup';
@@ -241,5 +249,35 @@ describe.if(dbAvailable)('legacy nickname grandfathering', () => {
 				}
 			})
 		).rejects.toThrow(`at most ${MAX_NICKNAME_LENGTH} characters`);
+	});
+});
+
+describe('email privacy split', () => {
+	test('public shapes carry no email; owner surfaces do', async () => {
+		const { userId, profile } = await createTestProfile();
+
+		await upsertMyProfile({
+			userId,
+			body: { nickname: profile.nickname, email: 'own@vici.invalid' }
+		});
+
+		const row = await getProfileRow({ userId });
+
+		if (isNullish(row)) {
+			throw new Error('profile row missing');
+		}
+
+		expect(shapeOwnProfile(row).email).toBe('own@vici.invalid');
+		expect('email' in shapeProfile(row)).toBeFalse();
+
+		const viewOther = await getProfileView({ userId, callerId: crypto.randomUUID() });
+		const viewSelf = await getProfileView({ userId, callerId: userId });
+
+		expect(nonNullish(viewOther) && 'email' in viewOther).toBeFalse();
+		expect(nonNullish(viewSelf) && 'email' in viewSelf).toBeTrue();
+
+		for (const item of await searchProfiles(userId)) {
+			expect('email' in item).toBeFalse();
+		}
 	});
 });
