@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.8.37](https://github.com/ViciApp/vici-app/compare/v1.8.36...v1.8.37) (2026-08-19)
+
+
+### Features
+
+* **backend:** auth service with sessions, email OTP, Google and env-gated Apple ([#1225](https://github.com/ViciApp/vici-app/issues/1225)) ([164b34a](https://github.com/ViciApp/vici-app/commit/164b34aa51e681ee16c589dbd7f3bafba6b6af55))
+* **backend:** leagues, battles, worlds and tournaments port ([#1232](https://github.com/ViciApp/vici-app/issues/1232)) ([37b662a](https://github.com/ViciApp/vici-app/commit/37b662a216180cea7c98226614b6de6fbbaec04f))
+* **backend:** market metadata, translations, tags and analytics port ([#1229](https://github.com/ViciApp/vici-app/issues/1229)) ([1a14a9c](https://github.com/ViciApp/vici-app/commit/1a14a9c826253416038e6df34287e2e85dac863d))
+* **backend:** multi-chain custody service and on-chain engine bridge ([#1226](https://github.com/ViciApp/vici-app/issues/1226)) ([4cf50cf](https://github.com/ViciApp/vici-app/commit/4cf50cf27a410ae537bc514cbba8457b1b65a30e))
+* **backend:** profiles, social graph, leaderboards and activity port ([#1227](https://github.com/ViciApp/vici-app/issues/1227)) ([48962a5](https://github.com/ViciApp/vici-app/commit/48962a5a64aad2b82481bd71411ce6d33e95807e))
+* **backend:** referrals, school verification, account lifecycle and admin port ([#1233](https://github.com/ViciApp/vici-app/issues/1233)) ([f174044](https://github.com/ViciApp/vici-app/commit/f1740442e3cb79c0ff6c9388c3a63189d68ba868))
+* **backend:** satellite ETL, principal mapping and parity tooling ([#1234](https://github.com/ViciApp/vici-app/issues/1234)) ([bbda75d](https://github.com/ViciApp/vici-app/commit/bbda75df0c5a0d217dd260e52f8eeece5d56994a))
+* **backend:** VXP economy, treasury payouts and worker job loop ([#1231](https://github.com/ViciApp/vici-app/issues/1231)) ([2b94603](https://github.com/ViciApp/vici-app/commit/2b9460357c9507e419264b843b4e593c50cb6041))
+* **backend:** web2 backend scaffold, local stack and CI ([#1223](https://github.com/ViciApp/vici-app/issues/1223)) ([7deae44](https://github.com/ViciApp/vici-app/commit/7deae44608d3f230e57fd55f8981fe71251dcc5d))
+* **frontend:** web2 backend mode seam and typed API client ([#1235](https://github.com/ViciApp/vici-app/issues/1235)) ([88070b8](https://github.com/ViciApp/vici-app/commit/88070b8012ec857bae3758e9b81b827aba4f23a1))
+
+
+### Tests
+
+* **backend:** drift tests for constants mirrored across stacks ([#1240](https://github.com/ViciApp/vici-app/issues/1240)) ([631325a](https://github.com/ViciApp/vici-app/commit/631325a491dcae08895e93c7d4a1b43e5a652dcd))
+* **backend:** make analytics pagination test self-contained ([#1241](https://github.com/ViciApp/vici-app/issues/1241)) ([43faf4e](https://github.com/ViciApp/vici-app/commit/43faf4e656394aad1763f44077e6d088fe80724d))
+
 ## [1.8.36](https://github.com/ViciApp/vici-app/compare/v1.8.35...v1.8.36) (2026-08-19)
 
 
