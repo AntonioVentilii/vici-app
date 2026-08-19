@@ -1,0 +1,61 @@
+name: Web2 Deploy
+
+# Manual-only for now: the Fly apps (vici-app-backend, vici-app-web) and the
+# FLY_API_TOKEN_WEB2_BACKEND / FLY_API_TOKEN_WEB2_WEB repo secrets DO NOT EXIST
+# yet, so a dispatch today fails at the deploy step by design. Setup, once:
+#   cd backend && fly launch --no-deploy         # creates vici-app-backend
+#   fly launch --no-deploy --config fly.web.toml # creates vici-app-web
+#   cd backend && fly tokens create deploy       # -> FLY_API_TOKEN_WEB2_BACKEND
+#   fly tokens create deploy --config fly.web.toml  # -> FLY_API_TOKEN_WEB2_WEB
+# A `fly tokens create deploy` token is scoped to ONE app, so one per app
+# (least privilege). Per-app runtime secrets/env live on Fly; CI only ships
+# the image. Backend DB migrations run atomically as the fly.toml
+# release_command.
+on:
+  workflow_dispatch:
+
+# One deploy at a time; never cancel a deploy mid-flight.
+concurrency:
+  group: web2-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Both apps deploy in parallel (independent); a backend migration failure
+  # (release_command) aborts only the backend deploy, never the web one.
+  deploy-backend:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # v1.6
+
+      - name: Deploy backend to Fly
+        working-directory: backend
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_WEB2_BACKEND }}
+        run: flyctl deploy --remote-only
+
+  deploy-web:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # v1.6
+
+      # Static SPA (nginx). Build context is the repo root; fly.web.toml points
+      # at Dockerfile.web and bakes the VITE_* build args.
+      - name: Deploy web to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_WEB2_WEB }}
+        run: flyctl deploy --config fly.web.toml --remote-only

@@ -42,6 +42,26 @@ export default ts.config(
 	},
 
 	{
+		// The Bun backend is its own TypeScript project; typed linting must
+		// resolve its files through backend/tsconfig.json, not the frontend's
+		// tsconfig.eslint.json.
+		files: ['backend/**/*.ts'],
+		languageOptions: {
+			parserOptions: {
+				project: ['./backend/tsconfig.json']
+			}
+		},
+		rules: {
+			// A server logs to stdout/stderr by design (Fly captures the stream);
+			// the browser-console concern behind this rule does not apply.
+			'no-console': 'off',
+			// Positional params are the backend idiom for db helpers like
+			// query(text, params); the object-params convention is a frontend rule.
+			'local-rules/prefer-object-params': 'off'
+		}
+	},
+
+	{
 		// The service worker legitimately uses the ServiceWorkerGlobalScope
 		// surface (`self`, `caches`, `fetch`, `clients`, event listeners).
 		files: ['src/service-worker.ts'],
