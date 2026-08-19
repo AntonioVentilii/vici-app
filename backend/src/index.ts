@@ -11,7 +11,9 @@ import { env } from './env';
 import { logger } from './lib/logger';
 import { authRoutes } from './routes/auth';
 import { engineRoutes } from './routes/engine';
+import { eventsRoutes } from './routes/events';
 import { leaderboardRoutes } from './routes/leaderboard';
+import { marketsRoutes } from './routes/markets';
 import { profilesRoutes } from './routes/profiles';
 import { socialRoutes } from './routes/social';
 import { walletRoutes } from './routes/wallet';
@@ -140,6 +142,8 @@ export const app = new Elysia()
 	.use(profilesRoutes)
 	.use(leaderboardRoutes)
 	.use(socialRoutes)
+	.use(marketsRoutes)
+	.use(eventsRoutes)
 	// Liveness + DB connectivity. Bounded probe; three consecutive failures exit
 	// the process for a supervised restart with a fresh pool.
 	.get('/health', async ({ set }) => {

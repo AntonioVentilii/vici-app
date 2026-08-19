@@ -91,6 +91,12 @@ Chain adapters live under `src/chains/` behind one interface (`chains/types.ts`)
 
 `src/engine/` wraps the on-chain clearing + registry canisters with the same method surface the app consumes, over candid bindings vendored under `src/declarations/` (verbatim copies of the app's generated bindings; refresh by re-copying, never hand-edit). Public market reads run anonymously behind a 15s in-memory TTL cache; account-scoped calls (orders, collateral, positions) sign with the calling user's derived custodial IC identity; settlement-grade calls sign with the admin identity. Routes: `routes/engine.ts` (public reads + session-gated trading) and `routes/wallet.ts` (balances, deposit addresses, withdrawals).
 
+## Markets and analytics
+
+`src/markets/` carries the market curation surface: per-series editorial metadata (`market_metadata`), per-locale translation overlays (`market_translations`, validated against the registered locale ids), and the tag reverse index (`market_tag_index`) derived from the closed 3-layer taxonomy (micros plus their macros; free tags are never indexed). Writes go through the curator gate: an admin may edit any series, the series creator their own, where the creator principal from the registry is matched against the caller's derived custodial identity or a linked legacy principal. The index is maintained in the same transaction as each metadata write and can be rebuilt from scratch via the admin corrective (`POST /api/v1/markets/tags/rebuild`).
+
+`src/analytics/` is the behavioural event pipeline: `POST /api/v1/events` ingests client batches (public: anonymous visitors track too; a session adds the pseudonymous user link), capped at 100 events per call with server-authoritative timestamps, and bumps the per-day rollup counters in the same transaction. `captureServerEvents` is the internal bridge other domains call for server-originated events (VXP payouts, settlements). Admin endpoints mirror the warehouse contract: daily summary, keyset event export with an idempotent drain delete, the registered-account count, and the profile-created export.
+
 ## Deploy (Fly.io)
 
 Two Fly apps, both in `ams`:
@@ -118,12 +124,14 @@ backend/
     index.ts        # Elysia app: security headers, CORS, error mapping, /health
     worker.ts       # background loop (deposit watcher ticks; domain jobs land per phase)
     env.ts          # validated environment
+    analytics/      # behavioural event ingest, rollups, warehouse export + drain
     auth/           # sessions, guards, identity resolution, OTP, Google, Apple
     chains/         # chain adapters (ic/evm/sol/btc) + registry + deposit watchers
     custody/        # assets, custody accounts, double-entry ledger, withdrawals
+    markets/        # market metadata, translations, tag index, curator gate
     declarations/   # vendored candid bindings for clearing + registry (generated, never hand-edited)
     engine/         # actor provider, TTL cache, typed clearing/registry wrappers
-    routes/         # /api/v1 route modules (auth, wallet, engine)
+    routes/         # /api/v1 route modules (auth, wallet, engine, markets, events, ...)
     lib/            # logger, crypto, keys (HKDF derivation), ic-agent, cookies, email, rate limiting
     db/
       client.ts     # pg pool, query/tx helpers, isDbUnavailable
