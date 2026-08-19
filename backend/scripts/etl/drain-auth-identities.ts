@@ -79,6 +79,14 @@ export const drainAuthIdentities = async ({
 
 		pages += 1;
 
+		// A has_more page with no rows can never advance the cursor; failing
+		// loudly beats spinning on the same call forever.
+		if (result.has_more && result.rows.length === 0) {
+			throw new Error(
+				`satellite returned has_more with an empty page (cursor ${afterKey ?? 'start'}); aborting drain`
+			);
+		}
+
 		const lastKey = result.rows[result.rows.length - 1]?.key;
 
 		// The cursor lands only after the page's rows committed, so a crash

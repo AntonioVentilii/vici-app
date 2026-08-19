@@ -92,6 +92,12 @@ export class PrincipalMapper {
 	/** The user id owning this principal, creating a provisional
 	 * claim_pending account (plus the 'etl' link) when none exists yet. */
 	async userIdFor(principal: string): Promise<string> {
+		// Fail fast: a blank principal would silently funnel every malformed
+		// doc onto one shared provisional account.
+		if (principal.trim() === '') {
+			throw new Error('userIdFor called with an empty principal');
+		}
+
 		const cached = this.cache.get(principal);
 
 		if (nonNullish(cached)) {

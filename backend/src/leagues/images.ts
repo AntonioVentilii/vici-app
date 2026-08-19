@@ -66,6 +66,12 @@ export const storeLeagueCoverBytes = async ({
 }): Promise<string> => {
 	assertSafeId(leagueId);
 
+	// Every caller (upload route and migration tooling alike) gets the same
+	// non-empty / 5 MB gate before any decode work.
+	if (bytes.byteLength === 0 || bytes.byteLength > LEAGUE_IMAGE_MAX_BYTES) {
+		throw new LeagueError('leagues cover image must be a non-empty file up to 5 MB.');
+	}
+
 	let thumbnail: Buffer;
 
 	try {
@@ -117,10 +123,6 @@ export const uploadLeagueImage = async ({
 
 	if (league.ownerUserId !== callerId) {
 		throw new LeagueError('leagues cover image edits require the owner.');
-	}
-
-	if (bytes.byteLength === 0 || bytes.byteLength > LEAGUE_IMAGE_MAX_BYTES) {
-		throw new LeagueError('leagues cover image must be a non-empty file up to 5 MB.');
 	}
 
 	const imageUrl = await storeLeagueCoverBytes({ leagueId, bytes });
