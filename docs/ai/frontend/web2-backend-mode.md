@@ -30,6 +30,13 @@ Two files under `src/lib/web2/`:
 | `VITE_BACKEND`      | `web3` \| `web2` | `web3`  | Selects the backend for domains that have a dual-mode path. Build-time only. |
 | `VITE_WEB2_API_URL` | origin URL       | empty   | Base of the HTTP API. Empty = same-origin relative (reverse-proxy shape).    |
 
+## Swapped domains
+
+| Domain    | Where the branch lives                                                    | Notes                                                         |
+| --------- | ------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Analytics | `analytics.services.ts` (flush call site)                                 | The reference for the per-service swap below.                 |
+| Auth      | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte` | The identity layer, not a per-service swap. See "Auth" below. |
+
 ## The swap pattern (exemplar: analytics flush)
 
 [`analytics.services.ts`](../../../src/lib/services/analytics.services.ts)
@@ -63,20 +70,48 @@ using the pattern above: the satellite / canister call in the service is
 paired with a `client.ts` wrapper hitting the matching `/api/v1/<domain>`
 route, behind `isWeb2Backend()`.
 
-Auth is the exception: it does not go dual-mode per service. The identity
-layer swaps wholesale at cutover (cookie sessions replace the on-chain
-identity flow), because half-swapped auth would leave reads and writes
-authenticated against different identities. Until cutover, web2 mode only
-covers paths that work with an anonymous or cookie-linked caller (the
-analytics ingest is deliberately such a path). `client.ts` already ships
-the auth basics for that moment: `getProviders()`, `getMe()`, `logout()`.
+## Auth
+
+Auth is not a per-service swap: the whole identity layer switches, because
+half-swapped auth would leave reads and writes authenticated against
+different identities. In web2 mode there is no local identity to read. The
+browser holds an HttpOnly session cookie set by the API, and "signed in"
+derives from `GET /api/v1/me` succeeding, not from an on-chain delegation.
+
+- **Session state — `web2/session.ts`.** A small store (`web2SessionStore`)
+  is the cookie-session counterpart to the on-chain identity flow.
+  `loadWeb2Session()` probes `/me` (a 401 is the signed-out steady state,
+  not an error), `adoptWeb2Session(user)` seeds it from a login response,
+  and `clearWeb2Session()` revokes server-side then drops local state.
+- **Session bootstrap — `Authn.svelte`.** `onMount` branches: web2 runs
+  `loadWeb2Session()` in place of Juno's `onAuthStateChange`. The on-chain
+  path is left byte-for-byte as it was.
+- **Sign-in — `SignInProviderStack.svelte`.** In web2 mode it renders
+  `SignInProviderStackWeb2.svelte`: email one-time code (request then verify
+  via `requestOtp` / `verifyOtp`), Google as a full-page redirect to
+  `googleSignInUrl()` (the API drives the OAuth dance and lands back on the
+  app root, where `Authn` picks up the session), and Apple + Passkey shown
+  disabled ("coming soon") since neither is wired on this transport yet. The
+  on-chain provider stack is untouched behind the same branch.
+- **Sign-out — `Logout.svelte`.** web2 calls `clearWeb2Session()`; on-chain
+  calls Juno `signOut()`.
+
+Engine calls still read the on-chain identity (`getIdentity()` /
+`getIdentityOnce()`); those stay on-chain until the custody/engine bridge
+lands, so the auth branch never reaches for a Juno identity in web2 mode.
+
+`client.ts` ships the auth surface: `getProviders()`, `getMe()`,
+`requestOtp()`, `verifyOtp()`, `googleSignInUrl()`, `logout()`.
 
 ## Guardrails
 
 - Never read `VITE_BACKEND` directly; always go through `backend-mode.ts`
   so the default stays in one place.
 - No `isWeb2Backend()` branches in components or stores; the seam lives in
-  services (and, for auth at cutover, the identity layer).
+  services. The one sanctioned exception is the identity layer, whose swap
+  is inherently UI-driven (one-time-code entry, redirect handoff): the auth
+  branches live in `Authn.svelte`, `SignInProviderStack.svelte`, and
+  `Logout.svelte`, with the session store in `web2/session.ts`.
 - Analytics event payloads stay behavioural and pseudonymous on both
   transports; the server stamps time and identity in both modes.
 - Constants mirrored between `src/` and `backend/` (locales, market

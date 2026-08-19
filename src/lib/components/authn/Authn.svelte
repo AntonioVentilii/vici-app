@@ -24,6 +24,8 @@
 	import { clearMyReferrals } from '$lib/stores/referrals.store';
 	import { tradeHistoryStore } from '$lib/stores/trade-history.store';
 	import { userStore } from '$lib/stores/user.store';
+	import { isWeb2Backend } from '$lib/web2/backend-mode';
+	import { loadWeb2Session } from '$lib/web2/session';
 
 	/**
 	 * Write (or clear) the `SIGNED_IN_FLAG_KEY` hint that this device has an
@@ -178,6 +180,39 @@
 	};
 
 	onMount(() => {
+		// Web2 mode has no on-chain identity to observe: the session is a cookie,
+		// so "signed in" is a `/me` probe mirrored into `web2SessionStore`, not a
+		// Juno auth transition. The on-chain path below is left exactly as is and
+		// runs whenever the flag is off (the default).
+		if (isWeb2Backend()) {
+			// The root gate (src/routes/+page.svelte) keys off `userStore.authBusy`,
+			// which boots `true`, so the probe must resolve it in BOTH outcomes or
+			// a web2 visitor hangs on the brand shell forever. `loadWeb2Session`
+			// never rejects: any failure resolves to signed-out.
+			void loadWeb2Session().then((user) => {
+				if (isNullish(user)) {
+					setSignedInFlag(false);
+
+					// Explicit signed-out state, mirroring the on-chain reset above.
+					userStore.set({
+						user: undefined,
+						profile: undefined,
+						email: '',
+						authBusy: false,
+						profileExisted: false
+					});
+
+					return;
+				}
+
+				// A live cookie session only releases the gate here; hydrating the
+				// user/profile into `userStore` belongs to the profiles domain swap.
+				userStore.update((data) => ({ ...data, authBusy: false }));
+			});
+
+			return;
+		}
+
 		const unsubscribe = onAuthStateChange(updateUserStore);
 
 		return () => {

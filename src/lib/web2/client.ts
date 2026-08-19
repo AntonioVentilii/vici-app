@@ -116,6 +116,59 @@ export const getMe = async (): Promise<Web2Me> => {
 	return user;
 };
 
+/**
+ * Ask the API to email a one-time code to `email`. Resolves on a queued
+ * send; a 4xx (unknown/invalid address, rate limit) surfaces as
+ * {@link Web2ApiError} so the caller can message the user.
+ */
+export const requestOtp = async ({ email }: { email: string }): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: '/api/v1/auth/otp/request',
+		method: 'POST',
+		body: { email }
+	});
+};
+
+/**
+ * Exchange an emailed code for a session. The API sets the HttpOnly session
+ * cookie on the response and echoes the `/me` body, so the returned user can
+ * seed the session store without a second round-trip. A wrong or expired
+ * code throws {@link Web2ApiError} (`status` 401), a locked address 429.
+ */
+export const verifyOtp = async ({
+	email,
+	code
+}: {
+	email: string;
+	code: string;
+}): Promise<Web2Me> => {
+	const { user } = await request<{ user: Web2Me }>({
+		path: '/api/v1/auth/otp/verify',
+		method: 'POST',
+		body: { email, code }
+	});
+
+	return user;
+};
+
+/**
+ * Absolute URL of the Google sign-in entry. It is a full-page redirect
+ * target (the API sets a signed state cookie and 302s on to Google), not a
+ * fetch, so callers navigate to it. `returnTo` is the in-app path the API
+ * redirects to after its callback; it must be a same-app absolute path
+ * (`/flow?x=1`, never a full URL) — the API embeds it in the signed OAuth
+ * state and clamps anything else to `/` to rule out open redirects.
+ */
+export const googleSignInUrl = ({ returnTo }: { returnTo?: string } = {}): string => {
+	const url = `${web2ApiBaseUrl()}/api/v1/auth/google`;
+
+	if (isNullish(returnTo) || returnTo === '') {
+		return url;
+	}
+
+	return `${url}?returnTo=${encodeURIComponent(returnTo)}`;
+};
+
 export const postEvents = async ({
 	events
 }: {
