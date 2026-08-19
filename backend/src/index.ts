@@ -8,6 +8,7 @@ import { Elysia } from 'elysia';
 import { isDbUnavailable, query } from './db/client';
 import { env } from './env';
 import { logger } from './lib/logger';
+import { authRoutes } from './routes/auth';
 
 // Baseline hardening headers on every response. The API serves JSON only, so a
 // deny-all framing posture is safe.
@@ -127,6 +128,7 @@ export const app = new Elysia()
 	})
 	// Credentialed CORS scoped to the SPA origins so the session cookie rides along.
 	.use(cors({ origin: allowedOrigins, credentials: true }))
+	.use(authRoutes)
 	// Liveness + DB connectivity. Bounded probe; three consecutive failures exit
 	// the process for a supervised restart with a fresh pool.
 	.get('/health', async ({ set }) => {
