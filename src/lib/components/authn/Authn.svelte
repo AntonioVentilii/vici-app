@@ -231,7 +231,30 @@
 		// Juno auth transition. The on-chain path below is left exactly as is and
 		// runs whenever the flag is off (the default).
 		if (isWeb2Backend()) {
-			void loadWeb2Session();
+			// The root gate (src/routes/+page.svelte) keys off `userStore.authBusy`,
+			// which boots `true`, so the probe must resolve it in BOTH outcomes or
+			// a web2 visitor hangs on the brand shell forever. `loadWeb2Session`
+			// never rejects: any failure resolves to signed-out.
+			void loadWeb2Session().then((user) => {
+				if (isNullish(user)) {
+					setSignedInFlag(false);
+
+					// Explicit signed-out state, mirroring the on-chain reset above.
+					userStore.set({
+						user: undefined,
+						profile: undefined,
+						email: '',
+						authBusy: false,
+						profileExisted: false
+					});
+
+					return;
+				}
+
+				// A live cookie session only releases the gate here; hydrating the
+				// user/profile into `userStore` belongs to the profiles domain swap.
+				userStore.update((data) => ({ ...data, authBusy: false }));
+			});
 
 			return;
 		}

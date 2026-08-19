@@ -66,9 +66,13 @@
 		}
 
 		// Full-page handoff: the API sets a signed state cookie and 302s to
-		// Google, then lands back on the app root where `Authn` picks up the
-		// session. `returnTo` records where the user started.
-		window.location.assign(googleSignInUrl({ returnTo: window.location.href }));
+		// Google, then redirects back to the app where `Authn` picks up the
+		// session. `returnTo` is the in-app path to land on after the callback;
+		// the API only accepts same-app absolute paths (never a full URL), so
+		// send path + query + hash rather than `location.href`.
+		const { pathname, search, hash } = window.location;
+
+		window.location.assign(googleSignInUrl({ returnTo: `${pathname}${search}${hash}` }));
 	};
 
 	const onEmailSubmit = async (event: SubmitEvent) => {
@@ -158,6 +162,7 @@
 				</span>
 				<input
 					class="signin-email-input num"
+					aria-label={t({ locale: $localeStore, key: 'signin.email.aria' })}
 					autocapitalize="off"
 					autocomplete="email"
 					disabled={blocked}
@@ -176,6 +181,9 @@
 					<ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
 				{/if}
 			</button>
+			{#if nonNullish(errorKey)}
+				<p class="signin-otp-error">{t({ locale: $localeStore, key: errorKey })}</p>
+			{/if}
 		</form>
 	{:else}
 		<form class="signin-email-inline" onsubmit={onCodeSubmit}>
@@ -186,6 +194,7 @@
 				<!-- svelte-ignore a11y_autofocus -->
 				<input
 					class="signin-email-input num"
+					aria-label={t({ locale: $localeStore, key: 'signin.otp.aria' })}
 					autocapitalize="off"
 					autocomplete="one-time-code"
 					autofocus
@@ -251,7 +260,7 @@
 	.signin-otp-error {
 		margin: 0.25rem 0 0;
 		font-size: 0.8125rem;
-		color: var(--color-destructive, #dc2626);
+		color: var(--color-destructive);
 	}
 
 	.signin-otp-back {
