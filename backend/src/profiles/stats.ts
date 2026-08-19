@@ -4,7 +4,8 @@
 // caller's own row by construction, and structurally validated here.
 
 import { isNullish } from '@dfinity/utils';
-import { query } from '../db/client';
+import { query, tx } from '../db/client';
+import { fanoutCategoryDeltasToLeagueStats } from '../leagues/stats';
 import { ProfileValidationError } from './profile';
 
 // user_stats
@@ -117,24 +118,47 @@ export const upsertUserStats = async ({
 }): Promise<UserStats> => {
 	validateUserStats({ categoryStats, recentSettlements });
 
-	const rows = await query<UserStatsRow>(
-		`insert into user_stats (user_id, category_stats, recent_settlements, computed_at_ms, updated_at)
-		 values ($1, $2, $3, $4, now())
-		 on conflict (user_id) do update set
-		   category_stats = excluded.category_stats,
-		   recent_settlements = excluded.recent_settlements,
-		   computed_at_ms = excluded.computed_at_ms,
-		   updated_at = now()
-		 returning user_id, category_stats, recent_settlements, computed_at_ms::text`,
-		[userId, JSON.stringify(categoryStats), JSON.stringify(recentSettlements), computedAtMs]
-	);
-	const [row] = rows;
+	return await tx(async (q) => {
+		const beforeRows = await q<{ category_stats: Record<string, CategoryStatsBucket> }>(
+			`select category_stats from user_stats where user_id = $1 for update`,
+			[userId]
+		);
 
-	if (isNullish(row)) {
-		throw new Error('user_stats upsert returned no row');
-	}
+		const rows = await q<UserStatsRow>(
+			`insert into user_stats (user_id, category_stats, recent_settlements, computed_at_ms, updated_at)
+			 values ($1, $2, $3, $4, now())
+			 on conflict (user_id) do update set
+			   category_stats = excluded.category_stats,
+			   recent_settlements = excluded.recent_settlements,
+			   computed_at_ms = excluded.computed_at_ms,
+			   updated_at = now()
+			 returning user_id, category_stats, recent_settlements, computed_at_ms::text`,
+			[userId, JSON.stringify(categoryStats), JSON.stringify(recentSettlements), computedAtMs]
+		);
+		const [row] = rows;
 
-	return shapeUserStats(row);
+		if (isNullish(row)) {
+			throw new Error('user_stats upsert returned no row');
+		}
+
+		// The per-category league buckets ride the same transaction, sourced
+		// exactly from the categoryStats deltas. A hibernated account's write
+		// never moves shared league counters.
+		const hibernatedRows = await q<{ hibernated: boolean }>(
+			`select (hibernated_at_ms is not null) as hibernated from profiles where user_id = $1`,
+			[userId]
+		);
+
+		await fanoutCategoryDeltasToLeagueStats({
+			q,
+			userId,
+			before: beforeRows[0]?.category_stats,
+			after: categoryStats,
+			hibernated: hibernatedRows[0]?.hibernated ?? false
+		});
+
+		return shapeUserStats(row);
+	});
 };
 
 export const getUserStats = async ({

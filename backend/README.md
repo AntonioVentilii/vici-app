@@ -66,6 +66,14 @@ Validated fail-fast in `src/env.ts`. In production the required vars abort boot 
 | `BTC_NETWORK`             | no              | `mainnet`                                    | `mainnet` / `testnet` / `regtest`                                                           |
 | `BTC_CONFIRMATIONS`       | no              | `2`                                          | Deposit confirmation depth                                                                  |
 
+ETL-only vars (read by `scripts/etl/*`, never by the server):
+
+| Var                       | Purpose                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| `ETL_SATELLITE_PEM`       | Path to the satellite ADMIN identity key file (PKCS#8 Ed25519 or secp256k1 PEM) |
+| `ETL_SATELLITE_ID`        | Satellite canister id to drain                                                  |
+| `ETL_SATELLITE_CONTAINER` | Optional emulator URL for a local satellite; unset targets production           |
+
 ## Auth
 
 Sessions are opaque 256-bit tokens in the HttpOnly `vici_session` cookie (SameSite=Lax, Secure in prod, Domain from `COOKIE_DOMAIN`); the database stores only `HMAC-SHA256(token, SESSION_SECRET)`. Login always rotates the token; logout revokes it server-side.
@@ -110,6 +118,45 @@ Award triggers mirror the post-write hook model: routes fire them AFTER the doma
 
 `src/worker.ts` (the Fly `worker` process) is a single poll loop over a registry of named jobs, interval-driven by `WORKER_POLL_INTERVAL_MS`. Each entry is a `WorkerJob { name, run, everyNthTick? }`: `run` must be idempotent (dedupe lives in the domain, e.g. the `vxp_awards` unique key or the deposits `tx_ref` key) and failures are caught and logged per job so one bad job never stalls the rest; `everyNthTick` throttles cheap-to-skip sweeps. A later phase adds a job by replacing its no-op placeholder slot with the domain's exported function, keeping the name stable for the logs. Current registry: deposit watchers (every tick), VXP award reconciliation (every tick, no-op in record-only mode), resolved-results pruning and the streak underpayment backfill (hourly), plus placeholder slots for the deletion sweep and the tournament draw/resolve ticks.
 
+## Data migration (ETL)
+
+`scripts/etl/` moves the legacy satellite data into Postgres. Every script is idempotent and re-runnable: writes upsert on the stable legacy identifiers, so re-running any step (including a full re-export) converges instead of duplicating. That property IS the cutover plan: an initial bulk run while the legacy stack is still live, then one final delta run during the write freeze.
+
+Scripts (also exposed as `bun run etl:*`):
+
+- `drain-auth-identities.ts`: calls the satellite's admin-gated auth-identity export and upserts into `legacy_auth_identities` (the table the login auto-match reads). Resumable: the keyset cursor persists in `etl_cursors` after every page, and clears on completion so the next run re-walks from the start.
+- `export-collections.ts [dir] [--fresh] [collection ...]`: drains every datastore collection into `<dir>/<collection>.jsonl` via the datastore list API signed with the admin identity, keyset-paged on doc keys. Resumable per collection through a `<collection>.cursor` sidecar file (`done` once complete); `--fresh` wipes and re-exports, which is how the delta pass re-pulls.
+- `import-collections.ts [dir] [collection ...]`: transforms the JSONL into the relational tables, one transaction per collection, in dependency order. Principals resolve through `legacy_principals`; an unmatched principal gets a provisional `users` row flagged `claim_pending` plus an `'etl'`-provenance link, claimed later by the login auto-match on a verified email.
+- `migrate-league-images.ts [--dry-run]`: downloads league covers still pointing at legacy storage URLs, re-encodes them through the standard 256px cover path (S3 or local disk) and rewrites the rows to this API's serving URL.
+- `verify-parity.ts [dir] [--sample N] [--offline] [collection ...]`: per-collection counts (satellite vs JSONL vs Postgres, mapping-aware) plus N random spot checks probing exported docs for their target rows.
+
+Mapping notes (the transforms in `scripts/etl/transforms.ts` are the authority):
+
+- `roles` only fills `users.role` while it is still `user`; roles granted on this stack are never clobbered, and `controller` (infrastructure, not grantable) is skipped.
+- `vxp_awards` keeps the exported status verbatim; an existing row only updates while still `pending`, so a payout recorded on either stack is never demoted or re-fired. Referral award keys are rewritten from the referee principal to the referee user id, matching the settlement path's idempotency key.
+- `vxp_onboarding` has no table of its own: each non-`none` milestone becomes a `vxp_awards` row (`onboarding`, `m1|m2|m3`) so the onboarding trigger collides instead of re-granting. `referrals` likewise synthesizes both payout-side award rows from the doc's payout states.
+- `school_submissions` is skipped by design: rows are ephemeral verification codes (salted digests with a short TTL); the durable outcome already lands via `schools` and `profiles.school_status`.
+- `events` / `event_rollups` are skipped: the behavioural history was already drained to the warehouse through the analytics export contract, and rollups rebuild from fresh ingest.
+- `chats` / `comments` are skipped: dormant surfaces with no target tables.
+
+Runbook (bulk run, repeatable):
+
+```bash
+cd backend
+export DATABASE_URL=...                      # target Postgres
+export ETL_SATELLITE_PEM=/path/to/admin.pem  # satellite ADMIN identity
+export ETL_SATELLITE_ID=<satellite-id>
+
+bun run migrate                              # 1. schema up to date
+bun run etl:drain-auth                       # 2. legacy_auth_identities (login auto-match)
+bun run etl:export -- ./etl-export           # 3. raw JSONL snapshot per collection
+bun run etl:import -- ./etl-export           # 4. transform into the tables
+bun run etl:images                           # 5. re-host league covers
+bun run etl:verify -- ./etl-export           # 6. parity report + spot checks
+```
+
+Cutover delta run: freeze legacy writes, then repeat steps 2-6 with a fresh export (`bun run etl:export -- ./etl-export-delta --fresh`, then import/verify against that directory). Because every import upserts and award/referral progress is never demoted, the delta pass only applies what changed since the bulk run.
+
 ## Deploy (Fly.io)
 
 Two Fly apps, both in `ams`:
@@ -143,7 +190,7 @@ backend/
     custody/        # assets, custody accounts, double-entry ledger, withdrawals
     markets/        # market metadata, translations, tag index, curator gate
     vxp/            # award economy: grant core, payout, triggers, calibration, referral settlement
-    declarations/   # vendored candid bindings for clearing + registry (generated, never hand-edited)
+    declarations/   # vendored candid bindings for clearing + registry + satellite (generated, never hand-edited)
     engine/         # actor provider, TTL cache, typed clearing/registry wrappers
     routes/         # /api/v1 route modules (auth, wallet, engine, markets, events, ...)
     lib/            # logger, crypto, keys (HKDF derivation), ic-agent, cookies, email, rate limiting
@@ -152,4 +199,6 @@ backend/
       migrate.ts    # forward-only migration runner (_migrations tracking)
       migrations/   # NNNN_name.sql, lexical order, never edited after merge
   tests/            # bun test suites (real Postgres, no mocks for DB paths)
+  scripts/
+    etl/            # data-migration tooling: drain, export, import, image re-host, parity
 ```

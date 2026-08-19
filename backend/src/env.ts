@@ -58,6 +58,14 @@ export interface BtcEnv {
 	confirmations: number;
 }
 
+export interface S3Env {
+	enabled: boolean;
+	endpoint: string;
+	bucket: string;
+	accessKeyId: string;
+	secretAccessKey: string;
+}
+
 export interface Env {
 	isProd: boolean;
 	port: number;
@@ -85,6 +93,7 @@ export interface Env {
 	evm: EvmEnv;
 	sol: SolEnv;
 	btc: BtcEnv;
+	s3: S3Env;
 }
 
 /** Build a validated env object from a raw source. Exported separately from
@@ -215,6 +224,27 @@ export const loadEnv = (source: EnvSource): Env => {
 				enabled: rpcUrl !== '',
 				rpcUrl,
 				commitment: optional('SOL_COMMITMENT', 'finalized')
+			};
+		})(),
+		// Object storage for uploaded league images: an S3-compatible bucket
+		// (Tigris) when configured, local disk under backend/uploads/ otherwise
+		// (dev fallback). The S3_* names win over the AWS_* aliases the Tigris
+		// Fly integration injects.
+		s3: (() => {
+			const endpoint = optional('S3_ENDPOINT', optional('AWS_ENDPOINT_URL_S3', ''));
+			const bucket = optional('S3_BUCKET', optional('BUCKET_NAME', ''));
+			const accessKeyId = optional('S3_ACCESS_KEY_ID', optional('AWS_ACCESS_KEY_ID', ''));
+			const secretAccessKey = optional(
+				'S3_SECRET_ACCESS_KEY',
+				optional('AWS_SECRET_ACCESS_KEY', '')
+			);
+
+			return {
+				enabled: endpoint !== '' && bucket !== '' && accessKeyId !== '' && secretAccessKey !== '',
+				endpoint,
+				bucket,
+				accessKeyId,
+				secretAccessKey
 			};
 		})(),
 		btc: (() => {
