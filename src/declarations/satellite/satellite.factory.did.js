@@ -515,7 +515,6 @@ export const idlFactory = ({ IDL }) => {
 				),
 				bouts_won: IDL.Float64,
 				handle_last_change_ms: IDL.Opt(IDL.Float64),
-				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Record({
 					favorite_participant_id: IDL.Text,
@@ -598,7 +597,6 @@ export const idlFactory = ({ IDL }) => {
 				),
 				bouts_won: IDL.Float64,
 				handle_last_change_ms: IDL.Opt(IDL.Float64),
-				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Record({
 					favorite_participant_id: IDL.Text,
@@ -875,7 +873,6 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
-				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({
@@ -1281,7 +1278,6 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
-				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({

@@ -3,6 +3,15 @@ import collections from '$root/juno.collections.json';
 export const Collection = {
 	ROLES: collections.ROLES,
 	PROFILES: collections.PROFILES,
+	/**
+	 * Owner-private profile data — one doc per principal (key = owner principal text), holding the
+	 * fields that must never appear on the publicly-readable {@link Collection.PROFILES} doc. Today
+	 * that's the account `email` (captured from an OpenID provider or the email-signup flow).
+	 * `managed` read/write: only the owner and controllers can see it; `assertSetProfilePrivate`
+	 * binds both the doc key and the embedded `owner` to the caller so no other user can squat or
+	 * forge someone else's doc.
+	 */
+	PROFILE_PRIVATE: collections.PROFILE_PRIVATE,
 	RELATIONS: collections.RELATIONS,
 	CHATS: collections.CHATS,
 	COMMENTS: collections.COMMENTS,
