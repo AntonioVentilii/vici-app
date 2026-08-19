@@ -203,15 +203,20 @@ const encodeQuery = (params: Record<string, string>): string =>
 		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
 		.join('&');
 
-/** Wire profile: the app profile with `owner` carried as `userId`. */
+/** Wire profile: the app profile with `owner` carried as `userId`. The API can
+ * also carry an `email` column on this row; it is dropped in {@link mapProfile}
+ * so it never rides a public profile object (leaderboard / search) on the
+ * client, mirroring the on-chain split that keeps the address off the public
+ * doc. */
 type Web2ProfileWire = Omit<UserProfile, 'owner' | 'visibility' | 'role'> & {
 	userId: string;
 	visibility: string;
 	role?: string;
+	email?: string;
 };
 
 const mapProfile = (wire: Web2ProfileWire): UserProfile => {
-	const { userId, visibility, role, ...rest } = wire;
+	const { userId, visibility, role, email: _email, ...rest } = wire;
 
 	return {
 		...rest,
