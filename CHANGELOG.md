@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.8.36](https://github.com/ViciApp/vici-app/compare/v1.8.35...v1.8.36) (2026-08-19)
+
+
+### Miscellaneous Chores
+
+* **github-actions:** bump actions/create-github-app-token from 2.2.2 to 3.2.0 ([#1222](https://github.com/ViciApp/vici-app/issues/1222)) ([a527ef5](https://github.com/ViciApp/vici-app/commit/a527ef5d7791a44356792912ce28516688820f73))
+* **github-actions:** bump dorny/paths-filter from 4.0.2 to 4.0.3 ([#1209](https://github.com/ViciApp/vici-app/issues/1209)) ([53e8aed](https://github.com/ViciApp/vici-app/commit/53e8aed48a5899c50d9a88e2a390ce3fee2d1513))
+* **npm-deps-dev:** bump @eslint-community/eslint-utils from 4.9.1 to 4.10.1 ([#1217](https://github.com/ViciApp/vici-app/issues/1217)) ([1bbfa52](https://github.com/ViciApp/vici-app/commit/1bbfa52f20ca3782ade13c2e1225dc6155bc529f))
+* **npm-deps-dev:** bump @sveltejs/kit from 2.70.1 to 2.70.2 ([#1214](https://github.com/ViciApp/vici-app/issues/1214)) ([c706a5c](https://github.com/ViciApp/vici-app/commit/c706a5caf2922769eb0606bf1ad9eecb8eec1bd0))
+* **npm-deps-dev:** bump @vitest/eslint-plugin from 1.6.23 to 1.6.27 ([#1210](https://github.com/ViciApp/vici-app/issues/1210)) ([2cf4251](https://github.com/ViciApp/vici-app/commit/2cf425112d3b9d668dd9b8df362689c88c458561))
+* **npm-deps-dev:** bump prettier from 3.9.5 to 3.9.6 ([#1211](https://github.com/ViciApp/vici-app/issues/1211)) ([bd002ea](https://github.com/ViciApp/vici-app/commit/bd002ea5177cfb38e9259608c5dcf3e31edfec26))
+* **npm-deps-dev:** bump svelte from 5.56.6 to 5.56.8 ([#1216](https://github.com/ViciApp/vici-app/issues/1216)) ([5b1148a](https://github.com/ViciApp/vici-app/commit/5b1148a4b59b3dd29bf72437366ff2f1893543b4))
+* **npm-deps-dev:** bump svelte-check from 4.7.3 to 4.7.5 ([#1215](https://github.com/ViciApp/vici-app/issues/1215)) ([4deef45](https://github.com/ViciApp/vici-app/commit/4deef458ed73542c33674cfcb04cf8ff2ab33f50))
+* **npm-deps:** bump @sveltejs/acorn-typescript from 1.0.11 to 1.0.13 ([#1213](https://github.com/ViciApp/vici-app/issues/1213)) ([fd0f670](https://github.com/ViciApp/vici-app/commit/fd0f670232a847cf5e1adb57ef3a467a82d55aa2))
+* **npm-deps:** bump nanoid from 6.0.0 to 6.0.1 ([#1218](https://github.com/ViciApp/vici-app/issues/1218)) ([5e064e2](https://github.com/ViciApp/vici-app/commit/5e064e21c0061c360faaa948da3ab92d4fb67746))
+* **npm-deps:** bump ws from 8.21.0 to 8.21.3 ([#1219](https://github.com/ViciApp/vici-app/issues/1219)) ([cdca20d](https://github.com/ViciApp/vici-app/commit/cdca20da32168ded9af101fa85734c4d2ab648f3))
+* **satellite:** remove the one-shot migrateProfileEmails endpoint ([#1238](https://github.com/ViciApp/vici-app/issues/1238)) ([469cf06](https://github.com/ViciApp/vici-app/commit/469cf06d90d85f7f8a47e24dddd0f66db8268fe0))
+
 ## [1.8.35](https://github.com/ViciApp/vici-app/compare/v1.8.34...v1.8.35) (2026-08-19)
 
 
