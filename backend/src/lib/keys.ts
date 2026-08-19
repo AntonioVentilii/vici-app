@@ -9,8 +9,11 @@
 // falls outside the valid range).
 //
 // Service (treasury / admin) keys use a distinct `svc:` info prefix so they
-// can never collide with a user key even if a user id were attacker-chosen;
-// PEM env vars override them for deployments that keep those keys off-box.
+// can never collide with a user key even if a user id were attacker-chosen.
+// PEM env vars (TREASURY_PEM / ADMIN_PEM) override the derived service keys
+// for deployments that keep those keys off-box; the overrides are loaded via
+// Secp256k1KeyIdentity, so supply secp256k1 PEMs there even though derived
+// ic keys are ed25519.
 
 import type { SignIdentity } from '@icp-sdk/core/agent';
 import { Ed25519KeyIdentity } from '@icp-sdk/core/identity';
