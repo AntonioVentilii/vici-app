@@ -32,11 +32,12 @@ Two files under `src/lib/web2/`:
 
 ## Swapped domains
 
-| Domain            | Where the branch lives                                                                                                             | Notes                                                                                               |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Analytics         | `analytics.services.ts` (flush call site)                                                                                          | The reference for the per-service swap below.                                                       |
-| Auth              | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                          | The identity layer, not a per-service swap. See "Auth" below.                                       |
-| Profiles + social | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts` | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below. |
+| Domain                        | Where the branch lives                                                                                                                                                                  | Notes                                                                                                   |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Analytics                     | `analytics.services.ts` (flush call site)                                                                                                                                               | The reference for the per-service swap below.                                                           |
+| Auth                          | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                                                                               | The identity layer, not a per-service swap. See "Auth" below.                                           |
+| Profiles + social             | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts`                                                      | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below.     |
+| Markets + public engine reads | `market.services.ts`, `market-metadata.services.ts`, `market-translation.services.ts`, `resolution.services.ts`, `trade.services.ts`, `standings.services.ts`, `collateral.services.ts` | Public reads only; user-signed engine calls stay on-chain. See "Markets and public engine reads" below. |
 
 ## The swap pattern (exemplar: analytics flush)
 
@@ -163,6 +164,74 @@ sanctioned identity-layer exception; no other component gains a branch.
   (`getMyEmail` / `saveMyEmail`) are unswapped; the account email in web2
   rides the auth identity, not the profile doc. `client.ts` intentionally
   does not yet ship wrappers for these to avoid unused surface.
+
+## Markets and public engine reads
+
+The fourth swapped domain: market curation (metadata, translations) plus
+every PUBLIC engine read the HTTP API bridges (`/api/v1/markets/...`,
+`/api/v1/engine/...`). User-signed engine calls (order submit/cancel,
+collateral deposit/withdraw, positions, own orders, own trade history)
+remain on-chain in BOTH modes until the engine / wallet swap maps engine
+identities onto accounts; web2 mode never signs an engine call.
+
+### The wire seam: serialized candid
+
+The engine routes return the canisters' candid responses serialized to
+JSON: bigints as decimal strings, principals as text, candid optionals
+still `[] | [value]`. [`web2/engine-wire.ts`](../../../src/lib/web2/engine-wire.ts)
+holds the explicit per-type mappers that convert each payload back into
+the exact `$declarations` candid types (`RegistryDid.Series`,
+`ClearingDid.SettlementStatusView`, candles, trade pages, volumes,
+collateral assets, leaderboard entries), so utils, stores, and components
+consume identical shapes on both transports. Mappers are field-explicit
+on purpose: a blanket digits-to-bigint pass cannot tell an id string from
+a serialized bigint. The `client.ts` wrappers (`listEngineSeries`,
+`getEngineSeries`, `getEngineSettlementStatus`, `getEnginePriceHistory`,
+`listEngineSeriesTrades`, `listEngineSeriesVolumes`,
+`listEngineSettledSeries`, `listEngineCollateralAssets`,
+`listEngineLeaderboard`, plus the markets metadata / translation set)
+apply them at the fetch boundary.
+
+### Service-layer branches
+
+- `market.services.ts`: the series catalog (`listSeries`, both the full
+  and the unexpired read), per-series `getSeries`, the settlement status
+  on the detail fetch, and the traded-volumes batch. The bridge's
+  tradeable-now filter stands in for `only_unexpired` (equivalent here:
+  no series carries a future start gate). The volumes read drops the
+  anonymous short-circuit in web2 mode because the bridge exposes it
+  publicly.
+- `market-metadata.services.ts` / `market-translation.services.ts`:
+  reads and curator-gated upserts; the HTTP API already speaks the app's
+  camelCase doc shapes, so these are envelope unwraps.
+- `resolution.services.ts`: `getSettledSeriesIds` (bridge read is
+  domain-unfiltered, safe because series ids are globally unique) and
+  `loadSettlementOutcomes` (same batching, per-series bridge status).
+- `trade.services.ts`: price-history candles and the traded-volume tape
+  drain. Callback flows deliver the bridge's single response as the final
+  `certified: true` pass, since no query/update pair exists on HTTP.
+- `standings.services.ts`: the global leaderboard (`getStandings`).
+  `getLeagueStandings` stays on-chain: the bridge has no member filter
+  and rosters are keyed by engine identities (engine / wallet domain).
+- `collateral.services.ts`: the collateral-asset catalog, without the
+  signed-identity gate in web2 mode (the bridge read is public).
+
+### Still on-chain in this domain
+
+- Order books (`order.services.ts` / `getOrderBook`): no HTTP surface
+  yet; the anonymous on-chain query is publicly readable, so web2 mode
+  still prices lists, decks, and detail pages from it.
+- The bulk metadata projections in `market-tags.services.ts`
+  (`listMarketTagsBySeries`, `listMarketMetadataBySeries`) scan the
+  public `MARKET_METADATA` collection via Juno `listDocs`; the HTTP API
+  has no public bulk-metadata list yet (its `/markets/tags` bucket index
+  is admin-only), so these stay on the satellite until that read exists.
+- Market creation / forking (`createMarket`, `forkMarket`) and admin
+  settlement (`resolution.services.ts` `settleMarket`) are user-signed
+  registry / clearing writes: engine / wallet domain.
+- Leaderboard identity caveat: web2 standings entries keep the on-chain
+  principal as `owner` (clearing's native key) until the engine identity
+  mapping lands.
 
 ## Guardrails
 

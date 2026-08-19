@@ -16,6 +16,11 @@ import {
 	settlementInputOutcome,
 	settlementInputTimestamp
 } from '$lib/utils/payoff.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	getEngineSettlementStatus as getEngineSettlementStatusWeb2,
+	listEngineSettledSeries as listEngineSettledSeriesWeb2
+} from '$lib/web2/client';
 import { nonNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
@@ -43,6 +48,15 @@ export const getSettledSeriesIds = async ({
 	certified?: boolean;
 	balanceDomain?: ClearingDid.BalanceDomain;
 } = {}): Promise<Set<string>> => {
+	// web2 reads the settled set from the public HTTP bridge; no signing
+	// identity exists in that mode, so the anonymous degrade below never
+	// applies. The bridge read is unfiltered by domain, which is safe: series
+	// ids are globally unique, so the extra ids can never match another
+	// domain's markets in the caller's subtraction.
+	if (isWeb2Backend()) {
+		return new Set(await listEngineSettledSeriesWeb2());
+	}
+
 	const resolvedIdentity = identity ?? (await getIdentityOrAnonymous());
 
 	// Clearing rejects anonymous callers on `list_settled_series` (IC0406), so a
@@ -112,13 +126,29 @@ export const loadSettlementOutcomes = async ({
 	identity?: Identity;
 	certified?: boolean;
 }): Promise<Map<string, SettlementDetails>> => {
-	const resolvedIdentity = identity ?? (await getIdentityOrAnonymous());
 	const details = new Map<string, SettlementDetails>();
+	let fetchStatus: (seriesId: string) => Promise<ClearingDid.SettlementStatusView | undefined>;
 
-	// Same anonymous-caller constraint as `getSettledSeriesIds`: clearing rejects
-	// anonymous reads, so a signed-out preview keeps the activity-derived labels.
-	if (resolvedIdentity.getPrincipal().isAnonymous()) {
-		return details;
+	// The per-series status is a public engine read: web2 routes it through
+	// the HTTP bridge (no signing identity exists in that mode); the default
+	// path keeps the on-chain read with its anonymous-caller constraint.
+	if (isWeb2Backend()) {
+		fetchStatus = getEngineSettlementStatusWeb2;
+	} else {
+		const resolvedIdentity = identity ?? (await getIdentityOrAnonymous());
+
+		// Same anonymous-caller constraint as `getSettledSeriesIds`: clearing rejects
+		// anonymous reads, so a signed-out preview keeps the activity-derived labels.
+		if (resolvedIdentity.getPrincipal().isAnonymous()) {
+			return details;
+		}
+
+		fetchStatus = (seriesId: string) =>
+			getSettlementStatus({
+				identity: resolvedIdentity,
+				certified,
+				seriesId
+			});
 	}
 
 	for (let start = 0; start < seriesIds.length; start += SETTLEMENT_STATUS_BATCH_SIZE) {
@@ -127,11 +157,7 @@ export const loadSettlementOutcomes = async ({
 		const statuses = await Promise.all(
 			batch.map(async (seriesId) => {
 				try {
-					return await getSettlementStatus({
-						identity: resolvedIdentity,
-						certified,
-						seriesId
-					});
+					return await fetchStatus(seriesId);
 				} catch (err: unknown) {
 					// One unreadable series must not cost the batch its other labels:
 					// fall through with no entry, leaving that market's existing
