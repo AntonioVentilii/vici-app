@@ -174,6 +174,11 @@ describe.if(dbAvailable)('analytics ingest', () => {
 describe.if(dbAvailable)('analytics export and drain', () => {
 	beforeAll(async () => {
 		await ensureMigrated();
+
+		// The pagination walk below pages the whole table, so a long-lived
+		// local database accumulating rows across runs would blow the test
+		// timeout. Start from an empty log to keep the walk bounded.
+		await query(`truncate analytics_events, analytics_event_rollups`);
 	});
 
 	/** Seed `count` events in one session and return their keys in key order. */
