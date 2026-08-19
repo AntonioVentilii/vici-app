@@ -47,6 +47,23 @@ jobs:
       contents: write
 
     steps:
+      # The formatting commit is pushed with the vici-release-bot installation
+      # token rather than GITHUB_TOKEN, because a push made with GITHUB_TOKEN
+      # does not trigger further workflow runs: the re-formatted head would
+      # never be re-checked.
+      # Guarded to same-repo pull requests: `RELEASE_BOT_PRIVATE_KEY` is not
+      # exposed to fork PRs (nor needed on push / merge_group), and this action
+      # hard-fails on an empty private key. When the step is skipped the token
+      # output is empty, `can_add_commit` is false, and formatting drift fails
+      # the job instead of being auto-committed.
+      - name: Mint vici-release-bot token
+        id: app-token
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: 4594605
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
       - name: Check if commits can be added
         id: check_can_add_commit
         run: |
@@ -109,10 +126,10 @@ jobs:
           message: '🤖 Apply formatting changes'
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Fail for formatting issues without personal access token
+      - name: Fail for formatting issues without a bot token
         if: steps.check_can_add_commit.outputs.can_add_commit == 'false' && steps.check_changes.outputs.changes_detected == 'true'
         run: |
-          echo "Formatting changes are needed but couldn't be committed because the personal access token isn't available or this isn't a pull request."
+          echo "Formatting changes are needed but couldn't be committed because the vici-release-bot token isn't available (fork pull request) or this isn't a pull request. Run 'npm run format' locally and commit the result."
           exit 1
 
   lint:
