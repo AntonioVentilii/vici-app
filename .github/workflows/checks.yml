@@ -47,15 +47,10 @@ jobs:
       contents: write
 
     steps:
-      # The formatting commit is pushed with the app installation token rather
-      # than GITHUB_TOKEN, because a push made with GITHUB_TOKEN does not
-      # trigger further workflow runs: the re-formatted head would never be
-      # re-checked.
-      # Guarded to same-repo pull requests: `RELEASE_BOT_PRIVATE_KEY` is not
-      # exposed to fork PRs (nor needed on push / merge_group), and this action
-      # hard-fails on an empty private key. When the step is skipped the token
-      # output is empty, `can_add_commit` is false, and formatting drift fails
-      # the job instead of being auto-committed.
+      # A push made with GITHUB_TOKEN does not trigger further workflow runs,
+      # which would leave the checks never re-running on the re-formatted head.
+      # Same-repo only: fork PRs get no secrets, and this action hard-fails on
+      # an empty private key.
       - name: Mint app token
         id: app-token
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
