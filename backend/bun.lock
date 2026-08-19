@@ -9,6 +9,7 @@
         "@elysiajs/cors": "^1.4.0",
         "@icp-sdk/canisters": "^3.5.2",
         "@icp-sdk/core": "^5.4.0",
+        "@junobuild/core": "^5.4.0",
         "@noble/curves": "^1.9.7",
         "@noble/hashes": "^1.8.0",
         "@scure/base": "^1.2.6",
@@ -34,6 +35,8 @@
     "@elysiajs/cors": ["@elysiajs/cors@1.4.2", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-FTCcbH35brTLigF1W7BYySRZomgI/dBEMK9BgK9RP9Nez7zmpGh4koL/Yr1BFv8nYz7CfhRvcM8d/c+XnwMaVQ=="],
 
     "@emnapi/runtime": ["@emnapi/runtime@1.11.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA=="],
+
+    "@icp-sdk/auth": ["@icp-sdk/auth@5.0.0", "", { "dependencies": { "idb": "^7.1.1" }, "peerDependencies": { "@icp-sdk/core": "^5" } }, "sha512-TaPfdaELT7s0vTIFOmCnlCmhPdL7kABA7+2Q0YNAUWIa/FFiwq6ffGPLvr0U0+2zFLaLQ4l7UCB2zf7vo6PFPQ=="],
 
     "@icp-sdk/canisters": ["@icp-sdk/canisters@3.6.0", "", { "dependencies": { "@noble/hashes": "^1.8.0", "base58-js": "^3.0.3", "bech32": "^2.0.0", "mime": "^3.0.0" }, "peerDependencies": { "@dfinity/utils": "^4.1", "@icp-sdk/core": "^5" } }, "sha512-GALqQiywObRabz98etHccTq1DpLy5Sbx3adrYO27ffbDgZGLY5sZcAQfR0CkP0Da6KUEauzZk3gBi8UDzbydHg=="],
 
@@ -89,6 +92,18 @@
 
     "@img/sharp-win32-x64": ["@img/sharp-win32-x64@0.34.5", "", { "os": "win32", "cpu": "x64" }, "sha512-+29YMsqY2/9eFEiW93eqWnuLcWcufowXewwSNIT6UwZdUUCrM3oFjMWH/Z6/TMmb4hlFenmfAVbpWeup2jryCw=="],
 
+    "@junobuild/auth": ["@junobuild/auth@4.1.2", "", { "peerDependencies": { "@icp-sdk/core": "^5", "@junobuild/ic-client": "^8.1", "@junobuild/utils": "^1" } }, "sha512-AR6qDeg6cUN4YabM92kD8P0oDK5NeP1ZA8kD/E5WAknUpDIyqSIE8/AXXj9YJlb6WUgrHhDK8JhRaTxlRdRRVw=="],
+
+    "@junobuild/core": ["@junobuild/core@5.4.0", "", { "dependencies": { "@junobuild/auth": "^4.1", "@junobuild/errors": "*", "@junobuild/ic-client": "^8.1", "@junobuild/storage": "^2.4" }, "peerDependencies": { "@icp-sdk/auth": "^5", "@icp-sdk/core": "^5", "@junobuild/utils": "^1" } }, "sha512-XW2O8S7HxNt8zPM9loxhd5z6st+ISY7ffGiYRdk2rzQsjlzGDlNdKdTjFcZqEC7mStnQJjsypJyFHhEzj81C8A=="],
+
+    "@junobuild/errors": ["@junobuild/errors@0.2.8", "", {}, "sha512-n2rXof9nIqGDCARHZETXcicG3JH6+1JGB9iTuFzkziPZm7q/G1KSzh8gRJYzrFC3XrSGPRWvhX4hKEnoxAbisQ=="],
+
+    "@junobuild/ic-client": ["@junobuild/ic-client@8.2.0", "", { "peerDependencies": { "@icp-sdk/core": "^5", "@junobuild/utils": "^1.0.2", "idb-keyval": "^6.2.2" } }, "sha512-IU/j6IEVR9SJfpvRlYk3NnYj7GDoa5n2u+OUgZP1AA1z1gz6cAwz97x/9EuuMYEs/8+wXyOkBgiXQz+4ry80eQ=="],
+
+    "@junobuild/storage": ["@junobuild/storage@2.4.2", "", { "peerDependencies": { "@icp-sdk/core": "^5", "@junobuild/ic-client": "^8.1", "@junobuild/utils": "^1" } }, "sha512-2rI2S/P8pCW7h8FtQjeKDzJ/OSFrdqWDMuAIxCkqjzhmUwS05TMmQJ5JUqBBS2DnwnlVj5rpOxEHNfT4ISVvmQ=="],
+
+    "@junobuild/utils": ["@junobuild/utils@1.0.3", "", { "peerDependencies": { "@icp-sdk/core": "^5" } }, "sha512-jeO1VthkesaT940cG7+Qjm13ndSynkQulx1JGxtXKKhR79ummxaWLAvFJqMPRQl/KsPT8LcPoJQximUuv84CZg=="],
+
     "@noble/curves": ["@noble/curves@1.9.7", "", { "dependencies": { "@noble/hashes": "1.8.0" } }, "sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw=="],
 
     "@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
@@ -134,6 +149,10 @@
     "fast-decode-uri-component": ["fast-decode-uri-component@1.0.1", "", {}, "sha512-WKgKWg5eUxvRZGwW8FvfbaH7AXSh2cL+3j5fMGzUMCxWBJ3dV3a7Wz8y2f/uQ0e3B6WmodD3oS54jTQ9HVTIIg=="],
 
     "file-type": ["file-type@22.0.2", "", { "dependencies": { "@tokenizer/inflate": "^0.4.1", "strtok3": "^10.3.5", "token-types": "^6.1.2", "uint8array-extras": "^1.5.0" } }, "sha512-0H8TsCUGBLx+V5adH3EY52hTAcyLKbV1D4gq5cIOJ6DnQAHeV9Z2Hhuc5CoBX4YmvB2oL+JIC84z0qO7JsCoNw=="],
+
+    "idb": ["idb@7.1.1", "", {}, "sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ=="],
+
+    "idb-keyval": ["idb-keyval@6.3.0", "", {}, "sha512-um+2dgAWmYsu615EXpWVwSmapJhON0G43t3Ka/EVaohzPQXSMqKEqeDK/oIW3Ow+BXaF2PvSc+oBTFp793A5Ow=="],
 
     "ieee754": ["ieee754@1.2.1", "", {}, "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA=="],
 

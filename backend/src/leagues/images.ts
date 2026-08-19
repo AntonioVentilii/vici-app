@@ -53,31 +53,21 @@ const assertSafeId = (leagueId: string): void => {
 };
 
 /**
- * Store a league's cover: decode whatever raster the client sent, downscale
- * to a square 256px cover JPEG with sharp, persist it, and stamp the serving
- * URL on the league row. Owner-only.
+ * Decode a raster, downscale it to the square 256px cover JPEG, persist it,
+ * and return the serving URL. Shared between the owner upload route and the
+ * data-migration tooling; callers own their access checks and the row write.
  */
-export const uploadLeagueImage = async ({
+export const storeLeagueCoverBytes = async ({
 	leagueId,
-	callerId,
 	bytes
 }: {
 	leagueId: string;
-	callerId: string;
 	bytes: ArrayBuffer | Uint8Array;
-}): Promise<League> => {
+}): Promise<string> => {
 	assertSafeId(leagueId);
 
-	const league = await getLeague(leagueId);
-
-	if (isNullish(league)) {
-		throw new LeagueError('league_not_found');
-	}
-
-	if (league.ownerUserId !== callerId) {
-		throw new LeagueError('leagues cover image edits require the owner.');
-	}
-
+	// Every caller (upload route and migration tooling alike) gets the same
+	// non-empty / 5 MB gate before any decode work.
 	if (bytes.byteLength === 0 || bytes.byteLength > LEAGUE_IMAGE_MAX_BYTES) {
 		throw new LeagueError('leagues cover image must be a non-empty file up to 5 MB.');
 	}
@@ -106,7 +96,36 @@ export const uploadLeagueImage = async ({
 		await Bun.write(diskPath(leagueId), thumbnail);
 	}
 
-	const imageUrl = `${env.apiBaseUrl}/api/v1/leagues/${leagueId}/image`;
+	return `${env.apiBaseUrl}/api/v1/leagues/${leagueId}/image`;
+};
+
+/**
+ * Store a league's cover: decode whatever raster the client sent, downscale
+ * to a square 256px cover JPEG with sharp, persist it, and stamp the serving
+ * URL on the league row. Owner-only.
+ */
+export const uploadLeagueImage = async ({
+	leagueId,
+	callerId,
+	bytes
+}: {
+	leagueId: string;
+	callerId: string;
+	bytes: ArrayBuffer | Uint8Array;
+}): Promise<League> => {
+	assertSafeId(leagueId);
+
+	const league = await getLeague(leagueId);
+
+	if (isNullish(league)) {
+		throw new LeagueError('league_not_found');
+	}
+
+	if (league.ownerUserId !== callerId) {
+		throw new LeagueError('leagues cover image edits require the owner.');
+	}
+
+	const imageUrl = await storeLeagueCoverBytes({ leagueId, bytes });
 
 	return await tx(async (q) => {
 		const rows = await q<Parameters<typeof shapeLeague>[0]>(
