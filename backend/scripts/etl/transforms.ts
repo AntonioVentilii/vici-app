@@ -1055,7 +1055,8 @@ const importAffiliations: ImporterRun = perDoc(async (doc, { q, mapper, stats })
 	await q(
 		`insert into affiliations (member_user_id, kind, affiliation_identifier, joined_at_ms, locked_until_ms)
 		 values ($1, $2, $3, $4, $5)
-		 on conflict (member_user_id, kind, affiliation_identifier) do update set
+		 on conflict (member_user_id, kind) do update set
+		   affiliation_identifier = excluded.affiliation_identifier,
 		   joined_at_ms = excluded.joined_at_ms,
 		   locked_until_ms = excluded.locked_until_ms`,
 		[
