@@ -47,10 +47,6 @@ jobs:
       contents: write
 
     steps:
-      # A push made with GITHUB_TOKEN does not trigger further workflow runs,
-      # which would leave the checks never re-running on the re-formatted head.
-      # Same-repo only: fork PRs get no secrets, and this action hard-fails on
-      # an empty private key.
       - name: Mint app token
         id: app-token
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
