@@ -313,7 +313,9 @@ export const listMyReferrals = async (userId: string): Promise<ReferralListItem[
 		referee: row.referee_user_id,
 		code: row.code,
 		redeemedAtMs: Number(row.redeemed_at_ms),
-		withinReferrerCap: row.within_referrer_cap === true,
+		// Undecided (null) reads as within-cap pending, matching the payout
+		// mapping below; settlement flips it to false only when over cap.
+		withinReferrerCap: row.within_referrer_cap !== false,
 		// The referee bonus is owed unconditionally from redemption on; the
 		// referrer side stays 'none' until the cap slot is decided in its favor.
 		refereePayout: sidePayout({
