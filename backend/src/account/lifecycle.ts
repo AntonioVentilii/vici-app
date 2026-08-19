@@ -167,11 +167,15 @@ export const hardDeleteAccount = async (userId: string): Promise<void> => {
 		await q(`delete from profiles where user_id = $1`, [userId]);
 		await q(`delete from vxp_awards where user_id = $1`, [userId]);
 		await q(`delete from referral_codes where owner_user_id = $1`, [userId]);
+		// Referee-side rows go with the account; referrer-side rows stay so a
+		// referred user keeps their own pending bonus. The settlement path
+		// skips the referrer reward once users.hard_deleted_at is stamped.
 		await q(`delete from referrals where referee_user_id = $1`, [userId]);
 		await q(`delete from affiliations where member_user_id = $1`, [userId]);
 		await q(`delete from relations where participant_one = $1 or participant_two = $1`, [userId]);
 		await q(`delete from league_members where member_user_id = $1`, [userId]);
 		await disbandOrTransferOwnedLeagues({ userId, q });
+		await q(`update users set hard_deleted_at = now() where id = $1`, [userId]);
 	});
 };
 

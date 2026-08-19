@@ -92,6 +92,12 @@ export class PrincipalMapper {
 	/** The user id owning this principal, creating a provisional
 	 * claim_pending account (plus the 'etl' link) when none exists yet. */
 	async userIdFor(principal: string): Promise<string> {
+		// Fail fast: a blank principal would silently funnel every malformed
+		// doc onto one shared provisional account.
+		if (principal.trim() === '') {
+			throw new Error('userIdFor called with an empty principal');
+		}
+
 		const cached = this.cache.get(principal);
 
 		if (nonNullish(cached)) {
@@ -1372,6 +1378,23 @@ const importExitSignals: ImporterRun = perDoc(async (doc, { q, nowMs, stats }) =
 	return true;
 });
 
+const importProfilePrivate: ImporterRun = perDoc(async (doc, { q, mapper }) => {
+	const d = rec(doc.data);
+	const email = str(d.email).trim();
+
+	if (email === '') {
+		return false;
+	}
+
+	// The address moved off the public profiles doc into this owner-private
+	// collection; on this stack it lands back on the profiles row, which is
+	// not publicly readable here.
+	const userId = await mapper.userIdFor(doc.key);
+	await q(`update profiles set email = $2 where user_id = $1`, [userId, email]);
+
+	return true;
+});
+
 const importAppConfig: ImporterRun = perDoc(async (doc, { q }) => {
 	// Settings managed on this stack win: existing keys are never
 	// overwritten by an import pass.
@@ -1603,6 +1626,12 @@ export const IMPORTERS: CollectionImporter[] = [
 		mode: 'import',
 		run: importAppConfig,
 		pgCount: (q) => countSql(q, `select count(*)::text as count from app_settings`)
+	},
+	{
+		collection: 'profile_private',
+		mode: 'import',
+		run: importProfilePrivate,
+		pgCount: (q) => countSql(q, `select count(*)::text as count from profiles where email <> ''`)
 	},
 	{
 		collection: 'chats',

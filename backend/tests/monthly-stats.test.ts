@@ -80,6 +80,30 @@ describe.if(dbAvailable)('user stats guard', () => {
 		).rejects.toThrow('finite non-negative');
 	});
 
+	test('rejects NaN, Infinity and non-integer counters', async () => {
+		const userId = await createTestUser();
+
+		for (const calls of [Number.NaN, Number.POSITIVE_INFINITY, 2.5]) {
+			expect(
+				upsertUserStats({
+					userId,
+					categoryStats: { sports: { calls, wins: 0 } },
+					recentSettlements: [],
+					computedAtMs: Date.now()
+				})
+			).rejects.toThrow('non-negative safe integers');
+		}
+
+		expect(
+			upsertUserStats({
+				userId,
+				categoryStats: { sports: { calls: 1, wins: Number.NaN } },
+				recentSettlements: [],
+				computedAtMs: Date.now()
+			})
+		).rejects.toThrow('non-negative safe integers');
+	});
+
 	test('bounds the recent-settlements list', async () => {
 		const userId = await createTestUser();
 		const snapshot = {

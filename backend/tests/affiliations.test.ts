@@ -4,6 +4,7 @@
 
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { randomBytes } from 'node:crypto';
+import { query } from '../src/db/client';
 import {
 	AFFILIATION_LOCK_MS,
 	getMyAffiliation,
@@ -91,6 +92,38 @@ describe.if(dbAvailable)('affiliation lock', () => {
 
 		expect(switched.affiliationIdentifier).toBe(second);
 		expect(switched.lockedUntilMs).toBe(nowMs + AFFILIATION_LOCK_MS + 1000 + AFFILIATION_LOCK_MS);
+	});
+
+	test('switching replaces the single slot of a kind instead of adding a second row', async () => {
+		const userId = await createTestUser();
+		const first = uniqueSlug();
+		const second = uniqueSlug();
+		const nowMs = Date.now();
+
+		await setAffiliation({ userId, kind: 'university', affiliationIdentifier: first, nowMs });
+		await setAffiliation({
+			userId,
+			kind: 'university',
+			affiliationIdentifier: second,
+			nowMs: nowMs + AFFILIATION_LOCK_MS + 1000
+		});
+
+		// One row per (member, kind): the old identifier's row is gone, not
+		// coexisting alongside the new one.
+		const rows = await query<{ affiliation_identifier: string }>(
+			`select affiliation_identifier from affiliations
+			 where member_user_id = $1 and kind = 'university'`,
+			[userId]
+		);
+
+		expect(rows.map((r) => r.affiliation_identifier)).toEqual([second]);
+
+		const oldRoster = await listWorldsRoster({
+			kind: 'university',
+			affiliationIdentifier: first
+		});
+
+		expect(oldRoster.some((a) => a.memberUserId === userId)).toBe(false);
 	});
 
 	test('re-joining the identical slot is an idempotent no-op that keeps the original lock', async () => {

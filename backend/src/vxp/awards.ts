@@ -1,9 +1,11 @@
 // The award ledger core every VXP economy trigger funnels through: one
-// idempotent grant path (insert-pending, transfer, mark paid/failed) plus the
-// reconciliation that pays recorded-unpaid awards later. Idempotency is
-// structural: the (user, award_type, award_key) unique index makes a
+// idempotent grant path (insert-pending, claim, transfer, mark paid/failed)
+// plus the reconciliation that pays recorded-unpaid awards later. Idempotency
+// is structural: the (user, award_type, award_key) unique index makes a
 // duplicate trigger collide instead of double-crediting, so no
-// timestamp-based dedupe is ever needed.
+// timestamp-based dedupe is ever needed. Double-pay is prevented by a
+// DB-level claim: a row must atomically move pending -> processing before its
+// transfer fires, so exactly one runner ever holds it.
 
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { captureServerEvents, type ServerEventInput } from '../analytics/events';
@@ -27,7 +29,17 @@ export type VxpAwardType =
 	| 'flow_overtime'
 	| 'league_founder';
 
-export type VxpAwardStatus = 'pending' | 'paid' | 'failed';
+export type VxpAwardStatus = 'pending' | 'processing' | 'paid' | 'failed';
+
+/**
+ * How long a claimed (processing) row stays off-limits before the
+ * reconciler may reclaim it. A crash between claim and paid must not strand
+ * the award forever, so stale claims reopen; 10 minutes is far above any
+ * ICRC transfer round-trip (seconds), so a live transfer is never
+ * double-claimed, while still bounding how long a crashed run delays a
+ * payout.
+ */
+export const PROCESSING_STALE_MS = 10 * 60_000;
 
 export interface VxpAward {
 	id: string;
@@ -129,9 +141,14 @@ const captureAwardPaid = async ({
 	}
 };
 
-/** Transfer + settle one pending row to paid/failed; used by the grant path
- * and the reconciliation, so the transition behaviour cannot drift. The
- * status guard on the update makes a concurrent settle a no-op. */
+/** Claim + transfer + settle one row to paid/failed; used by the grant path
+ * and the reconciliation, so the transition behaviour cannot drift. The claim
+ * (an atomic pending -> processing transition, with a timed reclaim of stale
+ * processing rows) happens BEFORE the transfer, so a grant-path settle racing
+ * the reconciler, or two reconcilers, resolves at the database: exactly one
+ * runner holds the row when the transfer fires, the loser reports
+ * claimed=false without transferring. A crash between claim and paid leaves
+ * the row processing until PROCESSING_STALE_MS reopens it. */
 const settlePendingAward = async ({
 	id,
 	userId,
@@ -146,14 +163,29 @@ const settlePendingAward = async ({
 	awardKey: string;
 	amountBaseUnits: bigint;
 	memo: string;
-}): Promise<{ paid: boolean; blockIndex?: string; error?: string }> => {
+}): Promise<{ paid: boolean; claimed: boolean; blockIndex?: string; error?: string }> => {
+	const claimed = await query<{ id: string }>(
+		`update vxp_awards
+		 set status = 'processing', processing_at = now()
+		 where id = $1
+		   and (status = 'pending'
+		     or (status = 'processing'
+		       and processing_at < now() - make_interval(secs => $2::double precision / 1000)))
+		 returning id`,
+		[id, PROCESSING_STALE_MS]
+	);
+
+	if (isNullish(claimed[0])) {
+		return { paid: false, claimed: false };
+	}
+
 	const result = await transferVxpToUser({ userId, amount: amountBaseUnits, memo });
 
 	if (result.ok) {
 		const updated = await query<{ id: string }>(
 			`update vxp_awards
 			 set status = 'paid', paid_at_ms = $2, block_index = $3
-			 where id = $1 and status = 'pending'
+			 where id = $1 and status = 'processing'
 			 returning id`,
 			[id, Date.now(), result.blockIndex]
 		);
@@ -162,18 +194,18 @@ const settlePendingAward = async ({
 			await captureAwardPaid({ userId, awardType, awardKey, amountBaseUnits });
 		}
 
-		return { paid: true, blockIndex: result.blockIndex };
+		return { paid: true, claimed: true, blockIndex: result.blockIndex };
 	}
 
 	await query(
 		`update vxp_awards set status = 'failed', error_message = $2
-		 where id = $1 and status = 'pending'`,
+		 where id = $1 and status = 'processing'`,
 		[id, result.error]
 	);
 
 	logger.error(`vxp award payout failed (${awardType}/${awardKey} for ${userId}):`, result.error);
 
-	return { paid: false, error: result.error };
+	return { paid: false, claimed: true, error: result.error };
 };
 
 export type GrantAwardOutcome =
@@ -234,9 +266,18 @@ export const grantAward = async ({
 		memo: memo ?? `vxp:${awardType}:${awardKey}`
 	});
 
-	return settled.paid
-		? { outcome: 'paid', blockIndex: settled.blockIndex ?? '' }
-		: { outcome: 'failed', error: settled.error ?? 'transfer failed' };
+	if (settled.paid) {
+		return { outcome: 'paid', blockIndex: settled.blockIndex ?? '' };
+	}
+
+	// A lost claim means another runner (a zero-grace reconcile) already holds
+	// this freshly inserted row and will drive it to paid: nothing is owed
+	// here, so the caller sees it as recorded, not failed.
+	if (!settled.claimed) {
+		return { outcome: 'recorded' };
+	}
+
+	return { outcome: 'failed', error: settled.error ?? 'transfer failed' };
 };
 
 export const getAward = async ({
@@ -326,7 +367,9 @@ export interface ReconcileReport {
 /**
  * Pays every recorded-unpaid (pending) award: the catch-up path after a
  * record-only stretch, and the retry for grants whose process died between
- * insert and transfer. A no-op while record-only mode is on; the grace
+ * insert and transfer. Also sweeps processing rows whose claim went stale
+ * (older than PROCESSING_STALE_MS): a crash between claim and paid must not
+ * strand the award forever. A no-op while record-only mode is on; the grace
  * window keeps it off the heels of an in-flight grant.
  */
 export const reconcileUnpaidAwards = async ({
@@ -341,10 +384,12 @@ export const reconcileUnpaidAwards = async ({
 
 	const rows = await query<VxpAwardRow>(
 		`select ${AWARD_COLUMNS} from vxp_awards
-		 where status = 'pending' and created_at < now() - make_interval(secs => $1::double precision / 1000)
+		 where (status = 'pending' and created_at < now() - make_interval(secs => $1::double precision / 1000))
+		    or (status = 'processing'
+		      and processing_at < now() - make_interval(secs => $3::double precision / 1000))
 		 order by created_at asc
 		 limit $2`,
-		[graceMs, limit]
+		[graceMs, limit, PROCESSING_STALE_MS]
 	);
 
 	for (const row of rows) {
@@ -362,9 +407,11 @@ export const reconcileUnpaidAwards = async ({
 
 			if (settled.paid) {
 				report.paid += 1;
-			} else {
+			} else if (settled.claimed) {
 				report.failed += 1;
 			}
+			// A lost claim is neither paid nor failed: a concurrent runner holds
+			// the row and reports its outcome.
 		} catch (err) {
 			// One award's hiccup must not abort the sweep; the row stays pending
 			// for the next pass.

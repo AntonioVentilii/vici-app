@@ -1,8 +1,13 @@
 // Referral payout semantics: the diminishing referrer curve, the
-// first-prediction settlement gate, both-sides idempotent settlement, and
-// the trade-activity trigger composition.
+// first-prediction settlement gate, both-sides idempotent settlement,
+// redemption-order tier determinism, the trade-activity trigger composition,
+// and the settle endpoint's caller scoping.
 
 import { afterEach, beforeAll, describe, expect, test } from 'bun:test';
+import { hardDeleteAccount } from '../src/account/lifecycle';
+import { createSession } from '../src/auth/sessions';
+import { query } from '../src/db/client';
+import { app } from '../src/index';
 import { createActivity } from '../src/social/activities';
 import { parseVxp, referrerRewardBaseUnits } from '../src/vxp/constants';
 import { recordReferralRedemption, settleReferralPayout } from '../src/vxp/referral';
@@ -111,6 +116,50 @@ describe('both-sides settlement', () => {
 		expect(stub.transfers).toHaveLength(2);
 	});
 
+	test('tiers follow redemption order even when settlements run out of order', async () => {
+		stub = stubVxpLedger();
+		const referrer = await createTestUser();
+		const referees: string[] = [];
+
+		for (let i = 0; i < 6; i++) {
+			const referee = await createTestUser();
+
+			referees.push(referee);
+			await recordReferralRedemption({
+				refereeUserId: referee,
+				referrerUserId: referrer,
+				code: 'CODE0005',
+				redeemedAtMs: 2000 + i
+			});
+			await recordTrade(referee);
+		}
+
+		// Settle newest-first, the reverse of redemption order: the sixth
+		// redemption must still land in tier 2 even though nothing else has
+		// settled yet.
+		for (const referee of [...referees].reverse()) {
+			await settleReferralPayout({ refereeUserId: referee });
+		}
+
+		const amounts: (string | undefined)[] = [];
+
+		for (const referee of referees) {
+			amounts.push(
+				(await readAwardRow({ userId: referrer, awardType: 'referral', awardKey: referee }))
+					?.amount_base_units
+			);
+		}
+
+		expect(amounts).toEqual([
+			parseVxp(500).toString(),
+			parseVxp(500).toString(),
+			parseVxp(500).toString(),
+			parseVxp(500).toString(),
+			parseVxp(500).toString(),
+			parseVxp(250).toString()
+		]);
+	});
+
 	test('the referrer curve steps down with prior credited redemptions', async () => {
 		stub = stubVxpLedger();
 		const referrer = await createTestUser();
@@ -142,6 +191,51 @@ describe('both-sides settlement', () => {
 	});
 });
 
+const settleRequest = ({ token, body }: { token: string; body?: object }): Request =>
+	new Request('http://localhost/api/v1/vxp/referral/settle', {
+		method: 'POST',
+		headers: { cookie: `vici_session=${token}`, 'content-type': 'application/json' },
+		body: JSON.stringify(body ?? {})
+	});
+
+describe('settle endpoint scoping', () => {
+	test('a non-admin may only settle their own referee row', async () => {
+		stub = stubVxpLedger();
+		const caller = await createTestUser();
+		const other = await createTestUser();
+		const token = await createSession(caller);
+
+		const rejected = await app.handle(settleRequest({ token, body: { refereeUserId: other } }));
+
+		expect(rejected.status).toBe(403);
+		expect(await rejected.json()).toEqual({ error: 'forbidden' });
+
+		const defaulted = await app.handle(settleRequest({ token }));
+
+		expect(defaulted.status).toBe(200);
+		expect(await defaulted.json()).toEqual({ settled: false, reason: 'no_referral' });
+
+		const explicitSelf = await app.handle(
+			settleRequest({ token, body: { refereeUserId: caller } })
+		);
+
+		expect(explicitSelf.status).toBe(200);
+	});
+
+	test('an admin may target any referee row', async () => {
+		stub = stubVxpLedger();
+		const adminToken = await createSession(await createTestUser('admin'));
+		const other = await createTestUser();
+
+		const res = await app.handle(
+			settleRequest({ token: adminToken, body: { refereeUserId: other } })
+		);
+
+		expect(res.status).toBe(200);
+		expect(await res.json()).toEqual({ settled: false, reason: 'no_referral' });
+	});
+});
+
 describe('trade-activity trigger', () => {
 	test('a trade activity drives the settlement; onboarding m2/m3 mint nothing at zero amounts', async () => {
 		stub = stubVxpLedger();
@@ -165,5 +259,43 @@ describe('trade-activity trigger', () => {
 		expect(
 			await readAwardRow({ userId: referee, awardType: 'onboarding', awardKey: 'm2' })
 		).toBeUndefined();
+	});
+});
+
+describe('hard-deleted referrer', () => {
+	test('settlement still pays the referee and decides the cap slot, but never the dead referrer', async () => {
+		stub = stubVxpLedger();
+		const referrer = await createTestUser();
+		const referee = await createTestUser();
+
+		await recordReferralRedemption({
+			refereeUserId: referee,
+			referrerUserId: referrer,
+			code: 'CODE0DEL'
+		});
+		await recordTrade(referee);
+		await hardDeleteAccount(referrer);
+
+		expect(await settleReferralPayout({ refereeUserId: referee })).toEqual({ settled: true });
+
+		const refereeAward = await readAwardRow({
+			userId: referee,
+			awardType: 'referral',
+			awardKey: referee
+		});
+		const referrerAward = await readAwardRow({
+			userId: referrer,
+			awardType: 'referral',
+			awardKey: referee
+		});
+		const capRows = await query<{ within_referrer_cap: boolean | null }>(
+			`select within_referrer_cap from referrals where referee_user_id = $1`,
+			[referee]
+		);
+
+		expect(refereeAward?.status).toBe('paid');
+		expect(referrerAward).toBeUndefined();
+		expect(capRows[0]?.within_referrer_cap).toBeTrue();
+		expect(stub.transfers).toHaveLength(1);
 	});
 });
