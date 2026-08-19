@@ -6,6 +6,7 @@ import { isNullish, nonNullish } from '@dfinity/utils';
 import { Elysia, t } from 'elysia';
 import { forbidden, requireAdmin, requireUser, unauthenticated } from '../auth/guard';
 import {
+	ActivityNotFoundError,
 	ActivityValidationError,
 	createActivity,
 	getReactionCounts,
@@ -44,18 +45,29 @@ const badRequest = (set: StatusContext, error: string): { error: string } => {
 	return { error };
 };
 
-const DEFAULT_ACTIVITY_LIMIT = 50;
-const MAX_ACTIVITY_LIMIT = 500;
-const DEFAULT_REACTIONS_LIMIT = 1000;
+export const DEFAULT_ACTIVITY_LIMIT = 50;
+export const MAX_ACTIVITY_LIMIT = 500;
+export const DEFAULT_REACTIONS_LIMIT = 1000;
+export const MAX_REACTIONS_LIMIT = 1000;
 
-const boundedLimit = (raw: string | undefined, fallback: number): number => {
+/** Each list surface carries its own ceiling, so a surface whose default
+ * exceeds another surface's cap (reactions vs activities) stays reachable. */
+export const boundedLimit = ({
+	raw,
+	fallback,
+	max
+}: {
+	raw: string | undefined;
+	fallback: number;
+	max: number;
+}): number => {
 	const parsed = Number(raw ?? fallback);
 
 	if (!Number.isInteger(parsed) || parsed < 0) {
 		return fallback;
 	}
 
-	return Math.min(parsed, MAX_ACTIVITY_LIMIT);
+	return Math.min(parsed, max);
 };
 
 export const socialRoutes = new Elysia({ prefix: '/api/v1/social' })
@@ -267,7 +279,11 @@ export const socialRoutes = new Elysia({ prefix: '/api/v1/social' })
 
 		return {
 			items: await listActivities({
-				limit: boundedLimit(params.limit, DEFAULT_ACTIVITY_LIMIT),
+				limit: boundedLimit({
+					raw: params.limit,
+					fallback: DEFAULT_ACTIVITY_LIMIT,
+					max: MAX_ACTIVITY_LIMIT
+				}),
 				type: nonNullish(type) && isActivityType(type) ? type : undefined
 			})
 		};
@@ -328,7 +344,11 @@ export const socialRoutes = new Elysia({ prefix: '/api/v1/social' })
 	)
 	.get('/activity-reactions', async ({ query: params }) => ({
 		items: await listReactions({
-			limit: boundedLimit(params.limit, DEFAULT_REACTIONS_LIMIT)
+			limit: boundedLimit({
+				raw: params.limit,
+				fallback: DEFAULT_REACTIONS_LIMIT,
+				max: MAX_REACTIONS_LIMIT
+			})
 		})
 	}))
 	.post(
@@ -360,6 +380,12 @@ export const socialRoutes = new Elysia({ prefix: '/api/v1/social' })
 			} catch (err) {
 				if (err instanceof ActivityValidationError) {
 					return badRequest(set, err.message);
+				}
+
+				if (err instanceof ActivityNotFoundError) {
+					set.status = 404;
+
+					return { error: 'not_found' };
 				}
 
 				throw err;

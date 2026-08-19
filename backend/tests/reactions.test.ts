@@ -3,8 +3,17 @@
 // heals drift.
 
 import { beforeAll, describe, expect, test } from 'bun:test';
+import { randomUUID } from 'node:crypto';
 import { query } from '../src/db/client';
 import {
+	boundedLimit,
+	DEFAULT_ACTIVITY_LIMIT,
+	DEFAULT_REACTIONS_LIMIT,
+	MAX_ACTIVITY_LIMIT,
+	MAX_REACTIONS_LIMIT
+} from '../src/routes/social';
+import {
+	ActivityNotFoundError,
 	createActivity,
 	getReactionCounts,
 	likeActivity,
@@ -154,6 +163,23 @@ describe.if(dbAvailable)('reaction rollup', () => {
 		).rejects.toThrow('at most 500');
 	});
 
+	test('rejects a reaction to a nonexistent activity and writes no rollup', async () => {
+		const liker = await createTestUser();
+		// Structurally valid key, but no activities row behind it.
+		const phantomKey = `${randomUUID()}#${Date.now()}#trade`;
+
+		await expect(
+			likeActivity({
+				likerId: liker,
+				activityKey: phantomKey,
+				timestamp: Date.now(),
+				activityTitle: 't'
+			})
+		).rejects.toThrow(ActivityNotFoundError);
+
+		expect(await countOf(phantomKey)).toBeUndefined();
+	});
+
 	test('reactions list surfaces the denormalized fields', async () => {
 		const activityKey = await seedActivity();
 		const liker = await createTestUser();
@@ -197,5 +223,38 @@ describe.if(dbAvailable)('reaction rollup', () => {
 		expect(recomputed).toBeGreaterThanOrEqual(2);
 		expect(await countOf(activityKey)).toBe(1);
 		expect(await countOf(orphanKey)).toBe(0);
+	});
+});
+
+describe('boundedLimit', () => {
+	test('each surface caps at its own ceiling, so both defaults are reachable', () => {
+		expect(
+			boundedLimit({ raw: undefined, fallback: DEFAULT_ACTIVITY_LIMIT, max: MAX_ACTIVITY_LIMIT })
+		).toBe(DEFAULT_ACTIVITY_LIMIT);
+		expect(
+			boundedLimit({ raw: '2000', fallback: DEFAULT_ACTIVITY_LIMIT, max: MAX_ACTIVITY_LIMIT })
+		).toBe(MAX_ACTIVITY_LIMIT);
+
+		expect(
+			boundedLimit({ raw: undefined, fallback: DEFAULT_REACTIONS_LIMIT, max: MAX_REACTIONS_LIMIT })
+		).toBe(DEFAULT_REACTIONS_LIMIT);
+		expect(
+			boundedLimit({
+				raw: `${DEFAULT_REACTIONS_LIMIT}`,
+				fallback: DEFAULT_REACTIONS_LIMIT,
+				max: MAX_REACTIONS_LIMIT
+			})
+		).toBe(DEFAULT_REACTIONS_LIMIT);
+		expect(
+			boundedLimit({ raw: '5000', fallback: DEFAULT_REACTIONS_LIMIT, max: MAX_REACTIONS_LIMIT })
+		).toBe(MAX_REACTIONS_LIMIT);
+	});
+
+	test('falls back on non-integer and negative input', () => {
+		for (const raw of ['-5', '1.5', 'abc', 'NaN']) {
+			expect(boundedLimit({ raw, fallback: DEFAULT_ACTIVITY_LIMIT, max: MAX_ACTIVITY_LIMIT })).toBe(
+				DEFAULT_ACTIVITY_LIMIT
+			);
+		}
 	});
 });

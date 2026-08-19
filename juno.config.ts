@@ -13,6 +13,7 @@ import { defineConfig } from '@junobuild/config';
 enum JunoDatastoreCollection {
 	ROLES = 'roles',
 	PROFILES = 'profiles',
+	PROFILE_PRIVATE = 'profile_private',
 	RELATIONS = 'relations',
 	CHATS = 'chats',
 	COMMENTS = 'comments',
@@ -111,6 +112,19 @@ export default defineConfig(({ mode }) => ({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				// Owner-private profile data (the account email). `managed` on
+				// both sides: the owner reads/writes their own doc, controllers
+				// (satellite endpoints, admin tooling) can read for server-side
+				// flows — but the doc is NEVER publicly readable, unlike the
+				// `profiles` doc it splits from. `assertSetProfilePrivate`
+				// additionally binds key + embedded owner to the caller so
+				// another user can't squat or forge someone else's doc.
+				{
+					collection: JunoDatastoreCollection.PROFILE_PRIVATE,
+					memory: 'stable',
+					read: 'managed',
+					write: 'managed'
 				},
 				{
 					collection: JunoDatastoreCollection.RELATIONS,

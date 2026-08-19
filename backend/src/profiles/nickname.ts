@@ -76,12 +76,13 @@ export const handleCooldownDaysLeft = ({
  * when `available` is false:
  * - required: empty / whitespace.
  * - too_short: under {@link MIN_NICKNAME_LENGTH}.
+ * - too_long: over {@link MAX_NICKNAME_LENGTH}.
  * - invalid: contains characters outside {@link NICKNAME_PATTERN}.
  * - taken: another user already owns this nickname (on the fold).
  */
 export type NicknameAvailability =
 	| { available: true }
-	| { available: false; reason: 'required' | 'too_short' | 'invalid' | 'taken' };
+	| { available: false; reason: 'required' | 'too_short' | 'too_long' | 'invalid' | 'taken' };
 
 /**
  * Shared nickname validator. Used by both the profile write guard and the
@@ -106,6 +107,10 @@ export const checkNicknameAvailability = async ({
 
 	if (trimmedNickname.length < MIN_NICKNAME_LENGTH) {
 		return { available: false, reason: 'too_short' };
+	}
+
+	if (trimmedNickname.length > MAX_NICKNAME_LENGTH) {
+		return { available: false, reason: 'too_long' };
 	}
 
 	// Charset guard tested on the RAW value (the stored one), not the trimmed

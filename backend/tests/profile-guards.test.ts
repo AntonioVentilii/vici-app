@@ -5,7 +5,7 @@
 import { beforeAll, describe, expect, test } from 'bun:test';
 import { query } from '../src/db/client';
 import { DAILY_HARD_CAP } from '../src/profiles/flow';
-import { nicknameUniqueKey } from '../src/profiles/nickname';
+import { MAX_NICKNAME_LENGTH, nicknameUniqueKey } from '../src/profiles/nickname';
 import { upsertMyProfile } from '../src/profiles/profile';
 import { createTestUser, ensureMigrated } from './helpers/auth';
 import { createTestProfile, uniqueNickname } from './helpers/profiles';
@@ -214,5 +214,32 @@ describe.if(dbAvailable)('legacy nickname grandfathering', () => {
 				body: { nickname: 'still bad', handleLastChangeMs: Date.now() }
 			})
 		).rejects.toThrow('contains invalid characters');
+	});
+
+	test('an unchanged over-length legacy nickname does not block unrelated edits', async () => {
+		const legacyNickname = `l${Date.now()}`.padEnd(MAX_NICKNAME_LENGTH + 4, 'a');
+		const userId = await seedLegacyProfile(legacyNickname);
+
+		const profile = await upsertMyProfile({
+			userId,
+			body: { nickname: legacyNickname, avatar: 'new-avatar' }
+		});
+
+		expect(profile.nickname).toBe(legacyNickname);
+		expect(profile.avatar).toBe('new-avatar');
+	});
+
+	test('setting a new over-length handle is rejected', async () => {
+		const { userId } = await createTestProfile();
+
+		expect(
+			upsertMyProfile({
+				userId,
+				body: {
+					nickname: uniqueNickname().padEnd(MAX_NICKNAME_LENGTH + 1, 'a'),
+					handleLastChangeMs: Date.now()
+				}
+			})
+		).rejects.toThrow(`at most ${MAX_NICKNAME_LENGTH} characters`);
 	});
 });
