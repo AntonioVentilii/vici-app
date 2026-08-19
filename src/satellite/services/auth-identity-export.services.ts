@@ -6,8 +6,9 @@
  *   getAuthIdentities({ afterKey?, limit }) -> { rows, hasMore }
  *     · one row per `#user` doc: principal (doc key), provider, the persisted
  *       OpenID claims (email/name — present only for OpenID providers and only
- *       when the user consented to share them), and the `profiles.email`
- *       best-effort address for the same principal
+ *       when the user consented to share them), and the best-effort address for
+ *       the same principal from the owner-private `profile_private` doc (the
+ *       public `profiles` doc no longer carries an email)
  *     · keyset-paged by KEY (the datastore's native indexed order — the same
  *       O(page) discipline as the analytics exports; ordering on `updated_at`
  *       would materialise the whole collection and blow the query budget)
@@ -21,6 +22,7 @@
 
 import { ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
+import type { ProfilePrivate } from '$lib/types/profile';
 import { isAdmin } from '$satellite/services/_authz';
 import { logError } from '$satellite/utils/logger.utils';
 import { isNullish, notEmptyString } from '@dfinity/utils';
@@ -38,8 +40,8 @@ import {
 const JUNO_USER_COLLECTION = '#user';
 
 /** Same page ceiling as the analytics exports: each row costs a decoded
- * `#user` doc plus a keyed `profiles` lookup, so a page of 100 stays well
- * inside the ~5B-instruction query budget while keeping the walk O(page). */
+ * `#user` doc plus a keyed `profile_private` lookup, so a page of 100 stays
+ * well inside the ~5B-instruction query budget while keeping the walk O(page). */
 const MAX_EXPORT_LIMIT = 100;
 
 /** One flat export row — mirrors AuthIdentityExportRowSchema. */
@@ -134,15 +136,17 @@ export const getAuthIdentitiesFn = ({
 			});
 		}
 
+		// The address lives on the owner-private `profile_private` doc; the
+		// admin access key reads it under the collection's `managed` rule.
 		try {
-			const profileDoc = getDocStore({
-				collection: Collection.PROFILES,
+			const privateDoc = getDocStore({
+				collection: Collection.PROFILE_PRIVATE,
 				key,
 				caller: admin
 			});
 
-			if (!isNullish(profileDoc)) {
-				const { email } = decodeDocData<{ email?: string }>(profileDoc.data);
+			if (!isNullish(privateDoc)) {
+				const { email } = decodeDocData<ProfilePrivate>(privateDoc.data);
 
 				if (notEmptyString(email)) {
 					row.profileEmail = email;
@@ -150,7 +154,7 @@ export const getAuthIdentitiesFn = ({
 			}
 		} catch (err) {
 			logError({
-				message: 'auth-identity export: profile lookup failed',
+				message: 'auth-identity export: private profile lookup failed',
 				detail: { key, error: err instanceof Error ? err.message : `${err}` }
 			});
 		}
