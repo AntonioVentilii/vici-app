@@ -9,6 +9,7 @@ import {
 	checkNicknameAvailability,
 	HANDLE_LAST_CHANGE_TOLERANCE_MS,
 	handleCooldownDaysLeft,
+	MAX_NICKNAME_LENGTH,
 	MIN_NICKNAME_LENGTH,
 	nicknameUniqueKey
 } from './nickname';
@@ -505,8 +506,8 @@ export const parseProfileInput = (body: Record<string, unknown>): ProfileInput =
  *
  * 1. Nickname validity + uniqueness via {@link checkNicknameAvailability},
  *    with a grandfather clause: an unchanged legacy nickname that fails the
- *    charset guard does not block edits to unrelated fields; it is rejected
- *    only when this write actually sets the bad handle.
+ *    charset or max-length guard does not block edits to unrelated fields;
+ *    it is rejected only when this write actually sets the bad handle.
  * 2. Handle-change cooldown: when the normalized nickname CHANGES versus the
  *    stored row, reject the write while the stored stamp is inside the
  *    window, and otherwise require the proposed stamp to be ~now. When the
@@ -545,9 +546,17 @@ const assertValidNickname = async ({
 			);
 		}
 
-		if (result.reason === 'invalid') {
-			// Grandfather an unchanged legacy nickname; reject only when this
-			// write actually sets the bad handle.
+		// Grandfather an unchanged legacy nickname on the length ceiling and
+		// charset rules; reject only when this write actually sets the bad
+		// handle, so a stored handle that predates these rules does not block
+		// edits to unrelated fields.
+		if (result.reason === 'too_long') {
+			if (settingNewHandle) {
+				throw new ProfileValidationError(
+					`Nickname must be at most ${MAX_NICKNAME_LENGTH} characters.`
+				);
+			}
+		} else if (result.reason === 'invalid') {
 			if (settingNewHandle) {
 				throw new ProfileValidationError(
 					`The handle "${nickname}" contains invalid characters: use lowercase letters, numbers and . _ - only (no spaces).`

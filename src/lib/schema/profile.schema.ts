@@ -8,6 +8,19 @@ export const ProfileVisibilitySchema = j.enum(ProfileVisibility);
 
 export const NicknameSchema = j.string();
 
+/**
+ * Owner-private profile data — one doc per principal in the
+ * `profile_private` collection (key = owner principal text). Holds the
+ * fields that must never land on the publicly-readable `profiles` doc.
+ * Today that's the account `email`, captured from an OpenID provider or
+ * the email-signup flow; the collection is `managed`, so only the owner
+ * and controllers can read it.
+ */
+export const ProfilePrivateSchema = j.strictObject({
+	owner: PrincipalTextSchema,
+	email: j.string().default('')
+});
+
 export const UserProfileSchema = j.strictObject({
 	owner: PrincipalTextSchema,
 	nickname: NicknameSchema.default(''),
@@ -21,7 +34,6 @@ export const UserProfileSchema = j.strictObject({
 	// principal). Uploaded avatar images still win over this. Mirror any
 	// change here in `src/satellite/api-schemas.ts`.
 	avatarParts: j.string().default(''),
-	email: j.string().default(''),
 	pnl: j.number().default(0),
 	visibility: ProfileVisibilitySchema.default(ProfileVisibility.FRIENDS_ONLY),
 	role: UserRoleSchema.optional(),

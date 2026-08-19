@@ -2,7 +2,12 @@
 // day-key validation, and the interplay with the monotonic profile guard.
 
 import { beforeAll, describe, expect, test } from 'bun:test';
-import { DAILY_HARD_CAP, isWellFormedDayKey, recordFlowSwipe } from '../src/profiles/flow';
+import {
+	DAILY_HARD_CAP,
+	InvalidDayKeyError,
+	isWellFormedDayKey,
+	recordFlowSwipe
+} from '../src/profiles/flow';
 import { upsertMyProfile } from '../src/profiles/profile';
 import { createTestUser, ensureMigrated } from './helpers/auth';
 import { createTestProfile } from './helpers/profiles';
@@ -61,7 +66,10 @@ describe.if(dbAvailable)('recordFlowSwipe', () => {
 		expect(next.capReached).toBe(false);
 	});
 
-	test('rejects a malformed day key', () => {
+	test('rejects a malformed day key with the typed error', () => {
+		expect(recordFlowSwipe({ userId: 'unused', dayKey: '2026-02-31' })).rejects.toThrow(
+			InvalidDayKeyError
+		);
 		expect(recordFlowSwipe({ userId: 'unused', dayKey: '2026-02-31' })).rejects.toThrow(
 			'well-formed'
 		);

@@ -1,9 +1,13 @@
-// Nickname rules: validity (required / too_short / invalid), case- and
-// accent-insensitive uniqueness, the self-exclusion, and the fold's
-// separator handling.
+// Nickname rules: validity (required / too_short / too_long / invalid),
+// case- and accent-insensitive uniqueness, the self-exclusion, and the
+// fold's separator handling.
 
 import { beforeAll, describe, expect, test } from 'bun:test';
-import { checkNicknameAvailability, nicknameUniqueKey } from '../src/profiles/nickname';
+import {
+	checkNicknameAvailability,
+	MAX_NICKNAME_LENGTH,
+	nicknameUniqueKey
+} from '../src/profiles/nickname';
 import { ensureMigrated } from './helpers/auth';
 import { createTestProfile } from './helpers/profiles';
 import { dbAvailable } from './helpers/setup';
@@ -53,6 +57,18 @@ describe.if(dbAvailable)('checkNicknameAvailability', () => {
 		expect(await checkNicknameAvailability({ nickname: 'a' })).toEqual({
 			available: false,
 			reason: 'too_short'
+		});
+	});
+
+	test('rejects an over-length nickname as too_long, accepts the exact ceiling', async () => {
+		expect(
+			await checkNicknameAvailability({ nickname: 'a'.repeat(MAX_NICKNAME_LENGTH + 1) })
+		).toEqual({
+			available: false,
+			reason: 'too_long'
+		});
+		expect(await checkNicknameAvailability({ nickname: 'a'.repeat(MAX_NICKNAME_LENGTH) })).toEqual({
+			available: true
 		});
 	});
 
