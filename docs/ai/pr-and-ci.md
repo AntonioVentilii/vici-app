@@ -151,8 +151,12 @@ tag created with `GITHUB_TOKEN` does not trigger further workflows). It mints a
 short-lived installation token from the **vici-release-bot** GitHub App via the
 `RELEASE_BOT_PRIVATE_KEY` secret; without that secret the release PR still works
 but you must dispatch `deploy.yml` / `publish.yml` manually after the tag lands.
-The `format` job in `checks.yml` mints the same token for the same reason, so its
-auto-commit re-triggers the checks on the re-formatted head.
+The same reasoning applies to every workflow that pushes a commit or opens a PR
+that CI must then run on, so `checks.yml` (`format`), `update-icdc-core.yml`,
+`e2e.yml` and `dependabot-bun-lock.yml` all mint the same token. The app id is
+the `PR_AUTOMATION_BOT_APP_ID` repository variable; only the private key is a
+secret. If you add another such workflow, mint the token too, or its bot commits
+will land with no checks attached.
 
 `config apply` (**applies** `juno.config.ts` — collection rules + authentication
 config — to the production satellite) is **run manually**, not in CI. Use
