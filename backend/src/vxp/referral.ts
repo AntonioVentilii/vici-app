@@ -134,13 +134,24 @@ export const settleReferralPayout = async ({
 	const decided = await getReferralRow(refereeUserId);
 
 	if (decided?.within_referrer_cap === true && reward > ZERO) {
-		await grantAward({
-			userId: row.referrer_user_id,
-			awardType: 'referral',
-			awardKey: refereeUserId,
-			amountBaseUnits: reward,
-			memo: 'vxp:referral:referrer'
-		});
+		// A hard-deleted referrer keeps its users row as the identity anchor;
+		// paying VXP to that account would strand the tokens on an
+		// unreachable custodial address. The cap slot above is still decided
+		// so later referees keep deterministic tiers.
+		const referrerAlive = await query<{ id: string }>(
+			`select id from users where id = $1 and hard_deleted_at is null`,
+			[row.referrer_user_id]
+		);
+
+		if (referrerAlive.length > 0) {
+			await grantAward({
+				userId: row.referrer_user_id,
+				awardType: 'referral',
+				awardKey: refereeUserId,
+				amountBaseUnits: reward,
+				memo: 'vxp:referral:referrer'
+			});
+		}
 	}
 
 	return { settled: true };
