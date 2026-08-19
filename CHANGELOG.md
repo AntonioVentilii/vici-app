@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.35](https://github.com/ViciApp/vici-app/compare/v1.8.34...v1.8.35) (2026-08-19)
+
+
+### Bug Fixes
+
+* **ci:** repoint juno-action -full pins at the real v0.7.5-full SHA ([#1228](https://github.com/ViciApp/vici-app/issues/1228)) ([49f0bff](https://github.com/ViciApp/vici-app/commit/49f0bff674a1ad302158657251ffaecddcb240d8))
+* **satellite:** keyset-paginate migrateProfileEmails ([#1230](https://github.com/ViciApp/vici-app/issues/1230)) ([8393dc9](https://github.com/ViciApp/vici-app/commit/8393dc9bd17d296432b556ffa76b747dd3d08495))
+
 ## [1.8.34](https://github.com/ViciApp/vici-app/compare/v1.8.33...v1.8.34) (2026-08-17)
 
 
