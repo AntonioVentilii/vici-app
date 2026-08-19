@@ -11,6 +11,9 @@ import { env } from './env';
 import { logger } from './lib/logger';
 import { authRoutes } from './routes/auth';
 import { engineRoutes } from './routes/engine';
+import { leaderboardRoutes } from './routes/leaderboard';
+import { profilesRoutes } from './routes/profiles';
+import { socialRoutes } from './routes/social';
 import { walletRoutes } from './routes/wallet';
 
 // Baseline hardening headers on every response. The API serves JSON only, so a
@@ -134,6 +137,9 @@ export const app = new Elysia()
 	.use(authRoutes)
 	.use(walletRoutes)
 	.use(engineRoutes)
+	.use(profilesRoutes)
+	.use(leaderboardRoutes)
+	.use(socialRoutes)
 	// Liveness + DB connectivity. Bounded probe; three consecutive failures exit
 	// the process for a supervised restart with a fresh pool.
 	.get('/health', async ({ set }) => {
