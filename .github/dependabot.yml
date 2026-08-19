@@ -41,3 +41,22 @@ updates:
           - '@junobuild/core'
           - '@junobuild/functions'
           - '@junobuild/schema'
+
+  # The backend is a standalone Bun project with its own bun.lock. It is not a
+  # workspace of the root package.json, so the npm entry above never sees it.
+  # Dependabot supports bun for VERSION updates only; its SECURITY updates
+  # still open package.json-only PRs that leave bun.lock stale, which is what
+  # .github/workflows/dependabot-bun-lock.yml repairs.
+  # https://docs.github.com/en/code-security/reference/supply-chain-security/supported-ecosystems-and-repositories
+  - package-ecosystem: bun
+    directory: '/backend'
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: 'chore(backend-deps): '
+      prefix-development: 'chore(backend-deps-dev): '
+    cooldown:
+      default-days: 7
+    allow:
+      - dependency-type: all
+    open-pull-requests-limit: 10
