@@ -15,13 +15,15 @@ import {
 	test
 } from 'bun:test';
 import { deleteAppSetting, upsertAppSetting } from '../src/admin/settings';
+import * as apple from '../src/auth/apple';
 import { BETA_GATE_SETTING_KEY, isBetaSignInAllowed } from '../src/auth/beta-gate';
 import * as google from '../src/auth/google';
 import { encodeOauthState } from '../src/auth/oauth-state';
 import { createOtp } from '../src/auth/otp';
 import { env } from '../src/env';
 import { app } from '../src/index';
-import { OAUTH_STATE_COOKIE } from '../src/lib/cookie';
+import { APPLE_STATE_COOKIE, OAUTH_STATE_COOKIE } from '../src/lib/cookie';
+import { signState } from '../src/lib/crypto';
 import { resetRateLimits } from '../src/lib/rate-limit';
 import { ensureMigrated, uniqueEmail } from './helpers/auth';
 import { dbAvailable } from './helpers/setup';
@@ -76,6 +78,16 @@ describe.if(dbAvailable)('beta gate policy', () => {
 		expect(await isBetaSignInAllowed(email)).toBe(true);
 		expect(await isBetaSignInAllowed(email.toUpperCase())).toBe(true);
 		expect(await isBetaSignInAllowed(uniqueEmail())).toBe(false);
+	});
+
+	test('a single non-string allowlist entry fails the whole list closed', async () => {
+		const allowed = uniqueEmail();
+
+		// A half-broken allowlist is a config error: honouring only its valid
+		// entries would quietly admit people under a list nobody can trust.
+		await setGate({ enabled: true, emails: [allowed, 42] as unknown as string[] });
+
+		expect(await isBetaSignInAllowed(allowed)).toBeFalse();
 	});
 
 	test('malformed setting fails closed while enabled', async () => {
@@ -228,7 +240,7 @@ describe.if(dbAvailable)('beta gate on the Google callback', () => {
 		const res = await callback(uniqueEmail());
 
 		expect(res.status).toBe(302);
-		expect(res.headers.get('location')).toBe(`${env.publicAppUrl}/?e=beta`);
+		expect(res.headers.get('location')).toBe(`${env.publicAppUrl}/signin?e=beta`);
 		expect(res.headers.get('set-cookie')).not.toContain('vici_session=');
 	});
 
@@ -246,6 +258,74 @@ describe.if(dbAvailable)('beta gate on the Google callback', () => {
 
 	test('gate off: callback logs in as before', async () => {
 		const res = await callback(uniqueEmail());
+
+		expect(res.status).toBe(302);
+		expect(res.headers.get('set-cookie')).toContain('vici_session=');
+	});
+});
+
+describe('beta gate: apple callback', () => {
+	const savedApple = { ...env.apple };
+
+	beforeAll(async () => {
+		await ensureMigrated();
+
+		Object.assign(env.apple, { ...env.apple, enabled: true });
+	});
+
+	afterAll(() => {
+		Object.assign(env.apple, savedApple);
+	});
+
+	beforeEach(() => {
+		resetRateLimits();
+	});
+
+	afterEach(async () => {
+		await clearGate();
+	});
+
+	const callback = async (profileEmail: string): Promise<Response> => {
+		const exchange = spyOn(apple, 'exchangeCode').mockResolvedValue({
+			sub: `apple-sub-${crypto.randomUUID()}`,
+			email: profileEmail,
+			emailVerified: true
+		});
+
+		try {
+			const body = new URLSearchParams({ code: 'c', state: 'csrf-ok' });
+
+			return await app.handle(
+				new Request('http://localhost/api/v1/auth/apple/callback', {
+					method: 'POST',
+					headers: {
+						'content-type': 'application/x-www-form-urlencoded',
+						cookie: `${APPLE_STATE_COOKIE}=${signState('csrf-ok')}`
+					},
+					body
+				})
+			);
+		} finally {
+			exchange.mockRestore();
+		}
+	};
+
+	test('non-allowlisted apple profile is bounced without a session', async () => {
+		await setGate({ enabled: true, emails: [uniqueEmail()] });
+
+		const res = await callback(uniqueEmail());
+
+		expect(res.status).toBe(302);
+		expect(res.headers.get('location')).toBe(`${env.publicAppUrl}/signin?e=beta`);
+		expect(res.headers.get('set-cookie')).not.toContain('vici_session=');
+	});
+
+	test('allowlisted apple profile logs in under the enabled gate', async () => {
+		const email = uniqueEmail();
+
+		await setGate({ enabled: true, emails: [email.toUpperCase()] });
+
+		const res = await callback(email);
 
 		expect(res.status).toBe(302);
 		expect(res.headers.get('set-cookie')).toContain('vici_session=');

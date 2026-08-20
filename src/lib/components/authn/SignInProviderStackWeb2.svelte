@@ -59,9 +59,10 @@
 	const blocked = $derived(busy || disabled);
 
 	onMount(async () => {
-		// A gated Google sign-in lands back on the app with `?e=beta` (a redirect
-		// flow cannot carry a JSON error body); surface the private-beta message
-		// and strip the marker so it does not outlive this screen.
+		// A gated OAuth sign-in lands back on `/signin?e=beta` (a redirect flow
+		// cannot carry a JSON error body, and this screen is where the message
+		// can be shown); surface the private-beta message and strip the marker
+		// so it does not outlive this screen.
 		const url = new URL(window.location.href);
 
 		if (url.searchParams.get('e') === 'beta') {

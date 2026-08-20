@@ -305,7 +305,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1' })
 		// The redirect flow's counterpart of the 403 beta_closed body: the
 		// browser is mid-navigation, so the refusal rides the landing path.
 		if (!(await isBetaSignInAllowed(profile.email))) {
-			return redirectToApp({ path: '/?e=beta', clearStateCookie });
+			return redirectToApp({ path: '/signin?e=beta', clearStateCookie });
 		}
 
 		const userId = await resolveIdentity({
@@ -381,7 +381,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1' })
 			}
 
 			if (!(await isBetaSignInAllowed(profile.email))) {
-				return redirectToApp({ path: '/?e=beta', clearStateCookie });
+				return redirectToApp({ path: '/signin?e=beta', clearStateCookie });
 			}
 
 			// Apple sends the user's name only on the very first authorization, as

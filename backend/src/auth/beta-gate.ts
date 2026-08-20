@@ -32,8 +32,14 @@ export const isBetaSignInAllowed = async (email: string): Promise<boolean> => {
 		return true;
 	}
 
-	const emails = Array.isArray(setting.emails) ? setting.emails : [];
+	// Fail closed on ANY malformed entry rather than quietly honouring the
+	// well-formed ones: a half-broken allowlist is a config error, and letting
+	// it partially admit callers would contradict the documented behaviour.
+	if (!Array.isArray(setting.emails) || setting.emails.some((entry) => typeof entry !== 'string')) {
+		return false;
+	}
+
 	const normalized = normalizeEmail(email);
 
-	return emails.some((entry) => typeof entry === 'string' && normalizeEmail(entry) === normalized);
+	return setting.emails.some((entry) => normalizeEmail(entry) === normalized);
 };
