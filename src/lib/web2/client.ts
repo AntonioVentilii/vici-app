@@ -1938,12 +1938,12 @@ export const resumeMyAccount = async (): Promise<{ ok: boolean; resumed: boolean
 // (`${user}#${timestamp}#${type}`); `user` / `liker` carry account ids in
 // this mode, the same `owner` string the swapped profile services key on.
 
-type Web2ActivityWire = Omit<Activity, 'type'> & { key: string; type: string };
+type Web2ActivityWire = Activity & { key: string };
 
 const mapActivity = (wire: Web2ActivityWire): Activity => {
-	const { key: _key, type, ...rest } = wire;
+	const { key: _key, ...rest } = wire;
 
-	return { ...rest, type: type as Activity['type'] };
+	return rest;
 };
 
 /** Publish one feed activity. The route stamps the author from the session

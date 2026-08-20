@@ -52,7 +52,15 @@ export const isSignedIn = async (): Promise<boolean> => {
  */
 export const signOut = async (): Promise<void> => {
 	if (isWeb2Backend()) {
-		await clearWeb2Session();
+		// clearWeb2Session clears the local session store in a finally, so the
+		// user is signed out locally even when the server revoke call fails;
+		// throwing here would strand callers on authBusy for a session that is
+		// already gone. Log and continue instead.
+		try {
+			await clearWeb2Session();
+		} catch (e: unknown) {
+			console.warn('web2 sign-out revoke failed (local session already cleared)', e);
+		}
 
 		return;
 	}

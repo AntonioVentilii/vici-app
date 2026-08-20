@@ -12,6 +12,7 @@ import {
 } from '$lib/web2/client';
 import { getWeb2User } from '$lib/web2/session';
 import { fromWireReferral } from '$satellite/utils/wire-format.utils';
+import { isNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@junobuild/schema';
 
 /**
@@ -148,8 +149,14 @@ export const listMyReferrals = async (): Promise<ReferralListItem[]> => {
 		const items = await listMyReferralsWeb2();
 
 		// The route lists rows where the caller IS the referrer, so the wire
-		// omits the referrer id; restore it from the session account.
-		const referrer = getWeb2User()?.id ?? '';
+		// omits the referrer id; restore it from the session account. A missing
+		// session means the caller raced the /me probe: fail fast rather than
+		// emitting rows with a blank owner.
+		const referrer = getWeb2User()?.id;
+
+		if (isNullish(referrer)) {
+			throw new Error('Not authenticated');
+		}
 
 		return items.map((item) => ({
 			version: 1,
