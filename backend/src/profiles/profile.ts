@@ -101,7 +101,6 @@ export interface Profile {
 	nickname: string;
 	avatar: string;
 	avatarParts: string;
-	email: string;
 	pnl: number;
 	visibility: ProfileVisibility;
 	role?: string;
@@ -237,7 +236,6 @@ export const shapeProfile = (row: ProfileRow): Profile => ({
 	nickname: row.nickname ?? '',
 	avatar: row.avatar ?? '',
 	avatarParts: row.avatar_parts ?? '',
-	email: row.email ?? '',
 	pnl: row.pnl ?? 0,
 	visibility: row.visibility,
 	...(nonNullish(row.role) && row.role !== 'user' ? { role: row.role } : {}),
@@ -281,6 +279,19 @@ export const isPubliclyHidden = (
 	row: Pick<ProfileRow, 'deleted_at_ms' | 'hibernated_at_ms'>
 ): boolean => nonNullish(row.deleted_at_ms) || nonNullish(row.hibernated_at_ms);
 
+/** The owner's own profile: the public shape plus the private email. Only
+ * the /me surface and an owner-scoped read may ever serialize this; every
+ * public read (leaderboard, search, by-id for others) uses shapeProfile,
+ * which carries no email at all. */
+export interface OwnProfile extends Profile {
+	email: string;
+}
+
+export const shapeOwnProfile = (row: ProfileRow): OwnProfile => ({
+	...shapeProfile(row),
+	email: row.email ?? ''
+});
+
 export const PROFILE_COLUMNS = `p.user_id, p.nickname, p.avatar, p.avatar_parts, p.email, p.pnl,
 	p.visibility, p.total_trades, p.win_rate, p.daily_streak, p.longest_streak,
 	p.daily_goal_done, p.daily_goal_date, p.streak, p.accuracy, p.points, p.level,
@@ -319,7 +330,7 @@ export const getProfileView = async ({
 }: {
 	userId: string;
 	callerId?: string;
-}): Promise<Profile | undefined> => {
+}): Promise<Profile | OwnProfile | undefined> => {
 	const row = await getProfileRow({ userId });
 
 	if (isNullish(row)) {
@@ -330,7 +341,7 @@ export const getProfileView = async ({
 		return;
 	}
 
-	return shapeProfile(row);
+	return callerId === userId ? shapeOwnProfile(row) : shapeProfile(row);
 };
 
 const escapeLike = (value: string): string => value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
@@ -669,7 +680,7 @@ export const upsertMyProfile = async ({
 }: {
 	userId: string;
 	body: Record<string, unknown>;
-}): Promise<Profile> => {
+}): Promise<OwnProfile> => {
 	const proposed = parseProfileInput(body);
 	const nowMs = Date.now();
 
@@ -809,6 +820,6 @@ export const upsertMyProfile = async ({
 			nowMs
 		});
 
-		return shapeProfile(row);
+		return shapeOwnProfile(row);
 	});
 };

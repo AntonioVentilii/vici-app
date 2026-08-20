@@ -2568,8 +2568,10 @@ export const esMessages = {
 	'wallet.send.empty':
 		'Cargando opciones de envío… Si persiste, no hay tokens disponibles para tu red actual.',
 	'wallet.send.error_title': 'Error',
+	'wallet.send.failed': 'Retiro fallido',
 	'wallet.send.recipient': 'Destinatario',
 	'wallet.send.recipient_placeholder': 'aaaaa-aa...',
+	'wallet.send.unavailable': 'El envío de {symbol} no está disponible en este momento',
 	'wallet.send.send_tokens': 'Enviar tokens',
 	'wallet.send.sending': 'Enviando...',
 	'wallet.send.success_message': '¡Transacción exitosa!',

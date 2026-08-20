@@ -2550,8 +2550,10 @@ export const enMessages = {
 	'wallet.send.empty':
 		'Loading send options… If this persists, no tokens are available for your current network.',
 	'wallet.send.error_title': 'Error',
+	'wallet.send.failed': 'Withdrawal failed',
 	'wallet.send.recipient': 'Recipient',
 	'wallet.send.recipient_placeholder': 'aaaaa-aa...',
+	'wallet.send.unavailable': 'Sending {symbol} is not available right now',
 	'wallet.send.send_tokens': 'Send Tokens',
 	'wallet.send.sending': 'Sending...',
 	'wallet.send.success_message': 'Transaction successful!',
