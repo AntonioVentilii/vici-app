@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.8.39](https://github.com/ViciApp/vici-app/compare/v1.8.38...v1.8.39) (2026-08-20)
+
+
+### Features
+
+* **frontend:** web2 engine operations and custodial wallet behind the flag ([#1279](https://github.com/ViciApp/vici-app/issues/1279)) ([a864d70](https://github.com/ViciApp/vici-app/commit/a864d7021382a9502647f069e9abaa6a5b8a31b2))
+* **frontend:** web2 leagues, battles, worlds and tournaments behind the flag ([#1280](https://github.com/ViciApp/vici-app/issues/1280)) ([f115fa5](https://github.com/ViciApp/vici-app/commit/f115fa5d9cac9c4123db45c870b9954fa26a8c48))
+* **frontend:** web2 markets and public engine reads behind the flag ([#1274](https://github.com/ViciApp/vici-app/issues/1274)) ([dd8d774](https://github.com/ViciApp/vici-app/commit/dd8d774c419cde6ee7cbe05dcee389d29efb3ba5))
+* **frontend:** web2 profiles, social and app-shell hydration behind the flag ([#1271](https://github.com/ViciApp/vici-app/issues/1271)) ([b3ff690](https://github.com/ViciApp/vici-app/commit/b3ff6908689b87a6545a1ed30d6d02198b63a0cf))
+* **frontend:** web2 vxp, referrals, school and account lifecycle behind the flag ([#1283](https://github.com/ViciApp/vici-app/issues/1283)) ([4d31216](https://github.com/ViciApp/vici-app/commit/4d31216d9ea4f55d17ad39b44d9f84897d1d1a88))
+
+
+### Bug Fixes
+
+* **backend:** keep email off public profile shapes ([#1272](https://github.com/ViciApp/vici-app/issues/1272)) ([16394ed](https://github.com/ViciApp/vici-app/commit/16394edf836ff65d81bed8470723b8dabf60b8e7))
+* **leagues:** clear league cover imageUrl when removing the image ([#1282](https://github.com/ViciApp/vici-app/issues/1282)) ([ceee562](https://github.com/ViciApp/vici-app/commit/ceee562f02e6dd2468a757263f54a7ff4026c0dc))
+* **legal:** publish the appointed EU/UK GDPR representative (Art. 27) ([#842](https://github.com/ViciApp/vici-app/issues/842)) ([1b53cb1](https://github.com/ViciApp/vici-app/commit/1b53cb1ccf01e52f5503d0ed1b3cb599a15e76c4))
+
+
+### Miscellaneous Chores
+
+* **backend-deps:** bump @scure/btc-signer from 1.8.1 to 2.3.0 in /backend ([#1254](https://github.com/ViciApp/vici-app/issues/1254)) ([b04b8f5](https://github.com/ViciApp/vici-app/commit/b04b8f518820ca7e9902ac95e5815f92d9ceb734))
+* **npm-deps-dev:** bump the lint-kit group across 1 directory with 4 updates ([#1277](https://github.com/ViciApp/vici-app/issues/1277)) ([a4be491](https://github.com/ViciApp/vici-app/commit/a4be49158f91eea73c92d27bc01eed1a4a37f3f0))
+
+
+### Continuous Integration
+
+* **merge-queue:** trigger every PR-gated workflow on merge_group ([#1278](https://github.com/ViciApp/vici-app/issues/1278)) ([e243c49](https://github.com/ViciApp/vici-app/commit/e243c49c5fab4ec7cebf6df25012022e3e5e251b))
+
 ## [1.8.38](https://github.com/ViciApp/vici-app/compare/v1.8.37...v1.8.38) (2026-08-20)
 
 
