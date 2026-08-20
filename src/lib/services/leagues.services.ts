@@ -31,6 +31,36 @@ import {
 	type LeagueMemberRole
 } from '$lib/types/league-member';
 import { leagueStatsBucket, leagueStatsKey, type LeagueStatsDoc } from '$lib/types/league-stats';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	acceptDuel as acceptDuelWeb2,
+	acceptLeagueBattle as acceptLeagueBattleWeb2,
+	createLeague as createLeagueWeb2,
+	declineBattle as declineBattleWeb2,
+	deleteLeagueImage as deleteLeagueImageWeb2,
+	expireBattle as expireBattleWeb2,
+	getBattle as getBattleWeb2,
+	getMyBattleStats as getMyBattleStatsWeb2,
+	joinLeagueByInvite as joinLeagueByInviteWeb2,
+	kickoffBattle as kickoffBattleWeb2,
+	listChallengeableLeagues as listChallengeableLeaguesWeb2,
+	listFriendRecommendedLeagues as listFriendRecommendedLeaguesWeb2,
+	listLeagueBattles as listLeagueBattlesWeb2,
+	listLeagueMembers as listLeagueMembersWeb2,
+	listMyBattles as listMyBattlesWeb2,
+	listMyLeagues as listMyLeaguesWeb2,
+	lookupLeagueByInvite as lookupLeagueByInviteWeb2,
+	proposeBattle as proposeBattleWeb2,
+	readBattleLiveScore as readBattleLiveScoreWeb2,
+	removeLeagueMember as removeLeagueMemberWeb2,
+	resolveBattle as resolveBattleWeb2,
+	retractBattle as retractBattleWeb2,
+	setLeagueMemberRole as setLeagueMemberRoleWeb2,
+	settleFounderAwards as settleFounderAwardsWeb2,
+	transferLeagueOwnership as transferLeagueOwnershipWeb2,
+	updateLeague as updateLeagueWeb2
+} from '$lib/web2/client';
+import { getWeb2User } from '$lib/web2/session';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
@@ -92,6 +122,10 @@ const projectLeagueWire = (league: {
  * role. Sorted newest-join first per the satellite query.
  */
 export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
+	if (isWeb2Backend()) {
+		return await listMyLeaguesWeb2();
+	}
+
 	const { items } = await functions.listMyLeagues();
 
 	return items.map(({ league, role, joinedAtMs, memberCount }) => ({
@@ -116,7 +150,11 @@ export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
  */
 export const settleFounderAwards = async (): Promise<number> => {
 	try {
-		const { settled } = await functions.settleFounderAwards();
+		// The web2 API also runs founder settlement from its worker; keeping the
+		// lazy page-mount trigger preserves parity and is idempotent server-side.
+		const { settled } = isWeb2Backend()
+			? await settleFounderAwardsWeb2()
+			: await functions.settleFounderAwards();
 
 		return settled;
 	} catch {
@@ -131,6 +169,10 @@ export const settleFounderAwards = async (): Promise<number> => {
  * alphabetically by name per the satellite query.
  */
 export const listChallengeableLeagues = async (): Promise<LeagueDoc[]> => {
+	if (isWeb2Backend()) {
+		return await listChallengeableLeaguesWeb2();
+	}
+
 	const { items } = await functions.listChallengeableLeagues();
 
 	return items.map(projectLeagueWire);
@@ -155,6 +197,10 @@ export interface FriendRecommendedLeague {
  * friend-overlap count descending per the satellite query.
  */
 export const listFriendRecommendedLeagues = async (): Promise<FriendRecommendedLeague[]> => {
+	if (isWeb2Backend()) {
+		return await listFriendRecommendedLeaguesWeb2();
+	}
+
 	const { items } = await functions.listFriendRecommendedLeagues();
 
 	return items.map(({ league, memberCount, friendMembers }) => ({
@@ -176,6 +222,10 @@ export const listLeagueMembers = async ({
 }: {
 	leagueId: string;
 }): Promise<LeagueMemberDoc[]> => {
+	if (isWeb2Backend()) {
+		return await listLeagueMembersWeb2(leagueId);
+	}
+
 	const { items } = await functions.listLeagueMembers({ leagueId });
 
 	return items.map(({ leagueId, member, joinedAtMs, role }) => ({
@@ -196,6 +246,10 @@ export const lookupLeagueByInvite = async ({
 }: {
 	inviteCode: string;
 }): Promise<LeagueDoc | undefined> => {
+	if (isWeb2Backend()) {
+		return await lookupLeagueByInviteWeb2(inviteCode);
+	}
+
 	const { league } = await functions.lookupLeagueByInvite({ inviteCode });
 
 	if (!league) {
@@ -209,7 +263,9 @@ export const lookupLeagueByInvite = async ({
  * Read a league by id from the public `leagues` collection, or
  * `undefined` if none exists. Reads the datastore doc directly (it's
  * stored as a `LeagueDoc`, so no wire projection) rather than via a
- * typed query like `lookupLeagueByInvite`.
+ * typed query like `lookupLeagueByInvite`. Default-backend only: the
+ * HTTP API has no public by-id league read, so the web2 branch of
+ * {@link loadLeaguesByIds} resolves the directory without this helper.
  */
 export const getLeagueById = async ({ id }: { id: string }): Promise<LeagueDoc | undefined> => {
 	const existing = await getDoc<LeagueDoc>({
@@ -234,6 +290,43 @@ export const loadLeaguesByIds = async ({ ids }: { ids: string[] }): Promise<void
 	const unique = Array.from(new Set(ids)).filter((id) => id.length > 0 && !cached.has(id));
 
 	if (unique.length === 0) {
+		return;
+	}
+
+	// The HTTP API has no public by-id league read yet, but every id this
+	// hydration is asked for (battle opponents, bracket slots) is either a
+	// league the caller belongs to or one in their challengeable pool, so two
+	// list reads cover the directory. An id outside both (a private opponent
+	// the caller never joined) stays unresolved and the UI falls back to the
+	// shortened id, the same as a failed per-id fetch on the default path.
+	if (isWeb2Backend()) {
+		try {
+			const [mine, challengeable] = await Promise.all([
+				listMyLeaguesWeb2(),
+				listChallengeableLeaguesWeb2()
+			]);
+			const byId = new Map<string, LeagueDoc>([
+				...mine.map(({ league }): [string, LeagueDoc] => [league.id, league]),
+				...challengeable.map((league): [string, LeagueDoc] => [league.id, league])
+			]);
+
+			leagueDirectoryStore.update((current) => {
+				const next = new Map(current);
+
+				for (const id of unique) {
+					const doc = byId.get(id);
+
+					if (doc) {
+						next.set(id, doc);
+					}
+				}
+
+				return next;
+			});
+		} catch {
+			// Best-effort like the per-id path: missing entries fall back in the UI.
+		}
+
 		return;
 	}
 
@@ -383,6 +476,21 @@ export const createLeague = async ({
 		throw new Error(`Invalid league draft: ${validation.reason}`);
 	}
 
+	// The API mints the invite code server-side and creates the owner
+	// membership in the same transaction, so the code the create sheet
+	// pre-generated for display is superseded by the one on the returned
+	// league (the detail surface renders the stored code everywhere).
+	if (isWeb2Backend()) {
+		return await createLeagueWeb2({
+			id: deriveLeagueId({ name, suffix: Date.now() }),
+			name,
+			description,
+			accentColor,
+			emblem,
+			privacy
+		});
+	}
+
 	const identity = await safeGetIdentityOnce();
 	const ownerPrincipal = identity.getPrincipal().toText();
 	const createdAtMs = Date.now();
@@ -468,6 +576,37 @@ export const updateLeague = async ({
 	/** New cover-image URL, `null` to clear, or omitted to leave as-is. */
 	imageUrl?: string | null;
 }): Promise<LeagueDoc> => {
+	if (isWeb2Backend()) {
+		const trimmedName = nonNullish(name) ? name.trim() : undefined;
+
+		if (nonNullish(trimmedName)) {
+			const validation = validateLeagueDraft({ name: trimmedName });
+
+			if (!validation.ok) {
+				throw new Error(`Invalid league name: ${validation.reason}`);
+			}
+		}
+
+		// A fresh cover URL was already persisted by the image upload route, so
+		// a non-empty `imageUrl` needs no write here; the PATCH (possibly empty)
+		// doubles as the read-back of the updated row. Clearing goes through the
+		// dedicated image endpoint because the PATCH surface carries no image
+		// field.
+		const league = await updateLeagueWeb2({
+			leagueId: id,
+			...(nonNullish(trimmedName) ? { name: trimmedName } : {}),
+			...(nonNullish(privacy) ? { privacy } : {})
+		});
+
+		// An explicit `null` clears, `undefined` leaves as-is; the typeof check
+		// tells them apart without a bare null compare.
+		const clearImage =
+			(isNullish(imageUrl) && typeof imageUrl !== 'undefined') ||
+			(nonNullish(imageUrl) && imageUrl.trim().length === 0);
+
+		return clearImage ? await deleteLeagueImageWeb2(id) : league;
+	}
+
 	const existing = await getDoc<LeagueDoc>({
 		collection: Collection.LEAGUES,
 		key: id
@@ -527,6 +666,13 @@ export const updateLeague = async ({
 let cachedReferral: { owner: PrincipalText; code: string } | undefined;
 
 const resolveMyReferralCode = async (): Promise<string | undefined> => {
+	// Referral codes are an unswapped satellite domain; until they ride the
+	// HTTP API the web2 share link stays plain (no `?ref=`) instead of probing
+	// the satellite from a session that holds no on-chain identity.
+	if (isWeb2Backend()) {
+		return;
+	}
+
 	const owner = get(authPrincipal);
 
 	if (isNullish(owner)) {
@@ -600,6 +746,17 @@ export const joinLeagueByInvite = async ({
 		throw new Error('No league found for that invite code.');
 	}
 
+	// The API join is idempotent (re-joining returns the existing row), so the
+	// already-a-member pre-check below is web3-only: it exists to pre-empt a
+	// confusing satellite assert error, which this transport cannot produce.
+	if (isWeb2Backend()) {
+		await joinLeagueByInviteWeb2({ inviteCode });
+
+		track({ name: 'league_joined', leagueId: league.id, source: 'invite' });
+
+		return league;
+	}
+
 	const identity = await safeGetIdentityOnce();
 	const memberPrincipal = identity.getPrincipal().toText();
 	const joinedAtMs = Date.now();
@@ -644,6 +801,20 @@ export const joinLeagueByInvite = async ({
  * "Leave" CTA on owner rows.
  */
 export const leaveLeague = async ({ leagueId }: { leagueId: string }): Promise<void> => {
+	if (isWeb2Backend()) {
+		const me = getWeb2User();
+
+		if (isNullish(me)) {
+			throw new Error('Not signed in.');
+		}
+
+		// Idempotent server-side: a missing row is a clean success, matching the
+		// early-return below.
+		await removeLeagueMemberWeb2({ leagueId, memberUserId: me.id });
+
+		return;
+	}
+
 	const identity = await safeGetIdentityOnce();
 	const memberPrincipal = identity.getPrincipal().toText();
 	const key = leagueMemberKey({ leagueId, memberPrincipal });
@@ -692,7 +863,11 @@ export const transferLeagueOwnership = ({
 	leagueId: string;
 	newOwnerPrincipal: string;
 }): Promise<TransferLeagueOwnershipResult> =>
-	functions.transferLeagueOwnership({ leagueId, newOwnerPrincipal });
+	// On the web2 backend the "principal" the roster carries is the account id,
+	// which is exactly what the transfer route keys the new owner by.
+	isWeb2Backend()
+		? transferLeagueOwnershipWeb2({ leagueId, newOwnerUserId: newOwnerPrincipal })
+		: functions.transferLeagueOwnership({ leagueId, newOwnerPrincipal });
 
 /**
  * Set a member's role inside a league — the owner-driven promote
@@ -717,6 +892,12 @@ export const setMemberRole = async ({
 	memberPrincipal: string;
 	role: Extract<LeagueMemberRole, 'admin' | 'member'>;
 }): Promise<void> => {
+	if (isWeb2Backend()) {
+		await setLeagueMemberRoleWeb2({ leagueId, memberUserId: memberPrincipal, role });
+
+		return;
+	}
+
 	const key = leagueMemberKey({ leagueId, memberPrincipal });
 
 	const existing = await getDoc<LeagueMemberDoc>({
@@ -796,6 +977,10 @@ export const listLeagueBattles = async ({
 }: {
 	leagueId: string;
 }): Promise<BattleDoc[]> => {
+	if (isWeb2Backend()) {
+		return await listLeagueBattlesWeb2(leagueId);
+	}
+
 	const { items } = await functions.listLeagueBattles({ leagueId });
 
 	return items.map(projectBattleWire);
@@ -807,6 +992,10 @@ export const listLeagueBattles = async ({
  * `kickoffMs` ascending.
  */
 export const listMyBattles = async (): Promise<BattleDoc[]> => {
+	if (isWeb2Backend()) {
+		return await listMyBattlesWeb2();
+	}
+
 	const { items } = await functions.listMyBattles();
 
 	return items.map(projectBattleWire);
@@ -820,7 +1009,7 @@ export const listMyBattles = async (): Promise<BattleDoc[]> => {
  * list.
  */
 export const getMyBattleStats = async (): Promise<{ boutsWon: number }> =>
-	await functions.getMyBattleStats();
+	isWeb2Backend() ? await getMyBattleStatsWeb2() : await functions.getMyBattleStats();
 
 /**
  * Propose a new battle (kind='league'). Caller must own the `sideA`
@@ -872,6 +1061,28 @@ export const proposeBattle = async ({
 
 	if (nonNullish(trimmedTrashTalk) && trimmedTrashTalk.length > BATTLE_TRASH_TALK_MAX_LENGTH) {
 		throw new Error(`Trash talk must be at most ${BATTLE_TRASH_TALK_MAX_LENGTH} characters.`);
+	}
+
+	// The server stamps proposer, state and respond-by from the session, and
+	// caps ids at 64 chars, so the id is a uuid rather than the readable
+	// two-sided slug (which can exceed the cap). The provisional window
+	// semantics are identical: its length encodes the duration accept keeps.
+	if (isWeb2Backend()) {
+		const now = Date.now();
+
+		return await proposeBattleWeb2({
+			id: crypto.randomUUID(),
+			kind: 'league',
+			sideA,
+			sideB,
+			kickoffMs: now,
+			settleMs: now + durationMs,
+			...(nonNullish(scope) && scope !== 'all' ? { scope } : {}),
+			...(nonNullish(wager) && wager > BATTLE_WAGER_MIN ? { wager } : {}),
+			...(nonNullish(trimmedTrashTalk) && trimmedTrashTalk.length > 0
+				? { trashTalk: trimmedTrashTalk }
+				: {})
+		});
 	}
 
 	const identity = await safeGetIdentityOnce();
@@ -947,6 +1158,15 @@ const readLeagueStatsBucket = async ({
  * separately. `respondedAtMs` records when the challenged side answered.
  */
 export const acceptBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	// The two accept shapes are separate routes: the league accept fuses the
+	// kickoff and stamps baselines server-side, the duel accept just moves the
+	// state. Same fused-vs-plain split as the doc writes below.
+	if (isWeb2Backend()) {
+		return battle.kind === 'league'
+			? await acceptLeagueBattleWeb2(battle.id)
+			: await acceptDuelWeb2(battle.id);
+	}
+
 	const existing = await getDoc<BattleDoc>({
 		collection: Collection.BATTLES,
 		key: battle.id
@@ -997,6 +1217,10 @@ export const acceptBattle = async ({ battle }: { battle: BattleDoc }): Promise<B
  * else and any battle past `proposed`. `respondedAtMs` records when.
  */
 export const declineBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	if (isWeb2Backend()) {
+		return await declineBattleWeb2(battle.id);
+	}
+
 	const existing = await getDoc<BattleDoc>({
 		collection: Collection.BATTLES,
 		key: battle.id
@@ -1029,6 +1253,23 @@ export const declineBattle = async ({ battle }: { battle: BattleDoc }): Promise<
  * rows without `respondByMs` fall back to `kickoffMs`.
  */
 export const maybeExpireBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	// Same lazy sweep over the HTTP transport: re-read, gate on state and the
+	// respond-by deadline locally (so a fresh proposal never fires a doomed
+	// write), then let the server apply the transition.
+	if (isWeb2Backend()) {
+		const current = await getBattleWeb2(battle.id);
+
+		if (isNullish(current)) {
+			return battle;
+		}
+
+		if (current.state !== 'proposed' || Date.now() < (current.respondByMs ?? current.kickoffMs)) {
+			return current;
+		}
+
+		return await expireBattleWeb2(battle.id);
+	}
+
 	const existing = await getDoc<BattleDoc>({
 		collection: Collection.BATTLES,
 		key: battle.id
@@ -1069,6 +1310,10 @@ export const maybeExpireBattle = async ({ battle }: { battle: BattleDoc }): Prom
  * stale wire projection.
  */
 export const kickoffBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	if (isWeb2Backend()) {
+		return await kickoffBattleWeb2(battle.id);
+	}
+
 	const existing = await getDoc<BattleDoc>({
 		collection: Collection.BATTLES,
 		key: battle.id
@@ -1109,6 +1354,12 @@ export const retractBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 		throw new Error('Only proposed battles can be retracted.');
 	}
 
+	if (isWeb2Backend()) {
+		await retractBattleWeb2(battle.id);
+
+		return;
+	}
+
 	const existing = await getDoc<BattleDoc>({
 		collection: Collection.BATTLES,
 		key: battle.id
@@ -1138,6 +1389,10 @@ export const retractBattle = async ({ battle }: { battle: BattleDoc }): Promise<
  * resolves fine, since resolution no longer reads baselines.
  */
 export const resolveBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	if (isWeb2Backend()) {
+		return await resolveBattleWeb2(battle.id);
+	}
+
 	const { battle: resolved } = await functions.resolveBattle({ battleId: battle.id });
 
 	return projectBattleWire(resolved);
@@ -1174,6 +1429,10 @@ export const readBattleLiveScore = async ({
 }): Promise<BattleLiveScore | null> => {
 	if (battle.state !== 'in_flight' || battle.kind !== 'league') {
 		return null;
+	}
+
+	if (isWeb2Backend()) {
+		return (await readBattleLiveScoreWeb2(battle.id)) ?? null;
 	}
 
 	const { score } = await functions.readBattleLiveScore({ battleId: battle.id });

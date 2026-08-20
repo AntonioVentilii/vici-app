@@ -1,13 +1,24 @@
 import type { ClearingDid, RegistryDid } from '$declarations';
 import type { AppLocale } from '$lib/constants/locale.constants';
+import type { LeaguePrivacy } from '$lib/enums/league';
 import type { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
+import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
+import type {
+	AffiliationChampionship,
+	AffiliationMemberCount,
+	AffiliationStatsDoc
+} from '$lib/types/affiliation-stats';
 import type { TrackEventInput } from '$lib/types/analytics-event';
+import { isBattleScope, type BattleDoc, type BattleWinner } from '$lib/types/battle';
+import type { LeagueDoc } from '$lib/types/league';
+import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
 import type { MarketMetadata, MarketMetadataInput } from '$lib/types/market-metadata';
 import type { MarketTranslation, MarketTranslationInput } from '$lib/types/market-translation';
 import type { UserProfile } from '$lib/types/profile';
 import type { FriendRequestOutcome, Relation } from '$lib/types/relation';
 import type { ResolvedResult } from '$lib/types/social';
+import type { TournamentDoc, TournamentMatchDoc } from '$lib/types/tournament';
 import type { UserStatsDoc } from '$lib/types/user-stats';
 import { web2ApiBaseUrl } from '$lib/web2/backend-mode';
 import {
@@ -88,7 +99,7 @@ const request = async <T>({
 	body
 }: {
 	path: string;
-	method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+	method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 	body?: Record<string, unknown>;
 }): Promise<T> => {
 	const response = await fetch(`${web2ApiBaseUrl()}${path}`, {
@@ -1014,3 +1025,650 @@ export const listEngineLeaderboard = async ({
 
 	return { items: items.map(mapLeaderboardEntry), total: BigInt(total) };
 };
+
+// ─── Leagues + battles ───────────────────────────────────────────────────
+//
+// The HTTP API keys league owners, members and battle proposers by the
+// account id (uuid) where the on-chain stack uses principals. The app's
+// domain shapes carry that identity in single string fields
+// (`LeagueDoc.owner`, `LeagueMemberDoc.member`, `BattleDoc.proposer`,
+// duel `sideA` / `sideB`), so the wrappers below carry the wire renames
+// (`ownerUserId` → `owner`, `memberUserId` → `member`,
+// `proposerUserId` → `proposer`) and re-narrow loose wire strings back to
+// the app unions, keeping the return shapes byte-identical to the
+// satellite services.
+
+type Web2LeagueWire = Omit<LeagueDoc, 'owner' | 'privacy'> & {
+	ownerUserId: string;
+	privacy: string;
+};
+
+const mapLeague = (wire: Web2LeagueWire): LeagueDoc => {
+	const { ownerUserId, privacy, ...rest } = wire;
+
+	return { ...rest, owner: ownerUserId, privacy: privacy as LeaguePrivacy };
+};
+
+type Web2LeagueMemberWire = Omit<LeagueMemberDoc, 'member'> & { memberUserId: string };
+
+const mapLeagueMember = (wire: Web2LeagueMemberWire): LeagueMemberDoc => {
+	const { memberUserId, ...rest } = wire;
+
+	return { ...rest, member: memberUserId };
+};
+
+type Web2BattleWire = Omit<BattleDoc, 'proposer' | 'scope'> & {
+	proposerUserId: string;
+	scope?: string;
+};
+
+const mapBattle = (wire: Web2BattleWire): BattleDoc => {
+	const { proposerUserId, scope, ...rest } = wire;
+
+	return {
+		...rest,
+		proposer: proposerUserId,
+		// Drop anything outside the closed scope set, like the satellite
+		// projection does for legacy / unknown values.
+		...(nonNullish(scope) && isBattleScope(scope) ? { scope } : {})
+	};
+};
+
+/** Every league the session user belongs to, with role and member tally. */
+export const listMyLeagues = async (): Promise<
+	{ league: LeagueDoc; role: LeagueMemberRole; joinedAtMs: number; memberCount: number }[]
+> => {
+	const { items } = await request<{
+		items: {
+			league: Web2LeagueWire;
+			role: LeagueMemberRole;
+			joinedAtMs: number;
+			memberCount: number;
+		}[];
+	}>({ path: '/api/v1/leagues/mine', method: 'GET' });
+
+	return items.map(({ league, ...rest }) => ({ league: mapLeague(league), ...rest }));
+};
+
+/** The opponent pool for the create-battle picker. */
+export const listChallengeableLeagues = async (): Promise<LeagueDoc[]> => {
+	const { items } = await request<{ items: Web2LeagueWire[] }>({
+		path: '/api/v1/leagues/challengeable',
+		method: 'GET'
+	});
+
+	return items.map(mapLeague);
+};
+
+/** Open leagues the caller's friends are in but the caller is not. */
+export const listFriendRecommendedLeagues = async (): Promise<
+	{ league: LeagueDoc; memberCount: number; friendMembers: string[] }[]
+> => {
+	const { items } = await request<{
+		items: { league: Web2LeagueWire; memberCount: number; friendMemberUserIds: string[] }[];
+	}>({ path: '/api/v1/leagues/friend-recommended', method: 'GET' });
+
+	return items.map(({ league, memberCount, friendMemberUserIds }) => ({
+		league: mapLeague(league),
+		memberCount,
+		friendMembers: friendMemberUserIds
+	}));
+};
+
+/** Resolve an invite code to its league; `undefined` = invalid code (UX). */
+export const lookupLeagueByInvite = async (inviteCode: string): Promise<LeagueDoc | undefined> => {
+	const { league } = await request<{ league?: Web2LeagueWire | null }>({
+		path: `/api/v1/leagues/invite/${encodeURIComponent(inviteCode)}`,
+		method: 'GET'
+	});
+
+	return isNullish(league) ? undefined : mapLeague(league);
+};
+
+/**
+ * Create a league. The invite code is minted server-side (any client-picked
+ * code is not part of the wire contract), so callers read the definitive
+ * code off the returned league.
+ */
+export const createLeague = async ({
+	id,
+	name,
+	description,
+	accentColor,
+	emblem,
+	privacy
+}: {
+	id: string;
+	name: string;
+	description?: string;
+	accentColor?: string;
+	emblem?: string;
+	privacy?: LeaguePrivacy;
+}): Promise<LeagueDoc> => {
+	const { league } = await request<{ league: Web2LeagueWire }>({
+		path: '/api/v1/leagues/',
+		method: 'POST',
+		body: {
+			id,
+			name,
+			...(isNullish(description) ? {} : { description }),
+			...(isNullish(accentColor) ? {} : { accentColor }),
+			...(isNullish(emblem) ? {} : { emblem }),
+			...(isNullish(privacy) ? {} : { privacy })
+		}
+	});
+
+	return mapLeague(league);
+};
+
+/** Owner-only edit of the mutable league fields; omitted fields keep their
+ * stored value, so an empty patch doubles as a fresh read of the row. */
+export const updateLeague = async ({
+	leagueId,
+	name,
+	privacy
+}: {
+	leagueId: string;
+	name?: string;
+	privacy?: LeaguePrivacy;
+}): Promise<LeagueDoc> => {
+	const { league } = await request<{ league: Web2LeagueWire }>({
+		path: `/api/v1/leagues/${encodeURIComponent(leagueId)}`,
+		method: 'PATCH',
+		body: {
+			...(isNullish(name) ? {} : { name }),
+			...(isNullish(privacy) ? {} : { privacy })
+		}
+	});
+
+	return mapLeague(league);
+};
+
+export interface Web2TransferLeagueOwnershipResult {
+	ok: boolean;
+	reason?: 'not_owner' | 'league_not_found' | 'new_owner_not_member' | 'new_owner_is_caller';
+}
+
+export const transferLeagueOwnership = async ({
+	leagueId,
+	newOwnerUserId
+}: {
+	leagueId: string;
+	newOwnerUserId: string;
+}): Promise<Web2TransferLeagueOwnershipResult> =>
+	await request({
+		path: `/api/v1/leagues/${encodeURIComponent(leagueId)}/transfer-ownership`,
+		method: 'POST',
+		body: { newOwnerUserId }
+	});
+
+/** Full roster of a league, earliest joiner first. */
+export const listLeagueMembers = async (leagueId: string): Promise<LeagueMemberDoc[]> => {
+	const { items } = await request<{ items: Web2LeagueMemberWire[] }>({
+		path: `/api/v1/leagues/${encodeURIComponent(leagueId)}/members`,
+		method: 'GET'
+	});
+
+	return items.map(mapLeagueMember);
+};
+
+/** Self-join by invite code. Idempotent server-side: re-joining returns the
+ * existing membership row unchanged. */
+export const joinLeagueByInvite = async ({
+	inviteCode
+}: {
+	inviteCode: string;
+}): Promise<LeagueMemberDoc> => {
+	const { member } = await request<{ member: Web2LeagueMemberWire }>({
+		path: '/api/v1/leagues/join',
+		method: 'POST',
+		body: { inviteCode }
+	});
+
+	return mapLeagueMember(member);
+};
+
+/** Owner-gated role write on an existing membership row. */
+export const setLeagueMemberRole = async ({
+	leagueId,
+	memberUserId,
+	role
+}: {
+	leagueId: string;
+	memberUserId: string;
+	role: LeagueMemberRole;
+}): Promise<LeagueMemberDoc> => {
+	const { member } = await request<{ member: Web2LeagueMemberWire }>({
+		path: `/api/v1/leagues/${encodeURIComponent(leagueId)}/members/${encodeURIComponent(memberUserId)}`,
+		method: 'PUT',
+		body: { role }
+	});
+
+	return mapLeagueMember(member);
+};
+
+/** Leave / kick: remove one membership row (never the owner's). */
+export const removeLeagueMember = async ({
+	leagueId,
+	memberUserId
+}: {
+	leagueId: string;
+	memberUserId: string;
+}): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: `/api/v1/leagues/${encodeURIComponent(leagueId)}/members/${encodeURIComponent(memberUserId)}`,
+		method: 'DELETE'
+	});
+};
+
+/** Retroactive founder-award self-heal over the caller's owned leagues. */
+export const settleFounderAwards = async (): Promise<{ settled: number }> =>
+	await request({ path: '/api/v1/leagues/founder-awards/settle', method: 'POST' });
+
+/**
+ * Owner-only cover upload. Multipart rather than JSON (the one non-JSON
+ * write on this client): the route wants the raw bytes as a file field.
+ * The server re-encodes to the canonical square cover and persists the
+ * serving URL on the league row, so the returned league already carries
+ * the final `imageUrl`.
+ */
+export const uploadLeagueImage = async ({
+	leagueId,
+	image
+}: {
+	leagueId: string;
+	image: Blob;
+}): Promise<LeagueDoc> => {
+	const body = new FormData();
+
+	// A filename is required for the multipart part to parse as a file.
+	body.append('image', image, 'cover.jpg');
+
+	const response = await fetch(
+		`${web2ApiBaseUrl()}/api/v1/leagues/${encodeURIComponent(leagueId)}/image`,
+		{ method: 'POST', credentials: 'include', body }
+	);
+
+	if (!response.ok) {
+		throw new Web2ApiError({ status: response.status, code: await errorCode(response) });
+	}
+
+	const { league } = (await response.json()) as { league: Web2LeagueWire };
+
+	return mapLeague(league);
+};
+
+/** Owner-only cover removal: clears the row's URL and drops the stored
+ * asset; the league falls back to its emblem glyph. */
+export const deleteLeagueImage = async (leagueId: string): Promise<LeagueDoc> => {
+	const { league } = await request<{ league: Web2LeagueWire }>({
+		path: `/api/v1/leagues/${encodeURIComponent(leagueId)}/image`,
+		method: 'DELETE'
+	});
+
+	return mapLeague(league);
+};
+
+/** Every battle involving the caller (duels by id, league bouts by owned
+ * leagues), kickoff ascending. */
+export const listMyBattles = async (): Promise<BattleDoc[]> => {
+	const { items } = await request<{ items: Web2BattleWire[] }>({
+		path: '/api/v1/battles/mine',
+		method: 'GET'
+	});
+
+	return items.map(mapBattle);
+};
+
+/** Battles referencing a league on either side, kickoff ascending. */
+export const listLeagueBattles = async (leagueId: string): Promise<BattleDoc[]> => {
+	const { items } = await request<{ items: Web2BattleWire[] }>({
+		path: `/api/v1/battles/league/${encodeURIComponent(leagueId)}`,
+		method: 'GET'
+	});
+
+	return items.map(mapBattle);
+};
+
+/** Count of resolved battles the caller's side won. */
+export const getMyBattleStats = async (): Promise<{ boutsWon: number }> =>
+	await request({ path: '/api/v1/battles/my-stats', method: 'GET' });
+
+/** One battle by id, or `undefined` when unknown. */
+export const getBattle = async (battleId: string): Promise<BattleDoc | undefined> => {
+	try {
+		const { battle } = await request<{ battle: Web2BattleWire }>({
+			path: `/api/v1/battles/${encodeURIComponent(battleId)}`,
+			method: 'GET'
+		});
+
+		return mapBattle(battle);
+	} catch (err: unknown) {
+		if (err instanceof Web2ApiError && err.status === 404) {
+			return;
+		}
+
+		throw err;
+	}
+};
+
+/** Propose a battle. The server stamps proposer, state and the respond-by
+ * deadline; league authorisation and challengeability run server-side. */
+export const proposeBattle = async ({
+	id,
+	kind,
+	sideA,
+	sideB,
+	kickoffMs,
+	settleMs,
+	scope,
+	wager,
+	trashTalk
+}: {
+	id: string;
+	kind: BattleDoc['kind'];
+	sideA: string;
+	sideB: string;
+	kickoffMs: number;
+	settleMs: number;
+	scope?: string;
+	wager?: number;
+	trashTalk?: string;
+}): Promise<BattleDoc> => {
+	const { battle } = await request<{ battle: Web2BattleWire }>({
+		path: '/api/v1/battles/',
+		method: 'POST',
+		body: {
+			id,
+			kind,
+			sideA,
+			sideB,
+			kickoffMs,
+			settleMs,
+			...(isNullish(scope) ? {} : { scope }),
+			...(isNullish(wager) ? {} : { wager }),
+			...(isNullish(trashTalk) ? {} : { trashTalk })
+		}
+	});
+
+	return mapBattle(battle);
+};
+
+const battleTransition = async ({
+	battleId,
+	action
+}: {
+	battleId: string;
+	action: 'accept' | 'accept-league' | 'decline' | 'expire' | 'kickoff' | 'resolve';
+}): Promise<BattleDoc> => {
+	const { battle } = await request<{ battle: Web2BattleWire }>({
+		path: `/api/v1/battles/${encodeURIComponent(battleId)}/${action}`,
+		method: 'POST'
+	});
+
+	return mapBattle(battle);
+};
+
+/** Duel accept: proposed -> accepted (kickoff is a later transition). */
+export const acceptDuel = (battleId: string): Promise<BattleDoc> =>
+	battleTransition({ battleId, action: 'accept' });
+
+/** League accept: proposed -> in_flight in one step, baselines stamped
+ * server-side from the sides' league stats. */
+export const acceptLeagueBattle = (battleId: string): Promise<BattleDoc> =>
+	battleTransition({ battleId, action: 'accept-league' });
+
+export const declineBattle = (battleId: string): Promise<BattleDoc> =>
+	battleTransition({ battleId, action: 'decline' });
+
+/** Lazy expiry of a proposal past its respond-by deadline. */
+export const expireBattle = (battleId: string): Promise<BattleDoc> =>
+	battleTransition({ battleId, action: 'expire' });
+
+export const kickoffBattle = (battleId: string): Promise<BattleDoc> =>
+	battleTransition({ battleId, action: 'kickoff' });
+
+/** Resolve a settled league battle from clearing settlement history;
+ * idempotent (an already-resolved battle comes back unchanged). */
+export const resolveBattle = (battleId: string): Promise<BattleDoc> =>
+	battleTransition({ battleId, action: 'resolve' });
+
+/** Retract a still-proposed battle (proposer-only, hard delete). */
+export const retractBattle = async (battleId: string): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: `/api/v1/battles/${encodeURIComponent(battleId)}`,
+		method: 'DELETE'
+	});
+};
+
+/** Provisional standings of an in-flight league battle; `undefined` when
+ * the battle cannot be scored live. */
+export const readBattleLiveScore = async (
+	battleId: string
+): Promise<
+	| { scoreA: number; scoreB: number; callsA: number; callsB: number; leader: BattleWinner }
+	| undefined
+> => {
+	const { score } = await request<{
+		score?: {
+			scoreA: number;
+			scoreB: number;
+			callsA: number;
+			callsB: number;
+			leader: BattleWinner;
+		} | null;
+	}>({ path: `/api/v1/battles/${encodeURIComponent(battleId)}/live-score`, method: 'GET' });
+
+	return score ?? undefined;
+};
+
+// ─── Worlds ──────────────────────────────────────────────────────────────
+//
+// Same identity rename as leagues: the wire keys the member by
+// `memberUserId` where `AffiliationDoc` carries a single `member` string.
+// Stats, member counts and championships are identity-free aggregates and
+// already ride the app's camelCase shapes.
+
+type Web2AffiliationWire = Omit<AffiliationDoc, 'member'> & { memberUserId: string };
+
+const mapAffiliation = (wire: Web2AffiliationWire): AffiliationDoc => {
+	const { memberUserId, ...rest } = wire;
+
+	return { ...rest, member: memberUserId };
+};
+
+/** The caller's current Worlds slots: at most one university + one country. */
+export const getMyAffiliations = async (): Promise<{
+	university?: AffiliationDoc;
+	country?: AffiliationDoc;
+}> => {
+	const { university, country } = await request<{
+		university?: Web2AffiliationWire | null;
+		country?: Web2AffiliationWire | null;
+	}>({ path: '/api/v1/worlds/affiliations/mine', method: 'GET' });
+
+	return {
+		...(isNullish(university) ? {} : { university: mapAffiliation(university) }),
+		...(isNullish(country) ? {} : { country: mapAffiliation(country) })
+	};
+};
+
+/** Join a Worlds slot. The 90-day lock is server arithmetic; switching
+ * identifiers within a kind is gated on the held slot's lock. */
+export const setAffiliation = async ({
+	kind,
+	affiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	affiliationIdentifier: string;
+}): Promise<AffiliationDoc> => {
+	const { affiliation } = await request<{ affiliation: Web2AffiliationWire }>({
+		path: '/api/v1/worlds/affiliations',
+		method: 'POST',
+		body: { kind, affiliationIdentifier }
+	});
+
+	return mapAffiliation(affiliation);
+};
+
+/** Leave a Worlds slot (lock-gated server-side, idempotent when absent). */
+export const removeAffiliation = async ({
+	kind,
+	affiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	affiliationIdentifier: string;
+}): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: `/api/v1/worlds/affiliations/${encodeURIComponent(kind)}/${encodeURIComponent(affiliationIdentifier)}`,
+		method: 'DELETE'
+	});
+};
+
+/** One affiliation's standings, or `undefined` when it has no activity. */
+export const getAffiliationStats = async ({
+	kind,
+	affiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	affiliationIdentifier: string;
+}): Promise<AffiliationStatsDoc | undefined> => {
+	const { stats } = await request<{ stats?: AffiliationStatsDoc | null }>({
+		path: `/api/v1/worlds/stats?${encodeQuery({ kind, affiliationIdentifier })}`,
+		method: 'GET'
+	});
+
+	return stats ?? undefined;
+};
+
+/** Ranked all-time leaderboard for a kind (rank-eligible rows only). */
+export const listAffiliationStats = async ({
+	kind,
+	limit
+}: {
+	kind: AffiliationKind;
+	limit?: number;
+}): Promise<AffiliationStatsDoc[]> => {
+	const { items } = await request<{ items: AffiliationStatsDoc[] }>({
+		path: `/api/v1/worlds/leaderboard?${encodeQuery({
+			kind,
+			...(isNullish(limit) ? {} : { limit: limit.toString() })
+		})}`,
+		method: 'GET'
+	});
+
+	return items;
+};
+
+/** Member tally per affiliation of a kind, biggest first. */
+export const listWorldsMemberCounts = async (
+	kind: AffiliationKind
+): Promise<AffiliationMemberCount[]> => {
+	const { items } = await request<{ items: AffiliationMemberCount[] }>({
+		path: `/api/v1/worlds/member-counts?${encodeQuery({ kind })}`,
+		method: 'GET'
+	});
+
+	return items;
+};
+
+/** Champion history for one affiliation, newest month first. */
+export const listAffiliationChampionships = async ({
+	kind,
+	affiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	affiliationIdentifier: string;
+}): Promise<AffiliationChampionship[]> => {
+	const { items } = await request<{ items: AffiliationChampionship[] }>({
+		path: `/api/v1/worlds/championships?${encodeQuery({ kind, affiliationIdentifier })}`,
+		method: 'GET'
+	});
+
+	return items;
+};
+
+/** Claim a closed month's Worlds podium finish (freezes the month on first
+ * touch; idempotent per place through the award key). */
+export const claimWorldsPodiumPrize = async ({
+	monthAnchor
+}: {
+	monthAnchor: string;
+}): Promise<{
+	monthAnchor: string;
+	awardsCreated: number;
+	awardsAlreadyClaimed: number;
+	notEligible: boolean;
+}> =>
+	await request({
+		path: '/api/v1/worlds/podium/claim',
+		method: 'POST',
+		body: { monthAnchor }
+	});
+
+// ─── Tournaments ─────────────────────────────────────────────────────────
+//
+// The bracket shapes are identity-free (league ids only) and the API
+// speaks the app's camelCase doc shapes with explicit nulls for TBD
+// slots, so these are envelope unwraps with type narrowing.
+
+/** The most recent tournament and its bracket; `tournament` is null until
+ * the first draw runs. */
+export const getCurrentTournament = async (): Promise<{
+	tournament: TournamentDoc | null;
+	matches: TournamentMatchDoc[];
+}> => await request({ path: '/api/v1/tournaments/current', method: 'GET' });
+
+/** Fire the monthly draw; idempotent by the month-anchor key collision. */
+export const triggerTournamentDraw = async ({
+	monthAnchor
+}: {
+	monthAnchor: string;
+}): Promise<{
+	ok: boolean;
+	tournamentId?: string;
+	reason?: 'already_drawn' | 'month_not_started' | 'insufficient_leagues' | 'invalid_input';
+	availableLeagues?: number;
+}> => await request({ path: '/api/v1/tournaments/draw', method: 'POST', body: { monthAnchor } });
+
+/** Resolve every still-open match of a closed round; idempotent. */
+export const resolveTournamentRound = async ({
+	tournamentId,
+	round
+}: {
+	tournamentId: string;
+	round: string;
+}): Promise<{
+	ok: boolean;
+	reason?:
+		| 'tournament_not_found'
+		| 'round_not_yet_closed'
+		| 'previous_round_not_resolved'
+		| 'no_matches'
+		| 'invalid_input';
+	matchesResolved?: number;
+	tournamentConcluded?: boolean;
+}> =>
+	await request({
+		path: `/api/v1/tournaments/${encodeURIComponent(tournamentId)}/resolve`,
+		method: 'POST',
+		body: { round }
+	});
+
+/** Per-user prize claim on a concluded tournament; idempotent through the
+ * award-key collision. */
+export const claimTournamentPrize = async ({
+	tournamentId
+}: {
+	tournamentId: string;
+}): Promise<{
+	ok: boolean;
+	reason?: 'tournament_not_found' | 'tournament_not_concluded' | 'not_member_of_top_league';
+	awardsCreated?: number;
+	awardsAlreadyClaimed?: number;
+	totalVxpCredited?: number;
+}> =>
+	await request({
+		path: `/api/v1/tournaments/${encodeURIComponent(tournamentId)}/claim`,
+		method: 'POST'
+	});

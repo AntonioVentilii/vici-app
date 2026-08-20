@@ -5,6 +5,13 @@ import {
 	type TournamentMatchDoc,
 	type TournamentRound
 } from '$lib/types/tournament';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	claimTournamentPrize as claimTournamentPrizeWeb2,
+	getCurrentTournament as getCurrentTournamentWeb2,
+	resolveTournamentRound as resolveTournamentRoundWeb2,
+	triggerTournamentDraw as triggerTournamentDrawWeb2
+} from '$lib/web2/client';
 import { isNullish } from '@dfinity/utils';
 
 /**
@@ -85,6 +92,12 @@ export const getCurrentTournament = async (): Promise<{
 	tournament: TournamentDoc | null;
 	matches: TournamentMatchDoc[];
 }> => {
+	// The HTTP API already emits the FE doc shapes with explicit nulls for
+	// TBD slots, so no wire projection applies on this transport.
+	if (isWeb2Backend()) {
+		return await getCurrentTournamentWeb2();
+	}
+
 	const { tournament, matches } = await functions.getCurrentTournament();
 
 	return {
@@ -109,7 +122,12 @@ export const triggerTournamentDraw = ({
 	monthAnchor
 }: {
 	monthAnchor: string;
-}): Promise<TriggerTournamentDrawResult> => functions.triggerTournamentDraw({ monthAnchor });
+}): Promise<TriggerTournamentDrawResult> =>
+	// The web2 API also runs the draw from its worker; the lazy page-mount
+	// trigger stays for parity and collides idempotently with it.
+	isWeb2Backend()
+		? triggerTournamentDrawWeb2({ monthAnchor })
+		: functions.triggerTournamentDraw({ monthAnchor });
 
 export interface ResolveTournamentRoundResult {
 	ok: boolean;
@@ -139,7 +157,11 @@ export const resolveTournamentRound = ({
 	tournamentId: string;
 	round: TournamentRound;
 }): Promise<ResolveTournamentRoundResult> =>
-	functions.resolveTournamentRound({ tournamentId, round });
+	// Also a worker job on the web2 API; the mount-time trigger stays for
+	// parity and skips already-settled matches server-side.
+	isWeb2Backend()
+		? resolveTournamentRoundWeb2({ tournamentId, round })
+		: functions.resolveTournamentRound({ tournamentId, round });
 
 export interface ClaimTournamentPrizeResult {
 	ok: boolean;
@@ -165,7 +187,10 @@ export const claimTournamentPrize = ({
 	tournamentId
 }: {
 	tournamentId: string;
-}): Promise<ClaimTournamentPrizeResult> => functions.claimTournamentPrize({ tournamentId });
+}): Promise<ClaimTournamentPrizeResult> =>
+	isWeb2Backend()
+		? claimTournamentPrizeWeb2({ tournamentId })
+		: functions.claimTournamentPrize({ tournamentId });
 
 /**
  * Convenience: the current calendar month's anchor (UTC). Used by
