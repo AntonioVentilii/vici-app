@@ -47,6 +47,14 @@ jobs:
       contents: write
 
     steps:
+      - name: Mint app token
+        id: app-token
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.PR_AUTOMATION_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
       - name: Check if commits can be added
         id: check_can_add_commit
         run: |
@@ -103,16 +111,16 @@ jobs:
           fi
 
       - name: Commit format
-        if: steps.check_changes.outputs.changes_detected == 'true'
+        if: steps.check_can_add_commit.outputs.can_add_commit == 'true' && steps.check_changes.outputs.changes_detected == 'true'
         uses: ./.github/actions/add-and-commit
         with:
           message: '🤖 Apply formatting changes'
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Fail for formatting issues without personal access token
+      - name: Fail for formatting issues without a bot token
         if: steps.check_can_add_commit.outputs.can_add_commit == 'false' && steps.check_changes.outputs.changes_detected == 'true'
         run: |
-          echo "Formatting changes are needed but couldn't be committed because the personal access token isn't available or this isn't a pull request."
+          echo "Formatting changes are needed but couldn't be committed because the bot app token isn't available (fork pull request) or this isn't a pull request. Run 'npm run format' locally and commit the result."
           exit 1
 
   lint:
