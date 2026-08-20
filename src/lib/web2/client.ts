@@ -1,11 +1,33 @@
+import type { ClearingDid, RegistryDid } from '$declarations';
+import type { AppLocale } from '$lib/constants/locale.constants';
 import type { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import type { TrackEventInput } from '$lib/types/analytics-event';
+import type { MarketMetadata, MarketMetadataInput } from '$lib/types/market-metadata';
+import type { MarketTranslation, MarketTranslationInput } from '$lib/types/market-translation';
 import type { UserProfile } from '$lib/types/profile';
 import type { FriendRequestOutcome, Relation } from '$lib/types/relation';
 import type { ResolvedResult } from '$lib/types/social';
 import type { UserStatsDoc } from '$lib/types/user-stats';
 import { web2ApiBaseUrl } from '$lib/web2/backend-mode';
+import {
+	intervalToWire,
+	leaderboardWindowToWire,
+	mapCollateralAssetInfo,
+	mapLeaderboardEntry,
+	mapPriceCandle,
+	mapSeries,
+	mapSeriesTradePage,
+	mapSeriesTradedVolume,
+	mapSettlementStatus,
+	type Web2CollateralAssetInfoWire,
+	type Web2LeaderboardEntryWire,
+	type Web2PriceCandleWire,
+	type Web2SeriesTradePageWire,
+	type Web2SeriesTradedVolumeWire,
+	type Web2SeriesWire,
+	type Web2SettlementStatusWire
+} from '$lib/web2/engine-wire';
 import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
@@ -458,4 +480,265 @@ export const listFriendResolvedResults = async (friends: string[]): Promise<Reso
 	});
 
 	return items.map(({ userId, ...rest }) => ({ owner: userId, ...rest }));
+};
+
+// ─── Markets (metadata + translations) ───────────────────────────────────
+//
+// The HTTP API stores market metadata and translations in the same camelCase
+// shape the app types already use, so these wrappers are plain envelope
+// unwraps. Writes go through the same curator gate server-side (admin or
+// series creator, resolved via the caller's session).
+
+/** Editorial metadata for one series, or `undefined` when none is stored. */
+export const getMarketMetadata = async (seriesId: string): Promise<MarketMetadata | undefined> => {
+	const { metadata } = await request<{ metadata: MarketMetadata | null }>({
+		path: `/api/v1/markets/${encodeURIComponent(seriesId)}/metadata`,
+		method: 'GET'
+	});
+
+	return metadata ?? undefined;
+};
+
+export const upsertMarketMetadata = async ({
+	seriesId,
+	data
+}: {
+	seriesId: string;
+	data: MarketMetadataInput;
+}): Promise<MarketMetadata> => {
+	const { metadata } = await request<{ metadata: MarketMetadata }>({
+		path: `/api/v1/markets/${encodeURIComponent(seriesId)}/metadata`,
+		method: 'PUT',
+		body: data
+	});
+
+	return metadata;
+};
+
+/** One stored translation overlay, or `undefined` when the locale has none. */
+export const getMarketTranslation = async ({
+	seriesId,
+	locale
+}: {
+	seriesId: string;
+	locale: AppLocale;
+}): Promise<MarketTranslation | undefined> => {
+	const { translation } = await request<{ translation: MarketTranslation | null }>({
+		path: `/api/v1/markets/${encodeURIComponent(seriesId)}/translations/${encodeURIComponent(locale)}`,
+		method: 'GET'
+	});
+
+	return translation ?? undefined;
+};
+
+export const listMarketTranslations = async (seriesId: string): Promise<MarketTranslation[]> => {
+	const { items } = await request<{ items: MarketTranslation[] }>({
+		path: `/api/v1/markets/${encodeURIComponent(seriesId)}/translations`,
+		method: 'GET'
+	});
+
+	return items;
+};
+
+/** Bulk overlay read across the visible series ids x the reader's candidate
+ * locales; the caller resolves best-per-series client-side. */
+export const listMarketTranslationsForLocales = async ({
+	seriesIds,
+	locales
+}: {
+	seriesIds: string[];
+	locales: AppLocale[];
+}): Promise<MarketTranslation[]> => {
+	const { items } = await request<{ items: MarketTranslation[] }>({
+		path: '/api/v1/markets/translations/query',
+		method: 'POST',
+		body: { seriesIds, locales }
+	});
+
+	return items;
+};
+
+export const upsertMarketTranslation = async ({
+	seriesId,
+	locale,
+	data
+}: {
+	seriesId: string;
+	locale: AppLocale;
+	data: MarketTranslationInput;
+}): Promise<MarketTranslation> => {
+	const { translation } = await request<{ translation: MarketTranslation }>({
+		path: `/api/v1/markets/${encodeURIComponent(seriesId)}/translations/${encodeURIComponent(locale)}`,
+		method: 'PUT',
+		body: data
+	});
+
+	return translation;
+};
+
+// ─── Public engine reads ─────────────────────────────────────────────────
+//
+// The API proxies the same anonymous registry / clearing queries the app runs
+// on-chain today, serialized to JSON (bigints as strings, principals as
+// text). The `engine-wire` mappers convert each payload back into the exact
+// `$declarations` candid types, so services hand downstream utils and stores
+// the same shapes on both transports. Only public market-wide reads live
+// here: every user-signed engine call (orders, collateral moves, positions)
+// stays on-chain until the engine / wallet swap.
+
+/**
+ * The series catalog. `tradeableNow` maps to the registry's tradeable-now
+ * filter; for this app's series (which never carry a future start gate) it is
+ * exactly the unexpired set the on-chain path requests via `only_unexpired`.
+ */
+export const listEngineSeries = async ({
+	tradeableNow = false
+}: { tradeableNow?: boolean } = {}): Promise<RegistryDid.Series[]> => {
+	const { series } = await request<{ series: Web2SeriesWire[] }>({
+		path: `/api/v1/engine/series${tradeableNow ? '?tradeable_now=true' : ''}`,
+		method: 'GET'
+	});
+
+	return series.map(mapSeries);
+};
+
+/** One series by id, or `undefined` when the registry does not know it. */
+export const getEngineSeries = async (
+	seriesId: string
+): Promise<RegistryDid.Series | undefined> => {
+	try {
+		const { series } = await request<{ series: Web2SeriesWire }>({
+			path: `/api/v1/engine/series/${encodeURIComponent(seriesId)}`,
+			method: 'GET'
+		});
+
+		return mapSeries(series);
+	} catch (err: unknown) {
+		// The route encodes "unknown series" as a 404; the app expects the same
+		// `undefined` the candid optional decodes to.
+		if (err instanceof Web2ApiError && err.status === 404) {
+			return;
+		}
+
+		throw err;
+	}
+};
+
+/** Clearing's settlement view for one series, `undefined` while unresolved. */
+export const getEngineSettlementStatus = async (
+	seriesId: string
+): Promise<ClearingDid.SettlementStatusView | undefined> => {
+	const { settlement } = await request<{ settlement: Web2SettlementStatusWire | null }>({
+		path: `/api/v1/engine/series/${encodeURIComponent(seriesId)}/settlement`,
+		method: 'GET'
+	});
+
+	return isNullish(settlement) ? undefined : mapSettlementStatus(settlement);
+};
+
+/** Market-wide OHLC candles for one series and interval. */
+export const getEnginePriceHistory = async ({
+	seriesId,
+	interval,
+	startTimeNs,
+	endTimeNs
+}: {
+	seriesId: string;
+	interval: ClearingDid.PriceHistoryInterval;
+	startTimeNs?: bigint;
+	endTimeNs?: bigint;
+}): Promise<ClearingDid.SeriesPriceCandle[]> => {
+	const { candles } = await request<{ candles: Web2PriceCandleWire[] }>({
+		path: `/api/v1/engine/series/${encodeURIComponent(seriesId)}/price-history?${encodeQuery({
+			interval: intervalToWire(interval),
+			...(isNullish(startTimeNs) ? {} : { start_ns: startTimeNs.toString() }),
+			...(isNullish(endTimeNs) ? {} : { end_ns: endTimeNs.toString() })
+		})}`,
+		method: 'GET'
+	});
+
+	return candles.map(mapPriceCandle);
+};
+
+/** One page of a series' market-wide executed-trade tape. */
+export const listEngineSeriesTrades = async ({
+	seriesId,
+	startAfter,
+	limit
+}: {
+	seriesId: string;
+	startAfter?: bigint;
+	limit?: bigint;
+}): Promise<ClearingDid.SeriesTradeHistoryPage> => {
+	const { page } = await request<{ page: Web2SeriesTradePageWire }>({
+		path: `/api/v1/engine/series/${encodeURIComponent(seriesId)}/trades?${encodeQuery({
+			...(isNullish(startAfter) ? {} : { start_after: startAfter.toString() }),
+			...(isNullish(limit) ? {} : { limit: limit.toString() })
+		})}`,
+		method: 'GET'
+	});
+
+	return mapSeriesTradePage(page);
+};
+
+/** The route caps one volumes request at this many series ids. */
+const ENGINE_VOLUMES_CHUNK_SIZE = 100;
+
+/** Market-wide traded volumes for a series set, chunked to the route's cap so
+ * a catalog-wide read never trips the request validator. */
+export const listEngineSeriesVolumes = async (
+	seriesIds: string[]
+): Promise<ClearingDid.SeriesTradedVolume[]> => {
+	const results: ClearingDid.SeriesTradedVolume[] = [];
+
+	for (let start = 0; start < seriesIds.length; start += ENGINE_VOLUMES_CHUNK_SIZE) {
+		const { volumes } = await request<{ volumes: Web2SeriesTradedVolumeWire[] }>({
+			path: '/api/v1/engine/series/volumes',
+			method: 'POST',
+			body: { seriesIds: seriesIds.slice(start, start + ENGINE_VOLUMES_CHUNK_SIZE) }
+		});
+
+		results.push(...volumes.map(mapSeriesTradedVolume));
+	}
+
+	return results;
+};
+
+/** The authoritative settled (resolved) series ids from clearing. */
+export const listEngineSettledSeries = async (): Promise<string[]> => {
+	const { settled } = await request<{ settled: string[] }>({
+		path: '/api/v1/engine/settled-series',
+		method: 'GET'
+	});
+
+	return settled;
+};
+
+export const listEngineCollateralAssets = async (): Promise<ClearingDid.CollateralAssetInfo[]> => {
+	const { assets } = await request<{ assets: Web2CollateralAssetInfoWire[] }>({
+		path: '/api/v1/engine/collateral-assets',
+		method: 'GET'
+	});
+
+	return assets.map(mapCollateralAssetInfo);
+};
+
+/** Per-window ranked standings from clearing's leaderboard. The server drains
+ * the ranking cursor with its own page bound. */
+export const listEngineLeaderboard = async ({
+	window,
+	limit
+}: {
+	window: ClearingDid.LeaderboardWindow;
+	limit?: bigint;
+}): Promise<{ items: ClearingDid.LeaderboardEntry[]; total: bigint }> => {
+	const { items, total } = await request<{ items: Web2LeaderboardEntryWire[]; total: string }>({
+		path: `/api/v1/engine/leaderboard?${encodeQuery({
+			window: leaderboardWindowToWire(window),
+			...(isNullish(limit) ? {} : { limit: limit.toString() })
+		})}`,
+		method: 'GET'
+	});
+
+	return { items: items.map(mapLeaderboardEntry), total: BigInt(total) };
 };

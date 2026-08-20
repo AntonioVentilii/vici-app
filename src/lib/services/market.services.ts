@@ -50,6 +50,13 @@ import {
 import { settlementInputOutcome, settlementInputTimestamp } from '$lib/utils/payoff.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	getEngineSeries as getEngineSeriesWeb2,
+	getEngineSettlementStatus as getEngineSettlementStatusWeb2,
+	listEngineSeriesVolumes as listEngineSeriesVolumesWeb2,
+	listEngineSeries as listEngineSeriesWeb2
+} from '$lib/web2/client';
 import { isEmptyString, isNullish, nonNullish, notEmptyString, toNullable } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
@@ -253,7 +260,10 @@ const fetchMarkets = async ({
 	includeOrderBook?: boolean;
 }): Promise<Market[]> => {
 	const [allSeries, settledIds, settlementActivities] = await Promise.all([
-		listSeries({ identity, certified }),
+		// The catalog is a public engine read: web2 routes it through the HTTP
+		// bridge (which runs the same anonymous registry query server-side);
+		// the default path is the untouched on-chain call.
+		isWeb2Backend() ? listEngineSeriesWeb2() : listSeries({ identity, certified }),
 		getSettledSeriesIds({ identity, certified }),
 		getSettlementActivities({ certified })
 	]);
@@ -357,7 +367,9 @@ const fetchMarkets = async ({
 		[...settledIds]
 			.filter((id) => !activeSeriesIds.has(id))
 			.map(async (id) => {
-				const series = await getSeries({ identity, certified, seriesId: id });
+				const series = isWeb2Backend()
+					? await getEngineSeriesWeb2(id)
+					: await getSeries({ identity, certified, seriesId: id });
 
 				if (isNullish(series)) {
 					return;
@@ -450,7 +462,12 @@ const fetchOpenBinaryMarketsLite = async ({
 	// Social — narrowing either query by a single `balance_domain` would drop
 	// the Social half of the playground feed.
 	const [unexpiredSeries, settledIds] = await Promise.all([
-		listSeries({ identity, certified, params: unexpiredSeriesParams() }),
+		// web2 asks the HTTP bridge for the tradeable-now catalog, which equals
+		// the on-chain `only_unexpired` read for this app's series (none carries
+		// a future start gate, so tradeable-now reduces to unexpired).
+		isWeb2Backend()
+			? listEngineSeriesWeb2({ tradeableNow: true })
+			: listSeries({ identity, certified, params: unexpiredSeriesParams() }),
 		getSettledSeriesIds({ identity, certified })
 	]);
 
@@ -657,16 +674,21 @@ const enrichMarketsWithVolume = async ({
 	identity: Identity;
 	certified: boolean;
 }): Promise<Market[]> => {
-	if (markets.length === 0 || identity.getPrincipal().isAnonymous()) {
+	// The anonymous short-circuit is on-chain-only: the HTTP bridge exposes the
+	// volumes read publicly (its server-side call is not anonymous), so web2
+	// mode, which holds no signing identity at all, must not skip it.
+	if (markets.length === 0 || (!isWeb2Backend() && identity.getPrincipal().isAnonymous())) {
 		return markets;
 	}
 
 	try {
-		const volumes = await listSeriesTradedVolumesApi({
-			identity,
-			certified,
-			seriesIds: markets.map(({ id }) => id)
-		});
+		const volumes = isWeb2Backend()
+			? await listEngineSeriesVolumesWeb2(markets.map(({ id }) => id))
+			: await listSeriesTradedVolumesApi({
+					identity,
+					certified,
+					seriesIds: markets.map(({ id }) => id)
+				});
 
 		const volumeById = new Map(volumes.map(({ series_id, volume }) => [series_id, volume]));
 
@@ -919,10 +941,17 @@ const fetchMarket = async ({
 	certified: boolean;
 	marketId: MarketId;
 }): Promise<Market | undefined> => {
+	// Series + settlement are public engine reads with a web2 HTTP path; the
+	// order book has no HTTP surface yet and stays an anonymous on-chain query
+	// on both transports (it is publicly readable, so web2 mode still prices).
 	const [s, rawOrders, settlementStatus] = await Promise.all([
-		getSeries({ identity, certified, seriesId: marketId }),
+		isWeb2Backend()
+			? getEngineSeriesWeb2(marketId)
+			: getSeries({ identity, certified, seriesId: marketId }),
 		getOrderBook({ marketId, identity, certified }),
-		getSettlementStatus({ identity, certified, seriesId: marketId })
+		isWeb2Backend()
+			? getEngineSettlementStatusWeb2(marketId)
+			: getSettlementStatus({ identity, certified, seriesId: marketId })
 	]);
 
 	const { midPrice, bids, asks } = calculateMarketStats({

@@ -23,6 +23,11 @@ import {
 	type MarketPriceSeries,
 	type PriceHistoryPeriod
 } from '$lib/utils/market-price-history.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	getEnginePriceHistory as getEnginePriceHistoryWeb2,
+	listEngineSeriesTrades as listEngineSeriesTradesWeb2
+} from '$lib/web2/client';
 import { fromNullable, isNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
@@ -168,7 +173,7 @@ export const loadUserTradeHistory = async ({
  * reads as a flat line. Fails open: any error leaves the caller on its
  * cold-start / seed fallback.
  */
-export const loadMarketPriceCandles = ({
+export const loadMarketPriceCandles = async ({
 	seriesId,
 	period,
 	onLoad,
@@ -180,6 +185,30 @@ export const loadMarketPriceCandles = ({
 	onUpdateError?: (error: unknown) => void;
 }): Promise<void> => {
 	const { interval, startTimeNs, endTimeNs } = priceHistoryQueryWindow(period);
+
+	// web2 reads the candles once from the public HTTP bridge: there is no
+	// query/update pair on that transport, so the single response is delivered
+	// as the final (`certified: true`) pass and the on-chain double read below
+	// never runs.
+	if (isWeb2Backend()) {
+		try {
+			const response = await getEnginePriceHistoryWeb2({ seriesId, interval, startTimeNs });
+			const windowStartNs = startTimeNs ?? response[0]?.bucket_start_ns ?? endTimeNs;
+
+			onLoad({
+				certified: true,
+				response: deriveMarketPriceSeries({
+					candles: response,
+					windowStartNs,
+					windowEndNs: endTimeNs
+				})
+			});
+		} catch (err: unknown) {
+			onUpdateError?.(err);
+		}
+
+		return;
+	}
 
 	return loadWithCertification<ClearingDid.SeriesPriceCandle[]>({
 		request: ({ certified, identity: reqIdentity }) =>
@@ -236,19 +265,28 @@ export const getSeriesTradeVolume = async ({
 	seriesId: string;
 	decimals: number;
 }): Promise<bigint> => {
-	const identity = await getIdentityOrAnonymous();
+	// The trade tape is a public engine read: web2 drains the same pages from
+	// the HTTP bridge (no signing identity exists in that mode); the default
+	// path keeps the anonymous on-chain query.
+	const identity = isWeb2Backend() ? undefined : await getIdentityOrAnonymous();
 
 	let volume = ZERO;
 	let startAfter: bigint | undefined;
 
 	for (;;) {
-		const { items, next_cursor } = await listSeriesTradeHistoryApi({
-			identity,
-			seriesId,
-			startAfter,
-			limit: TRADE_HISTORY_PAGE_SIZE,
-			certified: false
-		});
+		const { items, next_cursor } = isNullish(identity)
+			? await listEngineSeriesTradesWeb2({
+					seriesId,
+					startAfter,
+					limit: TRADE_HISTORY_PAGE_SIZE
+				})
+			: await listSeriesTradeHistoryApi({
+					identity,
+					seriesId,
+					startAfter,
+					limit: TRADE_HISTORY_PAGE_SIZE,
+					certified: false
+				});
 
 		volume += tradeHistoryNotional({ trades: items, decimals });
 
