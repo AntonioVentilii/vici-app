@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.8.40](https://github.com/ViciApp/vici-app/compare/v1.8.39...v1.8.40) (2026-08-20)
+
+
+### Bug Fixes
+
+* **backend:** pin scure btc-signer to the noble v1 line and guard crypto majors ([#1284](https://github.com/ViciApp/vici-app/issues/1284)) ([95b3631](https://github.com/ViciApp/vici-app/commit/95b363177a4e29bd8f7c8455bb02d21741e1ddd5))
+
+
+### Miscellaneous Chores
+
+* **npm-deps-dev:** bump @tailwindcss/postcss from 4.3.2 to 4.3.3 ([#1294](https://github.com/ViciApp/vici-app/issues/1294)) ([d131ad9](https://github.com/ViciApp/vici-app/commit/d131ad994d5bc41d5658e283d392bd6b3fed8475))
+* **npm-deps-dev:** bump comment-parser from 1.4.7 to 1.4.8 ([#1291](https://github.com/ViciApp/vici-app/issues/1291)) ([607e16d](https://github.com/ViciApp/vici-app/commit/607e16dceb9225e7f827d0bdd6d1567a2c6d4e54))
+* **npm-deps-dev:** bump esbuild from 0.28.1 to 0.28.2 ([#1289](https://github.com/ViciApp/vici-app/issues/1289)) ([108be66](https://github.com/ViciApp/vici-app/commit/108be66950164152790eaf2f7730f6647a060e0c))
+* **npm-deps-dev:** bump flatted from 3.4.2 to 3.4.4 ([#1288](https://github.com/ViciApp/vici-app/issues/1288)) ([b6d8291](https://github.com/ViciApp/vici-app/commit/b6d8291dea6f4ed3bbd1af28dc3557bb5e27de82))
+* **npm-deps-dev:** bump get-tsconfig from 4.14.0 to 4.14.3 ([#1286](https://github.com/ViciApp/vici-app/issues/1286)) ([613cac7](https://github.com/ViciApp/vici-app/commit/613cac76947678333ad2541809f368f87a9bff7a))
+* **npm-deps-dev:** bump postcss-selector-parser from 7.1.4 to 7.1.5 ([#1290](https://github.com/ViciApp/vici-app/issues/1290)) ([282ff6b](https://github.com/ViciApp/vici-app/commit/282ff6b0445f4ae67cf516b9fea37f8601cf381b))
+* **npm-deps-dev:** bump svelte from 5.56.8 to 5.56.9 ([#1292](https://github.com/ViciApp/vici-app/issues/1292)) ([8d5c7b2](https://github.com/ViciApp/vici-app/commit/8d5c7b26b2e758632216a0cad753b0d8f2f18e86))
+* **npm-deps-dev:** bump svelte-check from 4.7.5 to 4.7.6 ([#1287](https://github.com/ViciApp/vici-app/issues/1287)) ([971bb82](https://github.com/ViciApp/vici-app/commit/971bb820b86cf7dcd030300317b6810ff512d734))
+* **npm-deps:** bump @lucide/svelte from 1.24.0 to 1.31.0 ([#1293](https://github.com/ViciApp/vici-app/issues/1293)) ([31f7880](https://github.com/ViciApp/vici-app/commit/31f7880212a271f862c7294b49ecdd9cf5bc99cd))
+* **npm-deps:** bump pvutils from 1.1.5 to 1.2.0 ([#1295](https://github.com/ViciApp/vici-app/issues/1295)) ([a55421e](https://github.com/ViciApp/vici-app/commit/a55421e9008ede44f74be3d28649944ce02ac23d))
+
 ## [1.8.39](https://github.com/ViciApp/vici-app/compare/v1.8.38...v1.8.39) (2026-08-20)
 
 
