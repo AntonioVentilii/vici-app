@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { getDoc, signOut } from '@junobuild/core';
+	import { getDoc } from '@junobuild/core';
 	import {
 		Bell,
 		ChevronLeft,
@@ -44,6 +44,9 @@
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { flushEvents, track } from '$lib/services/analytics.services';
+	// The dual-mode sign-out: the Juno delegation drop on the default
+	// backend, the cookie-session revoke in web2 mode.
+	import { signOut } from '$lib/services/identity.services';
 	import { persistPreferences } from '$lib/services/profile.services';
 	import { canInstall } from '$lib/stores/a2hs.store';
 	import { localeStore, setLocale } from '$lib/stores/locale.store';

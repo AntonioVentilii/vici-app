@@ -1,5 +1,7 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import type { CallSide } from '$lib/types/market';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import { claimCalibrationReward as claimCalibrationRewardWeb2 } from '$lib/web2/client';
 
 /**
  * Thin actor wrappers around the satellite VXP-awards endpoints.
@@ -26,6 +28,9 @@ export type VxpCalibrationReason =
 	| 'outcome_undetermined'
 	| 'rate_limited_hourly'
 	| 'rate_limited_daily'
+	// HTTP API only: the award was recorded without a transfer (treasury
+	// parallel-run mode); the reconciliation job pays it out later.
+	| 'recorded_only'
 	| 'transfer_failed';
 
 export interface VxpCalibrationClaim {
@@ -69,6 +74,13 @@ export const claimCalibrationReward = async ({
 	seriesId: string;
 	chosenSide: CallSide;
 }): Promise<VxpCalibrationClaim> => {
+	// The HTTP route runs the same gates server-side and answers the same
+	// structured result; the session covers the `anonymous` case (a signed-out
+	// caller gets a 401 before the claim logic runs).
+	if (isWeb2Backend()) {
+		return await claimCalibrationRewardWeb2({ seriesId, chosenSide });
+	}
+
 	const result = await functions.claimCalibrationReward({ seriesId, chosenSide });
 
 	return {

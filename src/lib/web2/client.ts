@@ -11,13 +11,20 @@ import type {
 } from '$lib/types/affiliation-stats';
 import type { TrackEventInput } from '$lib/types/analytics-event';
 import { isBattleScope, type BattleDoc, type BattleWinner } from '$lib/types/battle';
+import type { ExitSignalReason } from '$lib/types/exit-signal';
 import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
+import type { CallSide } from '$lib/types/market';
 import type { MarketMetadata, MarketMetadataInput } from '$lib/types/market-metadata';
 import type { MarketTranslation, MarketTranslationInput } from '$lib/types/market-translation';
 import type { UserProfile } from '$lib/types/profile';
 import type { FriendRequestOutcome, Relation } from '$lib/types/relation';
-import type { ResolvedResult } from '$lib/types/social';
+import type {
+	Activity,
+	ActivityReaction,
+	ActivityReactionCount,
+	ResolvedResult
+} from '$lib/types/social';
 import type { TournamentDoc, TournamentMatchDoc } from '$lib/types/tournament';
 import type { UserStatsDoc } from '$lib/types/user-stats';
 import { web2ApiBaseUrl } from '$lib/web2/backend-mode';
@@ -309,6 +316,19 @@ export const getMyProfile = async (): Promise<UserProfile | undefined> => {
 	});
 
 	return isNullish(profile) ? undefined : mapProfile(profile);
+};
+
+/** The caller's own on-file email off the owner profile row, `''` when no
+ * profile (or no address) is stored. A separate read from {@link getMyProfile}
+ * because {@link mapProfile} deliberately drops `email` from every profile
+ * object the app handles. */
+export const getMyProfileEmail = async (): Promise<string> => {
+	const { profile } = await request<{ profile: Web2ProfileWire | null }>({
+		path: '/api/v1/profiles/me',
+		method: 'GET'
+	});
+
+	return profile?.email?.trim() ?? '';
 };
 
 /** A public profile by id, or `undefined` when absent / hidden to the caller. */
@@ -1672,3 +1692,363 @@ export const claimTournamentPrize = async ({
 		path: `/api/v1/tournaments/${encodeURIComponent(tournamentId)}/claim`,
 		method: 'POST'
 	});
+
+// ─── VXP economy ─────────────────────────────────────────────────────────
+
+/** One row of the caller's award ledger (amounts are VXP base units as
+ * decimal strings; `status` tracks the pending -> paid transfer machine). */
+export interface Web2VxpAward {
+	id: string;
+	userId: string;
+	awardType: string;
+	awardKey: string;
+	amountBaseUnits: string;
+	status: 'pending' | 'processing' | 'paid' | 'failed';
+	earnedAtMs: number;
+	paidAtMs?: number;
+	blockIndex?: string;
+	errorMessage?: string;
+}
+
+/** The caller's own award history, newest first, optionally one type. */
+export const listMyVxpAwards = async (type?: string): Promise<Web2VxpAward[]> => {
+	const { items } = await request<{ items: Web2VxpAward[] }>({
+		path: `/api/v1/vxp/awards${isNullish(type) ? '' : `?${encodeQuery({ type })}`}`,
+		method: 'GET'
+	});
+
+	return items;
+};
+
+/** Structured calibration-claim result; `recorded_only` marks an award that
+ * was recorded without a transfer (treasury parallel-run mode). */
+export interface Web2CalibrationClaim {
+	correct: boolean;
+	paidNow: boolean;
+	alreadyClaimed: boolean;
+	rewardBaseUnits?: string;
+	newBalanceBaseUnits?: string;
+	blockIndex?: string;
+	reason?:
+		| 'not_engaged_yet'
+		| 'balance_above_floor'
+		| 'not_vici_market'
+		| 'not_binary'
+		| 'not_finalised'
+		| 'outcome_undetermined'
+		| 'rate_limited_hourly'
+		| 'rate_limited_daily'
+		| 'recorded_only'
+		| 'transfer_failed';
+	errorMessage?: string;
+}
+
+/** Claim the calibration reward for a finalised binary market. Eligibility,
+ * correctness and the rate limits are all decided server-side; expected
+ * ineligibility resolves (never rejects) with a `reason`. */
+export const claimCalibrationReward = async ({
+	seriesId,
+	chosenSide
+}: {
+	seriesId: string;
+	chosenSide: CallSide;
+}): Promise<Web2CalibrationClaim> =>
+	await request({
+		path: '/api/v1/vxp/calibration/claim',
+		method: 'POST',
+		body: { seriesId, chosenSide }
+	});
+
+/** Retry / self-heal a referral payout. Omitting the referee targets the
+ * caller's own referee row; other rows are admin-only server-side. */
+export const settleReferralPayout = async (refereeUserId?: string): Promise<void> => {
+	await request<Record<string, unknown>>({
+		path: '/api/v1/vxp/referral/settle',
+		method: 'POST',
+		body: isNullish(refereeUserId) ? {} : { refereeUserId }
+	});
+};
+
+// ─── Referrals ───────────────────────────────────────────────────────────
+
+interface Web2ReferralPayoutWire {
+	status: 'none' | 'owed' | 'paid';
+	amountBaseUnits: string;
+}
+
+/** One redemption where the caller is the referrer. The wire omits the
+ * referrer id (it is always the caller); the service restores it. */
+export interface Web2ReferralWire {
+	referee: string;
+	code: string;
+	redeemedAtMs: number;
+	withinReferrerCap: boolean;
+	refereePayout: Web2ReferralPayoutWire;
+	referrerPayout: Web2ReferralPayoutWire;
+}
+
+/** The caller's referral code; the API assigns one on first read. */
+export const getMyReferralCode = async (): Promise<string> => {
+	const { code } = await request<{ code: string }>({
+		path: '/api/v1/referrals/code',
+		method: 'GET'
+	});
+
+	return code;
+};
+
+/** Resolve a code to its owner's account id (public: invite landings run
+ * before the visitor signs in). `undefined` = unknown / malformed. */
+export const lookupReferralCode = async (code: string): Promise<string | undefined> => {
+	const { owner } = await request<{ owner: string | null }>({
+		path: `/api/v1/referrals/lookup?${encodeQuery({ code })}`,
+		method: 'GET'
+	});
+
+	return owner ?? undefined;
+};
+
+/** One-time redemption for the session user. Refusals surface as
+ * {@link Web2ApiError} whose `code` carries the stable refusal reason. */
+export const redeemReferralCode = async (code: string): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: '/api/v1/referrals/redeem',
+		method: 'POST',
+		body: { code }
+	});
+};
+
+/** Friendship-only claim for callers past the signup window (no VXP). */
+export const claimReferralFriendship = async (code: string): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: '/api/v1/referrals/claim-friendship',
+		method: 'POST',
+		body: { code }
+	});
+};
+
+/** Every redemption where the caller is the referrer, newest first. */
+export const listMyReferrals = async (): Promise<Web2ReferralWire[]> => {
+	const { items } = await request<{ items: Web2ReferralWire[] }>({
+		path: '/api/v1/referrals/mine',
+		method: 'GET'
+	});
+
+	return items;
+};
+
+// ─── School verification ─────────────────────────────────────────────────
+
+/** Ask the API to mail a 6-digit code to `email`. The school itself is
+ * re-resolved server-side from the email domain (plus name/country for a
+ * new entry), so no school id rides the request. Rejections (bad domain,
+ * daily cap, feature disabled) surface as {@link Web2ApiError}. */
+export const submitSchool = async ({
+	name,
+	country,
+	email,
+	locale
+}: {
+	name: string;
+	country: string | null;
+	email: string;
+	locale: string;
+}): Promise<{ submissionId: string }> =>
+	await request({
+		path: '/api/v1/school/submit',
+		method: 'POST',
+		body: { name, country, email, locale }
+	});
+
+/** Verify a mailed code. Resolves `{ ok: false, message }` on a wrong /
+ * expired / capped code and `{ ok: true, schoolId, status }` on success. */
+export const verifySchoolCode = async ({
+	submissionId,
+	code
+}: {
+	submissionId: string;
+	code: string;
+}): Promise<{ ok: boolean; schoolId?: string; status?: 'pending' | 'public'; message?: string }> =>
+	await request({
+		path: '/api/v1/school/verify',
+		method: 'POST',
+		body: { submissionId, code }
+	});
+
+// ─── Account lifecycle ───────────────────────────────────────────────────
+
+/** Pre-flight for the delete CTA: owned leagues that still have other
+ * members and must be transferred or disbanded first. */
+export const listBlockingLeagues = async (): Promise<string[]> => {
+	const { leagueIds } = await request<{ leagueIds: string[] }>({
+		path: '/api/v1/account/blocking-leagues',
+		method: 'GET'
+	});
+
+	return leagueIds;
+};
+
+export interface Web2DeleteAccountResult {
+	ok: boolean;
+	reason?: 'owns_non_empty_league' | 'league_resolution_failed' | 'invalid_input';
+	blockingLeagueIds?: string[];
+	failedLeagueId?: string;
+	resolutionReason?: string;
+	softDeleted?: boolean;
+}
+
+/** Soft-delete the session account: league resolutions apply first (a
+ * refusal leaves everything intact), then the anonymous exit signal is
+ * recorded and the profile is marked deleted. `transferTo` is the new
+ * owner's account id. */
+export const deleteMyAccount = async ({
+	reason,
+	note,
+	leagueResolutions
+}: {
+	reason: ExitSignalReason;
+	note: string;
+	leagueResolutions?: { leagueId: string; action: 'transfer' | 'delete'; transferTo?: string }[];
+}): Promise<Web2DeleteAccountResult> =>
+	await request({
+		path: '/api/v1/account/delete',
+		method: 'POST',
+		body: { reason, note, ...(isNullish(leagueResolutions) ? {} : { leagueResolutions }) }
+	});
+
+/** Clear a soft-delete inside the recovery window; a lapsed window
+ * hard-deletes in place and returns `{ ok: false, reason: 'expired' }`. */
+export const recoverMyAccount = async (): Promise<
+	{ ok: true; recovered: boolean } | { ok: false; reason: 'expired' }
+> => await request({ path: '/api/v1/account/recover', method: 'POST' });
+
+/** Pause the session account (nothing is erased; resume lifts it). */
+export const hibernateMyAccount = async (): Promise<{
+	ok: boolean;
+	reason?: 'no_profile' | 'deleted';
+}> => await request({ path: '/api/v1/account/hibernate', method: 'POST' });
+
+/** Lift a hibernation; `resumed: false` when the account was never paused. */
+export const resumeMyAccount = async (): Promise<{ ok: boolean; resumed: boolean }> =>
+	await request({ path: '/api/v1/account/resume', method: 'POST' });
+
+// ─── Activities + reactions ──────────────────────────────────────────────
+//
+// The wire activity is the app `Activity` plus the stable doc key
+// (`${user}#${timestamp}#${type}`); `user` / `liker` carry account ids in
+// this mode, the same `owner` string the swapped profile services key on.
+
+type Web2ActivityWire = Omit<Activity, 'type'> & { key: string; type: string };
+
+const mapActivity = (wire: Web2ActivityWire): Activity => {
+	const { key: _key, type, ...rest } = wire;
+
+	return { ...rest, type: type as Activity['type'] };
+};
+
+/** Publish one feed activity. The route stamps the author from the session
+ * and runs the trade-activity award triggers (onboarding milestones,
+ * referral settlement) after the write, mirroring the satellite hooks. */
+export const createActivity = async ({
+	type,
+	targetUser,
+	marketId,
+	title,
+	details,
+	timestamp
+}: {
+	type: string;
+	targetUser?: string;
+	marketId?: string;
+	title: string;
+	details?: string;
+	timestamp: number;
+}): Promise<Activity> => {
+	const { activity } = await request<{ activity: Web2ActivityWire }>({
+		path: '/api/v1/social/activities',
+		method: 'POST',
+		body: { type, targetUser, marketId, title, details, timestamp }
+	});
+
+	return mapActivity(activity);
+};
+
+/** Most-recent activities (public read), optionally one type, newest first
+ * by server insert time. The route caps `limit` at 500. */
+export const listActivities = async ({
+	limit,
+	type
+}: {
+	limit: number;
+	type?: string;
+}): Promise<Activity[]> => {
+	const { items } = await request<{ items: Web2ActivityWire[] }>({
+		path: `/api/v1/social/activities?${encodeQuery({
+			limit: limit.toString(),
+			...(isNullish(type) ? {} : { type })
+		})}`,
+		method: 'GET'
+	});
+
+	return items.map(mapActivity);
+};
+
+/** Like one activity. The route derives the liker from the session and
+ * maintains the count rollup transactionally with the write. */
+export const likeActivity = async ({
+	activityKey,
+	timestamp,
+	activityTitle,
+	marketId
+}: {
+	activityKey: string;
+	timestamp: number;
+	activityTitle: string;
+	marketId?: string;
+}): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: '/api/v1/social/activity-reactions',
+		method: 'POST',
+		body: { activityKey, timestamp, activityTitle, marketId }
+	});
+};
+
+/** Remove the caller's like; idempotent when no like exists. */
+export const unlikeActivity = async ({ activityKey }: { activityKey: string }): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: '/api/v1/social/activity-reactions',
+		method: 'DELETE',
+		body: { activityKey }
+	});
+};
+
+/** The most-recent reactions across all users (public read), newest first.
+ * The route caps `limit` at 1000. */
+export const listActivityReactions = async ({
+	limit
+}: {
+	limit: number;
+}): Promise<ActivityReaction[]> => {
+	const { items } = await request<{ items: ActivityReaction[] }>({
+		path: `/api/v1/social/activity-reactions?${encodeQuery({ limit: limit.toString() })}`,
+		method: 'GET'
+	});
+
+	return items;
+};
+
+/** Rollup like counts for the given activity keys (key-addressed, so the
+ * caller derives the keys from the feed window it renders). */
+export const getActivityReactionCounts = async ({
+	activityKeys
+}: {
+	activityKeys: string[];
+}): Promise<ActivityReactionCount[]> => {
+	const { items } = await request<{ items: ActivityReactionCount[] }>({
+		path: '/api/v1/social/activity-reactions/counts',
+		method: 'POST',
+		body: { activityKeys }
+	});
+
+	return items;
+};

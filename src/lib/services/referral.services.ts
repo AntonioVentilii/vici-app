@@ -1,7 +1,32 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import type { ReferralListItem } from '$lib/types/referral';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	claimReferralFriendship as claimReferralFriendshipWeb2,
+	getMyReferralCode as getMyReferralCodeWeb2,
+	listMyReferrals as listMyReferralsWeb2,
+	lookupReferralCode as lookupReferralCodeWeb2,
+	redeemReferralCode as redeemReferralCodeWeb2,
+	settleReferralPayout as settleReferralPayoutWeb2,
+	Web2ApiError
+} from '$lib/web2/client';
+import { getWeb2User } from '$lib/web2/session';
 import { fromWireReferral } from '$satellite/utils/wire-format.utils';
 import type { PrincipalText } from '@junobuild/schema';
+
+/**
+ * The HTTP routes fold the satellite's trap reasons into the `{ error }`
+ * envelope; rethrow them as the Error message so the onboarding drain's
+ * reason matching (`existing_user_no_bonus`, "already redeemed", ...) stays
+ * shared between transports.
+ */
+const rethrowReferralReason = (err: unknown): never => {
+	if (err instanceof Web2ApiError && err.status === 400) {
+		throw new Error(err.code);
+	}
+
+	throw err;
+};
 
 /**
  * Thin actor wrappers around the satellite referral endpoints. UI for the registration flow
@@ -16,6 +41,12 @@ import type { PrincipalText } from '@junobuild/schema';
  * one (e.g. signed in before the feature shipped), the next profile write backfills it.
  */
 export const getMyReferralCode = async (): Promise<string | undefined> => {
+	// The HTTP route assigns a code on first read, so the returning-user
+	// backfill wait described above never applies on that transport.
+	if (isWeb2Backend()) {
+		return await getMyReferralCodeWeb2();
+	}
+
 	const { code } = await functions.getMyReferralCode();
 
 	return code;
@@ -30,6 +61,12 @@ export const lookupReferralCode = async ({
 }: {
 	code: string;
 }): Promise<PrincipalText | undefined> => {
+	// web2 resolves to the owner's account id, the same `owner` string the
+	// swapped profile reads key on, so the landing preview renders unchanged.
+	if (isWeb2Backend()) {
+		return await lookupReferralCodeWeb2(code);
+	}
+
 	const { owner } = await functions.lookupReferralCode({ code });
 
 	return owner;
@@ -49,6 +86,16 @@ export const lookupReferralCode = async ({
  * referee. Both VXP bonuses are paid out asynchronously by the post-write hook.
  */
 export const redeemReferralCode = async ({ code }: { code: string }): Promise<void> => {
+	if (isWeb2Backend()) {
+		try {
+			await redeemReferralCodeWeb2(code);
+		} catch (err: unknown) {
+			rethrowReferralReason(err);
+		}
+
+		return;
+	}
+
 	await functions.redeemReferralCode({ code });
 };
 
@@ -59,6 +106,14 @@ export const redeemReferralCode = async ({ code }: { code: string }): Promise<vo
  * every load.
  */
 export const settleReferral = async ({ referee }: { referee: PrincipalText }): Promise<void> => {
+	// `referee` is the account id in this mode; the route lets a non-admin
+	// caller target only their own row, which is the sole FE use case.
+	if (isWeb2Backend()) {
+		await settleReferralPayoutWeb2(referee);
+
+		return;
+	}
+
 	await functions.settleReferral({ referee });
 };
 
@@ -70,6 +125,16 @@ export const settleReferral = async ({ referee }: { referee: PrincipalText }): P
  * The satellite still validates the code shape, looks up the owner, and rejects self-referrals.
  */
 export const claimReferralFriendship = async ({ code }: { code: string }): Promise<void> => {
+	if (isWeb2Backend()) {
+		try {
+			await claimReferralFriendshipWeb2(code);
+		} catch (err: unknown) {
+			rethrowReferralReason(err);
+		}
+
+		return;
+	}
+
 	await functions.claimReferralFriendship({ code });
 };
 
@@ -79,6 +144,25 @@ export const claimReferralFriendship = async ({ code }: { code: string }): Promi
  * referrer payout) so the FE can show the full monitoring view.
  */
 export const listMyReferrals = async (): Promise<ReferralListItem[]> => {
+	if (isWeb2Backend()) {
+		const items = await listMyReferralsWeb2();
+
+		// The route lists rows where the caller IS the referrer, so the wire
+		// omits the referrer id; restore it from the session account.
+		const referrer = getWeb2User()?.id ?? '';
+
+		return items.map((item) => ({
+			version: 1,
+			referee: item.referee,
+			referrer,
+			code: item.code,
+			redeemedAtMs: item.redeemedAtMs,
+			withinReferrerCap: item.withinReferrerCap,
+			refereePayout: item.refereePayout,
+			referrerPayout: item.referrerPayout
+		}));
+	}
+
 	const { items } = await functions.listMyReferrals();
 
 	return items.map(fromWireReferral);

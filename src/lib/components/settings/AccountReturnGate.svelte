@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { signOut } from '@junobuild/core';
 	import { Loader2 } from '@lucide/svelte/icons';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { recoverMyAccount, resumeMyAccount } from '$lib/services/account.services';
+	// The dual-mode sign-out: the Juno delegation drop on the default
+	// backend, the cookie-session revoke in web2 mode.
+	import { signOut } from '$lib/services/identity.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';

@@ -333,8 +333,9 @@ export const placeOrder = async ({
 
 	try {
 		// In web2 mode the activity owner is the session account id (the same
-		// `owner` string the swapped profile services key on). Activities are an
-		// unswapped satellite domain, so the feed write is on-chain only; the
+		// `owner` string the swapped profile services key on); `logActivity`
+		// routes the write to the HTTP feed, whose trade trigger fires the same
+		// onboarding-milestone / referral awards the satellite hook does. The
 		// daily-streak bump in `recordActivity` rides the swapped profile writes.
 		const userText = isNullish(identity) ? getWeb2User()?.id : identity.getPrincipal().toText();
 
@@ -342,18 +343,16 @@ export const placeOrder = async ({
 			return;
 		}
 
-		if (nonNullish(identity)) {
-			await logActivity({
-				type: ActivityType.TRADE,
-				user: userText,
-				marketId,
-				// "Sold" only when the trade executed on the spot; an open limit sell is merely placed.
-				// `normalizedPrice` is the price of the chosen outcome — the raw `price` arg arrives
-				// YES-framed for binary NO and would display the complement.
-				title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${filledQty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
-				details: marketTitle
-			});
-		}
+		await logActivity({
+			type: ActivityType.TRADE,
+			user: userText,
+			marketId,
+			// "Sold" only when the trade executed on the spot; an open limit sell is merely placed.
+			// `normalizedPrice` is the price of the chosen outcome — the raw `price` arg arrives
+			// YES-framed for binary NO and would display the complement.
+			title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${filledQty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
+			details: marketTitle
+		});
 
 		await recordActivity(userText);
 	} catch (e: unknown) {

@@ -1,5 +1,13 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import type { ExitSignalReason } from '$lib/types/exit-signal';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	deleteMyAccount as deleteMyAccountWeb2,
+	hibernateMyAccount as hibernateMyAccountWeb2,
+	listBlockingLeagues as listBlockingLeaguesWeb2,
+	recoverMyAccount as recoverMyAccountWeb2,
+	resumeMyAccount as resumeMyAccountWeb2
+} from '$lib/web2/client';
 
 /**
  * Account deletion — Proposal 4. FE wrappers around the
@@ -52,6 +60,10 @@ export interface DeleteMyAccountResult {
  * checks will unblock the user without a page reload.
  */
 export const listMyBlockingLeagues = async (): Promise<string[]> => {
+	if (isWeb2Backend()) {
+		return await listBlockingLeaguesWeb2();
+	}
+
 	const { leagueIds } = await functions.listMyBlockingLeagues();
 
 	return leagueIds;
@@ -76,11 +88,17 @@ export const deleteMyAccount = ({
 	note: string;
 	leagueResolutions?: LeagueResolution[];
 }): Promise<DeleteMyAccountResult> =>
-	functions.deleteMyAccount({
-		reason,
-		note,
-		leagueResolutions
-	});
+	// Same structured result on both transports. In web2 mode `transferTo`
+	// holds the new owner's account id (the swapped league rosters already
+	// key members that way), and the caller signs out through the dual-mode
+	// `signOut` in `identity.services.ts` afterwards.
+	isWeb2Backend()
+		? deleteMyAccountWeb2({ reason, note, leagueResolutions })
+		: functions.deleteMyAccount({
+				reason,
+				note,
+				leagueResolutions
+			});
 
 export interface HibernateMyAccountResult {
 	ok: boolean;
@@ -95,7 +113,7 @@ export interface HibernateMyAccountResult {
  * wants a break never loses their record.
  */
 export const hibernateMyAccount = (): Promise<HibernateMyAccountResult> =>
-	functions.hibernateMyAccount();
+	isWeb2Backend() ? hibernateMyAccountWeb2() : functions.hibernateMyAccount();
 
 export interface ResumeMyAccountResult {
 	ok: boolean;
@@ -107,7 +125,8 @@ export interface ResumeMyAccountResult {
  * counterpart to {@link hibernateMyAccount}; the satellite no-ops
  * (`resumed: false`) when the account was never paused.
  */
-export const resumeMyAccount = (): Promise<ResumeMyAccountResult> => functions.resumeMyAccount();
+export const resumeMyAccount = (): Promise<ResumeMyAccountResult> =>
+	isWeb2Backend() ? resumeMyAccountWeb2() : functions.resumeMyAccount();
 
 /**
  * Result of {@link recoverMyAccount}, a discriminated union mirroring the
@@ -137,6 +156,11 @@ export type RecoverMyAccountResult =
  * `{ ok: false, reason: 'expired' }` — the account is gone.
  */
 export const recoverMyAccount = async (): Promise<RecoverMyAccountResult> => {
+	// The HTTP result already carries the flat discriminated shape.
+	if (isWeb2Backend()) {
+		return await recoverMyAccountWeb2();
+	}
+
 	const result = await functions.recoverMyAccount();
 
 	if (!result.ok) {

@@ -32,14 +32,15 @@ Two files under `src/lib/web2/`:
 
 ## Swapped domains
 
-| Domain                                   | Where the branch lives                                                                                                                                                                  | Notes                                                                                                                      |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Analytics                                | `analytics.services.ts` (flush call site)                                                                                                                                               | The reference for the per-service swap below.                                                                              |
-| Auth                                     | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                                                                               | The identity layer, not a per-service swap. See "Auth" below.                                                              |
-| Profiles + social                        | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts`                                                      | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below.                        |
-| Markets + public engine reads            | `market.services.ts`, `market-metadata.services.ts`, `market-translation.services.ts`, `resolution.services.ts`, `trade.services.ts`, `standings.services.ts`, `collateral.services.ts` | Public reads only. See "Markets and public engine reads" below.                                                            |
-| Engine account ops + wallet              | `order.services.ts`, `position.services.ts`, `trade.services.ts`, `collateral.services.ts`, `wallet.service.ts`, `send.services.ts`                                                     | The session-gated engine surface and the custodial wallet. See "Engine account operations and the custodial wallet" below. |
-| Leagues + battles + worlds + tournaments | `leagues.services.ts`, `worlds.services.ts`, `tournament.services.ts`, `storage.services.ts` (league cover), `standings.services.ts` (league slice)                                     | The social competition surfaces. See "Leagues, battles, worlds and tournaments" below.                                     |
+| Domain                                          | Where the branch lives                                                                                                                                                                                                                    | Notes                                                                                                                      |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Analytics                                       | `analytics.services.ts` (flush call site)                                                                                                                                                                                                 | The reference for the per-service swap below.                                                                              |
+| Auth                                            | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                                                                                                                                 | The identity layer, not a per-service swap. See "Auth" below.                                                              |
+| Profiles + social                               | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts`                                                                                                        | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below.                        |
+| Markets + public engine reads                   | `market.services.ts`, `market-metadata.services.ts`, `market-translation.services.ts`, `resolution.services.ts`, `trade.services.ts`, `standings.services.ts`, `collateral.services.ts`                                                   | Public reads only. See "Markets and public engine reads" below.                                                            |
+| Engine account ops + wallet                     | `order.services.ts`, `position.services.ts`, `trade.services.ts`, `collateral.services.ts`, `wallet.service.ts`, `send.services.ts`                                                                                                       | The session-gated engine surface and the custodial wallet. See "Engine account operations and the custodial wallet" below. |
+| Leagues + battles + worlds + tournaments        | `leagues.services.ts`, `worlds.services.ts`, `tournament.services.ts`, `storage.services.ts` (league cover), `standings.services.ts` (league slice)                                                                                       | The social competition surfaces. See "Leagues, battles, worlds and tournaments" below.                                     |
+| VXP + referrals + school + account + activities | `vxp-awards.services.ts`, `referral.services.ts`, `school-verification.services.ts`, `account.services.ts`, `activity.services.ts`, `activity-reaction.services.ts`, `profile.services.ts` (own email), `identity.services.ts` (sign-out) | The last app domain set. See "VXP, referrals, school, account lifecycle and activities" below.                             |
 
 ## The swap pattern (exemplar: analytics flush)
 
@@ -66,13 +67,42 @@ if (isWeb2Backend()) {
 }
 ```
 
-## Rolling out the remaining domains
+## Rollout status: all app domains are dual-mode
 
-Data domains (profiles, social, markets, leaderboards, leagues, wallet,
-VXP, worlds, school, account, admin) swap one service module at a time
-using the pattern above: the satellite / canister call in the service is
-paired with a `client.ts` wrapper hitting the matching `/api/v1/<domain>`
-route, behind `isWeb2Backend()`.
+Every app data domain (analytics, auth, profiles + social, markets +
+public engine reads, engine account ops + wallet, leagues + worlds +
+tournaments, VXP + referrals + school + account + activities) now carries
+a dual-mode path per the table above. What remains on the on-chain stack
+in web2 mode is deliberate, not backlog; the full list, collected from the
+per-domain sections:
+
+- **Login stats sync** (`calculateAndSyncStats` and its
+  `persistMyUserStats` / `syncMyMonthlyStats` writes): reads the on-chain
+  clearing history, so it is simply not run in web2 mode.
+- **Order books** (`getOrderBook` and the book read inside `placeOrder`'s
+  market-order walk): public IC data read anonymously in BOTH modes; no
+  HTTP surface exists for it.
+- **Bulk metadata projections** (`market-tags.services.ts`): public
+  satellite `listDocs` scans until a public bulk-metadata HTTP read
+  exists.
+- **Market creation / forking and admin settlement**
+  (`createMarket`, `forkMarket`, `settleMarket`): user-signed registry /
+  clearing writes; curator / admin surfaces stay on the on-chain identity,
+  as do `registerIcrcAsset` and the roles / admin services.
+- **Complete-set mint / redeem**: no HTTP route and no live caller.
+- **Direct ICRC ledger / index reads and user-held transfers**: web2 mode
+  surfaces custodial balances and routes sends through withdrawals; the
+  paged ledger history returns empty there.
+- **League standings slice** (`getLeagueStandings`): empty in web2 mode
+  until a member-filtered bridge read with the identity mapping exists;
+  web2 standings entries also keep the on-chain principal as `owner`.
+- **Market discussion comments** (`discussion.services.ts`): the comments
+  collection has no HTTP route; the surface stays on the satellite (and is
+  effectively read-only without a Juno identity).
+- **Landing proof figure** (`landing-proof.services.ts`): an anonymous
+  public satellite count; works identically from a web2 build.
+- **On-chain sign-in plumbing** (`apple-signin.services.ts` and the Juno
+  identity layer): replaced wholesale by the session flow in web2 mode.
 
 ## Auth
 
@@ -166,11 +196,9 @@ sanctioned identity-layer exception; no other component gains a branch.
   stays on the engine backend until the custody / engine bridge lands. In
   web2 mode the login stats sync is simply not run; the Dash reads whatever
   `user_stats` the API holds (empty until that write path swaps).
-- Activities + reactions (`activity.services.ts`,
-  `activity-reaction.services.ts`) and the private-email doc
-  (`getMyEmail` / `saveMyEmail`) are unswapped; the account email in web2
-  rides the auth identity, not the profile doc. `client.ts` intentionally
-  does not yet ship wrappers for these to avoid unused surface.
+- Activities + reactions and the private-email doc (`getMyEmail` /
+  `saveMyEmail`) swapped later with the final domain set; see "VXP,
+  referrals, school, account lifecycle and activities" below.
 
 ## Markets and public engine reads
 
@@ -261,9 +289,10 @@ the exact candid shapes.
   the session-gated own-orders read, since the account's engine principal
   lives server-side. `cancelLimitOrder`, `getUserOrders`, and the loader
   variants ride `/engine/orders` + `/engine/orders/cancel`. The trade
-  activity-feed write is skipped (activities are an unswapped satellite
-  domain); the daily-streak bump keeps riding the swapped profile writes
-  with the session account id as owner.
+  activity-feed write rides the swapped activities domain (its HTTP POST
+  also fires the trade-triggered awards; see the activities section); the
+  daily-streak bump keeps riding the swapped profile writes with the
+  session account id as owner.
 - `position.services.ts` / `trade.services.ts`: positions, the per-series
   position, and the user's own trade history read `/engine/positions` and
   `/engine/trade-history`; the domain scoping still runs through the
@@ -392,6 +421,86 @@ whichever side gets there first.
 - Duel-only endpoints without a live FE caller (manual duel resolve,
   battle restart) and the Worlds roster / month-list reads have API
   routes but no `client.ts` wrapper yet, to avoid unused surface.
+
+## VXP, referrals, school, account lifecycle and activities
+
+The final domain set: the calibration reward claim, the referral surface
+(code, lookup, redeem, friendship claim, my-referrals list, payout
+retry), school-email verification, the account lifecycle (delete /
+recover / hibernate / resume), the activity feed with like reactions, and
+the caller's own on-file email. Rides `/api/v1/vxp`, `/api/v1/referrals`,
+`/api/v1/school`, `/api/v1/account` and `/api/v1/social`.
+
+### Hook parity: awards fire on the HTTP writes
+
+On the satellite, VXP awards ride post-write hooks (a trade activity
+fires the onboarding call-count milestones and the referral settlement; a
+profile write fires the streak / achievement awards). The HTTP API runs
+the same triggers inside the matching routes: the activity POST runs the
+trade triggers after the write commits, and the profile PUT diffs the
+stored row against the incoming one. So the swapped services need no
+extra calls: `logActivity` posting a trade in web2 mode produces exactly
+the awards the satellite hook would have. `placeOrder` now logs the trade
+activity on both transports for the same reason.
+
+### Service-layer branches
+
+- `vxp-awards.services.ts`: `claimCalibrationReward` posts to
+  `/vxp/calibration/claim`; the structured result is shape-identical, the
+  session covers the `anonymous` reason (a signed-out call 401s), and the
+  web2-only `recorded_only` reason (treasury parallel-run mode: recorded,
+  not transferred) was added to the shared reason union. It does not
+  block the calibration session. `client.ts` also ships
+  `listMyVxpAwards` (`GET /vxp/awards`) for the award-history surface;
+  no live FE caller yet.
+- `referral.services.ts`: all six functions. The code is assigned
+  server-side on first read (no backfill wait); `lookupReferralCode`
+  resolves to the owner's account id, which the swapped profile reads
+  render as usual. The routes fold the satellite trap reasons into the
+  `{ error }` envelope and the service rethrows them as the Error
+  message, so the onboarding drain's terminal-reason matching
+  (`existing_user_no_bonus`, "already redeemed", ...) stays shared.
+- `school-verification.services.ts`: `submitSchool` / `verifySchoolCode`
+  under the same shared 15s timeout. The HTTP route re-resolves the
+  school from the email domain (plus name / country for a new entry), so
+  the `schoolId` hint is not part of its contract; codes are mailed by
+  the API directly (Resend) instead of the external relay.
+- `account.services.ts`: `listMyBlockingLeagues` (the delete pre-flight),
+  `deleteMyAccount` (same structured refusal / resolution round-trip;
+  `transferTo` carries the new owner's account id, which the swapped
+  league rosters already use), `recoverMyAccount`, `hibernateMyAccount`,
+  `resumeMyAccount`. The flow's closing sign-out goes through the
+  dual-mode `signOut` in `identity.services.ts` (below).
+- `activity.services.ts`: `logActivity` posts to `/social/activities`
+  (the route stamps the author from the session and enforces the same
+  `${user}#${timestamp}#${type}` key), `getGlobalActivities` and
+  `getSettlementActivities` read the public list (type-filtered
+  server-side instead of the key-suffix matcher).
+- `activity-reaction.services.ts`: like / unlike (the route keeps the
+  count rollup transactionally; unlike is idempotent), the reactions
+  window, and the count read. The HTTP counts read is key-addressed, so
+  the web2 branch derives the keys from the recent activity window first
+  (two requests, same O(1)-per-activity result). The received-reactions
+  read (the like-received inbox) has no author-scoped HTTP route yet, so
+  the web2 branch filters the recent global window by the activity-key
+  author prefix, with the same bounded under-reporting as the on-chain
+  window scans.
+- Own email (`profile.services.ts` `getMyEmail` / `saveMyEmail`): in web2
+  the address lives on the caller's own profile row (never surfaced on a
+  public profile object; `mapProfile` drops it), read via
+  `getMyProfileEmail` and written by a read-modify-write through the
+  profile PUT. With no profile row yet the write is skipped: sign-in is
+  email-verified on this transport and writing a default shell would
+  falsely flip a fresh account to "existed" for the onboarding drain.
+
+### The sign-out seam grew one service
+
+`DeleteAccountFlow` (via the settings page's sign-out hook) and
+`AccountReturnGate` used to call Juno `signOut()` directly.
+`identity.services.ts` now exports a dual-mode `signOut` (delegation drop
+on the default backend, cookie-session revoke in web2 mode) and those
+components import it instead, staying flag-free. The sanctioned auth trio
+(`Authn` / `SignInProviderStack` / `Logout`) is unchanged.
 
 ## Guardrails
 
