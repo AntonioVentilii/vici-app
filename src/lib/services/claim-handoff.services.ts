@@ -8,7 +8,7 @@ import {
 } from '$lib/utils/claim-handoff.utils';
 import { isWeb2Backend } from '$lib/web2/backend-mode';
 import { postClaim, Web2ApiError } from '$lib/web2/client';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { DelegationIdentity } from '@icp-sdk/core/identity';
 
 /**
@@ -34,34 +34,56 @@ export const isClaimPortalEnabled = (): boolean => isWeb2Backend();
  * available (signed out, or a session shape without a delegation chain).
  */
 export const startClaimHandoff = async (): Promise<boolean> => {
-	const identity = await getIdentity();
+	// Open the tab synchronously, inside the click's call stack: signing the
+	// handoff takes two awaits, and Safari blocks a popup opened after the
+	// gesture has unwound. The blank tab is navigated once the blob is ready,
+	// and closed if signing cannot proceed.
+	const portalWindow = window.open('', '_blank', 'noopener,noreferrer');
 
-	if (isNullish(identity) || !(identity instanceof DelegationIdentity)) {
-		return false;
+	try {
+		const identity = await getIdentity();
+
+		if (isNullish(identity) || !(identity instanceof DelegationIdentity)) {
+			portalWindow?.close();
+
+			return false;
+		}
+
+		const principal = identity.getPrincipal().toText();
+		const issuedAtMs = Date.now();
+		const signature = await identity.sign(claimMessageBytes({ principal, issuedAtMs }));
+		const blob = encodeClaimBlob({
+			v: 1,
+			aud: CLAIM_AUDIENCE,
+			principal,
+			issuedAtMs,
+			chain: identity.getDelegation().toJSON(),
+			sig: bytesToBase64Url(new Uint8Array(signature))
+		});
+
+		const href = `${CLAIM_PORTAL_URL}#${blob}`;
+
+		if (nonNullish(portalWindow)) {
+			portalWindow.location.href = href;
+
+			return true;
+		}
+
+		// The pre-open was blocked (or unavailable): fall back to an anchor
+		// click, which some browsers still honour for the original gesture.
+		const anchor = document.createElement('a');
+
+		anchor.href = href;
+		anchor.target = '_blank';
+		anchor.rel = 'noopener noreferrer';
+		anchor.click();
+
+		return true;
+	} catch (err: unknown) {
+		portalWindow?.close();
+
+		throw err;
 	}
-
-	const principal = identity.getPrincipal().toText();
-	const issuedAtMs = Date.now();
-	const signature = await identity.sign(claimMessageBytes({ principal, issuedAtMs }));
-	const blob = encodeClaimBlob({
-		v: 1,
-		aud: CLAIM_AUDIENCE,
-		principal,
-		issuedAtMs,
-		chain: identity.getDelegation().toJSON(),
-		sig: bytesToBase64Url(new Uint8Array(signature))
-	});
-
-	// Anchor click instead of window.open: `noopener` makes window.open return
-	// null even on success, so its result cannot distinguish a popup block.
-	const anchor = document.createElement('a');
-
-	anchor.href = `${CLAIM_PORTAL_URL}#${blob}`;
-	anchor.target = '_blank';
-	anchor.rel = 'noopener noreferrer';
-	anchor.click();
-
-	return true;
 };
 
 export type ClaimSubmitOutcome =
