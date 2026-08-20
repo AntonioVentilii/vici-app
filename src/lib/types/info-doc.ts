@@ -24,6 +24,13 @@ import type { MessageKey } from '$lib/utils/i18n.utils';
  *
  * Contact addresses are never translatable copy: `mail` block text and the
  * `{email}` params some paragraphs interpolate come from `contact.constants`.
+ *
+ * `link` and `badge` are always-literal blocks for external references in
+ * the legal docs: `link` is an outbound URL with display text, `badge` a
+ * linked certification image (e.g. the GDPR-representative verification
+ * badge); both open in a new tab. A badge carries the artwork's intrinsic
+ * pixel dimensions so the reserved box matches its aspect ratio while the
+ * lazily-loaded image is still in flight.
  */
 
 export type InfoDocBlock =
@@ -34,7 +41,9 @@ export type InfoDocBlock =
 	  ))
 	| { kind: 'list'; itemKeys: MessageKey[] }
 	| { kind: 'list'; items: string[] }
-	| { kind: 'mail'; text: string };
+	| { kind: 'mail'; text: string }
+	| { kind: 'link'; text: string; href: string }
+	| { kind: 'badge'; src: string; alt: string; href: string; width: number; height: number };
 
 /** Header title (also the page `<title>`) — keyed for help docs, literal for legal. */
 type TitleSource = { titleKey: MessageKey } | { title: string };
