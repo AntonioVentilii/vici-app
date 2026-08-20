@@ -1,5 +1,49 @@
 # Changelog
 
+## [1.8.38](https://github.com/ViciApp/vici-app/compare/v1.8.37...v1.8.38) (2026-08-20)
+
+
+### Features
+
+* **frontend:** web2 auth path behind the backend-mode flag ([#1269](https://github.com/ViciApp/vici-app/issues/1269)) ([f22c72b](https://github.com/ViciApp/vici-app/commit/f22c72b1793ec2485e45c707c27bfa9d0fdcfd82))
+
+
+### Bug Fixes
+
+* **backend:** align affiliations import conflict target with the tightened primary key ([#1246](https://github.com/ViciApp/vici-app/issues/1246)) ([d710f1b](https://github.com/ViciApp/vici-app/commit/d710f1b9f215c85c5b5044e16662015c86a4a925))
+* **backend:** regenerate bun.lock for the sharp 0.35.3 bump ([#1245](https://github.com/ViciApp/vici-app/issues/1245)) ([d2838c7](https://github.com/ViciApp/vici-app/commit/d2838c7a560841befe94fc317e06dd8087319d2b))
+* **ci:** create the e2e snapshot PR with the release bot token ([#1268](https://github.com/ViciApp/vici-app/issues/1268)) ([179d765](https://github.com/ViciApp/vici-app/commit/179d765e798325c835fe119dc17d848357ac8e2b))
+* **ci:** create the icdc-core sync PR with the release bot token ([#1261](https://github.com/ViciApp/vici-app/issues/1261)) ([db85174](https://github.com/ViciApp/vici-app/commit/db85174bdf9f46d1804a2419c378dbaf6ff8ebaf))
+* **ci:** mint the app token the format job commits with ([#1248](https://github.com/ViciApp/vici-app/issues/1248)) ([4dc92d1](https://github.com/ViciApp/vici-app/commit/4dc92d1059da337e07344b4d0ff904d7f7fc0515))
+
+
+### Documentation
+
+* **ci:** keep the reason the lockfile job needs an app token ([#1273](https://github.com/ViciApp/vici-app/issues/1273)) ([2071577](https://github.com/ViciApp/vici-app/commit/2071577d3f6ea23298afb43fb29dbb7816fb3651))
+
+
+### Miscellaneous Chores
+
+* **ci:** read the bot app id from a repository variable ([#1270](https://github.com/ViciApp/vici-app/issues/1270)) ([6fa55b6](https://github.com/ViciApp/vici-app/commit/6fa55b64d2245180b5e4d8bfa1c320e79764dfc7))
+* **deps:** bump sharp from 0.34.5 to 0.35.3 in /backend in the npm_and_yarn group across 1 directory ([#1242](https://github.com/ViciApp/vici-app/issues/1242)) ([7c182f9](https://github.com/ViciApp/vici-app/commit/7c182f9bdb362ea090854aed02099452c3baa886))
+* **github-actions:** bump junobuild/juno-action from 0.7.5.pre.full to 0.7.5 ([#1250](https://github.com/ViciApp/vici-app/issues/1250)) ([23917aa](https://github.com/ViciApp/vici-app/commit/23917aaa48514ced8e79cf793f517cd8fec78c90))
+* **npm-deps-dev:** bump @sveltejs/vite-plugin-svelte from 7.2.0 to 7.3.0 ([#1260](https://github.com/ViciApp/vici-app/issues/1260)) ([9716e2b](https://github.com/ViciApp/vici-app/commit/9716e2b737f1466664931554bb7c93468ac42036))
+* **npm-deps-dev:** bump @tailwindcss/vite from 4.3.2 to 4.3.3 ([#1266](https://github.com/ViciApp/vici-app/issues/1266)) ([8015e5b](https://github.com/ViciApp/vici-app/commit/8015e5b3177fed4208cef57850703a475441a1b7))
+* **npm-deps-dev:** bump @types/node from 26.1.1 to 26.2.0 ([#1263](https://github.com/ViciApp/vici-app/issues/1263)) ([da2c5f6](https://github.com/ViciApp/vici-app/commit/da2c5f63be5415782bb8ab31a75dc49a61d1215b))
+* **npm-deps-dev:** bump tailwindcss from 4.3.2 to 4.3.3 ([#1267](https://github.com/ViciApp/vici-app/issues/1267)) ([525c4c3](https://github.com/ViciApp/vici-app/commit/525c4c3afc31fa8bafd34b61d5c141aa9c2d2d0c))
+* **npm-deps-dev:** bump tsx from 4.23.1 to 4.23.12 ([#1265](https://github.com/ViciApp/vici-app/issues/1265)) ([c0bf443](https://github.com/ViciApp/vici-app/commit/c0bf44310132077abfe49a247e0c0b0b335689c1))
+* **npm-deps-dev:** bump vite from 8.1.3 to 8.2.1 ([#1257](https://github.com/ViciApp/vici-app/issues/1257)) ([43083f0](https://github.com/ViciApp/vici-app/commit/43083f03af0aa8355f8d820b469593a0381e0410))
+* **npm-deps:** bump @icp-sdk/signer from 5.4.0 to 5.6.2 ([#1264](https://github.com/ViciApp/vici-app/issues/1264)) ([94b83fc](https://github.com/ViciApp/vici-app/commit/94b83fca71dd985adbf385b5dd7434aef015c7f5))
+* **npm-deps:** bump acorn from 8.17.0 to 8.18.0 ([#1262](https://github.com/ViciApp/vici-app/issues/1262)) ([5c60d64](https://github.com/ViciApp/vici-app/commit/5c60d6490b9153a7719ad84a196d7af0a86585b0))
+* **npm-deps:** bump esrap from 2.2.13 to 2.3.5 ([#1259](https://github.com/ViciApp/vici-app/issues/1259)) ([7d2eef3](https://github.com/ViciApp/vici-app/commit/7d2eef3eeb0deb1b23d81f74d7e862a582421a02))
+
+
+### Continuous Integration
+
+* **backend-deps:** regenerate bun.lock on backend dependabot PRs ([#1247](https://github.com/ViciApp/vici-app/issues/1247)) ([6f6e06a](https://github.com/ViciApp/vici-app/commit/6f6e06a2886443ac4abcd74b834459eda7723596))
+* **checks:** revert the dependabot mint skip from [#1275](https://github.com/ViciApp/vici-app/issues/1275) ([#1276](https://github.com/ViciApp/vici-app/issues/1276)) ([a69a561](https://github.com/ViciApp/vici-app/commit/a69a56192323a40b73b5cbe25e1919b4d9c4caa3))
+* **checks:** skip app-token mint on dependabot runs ([#1275](https://github.com/ViciApp/vici-app/issues/1275)) ([45eebd6](https://github.com/ViciApp/vici-app/commit/45eebd6a17daa2004a58935e257bb3c9377b382f))
+
 ## [1.8.37](https://github.com/ViciApp/vici-app/compare/v1.8.36...v1.8.37) (2026-08-19)
 
 
