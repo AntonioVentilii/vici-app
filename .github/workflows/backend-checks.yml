@@ -44,6 +44,7 @@ on:
       - 'src/lib/types/tournament.ts'
       - 'src/lib/types/vxp-award.ts'
       - 'src/satellite/services/vxp-onboarding.services.ts'
+  merge_group:
   workflow_dispatch:
 
 permissions: {}
