@@ -1,6 +1,12 @@
+import type { ProfileVisibility } from '$lib/enums/profile';
+import type { UserRole } from '$lib/enums/user';
 import type { TrackEventInput } from '$lib/types/analytics-event';
+import type { UserProfile } from '$lib/types/profile';
+import type { FriendRequestOutcome, Relation } from '$lib/types/relation';
+import type { ResolvedResult } from '$lib/types/social';
+import type { UserStatsDoc } from '$lib/types/user-stats';
 import { web2ApiBaseUrl } from '$lib/web2/backend-mode';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
  * Thin typed fetch client for the HTTP API (`/api/v1/...`).
@@ -52,7 +58,7 @@ const request = async <T>({
 	body
 }: {
 	path: string;
-	method: 'GET' | 'POST';
+	method: 'GET' | 'POST' | 'PUT' | 'DELETE';
 	body?: Record<string, unknown>;
 }): Promise<T> => {
 	const response = await fetch(`${web2ApiBaseUrl()}${path}`, {
@@ -182,4 +188,274 @@ export const postEvents = async ({
 
 export const logout = async (): Promise<void> => {
 	await request<{ ok: boolean }>({ path: '/api/v1/auth/logout', method: 'POST' });
+};
+
+// ─── Profiles + social + leaderboard ─────────────────────────────────────
+//
+// The HTTP API keys a user by an opaque `userId` (uuid) where the on-chain
+// stack keys by a principal. The app's domain shape (`UserProfile`, `Relation`,
+// `ResolvedResult`) uses the single `owner` string for that identity, so the
+// wrappers below carry the wire→app rename (`userId` → `owner`) and re-narrow
+// the loose wire string unions back to the app enums, keeping the return shapes
+// byte-identical to the satellite services. A dual-mode service calls one of
+// these behind `isWeb2Backend()`; the default on-chain path is untouched.
+
+const encodeQuery = (params: Record<string, string>): string =>
+	Object.entries(params)
+		.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+		.join('&');
+
+/** Wire profile: the app profile with `owner` carried as `userId`. The API can
+ * also carry an `email` column on this row; it is dropped in {@link mapProfile}
+ * so it never rides a public profile object (leaderboard / search) on the
+ * client, mirroring the on-chain split that keeps the address off the public
+ * doc. */
+type Web2ProfileWire = Omit<UserProfile, 'owner' | 'visibility' | 'role'> & {
+	userId: string;
+	visibility: string;
+	role?: string;
+	email?: string;
+};
+
+const mapProfile = (wire: Web2ProfileWire): UserProfile => {
+	const { userId, visibility, role, email: _email, ...rest } = wire;
+
+	return {
+		...rest,
+		owner: userId,
+		visibility: visibility as ProfileVisibility,
+		...(nonNullish(role) ? { role: role as UserRole } : {})
+	};
+};
+
+/** Wire relation: `{ key, category, state, participants }`. The app `Relation`
+ * drops the key (callers rebuild it from the participants when they need it). */
+interface Web2RelationWire {
+	key: string;
+	category: Relation['category'];
+	state: Relation['state'];
+	participants: [string, string];
+}
+
+const mapRelation = (wire: Web2RelationWire): Relation => ({
+	category: wire.category,
+	state: wire.state,
+	participants: wire.participants
+});
+
+interface Web2UserStatsWire {
+	userId: string;
+	categoryStats: UserStatsDoc['categoryStats'];
+	recentSettlements: UserStatsDoc['recentSettlements'];
+	computedAtMs: number;
+}
+
+interface Web2ResolvedResultWire {
+	userId: string;
+	marketId: string;
+	title: string;
+	side: string;
+	outcome: 'win' | 'loss';
+	netVxp: number;
+	resolvedAtMs: number;
+}
+
+/** The caller's own profile, or `undefined` before the first profile write. */
+export const getMyProfile = async (): Promise<UserProfile | undefined> => {
+	const { profile } = await request<{ profile: Web2ProfileWire | null }>({
+		path: '/api/v1/profiles/me',
+		method: 'GET'
+	});
+
+	return isNullish(profile) ? undefined : mapProfile(profile);
+};
+
+/** A public profile by id, or `undefined` when absent / hidden to the caller. */
+export const getProfileById = async (userId: string): Promise<UserProfile | undefined> => {
+	const { profile } = await request<{ profile: Web2ProfileWire | null }>({
+		path: `/api/v1/profiles/${encodeURIComponent(userId)}`,
+		method: 'GET'
+	});
+
+	return isNullish(profile) ? undefined : mapProfile(profile);
+};
+
+/** Full-doc write of the caller's own profile; returns the stored result. */
+export const upsertMyProfile = async (data: Record<string, unknown>): Promise<UserProfile> => {
+	const { profile } = await request<{ profile: Web2ProfileWire }>({
+		path: '/api/v1/profiles/me',
+		method: 'PUT',
+		body: data
+	});
+
+	return mapProfile(profile);
+};
+
+/** Server-side nickname validity + uniqueness probe. The caller's own current
+ * nickname never counts as a conflict (the session identifies the caller). */
+export const checkNicknameAvailability = async (
+	nickname: string
+): Promise<
+	| { available: true }
+	| { available: false; reason: 'required' | 'too_short' | 'too_long' | 'invalid' | 'taken' }
+> =>
+	await request({
+		path: `/api/v1/profiles/nickname-availability?${encodeQuery({ nickname })}`,
+		method: 'GET'
+	});
+
+/** Case-insensitive search over nickname, id, and linked legacy principal. */
+export const searchProfiles = async (queryStr: string): Promise<UserProfile[]> => {
+	const { items } = await request<{ items: Web2ProfileWire[] }>({
+		path: `/api/v1/profiles/search?${encodeQuery({ q: queryStr })}`,
+		method: 'GET'
+	});
+
+	return items.map(mapProfile);
+};
+
+/** Whether two users hold an active friendship. */
+export const checkFriendship = async ({
+	userA,
+	userB
+}: {
+	userA: string;
+	userB: string;
+}): Promise<boolean> => {
+	const { isFriend } = await request<{ isFriend: boolean }>({
+		path: `/api/v1/social/friendship?${encodeQuery({ userA, userB })}`,
+		method: 'GET'
+	});
+
+	return isFriend;
+};
+
+/** The caller's dashboard stat cache, or `undefined` before the first sync. */
+export const getUserStats = async (): Promise<UserStatsDoc | undefined> => {
+	const { stats } = await request<{ stats: Web2UserStatsWire | null }>({
+		path: '/api/v1/profiles/me/stats',
+		method: 'GET'
+	});
+
+	if (isNullish(stats)) {
+		return;
+	}
+
+	const { userId, ...rest } = stats;
+
+	return { owner: userId, ...rest };
+};
+
+/** Record one committed Flow swipe against the server-authoritative daily
+ * counter; the server owns the count and the cap. */
+export const recordFlowSwipe = async ({
+	dayKey
+}: {
+	dayKey: string;
+}): Promise<{ dailyGoalDone: number; dailyGoalDate: string; capReached: boolean }> =>
+	await request({
+		path: '/api/v1/profiles/flow-swipe',
+		method: 'POST',
+		body: { dayKey }
+	});
+
+/** Top profiles by points, ranked server-side. */
+export const listLeaderboard = async (): Promise<UserProfile[]> => {
+	const { items } = await request<{ items: Web2ProfileWire[] }>({
+		path: '/api/v1/leaderboard/',
+		method: 'GET'
+	});
+
+	return items.map(mapProfile);
+};
+
+/** The caller's rival across the full ranking, or `undefined` when unranked /
+ * the lone ranked profile. `rivalIsTrailing` frames the gap as a lead. */
+export const getMyRival = async (): Promise<
+	{ profile: UserProfile; isTrailing: boolean } | undefined
+> => {
+	const { rival, rivalIsTrailing } = await request<{
+		rival: Web2ProfileWire | null;
+		rivalIsTrailing: boolean;
+	}>({ path: '/api/v1/leaderboard/rival', method: 'GET' });
+
+	return isNullish(rival) ? undefined : { profile: mapProfile(rival), isTrailing: rivalIsTrailing };
+};
+
+const listRelations = async (path: string): Promise<Relation[]> => {
+	const { items } = await request<{ items: Web2RelationWire[] }>({ path, method: 'GET' });
+
+	return items.map(mapRelation);
+};
+
+export const listFriends = (): Promise<Relation[]> => listRelations('/api/v1/social/friends');
+
+export const listFollowers = (): Promise<Relation[]> => listRelations('/api/v1/social/followers');
+
+export const listFollowing = (): Promise<Relation[]> => listRelations('/api/v1/social/following');
+
+export const listFriendRequests = (): Promise<Relation[]> =>
+	listRelations('/api/v1/social/friend-requests');
+
+export const listSentFriendRequests = (): Promise<Relation[]> =>
+	listRelations('/api/v1/social/friend-requests/sent');
+
+export const sendFriendRequest = async (target: string): Promise<FriendRequestOutcome> =>
+	await request({ path: '/api/v1/social/friend-requests', method: 'POST', body: { target } });
+
+export const acceptFriendRequest = async (relationId: string): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: `/api/v1/social/friend-requests/${encodeURIComponent(relationId)}/accept`,
+		method: 'POST'
+	});
+};
+
+export const rejectFriendRequest = async (relationId: string): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: `/api/v1/social/friend-requests/${encodeURIComponent(relationId)}/reject`,
+		method: 'POST'
+	});
+};
+
+export const cancelFriendRequest = async (relationId: string): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: `/api/v1/social/friend-requests/${encodeURIComponent(relationId)}`,
+		method: 'DELETE'
+	});
+};
+
+export const unfriendUser = async (userId: string): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: `/api/v1/social/friends/${encodeURIComponent(userId)}`,
+		method: 'DELETE'
+	});
+};
+
+export const followUser = async (target: string): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: '/api/v1/social/follow',
+		method: 'POST',
+		body: { target }
+	});
+};
+
+export const unfollowUser = async (userId: string): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: `/api/v1/social/follow/${encodeURIComponent(userId)}`,
+		method: 'DELETE'
+	});
+};
+
+/** Friend-scoped resolved-result rows for the Arena results digest. */
+export const listFriendResolvedResults = async (friends: string[]): Promise<ResolvedResult[]> => {
+	if (friends.length === 0) {
+		return [];
+	}
+
+	const { items } = await request<{ items: Web2ResolvedResultWire[] }>({
+		path: `/api/v1/social/resolved-results?${encodeQuery({ friends: friends.join(',') })}`,
+		method: 'GET'
+	});
+
+	return items.map(({ userId, ...rest }) => ({ owner: userId, ...rest }));
 };

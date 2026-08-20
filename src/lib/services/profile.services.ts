@@ -40,6 +40,16 @@ import {
 } from '$lib/utils/resolved-position.utils';
 import { applyDailyStreakBump, todayKey } from '$lib/utils/streak.utils';
 import { visibilityFromProfile } from '$lib/utils/visibility.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	checkFriendship as checkFriendshipWeb2,
+	checkNicknameAvailability as checkNicknameAvailabilityWeb2,
+	getMyProfile as getMyProfileWeb2,
+	getProfileById as getProfileWeb2,
+	recordFlowSwipe as recordFlowSwipeWeb2,
+	searchProfiles as searchProfilesWeb2,
+	upsertMyProfile as upsertMyProfileWeb2
+} from '$lib/web2/client';
 import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
@@ -48,78 +58,108 @@ import type { PrincipalText } from '@junobuild/schema';
 import { get } from 'svelte/store';
 
 /**
- * Loads a user profile from Juno or returns a default shell; merges role from the satellite query.
+ * The default profile shell for an owner with no stored doc yet. Shared by the
+ * on-chain and web2 read paths and the web2 app-shell hydration so a
+ * never-written account renders identically on both backends.
+ */
+export const emptyProfile = (owner: PrincipalText): UserProfile => ({
+	owner,
+	nickname: shortenWithMiddleEllipsis({ text: owner, splitLength: 5 }),
+	avatar: '',
+	avatarParts: '',
+	pnl: 0,
+	visibility: ProfileVisibility.FRIENDS_ONLY,
+	totalTrades: 0,
+	winRate: 0,
+	dailyStreak: 0,
+	longestStreak: 0,
+	dailyGoalDone: 0,
+	streak: 0,
+	onFireStreak: 0,
+	comebacks: 0,
+	winningCategories: 0,
+	leaguesJoined: 0,
+	boutsWon: 0,
+	leaguesFounded: 0,
+	accuracy: 0,
+	points: 0,
+	level: 1,
+	archetype: '',
+	interests: [],
+	unlockedAchievements: [],
+	contrarianWins: 0,
+	topDecileStreak: 0,
+	preferences: {
+		defaultAmount: {
+			flow: '1.0',
+			manual: '1.0'
+		},
+		notify: {
+			streakReminder: true,
+			marketAlerts: true,
+			friendActivity: false,
+			weeklyDigest: true
+		},
+		flowSessionLength: 10,
+		hapticsEnabled: true,
+		soundEnabled: true,
+		sharing: {
+			// Mirror the top-level `visibility` default
+			// (FRIENDS_ONLY → 'private'); opt-ins default on.
+			profileVisibility: visibilityFromProfile(ProfileVisibility.FRIENDS_ONLY),
+			callsPublic: true,
+			leaderboardOptIn: true,
+			worldsOptIn: true
+		},
+		flowTags: [],
+		worldCupMode: false,
+		savedMarketIds: [],
+		favoriteParticipantId: '',
+		favoriteSide: '',
+		onboardingCompleted: false
+	}
+});
+
+/**
+ * Loads a user profile from the backend or returns a default shell. web2 reads
+ * the HTTP API (`owner` is the account id there); the default on-chain path
+ * merges role from the satellite query. Both branches return the same
+ * `Doc<UserProfile>` shape so every caller stays backend-agnostic.
  */
 export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProfile>> => {
+	if (isWeb2Backend()) {
+		const profile = await getProfileWeb2(principal);
+
+		return { key: principal, data: profile ?? emptyProfile(principal) };
+	}
+
 	const { profile } = await functions.getProfile({ principalStr: principal });
 
 	if (isNullish(profile)) {
-		return {
-			key: principal,
-			data: {
-				owner: principal,
-				nickname: shortenWithMiddleEllipsis({ text: principal, splitLength: 5 }),
-				avatar: '',
-				avatarParts: '',
-				pnl: 0,
-				visibility: ProfileVisibility.FRIENDS_ONLY,
-				totalTrades: 0,
-				winRate: 0,
-				dailyStreak: 0,
-				longestStreak: 0,
-				dailyGoalDone: 0,
-				streak: 0,
-				onFireStreak: 0,
-				comebacks: 0,
-				winningCategories: 0,
-				leaguesJoined: 0,
-				boutsWon: 0,
-				leaguesFounded: 0,
-				accuracy: 0,
-				points: 0,
-				level: 1,
-				archetype: '',
-				interests: [],
-				unlockedAchievements: [],
-				contrarianWins: 0,
-				topDecileStreak: 0,
-				preferences: {
-					defaultAmount: {
-						flow: '1.0',
-						manual: '1.0'
-					},
-					notify: {
-						streakReminder: true,
-						marketAlerts: true,
-						friendActivity: false,
-						weeklyDigest: true
-					},
-					flowSessionLength: 10,
-					hapticsEnabled: true,
-					soundEnabled: true,
-					sharing: {
-						// Mirror the top-level `visibility` default
-						// (FRIENDS_ONLY → 'private'); opt-ins default on.
-						profileVisibility: visibilityFromProfile(ProfileVisibility.FRIENDS_ONLY),
-						callsPublic: true,
-						leaderboardOptIn: true,
-						worldsOptIn: true
-					},
-					flowTags: [],
-					worldCupMode: false,
-					savedMarketIds: [],
-					favoriteParticipantId: '',
-					favoriteSide: '',
-					onboardingCompleted: false
-				}
-			}
-		};
+		return { key: principal, data: emptyProfile(principal) };
 	}
 
 	return {
 		key: principal,
 		data: profile as UserProfile
 	};
+};
+
+/**
+ * The signed-in user's own profile for the web2 app-shell hydration. Returns
+ * the default shell (with `existed: false`) for a freshly created account that
+ * has no stored profile yet, so the onboarding drain runs exactly as it does
+ * for a new on-chain user. web2 only; the on-chain path hydrates via
+ * {@link ensureProfile}.
+ */
+export const loadWeb2ProfileShell = async (
+	owner: PrincipalText
+): Promise<{ profile: UserProfile; existed: boolean }> => {
+	const profile = await getMyProfileWeb2();
+
+	return isNullish(profile)
+		? { profile: emptyProfile(owner), existed: false }
+		: { profile, existed: true };
 };
 
 /**
@@ -335,7 +375,7 @@ export const recordFlowSwipe = ({
 }: {
 	dayKey: string;
 }): Promise<{ dailyGoalDone: number; dailyGoalDate: string; capReached: boolean }> =>
-	functions.recordFlowSwipe({ dayKey });
+	isWeb2Backend() ? recordFlowSwipeWeb2({ dayKey }) : functions.recordFlowSwipe({ dayKey });
 
 /**
  * Persist the Menagerie celebration ledger — the set of `${slug}:${tier}` keys
@@ -373,6 +413,17 @@ export const persistEarnedMenagerie = async ({
 export const upsertProfile = async (
 	profileDoc: Doc<UserProfile> | { key: string; data: UserProfile }
 ): Promise<void> => {
+	// web2 is a full-doc PUT: the server locks the caller's row, applies the
+	// same nickname / handle-cooldown / daily-goal guards, and returns the
+	// stored result. The caller's session identifies the row, so `owner` / role
+	// in the body are ignored; the account email lives on the auth identity in
+	// this mode, not the profile doc, so it is intentionally not sent here.
+	if (isWeb2Backend()) {
+		await upsertMyProfileWeb2(profileDoc.data);
+
+		return;
+	}
+
 	const { key } = profileDoc;
 	const existing = await getDoc<UserProfile>({
 		collection: Collection.PROFILES,
@@ -524,6 +575,10 @@ export const applyOnboardingPicks = async ({
  * Case-insensitive search over nickname, owner, and document key via secure satellite query.
  */
 export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
+	if (isWeb2Backend()) {
+		return searchProfilesWeb2(query);
+	}
+
 	const { items } = await functions.searchProfiles({ queryStr: query });
 
 	return items.map(fromWireProfile);
@@ -554,16 +609,25 @@ export const checkNicknameAvailability = async ({
 	nickname: string;
 	principal?: PrincipalText;
 }): Promise<NicknameAvailability> => {
-	const result = await functions.checkNicknameAvailability({
-		nickname,
-		excludePrincipalStr: principal ?? ''
-	});
+	// web2 excludes the caller's own current nickname via the session, so the
+	// `principal` hint is not needed on that transport.
+	const result = isWeb2Backend()
+		? await checkNicknameAvailabilityWeb2(nickname)
+		: await functions.checkNicknameAvailability({
+				nickname,
+				excludePrincipalStr: principal ?? ''
+			});
 
 	if (result.available) {
 		return { available: true };
 	}
 
-	return { available: false, reason: result.reason ?? 'taken' };
+	// The web2 validator can report `too_long`, which the shared FE outcome
+	// folds into `invalid` (the charset/format bucket) so both transports
+	// surface the same set of inline reasons.
+	const reason = result.reason === 'too_long' ? 'invalid' : (result.reason ?? 'taken');
+
+	return { available: false, reason };
 };
 
 /**
@@ -847,6 +911,10 @@ export const checkFriendship = async ({
 	userA: PrincipalText;
 	userB: PrincipalText;
 }): Promise<boolean> => {
+	if (isWeb2Backend()) {
+		return checkFriendshipWeb2({ userA, userB });
+	}
+
 	const { isFriend } = await functions.checkFriendship({ userA, userB });
 
 	return isFriend;

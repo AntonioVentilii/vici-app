@@ -32,10 +32,11 @@ Two files under `src/lib/web2/`:
 
 ## Swapped domains
 
-| Domain    | Where the branch lives                                                    | Notes                                                         |
-| --------- | ------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Analytics | `analytics.services.ts` (flush call site)                                 | The reference for the per-service swap below.                 |
-| Auth      | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte` | The identity layer, not a per-service swap. See "Auth" below. |
+| Domain            | Where the branch lives                                                                                                             | Notes                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Analytics         | `analytics.services.ts` (flush call site)                                                                                          | The reference for the per-service swap below.                                                       |
+| Auth              | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                          | The identity layer, not a per-service swap. See "Auth" below.                                       |
+| Profiles + social | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts` | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below. |
 
 ## The swap pattern (exemplar: analytics flush)
 
@@ -102,6 +103,66 @@ lands, so the auth branch never reaches for a Juno identity in web2 mode.
 
 `client.ts` ships the auth surface: `getProviders()`, `getMe()`,
 `requestOtp()`, `verifyOtp()`, `googleSignInUrl()`, `logout()`.
+
+## Profiles and social
+
+This is the worked example of the per-service swap for a data domain, and
+the exemplar for the ones that follow.
+
+### The identity rename
+
+The HTTP API keys a user by an opaque account id (`userId`, a uuid) where
+the on-chain stack keys by a principal. The app's domain shapes carry that
+identity in a single `owner` string (`UserProfile.owner`,
+`Relation.participants`, `ResolvedResult.owner`, `UserStatsDoc.owner`), so
+the `client.ts` wrappers carry the `userId` → `owner` rename and re-narrow
+the loose wire string unions (`visibility`, `role`) back to the app enums.
+The result is byte-identical to the satellite services, so every component
+and store stays backend-agnostic. In web2 mode `owner` simply holds the
+account id instead of a principal.
+
+### Service-layer branches
+
+Each read/write branches on `isWeb2Backend()` inside its owning
+`*.services.ts`, calling a `client.ts` wrapper on the web2 side and leaving
+the on-chain call untouched on the default side:
+
+- `profile.services.ts`: `getProfile`, `searchProfiles`,
+  `checkNicknameAvailability`, `checkFriendship`, `recordFlowSwipe`,
+  `upsertProfile`. The composed writers (`patchProfile`, `persistDailyStreak`,
+  `applyOnboardingPicks`, `persistPreferences`, `recordActivity`) ride the
+  swap for free: they route through `getProfile` + `upsertProfile`.
+- `user-stats.services.ts`: `loadMyUserStats` (the Dash read).
+- `leaderboard.services.ts`: `getLeaderboard`, `getMyRival`.
+- `relation.services.ts`: `sendFriendRequest` (with a web2 `@handle` / account-id
+  resolver), `accept` / `reject` / `cancel`, `unfriend`, `follow`, `unfollow`.
+- `relation-queries.services.ts`: friends, followers, following, friend
+  requests (sent + received), friend-scoped resolved results.
+
+### App-shell hydration
+
+The auth swap left `userStore` (the store the whole authenticated app reads)
+unhydrated in web2 mode. `Authn.svelte` now mirrors the cookie session into
+it: an `$effect` watches `web2SessionStore` and, when a user resolves, builds
+a minimal `User` (`key` / `owner` = account id), reads the profile via
+`loadWeb2ProfileShell` (the default shell with `profileExisted: false` for a
+brand-new account, so the onboarding drain runs identically), and sets
+`userStore`. Sign-out and the signed-out steady state clear it, so the shell
+never hangs on `authBusy`. This lives in `Authn.svelte` because it is the
+sanctioned identity-layer exception; no other component gains a branch.
+
+### Still on-chain in this domain
+
+- `calculateAndSyncStats` (and its `persistMyUserStats` /
+  `syncMyMonthlyStats` writes) reads the on-chain clearing history, so it
+  stays on the engine backend until the custody / engine bridge lands. In
+  web2 mode the login stats sync is simply not run; the Dash reads whatever
+  `user_stats` the API holds (empty until that write path swaps).
+- Activities + reactions (`activity.services.ts`,
+  `activity-reaction.services.ts`) and the private-email doc
+  (`getMyEmail` / `saveMyEmail`) are unswapped; the account email in web2
+  rides the auth identity, not the profile doc. `client.ts` intentionally
+  does not yet ship wrappers for these to avoid unused surface.
 
 ## Guardrails
 
