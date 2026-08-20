@@ -146,10 +146,17 @@ release event** — it cascades into `deploy.yml` + `publish.yml`. release-pleas
 keeps `package.json#version` and `package.json#juno.functions.version` in
 lockstep (config `extra-files`), so from the first release on, the two numbers
 are identical. For the cut tag to actually trigger the two deploy workflows,
-release-please must run with the `RELEASE_PLEASE_PAT` secret (a tag created with
-the default `GITHUB_TOKEN` does not trigger further workflows); without it, the
-release PR still works but you must dispatch `deploy.yml` / `publish.yml`
-manually after the tag lands.
+release-please must run with a token other than the default `GITHUB_TOKEN` (a
+tag created with `GITHUB_TOKEN` does not trigger further workflows). It mints a
+short-lived installation token from the **vici-release-bot** GitHub App via the
+`RELEASE_BOT_PRIVATE_KEY` secret; without that secret the release PR still works
+but you must dispatch `deploy.yml` / `publish.yml` manually after the tag lands.
+The same reasoning applies to every workflow that pushes a commit or opens a PR
+that CI must then run on, so `checks.yml` (`format`), `update-icdc-core.yml`,
+`e2e.yml` and `dependabot-bun-lock.yml` all mint the same token. The app id is
+the `PR_AUTOMATION_BOT_APP_ID` repository variable; only the private key is a
+secret. If you add another such workflow, mint the token too, or its bot commits
+will land with no checks attached.
 
 `config apply` (**applies** `juno.config.ts` — collection rules + authentication
 config — to the production satellite) is **run manually**, not in CI. Use
@@ -178,6 +185,19 @@ workflows and don't add a third.
 If your change is doc-only, the `format` and `lint` jobs still run because
 they cover the whole repo. The `check` job covers `*.svelte` / `*.ts` only,
 so doc-only changes typically pass it trivially.
+
+### Merge queue (`merge_group`)
+
+Every PR-triggered workflow also answers `merge_group`, so the suites re-run against the queued combination and not only against each PR alone. `dependabot-bun-lock.yml` is the exception: it is `pull_request_target`, and a lockfile repair that pushes to the PR head means nothing against a queue ref.
+
+Constraints that shape those workflows:
+
+- **`github.event.pull_request.*` is null.** Guard anything reading the PR number, head ref, labels, title or author on `github.event_name == 'pull_request'`, and give it a defined behaviour when the guard is false. `github.event.merge_group.head_sha` / `base_ref` are the queue equivalents (see the `checks.yml` cache keys).
+- **The queue ref `refs/heads/gh-readonly-queue/main/pr-<n>-<sha>` is read-only.** Auto-commit paths (`format`, the e2e snapshot commit-back) are gated to `pull_request`; in the queue the same drift is a hard failure that bounces the PR out. A fix belongs on the PR, not on the queue branch.
+- **`branches` filters work, `paths` filters don't.** Either run unconditionally (`backend-checks.yml`) or gate in-job against `github.event.merge_group.base_ref` (`e2e.yml`).
+- **Only an always-reporting aggregator can be a required context.** `checks-pass` reports on every event, which is why it is the one required check. A path-filtered job like `backend` never reports on an unrelated PR, so promoting it would block that PR forever; it needs a `*-pass` aggregator first.
+
+The queue is **not enabled** on `main` today, so these legs are dormant. Switching it on also means turning **off** `strict_required_status_checks_policy` (the queue supersedes "branches up to date"), and promoting `e2e-tests-pass` if the queue should gate on E2E.
 
 ## 6. After CI fails
 

@@ -444,7 +444,7 @@ export const createLeague = async ({
  * char window the create flow enforces; an invalid name throws before
  * any write). Pass `privacy` to change the league's visibility (any of
  * the three variants; the assert range-checks it). Pass `imageUrl` to
- * set or change the cover image, or `null` to clear it (the field is
+ * set or change the cover image, or `''` to clear it (the field is
  * dropped from the doc so a cover-less league carries an absent field,
  * matching the assert's non-empty rule). Omitting a field leaves it
  * untouched.
@@ -465,8 +465,8 @@ export const updateLeague = async ({
 	name?: string;
 	/** New three-way visibility, or omitted to leave as-is. */
 	privacy?: LeaguePrivacy;
-	/** New cover-image URL, `null` to clear, or omitted to leave as-is. */
-	imageUrl?: string | null;
+	/** New cover-image URL, `''` to clear, or omitted to leave as-is. */
+	imageUrl?: string;
 }): Promise<LeagueDoc> => {
 	const existing = await getDoc<LeagueDoc>({
 		collection: Collection.LEAGUES,
@@ -496,7 +496,7 @@ export const updateLeague = async ({
 	}
 
 	if (nonNullish(imageUrl)) {
-		const trimmedImageUrl = imageUrl?.trim() ?? '';
+		const trimmedImageUrl = imageUrl.trim();
 
 		if (trimmedImageUrl.length === 0) {
 			delete next.imageUrl;

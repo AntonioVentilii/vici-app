@@ -30,6 +30,14 @@ Two files under `src/lib/web2/`:
 | `VITE_BACKEND`      | `web3` \| `web2` | `web3`  | Selects the backend for domains that have a dual-mode path. Build-time only. |
 | `VITE_WEB2_API_URL` | origin URL       | empty   | Base of the HTTP API. Empty = same-origin relative (reverse-proxy shape).    |
 
+## Swapped domains
+
+| Domain            | Where the branch lives                                                                                                             | Notes                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Analytics         | `analytics.services.ts` (flush call site)                                                                                          | The reference for the per-service swap below.                                                       |
+| Auth              | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                          | The identity layer, not a per-service swap. See "Auth" below.                                       |
+| Profiles + social | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts` | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below. |
+
 ## The swap pattern (exemplar: analytics flush)
 
 [`analytics.services.ts`](../../../src/lib/services/analytics.services.ts)
@@ -63,20 +71,108 @@ using the pattern above: the satellite / canister call in the service is
 paired with a `client.ts` wrapper hitting the matching `/api/v1/<domain>`
 route, behind `isWeb2Backend()`.
 
-Auth is the exception: it does not go dual-mode per service. The identity
-layer swaps wholesale at cutover (cookie sessions replace the on-chain
-identity flow), because half-swapped auth would leave reads and writes
-authenticated against different identities. Until cutover, web2 mode only
-covers paths that work with an anonymous or cookie-linked caller (the
-analytics ingest is deliberately such a path). `client.ts` already ships
-the auth basics for that moment: `getProviders()`, `getMe()`, `logout()`.
+## Auth
+
+Auth is not a per-service swap: the whole identity layer switches, because
+half-swapped auth would leave reads and writes authenticated against
+different identities. In web2 mode there is no local identity to read. The
+browser holds an HttpOnly session cookie set by the API, and "signed in"
+derives from `GET /api/v1/me` succeeding, not from an on-chain delegation.
+
+- **Session state — `web2/session.ts`.** A small store (`web2SessionStore`)
+  is the cookie-session counterpart to the on-chain identity flow.
+  `loadWeb2Session()` probes `/me` (a 401 is the signed-out steady state,
+  not an error), `adoptWeb2Session(user)` seeds it from a login response,
+  and `clearWeb2Session()` revokes server-side then drops local state.
+- **Session bootstrap — `Authn.svelte`.** `onMount` branches: web2 runs
+  `loadWeb2Session()` in place of Juno's `onAuthStateChange`. The on-chain
+  path is left byte-for-byte as it was.
+- **Sign-in — `SignInProviderStack.svelte`.** In web2 mode it renders
+  `SignInProviderStackWeb2.svelte`: email one-time code (request then verify
+  via `requestOtp` / `verifyOtp`), Google as a full-page redirect to
+  `googleSignInUrl()` (the API drives the OAuth dance and lands back on the
+  app root, where `Authn` picks up the session), and Apple + Passkey shown
+  disabled ("coming soon") since neither is wired on this transport yet. The
+  on-chain provider stack is untouched behind the same branch.
+- **Sign-out — `Logout.svelte`.** web2 calls `clearWeb2Session()`; on-chain
+  calls Juno `signOut()`.
+
+Engine calls still read the on-chain identity (`getIdentity()` /
+`getIdentityOnce()`); those stay on-chain until the custody/engine bridge
+lands, so the auth branch never reaches for a Juno identity in web2 mode.
+
+`client.ts` ships the auth surface: `getProviders()`, `getMe()`,
+`requestOtp()`, `verifyOtp()`, `googleSignInUrl()`, `logout()`.
+
+## Profiles and social
+
+This is the worked example of the per-service swap for a data domain, and
+the exemplar for the ones that follow.
+
+### The identity rename
+
+The HTTP API keys a user by an opaque account id (`userId`, a uuid) where
+the on-chain stack keys by a principal. The app's domain shapes carry that
+identity in a single `owner` string (`UserProfile.owner`,
+`Relation.participants`, `ResolvedResult.owner`, `UserStatsDoc.owner`), so
+the `client.ts` wrappers carry the `userId` → `owner` rename and re-narrow
+the loose wire string unions (`visibility`, `role`) back to the app enums.
+The result is byte-identical to the satellite services, so every component
+and store stays backend-agnostic. In web2 mode `owner` simply holds the
+account id instead of a principal.
+
+### Service-layer branches
+
+Each read/write branches on `isWeb2Backend()` inside its owning
+`*.services.ts`, calling a `client.ts` wrapper on the web2 side and leaving
+the on-chain call untouched on the default side:
+
+- `profile.services.ts`: `getProfile`, `searchProfiles`,
+  `checkNicknameAvailability`, `checkFriendship`, `recordFlowSwipe`,
+  `upsertProfile`. The composed writers (`patchProfile`, `persistDailyStreak`,
+  `applyOnboardingPicks`, `persistPreferences`, `recordActivity`) ride the
+  swap for free: they route through `getProfile` + `upsertProfile`.
+- `user-stats.services.ts`: `loadMyUserStats` (the Dash read).
+- `leaderboard.services.ts`: `getLeaderboard`, `getMyRival`.
+- `relation.services.ts`: `sendFriendRequest` (with a web2 `@handle` / account-id
+  resolver), `accept` / `reject` / `cancel`, `unfriend`, `follow`, `unfollow`.
+- `relation-queries.services.ts`: friends, followers, following, friend
+  requests (sent + received), friend-scoped resolved results.
+
+### App-shell hydration
+
+The auth swap left `userStore` (the store the whole authenticated app reads)
+unhydrated in web2 mode. `Authn.svelte` now mirrors the cookie session into
+it: an `$effect` watches `web2SessionStore` and, when a user resolves, builds
+a minimal `User` (`key` / `owner` = account id), reads the profile via
+`loadWeb2ProfileShell` (the default shell with `profileExisted: false` for a
+brand-new account, so the onboarding drain runs identically), and sets
+`userStore`. Sign-out and the signed-out steady state clear it, so the shell
+never hangs on `authBusy`. This lives in `Authn.svelte` because it is the
+sanctioned identity-layer exception; no other component gains a branch.
+
+### Still on-chain in this domain
+
+- `calculateAndSyncStats` (and its `persistMyUserStats` /
+  `syncMyMonthlyStats` writes) reads the on-chain clearing history, so it
+  stays on the engine backend until the custody / engine bridge lands. In
+  web2 mode the login stats sync is simply not run; the Dash reads whatever
+  `user_stats` the API holds (empty until that write path swaps).
+- Activities + reactions (`activity.services.ts`,
+  `activity-reaction.services.ts`) and the private-email doc
+  (`getMyEmail` / `saveMyEmail`) are unswapped; the account email in web2
+  rides the auth identity, not the profile doc. `client.ts` intentionally
+  does not yet ship wrappers for these to avoid unused surface.
 
 ## Guardrails
 
 - Never read `VITE_BACKEND` directly; always go through `backend-mode.ts`
   so the default stays in one place.
 - No `isWeb2Backend()` branches in components or stores; the seam lives in
-  services (and, for auth at cutover, the identity layer).
+  services. The one sanctioned exception is the identity layer, whose swap
+  is inherently UI-driven (one-time-code entry, redirect handoff): the auth
+  branches live in `Authn.svelte`, `SignInProviderStack.svelte`, and
+  `Logout.svelte`, with the session store in `web2/session.ts`.
 - Analytics event payloads stay behavioural and pseudonymous on both
   transports; the server stamps time and identity in both modes.
 - Constants mirrored between `src/` and `backend/` (locales, market

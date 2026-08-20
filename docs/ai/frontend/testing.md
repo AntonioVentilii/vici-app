@@ -373,11 +373,14 @@ The `webServer` block in `playwright.config.ts` boots `npm run dev` on
 ### CI
 
 The [`.github/workflows/e2e.yml`](../../../.github/workflows/e2e.yml)
-workflow runs on **every** push to `main`, every pull request, every
-`merge_group`, on a nightly schedule, and on `workflow_dispatch` — no
-paths-filter / label gate. The Juno emulator is cheap enough relative
-to the value of catching a regression. Concurrency is grouped on the
-ref so pushing a new commit to a PR cancels the in-flight run.
+workflow runs unconditionally on pushes to `main`, nightly, and on
+`workflow_dispatch`. On a **pull request** and in a **`merge_group`**
+the `check-e2e-changes` paths-filter job skips the suite unless the
+change touches `e2e/**`, `playwright.config.ts`, the workflow,
+`dfx.json`, `juno.config.ts`, or `scripts/**`; `e2e-tests-pass` still
+reports green when skipped. The `run-e2e-snapshots` label forces it on,
+on a PR only. Concurrency is grouped on the ref so pushing a new commit
+to a PR cancels the in-flight run.
 
 The job installs the Juno CLI, starts the emulator headlessly, applies
 the development-mode config, builds + upgrades the satellite functions

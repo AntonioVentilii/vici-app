@@ -9,6 +9,7 @@ import * as apple from '../auth/apple';
 import * as google from '../auth/google';
 import { requireUser, unauthenticated } from '../auth/guard';
 import { resolveIdentity } from '../auth/identity';
+import { decodeOauthState, encodeOauthState, sanitizeReturnTo } from '../auth/oauth-state';
 import { requestOtp, verifyOtp } from '../auth/otp';
 import { revokeToken, rotateSession } from '../auth/sessions';
 import { query } from '../db/client';
@@ -229,7 +230,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1' })
 		{ body: t.Object({ email: t.String(), code: t.String() }) }
 	)
 
-	.get('/auth/google', ({ request, set }) => {
+	.get('/auth/google', ({ query: qs, request, set }) => {
 		const limited = enforceLimit({
 			set,
 			name: 'google',
@@ -247,8 +248,12 @@ export const authRoutes = new Elysia({ prefix: '/api/v1' })
 		}
 
 		const state = randomToken(16);
+		// Post-login landing path: clamped to a same-app absolute path (open
+		// redirects collapse to '/') and carried inside the signed state cookie
+		// so it cannot be tampered with between here and the callback.
+		const returnTo = sanitizeReturnTo(qs.returnTo);
 
-		set.headers['set-cookie'] = oauthStateCookie(signState(state));
+		set.headers['set-cookie'] = oauthStateCookie(encodeOauthState({ state, returnTo }));
 		set.status = 302;
 		set.headers.location = google.buildAuthUrl(state);
 
@@ -260,8 +265,15 @@ export const authRoutes = new Elysia({ prefix: '/api/v1' })
 		const code = typeof qs.code === 'string' ? qs.code : '';
 		const state = typeof qs.state === 'string' ? qs.state : '';
 		const clearStateCookie = clearOauthStateCookie();
+		const statePayload = decodeOauthState(cookieValue);
 
-		if (!env.google.enabled || code === '' || !stateMatches(cookieValue, state)) {
+		if (
+			!env.google.enabled ||
+			code === '' ||
+			state === '' ||
+			isNullish(statePayload) ||
+			!constantTimeEqual(statePayload.state, state)
+		) {
 			return redirectToApp({ path: '/?e=state', clearStateCookie });
 		}
 
@@ -279,7 +291,7 @@ export const authRoutes = new Elysia({ prefix: '/api/v1' })
 		});
 
 		return redirectToApp({
-			path: '/',
+			path: statePayload.returnTo,
 			clearStateCookie,
 			extraCookies: [await loginCookies(request, userId)]
 		});

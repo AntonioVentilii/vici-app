@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onAuthStateChange, type User } from '@junobuild/core';
 	import { onMount, type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
@@ -11,7 +11,8 @@
 	import {
 		ensureProfile,
 		calculateAndSyncStats,
-		forgetBootstrappedThisSession
+		forgetBootstrappedThisSession,
+		loadWeb2ProfileShell
 	} from '$lib/services/profile.services';
 	import { receivedReactionsStore } from '$lib/stores/activity-reactions.store';
 	import { clearAffiliations } from '$lib/stores/affiliations.store';
@@ -24,6 +25,9 @@
 	import { clearMyReferrals } from '$lib/stores/referrals.store';
 	import { tradeHistoryStore } from '$lib/stores/trade-history.store';
 	import { userStore } from '$lib/stores/user.store';
+	import { isWeb2Backend } from '$lib/web2/backend-mode';
+	import type { Web2Me } from '$lib/web2/client';
+	import { loadWeb2Session, web2SessionStore } from '$lib/web2/session';
 
 	/**
 	 * Write (or clear) the `SIGNED_IN_FLAG_KEY` hint that this device has an
@@ -177,12 +181,140 @@
 		}
 	};
 
+	/**
+	 * Web2 app-shell hydration: mirror the cookie session into `userStore` so the
+	 * authenticated app renders for a web2 user exactly as it does on-chain. The
+	 * on-chain path fills the same store via `ensureProfile`; here the identity is
+	 * the account id (no principal), the profile comes from the HTTP API, and the
+	 * email rides the auth identity rather than a private profile doc. A freshly
+	 * created account with no stored profile hydrates the default shell with
+	 * `profileExisted: false` so the onboarding drain runs identically.
+	 *
+	 * The stats sync (`calculateAndSyncStats`) is intentionally not run: it reads
+	 * the on-chain clearing history, which stays on the engine backend until the
+	 * custody / engine bridge lands.
+	 */
+	const hydrateWeb2AppShell = async (me: Web2Me): Promise<boolean> => {
+		userStore.update((data) => ({ ...data, authBusy: true }));
+
+		try {
+			const user: User = { key: me.id, owner: me.id, data: {} };
+			const email = me.identities.find((identity) => (identity.email ?? '') !== '')?.email ?? '';
+			const { profile, existed } = await loadWeb2ProfileShell(me.id);
+
+			setSignedInFlag(true);
+
+			userStore.set({ user, profile, email, authBusy: false, profileExisted: existed });
+
+			return true;
+		} catch (e: unknown) {
+			console.error('web2 app-shell hydration failed', e);
+
+			userStore.update((data) => ({ ...data, authBusy: false }));
+
+			return false;
+		}
+	};
+
+	const clearWeb2AppShell = (): void => {
+		setSignedInFlag(false);
+		forgetBootstrappedThisSession();
+
+		userStore.set({
+			user: undefined,
+			profile: undefined,
+			email: '',
+			authBusy: false,
+			profileExisted: false
+		});
+	};
+
 	onMount(() => {
+		// Web2 mode has no on-chain identity to observe: the session is a cookie,
+		// so "signed in" is a `/me` probe mirrored into `web2SessionStore`, not a
+		// Juno auth transition. The on-chain path below is left exactly as is and
+		// runs whenever the flag is off (the default).
+		if (isWeb2Backend()) {
+			// The root gate (src/routes/+page.svelte) keys off `userStore.authBusy`,
+			// which boots `true`, so the probe must resolve it in BOTH outcomes or
+			// a web2 visitor hangs on the brand shell forever. `loadWeb2Session`
+			// never rejects: any failure resolves to signed-out.
+			void loadWeb2Session().then((user) => {
+				if (isNullish(user)) {
+					setSignedInFlag(false);
+
+					// Explicit signed-out state, mirroring the on-chain reset above.
+					userStore.set({
+						user: undefined,
+						profile: undefined,
+						email: '',
+						authBusy: false,
+						profileExisted: false
+					});
+
+					return;
+				}
+
+				// A live cookie session only releases the gate here; hydrating the
+				// user/profile into `userStore` belongs to the profiles domain swap.
+				userStore.update((data) => ({ ...data, authBusy: false }));
+			});
+
+			return;
+		}
+
 		const unsubscribe = onAuthStateChange(updateUserStore);
 
 		return () => {
 			unsubscribe();
 		};
+	});
+
+	// Web2 only: drive `userStore` off the cookie-session store. This covers both
+	// sign-in entry points (the OTP verify that seeds the store in place and the
+	// Google redirect that re-runs the mount probe) and sign-out, and settles the
+	// signed-out steady state so the shell never hangs on `authBusy`. Guarded by
+	// the last-hydrated id so a redundant store emission never re-fetches.
+	let web2ShellUserId: string | undefined;
+	let web2ShellSettled = false;
+
+	$effect(() => {
+		if (!isWeb2Backend()) {
+			return;
+		}
+
+		const { user, authBusy } = $web2SessionStore;
+
+		if (authBusy) {
+			return;
+		}
+
+		if (isNullish(user)) {
+			if (nonNullish(web2ShellUserId) || !web2ShellSettled) {
+				web2ShellUserId = undefined;
+				web2ShellSettled = true;
+
+				clearWeb2AppShell();
+			}
+
+			return;
+		}
+
+		if (web2ShellUserId === user.id) {
+			return;
+		}
+
+		web2ShellUserId = user.id;
+		web2ShellSettled = true;
+
+		// A failed hydration must not burn the guard: clearing it lets the next
+		// store emission for the same session retry instead of stranding the
+		// shell unhydrated until a reload.
+		void hydrateWeb2AppShell(user).then((hydrated) => {
+			if (!hydrated && web2ShellUserId === user.id) {
+				web2ShellUserId = undefined;
+			}
+		});
 	});
 
 	// Mirror the current user's profile into `profilesStore` so every
