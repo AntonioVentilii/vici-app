@@ -194,7 +194,7 @@
 	 * the on-chain clearing history, which stays on the engine backend until the
 	 * custody / engine bridge lands.
 	 */
-	const hydrateWeb2AppShell = async (me: Web2Me): Promise<void> => {
+	const hydrateWeb2AppShell = async (me: Web2Me): Promise<boolean> => {
 		userStore.update((data) => ({ ...data, authBusy: true }));
 
 		try {
@@ -205,10 +205,14 @@
 			setSignedInFlag(true);
 
 			userStore.set({ user, profile, email, authBusy: false, profileExisted: existed });
+
+			return true;
 		} catch (e: unknown) {
 			console.error('web2 app-shell hydration failed', e);
 
 			userStore.update((data) => ({ ...data, authBusy: false }));
+
+			return false;
 		}
 	};
 
@@ -303,7 +307,14 @@
 		web2ShellUserId = user.id;
 		web2ShellSettled = true;
 
-		void hydrateWeb2AppShell(user);
+		// A failed hydration must not burn the guard: clearing it lets the next
+		// store emission for the same session retry instead of stranding the
+		// shell unhydrated until a reload.
+		void hydrateWeb2AppShell(user).then((hydrated) => {
+			if (!hydrated && web2ShellUserId === user.id) {
+				web2ShellUserId = undefined;
+			}
+		});
 	});
 
 	// Mirror the current user's profile into `profilesStore` so every
