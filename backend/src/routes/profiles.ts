@@ -13,7 +13,7 @@ import {
 	getProfileView,
 	ProfileValidationError,
 	searchProfiles,
-	shapeProfile,
+	shapeOwnProfile,
 	upsertMyProfile
 } from '../profiles/profile';
 import { getUserStats, upsertMonthlyStats, upsertUserStats } from '../profiles/stats';
@@ -40,7 +40,7 @@ export const profilesRoutes = new Elysia({ prefix: '/api/v1/profiles' })
 
 		const row = await getProfileRow({ userId: user.id });
 
-		return { profile: isNullish(row) ? null : shapeProfile(row) };
+		return { profile: isNullish(row) ? null : shapeOwnProfile(row) };
 	})
 	.put('/me', async ({ request, set, body }) => {
 		const user = await requireUser(request);
