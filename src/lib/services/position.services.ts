@@ -1,12 +1,15 @@
 import type { RegistryDid } from '$declarations';
 import { getPositions as getPositionsApi } from '$lib/api/clearing.api';
-import { getIdentity } from '$lib/services/identity.services';
+import { getIdentity, web2PlaceholderIdentity } from '$lib/services/identity.services';
 import { fetchMarketsLite } from '$lib/services/market.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import type { MarketId } from '$lib/types/market';
 import type { Position } from '$lib/types/position';
 import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
 import { mapPositionData } from '$lib/utils/position.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import { listEnginePositions as listEnginePositionsWeb2 } from '$lib/web2/client';
+import { getWeb2User } from '$lib/web2/session';
 import { isNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
@@ -24,7 +27,7 @@ const fetchPositions = async ({
 	domain: RegistryDid.BalanceDomain;
 }): Promise<Position[]> => {
 	const [positions, markets] = await Promise.all([
-		getPositionsApi({ identity, certified }),
+		isWeb2Backend() ? listEnginePositionsWeb2() : getPositionsApi({ identity, certified }),
 		// Order-book-free: we only need the market id set to filter positions to
 		// the currently visible markets. Threads the pass's own `certified` so the
 		// uncertified query pass isn't blocked on a certified catalog, while each
@@ -44,6 +47,15 @@ const fetchPositions = async ({
  * that should render fast then upgrade to a certified result.
  */
 export const getPositions = async (domain: RegistryDid.BalanceDomain): Promise<Position[]> => {
+	// web2 gates on the cookie session; the Juno identity path never runs.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return [];
+		}
+
+		return fetchPositions({ identity: web2PlaceholderIdentity(), certified: true, domain });
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
@@ -66,6 +78,29 @@ export const loadPositions = async ({
 	onLoad: (options: { certified: boolean; response: Position[] }) => void;
 	onUpdateError?: (error: unknown) => void;
 }): Promise<void> => {
+	// web2 reads once: no query/update pair exists on that transport, so the
+	// single response is the final (`certified: true`) pass.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return;
+		}
+
+		try {
+			onLoad({
+				certified: true,
+				response: await fetchPositions({
+					identity: web2PlaceholderIdentity(),
+					certified: true,
+					domain
+				})
+			});
+		} catch (err: unknown) {
+			onUpdateError?.(err);
+		}
+
+		return;
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
@@ -88,6 +123,18 @@ export const loadPositions = async ({
  * for UI flows that should render fast then upgrade to a certified result.
  */
 export const getPositionsForMarket = async (targetSeriesId: MarketId): Promise<Position[]> => {
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return [];
+		}
+
+		return fetchPositionsForMarket({
+			identity: web2PlaceholderIdentity(),
+			certified: true,
+			marketId: targetSeriesId
+		});
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
@@ -106,7 +153,9 @@ const fetchPositionsForMarket = async ({
 	certified: boolean;
 	marketId: MarketId;
 }): Promise<Position[]> => {
-	const positions = await getPositionsApi({ identity, certified });
+	const positions = isWeb2Backend()
+		? await listEnginePositionsWeb2()
+		: await getPositionsApi({ identity, certified });
 
 	return positions.filter((p) => p.series_id === marketId).map(mapPositionData);
 };
@@ -124,6 +173,28 @@ export const loadPositionsForMarket = async ({
 	onLoad: (options: { certified: boolean; response: Position[] }) => void;
 	onUpdateError?: (error: unknown) => void;
 }): Promise<void> => {
+	// Single-pass web2 read, delivered as the final (`certified: true`) pass.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return;
+		}
+
+		try {
+			onLoad({
+				certified: true,
+				response: await fetchPositionsForMarket({
+					identity: web2PlaceholderIdentity(),
+					certified: true,
+					marketId
+				})
+			});
+		} catch (err: unknown) {
+			onUpdateError?.(err);
+		}
+
+		return;
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {

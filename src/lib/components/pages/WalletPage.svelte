@@ -25,8 +25,7 @@
 	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
 	import { vxpBacked, vxpFree } from '$lib/derived/vxp-holdings.derived';
 	import { clearingTransactions } from '$lib/derived/wallet-feed.derived';
-	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import { sendIc } from '$lib/services/send.services';
+	import { sendToken, SendTokenError } from '$lib/services/send.services';
 	import {
 		getTransactionsPage,
 		type WalletTransactionsCursors,
@@ -252,16 +251,15 @@
 		sending = true;
 
 		try {
-			const identity = await safeGetIdentityOnce();
-
-			await sendIc({
-				identity,
+			// The service resolves the transport (user-signed ICRC transfer, or a
+			// custodial withdrawal in web2 mode) and the auth that goes with it.
+			await sendToken({
+				token: selectedTokenForSend,
 				to: recipient,
 				amount: parseToken({
 					value: `${amount}`,
 					unitName: selectedTokenForSend.decimals
-				}),
-				ledgerCanisterId: selectedTokenForSend.ledgerCanisterId
+				})
 			});
 
 			emit({ message: 'viciRefreshBalances' });
@@ -280,7 +278,10 @@
 		} catch (e: unknown) {
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'wallet.send.error_title' }),
-				message: (e as Error).message,
+				message:
+					e instanceof SendTokenError
+						? `${t({ locale: $localeStore, key: e.messageKey, params: e.params })}${nonNullish(e.detail) ? ` (${e.detail})` : ''}`
+						: (e as Error).message,
 				type: 'error'
 			});
 		} finally {

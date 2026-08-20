@@ -13,15 +13,23 @@ import { web2ApiBaseUrl } from '$lib/web2/backend-mode';
 import {
 	intervalToWire,
 	leaderboardWindowToWire,
+	mapAccountStateResponse,
 	mapCollateralAssetInfo,
+	mapEvent,
 	mapLeaderboardEntry,
+	mapLimitOrder,
+	mapPosition,
 	mapPriceCandle,
 	mapSeries,
 	mapSeriesTradePage,
 	mapSeriesTradedVolume,
 	mapSettlementStatus,
+	type Web2AccountStateResponseWire,
 	type Web2CollateralAssetInfoWire,
+	type Web2EventWire,
 	type Web2LeaderboardEntryWire,
+	type Web2LimitOrderWire,
+	type Web2PositionWire,
 	type Web2PriceCandleWire,
 	type Web2SeriesTradePageWire,
 	type Web2SeriesTradedVolumeWire,
@@ -721,6 +729,270 @@ export const listEngineCollateralAssets = async (): Promise<ClearingDid.Collater
 	});
 
 	return assets.map(mapCollateralAssetInfo);
+};
+
+// ─── Session-gated engine account surface ────────────────────────────────
+//
+// The API signs these clearing calls with the caller's derived custodial IC
+// identity, so the engine sees the same principal that owns the account's
+// positions; the browser authenticates with the session cookie only. Returns
+// are mapped back into the `$declarations` candid types like the public reads
+// above, so stores and utils stay backend-agnostic.
+
+/**
+ * Clearing's account view for the session user. It rides the engine's
+ * read-only query (`get_account_state_query`), the same source the on-chain
+ * uncertified pass reads: the refreshed update read is not bridged.
+ */
+export const getEngineAccountState = async (): Promise<ClearingDid.AccountStateResponse> => {
+	const { account } = await request<{ account: Web2AccountStateResponseWire }>({
+		path: '/api/v1/engine/account',
+		method: 'GET'
+	});
+
+	return mapAccountStateResponse(account);
+};
+
+/** The session user's open positions across all series and domains. */
+export const listEnginePositions = async (): Promise<ClearingDid.Position[]> => {
+	const { positions } = await request<{ positions: Web2PositionWire[] }>({
+		path: '/api/v1/engine/positions',
+		method: 'GET'
+	});
+
+	return positions.map(mapPosition);
+};
+
+/** The session user's open limit orders across all series and domains. */
+export const listEngineOrders = async (): Promise<ClearingDid.LimitOrder[]> => {
+	const { orders } = await request<{ orders: Web2LimitOrderWire[] }>({
+		path: '/api/v1/engine/orders',
+		method: 'GET'
+	});
+
+	return orders.map(mapLimitOrder);
+};
+
+/** The session user's own trade / settlement event history. */
+export const listEngineTradeHistory = async (): Promise<ClearingDid.Event[]> => {
+	const { events } = await request<{ events: Web2EventWire[] }>({
+		path: '/api/v1/engine/trade-history',
+		method: 'GET'
+	});
+
+	return events.map(mapEvent);
+};
+
+/** Submit a resting limit order. Returns whether any of it filled on entry. */
+export const submitEngineLimitOrder = async ({
+	orderId,
+	seriesId,
+	outcomeId,
+	side,
+	qty,
+	priceValue,
+	priceDecimals
+}: {
+	orderId: string;
+	seriesId: string;
+	outcomeId?: string;
+	side: 'buy' | 'sell';
+	qty: bigint;
+	/** Fixed-point price mantissa, matching the engine's DecimalValue encoding. */
+	priceValue: bigint;
+	priceDecimals: number;
+}): Promise<boolean> => {
+	const { filled } = await request<{ filled: boolean }>({
+		path: '/api/v1/engine/orders/limit',
+		method: 'POST',
+		body: {
+			orderId,
+			seriesId,
+			...(isNullish(outcomeId) ? {} : { outcomeId }),
+			side,
+			qty: qty.toString(),
+			priceValue: priceValue.toString(),
+			priceDecimals
+		}
+	});
+
+	return filled;
+};
+
+/** Execute against one resting order (`qty` caps the take at that level). */
+export const submitEngineMarketOrder = async ({
+	tradeId,
+	matchingOrderId,
+	qty
+}: {
+	tradeId: string;
+	matchingOrderId: string;
+	qty?: bigint;
+}): Promise<boolean> => {
+	const { filled } = await request<{ filled: boolean }>({
+		path: '/api/v1/engine/orders/market',
+		method: 'POST',
+		body: {
+			tradeId,
+			matchingOrderId,
+			...(isNullish(qty) ? {} : { qty: qty.toString() })
+		}
+	});
+
+	return filled;
+};
+
+export const cancelEngineOrder = async ({ orderId }: { orderId: string }): Promise<boolean> => {
+	const { cancelled } = await request<{ cancelled: boolean }>({
+		path: '/api/v1/engine/orders/cancel',
+		method: 'POST',
+		body: { orderId }
+	});
+
+	return cancelled;
+};
+
+/** Move custodial funds into clearing collateral. The route resolves the
+ * balance domain server-side from the asset's allowed domains. */
+export const depositEngineCollateral = async ({
+	depositId,
+	assetId,
+	amount
+}: {
+	depositId: string;
+	assetId: string;
+	amount: bigint;
+}): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: '/api/v1/engine/collateral/deposit',
+		method: 'POST',
+		body: { depositId, assetId, amount: amount.toString() }
+	});
+};
+
+/** Release clearing collateral back to the custodial account. */
+export const withdrawEngineCollateral = async ({
+	withdrawalId,
+	assetId,
+	amount
+}: {
+	withdrawalId: string;
+	assetId: string;
+	amount: bigint;
+}): Promise<void> => {
+	await request<{ ok: boolean }>({
+		path: '/api/v1/engine/collateral/withdraw',
+		method: 'POST',
+		body: { withdrawalId, assetId, amount: amount.toString() }
+	});
+};
+
+// ─── Custodial wallet ────────────────────────────────────────────────────
+//
+// Balances, deposit addresses and withdrawals live on the API's custody
+// ledger; `assetId` here is the custody asset id from `/wallet/assets`, a
+// separate namespace from the engine's collateral `asset_id`.
+
+export interface Web2WalletAsset {
+	id: string;
+	chain: string;
+	symbol: string;
+	decimals: number;
+	chainEnabled: boolean;
+}
+
+export interface Web2WalletBalance {
+	assetId: string;
+	symbol: string;
+	chain: string;
+	decimals: number;
+	balance: bigint;
+}
+
+export interface Web2WalletWithdrawal {
+	id: string;
+	assetId: string;
+	amount: string;
+	destination: string;
+	selfCustody: boolean;
+	state: string;
+	txRef: string | null;
+	failureReason: string | null;
+}
+
+/** The withdrawable asset catalog (public read). */
+export const listWalletAssets = async (): Promise<Web2WalletAsset[]> => {
+	const { assets } = await request<{ assets: Web2WalletAsset[] }>({
+		path: '/api/v1/wallet/assets',
+		method: 'GET'
+	});
+
+	return assets;
+};
+
+/** The session user's custodial accounts and per-asset balances. */
+export const getWalletBalances = async (): Promise<{
+	accounts: { chain: string; address: string }[];
+	balances: Web2WalletBalance[];
+}> => {
+	const { accounts, balances } = await request<{
+		accounts: { chain: string; address: string }[];
+		balances: (Omit<Web2WalletBalance, 'balance'> & { balance: string })[];
+	}>({ path: '/api/v1/wallet/balances', method: 'GET' });
+
+	return {
+		accounts,
+		balances: balances.map((row) => ({ ...row, balance: BigInt(row.balance) }))
+	};
+};
+
+/** The session user's deposit address on one chain (`ic` = the custodial
+ * principal). A disabled chain surfaces as a 503 {@link Web2ApiError}. */
+export const getWalletDepositAddress = async (
+	chain: string
+): Promise<{ chain: string; address: string }> =>
+	await request({
+		path: `/api/v1/wallet/deposit-address/${encodeURIComponent(chain)}`,
+		method: 'GET'
+	});
+
+export const listWalletWithdrawals = async (): Promise<Web2WalletWithdrawal[]> => {
+	const { withdrawals } = await request<{ withdrawals: Web2WalletWithdrawal[] }>({
+		path: '/api/v1/wallet/withdrawals',
+		method: 'GET'
+	});
+
+	return withdrawals;
+};
+
+/**
+ * Request a custodial withdrawal (the self-custody exit when `selfCustody`).
+ * The API executes best-effort inline, so the returned row already carries the
+ * outcome state (`submitted`, or `failed` with the hold refunded).
+ */
+export const requestWalletWithdrawal = async ({
+	assetId,
+	amount,
+	destination,
+	selfCustody
+}: {
+	assetId: string;
+	amount: bigint;
+	destination: string;
+	selfCustody?: boolean;
+}): Promise<Web2WalletWithdrawal> => {
+	const { withdrawal } = await request<{ withdrawal: Web2WalletWithdrawal }>({
+		path: '/api/v1/wallet/withdrawals',
+		method: 'POST',
+		body: {
+			assetId,
+			amount: amount.toString(),
+			destination,
+			...(isNullish(selfCustody) ? {} : { selfCustody })
+		}
+	});
+
+	return withdrawal;
 };
 
 /** Per-window ranked standings from clearing's leaderboard. The server drains

@@ -1,5 +1,5 @@
 import { logout as apiLogout, getMe, Web2ApiError, type Web2Me } from '$lib/web2/client';
-import { readonly, writable, type Readable } from 'svelte/store';
+import { get, readonly, writable, type Readable } from 'svelte/store';
 
 /**
  * Web2 session state, the cookie-backed counterpart to the on-chain identity
@@ -49,6 +49,14 @@ export const loadWeb2Session = async (): Promise<Web2Me | undefined> => {
 		setUser(undefined);
 	}
 };
+
+/**
+ * Imperative read of the current session user, for services that gate work on
+ * "signed in" the way the on-chain path gates on `getIdentity()`. `undefined`
+ * both while the first probe is in flight and in the signed-out steady state;
+ * callers that need to distinguish the two subscribe to the store instead.
+ */
+export const getWeb2User = (): Web2Me | undefined => get(store).user;
 
 /**
  * Adopt a session from a login response. The OTP verify route returns the

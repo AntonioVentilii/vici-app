@@ -32,12 +32,13 @@ Two files under `src/lib/web2/`:
 
 ## Swapped domains
 
-| Domain                        | Where the branch lives                                                                                                                                                                  | Notes                                                                                                   |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Analytics                     | `analytics.services.ts` (flush call site)                                                                                                                                               | The reference for the per-service swap below.                                                           |
-| Auth                          | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                                                                               | The identity layer, not a per-service swap. See "Auth" below.                                           |
-| Profiles + social             | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts`                                                      | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below.     |
-| Markets + public engine reads | `market.services.ts`, `market-metadata.services.ts`, `market-translation.services.ts`, `resolution.services.ts`, `trade.services.ts`, `standings.services.ts`, `collateral.services.ts` | Public reads only; user-signed engine calls stay on-chain. See "Markets and public engine reads" below. |
+| Domain                        | Where the branch lives                                                                                                                                                                  | Notes                                                                                                                      |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Analytics                     | `analytics.services.ts` (flush call site)                                                                                                                                               | The reference for the per-service swap below.                                                                              |
+| Auth                          | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                                                                               | The identity layer, not a per-service swap. See "Auth" below.                                                              |
+| Profiles + social             | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts`                                                      | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below.                        |
+| Markets + public engine reads | `market.services.ts`, `market-metadata.services.ts`, `market-translation.services.ts`, `resolution.services.ts`, `trade.services.ts`, `standings.services.ts`, `collateral.services.ts` | Public reads only. See "Markets and public engine reads" below.                                                            |
+| Engine account ops + wallet   | `order.services.ts`, `position.services.ts`, `trade.services.ts`, `collateral.services.ts`, `wallet.service.ts`, `send.services.ts`                                                     | The session-gated engine surface and the custodial wallet. See "Engine account operations and the custodial wallet" below. |
 
 ## The swap pattern (exemplar: analytics flush)
 
@@ -98,9 +99,14 @@ derives from `GET /api/v1/me` succeeding, not from an on-chain delegation.
 - **Sign-out — `Logout.svelte`.** web2 calls `clearWeb2Session()`; on-chain
   calls Juno `signOut()`.
 
-Engine calls still read the on-chain identity (`getIdentity()` /
-`getIdentityOnce()`); those stay on-chain until the custody/engine bridge
-lands, so the auth branch never reaches for a Juno identity in web2 mode.
+Engine calls never read a local identity in web2 mode: public reads ride the
+HTTP bridge and the session-gated account surface is signed server-side with
+the caller's derived custodial identity (see "Engine account operations and
+the custodial wallet"), so no web2 path ever reaches for a Juno identity.
+Loaders that only gate on "is someone signed in" use
+`identity.services.isSignedIn()`, which is the Juno identity check on the
+default backend and the cookie-session store in web2 mode
+(`IdentityAwareLoader` runs every polling loader through it).
 
 `client.ts` ships the auth surface: `getProviders()`, `getMe()`,
 `requestOtp()`, `verifyOtp()`, `googleSignInUrl()`, `logout()`.
@@ -167,12 +173,11 @@ sanctioned identity-layer exception; no other component gains a branch.
 
 ## Markets and public engine reads
 
-The fourth swapped domain: market curation (metadata, translations) plus
-every PUBLIC engine read the HTTP API bridges (`/api/v1/markets/...`,
-`/api/v1/engine/...`). User-signed engine calls (order submit/cancel,
-collateral deposit/withdraw, positions, own orders, own trade history)
-remain on-chain in BOTH modes until the engine / wallet swap maps engine
-identities onto accounts; web2 mode never signs an engine call.
+Market curation (metadata, translations) plus every PUBLIC engine read the
+HTTP API bridges (`/api/v1/markets/...`, `/api/v1/engine/...`). The
+account-scoped engine surface (orders, positions, collateral, own history)
+is the separate swap documented in "Engine account operations and the
+custodial wallet"; web2 mode never signs an engine call client-side.
 
 ### The wire seam: serialized candid
 
@@ -228,10 +233,89 @@ apply them at the fetch boundary.
   is admin-only), so these stay on the satellite until that read exists.
 - Market creation / forking (`createMarket`, `forkMarket`) and admin
   settlement (`resolution.services.ts` `settleMarket`) are user-signed
-  registry / clearing writes: engine / wallet domain.
+  registry / clearing writes with no HTTP route yet; curator / admin
+  surfaces stay on the on-chain identity.
 - Leaderboard identity caveat: web2 standings entries keep the on-chain
   principal as `owner` (clearing's native key) until the engine identity
   mapping lands.
+
+## Engine account operations and the custodial wallet
+
+The fifth swapped domain: everything a signed-in user does against the
+engine (orders, positions, own history, collateral moves, account state)
+plus the wallet (balances, receive address, sends). In web2 mode the API
+holds the custodial keys and signs every account-scoped clearing call with
+the caller's derived custodial identity; the browser authenticates each
+request with the session cookie only. `engine-wire.ts` grew mappers for the
+account payloads (`LimitOrder`, `Position`, `Event`,
+`AccountStateResponse`), so stores, utils, and components keep consuming
+the exact candid shapes.
+
+### The full trade lifecycle in web2 mode
+
+- `order.services.ts`: `placeOrder` submits limit orders via
+  `/engine/orders/limit` and walks the book with `/engine/orders/market`;
+  the book read inside the walk stays the public anonymous on-chain query
+  (see below), with the caller's own resting orders excluded by id from
+  the session-gated own-orders read, since the account's engine principal
+  lives server-side. `cancelLimitOrder`, `getUserOrders`, and the loader
+  variants ride `/engine/orders` + `/engine/orders/cancel`. The trade
+  activity-feed write is skipped (activities are an unswapped satellite
+  domain); the daily-streak bump keeps riding the swapped profile writes
+  with the session account id as owner.
+- `position.services.ts` / `trade.services.ts`: positions, the per-series
+  position, and the user's own trade history read `/engine/positions` and
+  `/engine/trade-history`; the domain scoping still runs through the
+  (dual-mode) market catalog. Single web2 responses are delivered as the
+  final `certified: true` pass, like every other bridge read.
+- `collateral.services.ts`: deposits and withdrawals post to
+  `/engine/collateral/*`; the ICRC approval happens server-side under the
+  custodial identity, and the clearing `asset_id` still resolves
+  client-side from the public collateral catalog. The playground VXP
+  auto-sweep reads its sweepable amount through
+  `getSweepableVxpAmount()`, which in web2 mode pairs the custodial
+  balance with the (public, anonymously read) ledger fee.
+- Account state (`getAccountState` / `loadAccountState`,
+  `wallet.service.ts` `getCollateralBalances`) reads `/engine/account`,
+  which bridges clearing's read-only query. Outside the Settlement domain
+  the query's top-level equity / margin figures carry that view's known
+  engine-side limitation; the response is still delivered as the
+  `certified: true` pass because no refreshed update read is bridged, and
+  an uncertified delivery would trip the Settlement-only gate in
+  `LoaderCollaterals` and leave the store empty forever.
+
+### The custodial wallet
+
+- `wallet.service.ts` `getLedgerBalances`: `/wallet/balances`, keyed back
+  to the app's token ids by symbol (the custody asset catalog mirrors the
+  supported IC tokens).
+- `getReceiveAddress` (the Receive tab): `/wallet/deposit-address/ic`,
+  the custodial IC principal the API derives for the user. Deposits to it
+  are detected and credited server-side.
+- Sends (`send.services.ts` `sendToken`, used by the Wallet Send tab):
+  a user-signed ICRC transfer on the default backend, a self-custody
+  withdrawal request (`POST /wallet/withdrawals`) in web2 mode; the API
+  executes the transfer from the custodial account and a failed execution
+  surfaces like a rejected transfer. `sendIc` / `sendIcrc` stay
+  identity-parameterised for on-chain callers (admin tooling).
+- The paged ICRC ledger history (`getTransactionsPage`) returns empty in
+  web2 mode: index canisters key history by principal and the API exposes
+  no custodial transfer feed yet. The wallet still shows clearing rows
+  (trades, settlements) through the swapped trade-history read.
+
+### Deliberately on-chain in this domain
+
+- Order books (`order.services.ts` `getOrderBook` / `loadOrderBook`, and
+  the book read inside `placeOrder`'s market-order walk) stay anonymous
+  on-chain queries in BOTH modes: the book is public IC data and no HTTP
+  surface exists for it.
+- Complete-set mint / redeem (`trade.services.ts`) has no HTTP route and
+  no live caller; it stays on the on-chain identity.
+- `registerIcrcAsset` (collateral admin) stays on the on-chain admin
+  identity.
+- Direct ICRC ledger / index reads and user-held ICRC transfers are
+  web3-only by construction; web2 mode surfaces custodial balances and
+  routes sends through withdrawals instead.
 
 ## Guardrails
 
