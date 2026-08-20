@@ -20,7 +20,7 @@ import type { InfoDoc } from '$lib/types/info-doc';
  */
 
 /**
- * Appointed EU and UK GDPR representative (Art. 27) — Euverify Ltd. The
+ * Appointed EU and UK GDPR representative (Art. 27): Euverify Ltd. The
  * details below are the representative's own published contact identifiers
  * (not ours, so they don't route through `contact.constants`), shared
  * between the Privacy Policy riders and the Legal notice so the two pages
@@ -37,7 +37,9 @@ const GDPR_REP_UK_NAME = 'Euverify Ltd (UK)';
 const GDPR_REP_UK_ADDRESS = '3rd Floor, 86-90 Paul Street, London, EC2A 4NE, United Kingdom';
 const GDPR_REP_PORTAL_URL = 'https://gdpr.euverify.com/verify/96ec5aca-dcec-4bb2-9546-1e1e8ffad550';
 const GDPR_REP_BADGE_SRC = '/badges/gdpr-euverify.png';
-const GDPR_REP_BADGE_ALT = 'GDPR Representative — certified by Euverify';
+const GDPR_REP_BADGE_ALT = 'GDPR Representative, certified by Euverify';
+const GDPR_REP_BADGE_WIDTH = 1236;
+const GDPR_REP_BADGE_HEIGHT = 670;
 
 export const TERMS: InfoDoc = {
 	slug: 'terms',
@@ -177,7 +179,7 @@ export const PRIVACY: InfoDoc = {
 	title: 'Privacy Policy',
 	eyebrow: 'Legal · Effective 10 June 2026',
 	blocks: [
-		{ kind: 'p', text: 'Last updated: 10 June 2026' },
+		{ kind: 'p', text: 'Last updated: 20 August 2026' },
 		{ kind: 'h', text: '1. Who we are' },
 		{
 			kind: 'lede',
@@ -351,14 +353,21 @@ export const PRIVACY: InfoDoc = {
 		},
 		{
 			kind: 'p',
-			text: 'To submit a Data Subject Access Request (DSAR), a data deletion request, or any other GDPR-related inquiry — and to verify our appointed representative — use the secure portal below. Requests submitted through the portal are logged and tracked to ensure a timely response.'
+			text: 'To submit a Data Subject Access Request (DSAR), a data deletion request, or any other GDPR-related inquiry, and to verify our appointed representative, use the secure portal below. Requests submitted through the portal are logged and tracked to ensure a timely response.'
 		},
 		{
 			kind: 'link',
 			text: 'Verify our representative & submit GDPR requests',
 			href: GDPR_REP_PORTAL_URL
 		},
-		{ kind: 'badge', src: GDPR_REP_BADGE_SRC, alt: GDPR_REP_BADGE_ALT, href: GDPR_REP_PORTAL_URL },
+		{
+			kind: 'badge',
+			src: GDPR_REP_BADGE_SRC,
+			alt: GDPR_REP_BADGE_ALT,
+			href: GDPR_REP_PORTAL_URL,
+			width: GDPR_REP_BADGE_WIDTH,
+			height: GDPR_REP_BADGE_HEIGHT
+		},
 		{ kind: 'h', text: 'B. United Kingdom' },
 		{
 			kind: 'p',
@@ -502,7 +511,7 @@ export const IMPRINT: InfoDoc = {
 		{ kind: 'h', text: 'EU legal representative (Digital Services Act, Art. 13)' },
 		{
 			kind: 'p',
-			text: 'An EU legal representative will be appointed for the service offered to users in the EU — located in an EU member state, with a publicly accessible contact — and their details will be published here. This is a separate appointment from the GDPR representative above.'
+			text: 'An EU legal representative will be appointed for the service offered to users in the EU (located in an EU member state, with a publicly accessible contact), and their details will be published here. This is a separate appointment from the GDPR representative above.'
 		}
 	]
 };

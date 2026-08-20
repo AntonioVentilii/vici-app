@@ -96,12 +96,18 @@
 				{:else if block.kind === 'mail'}
 					<a class="info-mail num" href={mailtoHref(block.text)}>{block.text}</a>
 				{:else if block.kind === 'link'}
-					<a class="info-mail num" href={block.href} rel="noopener noreferrer" target="_blank">
+					<a class="info-link" href={block.href} rel="noopener noreferrer" target="_blank">
 						{block.text}
 					</a>
 				{:else if block.kind === 'badge'}
 					<a class="info-badge" href={block.href} rel="noopener noreferrer" target="_blank">
-						<img alt={block.alt} src={block.src} />
+						<img
+							alt={block.alt}
+							height={block.height}
+							loading="lazy"
+							src={block.src}
+							width={block.width}
+						/>
 					</a>
 				{/if}
 			{/each}
@@ -253,7 +259,26 @@
 		text-decoration-color: var(--color-primary);
 	}
 
-	/* Linked certification badge — the artwork carries its own card
+	/* Outbound prose link: same accent underline as the mail link, but in
+	   the body face. The mono treatment belongs to identifier-like strings
+	   (addresses), not to a sentence. */
+	.info-link {
+		display: inline-block;
+		margin-bottom: 0.75rem;
+		font-size: var(--t-14);
+		font-weight: 600;
+		line-height: 1.65;
+		color: var(--color-primary);
+		text-decoration: underline;
+		text-decoration-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+		text-underline-offset: 3px;
+	}
+
+	.info-link:hover {
+		text-decoration-color: var(--color-primary);
+	}
+
+	/* Linked certification badge. The artwork carries its own card
 	   framing, so the block only sizes and spaces it. */
 	.info-badge {
 		display: block;
