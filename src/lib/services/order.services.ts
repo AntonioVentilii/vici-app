@@ -23,8 +23,16 @@ import type { OrderSide, OrderType } from '$lib/types/order';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
 import { parseLimitOrderPriceValue } from '$lib/utils/parse.utils';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
-import { isNullish, toNullable, type Nullable } from '@dfinity/utils';
-import type { Identity } from '@icp-sdk/core/agent';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	cancelEngineOrder as cancelEngineOrderWeb2,
+	listEngineOrders as listEngineOrdersWeb2,
+	submitEngineLimitOrder as submitEngineLimitOrderWeb2,
+	submitEngineMarketOrder as submitEngineMarketOrderWeb2
+} from '$lib/web2/client';
+import { getWeb2User } from '$lib/web2/session';
+import { fromNullable, isNullish, nonNullish, toNullable, type Nullable } from '@dfinity/utils';
+import { AnonymousIdentity, type Identity } from '@icp-sdk/core/agent';
 import { getIdentityOnce } from '@junobuild/core';
 import { nanoid } from 'nanoid';
 
@@ -142,7 +150,10 @@ export const placeOrder = async ({
 		throw new Error('Stake is too small for this price — the order quantity rounds to zero');
 	}
 
-	const identity = await safeGetIdentityOnce();
+	// In web2 mode there is no local signing identity: the API signs engine
+	// calls with the caller's derived custodial identity (the session cookie is
+	// the auth), so reaching for the Juno identity would throw for every trade.
+	const identity = isWeb2Backend() ? undefined : await safeGetIdentityOnce();
 
 	const isBinary = outcome === 'YES' || outcome === 'NO';
 	const normalizedSide: OrderSide = isBinary
@@ -163,36 +174,57 @@ export const placeOrder = async ({
 	if (type === 'LIMIT') {
 		const orderId = `ORD_${nanoid(8)}`;
 
-		await submitLimitOrder({
-			identity,
-			params: {
-				order_id: orderId,
-				series_id: marketId,
-				side: normalizedSide === 'BUY' ? { Buy: null } : { Sell: null },
-				outcome_id: outcomeId,
-				price: {
-					decimal: {
-						value: parseLimitOrderPriceValue(normalizedPrice),
-						decimals: PRICE_DECIMALS
-					},
-					timestamp: toNullable(),
-					oracle_id: toNullable()
-				},
+		if (isNullish(identity)) {
+			await submitEngineLimitOrderWeb2({
+				orderId,
+				seriesId: marketId,
+				side: normalizedSide === 'BUY' ? 'buy' : 'sell',
+				outcomeId: fromNullable(outcomeId),
+				priceValue: parseLimitOrderPriceValue(normalizedPrice),
+				priceDecimals: PRICE_DECIMALS,
 				qty
-			}
-		});
+			});
+		} else {
+			await submitLimitOrder({
+				identity,
+				params: {
+					order_id: orderId,
+					series_id: marketId,
+					side: normalizedSide === 'BUY' ? { Buy: null } : { Sell: null },
+					outcome_id: outcomeId,
+					price: {
+						decimal: {
+							value: parseLimitOrderPriceValue(normalizedPrice),
+							decimals: PRICE_DECIMALS
+						},
+						timestamp: toNullable(),
+						oracle_id: toNullable()
+					},
+					qty
+				}
+			});
+		}
 	} else {
 		const counterSide = normalizedSide === 'BUY' ? 'Sell' : 'Buy';
 
 		const targetOutcomeId = outcome === 'YES' || outcome === 'NO' ? undefined : outcome;
 
-		const callerText = identity.getPrincipal().toText();
+		const callerText = identity?.getPrincipal().toText();
 
 		const fetchMatchingOrders = async (): Promise<ClearingDid.LimitOrder[]> => {
-			const orders = await listOrdersApi({
-				identity,
-				params: { series_id: toNullable(marketId) }
-			});
+			// The book itself is a public on-chain query in both modes. In web2
+			// mode the caller's engine principal lives server-side, so their own
+			// resting orders are excluded by id (from the session-gated own-orders
+			// read) instead of by creator.
+			const [orders, ownOrderIds] = await Promise.all([
+				listOrdersApi({
+					identity: identity ?? new AnonymousIdentity(),
+					params: { series_id: toNullable(marketId) }
+				}),
+				isNullish(identity)
+					? listEngineOrdersWeb2().then((own) => new Set(own.map((o) => o.order_id)))
+					: Promise.resolve(undefined)
+			]);
 
 			return orders
 				.filter((o: ClearingDid.LimitOrder) => {
@@ -200,7 +232,9 @@ export const placeOrder = async ({
 					const isCorrectOutcome = o.outcome_id[0] === targetOutcomeId;
 					// The engine rejects self-trades; the caller's own resting
 					// orders are not liquidity for this market order.
-					const isSelf = o.creator.toText() === callerText;
+					const isSelf = nonNullish(ownOrderIds)
+						? ownOrderIds.has(o.order_id)
+						: o.creator.toText() === callerText;
 
 					return isCorrectSide && isCorrectOutcome && !isSelf;
 				})
@@ -244,14 +278,22 @@ export const placeOrder = async ({
 
 				const take = remaining < best.qty ? remaining : best.qty;
 
-				await submitMarketOrder({
-					identity,
-					params: {
-						trade_id: `TRD_${nanoid(8)}`,
-						matching_order_id: best.order_id,
-						qty: toNullable(take)
-					}
-				});
+				if (isNullish(identity)) {
+					await submitEngineMarketOrderWeb2({
+						tradeId: `TRD_${nanoid(8)}`,
+						matchingOrderId: best.order_id,
+						qty: take
+					});
+				} else {
+					await submitMarketOrder({
+						identity,
+						params: {
+							trade_id: `TRD_${nanoid(8)}`,
+							matching_order_id: best.order_id,
+							qty: toNullable(take)
+						}
+					});
+				}
 
 				remaining -= take;
 			}
@@ -290,17 +332,29 @@ export const placeOrder = async ({
 	}
 
 	try {
-		const userText = identity.getPrincipal().toText();
-		await logActivity({
-			type: ActivityType.TRADE,
-			user: userText,
-			marketId,
-			// "Sold" only when the trade executed on the spot; an open limit sell is merely placed.
-			// `normalizedPrice` is the price of the chosen outcome — the raw `price` arg arrives
-			// YES-framed for binary NO and would display the complement.
-			title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${filledQty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
-			details: marketTitle
-		});
+		// In web2 mode the activity owner is the session account id (the same
+		// `owner` string the swapped profile services key on). Activities are an
+		// unswapped satellite domain, so the feed write is on-chain only; the
+		// daily-streak bump in `recordActivity` rides the swapped profile writes.
+		const userText = isNullish(identity) ? getWeb2User()?.id : identity.getPrincipal().toText();
+
+		if (isNullish(userText)) {
+			return;
+		}
+
+		if (nonNullish(identity)) {
+			await logActivity({
+				type: ActivityType.TRADE,
+				user: userText,
+				marketId,
+				// "Sold" only when the trade executed on the spot; an open limit sell is merely placed.
+				// `normalizedPrice` is the price of the chosen outcome — the raw `price` arg arrives
+				// YES-framed for binary NO and would display the complement.
+				title: `${side === 'BUY' ? 'Predicted' : type === 'MARKET' ? 'Sold' : 'Placed'} ${filledQty} on ${outcome} @ ${Math.round(normalizedPrice * 100)}%`,
+				details: marketTitle
+			});
+		}
+
 		await recordActivity(userText);
 	} catch (e: unknown) {
 		console.error('Failed to log trade activity', e);
@@ -308,14 +362,20 @@ export const placeOrder = async ({
 };
 
 export const cancelLimitOrder = async (orderId: string): Promise<void> => {
-	const identity = await safeGetIdentityOnce();
+	if (isWeb2Backend()) {
+		// The API signs the cancel with the caller's derived custodial identity;
+		// there is no local identity to fetch in this mode.
+		await cancelEngineOrderWeb2({ orderId });
+	} else {
+		const identity = await safeGetIdentityOnce();
 
-	await cancelLimitOrderApi({
-		identity,
-		params: {
-			order_id: orderId
-		}
-	});
+		await cancelLimitOrderApi({
+			identity,
+			params: {
+				order_id: orderId
+			}
+		});
+	}
 
 	track({ name: 'order_cancelled' });
 
@@ -367,6 +427,18 @@ export const getUserOrdersForMarket = async ({
 export const getUserOrders = async (
 	domain: ClearingDid.BalanceDomain
 ): Promise<ClearingDid.LimitOrder[]> => {
+	// web2 reads the session-gated own-orders route; the cookie is the auth, so
+	// the Juno identity gate below never runs in that mode.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return [];
+		}
+
+		const orders = await listEngineOrdersWeb2();
+
+		return filterByPlaygroundExpandedDomain({ items: orders, targetDomain: domain });
+	}
+
 	const identity = await getIdentityOnce();
 
 	if (isNullish(identity)) {
@@ -389,6 +461,27 @@ export const loadUserOrders = async ({
 	onLoad: (options: { certified: boolean; response: ClearingDid.LimitOrder[] }) => void;
 	onUpdateError?: (error: unknown) => void;
 }): Promise<void> => {
+	// web2 reads the own-orders route once: no query/update pair exists on that
+	// transport, so the single response is the final (`certified: true`) pass.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return;
+		}
+
+		try {
+			const orders = await listEngineOrdersWeb2();
+
+			onLoad({
+				certified: true,
+				response: filterByPlaygroundExpandedDomain({ items: orders, targetDomain: domain })
+			});
+		} catch (err: unknown) {
+			onUpdateError?.(err);
+		}
+
+		return;
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {

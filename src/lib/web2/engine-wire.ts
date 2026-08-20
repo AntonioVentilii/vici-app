@@ -266,6 +266,118 @@ export const mapLeaderboardEntry = (
 	settled_count: BigInt(wire.settled_count)
 });
 
+export interface Web2LimitOrderWire {
+	qty: string;
+	creator: string;
+	outcome_id: Opt<string>;
+	blocked_margin_usd: string;
+	series_id: string;
+	side: ClearingDid.Side;
+	order_id: string;
+	price: Web2PriceWire;
+	balance_domain: ClearingDid.BalanceDomain;
+}
+
+export const mapLimitOrder = (wire: Web2LimitOrderWire): ClearingDid.LimitOrder => ({
+	qty: BigInt(wire.qty),
+	creator: Principal.fromText(wire.creator),
+	outcome_id: wire.outcome_id,
+	blocked_margin_usd: BigInt(wire.blocked_margin_usd),
+	series_id: wire.series_id,
+	side: wire.side,
+	order_id: wire.order_id,
+	price: mapPrice(wire.price),
+	balance_domain: wire.balance_domain
+});
+
+export interface Web2PositionWire {
+	outcome_id: Opt<string>;
+	series_id: string;
+	net_qty: string;
+	user: string;
+	reserved_margin_usd: string;
+}
+
+export const mapPosition = (wire: Web2PositionWire): ClearingDid.Position => ({
+	outcome_id: wire.outcome_id,
+	series_id: wire.series_id,
+	net_qty: BigInt(wire.net_qty),
+	user: Principal.fromText(wire.user),
+	reserved_margin_usd: BigInt(wire.reserved_margin_usd)
+});
+
+export interface Web2EventWire {
+	qty: string;
+	series_id: string;
+	user: string;
+	timestamp: string;
+	event_id: string;
+	price: Web2PriceWire;
+	event_type: ClearingDid.EventType;
+	clearing_id: string;
+}
+
+export const mapEvent = (wire: Web2EventWire): ClearingDid.Event => ({
+	qty: BigInt(wire.qty),
+	series_id: wire.series_id,
+	user: Principal.fromText(wire.user),
+	timestamp: BigInt(wire.timestamp),
+	event_id: BigInt(wire.event_id),
+	price: mapPrice(wire.price),
+	event_type: wire.event_type,
+	clearing_id: Principal.fromText(wire.clearing_id)
+});
+
+interface Web2AssetWorthWire {
+	pre_haircut_value_usd: string;
+	haircut_bps: number;
+	balance: string;
+	value_usd: string;
+	asset_id: string;
+}
+
+/** Domain-keyed candid maps (`vec record { BalanceDomain; nat }`) survive JSON
+ * as pair arrays; only the numeric halves need reviving. */
+type Web2DomainPairsWire = [ClearingDid.BalanceDomain, string][];
+
+const mapDomainPairs = (wire: Web2DomainPairsWire): Array<[ClearingDid.BalanceDomain, bigint]> =>
+	wire.map(([domain, value]) => [domain, BigInt(value)]);
+
+export interface Web2AccountStateResponseWire {
+	assets: Web2AssetWorthWire[];
+	state: {
+		user: string;
+		reserved_margins_usd: Web2DomainPairsWire;
+		cash_balances_usd: Web2DomainPairsWire;
+		balances: [ClearingDid.BalanceDomain, [string, string][]][];
+	};
+	total_equity_usd: string;
+	available_margin_usd: string;
+}
+
+export const mapAccountStateResponse = (
+	wire: Web2AccountStateResponseWire
+): ClearingDid.AccountStateResponse => ({
+	assets: wire.assets.map((asset) => ({
+		pre_haircut_value_usd: BigInt(asset.pre_haircut_value_usd),
+		haircut_bps: asset.haircut_bps,
+		balance: BigInt(asset.balance),
+		value_usd: BigInt(asset.value_usd),
+		asset_id: asset.asset_id
+	})),
+	state: {
+		user: Principal.fromText(wire.state.user),
+		reserved_margins_usd: mapDomainPairs(wire.state.reserved_margins_usd),
+		cash_balances_usd: mapDomainPairs(wire.state.cash_balances_usd),
+		balances: wire.state.balances.map(([domain, entries]) => [
+			domain,
+			entries.map(([assetId, balance]): [string, bigint] => [assetId, BigInt(balance)])
+		])
+	},
+	total_equity_usd: BigInt(wire.total_equity_usd),
+	available_margin_usd: BigInt(wire.available_margin_usd)
+});
+
 /** The API selects the candle interval by name; map the candid variant the
  * chart utils produce onto that query value. */
 export const intervalToWire = (interval: ClearingDid.PriceHistoryInterval): 'hour' | 'day' =>

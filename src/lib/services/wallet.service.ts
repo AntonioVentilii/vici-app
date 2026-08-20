@@ -16,7 +16,7 @@ import {
 	VXP_TOKEN
 } from '$lib/constants/tokens/tokens.ic.constants';
 import { getCollateralAssets } from '$lib/services/collateral.services';
-import { getIdentity } from '$lib/services/identity.services';
+import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { TokenId } from '$lib/types/token';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
 import { findSupportedTokenForClearingAssetId } from '$lib/utils/asset-ref.utils';
@@ -28,12 +28,49 @@ import {
 	mapTransactionIcpToSelf,
 	mapTransactionIcrcToSelf
 } from '$lib/utils/transactions.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	getEngineAccountState as getEngineAccountStateWeb2,
+	getWalletBalances as getWalletBalancesWeb2,
+	getWalletDepositAddress as getWalletDepositAddressWeb2
+} from '$lib/web2/client';
+import { getWeb2User } from '$lib/web2/session';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
 
 /**
  * On-ledger balances for each supported token id (empty if not signed in).
  */
 export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
+	// web2: the "on-ledger" balances are the custodial ones the API holds for
+	// the session user, keyed back to the app's token ids by symbol (the
+	// custody asset catalog mirrors the supported IC tokens). Direct ledger
+	// reads need an identity, which never exists in this mode.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return {};
+		}
+
+		try {
+			const { balances } = await getWalletBalancesWeb2();
+
+			const bySymbol = new Map(
+				balances
+					.filter(({ chain }) => chain === 'ic')
+					.map(({ symbol, balance }) => [symbol, balance] as const)
+			);
+
+			return SUPPORTED_TOKENS.reduce<Record<TokenId, bigint>>((acc, token) => {
+				const balance = bySymbol.get(token.symbol);
+
+				return nonNullish(balance) ? { ...acc, [token.id]: balance } : acc;
+			}, {});
+		} catch (e: unknown) {
+			console.error('Failed to get ledger balances', e);
+
+			return {};
+		}
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
@@ -75,6 +112,22 @@ export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 export const getCollateralBalances = async (
 	domain: ClearingDid.BalanceDomain
 ): Promise<ClearingDid.AccountStateResponse | undefined> => {
+	// web2: the bridge exposes clearing's read-only account query (all
+	// domains); downstream consumers already filter by domain.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return;
+		}
+
+		try {
+			return await getEngineAccountStateWeb2();
+		} catch (e: unknown) {
+			console.error('Failed to get collateral balances', e);
+		}
+
+		return;
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
@@ -163,6 +216,20 @@ export const getTransactionsPage = async ({
 	done: WalletTransactionsDone;
 	hasMore: boolean;
 }> => {
+	// web2: the ICRC index canisters key history by principal, which the
+	// browser does not hold in this mode, and the API exposes no custodial
+	// transfer feed yet. The wallet still shows clearing activity (trades,
+	// settlements) through the swapped trade-history read; the ledger rows are
+	// simply absent until the API grows that feed.
+	if (isWeb2Backend()) {
+		return {
+			transactions: [],
+			cursors: {},
+			done: { icp: true, ckUsdc: true, vxp: true },
+			hasMore: false
+		};
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
@@ -302,4 +369,22 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 	const result = await getTransactionsPage({ batchSize: WALLET_PAGINATION });
 
 	return result.transactions;
+};
+
+/**
+ * The address to receive IC tokens on: the signed-in principal on the default
+ * backend, the custodial IC principal the API derives for the session user in
+ * web2 mode (deposits to it are detected server-side and credited to the
+ * custodial balance). Throws when signed out, mirroring the identity path.
+ */
+export const getReceiveAddress = async (): Promise<string> => {
+	if (isWeb2Backend()) {
+		const { address } = await getWalletDepositAddressWeb2('ic');
+
+		return address;
+	}
+
+	const identity = await safeGetIdentityOnce();
+
+	return identity.getPrincipal().toText();
 };

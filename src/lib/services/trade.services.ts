@@ -11,7 +11,8 @@ import { ZERO } from '$lib/constants/app.constants';
 import {
 	getIdentity,
 	getIdentityOrAnonymous,
-	safeGetIdentityOnce
+	safeGetIdentityOnce,
+	web2PlaceholderIdentity
 } from '$lib/services/identity.services';
 import { fetchMarketsLite } from '$lib/services/market.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
@@ -26,8 +27,11 @@ import {
 import { isWeb2Backend } from '$lib/web2/backend-mode';
 import {
 	getEnginePriceHistory as getEnginePriceHistoryWeb2,
-	listEngineSeriesTrades as listEngineSeriesTradesWeb2
+	listEnginePositions as listEnginePositionsWeb2,
+	listEngineSeriesTrades as listEngineSeriesTradesWeb2,
+	listEngineTradeHistory as listEngineTradeHistoryWeb2
 } from '$lib/web2/client';
+import { getWeb2User } from '$lib/web2/session';
 import { fromNullable, isNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
@@ -44,7 +48,9 @@ const fetchPosition = async ({
 	certified: boolean;
 	seriesId: string;
 }): Promise<ClearingDid.Position | undefined> => {
-	const positions = await getPositionsApi({ identity, certified });
+	const positions = isWeb2Backend()
+		? await listEnginePositionsWeb2()
+		: await getPositionsApi({ identity, certified });
 
 	return positions.find((p) => p.series_id === seriesId);
 };
@@ -56,6 +62,16 @@ const fetchPosition = async ({
  * that should render fast then upgrade to a certified result.
  */
 export const getPosition = async (seriesId: string): Promise<ClearingDid.Position | undefined> => {
+	// web2 gates on the cookie session, mirroring the signed-out throw of the
+	// identity path; the API signs the read with the derived custodial identity.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			throw new Error('Not authenticated');
+		}
+
+		return fetchPosition({ identity: web2PlaceholderIdentity(), certified: true, seriesId });
+	}
+
 	const identity = await safeGetIdentityOnce();
 
 	return fetchPosition({ identity, certified: true, seriesId });
@@ -74,6 +90,29 @@ export const loadPosition = async ({
 	onLoad: (options: { certified: boolean; response: ClearingDid.Position | undefined }) => void;
 	onUpdateError?: (error: unknown) => void;
 }): Promise<void> => {
+	// web2 reads once: no query/update pair exists on that transport, so the
+	// single response is the final (`certified: true`) pass.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return;
+		}
+
+		try {
+			onLoad({
+				certified: true,
+				response: await fetchPosition({
+					identity: web2PlaceholderIdentity(),
+					certified: true,
+					seriesId
+				})
+			});
+		} catch (err: unknown) {
+			onUpdateError?.(err);
+		}
+
+		return;
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
@@ -102,7 +141,7 @@ const fetchUserTradeHistory = async ({
 	domain: RegistryDid.BalanceDomain;
 }): Promise<ClearingDid.Event[]> => {
 	const [events, markets] = await Promise.all([
-		getTradeHistoryApi({ identity, certified }),
+		isWeb2Backend() ? listEngineTradeHistoryWeb2() : getTradeHistoryApi({ identity, certified }),
 		// Order-book-free: trade history only needs the market id set to scope
 		// events to the current domain. Threads the pass's own `certified` so the
 		// uncertified query pass isn't blocked on a certified catalog, while each
@@ -124,6 +163,20 @@ const fetchUserTradeHistory = async ({
 export const getUserTradeHistory = async (
 	domain: RegistryDid.BalanceDomain
 ): Promise<ClearingDid.Event[]> => {
+	// web2 gates on the cookie session, mirroring the signed-out throw of the
+	// identity path.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			throw new Error('Not authenticated');
+		}
+
+		return fetchUserTradeHistory({
+			identity: web2PlaceholderIdentity(),
+			certified: true,
+			domain
+		});
+	}
+
 	const identity = await safeGetIdentityOnce();
 
 	return fetchUserTradeHistory({ identity, certified: true, domain });
@@ -142,6 +195,28 @@ export const loadUserTradeHistory = async ({
 	onLoad: (options: { certified: boolean; response: ClearingDid.Event[] }) => void;
 	onUpdateError?: (error: unknown) => void;
 }): Promise<void> => {
+	// Single-pass web2 read, delivered as the final (`certified: true`) pass.
+	if (isWeb2Backend()) {
+		if (isNullish(getWeb2User())) {
+			return;
+		}
+
+		try {
+			onLoad({
+				certified: true,
+				response: await fetchUserTradeHistory({
+					identity: web2PlaceholderIdentity(),
+					certified: true,
+					domain
+				})
+			});
+		} catch (err: unknown) {
+			onUpdateError?.(err);
+		}
+
+		return;
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
