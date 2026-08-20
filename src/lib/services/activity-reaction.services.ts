@@ -1,6 +1,14 @@
 import { Collection } from '$lib/constants/collections.constants';
 import { track } from '$lib/services/analytics.services';
 import type { Activity, ActivityReaction, ActivityReactionCount } from '$lib/types/social';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	getActivityReactionCounts as getActivityReactionCountsWeb2,
+	likeActivity as likeActivityWeb2,
+	listActivities as listActivitiesWeb2,
+	listActivityReactions as listActivityReactionsWeb2,
+	unlikeActivity as unlikeActivityWeb2
+} from '$lib/web2/client';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, listDocs, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
@@ -58,6 +66,21 @@ export const likeActivity = async ({
 }): Promise<void> => {
 	const activityKey = activityReactionKey({ activity });
 
+	// The HTTP route derives the liker from the session (the passed `liker`
+	// is that same account id) and maintains the count rollup transactionally
+	// with the write; the denormalized title/marketId ride along for the
+	// like-received inbox card exactly as on the satellite doc.
+	if (isWeb2Backend()) {
+		await likeActivityWeb2({
+			activityKey,
+			timestamp: Date.now(),
+			activityTitle: activity.title,
+			marketId: activity.marketId
+		});
+
+		return;
+	}
+
 	await setDoc<ActivityReaction>({
 		collection: Collection.ACTIVITY_REACTIONS,
 		doc: {
@@ -82,6 +105,14 @@ export const unlikeActivity = async ({
 	activity: Activity;
 	liker: PrincipalText;
 }): Promise<void> => {
+	// Idempotent server-side: unliking an absent row is a clean success,
+	// matching the missing-doc early return below.
+	if (isWeb2Backend()) {
+		await unlikeActivityWeb2({ activityKey: activityReactionKey({ activity }) });
+
+		return;
+	}
+
 	const doc = await getDoc<ActivityReaction>({
 		collection: Collection.ACTIVITY_REACTIONS,
 		key: reactionDocKey({ activity, liker })
@@ -116,6 +147,10 @@ export const getActivityReactions = async ({
 	}
 
 	try {
+		if (isWeb2Backend()) {
+			return await listActivityReactionsWeb2({ limit });
+		}
+
 		const { items } = await listDocs<ActivityReaction>({
 			collection: Collection.ACTIVITY_REACTIONS,
 			filter: {
@@ -160,6 +195,18 @@ export const getReceivedActivityReactions = async ({
 	}
 
 	try {
+		// No author-scoped reactions read exists on the HTTP API yet, so filter
+		// the recent global window by the activity-key author prefix (`author`
+		// is the account id there and ids never contain `#`). Same bounded
+		// under-reporting as the on-chain window scans on this surface.
+		if (isWeb2Backend()) {
+			const window = await listActivityReactionsWeb2({ limit: ACTIVITY_REACTIONS_READ_LIMIT });
+
+			return window
+				.filter(({ activityKey }) => activityKey.startsWith(`${author}#`))
+				.slice(0, limit);
+		}
+
 		const { items } = await listDocs<ActivityReaction>({
 			collection: Collection.ACTIVITY_REACTIONS,
 			filter: {
@@ -203,6 +250,25 @@ export const getActivityReactionCounts = async ({
 	}
 
 	try {
+		// The HTTP counts read is key-addressed, so derive the keys from the
+		// recent activity window first (the feed only renders counts for the
+		// activities inside it; 500 is the activity route's list cap). Two
+		// requests, same O(1)-per-activity result.
+		if (isWeb2Backend()) {
+			const activities = await listActivitiesWeb2({ limit: Math.min(limit, 500) });
+			const activityKeys = activities.map(
+				({ user, timestamp, type }) => `${user}#${timestamp}#${type}`
+			);
+
+			if (activityKeys.length === 0) {
+				return new Map();
+			}
+
+			const counts = await getActivityReactionCountsWeb2({ activityKeys });
+
+			return new Map(counts.map(({ activityKey, count }) => [activityKey, count]));
+		}
+
 		const { items } = await listDocs<ActivityReactionCount>({
 			collection: Collection.ACTIVITY_REACTION_COUNTS,
 			filter: {

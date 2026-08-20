@@ -29,6 +29,11 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import type { AppLocale } from '$lib/constants/locale.constants';
 import { withTimeout } from '$lib/utils/async.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	submitSchool as submitSchoolWeb2,
+	verifySchoolCode as verifySchoolCodeWeb2
+} from '$lib/web2/client';
 
 /** Hard timeout for either verification round-trip. */
 const SCHOOL_VERIFY_TIMEOUT_MS = 15_000;
@@ -80,14 +85,19 @@ export const submitSchool = async ({
 	schoolId,
 	locale
 }: SchoolSubmitInput): Promise<SchoolSubmitResult> => {
+	// The HTTP route re-resolves the school from the email domain (plus
+	// name/country for a new entry) server-side, so the `schoolId` hint is
+	// not part of its contract; the same shared timeout wraps both transports.
 	const { submissionId } = await withTimeout({
-		operation: functions.submitSchool({
-			name,
-			country: country ?? undefined,
-			schoolId: schoolId ?? undefined,
-			email,
-			locale
-		}),
+		operation: isWeb2Backend()
+			? submitSchoolWeb2({ name, country, email, locale })
+			: functions.submitSchool({
+					name,
+					country: country ?? undefined,
+					schoolId: schoolId ?? undefined,
+					email,
+					locale
+				}),
 		timeoutMs: SCHOOL_VERIFY_TIMEOUT_MS,
 		label: 'submitSchool'
 	});
@@ -106,7 +116,9 @@ export const verifySchoolCode = async ({
 	code
 }: SchoolVerifyInput): Promise<SchoolVerifyResult> => {
 	const result = await withTimeout({
-		operation: functions.verifySchoolCode({ submissionId, code }),
+		operation: isWeb2Backend()
+			? verifySchoolCodeWeb2({ submissionId, code })
+			: functions.verifySchoolCode({ submissionId, code }),
 		timeoutMs: SCHOOL_VERIFY_TIMEOUT_MS,
 		label: 'verifySchoolCode'
 	});

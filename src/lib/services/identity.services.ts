@@ -1,8 +1,8 @@
 import { isWeb2Backend } from '$lib/web2/backend-mode';
-import { getWeb2User } from '$lib/web2/session';
+import { clearWeb2Session, getWeb2User } from '$lib/web2/session';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { AnonymousIdentity, type Identity } from '@icp-sdk/core/agent';
-import { getIdentityOnce } from '@junobuild/core';
+import { getIdentityOnce, signOut as junoSignOut } from '@junobuild/core';
 
 /**
  * Juno-backed sign-in: current ICP identity, or null/undefined if signed out.
@@ -41,6 +41,31 @@ export const isSignedIn = async (): Promise<boolean> => {
 	}
 
 	return nonNullish(await getIdentity());
+};
+
+/**
+ * Backend-agnostic sign-out for surfaces outside the sanctioned auth trio
+ * (the settings page's sign-out and the account return gate). The default
+ * on-chain path drops the Juno delegation exactly as before; web2 revokes
+ * the cookie session server-side, which the app shell observes through
+ * `web2SessionStore` and folds into a cleared `userStore`.
+ */
+export const signOut = async (): Promise<void> => {
+	if (isWeb2Backend()) {
+		// clearWeb2Session clears the local session store in a finally, so the
+		// user is signed out locally even when the server revoke call fails;
+		// throwing here would strand callers on authBusy for a session that is
+		// already gone. Log and continue instead.
+		try {
+			await clearWeb2Session();
+		} catch (e: unknown) {
+			console.warn('web2 sign-out revoke failed (local session already cleared)', e);
+		}
+
+		return;
+	}
+
+	await junoSignOut();
 };
 
 /**

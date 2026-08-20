@@ -44,6 +44,7 @@ import { isWeb2Backend } from '$lib/web2/backend-mode';
 import {
 	checkFriendship as checkFriendshipWeb2,
 	checkNicknameAvailability as checkNicknameAvailabilityWeb2,
+	getMyProfileEmail as getMyProfileEmailWeb2,
 	getMyProfile as getMyProfileWeb2,
 	getProfileById as getProfileWeb2,
 	recordFlowSwipe as recordFlowSwipeWeb2,
@@ -638,6 +639,13 @@ export const checkNicknameAvailability = async ({
  * (or no address) is stored.
  */
 export const getMyEmail = async (principal: PrincipalText): Promise<string> => {
+	// web2 keys the read on the session, not the passed principal, and the
+	// address lives on the caller's own profile row rather than a private doc
+	// (the row's email never rides a public profile object client-side).
+	if (isWeb2Backend()) {
+		return await getMyProfileEmailWeb2();
+	}
+
 	const doc = await getDoc<ProfilePrivate>({
 		collection: Collection.PROFILE_PRIVATE,
 		key: principal
@@ -659,6 +667,24 @@ export const saveMyEmail = async ({
 	principal: PrincipalText;
 	email: string;
 }): Promise<void> => {
+	// web2 stores the address on the owner profile row and the PUT is a
+	// full-doc write, so read-modify-write the stored profile. With no profile
+	// row yet the address already rides the auth identity (sign-in is
+	// email-verified on this transport), and writing a default shell here
+	// would falsely flip a fresh account to "existed" for the onboarding
+	// drain, so skip instead.
+	if (isWeb2Backend()) {
+		const profile = await getMyProfileWeb2();
+
+		if (isNullish(profile)) {
+			return;
+		}
+
+		await upsertMyProfileWeb2({ ...profile, email });
+
+		return;
+	}
+
 	const existing = await getDoc<ProfilePrivate>({
 		collection: Collection.PROFILE_PRIVATE,
 		key: principal
