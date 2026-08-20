@@ -186,6 +186,19 @@ If your change is doc-only, the `format` and `lint` jobs still run because
 they cover the whole repo. The `check` job covers `*.svelte` / `*.ts` only,
 so doc-only changes typically pass it trivially.
 
+### Merge queue (`merge_group`)
+
+Every PR-triggered workflow also answers `merge_group`, so the suites re-run against the queued combination and not only against each PR alone. `dependabot-bun-lock.yml` is the exception: it is `pull_request_target`, and a lockfile repair that pushes to the PR head means nothing against a queue ref.
+
+Constraints that shape those workflows:
+
+- **`github.event.pull_request.*` is null.** Guard anything reading the PR number, head ref, labels, title or author on `github.event_name == 'pull_request'`, and give it a defined behaviour when the guard is false. `github.event.merge_group.head_sha` / `base_ref` are the queue equivalents (see the `checks.yml` cache keys).
+- **The queue ref `refs/heads/gh-readonly-queue/main/pr-<n>-<sha>` is read-only.** Auto-commit paths (`format`, the e2e snapshot commit-back) are gated to `pull_request`; in the queue the same drift is a hard failure that bounces the PR out. A fix belongs on the PR, not on the queue branch.
+- **`branches` filters work, `paths` filters don't.** Either run unconditionally (`backend-checks.yml`) or gate in-job against `github.event.merge_group.base_ref` (`e2e.yml`).
+- **Only an always-reporting aggregator can be a required context.** `checks-pass` reports on every event, which is why it is the one required check. A path-filtered job like `backend` never reports on an unrelated PR, so promoting it would block that PR forever; it needs a `*-pass` aggregator first.
+
+The queue is **not enabled** on `main` today, so these legs are dormant. Switching it on also means turning **off** `strict_required_status_checks_policy` (the queue supersedes "branches up to date"), and promoting `e2e-tests-pass` if the queue should gate on E2E.
+
 ## 6. After CI fails
 
 - **`format` pushed a formatting commit** → pull, you're fine. Don't fight
