@@ -107,3 +107,14 @@ jobs:
         run: |
           bun build src/index.ts --target=bun --outdir "$RUNNER_TEMP/backend-build-check"
           bun build src/worker.ts --target=bun --outdir "$RUNNER_TEMP/backend-build-check"
+
+      # Bundling resolves specifiers but never runs module initializers, so a
+      # dependency whose runtime API drifted (e.g. a mixed major tree that only
+      # materialises under the pruned production hoisting) still crashes the
+      # machine at boot. Importing the entrypoints executes those initializers;
+      # the serving arm is import-safe by design, so this exits cleanly when
+      # every module-level line runs.
+      - name: Boot smoke (entrypoint imports must execute)
+        run: |
+          bun -e 'await import("./src/index.ts"); process.exit(0)'
+          bun -e 'await import("./src/worker.ts"); process.exit(0)'
