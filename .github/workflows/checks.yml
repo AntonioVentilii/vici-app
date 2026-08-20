@@ -49,9 +49,7 @@ jobs:
     steps:
       - name: Mint app token
         id: app-token
-        # Dependabot-triggered runs receive no repository secrets, so the mint
-        # step must skip there; the job then takes the check-only path below.
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ vars.PR_AUTOMATION_BOT_APP_ID }}
