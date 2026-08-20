@@ -241,7 +241,7 @@
 
 		try {
 			const previousUrl = league.imageUrl;
-			await updateLeague({ id: league.id, imageUrl: null });
+			await updateLeague({ id: league.id, imageUrl: '' });
 
 			if (nonNullish(previousUrl)) {
 				await deleteLeagueImageByUrl(previousUrl);
