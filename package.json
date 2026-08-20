@@ -54,7 +54,7 @@
 		"@tailwindcss/postcss": "^4.3.2",
 		"@tailwindcss/vite": "^4.3.2",
 		"@types/eslint": "^9.6.1",
-		"@types/node": "^26.1.1",
+		"@types/node": "^26.2.0",
 		"eslint": "^10.8.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.22.0",
