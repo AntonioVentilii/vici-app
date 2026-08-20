@@ -14,7 +14,7 @@
 	 *
 	 * Positioned at the deck top, anchored to the exit edge (`is-yes` →
 	 * right, `is-no` → left) so it trails the gesture. Non-blocking;
-	 * self-dismisses ~1 s after mount via the `xp-toast-pop` envelope.
+	 * self-dismisses ~1.5 s after mount via the `xp-toast-pop` envelope.
 	 */
 	interface Props {
 		side: CallSide | 'SKIP';
@@ -30,7 +30,7 @@
 	onMount(() => {
 		timer = setTimeout(() => {
 			onDone?.();
-		}, 1000);
+		}, 1500);
 	});
 
 	onDestroy(() => {

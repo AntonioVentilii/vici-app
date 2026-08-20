@@ -48,10 +48,11 @@
 		// card that mounts underneath. Default true keeps static / guided
 		// usages unaffected.
 		gesturesArmed?: boolean;
-		// Generative-artwork category. FlowMode resolves this from the
-		// market's primary tag; FlowCard treats it as opaque and falls back
-		// to a hash-derived bucket when the market has no tags.
-		category?: FlowArtCategory | string;
+		// Generative-artwork category — a resolved macro (or the `wc`
+		// tentpole). FlowMode resolves this from the market's stored tags;
+		// FlowCard falls back to a hash-derived bucket when absent (static /
+		// preview usages).
+		category?: FlowArtCategory;
 		// Optional editorial sub-line ("FOMC · rate-cut call"). When
 		// undefined, FlowCard resolves one from metadata, the curated
 		// WC-market table, or — as a last resort — the market description.
@@ -94,6 +95,12 @@
 		// Flip this one card between translated and original. No-op-safe when
 		// absent (static / guided usages don't wire it).
 		onToggleTranslation?: () => void;
+		// Proactive stake warning resolved by FlowMode, surfaced on the
+		// back-face slider. `'unaffordable'` = the selected size exceeds
+		// spendable VXP; `'wont-finish'` = it would leave too little to fund
+		// the rest of the sitting. Defaults to `'none'` so static / preview
+		// usages render no warning.
+		stakeWarning?: 'none' | 'unaffordable' | 'wont-finish';
 	}
 
 	const {
@@ -118,7 +125,8 @@
 		translation,
 		showOriginal = false,
 		translatedLanguageLabel,
-		onToggleTranslation
+		onToggleTranslation,
+		stakeWarning = 'none'
 	}: Props = $props();
 
 	// Single source for the card's rendered text: translated unless the viewer
@@ -141,9 +149,11 @@
 	const DESCRIPTION_SUBTITLE_MAX_LENGTH = 60;
 
 	// Resolved category — single source of truth across the surface so
-	// untagged markets hash identically here, in FlowMode, etc.
+	// untagged markets hash identically here, in FlowMode, etc. An explicit
+	// `category` (already resolved by FlowMode) wins; otherwise fall back to
+	// the deterministic hash-of-id bucket.
 	const resolvedCategory: FlowArtCategory = $derived(
-		resolveFlowArtCategory({ categoryId: category, seed: market.id })
+		category ?? resolveFlowArtCategory({ tags: [], seed: market.id })
 	);
 	const catColor = $derived(tagColor(resolvedCategory));
 
@@ -714,6 +724,7 @@
 							seed={market.id}
 							size={420}
 							state="neutral"
+							title={market.title}
 						/>
 					</div>
 
@@ -827,6 +838,7 @@
 						{pointXs}
 						{points}
 						{priorCall}
+						{stakeWarning}
 						{tradeAmount}
 					/>
 				{/if}

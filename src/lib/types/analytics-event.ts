@@ -71,6 +71,15 @@ export type AnalyticsEventName =
 	 * target view (`original | translated`).
 	 */
 	| 'market_translation_toggled'
+	/**
+	 * A market-board category chip was selected; `label` carries the bounded
+	 * selection — the taxonomy macro id, or `macro:micro` when the viewer
+	 * drilled into a subcategory. Closed vocab (taxonomy ids), no PII. (The
+	 * dimension rides `label` rather than dedicated `macro`/`micro` fields
+	 * because the props vocabulary is a closed schema shared with the
+	 * satellite — new dimensions need a satellite regen; `label` is free here.)
+	 */
+	| 'market_category_filter'
 	// ── Trading ───────────────────────────────────────────────────────
 	/** A position was taken (cockpit's `position_taken`). */
 	| 'position_taken'
@@ -126,6 +135,12 @@ export type AnalyticsEventName =
 	 * (`like | unlike`), `source` the surface (`arena`).
 	 */
 	| 'friend_feed_reaction'
+	/**
+	 * A friend results-digest row was tapped through; `source` the surface
+	 * (`arena`), `marketId` the standout market when the tap targets one
+	 * (omitted otherwise). Behavioural only — no W–L, net VXP, or handle.
+	 */
+	| 'friend_digest_opened'
 	/** A league was created. */
 	| 'league_created'
 	/** A user joined a league. */
@@ -148,11 +163,26 @@ export type AnalyticsEventName =
 	| 'comment_posted'
 	/** A chat message was sent. */
 	| 'chat_sent'
+	/**
+	 * The global leaderboard was viewed (a window load or tab switch). `label`
+	 * carries the window (`week | month | all`), `count` the ranked rows shown,
+	 * `ok` whether the viewer is qualified/ranked (vs provisional/absent), and
+	 * `value` the viewer's own settled-call count — so the gate's effect on
+	 * real viewers is measurable.
+	 */
+	| 'leaderboard_viewed'
 	// ── Worlds (affiliations) ─────────────────────────────────────────
 	/** A school / country affiliation was set. */
 	| 'affiliation_set'
 	/** An affiliation was removed (after the 90-day lock). */
 	| 'affiliation_removed'
+	// ── Settings / privacy ────────────────────────────────────────────
+	/**
+	 * A sharing opt-out toggle was flipped in Settings → Privacy. `source`
+	 * carries which control (`leaderboard | worlds`), `label` the new state
+	 * (`on | off`) — so opt-out rates per surface are measurable.
+	 */
+	| 'privacy_sharing_toggled'
 	// ── School verification ───────────────────────────────────────────
 	/** The school picker was opened. */
 	| 'school_picker_opened'
@@ -179,6 +209,22 @@ export type AnalyticsEventName =
 	 * so engagement can be sliced by notification type.
 	 */
 	| 'notification_opened'
+	// ── PWA install (add-to-home-screen) ──────────────────────────────
+	/**
+	 * The install sheet opened. `source`: `settings | flow_end`; `label`:
+	 * the install `platform` (`ios | android | desktop | other`).
+	 */
+	| 'pwa_install_prompted'
+	/**
+	 * The native prompt was accepted, or `appinstalled` fired. `label`: the
+	 * install `platform`.
+	 */
+	| 'pwa_install_accepted'
+	/**
+	 * The install sheet was dismissed ("Not now") or the native prompt was
+	 * declined. `source`; `label`: the install `platform`.
+	 */
+	| 'pwa_install_dismissed'
 	// ── Health ────────────────────────────────────────────────────────
 	/** A client-side error surfaced (no PII — message is omitted/coarse). */
 	| 'app_error'
@@ -221,6 +267,14 @@ export interface AnalyticsEventProps {
 	durationMs?: number;
 	/** Boolean outcome (e.g. handle available, verification ok). */
 	ok?: boolean;
+	/**
+	 * ISO-3166 alpha-2 country (uppercase), best-effort from the browser
+	 * locale's region subtag (`en-US` → `US`). Coarse geo for aggregate
+	 * regional analytics only — never precise location, never PII.
+	 */
+	country?: string;
+	/** BCP-47 primary language subtag (`en-US` → `en`) — localization analytics. */
+	locale?: string;
 }
 
 /**
@@ -286,7 +340,9 @@ export const ANALYTICS_PROP_KEYS = [
 	'value',
 	'count',
 	'durationMs',
-	'ok'
+	'ok',
+	'country',
+	'locale'
 ] as const satisfies readonly (keyof AnalyticsEventProps)[];
 
 /** One event-name → count pair within a daily rollup. */

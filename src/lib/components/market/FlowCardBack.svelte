@@ -51,6 +51,9 @@
 		// the guided onboarding card) render unchanged.
 		displayTitle?: string;
 		displayResolution?: string;
+		// Proactive stake warning resolved by FlowMode, rendered on the stake
+		// slider. Defaults to `'none'` so static / preview usages stay quiet.
+		stakeWarning?: 'none' | 'unaffordable' | 'wont-finish';
 	}
 
 	const {
@@ -69,7 +72,8 @@
 		points,
 		pointXs,
 		displayTitle,
-		displayResolution
+		displayResolution,
+		stakeWarning = 'none'
 	}: Props = $props();
 
 	const catColor = $derived(tagColor(category));
@@ -89,7 +93,7 @@
 
 		<FlowCommunityRead {crowdPct} {crowdSide} {market} {metadata} {pointXs} {points} />
 
-		<FlowStake {market} {noPct} {onStakeChange} {tradeAmount} {yesPct} />
+		<FlowStake {market} {noPct} {onStakeChange} {stakeWarning} {tradeAmount} {yesPct} />
 
 		<FlowWhoCalling {followedLean} {yesPct} />
 

@@ -47,6 +47,14 @@ jobs:
       contents: write
 
     steps:
+      - name: Mint app token
+        id: app-token
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.PR_AUTOMATION_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
       - name: Check if commits can be added
         id: check_can_add_commit
         run: |
@@ -56,7 +64,7 @@ jobs:
 
       - name: Checkout for pull request
         if: steps.check_can_add_commit.outputs.can_add_commit == 'true'
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
@@ -65,7 +73,7 @@ jobs:
 
       - name: Checkout
         if: steps.check_can_add_commit.outputs.can_add_commit == 'false'
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -73,7 +81,7 @@ jobs:
         uses: ./.github/actions/prepare
 
       - name: Restore Prettier Cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ./node_modules/.cache/prettier/.prettier-cache
           key: ${{ runner.os }}-prettier-cache-format-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
@@ -82,7 +90,7 @@ jobs:
             ${{ runner.os }}-prettier-cache-format-
 
       - name: Restore ESLint Cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .eslintcache
           key: ${{ runner.os }}-eslint-cache-format-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
@@ -103,16 +111,16 @@ jobs:
           fi
 
       - name: Commit format
-        if: steps.check_changes.outputs.changes_detected == 'true'
+        if: steps.check_can_add_commit.outputs.can_add_commit == 'true' && steps.check_changes.outputs.changes_detected == 'true'
         uses: ./.github/actions/add-and-commit
         with:
           message: '🤖 Apply formatting changes'
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Fail for formatting issues without personal access token
+      - name: Fail for formatting issues without a bot token
         if: steps.check_can_add_commit.outputs.can_add_commit == 'false' && steps.check_changes.outputs.changes_detected == 'true'
         run: |
-          echo "Formatting changes are needed but couldn't be committed because the personal access token isn't available or this isn't a pull request."
+          echo "Formatting changes are needed but couldn't be committed because the bot app token isn't available (fork pull request) or this isn't a pull request. Run 'npm run format' locally and commit the result."
           exit 1
 
   lint:
@@ -122,7 +130,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -130,7 +138,7 @@ jobs:
         uses: ./.github/actions/prepare
 
       - name: Restore Prettier Cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ./node_modules/.cache/prettier/.prettier-cache
           key: ${{ runner.os }}-prettier-cache-lint-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
@@ -139,7 +147,7 @@ jobs:
             ${{ runner.os }}-prettier-cache-lint-
 
       - name: Restore ESLint Cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .eslintcache
           key: ${{ runner.os }}-eslint-cache-lint-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
@@ -157,7 +165,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -174,7 +182,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -182,7 +190,7 @@ jobs:
         uses: ./.github/actions/prepare
 
       - name: Restore Prettier Cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ./node_modules/.cache/prettier/.prettier-cache
           key: ${{ runner.os }}-prettier-cache-quality-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
@@ -191,7 +199,7 @@ jobs:
             ${{ runner.os }}-prettier-cache-quality-
 
       - name: Restore ESLint Cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .eslintcache
           key: ${{ runner.os }}-eslint-cache-quality-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
@@ -239,7 +247,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: ./.github/actions/needs_success

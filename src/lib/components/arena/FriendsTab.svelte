@@ -2,7 +2,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import type { Doc } from '@junobuild/core';
 	import { Check, ChevronRight, Link2, Plus, Share2, Zap } from '@lucide/svelte/icons';
-	import { onMount, tick, untrack } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
@@ -14,23 +14,18 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { MILLISECOND_IN_NANOSECONDS } from '$lib/constants/app.constants';
+	import { MILLISECOND_IN_NANOSECONDS, USD_DECIMALS } from '$lib/constants/app.constants';
 	import {
 		cumulativeReferrerRewardBaseUnits,
 		REFERRAL_MAX_PAID
 	} from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-	import { globalActivities } from '$lib/derived/activities.derived';
-	import { leaderboard } from '$lib/derived/leaderboard.derived';
+	import { ownGlobalStanding } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import {
-		activityReactionKey,
-		likeActivity,
-		unlikeActivity
-	} from '$lib/services/activity-reaction.services';
 	import { track } from '$lib/services/analytics.services';
 	import { getMyReferralCode } from '$lib/services/referral.services';
+	import { getFriendResolvedResults } from '$lib/services/relation-queries.services';
 	import {
 		acceptFriendRequest,
 		cancelFriendRequest,
@@ -38,11 +33,7 @@
 		sendFriendRequest,
 		unfriendUser
 	} from '$lib/services/relation.services';
-	import { loadGlobalStandings } from '$lib/services/standings.services';
-	import {
-		activityReactionCountsStore,
-		activityReactionsStore
-	} from '$lib/stores/activity-reactions.store';
+	import { getLeagueStandings, loadGlobalStandings } from '$lib/services/standings.services';
 	import {
 		friendRequestsStore,
 		friendsListStore,
@@ -51,6 +42,7 @@
 		sentFriendRequestsStore
 	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { marketDisplay } from '$lib/stores/market-translations.store';
 	import { notificationsStore, type NotificationType } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import { myReferralsStore, refreshMyReferrals } from '$lib/stores/referrals.store';
@@ -58,16 +50,21 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { Relation } from '$lib/types/relation';
-	import type { Activity } from '$lib/types/social';
+	import type { ResolvedResult } from '$lib/types/social';
+	import type { StandingEntry, StandingsWindow } from '$lib/types/standings';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
 	import {
+		decimalFixedValueToNumber,
 		formatRelativeAgoFromNs,
-		safeBigInt,
 		shortenWithMiddleEllipsis
 	} from '$lib/utils/format.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { formatVxpBalance, vxpBaseUnitsFromPoints } from '$lib/utils/playground-display.utils';
+	import {
+		formatVxpBalance,
+		formatWholeVxpMagnitude,
+		vxpBaseUnitsFromPoints
+	} from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { friendRequestOutcomeNotice } from '$lib/utils/relation.utils';
 
@@ -85,8 +82,10 @@
 	 *  3. Incoming friend requests — each expandable to Accept / Reject.
 	 *  4. Friends-ranked list — rank 01, 02, …, h2h accuracy delta chip,
 	 *     sticky YOU row pinned at the bottom of the rank list.
-	 *  5. Friends feed — placeholder until a friend activity service
-	 *     lands; today renders quiet serif-italic copy.
+	 *  5. Friends results digest — one row per friend with a resolved
+	 *     record over the window: W–L tally + net VXP + a standout call.
+	 *     Friends with no resolved prediction in the window are excluded;
+	 *     an empty graph renders quiet serif-italic copy.
 	 *  6. Global ranking link — viewer's leaderboard rank with chevron;
 	 *     rank-delta chip deferred until the satellite ships a
 	 *     historical-rank snapshot.
@@ -368,9 +367,24 @@
 		return rows.sort((a, b) => b.accuracy - a.accuracy);
 	});
 
-	let showAllRanked = $state(false);
-	const visibleRanked = $derived(showAllRanked ? rankedFriends : rankedFriends.slice(0, 10));
-	const hiddenRankedCount = $derived(Math.max(0, rankedFriends.length - visibleRanked.length));
+	// Viewer's slot in the accuracy-ranked friends list. Placed just above the
+	// first friend with strictly lower accuracy, so friends at equal-or-higher
+	// accuracy stay ahead — on a tie the viewer sits below them, never above.
+	// That keeps a viewer with no edge yet (everyone still at 0% on a thin
+	// graph) off a misleading #01 and at the bottom instead. Same `accuracyOf`
+	// source as the friend rows, so the comparison is apples-to-apples;
+	// `rankedFriends` is accuracy-descending, so this scan finds the slot
+	// without allocating an intermediate array.
+	const myFriendRank = $derived.by(() => {
+		const below = rankedFriends.findIndex(({ accuracy }) => accuracy < myAccuracy);
+
+		return (below === -1 ? rankedFriends.length : below) + 1;
+	});
+
+	// Slot the YOU row occupies in the rendered list (0-based). Equals
+	// `rankedFriends.length` when the viewer trails every friend, where
+	// it renders as the final row.
+	const youInsertAt = $derived(myFriendRank - 1);
 
 	const formatPct = (value: number): string => {
 		// `value` is a 0..100 accuracy percentage — a live standings entry
@@ -636,12 +650,13 @@
 	};
 
 	// ── Global ranking link ─────────────────────────────────────────
-	const globalLeaderboard = $derived<UserProfile[]>($leaderboard);
-	const myRank = $derived.by(() => {
-		const idx = globalLeaderboard.findIndex((entry) => entry.owner === userPrincipal);
-
-		return idx === -1 ? undefined : idx + 1;
-	});
+	// The viewer's own position on the global board, read from the same
+	// confidence-adjusted standings the Leaderboard renders (`ownGlobalStanding`
+	// → the all-time `globalStandingsRows` partition), NOT the satellite points
+	// ranking. The two surfaces must agree: a viewer below the qualify gate is
+	// `provisional` here exactly as they are there, never a phantom points #1.
+	// The 'all' slice is hydrated on mount above.
+	const ownStanding = ownGlobalStanding('all');
 
 	const goToLeaderboard = () => {
 		// Leaderboard lives at /arena/leaderboard; this keeps the user inside
@@ -649,168 +664,227 @@
 		void goto(resolve(`${AppPath.Arena}/leaderboard`));
 	};
 
-	// ── Friends activity feed ───────────────────────────────────────
-	// Drinks from the same cached global activity stream that powers the
-	// market trade rows + dashboard feed (populated by
-	// `LoaderGlobalActivities`), filtered to the viewer's friend set so
-	// no extra fetch is needed and the list stays stale-while-revalidate.
+	// ── Friends results digest ──────────────────────────────────────
+	// One row per friend summarising their resolved record over a recent
+	// window — W–L tally + net VXP (from the friend-scoped league standings
+	// aggregate) and a standout call (the friend's resolved prediction with
+	// the largest |net VXP|, read from the `resolved_results` collection).
+	// Open / unresolved calls carry no outcome, so they never appear.
 	const friendIdSet = $derived(
 		new Set(rankedFriends.map((row) => row.friendId).filter((id): id is string => id.length > 0))
 	);
 
-	const friendActivities = $derived(
-		$globalActivities.filter((activity) => friendIdSet.has(activity.user)).slice(0, 20)
-	);
+	// The window the digest aggregates over. `'month'` sits inside the
+	// `resolved_results` retention horizon (so the standout source and the
+	// standings aggregate cover the same span) while still yielding fuller
+	// rows on a thin friend graph than `'week'` would.
+	const DIGEST_WINDOW: StandingsWindow = 'month';
 
-	// Persisted likes live in the `activity_reactions` collection (one doc
-	// per (activity, liker)). The feed renders server truth — per-row counts
-	// and the viewer's own likes, both derived below — with a per-row
-	// optimistic override layered on top, so a tap reflects instantly and
-	// reconciles to the server on the next load.
-	const REACTION_MOTION_MS = 600;
+	// Friend-scoped standings slice (W–L + net VXP per friend), hydrated by
+	// the effect below into a per-owner map. Held locally rather than in the
+	// shared `globalStandingsStore` so it can't collide with that store's
+	// global / all-time slices for the same window.
+	const friendStandingsByOwner = new SvelteMap<string, StandingEntry>();
 
-	// Rows currently playing the commit motion — kept separate from liked
-	// state so un-liking then re-liking re-fires the tilt + burst.
-	const firingKeys = new SvelteSet<string>();
+	// The friend set's resolved-result rows over the retention window — the
+	// source for each row's standout call. One bounded bulk read, not one
+	// call per friend.
+	let friendResolvedResults = $state<ResolvedResult[]>([]);
 
-	// Optimistic overrides keyed by activity doc key → the viewer's desired
-	// liked state. An entry shadows server truth until a reload confirms it
-	// (reconciled by the effect below) or a failed write reverts it.
-	const pendingLikes = new SvelteMap<string, boolean>();
+	// Signature of the friend set the digest was last hydrated for. Arena
+	// re-mounts this tab on every tab switch, so guarding on it keeps a
+	// re-mount (or a friend-list refresh that doesn't change the set) from
+	// re-draining the two reads.
+	let hydratedFriendKey: string | undefined;
 
-	const rowKey = (activity: Activity): string => activityReactionKey({ activity });
-
-	const isFiring = (activity: Activity): boolean => firingKeys.has(rowKey(activity));
-
-	// The most-recent reaction page, hydrated by `LoaderGlobalActivities`.
-	// Used only to derive the viewer's own-like state (below); the like
-	// *count* comes from the server rollup.
-	const reactions = $derived($activityReactionsStore);
-
-	// Per-activity like counts from the server-maintained rollup (O(1) per
-	// activity), hydrated by `LoaderGlobalActivities`.
-	const reactionCounts = $derived($activityReactionCountsStore);
-
-	// Activity keys the viewer has liked per the server. Derived against
-	// `$authPrincipal` so likes highlight as soon as auth resolves — the
-	// loader runs identity-agnostically, so a signed-out load must not
-	// freeze this empty.
-	const serverLikedKeys = $derived.by(() => {
-		const keys = new SvelteSet<string>();
-		const me = $authPrincipal;
-
-		if (isNullish(me) || isNullish(reactions)) {
-			return keys;
-		}
-
-		for (const { activityKey, liker } of reactions) {
-			if (liker === me) {
-				keys.add(activityKey);
-			}
-		}
-
-		return keys;
-	});
-
-	// Drop optimistic overrides the server has caught up to, so server truth
-	// resumes once a like/unlike shows up in a reload (and a stale refresh
-	// can't re-add a key the viewer just removed). Depends only on
-	// `serverLikedKeys`; `pendingLikes` is read untracked so the self-write
-	// can't loop.
+	// Hydrate the friend-scoped standings slice + resolved-results once the
+	// friend set is known and whenever it actually changes. Fail-open: on
+	// error the digest degrades to the rows it can build (or none) rather
+	// than blocking the tab.
 	$effect(() => {
-		const liked = serverLikedKeys;
+		const friends = [...friendIdSet];
+		const key = friends.slice().sort().join('#');
 
-		untrack(() => {
-			for (const [key, desired] of pendingLikes) {
-				if (liked.has(key) === desired) {
-					pendingLikes.delete(key);
-				}
-			}
-		});
-	});
-
-	const isActivityLiked = (activity: Activity): boolean => {
-		const key = rowKey(activity);
-
-		return pendingLikes.has(key) ? (pendingLikes.get(key) ?? false) : serverLikedKeys.has(key);
-	};
-
-	// The like count for a row: the server tally adjusted for the viewer's
-	// optimistic override, so a just-tapped like updates the number
-	// immediately and reconciles to the same value after the next reload.
-	const reactionCount = (activity: Activity): number => {
-		const key = rowKey(activity);
-		const base = reactionCounts?.get(key) ?? 0;
-		const serverMine = serverLikedKeys.has(key);
-		const mine = isActivityLiked(activity);
-
-		return base + (mine ? 1 : 0) - (serverMine ? 1 : 0);
-	};
-
-	const toggleLike = async (activity: Activity) => {
-		const liker = $authPrincipal;
-
-		// The feed is friends-only, so a viewer is signed in; guard anyway —
-		// without a principal the like can't be attributed or persisted.
-		if (isNullish(liker)) {
+		if (friends.length === 0 || key === hydratedFriendKey) {
 			return;
 		}
 
-		const key = rowKey(activity);
-		const desired = !isActivityLiked(activity);
+		hydratedFriendKey = key;
 
-		// Optimistic: shadow server truth immediately and fire the commit
-		// motion; the persisted write happens after.
-		pendingLikes.set(key, desired);
+		void (async () => {
+			try {
+				const [standings, resolved] = await Promise.all([
+					getLeagueStandings({ window: DIGEST_WINDOW, members: friends }),
+					getFriendResolvedResults({ friends })
+				]);
+
+				friendStandingsByOwner.clear();
+
+				for (const entry of standings.entries) {
+					friendStandingsByOwner.set(entry.owner, entry);
+				}
+
+				friendResolvedResults = resolved;
+			} catch (err: unknown) {
+				console.error('FriendsTab: failed to hydrate results digest', err);
+				// Release the guard so a later store refresh can retry — a transient
+				// read failure shouldn't permanently strand the digest on empty rows
+				// for this friend set.
+				hydratedFriendKey = undefined;
+			}
+		})();
+	});
+
+	// Each friend's standout call: the resolved-result row with the greatest
+	// absolute net VXP (their most consequential result, win or loss),
+	// tie-broken to the most recent resolution.
+	const standoutByOwner = $derived.by(() => {
+		const byOwner = new SvelteMap<string, ResolvedResult>();
+
+		for (const row of friendResolvedResults) {
+			const current = byOwner.get(row.owner);
+			const better =
+				isNullish(current) ||
+				Math.abs(row.netVxp) > Math.abs(current.netVxp) ||
+				(Math.abs(row.netVxp) === Math.abs(current.netVxp) &&
+					row.resolvedAtMs > current.resolvedAtMs);
+
+			if (better) {
+				byOwner.set(row.owner, row);
+			}
+		}
+
+		return byOwner;
+	});
+
+	interface FriendDigest {
+		friendId: string;
+		profile: UserProfile | undefined;
+		won: number;
+		lost: number;
+		total: number;
+		/** Signed net-VXP label, e.g. `+312` / `−58`, win/loss colored via `netUp`. */
+		netLabel: string;
+		netUp: boolean;
+		/** Relative window label from the standout's resolution time, when present. */
+		windowLabel: string | undefined;
+		standout: { marketId: string; title: string } | undefined;
+	}
+
+	const friendDigests = $derived.by<FriendDigest[]>(() =>
+		rankedFriends
+			// Keep only friends with a resolved record in the window; a zero
+			// `settledCount` (or no standings entry) is the open-call exclusion.
+			.filter((friend) => {
+				const entry = friendStandingsByOwner.get(friend.friendId);
+
+				return nonNullish(entry) && entry.settledCount > 0;
+			})
+			.map((friend): FriendDigest => {
+				// Safe by the filter above.
+				const entry = friendStandingsByOwner.get(friend.friendId) as StandingEntry;
+				const netVxp = decimalFixedValueToNumber({
+					value: entry.realizedPnl,
+					decimals: USD_DECIMALS
+				});
+				const netUp = netVxp >= 0;
+				const standoutRow = standoutByOwner.get(friend.friendId);
+
+				return {
+					friendId: friend.friendId,
+					profile: friend.profile,
+					won: entry.winCount,
+					lost: Math.max(0, entry.settledCount - entry.winCount),
+					total: entry.settledCount,
+					netLabel: `${netUp ? '+' : '−'}${formatWholeVxpMagnitude(netVxp)}`,
+					netUp,
+					windowLabel: nonNullish(standoutRow)
+						? formatRelativeAgoFromNs({
+								timestampNs:
+									BigInt(Math.trunc(standoutRow.resolvedAtMs)) * MILLISECOND_IN_NANOSECONDS,
+								locale: $localeStore
+							})
+						: undefined,
+					standout: nonNullish(standoutRow)
+						? {
+								marketId: standoutRow.marketId,
+								// Localize via the translation overlay (not `displayMarkets`,
+								// which would couple the digest to price ticks); the
+								// denormalized English title is the durable fallback for
+								// pruned/expired markets and only the title is displayed.
+								title: $marketDisplay({
+									id: standoutRow.marketId,
+									title: standoutRow.title,
+									description: '',
+									resolution: ''
+								}).title
+							}
+						: undefined
+				};
+			})
+			// Newest standout first; rows without a standout (no retained result
+			// row) sort after the timestamped ones.
+			.sort((a, b) => {
+				const at = standoutByOwner.get(a.friendId)?.resolvedAtMs ?? 0;
+				const bt = standoutByOwner.get(b.friendId)?.resolvedAtMs ?? 0;
+
+				return bt - at;
+			})
+	);
+
+	// The Zap reaction is kept as a transient acknowledgement on the digest
+	// row — a digest row is not an `Activity` doc, so it has no
+	// `activity_reactions` identity to persist against; v1 keeps the visual
+	// + motion and still fires `friend_feed_reaction` so the engagement
+	// series stays continuous across the swap from the per-call feed.
+	const REACTION_MOTION_MS = 600;
+	const firingKeys = new SvelteSet<string>();
+	const reactedKeys = new SvelteSet<string>();
+
+	const isFiring = (friendId: string): boolean => firingKeys.has(friendId);
+	const isReacted = (friendId: string): boolean => reactedKeys.has(friendId);
+
+	const toggleReaction = (friendId: string) => {
+		const desired = !reactedKeys.has(friendId);
 
 		if (desired) {
+			reactedKeys.add(friendId);
 			haptic('light-tap');
 
 			if (!prefersReducedMotion()) {
-				firingKeys.add(key);
-				setTimeout(() => firingKeys.delete(key), REACTION_MOTION_MS);
+				firingKeys.add(friendId);
+				setTimeout(() => firingKeys.delete(friendId), REACTION_MOTION_MS);
 			}
+		} else {
+			reactedKeys.delete(friendId);
 		}
 
-		try {
-			if (desired) {
-				await likeActivity({ activity, liker });
-			} else {
-				await unlikeActivity({ activity, liker });
-			}
-
-			track({
-				name: 'friend_feed_reaction',
-				source: 'arena',
-				label: desired ? 'like' : 'unlike'
-			});
-		} catch (_err) {
-			// Revert the optimistic override to server truth + surface the toast.
-			pendingLikes.delete(key);
-
-			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
-				message: t({ locale: $localeStore, key: 'common.error.generic' }),
-				type: 'error'
-			});
-		}
+		track({
+			name: 'friend_feed_reaction',
+			source: 'arena',
+			label: desired ? 'like' : 'unlike'
+		});
 	};
 
-	const goToMarket = (marketId: string | undefined) => {
-		if (isNullish(marketId) || marketId.length === 0) {
+	const openDigest = (digest: FriendDigest) => {
+		const marketId = digest.standout?.marketId;
+
+		if (nonNullish(marketId) && marketId.length > 0) {
+			track({ name: 'friend_digest_opened', source: 'arena', marketId });
+			void goto(resolve(`${AppPath.Markets}/${marketId}`));
+
 			return;
 		}
 
-		void goto(resolve(`${AppPath.Markets}/${marketId}`));
-	};
+		// No standout to navigate to — open the friend mini-profile sheet so
+		// the row stays interactive rather than a dead tap.
+		const row = rankedFriends.find((friend) => friend.friendId === digest.friendId);
 
-	const feedRelative = (timestampMs: number): string =>
-		formatRelativeAgoFromNs({
-			// Activity timestamps come from stored docs; a fractional / NaN value
-			// would make a bare `BigInt(...)` throw, so coerce defensively.
-			timestampNs: safeBigInt({ value: timestampMs }) * MILLISECOND_IN_NANOSECONDS,
-			locale: $localeStore
-		});
+		if (nonNullish(row)) {
+			track({ name: 'friend_digest_opened', source: 'arena' });
+			openFriendSheet(row);
+		}
+	};
 </script>
 
 <div class="friends-tab">
@@ -1094,8 +1168,28 @@
 					onInvite={() => void handleShare()}
 				/>
 			{:else}
+				{#snippet youRow()}
+					<li class="ranked-li-you">
+						<RankedRow
+							accuracyLabel={formatPct(myAccuracy)}
+							avatar={myProfile?.avatar}
+							avatarParts={myProfile?.avatarParts}
+							dailyStreak={myProfile?.dailyStreak ?? 0}
+							displayName={myProfile?.nickname ??
+								t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
+							nickname={myProfile?.nickname}
+							numLabel={String(myFriendRank).padStart(2, '0')}
+							owner={userPrincipal}
+							variant="you"
+							vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
+						/>
+					</li>
+				{/snippet}
 				<ul class="ranked-list">
-					{#each visibleRanked as row, idx (row.friendId)}
+					{#each rankedFriends as row, idx (row.friendId)}
+						{#if idx === youInsertAt}
+							{@render youRow()}
+						{/if}
 						{@const h2h = formatH2h(row.accuracy)}
 						<li>
 							<RankedRow
@@ -1108,96 +1202,107 @@
 								h2hAhead={h2h.ahead}
 								h2hValue={h2h.value}
 								nickname={row.profile?.nickname}
-								numLabel={String(idx + 1).padStart(2, '0')}
+								numLabel={String(idx < youInsertAt ? idx + 1 : idx + 2).padStart(2, '0')}
 								onOpen={() => openFriendSheet(row)}
 								owner={row.profile?.owner ?? row.friendId}
 								variant="friend"
 							/>
 						</li>
 					{/each}
-					{#if hiddenRankedCount > 0}
-						<li>
-							<button class="ranked-see-all" onclick={() => (showAllRanked = true)} type="button">
-								{t({
-									locale: $localeStore,
-									key: 'arena.friends.ranked.see_all',
-									params: { count: rankedFriends.length }
-								})}
-							</button>
-						</li>
+					{#if youInsertAt >= rankedFriends.length}
+						{@render youRow()}
 					{/if}
-					<li class="ranked-li-you">
-						<RankedRow
-							accuracyLabel={formatPct(myAccuracy)}
-							avatar={myProfile?.avatar}
-							avatarParts={myProfile?.avatarParts}
-							dailyStreak={myProfile?.dailyStreak ?? 0}
-							displayName={myProfile?.nickname ??
-								t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
-							nickname={myProfile?.nickname}
-							numLabel={t({ locale: $localeStore, key: 'arena.friends.ranked.you' })}
-							owner={userPrincipal}
-							variant="you"
-							vxpLabel={formatVxpBalance({ value: vxpBaseUnitsFromPoints(myProfile?.points ?? 0) })}
-						/>
-					</li>
 				</ul>
 			{/if}
 		</section>
 	{/if}
 
-	<!-- Friends feed ──────────────────────────────────────────── -->
+	<!-- Friends results digest ─────────────────────────────────── -->
 	<!--
-		Recent calls from the viewer's friend set, sourced from the cached
-		global activity stream. When the friend graph has yet to produce
-		any activity we keep the quiet copy block so the surface stays
-		discoverable without faking data.
+		One row per friend with a resolved record over the window: their W–L
+		tally + net VXP (from the friend-scoped league standings aggregate)
+		and a standout call (their resolved prediction with the largest
+		|net VXP|). Friends with no resolved prediction in the window do not
+		appear; when the graph has yet to resolve anything we keep the quiet
+		copy block so the surface stays discoverable without faking data.
 	-->
-	{#if !loading && friendActivities.length > 0}
+	{#if !loading && friendDigests.length > 0}
 		<section class="friends-section">
 			<header class="section-eyebrow">
 				<span>{t({ locale: $localeStore, key: 'arena.friends.feed.eyebrow' })}</span>
 			</header>
 			<ul class="feed-list">
-				{#each friendActivities as activity (rowKey(activity))}
-					{@const profile = friendProfiles.get(activity.user)}
-					{@const isLiked = isActivityLiked(activity)}
-					{@const likeCount = reactionCount(activity)}
+				{#each friendDigests as digest (digest.friendId)}
 					<li>
 						<div class="feed-row">
-							<button class="feed-main" onclick={() => goToMarket(activity.marketId)} type="button">
+							<button class="feed-main" onclick={() => openDigest(digest)} type="button">
 								<span class="feed-avatar">
 									<Avatar
 										class="h-full w-full"
-										avatar={profile?.avatar}
-										avatarParts={profile?.avatarParts}
-										nickname={profile?.nickname}
-										owner={profile?.owner ?? activity.user}
+										avatar={digest.profile?.avatar}
+										avatarParts={digest.profile?.avatarParts}
+										nickname={digest.profile?.nickname}
+										owner={digest.profile?.owner ?? digest.friendId}
 									/>
 								</span>
 								<span class="feed-copy">
 									<span class="feed-line">
 										<b class="feed-handle"
-											>@{profile?.nickname ??
+											>@{digest.profile?.nickname ??
 												t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}</b
 										>
-										<span class="feed-action">{activity.title}</span>
-										{#if activity.details}
-											<span class="feed-market">“{activity.details}”</span>
+										<span class="feed-action">
+											{t({
+												locale: $localeStore,
+												key:
+													digest.total === 1
+														? 'arena.friends.feed.resolved_one'
+														: 'arena.friends.feed.resolved_many',
+												params: { count: digest.total }
+											})}
+										</span>
+										<span class="num feed-record"
+											>· <span class="feed-record-win"
+												>{t({
+													locale: $localeStore,
+													key: 'arena.friends.feed.record_won',
+													params: { count: digest.won }
+												})}</span
+											>–<span class="feed-record-loss"
+												>{t({
+													locale: $localeStore,
+													key: 'arena.friends.feed.record_lost',
+													params: { count: digest.lost }
+												})}</span
+											></span
+										>
+									</span>
+									<span class="feed-meta">
+										{#if nonNullish(digest.windowLabel)}
+											<span class="num feed-when">{digest.windowLabel}</span>
+										{/if}
+										{#if nonNullish(digest.standout)}
+											<span class="feed-market">
+												{t({
+													locale: $localeStore,
+													key: 'arena.friends.feed.standout',
+													params: { question: digest.standout.title }
+												})}
+											</span>
 										{/if}
 									</span>
-									<span class="num feed-when">{feedRelative(activity.timestamp)}</span>
+								</span>
+								<span class="num feed-net" class:is-down={!digest.netUp} class:is-up={digest.netUp}>
+									{digest.netLabel} VXP
 								</span>
 							</button>
 							<button
 								class="feed-react"
-								class:is-firing={isFiring(activity)}
-								class:is-liked={isLiked}
-								aria-label={likeCount > 0
-									? `${t({ locale: $localeStore, key: 'arena.friends.feed.like' })} · ${likeCount}`
-									: t({ locale: $localeStore, key: 'arena.friends.feed.like' })}
-								aria-pressed={isLiked}
-								onclick={() => void toggleLike(activity)}
+								class:is-firing={isFiring(digest.friendId)}
+								class:is-liked={isReacted(digest.friendId)}
+								aria-label={t({ locale: $localeStore, key: 'arena.friends.feed.like' })}
+								aria-pressed={isReacted(digest.friendId)}
+								onclick={() => toggleReaction(digest.friendId)}
 								type="button"
 							>
 								<Zap aria-hidden="true" size={16} strokeWidth={1.6} />
@@ -1211,9 +1316,6 @@
 									<span></span>
 									<span></span>
 								</span>
-								{#if likeCount > 0}
-									<span class="num feed-react-count" aria-hidden="true">{likeCount}</span>
-								{/if}
 							</button>
 						</div>
 					</li>
@@ -1244,9 +1346,13 @@
 			</span>
 			<span class="global-link-value num">
 				<span class="global-link-rank">
-					{nonNullish(myRank)
-						? `#${myRank}`
-						: t({ locale: $localeStore, key: 'arena.friends.global.unranked' })}
+					{#if nonNullish($ownStanding?.displayRank)}
+						#{$ownStanding.displayRank}
+					{:else if $ownStanding?.provisional}
+						{t({ locale: $localeStore, key: 'arena.friends.global.provisional' })}
+					{:else}
+						{t({ locale: $localeStore, key: 'arena.friends.global.unranked' })}
+					{/if}
 				</span>
 				<!-- Rank delta (↑/↓ N this week) deferred until the satellite
 				     ships a `previousRank` snapshot. -->
@@ -1742,8 +1848,8 @@
 	/* ── Ranked list ───────────────────────────────────────── */
 	/* Single unified card with internal dividers. The
 	   list is its own internal-scroll container (`overflow: auto;
-	   max-height: 60vh`) so the YOU `<li>` can stick to the bottom
-	   of the card on scroll, instead of being trapped by the page
+	   max-height: 60vh`) so the YOU `<li>` can stick to the nearest
+	   card edge on scroll, instead of being trapped by the page
 	   scroll context. */
 	.ranked-list {
 		position: relative;
@@ -1763,40 +1869,21 @@
 		border-top: 1px solid var(--border-base);
 	}
 
-	/* Sticky YOU row — pinned to the bottom edge of the rank list
-	   with a gold-tinted backdrop blur.
-	   `position: sticky` lives on the `<li>` wrapper (not the
-	   inner row element rendered by `RankedRow`): a sticky element
-	   is constrained by its containing block, and the `<li>` is a
-	   direct child of the scrollable `.ranked-list` — putting sticky
-	   on the inner row would constrain it to the `<li>`'s own height,
-	   which is the row itself, so no visible sticking. */
+	/* Sticky YOU row — sits inline at the viewer's real rank and, on
+	   scroll, glues to whichever card edge its natural slot has passed
+	   (top when the slot is above the fold, bottom when below) via a
+	   single sticky element with both insets set; it flows back inline
+	   when the slot is on screen.
+	   `position: sticky` lives on the `<li>` wrapper (not the inner row
+	   element rendered by `RankedRow`): a sticky element is constrained
+	   by its containing block, and the `<li>` is a direct child of the
+	   scrollable `.ranked-list` — putting sticky on the inner row would
+	   constrain it to the `<li>`'s own height, so no visible sticking. */
 	.ranked-li-you {
 		position: sticky;
+		top: 0;
 		bottom: 0;
 		z-index: 2;
-	}
-
-	/* "See all N →" sits as the last divider-separated row inside
-	   the unified ranked card. Accent text, no border (border-top
-	   comes from the shared `li + li` divider rule). */
-	.ranked-see-all {
-		width: 100%;
-		padding: 0.7rem 0.85rem;
-		border: 0;
-		background: transparent;
-		color: var(--color-primary);
-		font-family: var(--font-mono);
-		font-size: var(--t-12);
-		font-weight: 700;
-		letter-spacing: var(--tracking-wide);
-		cursor: pointer;
-		text-align: center;
-		transition: background 140ms ease;
-	}
-
-	.ranked-see-all:hover {
-		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
 	}
 
 	/* ── Empty ─────────────────────────────────────────────── */
@@ -1806,9 +1893,10 @@
 		padding: 1.5rem 0;
 	}
 
-	/* ── Feed ──────────────────────────────────────────────── */
+	/* ── Feed (results digest) ─────────────────────────────── */
 	/* Unified card with internal dividers — same pattern as the ranked
-	   and pending lists. Each row is the activity line + a clap react. */
+	   and pending lists. Each row is one friend's resolved record (W–L +
+	   net VXP + standout) and a transient Zap reaction. */
 	.feed-list {
 		display: flex;
 		flex-direction: column;
@@ -1835,7 +1923,7 @@
 
 	.feed-main {
 		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
+		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
 		gap: 0.65rem;
 		flex: 1;
@@ -1879,10 +1967,40 @@
 		color: var(--text-muted);
 	}
 
+	/* W–L tally — mono numerals, base weight so the record reads as the
+	   row's spine. Wins/losses carry the same yes/no color as the net
+	   figure plus a leading W/L glyph, so the split reads at a glance
+	   without leaning on color alone. */
+	.feed-record {
+		color: var(--text-muted);
+		font-weight: 700;
+	}
+
+	.feed-record-win {
+		color: var(--yes);
+	}
+
+	.feed-record-loss {
+		color: var(--no);
+	}
+
+	/* Window label + standout, on one wrapping meta line under the record. */
+	.feed-meta {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.4rem;
+		min-width: 0;
+	}
+
 	.feed-market {
+		overflow: hidden;
 		color: var(--text-base);
 		font-family: var(--font-serif, var(--font-display, serif));
+		font-size: var(--t-12);
 		font-style: italic;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.feed-when {
@@ -1894,8 +2012,26 @@
 		text-transform: uppercase;
 	}
 
-	/* Like react — acknowledge a friend's call. Brand forbids emoji
-	   (design.md), so the cue is the `Zap` glyph. Resting state is
+	/* Signed net VXP — the row's headline figure, colored win (yes) / loss
+	   (no) and right-aligned beside the copy. */
+	.feed-net {
+		justify-self: end;
+		flex-shrink: 0;
+		font-size: var(--t-13);
+		font-weight: 800;
+		white-space: nowrap;
+	}
+
+	.feed-net.is-up {
+		color: var(--yes);
+	}
+
+	.feed-net.is-down {
+		color: var(--no);
+	}
+
+	/* Like react — acknowledge a friend's result. Brand forbids emoji,
+	   so the cue is the `Zap` glyph. Resting state is
 	   dimmed; tapping commits to full opacity + an accent wash, plus a
 	   one-beat tilt and particle burst (both reduced-motion gated). The
 	   accent uses `--color-primary` (laurel in dark, the contrast-safe
@@ -1932,14 +2068,6 @@
 		opacity: 1;
 		background: color-mix(in srgb, var(--color-primary) 14%, transparent);
 		color: var(--color-primary);
-	}
-
-	/* Persisted like tally — sits beside the glyph, inherits the button's
-	   colour so it turns accent alongside the icon on commit. */
-	.feed-react-count {
-		margin-left: 0.2rem;
-		font-size: 0.72rem;
-		line-height: 1;
 	}
 
 	.feed-react.is-firing :global(svg) {

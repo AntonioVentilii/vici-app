@@ -1,5 +1,6 @@
 import { default as svelteConfig } from '@dfinity/eslint-config-oisy-wallet/svelte';
 import { default as vitestConfig } from '@dfinity/eslint-config-oisy-wallet/vitest';
+import globals from 'globals';
 import ts from 'typescript-eslint';
 
 export default ts.config(
@@ -13,6 +14,9 @@ export default ts.config(
 			'dist/',
 			'static/',
 			'src/declarations/',
+			// Vendored copies of the generated candid bindings (see
+			// backend/src/declarations/index.ts): generated code, not linted.
+			'backend/src/declarations/',
 			'.claude/worktrees/'
 		]
 	},
@@ -37,6 +41,35 @@ export default ts.config(
 		files: ['src/**/*'],
 		rules: {
 			'local-rules/no-relative-imports': 'error'
+		}
+	},
+
+	{
+		// The Bun backend is its own TypeScript project; typed linting must
+		// resolve its files through backend/tsconfig.json, not the frontend's
+		// tsconfig.eslint.json.
+		files: ['backend/**/*.ts'],
+		languageOptions: {
+			parserOptions: {
+				project: ['./backend/tsconfig.json']
+			}
+		},
+		rules: {
+			// A server logs to stdout/stderr by design (Fly captures the stream);
+			// the browser-console concern behind this rule does not apply.
+			'no-console': 'off',
+			// Positional params are the backend idiom for db helpers like
+			// query(text, params); the object-params convention is a frontend rule.
+			'local-rules/prefer-object-params': 'off'
+		}
+	},
+
+	{
+		// The service worker legitimately uses the ServiceWorkerGlobalScope
+		// surface (`self`, `caches`, `fetch`, `clients`, event listeners).
+		files: ['src/service-worker.ts'],
+		languageOptions: {
+			globals: globals.serviceworker
 		}
 	},
 

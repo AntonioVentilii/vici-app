@@ -15,10 +15,10 @@
 	interface Props {
 		// Stable seed — `market.id` for parity with FlowCard.
 		marketId: string | number;
-		// The market's primary tag (see `primaryMarketTag`) when
-		// available; the renderer falls back to a hash-based pick when
-		// missing or unrecognised.
-		categoryId?: string | null;
+		// The market's stored `tags` (micros first, then free tags). The
+		// renderer resolves the artwork macro from them and falls back to a
+		// hash-based pick when they're missing or carry no micros.
+		tags?: readonly string[];
 		// Final state for resolved positions. `'neutral'` means the
 		// position is still open or there is no recorded outcome — the
 		// thumb sits in neutral and never crossfades.
@@ -32,7 +32,7 @@
 
 	const {
 		marketId,
-		categoryId = null,
+		tags = [],
 		result = 'neutral',
 		size = 56,
 		class: extraClass = ''
@@ -68,7 +68,7 @@
 		return () => clearTimeout(id);
 	});
 
-	const category = $derived(resolveFlowArtCategory({ categoryId, seed: marketId }));
+	const category = $derived(resolveFlowArtCategory({ tags, seed: marketId }));
 	const showOverlay = $derived(result !== 'neutral');
 </script>
 

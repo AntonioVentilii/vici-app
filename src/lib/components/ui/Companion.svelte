@@ -119,7 +119,7 @@
 		right: 16px;
 		padding: 8px 14px 8px 8px;
 		border-radius: var(--r-pill);
-		background: rgba(14, 13, 11, 0.85);
+		background: var(--companion-float-bg);
 		backdrop-filter: blur(16px);
 		border: 1px solid var(--border-base);
 		box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.6);

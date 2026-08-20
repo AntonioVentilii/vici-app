@@ -3,7 +3,7 @@
 	import AdminBulkMarketForm from '$lib/components/admin/AdminBulkMarketForm.svelte';
 	import AdminMarketForm from '$lib/components/admin/AdminMarketForm.svelte';
 	import AdminSubPageHeader from '$lib/components/admin/AdminSubPageHeader.svelte';
-	import { normalizeMarketTags } from '$lib/constants/market-tags.constants';
+	import { normalizeStoredTags } from '$lib/constants/market-taxonomy.constants';
 	import { upsertMarketMetadata } from '$lib/services/market-metadata.services';
 	import { createMarket } from '$lib/services/market.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -54,7 +54,7 @@
 							balanceDomain: balanceDomain ? toBalanceDomain(balanceDomain) : defaultDomain
 						});
 
-						const normalizedTags = normalizeMarketTags(
+						const normalizedTags = normalizeStoredTags(
 							(tags ?? []).map((value) => value.toLowerCase())
 						);
 

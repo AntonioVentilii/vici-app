@@ -9,7 +9,6 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
-	import { USD_DECIMALS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { globalStandingsRows, type StandingsRow } from '$lib/derived/standings.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -28,12 +27,13 @@
 	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
+	import { globalStandingsStore } from '$lib/stores/standings.store';
+	import { leaderboardQualifyMin } from '$lib/stores/tweaks.store';
 	import type { Relation } from '$lib/types/relation';
 	import type { StandingsWindow } from '$lib/types/standings';
-	import { decimalFixedValueToNumber, shortenPrincipal } from '$lib/utils/format.utils';
+	import { shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
-	import { formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { friendRequestOutcomeNotice } from '$lib/utils/relation.utils';
 
@@ -46,26 +46,31 @@
 	 * slice, so a revisit renders instantly while a refresh runs in the
 	 * background.
 	 *
-	 * The board ranks by **accuracy** — being right is the score. The canister
-	 * returns the slice ordered by net P&L; `globalStandingsRows` re-ranks it by
-	 * accuracy (with a min-settled floor so a 1-call 100% can't take #1) and
-	 * stamps each row's `displayRank` (its 1-based position in that order). We
-	 * render `displayRank`, never `entry.rank` (which is the canister's P&L
-	 * rank).
+	 * The board ranks by **confidence-adjusted accuracy**. The canister returns
+	 * the slice ordered by net P&L; `globalStandingsRows` re-ranks it and splits
+	 * it into two partitions (see `standings.constants`):
+	 *  - **ranked** — predictors who cleared the qualify gate (settled calls ≥
+	 *    the effective threshold), ordered by a Bayesian-shrinkage score so a
+	 *    thin record can't top a proven one. Each carries a 1-based `displayRank`
+	 *    (we render this, never `entry.rank`, the canister's P&L rank).
+	 *  - **provisional** — predictors below the gate: unranked, shown in a
+	 *    separate section with `{done}/{min} to qualify` progress.
 	 *
 	 * Layout is a single column:
 	 *  - chip-style window tabs at the top
 	 *  - 3-tile podium row (top-3, #1 gets the gold halo + tinted bg)
-	 *  - flat list of rest rows (rank, avatar, handle + VXP · streak, accuracy on
-	 *    the right — coloured `--yes` once accuracy ≥ 78%)
+	 *  - flat list of remaining ranked rows (rank, avatar, handle + calls ·
+	 *    streak, accuracy on the right — coloured `--yes` once accuracy ≥ 78%)
+	 *  - the Provisional section (only when non-empty)
 	 *
-	 * Accuracy, settled count and net VXP are authoritative from the clearing
-	 * canister; handle / avatar / streak are overlaid from the shared profile
-	 * cache (the viewer's own row from their live profile). The viewer's own row
-	 * carries an accent border + tinted bg and is never tappable; every other
-	 * row / podium tile opens a mini-profile bottom sheet with an add- or
-	 * remove-friend action that routes through the same `relation.services` the
-	 * Friends tab uses.
+	 * Every row and podium tile shows its **call count** — the trust signal that
+	 * makes the shrinkage legible. Accuracy and settled count are authoritative
+	 * from the clearing canister; handle / avatar / streak are overlaid from the
+	 * shared profile cache (the viewer's own row from their live profile). The
+	 * viewer's own row carries an accent border + tinted bg and is never
+	 * tappable; every other row / podium tile opens a mini-profile bottom sheet
+	 * with an add- or remove-friend action that routes through the same
+	 * `relation.services` the Friends tab uses.
 	 */
 
 	const windows: { id: StandingsWindow; labelKey: MessageKey }[] = [
@@ -82,40 +87,79 @@
 	// all three at once would keep re-mapping two windows that aren't on screen.
 	// The standings store caches per-window, so switching tabs re-subscribes to
 	// the cached slice. `undefined` until the active window's slice has loaded,
-	// distinct from a loaded-but-empty window (`[]`).
-	const rowsStore = $derived(globalStandingsRows(activeWindow));
-	const rows = $derived<StandingsRow[] | undefined>($rowsStore);
+	// distinct from a loaded-but-empty window (both partitions `[]`).
+	const partitionStore = $derived(globalStandingsRows(activeWindow));
+	const partition = $derived($partitionStore);
 
-	const loading = $derived(isNullish(rows));
-	const rankedRows = $derived(rows ?? []);
+	const loading = $derived(isNullish(partition));
+	const rankedRows = $derived(partition?.ranked ?? []);
+	const provisionalRows = $derived(partition?.provisional ?? []);
 
 	const podium = $derived(rankedRows.slice(0, 3));
 	const rest = $derived(rankedRows.slice(3));
+
+	// The viewer's own row, wherever it landed (ranked or provisional), for the
+	// `leaderboard_viewed` qualification signal.
+	const selfRow = $derived([...rankedRows, ...provisionalRows].find((row) => row.isSelf));
 
 	// Hydrate each window on first view. The store caches per-window, so a
 	// repeat visit short-circuits the fetch and re-renders the cached slice.
 	$effect(() => {
 		const window = activeWindow;
 
-		if (isNullish(rows)) {
+		if (isNullish(partition)) {
 			void loadGlobalStandings({ window }).catch((err: unknown) => {
 				console.error(err);
 			});
 		}
 	});
 
-	// Hydrate the shared profile cache for the rows this surface actually
-	// paints — handle / avatar / streak overlay onto the standing reactively as
-	// profiles land. `loadGlobalStandings` no longer hydrates (the dash shares
-	// its cached slice but only needs the viewer's own rank), so the Leaderboard
-	// owns this. `loadProfilesByPrincipals` dedupes against the cache, so the
-	// re-run this triggers once profiles arrive is a no-op.
-	//
-	// The viewer's own row is excluded: `globalStandingsRows` already overlays
-	// the self row from the live `userStore.profile`, so hydrating it would only
-	// add a redundant `getProfile` on every visit / window switch.
+	// Fire `leaderboard_viewed` once per window load / tab switch (not on every
+	// profile trickle that re-derives the partition). `ok` = the viewer cleared
+	// the qualify gate (ranked vs provisional/absent); `value` = their settled
+	// count, so the gate's effect on real viewers is measurable.
+	let trackedWindow = $state<StandingsWindow | undefined>(undefined);
+
 	$effect(() => {
-		const owners = rankedRows.filter((row) => !row.isSelf).map((row) => row.owner);
+		if (isNullish(partition) || activeWindow === trackedWindow) {
+			return;
+		}
+
+		trackedWindow = activeWindow;
+		track({
+			name: 'leaderboard_viewed',
+			label: activeWindow,
+			count: rankedRows.length,
+			ok: nonNullish(selfRow?.displayRank),
+			value: selfRow?.entry.settledCount
+		});
+	});
+
+	// Hydrate the shared profile cache for the rows this surface paints —
+	// handle / avatar / streak overlay onto the standing reactively as profiles
+	// land. `loadGlobalStandings` no longer hydrates (the dash shares its cached
+	// slice but only needs the viewer's own rank), so the Leaderboard owns this.
+	// `loadProfilesByPrincipals` dedupes against the cache, so the re-run this
+	// triggers once profiles arrive is a no-op.
+	//
+	// Driven off the RAW slice (`globalStandingsStore`), not the filtered
+	// `rankedRows` / `provisionalRows`: the leaderboard opt-out fails closed, so
+	// a not-yet-hydrated (or opted-out) row is absent from the partition.
+	// Hydrating only the visible rows would never fetch the missing profiles, so
+	// an opted-in row could never resolve into view. The viewer's own row is
+	// excluded — `globalStandingsRows` overlays it from the live
+	// `userStore.profile`, so hydrating it would only add a redundant
+	// `getProfile` on every visit / window switch.
+	$effect(() => {
+		const slice = $globalStandingsStore.get(activeWindow);
+
+		if (isNullish(slice)) {
+			return;
+		}
+
+		const owners = slice.entries
+			.filter((entry) => entry.owner !== currentUser)
+			.map((entry) => entry.owner);
 
 		if (owners.length > 0) {
 			void loadProfilesByPrincipals({ principals: owners });
@@ -124,31 +168,6 @@
 
 	const handleOf = (row: StandingsRow): string =>
 		row.nickname && row.nickname.length > 0 ? row.nickname : shortenPrincipal(row.owner);
-
-	// The board's accuracy-ordered position (NOT the canister P&L rank), so the
-	// mini-profile sheet agrees with the row the user tapped.
-	const rankOf = (owner: string): number =>
-		rankedRows.find((row) => row.owner === owner)?.displayRank ?? 0;
-
-	// Net realized P&L over the window, shown as whole VXP with a +/− sign on a
-	// real swing only. `realizedPnl` is a signed `USD_DECIMALS` fixed-point
-	// value, so decode it via `decimalFixedValueToNumber` (NOT `/1e8`);
-	// `formatWholeVxpMagnitude` then renders the magnitude (sub-1 wins read `<1`,
-	// not a misleading `0`). A zero net P&L renders as a plain `0` (never `+0`),
-	// and a non-finite/NaN decode falls back to the same unsigned `0`.
-	const formatRowVxp = (realizedPnl: bigint): string => {
-		const value = decimalFixedValueToNumber({ value: realizedPnl, decimals: USD_DECIMALS });
-		const magnitude = formatWholeVxpMagnitude(value);
-
-		// Only sign a real swing: a zero net P&L reads as `0` (never `+0`/`−0`),
-		// and a non-finite/NaN decode falls back to the unsigned `0` magnitude.
-		// Matches the swing convention in `ResolutionReveal` / `FlowEntry`.
-		if (magnitude === '0' || !Number.isFinite(value)) {
-			return magnitude;
-		}
-
-		return `${value < 0 ? '−' : '+'}${magnitude}`;
-	};
 
 	// ── Friend state ────────────────────────────────────────────────
 	const friendOwners = $derived(
@@ -283,7 +302,7 @@
 			<div class="leaderboard-spinner"></div>
 			<p class="allcaps">{t({ locale: $localeStore, key: 'leaderboard.loading' })}</p>
 		</div>
-	{:else if rankedRows.length === 0}
+	{:else if rankedRows.length === 0 && provisionalRows.length === 0}
 		<div class="leaderboard-empty">
 			<p class="allcaps">{t({ locale: $localeStore, key: 'leaderboard.empty' })}</p>
 			<p class="leaderboard-empty-sub">
@@ -291,52 +310,19 @@
 			</p>
 		</div>
 	{:else}
-		<!-- 3-tile podium row. #1 gets the gold halo + tinted bg; #2 / #3 stay
-		     on the neutral surface. Every tile but the viewer's own is a real
-		     button that opens the mini-profile sheet. -->
-		<div class="leaderboard-podium">
-			{#each podium as row, i (row.owner)}
-				<button
-					class="leaderboard-podium-tile"
-					class:is-first={i === 0}
-					class:is-you={row.isSelf}
-					aria-label={row.isSelf
-						? undefined
-						: t({
-								locale: $localeStore,
-								key: 'leaderboard.open_profile_aria',
-								params: { name: handleOf(row) }
-							})}
-					disabled={row.isSelf}
-					onclick={() => openSheet(row)}
-					type="button"
-					in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 24, delay: i * 100 }}
-				>
-					<div class="leaderboard-podium-rank num allcaps">#{row.displayRank}</div>
-					<div class="leaderboard-podium-avatar-wrap">
-						<Avatar
-							class={i === 0 ? 'leaderboard-podium-avatar-lg' : 'leaderboard-podium-avatar-md'}
-							avatar={row.avatar ?? null}
-							avatarParts={row.avatarParts ?? null}
-							nickname={row.nickname ?? null}
-							owner={row.owner}
-							self={row.isSelf}
-						/>
-					</div>
-					<div class="leaderboard-podium-name">
-						{row.isSelf ? t({ locale: $localeStore, key: 'leaderboard.you' }) : handleOf(row)}
-					</div>
-					<div class="leaderboard-podium-acc num">{row.entry.accuracy}%</div>
-				</button>
-			{/each}
-		</div>
-
-		<!-- Flat list of rest rows. -->
-		<ul class="leaderboard-rows">
-			{#each rest as row, i (row.owner)}
-				<li in:fade={{ delay: i * 20 }}>
+		<!-- The ranked podium + list render only when at least one predictor has
+		     qualified. With everyone still below the gate (e.g. a high Tweak
+		     threshold) the board is all-Provisional — skip straight to that
+		     section rather than painting an empty podium. -->
+		{#if rankedRows.length > 0}
+			<!-- 3-tile podium row. #1 gets the gold halo + tinted bg; #2 / #3 stay
+			     on the neutral surface. Every tile but the viewer's own is a real
+			     button that opens the mini-profile sheet. -->
+			<div class="leaderboard-podium">
+				{#each podium as row, i (row.owner)}
 					<button
-						class="leaderboard-row"
+						class="leaderboard-podium-tile"
+						class:is-first={i === 0}
 						class:is-you={row.isSelf}
 						aria-label={row.isSelf
 							? undefined
@@ -348,43 +334,162 @@
 						disabled={row.isSelf}
 						onclick={() => openSheet(row)}
 						type="button"
+						in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 24, delay: i * 100 }}
 					>
-						<span class="leaderboard-row-left">
-							<span class="leaderboard-row-rank-wrap">
-								<span class="leaderboard-row-rank num">#{row.displayRank}</span>
-							</span>
+						<div class="leaderboard-podium-rank num allcaps">#{row.displayRank}</div>
+						<div class="leaderboard-podium-avatar-wrap">
 							<Avatar
-								class="leaderboard-row-avatar"
+								class={i === 0 ? 'leaderboard-podium-avatar-lg' : 'leaderboard-podium-avatar-md'}
 								avatar={row.avatar ?? null}
 								avatarParts={row.avatarParts ?? null}
 								nickname={row.nickname ?? null}
 								owner={row.owner}
 								self={row.isSelf}
 							/>
-							<span class="leaderboard-row-text">
-								<span class="leaderboard-row-handle">
-									{row.isSelf ? t({ locale: $localeStore, key: 'leaderboard.you' }) : handleOf(row)}
-								</span>
-								<span class="leaderboard-row-meta num">
-									{t({
+						</div>
+						<div class="leaderboard-podium-name">
+							{row.isSelf ? t({ locale: $localeStore, key: 'leaderboard.you' }) : handleOf(row)}
+						</div>
+						<div class="leaderboard-podium-acc num">{row.entry.accuracy}%</div>
+						<div class="leaderboard-podium-calls num">
+							{t({
+								locale: $localeStore,
+								key: 'leaderboard.row.calls',
+								params: { count: row.entry.settledCount }
+							})}
+						</div>
+					</button>
+				{/each}
+			</div>
+
+			<!-- Flat list of remaining ranked rows. -->
+			<ul class="leaderboard-rows">
+				{#each rest as row, i (row.owner)}
+					<li in:fade={{ delay: i * 20 }}>
+						<button
+							class="leaderboard-row"
+							class:is-you={row.isSelf}
+							aria-label={row.isSelf
+								? undefined
+								: t({
 										locale: $localeStore,
-										key: 'leaderboard.row.vxp',
-										params: { vxp: formatRowVxp(row.entry.realizedPnl) }
-									})} · {t({
-										locale: $localeStore,
-										key: 'leaderboard.row.streak',
-										params: { count: row.dailyStreak }
+										key: 'leaderboard.open_profile_aria',
+										params: { name: handleOf(row) }
 									})}
+							disabled={row.isSelf}
+							onclick={() => openSheet(row)}
+							type="button"
+						>
+							<span class="leaderboard-row-left">
+								<span class="leaderboard-row-rank-wrap">
+									<span class="leaderboard-row-rank num">#{row.displayRank}</span>
+								</span>
+								<Avatar
+									class="leaderboard-row-avatar"
+									avatar={row.avatar ?? null}
+									avatarParts={row.avatarParts ?? null}
+									nickname={row.nickname ?? null}
+									owner={row.owner}
+									self={row.isSelf}
+								/>
+								<span class="leaderboard-row-text">
+									<span class="leaderboard-row-handle">
+										{row.isSelf
+											? t({ locale: $localeStore, key: 'leaderboard.you' })
+											: handleOf(row)}
+									</span>
+									<span class="leaderboard-row-meta num">
+										{t({
+											locale: $localeStore,
+											key: 'leaderboard.row.calls',
+											params: { count: row.entry.settledCount }
+										})} · {t({
+											locale: $localeStore,
+											key: 'leaderboard.row.streak',
+											params: { count: row.dailyStreak }
+										})}
+									</span>
 								</span>
 							</span>
-						</span>
-						<span class="leaderboard-row-acc num" class:is-strong={row.entry.accuracy >= 78}>
-							{row.entry.accuracy}%
-						</span>
-					</button>
-				</li>
-			{/each}
-		</ul>
+							<span class="leaderboard-row-acc num" class:is-strong={row.entry.accuracy >= 78}>
+								{row.entry.accuracy}%
+							</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+
+		<!-- Provisional — predictors who've predicted but are below the qualify
+		     gate. Unranked, shown with progress so newcomers see a path, not a
+		     phantom #1. Only rendered when at least one predictor is provisional. -->
+		{#if provisionalRows.length > 0}
+			<div class="leaderboard-provisional">
+				<div class="leaderboard-provisional-head">
+					<span class="allcaps"
+						>{t({ locale: $localeStore, key: 'leaderboard.provisional.title' })}</span
+					>
+					<span class="num allcaps leaderboard-provisional-min">
+						{t({
+							locale: $localeStore,
+							key: 'leaderboard.provisional.min_calls',
+							params: { count: $leaderboardQualifyMin }
+						})}
+					</span>
+				</div>
+				<ul class="leaderboard-rows">
+					{#each provisionalRows as row, i (row.owner)}
+						<li in:fade={{ delay: i * 20 }}>
+							<button
+								class="leaderboard-row leaderboard-row-provisional"
+								class:is-you={row.isSelf}
+								aria-label={row.isSelf
+									? undefined
+									: t({
+											locale: $localeStore,
+											key: 'leaderboard.open_profile_aria',
+											params: { name: handleOf(row) }
+										})}
+								disabled={row.isSelf}
+								onclick={() => openSheet(row)}
+								type="button"
+							>
+								<span class="leaderboard-row-left">
+									<span class="leaderboard-prov-badge allcaps">
+										{t({ locale: $localeStore, key: 'leaderboard.provisional.badge' })}
+									</span>
+									<Avatar
+										class="leaderboard-row-avatar"
+										avatar={row.avatar ?? null}
+										avatarParts={row.avatarParts ?? null}
+										nickname={row.nickname ?? null}
+										owner={row.owner}
+										self={row.isSelf}
+									/>
+									<span class="leaderboard-row-text">
+										<span class="leaderboard-row-handle">
+											{row.isSelf
+												? t({ locale: $localeStore, key: 'leaderboard.you' })
+												: handleOf(row)}
+										</span>
+										<span class="leaderboard-row-meta num">
+											{t({
+												locale: $localeStore,
+												key: 'leaderboard.provisional.to_qualify',
+												params: { done: row.entry.settledCount, min: $leaderboardQualifyMin }
+											})}
+										</span>
+									</span>
+								</span>
+								<span class="leaderboard-row-acc num leaderboard-prov-acc">
+									{row.entry.accuracy}%
+								</span>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -410,11 +515,19 @@
 			<div class="lb-sheet-head-copy">
 				<span class="lb-sheet-name">@{handleOf(row)}</span>
 				<span class="num lb-sheet-sub">
-					{t({
-						locale: $localeStore,
-						key: 'leaderboard.sheet.rank_streak',
-						params: { rank: rankOf(row.owner), count: row.dailyStreak }
-					})}
+					{#if nonNullish(row.displayRank)}
+						{t({
+							locale: $localeStore,
+							key: 'leaderboard.sheet.rank_streak',
+							params: { rank: row.displayRank, count: row.dailyStreak }
+						})}
+					{:else}
+						{t({
+							locale: $localeStore,
+							key: 'leaderboard.sheet.provisional_streak',
+							params: { count: row.dailyStreak }
+						})}
+					{/if}
 				</span>
 			</div>
 		</div>
@@ -614,6 +727,15 @@
 		color: var(--color-primary);
 	}
 
+	/* Call count — the trust signal under each podium tile's accuracy. */
+	.leaderboard-podium-calls {
+		margin-top: 0.1rem;
+		font-size: var(--t-10);
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		color: var(--text-muted);
+	}
+
 	/* Rest rows — simple flat row card. */
 	.leaderboard-rows {
 		display: flex;
@@ -728,6 +850,54 @@
 
 	.leaderboard-row-acc.is-strong {
 		color: var(--yes);
+	}
+
+	/* ── Provisional section ─────────────────────────────────────── */
+	.leaderboard-provisional {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		margin-top: 0.75rem;
+	}
+
+	.leaderboard-provisional-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.25rem 0.125rem;
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+	}
+
+	.leaderboard-provisional-min {
+		font-weight: 600;
+	}
+
+	/* Provisional rows read a touch quieter than ranked ones — they're a path,
+	   not a standing. */
+	.leaderboard-row-provisional:not(.is-you) {
+		opacity: 0.86;
+	}
+
+	.leaderboard-prov-badge {
+		display: inline-flex;
+		align-items: center;
+		flex-shrink: 0;
+		padding: 0.15rem 0.4rem;
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+		background: var(--bg-elevated);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+	}
+
+	.leaderboard-prov-acc {
+		font-size: var(--t-13);
+		color: var(--text-muted);
 	}
 
 	.leaderboard-loading,

@@ -24,6 +24,7 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import DashHoldingsBreakdown from '$lib/components/dash/DashHoldingsBreakdown.svelte';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
@@ -34,7 +35,7 @@
 		ZERO
 	} from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { marketById } from '$lib/derived/market-by-id.derived';
+	import { openCallCount } from '$lib/derived/open-call-count.derived';
 	import { tradeHistory, tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 	import {
 		vxpBacked,
@@ -48,6 +49,7 @@
 		type VxpLedgerHistory
 	} from '$lib/services/transaction-history.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import type {
 		TransactionHistoryBonusTag,
 		TransactionHistoryFilter,
@@ -189,7 +191,7 @@
 		}
 
 		const kindLabel = t({ locale, key: `transactions.kind.${row.kind}` as const });
-		const market = nonNullish(row.marketId) ? $marketById.get(row.marketId) : undefined;
+		const market = nonNullish(row.marketId) ? $displayMarkets.get(row.marketId) : undefined;
 
 		return nonNullish(market) ? `${kindLabel} · ${market.title}` : kindLabel;
 	};
@@ -245,23 +247,14 @@
 	/>
 
 	<div class="txh-summary">
-		<span class="txh-total">
-			<em>{t({ locale: $localeStore, key: 'transactions.total' })}</em>
-			<span class="num">{totalDisplay} VXP</span>
-		</span>
-		<div class="txh-breakdown">
-			<span class="txh-stat">
-				<em>{t({ locale: $localeStore, key: 'transactions.available' })}</em>
-				<span class="num">{availableDisplay}</span>
-			</span>
-			<span class="txh-inplay num">
-				{t({
-					locale: $localeStore,
-					key: 'transactions.in_play',
-					params: { amount: inPlayDisplay }
-				})}
-			</span>
-		</div>
+		<DashHoldingsBreakdown
+			{availableDisplay}
+			availableValue={$vxpSpendable}
+			holdingsDisplay={totalDisplay}
+			{inPlayDisplay}
+			inPlayValue={$vxpBacked}
+			openCallCount={$openCallCount}
+		/>
 	</div>
 
 	<div
@@ -357,61 +350,7 @@
 	}
 
 	.txh-summary {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
 		padding: 2px var(--spacing-edge) 12px;
-	}
-
-	.txh-total {
-		display: flex;
-		align-items: baseline;
-		gap: 8px;
-		color: var(--text-base);
-		font-size: var(--t-20);
-		font-weight: 600;
-	}
-
-	.txh-total em {
-		color: var(--text-muted);
-		font-size: var(--t-11);
-		font-style: normal;
-		font-weight: 400;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-	}
-
-	.txh-breakdown {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-	}
-
-	.txh-stat {
-		display: flex;
-		align-items: baseline;
-		gap: 6px;
-		color: var(--text-base);
-		font-size: var(--t-13);
-		font-weight: 600;
-	}
-
-	.txh-stat em {
-		color: var(--text-muted);
-		font-size: var(--t-11);
-		font-style: normal;
-		font-weight: 400;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-	}
-
-	.txh-inplay {
-		padding: 3px 10px;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		color: var(--text-muted);
-		font-size: var(--t-11);
-		white-space: nowrap;
 	}
 
 	.txh-filters {

@@ -156,6 +156,35 @@ const goalFrame = ({
 	return s;
 };
 
+// Team-led backdrop for catalogue scenes. `teamA` is the market's featured
+// side, so it owns the field; `teamB` only appears as the opponent accent.
+const teamFlagBackdrop = ({
+	h,
+	teamA,
+	teamB,
+	baseOpacity = 0.38
+}: {
+	h: WcHelpers;
+	teamA: WCKit;
+	teamB?: WCKit;
+	baseOpacity?: number;
+}): string => {
+	const { p } = h;
+	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
+	s += `<rect x="0" y="0" width="280" height="34" fill="${teamA.primary}" opacity="0.72"/>`;
+	s += `<rect x="0" y="34" width="280" height="32" fill="${teamA.secondary}" opacity="0.78"/>`;
+	s += `<rect x="0" y="66" width="280" height="34" fill="${teamA.primary}" opacity="0.72"/>`;
+
+	if (teamB) {
+		s += `<polygon points="216,0 280,0 280,100 246,100" fill="${teamB.primary}" opacity="0.42"/>`;
+		s += `<polygon points="246,0 280,0 280,100 266,100" fill="${teamB.secondary}" opacity="0.5"/>`;
+	}
+
+	s += `<rect width="280" height="100" fill="${p.base}" opacity="${baseOpacity}"/>`;
+
+	return s;
+};
+
 // A blocky keeper silhouette (arms out), facing the viewer.
 const keeperFigure = ({
 	h,
@@ -199,10 +228,7 @@ const kitClash = ({
 }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<polygon points="0,0 150,0 110,100 0,100" fill="${teamA.primary}" opacity="0.30"/>`;
-	s += `<polygon points="150,0 280,0 280,100 110,100" fill="${teamB.primary}" opacity="0.30"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.34"/>`;
+	let s = teamFlagBackdrop({ h, teamA, teamB, baseOpacity: 0.3 });
 
 	const lineCount = g.int(4, 6);
 
@@ -261,8 +287,7 @@ const qualifyBracket = ({
 }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.45"/>`;
+	let s = teamFlagBackdrop({ h, teamA, baseOpacity: 0.42 });
 
 	s += `<path d="M 150 16 L 214 50 L 150 84" fill="none" stroke="${p.fg}" stroke-width="1.4" opacity="0.55"/>`;
 	s += `<line x1="150" y1="50" x2="214" y2="50" stroke="${p.fg}" stroke-width="1.4" opacity="0.55"/>`;
@@ -294,10 +319,7 @@ const ballInNet = ({
 }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<polygon points="0,0 140,0 120,100 0,100" fill="${teamA.primary}" opacity="0.22"/>`;
-	s += `<polygon points="140,0 280,0 280,100 120,100" fill="${teamB.primary}" opacity="0.22"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.4"/>`;
+	let s = teamFlagBackdrop({ h, teamA, teamB });
 
 	s += goalFrame({ h, x: 150, y: 18, w: 104, hgt: 64 });
 	// Net bulge behind the ball.
@@ -337,10 +359,7 @@ const splitPitch = ({
 }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<rect x="0" y="0" width="140" height="100" fill="${teamA.primary}" opacity="0.24"/>`;
-	s += `<rect x="140" y="0" width="140" height="100" fill="${teamB.primary}" opacity="0.24"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.4"/>`;
+	let s = teamFlagBackdrop({ h, teamA, teamB });
 	// Centre line + circle.
 	s += `<line x1="140" y1="0" x2="140" y2="100" stroke="${p.fg}" stroke-width="0.8" opacity="0.45"/>`;
 	s += `<circle cx="140" cy="50" r="14" fill="none" stroke="${p.fg}" stroke-width="0.6" opacity="0.4"/>`;
@@ -360,8 +379,7 @@ const splitPitch = ({
 const keeperWall = ({ h, teamA }: { h: WcHelpers; teamA: WCKit }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.45"/>`;
+	let s = teamFlagBackdrop({ h, teamA, baseOpacity: 0.45 });
 
 	// Brick wall on the right.
 	for (let row = 0; row < 6; row++) {
@@ -394,10 +412,9 @@ const keeperWall = ({ h, teamA }: { h: WcHelpers; teamA: WCKit }): string => {
 const penaltySpot = ({ h, teamA, teamB }: { h: WcHelpers; teamA: WCKit; teamB: WCKit }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
+	let s = teamFlagBackdrop({ h, teamA, teamB });
 	// Spotlight cone from above.
 	s += `<polygon points="130,-10 150,-10 210,100 70,100" fill="${WC_SHIRT.cream}" opacity="0.12"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.4"/>`;
 
 	// Goal at the back with the keeper.
 	s += goalFrame({ h, x: 96, y: 12, w: 88, hgt: 30 });
@@ -419,8 +436,7 @@ const penaltySpot = ({ h, teamA, teamB }: { h: WcHelpers; teamA: WCKit; teamB: W
 const podium = ({ h, teamA, uid }: { h: WcHelpers; teamA: WCKit; uid: string }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.45"/>`;
+	let s = teamFlagBackdrop({ h, teamA, baseOpacity: 0.45 });
 
 	// Three steps — centre tallest.
 	s += `<rect x="92" y="58" width="44" height="42" fill="${p.fg}" opacity="0.2"/>`;
@@ -462,10 +478,7 @@ const stopwatch = ({
 }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<rect x="0" y="0" width="140" height="100" fill="${teamA.primary}" opacity="0.2"/>`;
-	s += `<rect x="140" y="0" width="140" height="100" fill="${teamB.primary}" opacity="0.2"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.45"/>`;
+	let s = teamFlagBackdrop({ h, teamA, teamB, baseOpacity: 0.45 });
 	// Corner accent blocks in each side's secondary colour.
 	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
 	s += `<rect x="270" y="78" width="10" height="22" fill="${teamB.secondary}" opacity="0.7"/>`;
@@ -521,12 +534,7 @@ const refereeCard = ({
 	teamA: WCKit;
 	teamB: WCKit;
 }): string => {
-	const { p } = h;
-
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<polygon points="0,0 150,0 110,100 0,100" fill="${teamA.primary}" opacity="0.26"/>`;
-	s += `<polygon points="150,0 280,0 280,100 110,100" fill="${teamB.primary}" opacity="0.26"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.5"/>`;
+	let s = teamFlagBackdrop({ h, teamA, teamB, baseOpacity: 0.5 });
 	// Corner accent blocks in each side's secondary colour.
 	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
 	s += `<rect x="270" y="78" width="10" height="22" fill="${teamB.secondary}" opacity="0.7"/>`;
@@ -569,8 +577,7 @@ const stadiumClock = ({
 }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.45"/>`;
+	let s = teamFlagBackdrop({ h, teamA, teamB, baseOpacity: 0.45 });
 
 	// Scoreboard panel.
 	s += `<rect x="68" y="18" width="144" height="40" rx="3" fill="${p.ink}" opacity="0.92"/>`;
@@ -607,10 +614,7 @@ const strikerJuggle = ({
 }): string => {
 	const { p } = h;
 
-	let s = h.bgPerspective(WC_SHIRT.cream);
-	s += `<rect width="280" height="100" fill="${teamA.primary}" opacity="0.16"/>`;
-	// Opponent accent band on the far (right) side.
-	s += `<polygon points="200,0 280,0 280,100 232,100" fill="${teamB.primary}" opacity="0.14"/>`;
+	let s = teamFlagBackdrop({ h, teamA, teamB, baseOpacity: 0.32 });
 
 	s += `<g transform="rotate(-4 132 56)">`;
 	s += h.wcFace({
@@ -644,9 +648,7 @@ const strikerJuggle = ({
 const playerFigure = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<polygon points="0,0 200,0 160,100 0,100" fill="${teamA.primary}" opacity="0.26"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.4"/>`;
+	let s = teamFlagBackdrop({ h, teamA });
 
 	s += h.wcFace({
 		cx: 118,
@@ -685,11 +687,7 @@ const amberCardProp = ({ cx, cy, rot = 12 }: { cx: number; cy: number; rot?: num
 // does; the card stays fixed booking-amber regardless of the team. A
 // blocky forearm angles up to the card, echoing referee-card's raised arm.
 const playerCard = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): string => {
-	const { p } = h;
-
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<polygon points="0,0 200,0 160,100 0,100" fill="${teamA.primary}" opacity="0.26"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.4"/>`;
+	let s = teamFlagBackdrop({ h, teamA });
 	// Corner accent block in the kit's secondary colour.
 	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
 
@@ -724,9 +722,7 @@ const playerCard = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): st
 const playerAssist = ({ h, g, teamA }: { h: WcHelpers; g: Rng; teamA: WCKit }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<polygon points="0,0 200,0 160,100 0,100" fill="${teamA.primary}" opacity="0.26"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.4"/>`;
+	let s = teamFlagBackdrop({ h, teamA });
 	// Corner accent block in the kit's secondary colour.
 	s += `<rect x="0" y="0" width="10" height="22" fill="${teamA.secondary}" opacity="0.7"/>`;
 
@@ -777,8 +773,7 @@ const crestLadder = ({
 }): string => {
 	const { p } = h;
 
-	let s = `<rect width="280" height="100" fill="${p.bg}"/>`;
-	s += `<rect width="280" height="100" fill="${p.base}" opacity="0.45"/>`;
+	let s = teamFlagBackdrop({ h, teamA, teamB, baseOpacity: 0.45 });
 
 	// Ladder rails + rungs.
 	s += `<line x1="96" y1="14" x2="96" y2="92" stroke="${p.fg}" stroke-width="1" opacity="0.4"/>`;

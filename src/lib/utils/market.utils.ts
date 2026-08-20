@@ -5,7 +5,7 @@ import type { OrderBookLevel, OrderType } from '$lib/types/order';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { resolveMarketDisplayToken } from '$lib/utils/market-token.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
-import { isNullish, nonNullish } from '@dfinity/utils';
+import { fromNullable, isNullish, nonNullish } from '@dfinity/utils';
 
 /**
  * Builds a `Market` view model from registry series and optional book/probability fields.
@@ -21,6 +21,7 @@ export const mapMarketData = ({
 	bestAskQty = undefined,
 	status = 'Open',
 	outcome = undefined,
+	resolvedAt = undefined,
 	categoricalProbabilities = undefined
 }: {
 	series: RegistryDid.Series;
@@ -33,11 +34,13 @@ export const mapMarketData = ({
 	bestAskQty?: bigint;
 	status?: MarketStatus;
 	outcome?: Outcome;
+	resolvedAt?: bigint;
 	categoricalProbabilities?: Record<string, number>;
 }): Market | undefined => {
 	const {
 		series_id: id,
 		expiry_ns: expiryDate,
+		start_ns: startNsOpt,
 		creator,
 		title,
 		description: { plain: description },
@@ -69,6 +72,8 @@ export const mapMarketData = ({
 	const tradingAccess: TradingAccessUI[] = mapTradingAccess(rawTradingAccess);
 	const isInviteOnly = tradingAccess.length > 0 && !tradingAccess.some((a) => a.type === 'Open');
 
+	const startNs = fromNullable(startNsOpt);
+
 	return {
 		id: parseMarketId(id),
 		title,
@@ -76,9 +81,11 @@ export const mapMarketData = ({
 		resolution,
 		creator: creator.toText(),
 		expiryDate: expiryDate / MILLISECOND_IN_NANOSECONDS,
+		startDate: nonNullish(startNs) ? startNs / MILLISECOND_IN_NANOSECONDS : undefined,
 		createdAt: series.created_at_ns / MILLISECOND_IN_NANOSECONDS,
 		status,
 		outcome,
+		resolvedAt,
 		outcomes: outcomes?.[0]?.map((o) => ({
 			id: o.id,
 			title: o.title,

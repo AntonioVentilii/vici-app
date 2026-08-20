@@ -9,7 +9,12 @@
 	} from '$lib/constants/notification-kind.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { track } from '$lib/services/analytics.services';
-	import { clearInboxToast, initInboxToasts, latestInboxToast } from '$lib/stores/inbox.store';
+	import {
+		clearInboxToast,
+		initInboxProgress,
+		initInboxToasts,
+		latestInboxToast
+	} from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -75,9 +80,18 @@
 		return clearTimers;
 	});
 
-	// Start the arrival-toast diff on mount, unsubscribe on destroy, so it
-	// only runs while the host is rendered (not at module scope).
-	onMount(() => initInboxToasts());
+	// Start the arrival-toast diff and the streak/level progress-marker
+	// maintenance on mount, unsubscribe both on destroy, so they only run
+	// while the host is rendered (not at module scope).
+	onMount(() => {
+		const stopToasts = initInboxToasts();
+		const stopProgress = initInboxProgress();
+
+		return () => {
+			stopToasts();
+			stopProgress();
+		};
+	});
 
 	const open = () => {
 		// The destination may be a dynamic path (e.g. `/markets/<id>` when the

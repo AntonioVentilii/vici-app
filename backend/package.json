@@ -1,0 +1,39 @@
+{
+	"name": "vici-app-backend",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"description": "VICI app backend API (Bun + Elysia + Postgres).",
+	"scripts": {
+		"dev": "bun run --watch src/index.ts",
+		"start": "bun run src/index.ts",
+		"worker": "bun run src/worker.ts",
+		"migrate": "bun run src/db/migrate.ts",
+		"typecheck": "tsc --noEmit",
+		"test": "bun test",
+		"etl:drain-auth": "bun run scripts/etl/drain-auth-identities.ts",
+		"etl:export": "bun run scripts/etl/export-collections.ts",
+		"etl:import": "bun run scripts/etl/import-collections.ts",
+		"etl:images": "bun run scripts/etl/migrate-league-images.ts",
+		"etl:verify": "bun run scripts/etl/verify-parity.ts"
+	},
+	"dependencies": {
+		"@dfinity/utils": "^4.2.1",
+		"@elysiajs/cors": "^1.4.0",
+		"@icp-sdk/canisters": "^3.5.2",
+		"@icp-sdk/core": "^5.4.0",
+		"@junobuild/core": "^5.4.0",
+		"@noble/curves": "^1.9.7",
+		"@noble/hashes": "^1.8.0",
+		"@scure/base": "^2.3.0",
+		"@scure/btc-signer": "^2.3.0",
+		"elysia": "^1.4.10",
+		"pg": "^8.16.3",
+		"sharp": "^0.35.3"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.3.5",
+		"@types/pg": "^8.15.6",
+		"typescript": "^5.9.2"
+	}
+}

@@ -208,8 +208,7 @@
 					locale: $localeStore,
 					key: 'market.metadata.translations.translation_placeholder'
 				})}
-				bind:value={descriptionInput}
-			></textarea>
+				bind:value={descriptionInput}></textarea>
 		</div>
 
 		<div class="translations-row">
@@ -228,8 +227,7 @@
 					locale: $localeStore,
 					key: 'market.metadata.translations.translation_placeholder'
 				})}
-				bind:value={resolutionInput}
-			></textarea>
+				bind:value={resolutionInput}></textarea>
 		</div>
 
 		{#each translatableOutcomes as outcome (outcome.id)}

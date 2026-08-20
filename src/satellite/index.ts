@@ -1,12 +1,24 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	AnalyticsSummarySchema,
+	AnalyticsUserStatsSchema,
+	DeleteAnalyticsEventsArgsSchema,
+	DeleteAnalyticsEventsResultSchema,
+	GetAnalyticsEventsArgsSchema,
+	GetAnalyticsEventsResultSchema,
+	GetAnalyticsProfileCreatedArgsSchema,
+	GetAnalyticsProfileCreatedResultSchema,
 	GetAnalyticsSummaryArgsSchema,
 	TrackEventsArgsSchema,
 	TrackEventsResultSchema
 } from '$lib/schema/analytics-event.schema';
 import {
+	GetAuthIdentitiesArgsSchema,
+	GetAuthIdentitiesResultSchema
+} from '$lib/schema/auth-identity.schema';
+import {
 	GetMarketMetadataArgsSchema,
+	GetMarketTagsResultSchema,
 	MarketMetadataSchema,
 	UpsertMarketMetadataArgsSchema
 } from '$lib/schema/market-metadata.schema';
@@ -26,6 +38,10 @@ import {
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema, FriendRequestOutcomeSchema } from '$lib/schema/relation.schema';
 import {
+	ListFriendResolvedResultsArgsSchema,
+	ResolvedResultSchema
+} from '$lib/schema/resolved-result.schema';
+import {
 	deleteMyAccountFn,
 	hibernateMyAccountFn,
 	listMyBlockingLeaguesFn,
@@ -40,15 +56,27 @@ import {
 } from '$satellite/services/activity-reaction-count.services';
 import { assertSetActivityReaction } from '$satellite/services/activity-reaction.services';
 import { assertSetActivity } from '$satellite/services/activity.services';
-import {
-	assertSetAffiliationStats,
-	onProfileSetForAffiliationStats
-} from '$satellite/services/affiliation-stats.services';
+import { assertSetAffiliationStats } from '$satellite/services/affiliation-stats.services';
 import {
 	assertDeleteAffiliation,
-	assertSetAffiliation
+	assertSetAffiliation,
+	onAffiliationDeleteForAnalytics,
+	onAffiliationSetForAnalytics
 } from '$satellite/services/affiliation.services';
-import { getAnalyticsSummaryFn, trackEventsFn } from '$satellite/services/analytics.services';
+import {
+	deleteAnalyticsEventsFn,
+	getAnalyticsEventsFn,
+	getAnalyticsProfileCreatedFn,
+	getAnalyticsSummaryFn,
+	getAnalyticsUserStatsFn,
+	onVxpAwardSetForAnalytics,
+	trackEventsFn
+} from '$satellite/services/analytics.services';
+import { getAuthIdentitiesFn } from '$satellite/services/auth-identity-export.services';
+import {
+	readBattleLiveScoreFn,
+	resolveBattleFromSettlementsFn
+} from '$satellite/services/battle-resolution.services';
 import { assertDeleteBattle, assertSetBattle } from '$satellite/services/battle.services';
 import {
 	getAffiliationStatsFn,
@@ -91,11 +119,16 @@ import {
 	upsertMarketMetadata as upsertMarketMetadataFn
 } from '$satellite/services/market-metadata.services';
 import {
+	getMarketTagsFn,
+	rebuildMarketTagIndexFn
+} from '$satellite/services/market-tag-index.services';
+import {
 	getMarketTranslation as getMarketTranslationFn,
 	listMarketTranslations as listMarketTranslationsFn,
 	listMarketTranslationsForLocales as listMarketTranslationsForLocalesFn,
 	upsertMarketTranslation as upsertMarketTranslationFn
 } from '$satellite/services/market-translation.services';
+import { assertSetProfilePrivate } from '$satellite/services/profile-private.services';
 import {
 	assertDailyGoalMonotonic,
 	assertValidNickname,
@@ -130,6 +163,11 @@ import {
 	rejectFriendRequest as rejectFriendRequestFn,
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
+import {
+	listFriendResolvedResultsFn,
+	onActivitySetForResolvedResults,
+	pruneResolvedResultsFn
+} from '$satellite/services/resolved-results.services';
 import { assertSetRole } from '$satellite/services/roles.services';
 import { submitSchoolFn, verifySchoolCodeFn } from '$satellite/services/school.services';
 import {
@@ -159,6 +197,7 @@ import {
 	onTradeActivityForVxpOnboarding
 } from '$satellite/services/vxp-onboarding.services';
 import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
+import { backfillStreakUnderpaymentsFn } from '$satellite/services/vxp-streak-backfill.services';
 import { claimWorldsPodiumPrizeFn } from '$satellite/services/vxp-worlds-podium.services';
 import {
 	AffiliationChampionshipWireSchema,
@@ -566,6 +605,62 @@ export const getAnalyticsSummary = defineQuery({
 	handler: (args) => getAnalyticsSummaryFn(args)
 });
 
+/**
+ * Admin-gated raw-event export for the cockpit warehouse: the next page of
+ * `events` after the given keyset cursor, flattened. Same admin gate as
+ * `getAnalyticsSummary` — restricted to the cockpit's reader principal.
+ */
+export const getAnalyticsEvents = defineQuery({
+	args: GetAnalyticsEventsArgsSchema,
+	result: GetAnalyticsEventsResultSchema,
+	handler: (args) => getAnalyticsEventsFn(args)
+});
+
+/**
+ * Admin-gated all-time registered-account count for the cockpit's
+ * "Registered" tile. Same admin gate as `getAnalyticsSummary` — restricted
+ * to the cockpit's reader principal. No args: the count is global.
+ */
+export const getAnalyticsUserStats = defineQuery({
+	result: AnalyticsUserStatsSchema,
+	handler: () => getAnalyticsUserStatsFn()
+});
+
+/**
+ * Admin-gated profile-created export for the cockpit warehouse: doc keys +
+ * envelope `created_at` (ns), keyset-paged by key. The TRUE sign-up series —
+ * the event stream only starts at capture and `signed_up` was single-path
+ * until #1112, so window cohorts need the profile envelope, not events. Same
+ * admin gate as the other analytics exports; no profile body field leaves.
+ */
+export const getAnalyticsProfileCreated = defineQuery({
+	args: GetAnalyticsProfileCreatedArgsSchema,
+	result: GetAnalyticsProfileCreatedResultSchema,
+	handler: (args) => getAnalyticsProfileCreatedFn(args)
+});
+
+// The cockpit's DRAIN step — delete a page of events after the warehouse has
+// durably ingested it, so the on-chain `events` collection stays a small buffer and
+// the export query never blows the instruction budget (IC0522). Admin-gated update.
+export const deleteAnalyticsEvents = defineUpdate({
+	args: DeleteAnalyticsEventsArgsSchema,
+	result: DeleteAnalyticsEventsResultSchema,
+	handler: (args) => deleteAnalyticsEventsFn(args)
+});
+
+/**
+ * Admin-gated export of the principal ⇄ sign-in-identity mapping: one row per
+ * `#user` doc (provider + consented OpenID email/name) joined with the
+ * best-effort `profiles.email`, keyset-paged by key. Exists so an off-chain
+ * system can match accounts to the same login elsewhere. Same admin gate as
+ * the analytics exports; deliberately exports addresses, admin-only.
+ */
+export const getAuthIdentities = defineQuery({
+	args: GetAuthIdentitiesArgsSchema,
+	result: GetAuthIdentitiesResultSchema,
+	handler: (args) => getAuthIdentitiesFn(args)
+});
+
 // ─── Social cohorts ─────────────────────────────────────────────
 
 export const listMyLeagues = defineQuery({
@@ -678,6 +773,40 @@ export const getMyBattleStats = defineQuery({
 		boutsWon: j.number()
 	}),
 	handler: () => getMyBattleStatsFn()
+});
+
+// Resolve a settled league battle from clearing settlement history
+// (controller-trusted). Idempotent + the lazy liveness path: the FE calls this
+// the first time a member of either side opens a settled battle. An `update`
+// because it reads the clearing canister and writes the resolved doc.
+export const resolveBattle = defineUpdate({
+	args: j.strictObject({ battleId: j.string() }),
+	result: j.strictObject({ battle: BattleWireSchema }),
+	handler: async ({ battleId }) => ({
+		battle: toWireBattle(await resolveBattleFromSettlementsFn({ battleId }))
+	})
+});
+
+// Provisional standings of an in-flight league battle, projected from the same
+// clearing settlement history over [kickoff, now). `score` is absent for a
+// battle that can't be scored live or for a non-member caller. An `update`
+// (not a query) because it makes an inter-canister call to clearing.
+export const readBattleLiveScore = defineUpdate({
+	args: j.strictObject({ battleId: j.string() }),
+	result: j.strictObject({
+		score: j.optional(
+			j.strictObject({
+				scoreA: j.number(),
+				scoreB: j.number(),
+				callsA: j.number(),
+				callsB: j.number(),
+				leader: j.enum(['A', 'B', 'draw'])
+			})
+		)
+	}),
+	handler: async ({ battleId }) => ({
+		score: await readBattleLiveScoreFn({ battleId })
+	})
 });
 
 // ─── Worlds affiliations ────────────────────────────────────────
@@ -1000,11 +1129,76 @@ export const sweepExpiredDeletions = defineUpdate({
 // concurrent-like version race (the hooks are best-effort) and backfills
 // counts for likes that predate the rollup. Admin-gated; `recomputed` is
 // the number of counter docs written.
+// One-time streak-underpayment backfill (#957 remediation). Admin-gated,
+// dryRun-default, idempotent. Remove in a follow-up PR after the prod run.
+export const backfillStreakUnderpayments = defineUpdate({
+	// `dryRun` is optional and defaults to `true` in the handler — omitting it
+	// is the safe report-only path; pass `false` to mint.
+	args: j.strictObject({ dryRun: j.optional(j.boolean()) }),
+	result: j.strictObject({
+		scanned: j.number(),
+		underpaid: j.number(),
+		alreadyBackfilled: j.number(),
+		minted: j.number(),
+		failed: j.number(),
+		totalShortfallBaseUnits: j.string()
+	}),
+	handler: async ({ dryRun }) => await backfillStreakUnderpaymentsFn({ dryRun })
+});
+
 export const recomputeActivityReactionCounts = defineUpdate({
 	result: j.strictObject({
 		recomputed: j.number()
 	}),
 	handler: () => recomputeActivityReactionCountsFn()
+});
+
+// Admin-only: re-derive the `market_tag_index` buckets from a single scan of
+// `market_metadata`. Run once after deploy to backfill the index for markets
+// that predate it; also heals any drift from a concurrent-write version race.
+export const rebuildMarketTagIndex = defineUpdate({
+	result: j.strictObject({
+		buckets: j.number(),
+		series: j.number()
+	}),
+	handler: () => rebuildMarketTagIndexFn()
+});
+
+/**
+ * Admin-gated read of every `market_tag_index` bucket (`tag → seriesIds`) for
+ * the cockpit — it classifies markets (sport vs non-sport) for the campaign
+ * hypothesis register. Same admin gate as the analytics exports. Seven keyed
+ * reads, never a collection scan.
+ */
+export const getMarketTags = defineQuery({
+	result: GetMarketTagsResultSchema,
+	handler: () => getMarketTagsFn()
+});
+
+// Friend-scoped bulk read for the resolved-results digest (the consumer that
+// renders these rows ships separately). Returns the supplied friend set's
+// resolved-result rows over the active retention window in ONE bounded
+// owner-prefix scan — never one call per friend. Public read; the FE scopes the
+// `friends` set to the caller's confirmed friends.
+export const listFriendResolvedResults = defineQuery({
+	args: ListFriendResolvedResultsArgsSchema,
+	result: j.strictObject({
+		items: j.array(ResolvedResultSchema)
+	}),
+	handler: ({ friends }) => ({
+		items: listFriendResolvedResultsFn({ friends })
+	})
+});
+
+// Retention cleanup for `resolved_results` — prunes rows older than the
+// configured horizon. Admin-gated; Juno has no scheduler so this is triggered
+// externally (admin/cron), mirroring `sweepExpiredDeletions`. `pruned` is the
+// number of rows removed.
+export const pruneResolvedResults = defineUpdate({
+	result: j.strictObject({
+		pruned: j.number()
+	}),
+	handler: () => pruneResolvedResultsFn()
 });
 
 // Monthly tournament — Proposal 3. The draw is fire-and-forget on
@@ -1180,6 +1374,7 @@ const assertSetDocCollections = [
 	Collection.ACTIVITIES,
 	Collection.ACTIVITY_REACTIONS,
 	Collection.PROFILES,
+	Collection.PROFILE_PRIVATE,
 	Collection.ROLES,
 	Collection.REFERRAL_CODES,
 	Collection.REFERRALS,
@@ -1206,6 +1401,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.ACTIVITIES]: assertSetActivity,
 			[Collection.ACTIVITY_REACTIONS]: assertSetActivityReaction,
 			[Collection.PROFILES]: assertProfile,
+			[Collection.PROFILE_PRIVATE]: assertSetProfilePrivate,
 			[Collection.ROLES]: assertSetRole,
 			[Collection.REFERRAL_CODES]: assertSetReferralCode,
 			[Collection.REFERRALS]: assertSetReferral,
@@ -1255,7 +1451,9 @@ const setDocCollections = [
 	Collection.ROLES,
 	Collection.REFERRALS,
 	Collection.LEAGUES,
-	Collection.USER_STATS
+	Collection.USER_STATS,
+	Collection.VXP_AWARDS,
+	Collection.AFFILIATIONS
 ] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
@@ -1273,16 +1471,18 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onProfileSetForFlowMilestone(context);
 	await onProfileSetForAchievementAward(context);
 	await onProfileSetForComebackRestore(context);
-	onProfileSetForAffiliationStats(context);
 	onProfileSetForLeagueStats(context);
 };
 
 // A trade activity drives both the new-user onboarding milestones and the referral first-prediction
-// payout. Onboarding runs first; referral settlement is best-effort (it logs and swallows its own
-// errors) so it can't disrupt the onboarding payout.
+// payout; a settlement activity fans out the per-participant `resolved_results` rows. Onboarding
+// runs first; the others are best-effort (each logs and swallows its own errors) so they can't
+// disrupt the onboarding payout. Each sub-hook self-filters on the activity type, so the composition
+// stays a single dispatch entry.
 const onActivitySetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onTradeActivityForVxpOnboarding(context);
 	await onTradeActivityForReferral(context);
+	await onActivitySetForResolvedResults(context);
 };
 
 export const onSetDoc = defineHook<OnSetDoc>({
@@ -1295,14 +1495,24 @@ export const onSetDoc = defineHook<OnSetDoc>({
 			[Collection.ROLES]: syncRoleToEngineOnSet,
 			[Collection.REFERRALS]: onReferralSetForVxpPayout,
 			[Collection.LEAGUES]: onLeagueSetForFounderVxpPayout,
-			[Collection.USER_STATS]: onUserStatsSetForLeagueStats
+			[Collection.USER_STATS]: onUserStatsSetForLeagueStats,
+			// Server-side capture: every VXP payout (any award service) emits
+			// `vxp_awarded` (+ `streak_milestone`) on its pending→paid transition.
+			[Collection.VXP_AWARDS]: onVxpAwardSetForAnalytics,
+			// Server-side capture: a Worlds join (client `setDoc`) emits
+			// `affiliation_set` on row creation.
+			[Collection.AFFILIATIONS]: onAffiliationSetForAnalytics
 		};
 
 		await fn[context.data.collection]?.(context);
 	}
 });
 
-const deleteDocCollections = [Collection.ROLES, Collection.ACTIVITY_REACTIONS] as const;
+const deleteDocCollections = [
+	Collection.ROLES,
+	Collection.ACTIVITY_REACTIONS,
+	Collection.AFFILIATIONS
+] as const;
 
 type OnDeleteDocCollection = (typeof deleteDocCollections)[number];
 
@@ -1311,7 +1521,10 @@ export const onDeleteDoc = defineHook<OnDeleteDoc>({
 	run: async (context) => {
 		const fn: Record<OnDeleteDocCollection, RunFunction<OnDeleteDocContext>> = {
 			[Collection.ROLES]: syncRoleToEngineOnDelete,
-			[Collection.ACTIVITY_REACTIONS]: onActivityReactionDelete
+			[Collection.ACTIVITY_REACTIONS]: onActivityReactionDelete,
+			// Server-side capture: a Worlds leave (client `deleteDoc`, only
+			// reachable past the 90-day lock) emits `affiliation_removed`.
+			[Collection.AFFILIATIONS]: onAffiliationDeleteForAnalytics
 		};
 
 		await fn[context.data.collection]?.(context);

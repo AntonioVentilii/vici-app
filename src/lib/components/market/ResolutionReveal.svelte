@@ -34,6 +34,29 @@
 
 	const { data, onReview, onDismiss }: Props = $props();
 
+	// Ceiling on the title-skeleton wait: past it the rows render with
+	// whatever titles resolved (fallback included), so a failed catalog or
+	// translation fetch can't pin the skeletons forever.
+	const TITLES_WAIT_CAP_MS = 8_000;
+
+	let titlesWaitElapsed = $state(false);
+
+	$effect(() => {
+		if (!data.titlesLoading) {
+			return;
+		}
+
+		const cap = setTimeout(() => {
+			titlesWaitElapsed = true;
+		}, TITLES_WAIT_CAP_MS);
+
+		return () => {
+			clearTimeout(cap);
+		};
+	});
+
+	const titlesPending = $derived(data.titlesLoading && !titlesWaitElapsed);
+
 	const positive = $derived(data.netVxp >= 0);
 	// Any right call earns the celebration hit, even on a net-negative batch
 	// (the burst itself only fires when `positive` too — see the template).
@@ -174,7 +197,16 @@
 							: ''}"
 				>
 					<span class="reso-row-side {it.sideKey}">{it.side}</span>
-					<span class="reso-row-q">{it.question}</span>
+					{#if titlesPending}
+						<span
+							class="reso-row-q-skeleton"
+							aria-busy="true"
+							aria-label={t({ locale: $localeStore, key: 'ui.loading' })}
+							role="status"
+						></span>
+					{:else}
+						<span class="reso-row-q">{it.question}</span>
+					{/if}
 					<span class="reso-row-out num {it.result}">
 						{it.net > 0
 							? `+${formatWholeVxpMagnitude(it.net)}`

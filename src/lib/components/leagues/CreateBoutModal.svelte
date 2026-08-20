@@ -5,7 +5,6 @@
 	import { resolve } from '$app/paths';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { track } from '$lib/services/analytics.services';
 	import {
@@ -34,11 +33,11 @@
 	 * Steps (steps the caller sees collapse when the data is
 	 * unambiguous):
 	 *
-	 *  1. Pick your league — only the leagues the caller owns can send a
-	 *     challenge (the satellite assert hard-rejects non-owners). Auto-
-	 *     skipped when the caller owns exactly one league or when
-	 *     `fromLeagueId` pins the challenger; the empty state routes to
-	 *     Leagues when they own none.
+	 *  1. Pick your league — only the leagues the caller owns or admins
+	 *     can send a challenge (the satellite assert hard-rejects everyone
+	 *     else). Auto-skipped when the caller owns/admins exactly one league
+	 *     or when `fromLeagueId` pins the challenger; the empty state routes
+	 *     to Leagues when they have none.
 	 *  2. Opponent — a searchable list of challengeable leagues
 	 *     (`listChallengeableLeagues`): public leagues plus the caller's
 	 *     own memberships, minus the leagues the caller owns. The caller
@@ -70,13 +69,12 @@
 	const DURATIONS = [7, 14, 30] as const;
 	type Duration = (typeof DURATIONS)[number];
 
-	// Scope options surfaced in the picker — `all` plus the two
-	// category narrowings the design highlights. Labels reuse the
-	// canonical market-tag catalog so they never drift.
+	// Scope options surfaced in the picker — `all` plus the two macro
+	// narrowings the design highlights, labelled via the macro catalog.
 	const SCOPE_OPTIONS: readonly { value: BattleScope; key: MessageKey }[] = [
 		{ value: 'all', key: 'battles.create.scope_all' },
-		{ value: 'wc', key: MARKET_TAG_LABEL_KEYS.wc },
-		{ value: 'macro', key: MARKET_TAG_LABEL_KEYS.macro }
+		{ value: 'sports', key: 'market.macro.sports' },
+		{ value: 'economy', key: 'market.macro.economy' }
 	];
 
 	// Start as 'loading' so the first open shows the spinner immediately
@@ -144,7 +142,7 @@
 
 		try {
 			const [mine, opponents] = await Promise.all([listMyLeagues(), listChallengeableLeagues()]);
-			ownedLeagues = mine.filter((m) => m.role === 'owner');
+			ownedLeagues = mine.filter((m) => m.role === 'owner' || m.role === 'admin');
 			challengeable = opponents;
 
 			fromLeague = pickDefaultFromLeague();

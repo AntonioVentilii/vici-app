@@ -37,23 +37,24 @@ export interface LeagueDoc {
 	 */
 	emblem?: string;
 	/**
-	 * Three-way visibility, set at creation and owner-mutable thereafter
+	 * Two-way visibility, set at creation and owner-mutable thereafter
 	 * (the owner can tighten or loosen a league's visibility; see the
 	 * assert and `updateLeague`):
 	 *
 	 * - {@link LeaguePrivacy.PRIVATE} — hidden; reachable only by invite
-	 *   code, never surfaced in any public list or recommendation.
-	 * - {@link LeaguePrivacy.INVITE} — NOT publicly listed; still
-	 *   recommendable to a member's friends. Reachable by invite code.
-	 * - {@link LeaguePrivacy.OPEN} — publicly listed; surfaced in challenge
-	 *   pools and friend recommendations to anyone. Still joined by invite
-	 *   code (privacy gates discovery, not the join).
+	 *   code, never surfaced in any public list, recommendation, or
+	 *   challenge pool.
+	 * - {@link LeaguePrivacy.OPEN} — discoverable; surfaced in challenge
+	 *   pools, recommendations, and public lists to anyone. Still joined by
+	 *   invite code (privacy gates discovery, not the join).
 	 *
 	 * Absent on legacy rows written before this field shipped — callers
 	 * treat absent as {@link LeaguePrivacy.OPEN} (the legacy
 	 * `private === false/undefined` default). The legacy boolean's
-	 * `private === true` maps to {@link LeaguePrivacy.INVITE} (it carried
-	 * an invite code and was hidden from public lists).
+	 * `private === true`, and any row persisted under the retired
+	 * invite-only tier, both resolve to {@link LeaguePrivacy.PRIVATE} (they
+	 * were hidden from public lists), so a hidden league is never leaked as
+	 * Open.
 	 */
 	privacy?: LeaguePrivacy;
 	/**
@@ -144,51 +145,58 @@ export const LEAGUE_NAME_MAX_LENGTH = 40;
 export const LEAGUE_DESCRIPTION_MAX_LENGTH = 240;
 
 /**
- * Default privacy for a newly created league + the fallback for legacy
- * rows that predate the field. The create surface defaults to
- * {@link LeaguePrivacy.INVITE} (matching the design), but a row with no
- * stored value reads as {@link LeaguePrivacy.OPEN} — that is what the
- * legacy `private === false/undefined` meant (publicly listed).
+ * Fallback privacy for legacy rows that predate the `privacy` field —
+ * NOT the default applied to newly created leagues (that default lives
+ * on the create surface and the `createLeague` service, which both pick
+ * {@link LeaguePrivacy.OPEN}). A legacy row with no stored value reads
+ * as {@link LeaguePrivacy.OPEN}, matching what the old
+ * `private === false/undefined` meant (publicly listed).
  */
 export const LEAGUE_PRIVACY_LEGACY_FALLBACK = LeaguePrivacy.OPEN;
 
 /**
  * A league shape readable for its effective privacy: the current
  * `privacy` field, plus the optional legacy `private` boolean still
- * carried by rows written before the 3-way model.
+ * carried by rows written before the typed model.
  */
 type LeaguePrivacyReadable = Pick<LeagueDoc, 'privacy'> & { private?: boolean };
 
 /**
  * Resolve a league's effective privacy. Single source of truth for every
- * visibility / recommendation decision. Legacy rows (no `privacy`) map
- * from the old boolean: `private === true` carried an invite code + was
- * hidden from public lists → {@link LeaguePrivacy.INVITE} (so a legacy
- * private league is NEVER leaked as Open); otherwise →
+ * visibility / recommendation decision.
+ *
+ * Normalizes the retired invite-only tier: a stored `privacy === 'invite'`
+ * (persisted under the old three-way model) collapses to
+ * {@link LeaguePrivacy.PRIVATE} — it was hidden from public lists, so it
+ * must never leak as Open, and the value is no longer a member of the
+ * narrowed enum / Candid variant.
+ *
+ * Legacy rows with no `privacy` map from the old boolean: `private === true`
+ * carried an invite code + was hidden from public lists →
+ * {@link LeaguePrivacy.PRIVATE}; otherwise →
  * {@link LEAGUE_PRIVACY_LEGACY_FALLBACK} (Open, the old public default).
  */
 export const leaguePrivacy = (league: LeaguePrivacyReadable): LeaguePrivacy => {
 	if (nonNullish(league.privacy)) {
-		return league.privacy;
+		return (league.privacy as string) === 'invite' ? LeaguePrivacy.PRIVATE : league.privacy;
 	}
 
-	return league.private === true ? LeaguePrivacy.INVITE : LEAGUE_PRIVACY_LEGACY_FALLBACK;
+	return league.private === true ? LeaguePrivacy.PRIVATE : LEAGUE_PRIVACY_LEGACY_FALLBACK;
 };
 
 /**
  * Whether a league appears in public, non-member-scoped lists (challenge
  * pools, the open directory). Only {@link LeaguePrivacy.OPEN} leagues are
- * publicly listed; invite-only and private leagues are reachable by code
- * only.
+ * publicly listed; {@link LeaguePrivacy.PRIVATE} leagues are reachable by
+ * code only.
  */
 export const isLeaguePubliclyListed = (league: LeaguePrivacyReadable): boolean =>
 	leaguePrivacy(league) === LeaguePrivacy.OPEN;
 
 /**
  * Whether a league may be surfaced to a member's friends in the
- * friend-recommendations row. Both {@link LeaguePrivacy.OPEN} and
- * {@link LeaguePrivacy.INVITE} leagues qualify (invite-only is a code
- * gate, not secrecy); {@link LeaguePrivacy.PRIVATE} is never recommended.
+ * friend-recommendations row. Only {@link LeaguePrivacy.OPEN} leagues
+ * qualify; {@link LeaguePrivacy.PRIVATE} (hidden) is never recommended.
  */
 export const isLeagueRecommendableToFriends = (league: LeaguePrivacyReadable): boolean =>
-	leaguePrivacy(league) !== LeaguePrivacy.PRIVATE;
+	leaguePrivacy(league) === LeaguePrivacy.OPEN;

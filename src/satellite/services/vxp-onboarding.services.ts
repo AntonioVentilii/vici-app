@@ -408,7 +408,8 @@ const payOutMilestoneIfNeeded = async ({
 					}
 				});
 				throw new Error(
-					`Failed to persist ${mk} after transfer (user=${userKey}, ok=${result.ok})`
+					`Failed to persist ${mk} after transfer (user=${userKey}, ok=${result.ok})`,
+					{ cause: e }
 				);
 			}
 

@@ -25,14 +25,24 @@ export enum TestId {
 	MarketCardSkeleton = 'market-card-skeleton',
 	MarketTimeRemaining = 'market-time-remaining',
 	PrincipalDisplay = 'principal-display',
-	// Onboarding (the `/signup` 3-beat flow): the outer wrapper, Beat 1.a's
-	// "skip team" link, Beat 1.b's swipeable first-call card, Beat 2's pool
-	// handle suggestions + "pick later" skip, and the shared primary CTA
-	// (Beat 2 claim / Beat 3 finish).
-	OnboardingFlow = 'onboarding-flow',
-	OnboardingTeamSkip = 'onboarding-team-skip',
-	OnboardingCard = 'onboarding-card',
-	OnboardingHandleSuggestion = 'onboarding-handle-suggestion',
+	// Onboarding (`/signup`): the outer wrapper, the handle input, the skip
+	// escape, and the primary CTA (claim / finish).
+	Onboarding = 'onboarding',
+	OnboardingHandleInput = 'onboarding-handle-input',
 	OnboardingHandleSkip = 'onboarding-handle-skip',
-	OnboardingPrimary = 'onboarding-primary'
+	OnboardingPrimary = 'onboarding-primary',
+	// Admin resolutions page (`/admin/resolutions`): the pending-list and
+	// history sections, the list's search input, each pending market card
+	// (also tagged with `data-market-id` so a specific market is
+	// addressable), its YES / NO resolve buttons, and the confirm dialog
+	// with its cancel / confirm controls.
+	AdminResolutionList = 'admin-resolution-list',
+	AdminResolutionHistory = 'admin-resolution-history',
+	AdminResolutionSearch = 'admin-resolution-search',
+	AdminResolutionCard = 'admin-resolution-card',
+	AdminResolutionResolveYes = 'admin-resolution-resolve-yes',
+	AdminResolutionResolveNo = 'admin-resolution-resolve-no',
+	AdminResolutionConfirmDialog = 'admin-resolution-confirm-dialog',
+	AdminResolutionConfirmCancel = 'admin-resolution-confirm-cancel',
+	AdminResolutionConfirmCta = 'admin-resolution-confirm-cta'
 }

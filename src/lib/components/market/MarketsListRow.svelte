@@ -6,7 +6,6 @@
 	import MarketTranslationToggle from '$lib/components/market/MarketTranslationToggle.svelte';
 	import ProbBar from '$lib/components/ui/ProbBar.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { track } from '$lib/services/analytics.services';
@@ -29,7 +28,7 @@
 	 */
 	interface Props {
 		market: Market;
-		tag?: MarketTag;
+		tag?: string;
 	}
 
 	const { market, tag }: Props = $props();

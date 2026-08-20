@@ -78,7 +78,7 @@
 			0 0 32px var(--laurel-glow),
 			var(--shadow-card);
 		animation:
-			xpPopBonus 1.8s var(--ease-vici) forwards,
+			xpPopBonus 2.6s var(--ease-vici) forwards,
 			none;
 	}
 	.xp-pop-copy {

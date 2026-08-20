@@ -1,0 +1,28 @@
+# VICI SPA (static, nginx) on Fly.io. Sibling to the backend app
+# (vici-app-backend); see Dockerfile.web. Not wired into any deploy yet; the
+# manual workflow is .github/workflows/web2-deploy.yml.
+app = "vici-app-web"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile.web"
+  [build.args]
+    # Web2 seam placeholders: empty keeps the bundle on the current stack.
+    VITE_WEB2_API_URL = ""
+    VITE_BACKEND = ""
+
+# Keep one machine warm: the SPA gets no benefit from scale-to-zero, and a
+# cold-stopped machine that wedges is invisible to Fly without a health check.
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+# nginx serves index.html on `/` (HTTP 200), so `/` doubles as the liveness probe.
+[[http_service.checks]]
+  method = "get"
+  path = "/"
+  interval = "15s"
+  timeout = "2s"

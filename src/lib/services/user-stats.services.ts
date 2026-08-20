@@ -1,7 +1,7 @@
 import type * as ClearingDid from '$declarations/clearing/clearing';
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
-import { MARKET_TAGS, isMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
+import { MACRO_IDS, primaryMacro, type MacroId } from '$lib/constants/market-taxonomy.constants';
 import type { MarketMetadata } from '$lib/types/market-metadata';
 import {
 	USER_STATS_RECENT_LIMIT,
@@ -12,6 +12,8 @@ import {
 import { CONTRARIAN_PRICE_THRESHOLD } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { eventExecutionPrice, isSettledEvent } from '$lib/utils/resolved-position.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import { getUserStats as getUserStatsWeb2 } from '$lib/web2/client';
 import { isNullish } from '@dfinity/utils';
 import { getDoc, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
@@ -44,33 +46,27 @@ import type { PrincipalText } from '@junobuild/schema';
 const emptyCategoryStats = (): Record<string, CategoryStatsBucket> => {
 	const out: Record<string, CategoryStatsBucket> = {};
 
-	for (const tag of MARKET_TAGS) {
-		out[tag] = { calls: 0, wins: 0 };
+	for (const macro of MACRO_IDS) {
+		out[macro] = { calls: 0, wins: 0 };
 	}
 
 	return out;
 };
 
-const tagForSeries = ({
+const macroForSeries = ({
 	seriesId,
 	metadata
 }: {
 	seriesId: string;
 	metadata: Record<string, MarketMetadata> | undefined;
-}): MarketTag | '' => {
+}): MacroId | '' => {
 	const meta = metadata?.[seriesId];
 
 	if (isNullish(meta)) {
 		return '';
 	}
 
-	for (const tag of meta.tags) {
-		if (isMarketTag(tag)) {
-			return tag;
-		}
-	}
-
-	return '';
+	return primaryMacro(meta.tags) ?? '';
 };
 
 /**
@@ -114,12 +110,12 @@ export const computeUserStatsSnapshot = ({
 	const settled = history.filter(isSettledEvent);
 
 	for (const event of settled) {
-		const tag = tagForSeries({ seriesId: event.series_id, metadata });
+		const macro = macroForSeries({ seriesId: event.series_id, metadata });
 
 		// Skip untagged markets (they aren't in any category bucket);
-		// the categories tile only renders the known tags anyway.
-		if (tag !== '') {
-			const bucket = categoryStats[tag];
+		// the categories tile only renders the known macros anyway.
+		if (macro !== '') {
+			const bucket = categoryStats[macro];
 			bucket.calls += 1;
 
 			if (event.qty > ZERO) {
@@ -137,7 +133,7 @@ export const computeUserStatsSnapshot = ({
 
 			return {
 				marketId: event.series_id,
-				tag: tagForSeries({ seriesId: event.series_id, metadata }),
+				tag: macroForSeries({ seriesId: event.series_id, metadata }),
 				win,
 				settledAtMs: Number(event.timestamp / 1_000_000n),
 				vxp: settlementVxp(event),
@@ -191,6 +187,10 @@ export const persistMyUserStats = async (snapshot: UserStatsDoc): Promise<void> 
 export const loadMyUserStats = async (
 	principal: PrincipalText
 ): Promise<UserStatsDoc | undefined> => {
+	if (isWeb2Backend()) {
+		return getUserStatsWeb2();
+	}
+
 	const doc = await getDoc<UserStatsDoc>({
 		collection: Collection.USER_STATS,
 		key: principal

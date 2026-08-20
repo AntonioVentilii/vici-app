@@ -169,8 +169,7 @@
 						locale: $localeStore,
 						key: 'market.resolution.placeholder.text'
 					})}
-					bind:value={resolutionText}
-				></textarea>
+					bind:value={resolutionText}></textarea>
 			</div>
 
 			<div class="space-y-2">

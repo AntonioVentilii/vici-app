@@ -316,10 +316,7 @@ const seedFirstRoundPairs = (
 };
 
 export type TriggerTournamentDrawRefusalReason =
-	| 'already_drawn'
-	| 'month_not_started'
-	| 'insufficient_leagues'
-	| 'invalid_input';
+	'already_drawn' | 'month_not_started' | 'insufficient_leagues' | 'invalid_input';
 
 export interface TriggerTournamentDrawResult {
 	ok: boolean;
@@ -1057,9 +1054,7 @@ const propagateWinnerToNextRound = ({
 // ─── Prize claim ─────────────────────────────────────────────────
 
 export type ClaimTournamentPrizeRefusalReason =
-	| 'tournament_not_found'
-	| 'tournament_not_concluded'
-	| 'not_member_of_top_league';
+	'tournament_not_found' | 'tournament_not_concluded' | 'not_member_of_top_league';
 
 export interface ClaimTournamentPrizeResult {
 	ok: boolean;

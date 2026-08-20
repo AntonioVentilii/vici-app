@@ -6,9 +6,11 @@ import {
 	submitLimitOrder,
 	submitMarketOrder
 } from '$lib/api/clearing.api';
+import { MarketClosedError } from '$lib/canisters/clearing.errors';
 import { PRICE_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import { logActivity } from '$lib/services/activity.services';
+import { track } from '$lib/services/analytics.services';
 import {
 	getIdentity,
 	getIdentityOrAnonymous,
@@ -112,7 +114,8 @@ export const placeOrder = async ({
 	type,
 	price,
 	qty,
-	outcome
+	outcome,
+	expiryDate
 }: {
 	marketId: MarketId;
 	marketTitle: string;
@@ -121,7 +124,17 @@ export const placeOrder = async ({
 	price: number;
 	qty: bigint;
 	outcome: Outcome;
+	expiryDate: bigint;
 }): Promise<void> => {
+	// Stopgap expiry gate. The deck/catalog is filtered `only_unexpired` at
+	// fetch time, but the clearing engine has no expiry check (its `TradeError`
+	// has no `Expired` variant — it only rejects settled series), so a deck
+	// opened just before kickoff could submit after it. Reject at/after the
+	// market's expiry until icdc-core enforces this server-side.
+	if (BigInt(Date.now()) >= expiryDate) {
+		throw new MarketClosedError();
+	}
+
 	// Sizing rounds the stake down to whole contracts (`amountUsd / priceUsd`),
 	// so a stake smaller than one contract's price arrives here as zero —
 	// reject it before any state changes or activity logging.
@@ -261,6 +274,21 @@ export const placeOrder = async ({
 
 	refreshAllBalances();
 
+	// Behavioural telemetry for the cockpit — every REAL trade goes through here
+	// (the flow deck's guest picks emit separately). `value` is the VXP at stake
+	// (contracts × price of the chosen outcome); a resting limit order reports its
+	// full placed size, a market order the actually-executed fill.
+	if (filledQty > ZERO || type === 'LIMIT') {
+		track({
+			name:
+				type === 'LIMIT' ? 'order_placed' : side === 'BUY' ? 'position_taken' : 'position_closed',
+			marketId,
+			label: outcome,
+			count: Number(filledQty),
+			value: Number(filledQty) * normalizedPrice
+		});
+	}
+
 	try {
 		const userText = identity.getPrincipal().toText();
 		await logActivity({
@@ -288,6 +316,8 @@ export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 			order_id: orderId
 		}
 	});
+
+	track({ name: 'order_cancelled' });
 
 	refreshPositions();
 

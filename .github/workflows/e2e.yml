@@ -28,13 +28,14 @@ jobs:
       e2e-or-config-changed: ${{ steps.change.outputs.e2e }}
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: change
         with:
+          base: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_ref || '' }}
           filters: |
             e2e:
               - playwright.config.ts
@@ -61,7 +62,9 @@ jobs:
     needs: check-e2e-changes
     # Skip the suite on PRs / merge-group when no E2E-relevant file changed,
     # unless the PR carries the `run-e2e-snapshots` opt-in label. Push / cron
-    # / workflow_dispatch always run.
+    # / workflow_dispatch always run. The label leg is pull_request-only:
+    # `merge_group` has no PR payload, and it could not commit a rewrite back
+    # from the queue anyway.
     if: >-
       (github.event_name != 'pull_request' && github.event_name != 'merge_group') ||
       (
@@ -89,7 +92,7 @@ jobs:
         if: >-
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           persist-credentials: false
@@ -98,7 +101,7 @@ jobs:
         if: >-
           github.event_name != 'pull_request' ||
           github.event.pull_request.head.repo.full_name != github.repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -161,7 +164,7 @@ jobs:
 
       - name: Deploy icdc-core canisters
         # Mirrors the local `npm run deploy` flow: dfx pulls the icdc-core
-        # WASMs from the AntonioVentilii/icdc-core / vici-points / vici-icrc
+        # WASMs from the AntonioVentilii/icdc-core, ViciApp/vici-points and ViciApp/vici-icrc
         # GitHub releases (see scripts/build/download.*.sh) and installs
         # them into the PocketIC instance the emulator is already running.
         # After this, the registry / clearing / vUSD / VXP / vici / cketh /
@@ -247,7 +250,7 @@ jobs:
         if: >-
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           persist-credentials: false
@@ -256,7 +259,7 @@ jobs:
         if: >-
           github.event_name != 'pull_request' ||
           github.event.pull_request.head.repo.full_name != github.repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -305,16 +308,21 @@ jobs:
           echo "$MODIFIED_FILES" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
+      - name: Mint app token
+        id: app-token
+        if: env.FINAL_CHANGES == 'true' && github.ref == 'refs/heads/main'
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.PR_AUTOMATION_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
       # On `main`, the workflow can't push directly to a protected branch, so
-      # open a follow-up PR with the snapshot diff. Note: PRs created with the
-      # default `GITHUB_TOKEN` do not retrigger downstream workflows, so the
-      # opened PR's own CI will need a manual nudge (close/reopen or empty
-      # commit). Switching to a GitHub App token would lift that.
+      # open a follow-up PR with the snapshot diff.
       - name: Create Pull Request (if changes and on main)
         if: env.FINAL_CHANGES == 'true' && github.ref == 'refs/heads/main'
         uses: ./.github/actions/create-pr
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           branch: bot-e2e-update-snapshots
           paths: e2e/
           title: 'chore(e2e): Update Playwright E2E Snapshots'

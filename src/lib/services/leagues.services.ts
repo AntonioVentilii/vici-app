@@ -3,6 +3,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
 import { authPrincipal } from '$lib/derived/user.derived';
 import { LeaguePrivacy } from '$lib/enums/league';
+import { track } from '$lib/services/analytics.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getMyReferralCode } from '$lib/services/referral.services';
 import { leagueDirectoryStore } from '$lib/stores/league-directory.store';
@@ -12,11 +13,10 @@ import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
 	BATTLE_WAGER_MAX,
 	BATTLE_WAGER_MIN,
-	battleAccuracyPct,
-	deriveBattleWinner,
 	isBattleScope,
 	type BattleDoc,
-	type BattleScope
+	type BattleScope,
+	type BattleWinner
 } from '$lib/types/battle';
 import {
 	LEAGUE_DESCRIPTION_MAX_LENGTH,
@@ -351,7 +351,7 @@ export const createLeague = async ({
 	description,
 	accentColor,
 	emblem,
-	privacy = LeaguePrivacy.INVITE,
+	privacy = LeaguePrivacy.OPEN,
 	inviteCode
 }: {
 	name: string;
@@ -365,8 +365,10 @@ export const createLeague = async ({
 	 *  everywhere the league is rendered. */
 	emblem?: string;
 	/** Three-way visibility the owner picked in the create sheet.
-	 *  Defaults to Invite-only (the design default); persisted on the
-	 *  league doc and surfaced as the detail header's privacy chip. */
+	 *  Defaults to {@link LeaguePrivacy.OPEN} (the create surface's
+	 *  default — new leagues are publicly listed and battle-eligible);
+	 *  persisted on the league doc and surfaced as the detail header's
+	 *  privacy chip. */
 	privacy?: LeaguePrivacy;
 	/** Pre-generated 6-char invite code. The create sheet surfaces the
 	 *  code to the owner before submit (so they can share it), so it
@@ -442,7 +444,7 @@ export const createLeague = async ({
  * char window the create flow enforces; an invalid name throws before
  * any write). Pass `privacy` to change the league's visibility (any of
  * the three variants; the assert range-checks it). Pass `imageUrl` to
- * set or change the cover image, or `null` to clear it (the field is
+ * set or change the cover image, or `''` to clear it (the field is
  * dropped from the doc so a cover-less league carries an absent field,
  * matching the assert's non-empty rule). Omitting a field leaves it
  * untouched.
@@ -463,8 +465,8 @@ export const updateLeague = async ({
 	name?: string;
 	/** New three-way visibility, or omitted to leave as-is. */
 	privacy?: LeaguePrivacy;
-	/** New cover-image URL, `null` to clear, or omitted to leave as-is. */
-	imageUrl?: string | null;
+	/** New cover-image URL, `''` to clear, or omitted to leave as-is. */
+	imageUrl?: string;
 }): Promise<LeagueDoc> => {
 	const existing = await getDoc<LeagueDoc>({
 		collection: Collection.LEAGUES,
@@ -494,7 +496,7 @@ export const updateLeague = async ({
 	}
 
 	if (nonNullish(imageUrl)) {
-		const trimmedImageUrl = imageUrl?.trim() ?? '';
+		const trimmedImageUrl = imageUrl.trim();
 
 		if (trimmedImageUrl.length === 0) {
 			delete next.imageUrl;
@@ -630,6 +632,8 @@ export const joinLeagueByInvite = async ({
 		}
 	});
 
+	track({ name: 'league_joined', leagueId: league.id, source: 'invite' });
+
 	return league;
 };
 
@@ -689,6 +693,52 @@ export const transferLeagueOwnership = ({
 	newOwnerPrincipal: string;
 }): Promise<TransferLeagueOwnershipResult> =>
 	functions.transferLeagueOwnership({ leagueId, newOwnerPrincipal });
+
+/**
+ * Set a member's role inside a league — the owner-driven promote
+ * (`member → admin`) / demote (`admin → member`) control. Re-reads the
+ * existing membership row to round-trip the server's `version` token and
+ * to carry the immutable identity fields (`leagueId`, `member`,
+ * `joinedAtMs`) verbatim, then writes back the same row with the new
+ * `role`.
+ *
+ * Owner-gated server-side: the `league_members` assert rejects a
+ * role-change write from any caller that isn't the league owner, so the
+ * owner-only UI guard is a convenience, not the authority. `'owner'` is
+ * never a target here — promotion only ever toggles `member ↔ admin`; the
+ * owner role is reserved for the league's owner principal.
+ */
+export const setMemberRole = async ({
+	leagueId,
+	memberPrincipal,
+	role
+}: {
+	leagueId: string;
+	memberPrincipal: string;
+	role: Extract<LeagueMemberRole, 'admin' | 'member'>;
+}): Promise<void> => {
+	const key = leagueMemberKey({ leagueId, memberPrincipal });
+
+	const existing = await getDoc<LeagueMemberDoc>({
+		collection: Collection.LEAGUE_MEMBERS,
+		key
+	});
+
+	if (!existing) {
+		throw new Error('Member is no longer in this league.');
+	}
+
+	const next: LeagueMemberDoc = { ...existing.data, role };
+
+	await setDoc<LeagueMemberDoc>({
+		collection: Collection.LEAGUE_MEMBERS,
+		doc: {
+			key,
+			data: next,
+			version: existing.version
+		}
+	});
+};
 
 // ─── Battles ───────────────────────────────────────────────────────────────
 
@@ -1079,79 +1129,18 @@ export const retractBattle = async ({ battle }: { battle: BattleDoc }): Promise<
 };
 
 /**
- * Resolve a league battle (`in_flight → resolved`). Takes no scores:
- * each side's score is its prediction accuracy over the window,
- * computed from the delta between the current `league_stats` bucket and
- * the baseline stamped at kickoff. The satellite assert re-derives the
- * same figures from `league_stats` and rejects any mismatch, so the
- * result can't be falsified. Idempotent at the call site: an
- * already-resolved battle is returned unchanged without a write.
+ * Resolve a settled league battle (`in_flight → resolved`). Delegates to the
+ * satellite `resolveBattle` endpoint, which derives each side's accuracy from
+ * the clearing canister's settlement history over the battle window (scoped to
+ * the battle's market category) and writes the resolved doc as a controller —
+ * a client cannot forge a result. Idempotent server-side: an already-resolved
+ * battle is returned unchanged. A legacy row that never got a kickoff baseline
+ * resolves fine, since resolution no longer reads baselines.
  */
 export const resolveBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
-	const existing = await getDoc<BattleDoc>({
-		collection: Collection.BATTLES,
-		key: battle.id
-	});
+	const { battle: resolved } = await functions.resolveBattle({ battleId: battle.id });
 
-	if (!existing) {
-		throw new Error('Battle no longer exists.');
-	}
-
-	const current = existing.data;
-
-	if (current.state === 'resolved') {
-		return current;
-	}
-
-	if (current.kind !== 'league') {
-		throw new Error('Only league battles resolve from league accuracy.');
-	}
-
-	if (isNullish(current.baselineA) || isNullish(current.baselineB)) {
-		throw new Error('Battle is missing its kickoff baselines.');
-	}
-
-	const scope: BattleScope = current.scope ?? BATTLE_SCOPE_DEFAULT;
-	const [statsA, statsB] = await Promise.all([
-		readLeagueStatsBucket({ leagueId: current.sideA, scope }),
-		readLeagueStatsBucket({ leagueId: current.sideB, scope })
-	]);
-
-	const deltaA = {
-		calls: Math.max(0, statsA.calls - current.baselineA.calls),
-		wins: Math.max(0, statsA.wins - current.baselineA.wins)
-	};
-	const deltaB = {
-		calls: Math.max(0, statsB.calls - current.baselineB.calls),
-		wins: Math.max(0, statsB.wins - current.baselineB.wins)
-	};
-
-	const scoreA = battleAccuracyPct(deltaA);
-	const scoreB = battleAccuracyPct(deltaB);
-	const winner = deriveBattleWinner({
-		scoreA,
-		scoreB,
-		callsA: deltaA.calls,
-		callsB: deltaB.calls
-	});
-
-	const next: BattleDoc = {
-		...current,
-		state: 'resolved',
-		scoreA,
-		scoreB,
-		callsA: deltaA.calls,
-		callsB: deltaB.calls,
-		winner,
-		resolvedAtMs: Date.now()
-	};
-
-	await setDoc<BattleDoc>({
-		collection: Collection.BATTLES,
-		doc: { key: battle.id, data: next, version: existing.version }
-	});
-
-	return next;
+	return projectBattleWire(resolved);
 };
 
 /** Running standings for an in-flight battle, before it resolves. */
@@ -1165,59 +1154,29 @@ export interface BattleLiveScore {
 	/** Side B window call count so far. */
 	callsB: number;
 	/** Who's ahead right now, by the same rule resolution uses. */
-	leader: ReturnType<typeof deriveBattleWinner>;
+	leader: BattleWinner;
 }
 
 /**
  * Project the **current** standings of an in-flight league battle —
- * "who's winning" while the window is still open. Runs the identical
- * `league_stats − baseline` accuracy arithmetic as {@link resolveBattle},
- * but is strictly **read-only**: it never writes the doc, so viewing a
- * battle can't resolve it (that stays the lazy auto-resolve path). The
- * standing is provisional and moves as each side keeps predicting.
+ * "who's winning" while the window is still open. Delegates to the satellite
+ * `readBattleLiveScore` endpoint, which runs the identical clearing-settlement
+ * accuracy arithmetic as {@link resolveBattle} over `[kickoff, now)`, strictly
+ * read-only.
  *
- * Returns `null` for anything that can't be scored live — a duel (no
- * `league_stats` to delta), a non-`in_flight` battle, or a legacy row
- * missing its kickoff baselines. Callers fall back to their existing
- * render.
+ * Returns `null` for anything that can't be scored live — a duel, a
+ * non-`in_flight` battle, or a caller who is not a member of either side.
  */
 export const readBattleLiveScore = async ({
 	battle
 }: {
 	battle: BattleDoc;
 }): Promise<BattleLiveScore | null> => {
-	if (
-		battle.state !== 'in_flight' ||
-		battle.kind !== 'league' ||
-		isNullish(battle.baselineA) ||
-		isNullish(battle.baselineB)
-	) {
+	if (battle.state !== 'in_flight' || battle.kind !== 'league') {
 		return null;
 	}
 
-	const scope: BattleScope = battle.scope ?? BATTLE_SCOPE_DEFAULT;
-	const [statsA, statsB] = await Promise.all([
-		readLeagueStatsBucket({ leagueId: battle.sideA, scope }),
-		readLeagueStatsBucket({ leagueId: battle.sideB, scope })
-	]);
+	const { score } = await functions.readBattleLiveScore({ battleId: battle.id });
 
-	const deltaA = {
-		calls: Math.max(0, statsA.calls - battle.baselineA.calls),
-		wins: Math.max(0, statsA.wins - battle.baselineA.wins)
-	};
-	const deltaB = {
-		calls: Math.max(0, statsB.calls - battle.baselineB.calls),
-		wins: Math.max(0, statsB.wins - battle.baselineB.wins)
-	};
-
-	const scoreA = battleAccuracyPct(deltaA);
-	const scoreB = battleAccuracyPct(deltaB);
-
-	return {
-		scoreA,
-		scoreB,
-		callsA: deltaA.calls,
-		callsB: deltaB.calls,
-		leader: deriveBattleWinner({ scoreA, scoreB, callsA: deltaA.calls, callsB: deltaB.calls })
-	};
+	return score ?? null;
 };

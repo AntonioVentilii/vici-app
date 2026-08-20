@@ -39,6 +39,7 @@
 		maybeExpireBattle,
 		resolveBattle,
 		retractBattle,
+		setMemberRole,
 		updateLeague,
 		validateLeagueDraft
 	} from '$lib/services/leagues.services';
@@ -138,7 +139,7 @@
 	$effect(() => {
 		if (
 			loadState === 'ready' &&
-			myRole === 'owner' &&
+			isLeagueAdmin &&
 			(page.url.searchParams.get('challenge') === '1' ||
 				page.url.searchParams.get('propose') === '1') &&
 			!challengeOpen
@@ -154,9 +155,13 @@
 	// before the picker shipped.
 	const emblem = $derived(league ? leagueEmblem(league) : '◆');
 
-	const canSeeInvite = $derived(myRole === 'owner' || myRole === 'admin');
+	// A league owner or admin holds the same battle authority — initiate,
+	// accept, decline, expire. The satellite assert enforces the same
+	// owner-or-admin predicate, so these gates and the backend never drift.
+	const isLeagueAdmin = $derived(myRole === 'owner' || myRole === 'admin');
+	const canSeeInvite = $derived(isLeagueAdmin);
 	const canLeave = $derived(myRole !== 'owner' && nonNullish(myRole));
-	const canChallenge = $derived(myRole === 'owner');
+	const canChallenge = $derived(isLeagueAdmin);
 	const canTransfer = $derived(
 		myRole === 'owner' && members.filter((m) => m.role !== 'owner').length > 0
 	);
@@ -236,7 +241,7 @@
 
 		try {
 			const previousUrl = league.imageUrl;
-			await updateLeague({ id: league.id, imageUrl: null });
+			await updateLeague({ id: league.id, imageUrl: '' });
 
 			if (nonNullish(previousUrl)) {
 				await deleteLeagueImageByUrl(previousUrl);
@@ -397,17 +402,16 @@
 		() => leagueRankOf({ sorted: sortedMembers, principal: selfPrincipal }) ?? 1
 	);
 
-	// Maps the three-way privacy onto its chip label key. A league with an
+	// Maps the privacy tier onto its chip label key. A league with an
 	// absent field resolves to `open` via `leaguePrivacy`.
 	const PRIVACY_CHIP_KEY: Record<LeaguePrivacy, MessageKey> = {
 		[LeaguePrivacy.PRIVATE]: 'leagues.detail.hero_chip_private',
-		[LeaguePrivacy.INVITE]: 'leagues.detail.hero_chip_invite',
 		[LeaguePrivacy.OPEN]: 'leagues.detail.hero_chip_open'
 	};
 
 	// Editorial-hero eyebrow chips — the kind ("League") and the privacy
-	// state (Private / Invite-only / Open). The privacy chip reads the
-	// league's `privacy` field through `leaguePrivacy` (absent → Open).
+	// state (Open / Private). The privacy chip reads the league's
+	// `privacy` field through `leaguePrivacy` (absent → Open).
 	// The member count now lives on the identity card's overlap row, and
 	// the caller's role is surfaced in the battle section ("Admin · you").
 	const kindChipLabel = $derived(t({ locale: $localeStore, key: 'leagues.detail.hero_chip_kind' }));
@@ -652,17 +656,17 @@
 	const MAX_AUTO_RESOLVE_ATTEMPTS = 3;
 	const autoExpireAttempted = new SvelteSet<string>();
 
-	// The challenged side's owner can respond to a proposal. Accept is
-	// additionally blocked at the far concurrency rail (a safety bound, not
-	// a product limit — see BATTLE_MAX_CONCURRENT_IN_FLIGHT).
+	// The challenged side's owner or admin can respond to a proposal.
+	// Accept is additionally blocked at the far concurrency rail (a safety
+	// bound, not a product limit — see BATTLE_MAX_CONCURRENT_IN_FLIGHT).
 	const canRespondToBattle = (battle: BattleDoc): boolean =>
-		myRole === 'owner' && battle.state === 'proposed' && battle.sideB === leagueId;
+		isLeagueAdmin && battle.state === 'proposed' && battle.sideB === leagueId;
 
 	const canAcceptBattle = (battle: BattleDoc): boolean =>
 		canRespondToBattle(battle) && inFlightCount < BATTLE_MAX_CONCURRENT_IN_FLIGHT;
 
 	const canKickoffBattle = (battle: BattleDoc): boolean =>
-		myRole === 'owner' &&
+		isLeagueAdmin &&
 		battle.state === 'accepted' &&
 		(battle.sideA === leagueId || battle.sideB === leagueId) &&
 		Date.now() >= battle.kickoffMs;
@@ -747,7 +751,9 @@
 
 		try {
 			await declineBattle({ battle });
-			track({ name: 'battle_declined', battleId: battle.id, leagueId });
+			// `label` carries the actor's role (owner | admin) so the
+			// owner-vs-admin split is visible in product analysis.
+			track({ name: 'battle_declined', battleId: battle.id, leagueId, label: myRole });
 			await refreshMyLeagues();
 		} catch (err) {
 			console.error('LeagueDetailPage: declineBattle failed', err);
@@ -847,9 +853,10 @@
 			return;
 		}
 
-		// Expiry stays owner-only — the satellite gate for proposed->expired
-		// is still isSideOwner, so a non-owner attempt would be rejected.
-		if (myRole !== 'owner') {
+		// Expiry is owner-or-admin — the satellite gate for proposed->expired
+		// admits a side owner or admin, so a plain member's attempt would be
+		// rejected.
+		if (!isLeagueAdmin) {
 			return;
 		}
 
@@ -960,6 +967,45 @@
 
 		return idx === -1 ? 1 : idx + 1;
 	});
+
+	// Owner-only promote/demote control in the member sheet. Shown for a
+	// member that is neither the owner nor the caller; the satellite assert
+	// re-enforces the owner gate, so this is a convenience guard. Promotion
+	// only ever toggles member ↔ admin (the owner role is reserved for the
+	// owner principal).
+	let roleSaving = $state(false);
+
+	const canManageMemberRole = $derived(
+		myRole === 'owner' &&
+			nonNullish(openMember) &&
+			openMember.role !== 'owner' &&
+			openMember.member !== selfPrincipal
+	);
+
+	const handleSetMemberRole = async ({
+		member,
+		role
+	}: {
+		member: LeagueMemberDoc;
+		role: 'admin' | 'member';
+	}) => {
+		if (roleSaving || !league) {
+			return;
+		}
+
+		roleSaving = true;
+
+		try {
+			await setMemberRole({ leagueId: league.id, memberPrincipal: member.member, role });
+			await refreshMyLeagues();
+			openMember = null;
+		} catch (err) {
+			console.error('LeagueDetailPage: setMemberRole failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			roleSaving = false;
+		}
+	};
 </script>
 
 <div class="league-detail">
@@ -1538,6 +1584,10 @@
 					<span>{t({ locale: $localeStore, key: 'leagues.detail.battle_challenge_cta' })}</span>
 					<ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
 				</button>
+			{:else}
+				<p class="league-detail-battle-hint num">
+					{t({ locale: $localeStore, key: 'leagues.detail.battle_admin_only' })}
+				</p>
 			{/if}
 		</section>
 
@@ -1673,6 +1723,32 @@
 					<span class="num league-detail-member-stat-value">{memberStreak(openMember.member)}</span>
 				</div>
 			</div>
+
+			{#if canManageMemberRole}
+				<div class="league-detail-member-sheet-actions">
+					{#if openMember.role === 'admin'}
+						<button
+							class="league-detail-member-role-btn"
+							disabled={roleSaving}
+							onclick={() =>
+								openMember && handleSetMemberRole({ member: openMember, role: 'member' })}
+							type="button"
+						>
+							{t({ locale: $localeStore, key: 'leagues.detail.member_remove_admin' })}
+						</button>
+					{:else}
+						<button
+							class="league-detail-member-role-btn is-primary"
+							disabled={roleSaving}
+							onclick={() =>
+								openMember && handleSetMemberRole({ member: openMember, role: 'admin' })}
+							type="button"
+						>
+							{t({ locale: $localeStore, key: 'leagues.detail.member_make_admin' })}
+						</button>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	{/if}
 </BottomSheet>
@@ -2695,6 +2771,47 @@
 		font-size: var(--t-20);
 		font-weight: 700;
 		color: var(--text-base);
+	}
+
+	/* ─── Member sheet · owner-only role control ────────────────── */
+
+	.league-detail-member-sheet-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-top: 0.85rem;
+	}
+
+	.league-detail-member-role-btn {
+		appearance: none;
+		padding: 0.7rem 1rem;
+		font: inherit;
+		font-size: var(--t-13);
+		font-weight: 700;
+		color: var(--text-muted);
+		background: none;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici);
+	}
+
+	.league-detail-member-role-btn:hover:not(:disabled) {
+		color: var(--text-base);
+		border-color: var(--color-primary);
+	}
+
+	.league-detail-member-role-btn.is-primary {
+		color: var(--text-on-accent, #fff);
+		background: var(--laurel);
+		border-color: var(--laurel);
+	}
+
+	.league-detail-member-role-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	/* ─── Activity feed ─────────────────────────────────────────── */

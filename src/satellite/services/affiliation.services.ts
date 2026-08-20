@@ -5,9 +5,16 @@ import {
 	affiliationKey,
 	type AffiliationDoc
 } from '$lib/types/affiliation';
-import { isNullish } from '@dfinity/utils';
+import { captureServerEvents } from '$satellite/services/analytics.services';
+import { logError } from '$satellite/utils/logger.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
-import type { AssertDeleteDocContext, AssertSetDocContext } from '@junobuild/functions';
+import type {
+	AssertDeleteDocContext,
+	AssertSetDocContext,
+	OnDeleteDocContext,
+	OnSetDocContext
+} from '@junobuild/functions';
 import { time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData } from '@junobuild/functions/sdk';
 
@@ -161,5 +168,95 @@ export const assertDeleteAffiliation = ({
 	if (nowMs < currentDoc.lockedUntilMs) {
 		const daysLeft = Math.ceil((currentDoc.lockedUntilMs - nowMs) / (24 * 60 * 60 * 1000));
 		throw new Error(`affiliations lock active — cannot leave for another ${daysLeft} day(s).`);
+	}
+};
+
+/**
+ * `affiliations` post-write analytics: emit `affiliation_set` on the CREATE
+ * of a row (the client `setDoc` in the Worlds join flow). Updates are
+ * skipped — the identity fields are immutable (see `assertSetAffiliation`
+ * rule 6), so a re-set of an existing key carries no new affiliation and
+ * must not double-count. `source` carries the kind (`university | country`),
+ * `label` the affiliation identifier (a school slug / ISO country code —
+ * behavioural, never PII). Best-effort: a capture failure is logged and
+ * swallowed so analytics can never break the join.
+ */
+export const onAffiliationSetForAnalytics = (ctx: OnSetDocContext): void => {
+	try {
+		const {
+			data: {
+				collection,
+				data: { before, after }
+			}
+		} = ctx;
+
+		if (collection !== Collection.AFFILIATIONS || nonNullish(before)) {
+			return;
+		}
+
+		const doc = decodeDocData<AffiliationDoc>(after.data);
+
+		captureServerEvents({
+			events: [
+				{
+					name: 'affiliation_set',
+					principal: doc.member,
+					props: { source: doc.kind, label: doc.affiliationIdentifier }
+				}
+			]
+		});
+	} catch (err) {
+		logError({
+			message: 'affiliation analytics capture failed (join still committed)',
+			detail: { error: err instanceof Error ? err.message : `${err}` }
+		});
+	}
+};
+
+/**
+ * `affiliations` post-delete analytics: emit `affiliation_removed` on the
+ * client `deleteDoc` leave path (only reachable after the 90-day lock —
+ * `assertDeleteAffiliation` vetoes earlier). Dimensions are parsed from the
+ * doc key (`${member}/${kind}/${affiliationIdentifier}`, defended by
+ * `assertSetAffiliation` rule 1) so no decode of the deleted body is
+ * needed. The account-deletion cascade drops affiliation rows via the
+ * serverless `deleteDocStore`, which never fires hooks — so a departing
+ * account does not spray `affiliation_removed` events. Best-effort.
+ */
+export const onAffiliationDeleteForAnalytics = (ctx: OnDeleteDocContext): void => {
+	try {
+		const {
+			data: { collection, key }
+		} = ctx;
+
+		if (collection !== Collection.AFFILIATIONS) {
+			return;
+		}
+
+		// `split` yields (possibly empty) strings, never nullish — require
+		// exactly three non-empty segments so a malformed key can't emit an
+		// event with an empty principal or dimension.
+		const segments = key.split('/');
+
+		if (segments.length !== 3 || segments.some((segment) => segment.length === 0)) {
+			return;
+		}
+
+		const [member, kind, affiliationIdentifier] = segments;
+
+		captureServerEvents({
+			events: [
+				{
+					name: 'affiliation_removed',
+					principal: member,
+					props: { source: kind, label: affiliationIdentifier }
+				}
+			]
+		});
+	} catch (err) {
+		logError({
+			message: 'affiliation analytics capture failed (leave still committed)',
+			detail: { error: err instanceof Error ? err.message : `${err}` }
+		});
 	}
 };

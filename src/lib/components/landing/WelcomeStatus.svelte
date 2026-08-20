@@ -95,8 +95,19 @@
 
 	// `focusout`/`pointerleave` confirm focus has actually left the container
 	// (relatedTarget can be null on click-away) before clearing focus-within.
-	const focusStillInside = ({ el, next }: { el: HTMLElement; next: EventTarget | null }): boolean =>
-		(next instanceof Node && el.contains(next)) || el.contains(document.activeElement);
+	const focusStillInside = ({
+		el,
+		next
+	}: {
+		el: HTMLElement;
+		next: EventTarget | null;
+	}): boolean => {
+		if (next instanceof Node && el.contains(next)) {
+			return true;
+		}
+
+		return el.contains(document.activeElement);
+	};
 
 	const tab = $derived(tabs[active]);
 	const headline = $derived(splitHeadline(tt('welcome.status.headline')));

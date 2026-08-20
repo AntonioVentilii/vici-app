@@ -18,6 +18,7 @@
 		Scale,
 		Search,
 		Share2,
+		Smartphone,
 		Sun,
 		Target,
 		Trophy,
@@ -27,6 +28,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import A2hsSheet from '$lib/components/pwa/A2hsSheet.svelte';
 	import DeleteAccountFlow from '$lib/components/settings/DeleteAccountFlow.svelte';
 	import SetRow from '$lib/components/settings/SetRow.svelte';
 	import SetSegmented from '$lib/components/settings/SetSegmented.svelte';
@@ -41,7 +43,9 @@
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { flushEvents, track } from '$lib/services/analytics.services';
 	import { persistPreferences } from '$lib/services/profile.services';
+	import { canInstall } from '$lib/stores/a2hs.store';
 	import { localeStore, setLocale } from '$lib/stores/locale.store';
 	import { marketLanguagePreference } from '$lib/stores/market-language.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
@@ -64,6 +68,10 @@
 	// Resolved against the full registry so a regional edition (e.g. `pt-BR`)
 	// shows its own native label and short code, not just the live base set.
 	let langSheetOpen = $state(false);
+
+	// Install sheet — the Add-to-Home-Screen flow lives in `A2hsSheet`; this
+	// row only owns the open toggle and is gated on `$canInstall`.
+	let a2hsSheetOpen = $state(false);
 
 	const activeLocale = $derived(
 		LOCALE_REGISTRY.find((locale) => locale.id === $localeStore) ?? LOCALE_REGISTRY[0]
@@ -130,7 +138,9 @@
 
 	const profile = $derived($userStore.profile);
 	const nickname = $derived(profile?.nickname ?? '');
-	const email = $derived(profile?.email ?? '');
+	// The address lives on the owner-private `profile_private` doc (hydrated
+	// into the store at sign-in), never on the public profile.
+	const email = $derived($userStore.email);
 	const hasEmail = $derived(email.length > 0);
 
 	// Sign-in method sub — derived from the provider Juno records on the
@@ -235,12 +245,37 @@
 	const doSignOut = async () => {
 		signOutStatus = 'pending';
 
+		// Emit + flush BEFORE the auth drop: `flushEvents` is fire-and-forget
+		// (it never blocks or fails the sign-out), but starting it while the
+		// session is still live lets the satellite stitch the principal onto
+		// the event — after `signOut()` the batch would land anonymous.
+		track({ name: 'signed_out', source: 'settings' });
+		void flushEvents();
+
 		try {
 			await dropAuth();
-		} finally {
+		} catch {
+			// Sign-out failed before the session changed. `dropAuth` set the
+			// global `authBusy` flag and only `onAuthStateChange` clears it —
+			// which won't fire now — so clear it here, otherwise the (app)
+			// shell stays stuck on its `authResolving` loader instead of the
+			// restored confirm controls. Then re-enable so the user can retry.
+			setAuthBusy(false);
 			signOutStatus = 'enabled';
 			confirmingSignOut = false;
+
+			return;
 		}
+
+		// Auth is dropped. Drive the redirect from here instead of waiting for
+		// the (app) layout's auth-gate effect to react and paint the shell's
+		// hydration spinner first, which reads as a sluggish sign-out. The
+		// button stays `pending` through the navigation — this component
+		// unmounts on the route change, so the spinner never flickers back to
+		// the idle label. Deliberately outside the try: a `goto` abort (a
+		// concurrent redirect already taking us away) is not a sign-out failure
+		// and must not re-enable the controls.
+		await goto(resolve(PublicPath.SignIn), { replaceState: true });
 	};
 
 	/**
@@ -263,7 +298,7 @@
 		const onKey = (event: KeyboardEvent) => {
 			// Open sheets own Escape while visible (they close themselves,
 			// not the page); don't navigate away underneath them.
-			if (event.key === 'Escape' && !deleteSheetOpen && !langSheetOpen) {
+			if (event.key === 'Escape' && !deleteSheetOpen && !langSheetOpen && !a2hsSheetOpen) {
 				void goto(resolve(AppPath.Profile));
 			}
 		};
@@ -395,6 +430,15 @@
 				}}
 				sub={t({ locale: $localeStore, key: 'settings.sound.sub' })}
 			/>
+
+			{#if $canInstall}
+				<SetRow
+					icon={Smartphone}
+					label={t({ locale: $localeStore, key: 'settings.add_home' })}
+					onclick={() => (a2hsSheetOpen = true)}
+					sub={t({ locale: $localeStore, key: 'settings.add_home.sub' })}
+				/>
+			{/if}
 		</SettingsSection>
 
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.privacy' })}>
@@ -436,9 +480,8 @@
 			Secondary "Privacy" card — the two opt-out share toggles
 			(global leaderboard, Worlds Universities) distinct from the
 			privacy-and-security set above. Both persist through the
-			`preferences.sharing` slice. They record the user's intent
-			today; server-side enforcement (actually hiding an opted-out
-			user from those surfaces) is a follow-up.
+			`preferences.sharing` slice and are enforced: leaderboard via
+			the FE standings filter, Worlds via the affiliation-stats hook.
 		-->
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.privacy_share' })}>
 			<SetToggle
@@ -450,6 +493,11 @@
 						...prefs,
 						sharing: { ...prefs.sharing, leaderboardOptIn: value }
 					}));
+					track({
+						name: 'privacy_sharing_toggled',
+						source: 'leaderboard',
+						label: value ? 'on' : 'off'
+					});
 				}}
 				sub={t({ locale: $localeStore, key: 'settings.privacy_share.global.sub' })}
 			/>
@@ -463,6 +511,7 @@
 						...prefs,
 						sharing: { ...prefs.sharing, worldsOptIn: value }
 					}));
+					track({ name: 'privacy_sharing_toggled', source: 'worlds', label: value ? 'on' : 'off' });
 				}}
 				sub={t({ locale: $localeStore, key: 'settings.privacy_share.worlds.sub' })}
 			/>
@@ -595,6 +644,8 @@
 			langSheetOpen = false;
 		}}
 	/>
+
+	<A2hsSheet isOpen={a2hsSheetOpen} onClose={() => (a2hsSheetOpen = false)} source="settings" />
 
 	{#if nonNullish(toastMessage)}
 		<!--

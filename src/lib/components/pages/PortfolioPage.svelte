@@ -3,13 +3,14 @@
 	import { resolve } from '$app/paths';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import MarketOddsSkeleton from '$lib/components/market/MarketOddsSkeleton.svelte';
+	import MarketTitleSkeleton from '$lib/components/market/MarketTitleSkeleton.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
 	import PortfolioEmptyState from '$lib/components/portfolio/PortfolioEmptyState.svelte';
 	import PortfolioHero from '$lib/components/portfolio/PortfolioHero.svelte';
 	import PortfolioPerformanceCard from '$lib/components/portfolio/PortfolioPerformanceCard.svelte';
 	import { EM_DASH, MILLISECOND_IN_NANOSECONDS, USD_DECIMALS } from '$lib/constants/app.constants';
-	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
+	import { primaryMicro } from '$lib/constants/market-taxonomy.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -25,6 +26,7 @@
 	import { tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 	import { vxpHoldingsTotal } from '$lib/derived/vxp-holdings.derived';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { displayAccuracyPct } from '$lib/utils/accuracy.utils';
@@ -81,7 +83,10 @@
 		refreshPositions();
 	};
 
-	const getMarketById = (id: string) => $markets.find((m) => m.id === id);
+	// Markets in the reader's language (see `displayMarkets`); every numeric /
+	// status field is the untouched canonical value, so this is the right source
+	// for both the row titles and the PnL / probability math below.
+	const getMarketById = (id: string) => $displayMarkets.get(id);
 
 	// Live positions whose market hasn't resolved yet. The clearing canister
 	// deletes positions on settlement, so anything still in `$positions` is
@@ -187,20 +192,20 @@
 	};
 
 	const categoryLabel = (marketId: string): string | null => {
-		const tag = primaryMarketTag($marketTags[marketId]);
+		const micro = primaryMicro($marketTags[marketId] ?? []);
 
-		return tag ? tag.toUpperCase() : null;
+		return nonNullish(micro) ? micro.toUpperCase() : null;
 	};
 
 	/**
 	 * Per-category accent for the row tag chip. Falls back to the
-	 * laurel-gold default when the market has no recognised tag — same
+	 * laurel-gold default when the market has no recognised micro — same
 	 * fallback `tagColor()` uses internally.
 	 */
 	const categoryAccent = (marketId: string): string => {
-		const tag = primaryMarketTag($marketTags[marketId]);
+		const micro = primaryMicro($marketTags[marketId] ?? []);
 
-		return tagColor(tag ?? '');
+		return tagColor(micro ?? '');
 	};
 
 	// Current implied probability for the position's side, or `undefined` when
@@ -375,8 +380,9 @@
 						<li>
 							<a
 								class="portfolio-row portfolio-row-card portfolio-row-inline"
-								aria-label={market?.title ??
-									t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+								aria-label={$marketsNotInitialized && isNullish(market)
+									? t({ locale: $localeStore, key: 'ui.loading' })
+									: (market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' }))}
 								href="{AppPath.Markets}/{pos.marketId}"
 							>
 								<div class="portfolio-row-tags">
@@ -390,7 +396,11 @@
 									</span>
 								</div>
 								<div class="portfolio-row-title">
-									{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+									{#if $marketsNotInitialized && isNullish(market)}
+										<MarketTitleSkeleton />
+									{:else}
+										{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+									{/if}
 								</div>
 								<div class="portfolio-row-meta">
 									<span class="num portfolio-row-prob">
@@ -454,7 +464,12 @@
 							<a class="portfolio-history-row" href="{AppPath.Markets}/{resolved.marketId}">
 								<div class="portfolio-history-body">
 									<div class="portfolio-history-title">
-										{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+										{#if $marketsNotInitialized && isNullish(market)}
+											<MarketTitleSkeleton />
+										{:else}
+											{market?.title ??
+												t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+										{/if}
 									</div>
 									<div class="portfolio-history-meta">
 										<span class="portfolio-row-side portfolio-row-side-{sideKey}">
@@ -496,7 +511,11 @@
 					</h2>
 					<span class="num portfolio-section-count">{$orders.length}</span>
 				</header>
-				<OpenOrdersTable markets={$markets} onRefresh={onOrdersRefresh} orders={$orders} />
+				<OpenOrdersTable
+					markets={[...$displayMarkets.values()]}
+					onRefresh={onOrdersRefresh}
+					orders={$orders}
+				/>
 			</section>
 		{/if}
 	{/if}

@@ -51,6 +51,13 @@ Non-obvious points the codebase will not tell you:
   `$lib/constants/app.constants` and bare `return;`.
 - No test runner is wired yet — when the first Vitest spec lands,
   [`testing.md`](./testing.md) becomes the contract.
+- The crawler-facing surface (sitemap + per-market meta pages) is generated
+  at deploy time, not at runtime — see [`seo.md`](./seo.md) before touching
+  `src/app.html` head tags, `robots.txt`, or the hosting `predeploy` chain.
+- A build-time backend seam (`VITE_BACKEND`) can route migrated domains to
+  the repo's HTTP API; the default is unchanged current behavior. Read
+  [`web2-backend-mode.md`](./web2-backend-mode.md) before adding any
+  `isWeb2Backend()` branch.
 
 ## What "good" looks like in this repo
 

@@ -2,7 +2,7 @@ import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
 
 /**
  * Static demo markets shared by the public `/welcome` landing grid and
- * the pre-sign-in `OnboardingFlow`. Both surfaces render hand-curated
+ * the pre-sign-in onboarding. Both surfaces render hand-curated
  * "what the live deck feels like" cards; centralising the fixture
  * keeps IDs, categories, and yes-probabilities in lock-step so a tweak
  * here updates both surfaces.
@@ -58,7 +58,7 @@ const previewMarket = ({
 export const WELCOME_MARKET_PREVIEWS: readonly WelcomeMarketPreview[] = [
 	previewMarket({
 		id: 'fed-jun',
-		category: 'macro',
+		category: 'economy',
 		question: 'Will the Fed cut rates in June?',
 		yesProbability: 0.64,
 		closesLabel: 'June 18',

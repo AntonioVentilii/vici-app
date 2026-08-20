@@ -8,7 +8,7 @@
 	 *       accuracy trend (7 / 30 / 90-day windows), the session delta + streak,
 	 *       and a global ⇄ friends benchmark toggle.
 	 *   2 · Stack       — the holdings card; tapping opens a breakdown sheet
-	 *       (lifetime earned, in-play, referrals).
+	 *       (Your VXP hero + Available / In-play split).
 	 *   3 · Calls       — an Open / Resolved segmented toggle over compact call
 	 *       rows with status dots and an inline "see all".
 	 *
@@ -32,8 +32,7 @@
 	import DashStackSheet from '$lib/components/dash/DashStackSheet.svelte';
 	import ResolutionReveal from '$lib/components/market/ResolutionReveal.svelte';
 	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
-	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
-	import { cumulativeReferrerRewardBaseUnits } from '$lib/constants/referral.constants';
+	import { primaryMicro } from '$lib/constants/market-taxonomy.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -46,7 +45,8 @@
 	import {
 		vxpBacked,
 		vxpHoldingsNotInitialized,
-		vxpHoldingsTotal
+		vxpHoldingsTotal,
+		vxpSpendable
 	} from '$lib/derived/vxp-holdings.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
@@ -54,13 +54,8 @@
 	import { friendsListStore } from '$lib/stores/friends.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { marketsStore } from '$lib/stores/markets.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
-	import {
-		myReferralsLoadedStore,
-		myReferralsStore,
-		refreshMyReferrals
-	} from '$lib/stores/referrals.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
@@ -70,6 +65,7 @@
 		probabilityToPercent
 	} from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { categoryLabel } from '$lib/utils/market-tags.utils';
 	import { formatVxpBalance, formatWholeVxpMagnitude } from '$lib/utils/playground-display.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
@@ -83,34 +79,20 @@
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
 
-	// Credited referrals back the stack-sheet referral figure. A row counts once its
-	// `referrerPayout.status` has left `none` (owed / processing / paid — anything in
-	// flight still consumes a slot), matching the satellite's `countReferrerCredits`
-	// rule and the Arena invite hero. Filtering on `paid` alone hid redemptions whose
-	// payout was still in flight (or stuck retrying), reading as "0 friends" while
-	// Arena already showed the credit.
-	const referralsLoaded = $derived($myReferralsLoadedStore);
-	const referralCount = $derived(
-		$myReferralsStore.filter(({ referrerPayout }) => referrerPayout.status !== 'none').length
-	);
-
 	// ─── Holdings (playground / VXP domain) ────────────────────────────
 	const holdingsDisplay = $derived(
 		formatVxpBalance({ value: $vxpHoldingsTotal, decimals: USD_DECIMALS })
 	);
+	const availableDisplay = $derived(
+		formatVxpBalance({ value: $vxpSpendable, decimals: USD_DECIMALS })
+	);
 	const inPlayDisplay = $derived(formatVxpBalance({ value: $vxpBacked, decimals: USD_DECIMALS }));
 
-	// Lifetime earned = `profile.points`, the running VXP accumulator.
-	const lifetimeDisplay = $derived((profile?.points ?? 0).toLocaleString());
-
-	// Referral earnings — cumulative tiered reward over the credited redemptions, mirroring the
-	// Arena invite hero so the two surfaces can never disagree.
-	const referralVxpDisplay = $derived(
-		formatVxpBalance({ value: cumulativeReferrerRewardBaseUnits(referralCount) })
-	);
-
 	// ─── Markets ───────────────────────────────────────────────────────
-	const marketById = $derived(new Map<string, Market>(($marketsStore ?? []).map((m) => [m.id, m])));
+	// Markets in the reader's language (see `displayMarkets`) — every numeric /
+	// status field is the untouched canonical value, so the call-row math and
+	// `isUnresolved` status checks below read from it unchanged.
+	const marketById = $derived($displayMarkets);
 
 	// Short, year-stripped close label so the row end stays compact.
 	const timerOf = (market: Market): string => {
@@ -128,10 +110,10 @@
 	};
 
 	const categoryOf = (market: Market): string => {
-		const [tag]: (MarketTag | undefined)[] = $marketTags[market.id] ?? [];
+		const micro = primaryMicro($marketTags[market.id] ?? []);
 
-		return nonNullish(tag) && nonNullish(MARKET_TAG_LABEL_KEYS[tag])
-			? t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })
+		return nonNullish(micro)
+			? categoryLabel({ category: micro, variant: 'full', locale: $localeStore })
 			: t({ locale: $localeStore, key: 'dash.build.category_fallback' });
 	};
 
@@ -340,7 +322,7 @@
 	// Open markets, most-traded first — the starter list (Day 0) and the
 	// "add another while you wait" pair (Day 1).
 	const openMarketsByVolume = $derived.by<Market[]>(() =>
-		[...($marketsStore ?? [])]
+		[...$displayMarkets.values()]
 			.filter((m) => m.status === 'Open')
 			.sort((a, b) => {
 				if (b.totalVolume === a.totalVolume) {
@@ -400,12 +382,6 @@
 		} catch (err) {
 			console.error('DashPage: failed to load user_stats', err);
 		}
-
-		// Stale-while-revalidate: the shared store keeps the last list across
-		// navigation, so a revisit shows the cached count immediately while this
-		// background refresh reconciles any newly credited redemptions. The store
-		// fails open internally, so no defensive wrapping is needed here.
-		void refreshMyReferrals();
 	});
 </script>
 
@@ -470,14 +446,14 @@
 {/if}
 
 <DashStackSheet
+	{availableDisplay}
+	availableValue={$vxpSpendable}
 	{holdingsDisplay}
 	{inPlayDisplay}
+	inPlayValue={$vxpBacked}
 	isOpen={sheetOpen}
-	{lifetimeDisplay}
 	onClose={() => (sheetOpen = false)}
-	{referralCount}
-	{referralVxpDisplay}
-	referralsLoading={!referralsLoaded}
+	openCallCount={liveCallCount}
 />
 
 {#if revealOpen}

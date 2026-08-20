@@ -2,6 +2,7 @@
 	import { ChevronRight, X } from '@lucide/svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { LeaguePrivacy } from '$lib/enums/league';
+	import { track } from '$lib/services/analytics.services';
 	import {
 		createLeague,
 		generateInviteCode,
@@ -41,17 +42,18 @@
 		{ id: 'violet', value: '#b49cff' },
 		{ id: 'parch', value: '#f2ecdc' }
 	] as const;
-	// Three-way privacy selector — Private / Invite-only / Open, ordered
-	// most → least restrictive, defaulting to Invite-only (the design
-	// default). The chosen value persists onto the league doc's `privacy`
-	// field and reads back as the detail header's privacy chip.
-	const PRIVACIES = [LeaguePrivacy.PRIVATE, LeaguePrivacy.INVITE, LeaguePrivacy.OPEN] as const;
+	// Two-way privacy selector — Open / Private, defaulting to Open (new
+	// leagues are discoverable and battle-eligible from creation; owners
+	// tighten to hidden in two taps). The chosen value persists onto the
+	// league doc's `privacy` field and reads back as the detail header's
+	// privacy chip.
+	const PRIVACIES = [LeaguePrivacy.OPEN, LeaguePrivacy.PRIVATE] as const;
 
 	const [DEFAULT_COLOR] = COLORS;
 
 	let name = $state('');
 	let description = $state('');
-	let privacy = $state<LeaguePrivacy>(LeaguePrivacy.INVITE);
+	let privacy = $state<LeaguePrivacy>(LeaguePrivacy.OPEN);
 	let emblem = $state<string>(LEAGUE_EMBLEM_DEFAULT);
 	let color = $state<string>(DEFAULT_COLOR.value);
 	let submitting = $state(false);
@@ -106,6 +108,9 @@
 	const privacyLabel = (value: LeaguePrivacy): string =>
 		t({ locale: $localeStore, key: `leagues.create.privacy_${value}` });
 
+	const privacyDesc = (value: LeaguePrivacy): string =>
+		t({ locale: $localeStore, key: `leagues.privacy.desc_${value}` });
+
 	const previewMeta = $derived(
 		t({
 			locale: $localeStore,
@@ -117,7 +122,7 @@
 	const reset = () => {
 		name = '';
 		description = '';
-		privacy = LeaguePrivacy.INVITE;
+		privacy = LeaguePrivacy.OPEN;
 		emblem = LEAGUE_EMBLEM_DEFAULT;
 		color = DEFAULT_COLOR.value;
 		submitting = false;
@@ -150,6 +155,7 @@
 				privacy,
 				inviteCode
 			});
+			track({ name: 'league_created', leagueId: league.id, label: privacy });
 			onCreated(league);
 			reset();
 		} catch (err) {
@@ -231,19 +237,24 @@
 		</label>
 
 		<fieldset class="league-field">
-			<legend class="league-field-label allcaps">
+			<legend id="league-privacy-label" class="league-field-label allcaps">
 				{t({ locale: $localeStore, key: 'leagues.create.label_privacy' })}
 			</legend>
-			<div class="league-privacy-row">
+			<div class="league-vis-list" aria-labelledby="league-privacy-label" role="radiogroup">
 				{#each PRIVACIES as option (option)}
 					<button
-						class="league-privacy-btn"
+						class="league-vis-card"
 						class:is-active={privacy === option}
-						aria-pressed={privacy === option}
+						aria-checked={privacy === option}
 						onclick={() => (privacy = option)}
+						role="radio"
 						type="button"
 					>
-						{privacyLabel(option)}
+						<span class="league-vis-radio" aria-hidden="true"></span>
+						<span class="league-vis-body">
+							<span class="league-vis-title">{privacyLabel(option)}</span>
+							<span class="league-vis-sub">{privacyDesc(option)}</span>
+						</span>
 					</button>
 				{/each}
 			</div>
@@ -468,34 +479,74 @@
 		outline-offset: 0;
 	}
 
-	/* ─── Privacy selector ──────────────────────────────────────── */
+	/* ─── Privacy visibility cards ──────────────────────────────── */
 
-	.league-privacy-row {
+	.league-vis-list {
 		display: flex;
+		flex-direction: column;
 		gap: 0.4rem;
 	}
 
-	.league-privacy-btn {
+	.league-vis-card {
 		appearance: none;
-		flex: 1;
-		padding: 0.5rem 0.6rem;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		width: 100%;
+		padding: 0.75rem 0.85rem;
 		font: inherit;
-		font-size: var(--t-13);
-		font-weight: 500;
-		color: var(--text-muted);
+		text-align: left;
 		background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
+		border-radius: var(--r-12);
 		cursor: pointer;
 		transition:
 			border-color 160ms var(--ease-vici),
-			color 160ms var(--ease-vici);
+			background 160ms var(--ease-vici);
 	}
 
-	.league-privacy-btn.is-active {
-		color: var(--color-accent);
+	.league-vis-card.is-active {
 		border-color: var(--color-accent);
+		background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+	}
+
+	.league-vis-radio {
+		flex: 0 0 auto;
+		width: 18px;
+		height: 18px;
+		border-radius: var(--r-pill);
+		border: 2px solid var(--border-base);
+		transition: border-color 160ms var(--ease-vici);
+	}
+
+	.league-vis-card.is-active .league-vis-radio {
+		border-color: var(--color-accent);
+		box-shadow:
+			inset 0 0 0 3px var(--bg-surface),
+			inset 0 0 0 9px var(--color-accent);
+	}
+
+	.league-vis-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		min-width: 0;
+	}
+
+	.league-vis-title {
+		font-size: var(--t-14);
 		font-weight: 600;
+		color: var(--text-base);
+	}
+
+	.league-vis-card.is-active .league-vis-title {
+		color: var(--color-accent);
+	}
+
+	.league-vis-sub {
+		font-size: 11.5px;
+		line-height: 1.4;
+		color: var(--text-muted);
 	}
 
 	/* ─── Emblem picker ─────────────────────────────────────────── */

@@ -6,7 +6,6 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { authBusy, userSignedIn } from '$lib/derived/user.derived';
@@ -18,6 +17,7 @@
 	import { userStore } from '$lib/stores/user.store';
 	import { LEAGUE_INVITE_CODE_REGEX } from '$lib/types/league';
 	import { t } from '$lib/utils/i18n.utils';
+	import { stashLeagueInviteForSignup } from '$lib/utils/pending-onboarding.utils';
 
 	/**
 	 * League-invite landing page — the single canonical URL the "Invite"
@@ -104,39 +104,6 @@
 		void handleInvite();
 	});
 
-	const stashCodeForSignup = () => {
-		try {
-			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
-			const parsed: Record<string, unknown> =
-				nonNullish(raw) && typeof raw === 'string'
-					? ((): Record<string, unknown> => {
-							try {
-								const v = JSON.parse(raw);
-
-								return typeof v === 'object' && nonNullish(v) ? (v as Record<string, unknown>) : {};
-							} catch {
-								return {};
-							}
-						})()
-					: {};
-			parsed.leagueInvite = normalizedCode;
-
-			// First-referrer-wins: a code stashed by an earlier `?ref=` (e.g. a
-			// market share) is never overwritten. Mirrors the (app) layout's
-			// capture rule, which is itself signed-out-only.
-			const hasReferral = typeof parsed.referralCode === 'string' && parsed.referralCode.length > 0;
-
-			if (nonNullish(referralCode) && !hasReferral) {
-				parsed.referralCode = referralCode;
-			}
-
-			localStorage.setItem(PENDING_ONBOARDING_STORAGE_KEY, JSON.stringify(parsed));
-		} catch {
-			// Best-effort: signup still works without the stashed invite —
-			// the user can join manually with the code afterwards.
-		}
-	};
-
 	const goLeaguesList = () => {
 		void goto(leaguesListPath, { replaceState: true });
 	};
@@ -157,8 +124,11 @@
 		// Signed-out OR a brand-new account still mid-onboarding → stash +
 		// route to signup. The (app) layout drain redeems the invite once the
 		// profile exists. Returning users join directly (see `needsOnboarding`).
+		// The common signed-out case (no signed-in hint on the device) never
+		// reaches here — `+page.ts` fast-paths it before the auth handshake;
+		// this branch covers a stale hint whose session turned out expired.
 		if (!$userSignedIn || needsOnboarding) {
-			stashCodeForSignup();
+			stashLeagueInviteForSignup({ inviteCode: normalizedCode, referralCode });
 			void goto(resolve(PublicPath.SignUp), { replaceState: true });
 
 			return;

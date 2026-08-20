@@ -3,10 +3,28 @@ import collections from '$root/juno.collections.json';
 export const Collection = {
 	ROLES: collections.ROLES,
 	PROFILES: collections.PROFILES,
+	/**
+	 * Owner-private profile data — one doc per principal (key = owner principal text), holding the
+	 * fields that must never appear on the publicly-readable {@link Collection.PROFILES} doc. Today
+	 * that's the account `email` (captured from an OpenID provider or the email-signup flow).
+	 * `managed` read/write: only the owner and controllers can see it; `assertSetProfilePrivate`
+	 * binds both the doc key and the embedded `owner` to the caller so no other user can squat or
+	 * forge someone else's doc.
+	 */
+	PROFILE_PRIVATE: collections.PROFILE_PRIVATE,
 	RELATIONS: collections.RELATIONS,
 	CHATS: collections.CHATS,
 	COMMENTS: collections.COMMENTS,
 	MARKET_METADATA: collections.MARKET_METADATA,
+	/**
+	 * Reverse index from market tag to the series carrying it. One doc per tag in the closed
+	 * {@link MARKET_TAGS} taxonomy, keyed by the tag id, holding that tag's `seriesIds`. Maintained
+	 * inline by `upsertMarketMetadata` (diffing a market's old vs new tags); public read so battle
+	 * resolution can read a single bucket, controllers write so only the satellite upsert / the admin
+	 * `rebuildMarketTagIndex` endpoint can mutate it. Lets `scopeSeriesIds` read O(matching-series)
+	 * instead of scanning the whole {@link Collection.MARKET_METADATA} collection on every resolve.
+	 */
+	MARKET_TAG_INDEX: collections.MARKET_TAG_INDEX,
 	MARKET_TRANSLATIONS: collections.MARKET_TRANSLATIONS,
 	ACTIVITIES: collections.ACTIVITIES,
 	/**
@@ -26,6 +44,16 @@ export const Collection = {
 	 * admin `recomputeActivityReactionCounts` endpoint re-derives exact counts from the reaction docs.
 	 */
 	ACTIVITY_REACTION_COUNTS: collections.ACTIVITY_REACTION_COUNTS,
+	/**
+	 * Per-participant resolved-result rows for the friend-readable results feed. One doc per
+	 * `(owner, market)` resolved call, keyed `${owner}#${marketId}`, holding that participant's
+	 * outcome (win/loss), side, signed net VXP, and the resolution time. Public read; controllers
+	 * write — only the satellite resolution hook writes it (as admin, derived from the clearing
+	 * settlement plan), so a user cannot forge a win for themselves or a friend. Bulk-read
+	 * friend-scoped by the digest consumer over an owner-prefix scan; rows past the retention horizon
+	 * are pruned by the controllers-only cleanup.
+	 */
+	RESOLVED_RESULTS: collections.RESOLVED_RESULTS,
 	/**
 	 * Server-driven VXP new-user ladder state (owed vs paid); written from satellite hooks.
 	 */

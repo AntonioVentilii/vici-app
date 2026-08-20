@@ -10,33 +10,32 @@ import {
 	BATTLE_TRASH_TALK_MAX_LENGTH,
 	BATTLE_WAGER_MAX,
 	BATTLE_WAGER_MIN,
-	battleAccuracyPct,
 	deriveBattleWinner,
 	type BattleDoc,
 	type BattleScope,
 	type BattleWinner
 } from '$lib/types/battle';
 import { leaguePrivacy, type LeagueDoc } from '$lib/types/league';
-import { leagueMemberKey } from '$lib/types/league-member';
+import { leagueMemberKey, type LeagueMemberDoc } from '$lib/types/league-member';
 import { leagueStatsBucket, leagueStatsKey, type LeagueStatsDoc } from '$lib/types/league-stats';
 import type { CategoryStatsBucket } from '$lib/types/user-stats';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertDeleteDocContext, AssertSetDocContext } from '@junobuild/functions';
 import { time } from '@junobuild/functions/ic-cdk';
-import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
+import { decodeDocData, getAdminAccessKeys, getDocStore } from '@junobuild/functions/sdk';
 
-/** Window delta between a baseline snapshot and the current bucket, clamped `≥ 0`. */
-const deltaBucket = ({
-	baseline,
-	current
-}: {
-	baseline: CategoryStatsBucket;
-	current: CategoryStatsBucket;
-}): CategoryStatsBucket => ({
-	calls: Math.max(0, current.calls - baseline.calls),
-	wins: Math.max(0, current.wins - baseline.wins)
-});
+/**
+ * Whether `callerText` is one of the satellite's controllers. The trust anchor
+ * for controller-written league resolutions: the resolve endpoint derives the
+ * scoreline from clearing settlement history and writes the resolved doc as a
+ * controller, so the assert — which cannot make that inter-canister call to
+ * re-derive it — trusts a league resolve only from a controller.
+ */
+const isControllerText = (callerText: string): boolean =>
+	getAdminAccessKeys().some(
+		([keyBytes]) => Principal.fromUint8Array(keyBytes).toText() === callerText
+	);
 
 // eslint-disable-next-line local-rules/prefer-object-params -- equality predicate; a/b read best positionally
 const bucketsEqual = (a: CategoryStatsBucket, b: CategoryStatsBucket): boolean =>
@@ -69,7 +68,7 @@ const bucketsNullableEqual = (
  *  3. **State machine.** Forward-only per `BATTLE_TRANSITIONS`. New
  *     docs start at `proposed`. Each transition is gated by:
  *
- *       - `proposed`        — caller is the proposer (league.owner of
+ *       - `proposed`        — caller is the proposer (owner or admin of
  *                             sideA for kind='league', or sideA
  *                             principal for kind='duel'). For league
  *                             battles sideB must be challengeable —
@@ -78,15 +77,15 @@ const bucketsNullableEqual = (
  *       - `proposed → accepted` — caller is the *other* side's owner
  *                             (duel path; leagues fuse accept+kickoff).
  *       - `proposed → in_flight` — league accept fuses the kickoff:
- *                             the `sideB` owner accepts and the window
- *                             starts now (`kickoffMs ≈ now`, the
+ *                             a sideB owner or admin accepts and the
+ *                             window starts now (`kickoffMs ≈ now`, the
  *                             proposed duration preserved). Baselines
  *                             are stamped + re-validated exactly as the
  *                             `accepted → in_flight` kickoff does.
- *       - `proposed → declined` — the `sideB` owner declines; terminal.
- *       - `proposed → expired` — a side owner lazily expires a proposal
- *                             past `respondByMs` (fallback `kickoffMs`);
- *                             terminal.
+ *       - `proposed → declined` — a sideB owner or admin declines; terminal.
+ *       - `proposed → expired` — a side owner or admin lazily expires a
+ *                             proposal past `respondByMs` (fallback
+ *                             `kickoffMs`); terminal.
  *       - `accepted → in_flight` — either side's owner, once
  *                                  `now >= kickoffMs`. League battles
  *                                  stamp each side's `league_stats`
@@ -94,6 +93,14 @@ const bucketsNullableEqual = (
  *                                  baseline; the assert re-reads
  *                                  `league_stats` and rejects a
  *                                  baseline that doesn't match.
+ *       - `in_flight → in_flight` (restart) — a legacy league battle
+ *                                  with no baselines (#912) can't be
+ *                                  scored or resolved; any member of
+ *                                  either side re-opens its window from
+ *                                  now, the original duration preserved,
+ *                                  stamping a fresh `league_stats`
+ *                                  baseline the assert re-reads. Only
+ *                                  valid while the row lacks baselines.
  *       - `in_flight → resolved` — either side's owner, once
  *                                  `now >= settleMs`. League scores are
  *                                  the window accuracy (`Δwins/Δcalls`)
@@ -214,8 +221,37 @@ export const assertSetBattle = ({
 		}
 	};
 
+	// Owner-OR-admin authority over a league. The owner check runs first
+	// (one `LEAGUES` read); only on a miss do we point-read the caller's
+	// `league_members` row (exact key, O(1)) and accept an `admin` role.
+	// A non-member / plain member never passes.
+	const isOwnerOrAdminOfLeague = (leagueId: string): boolean => {
+		if (isOwnerOfLeague(leagueId)) {
+			return true;
+		}
+
+		const memberDoc = getDocStore({
+			collection: Collection.LEAGUE_MEMBERS,
+			key: leagueMemberKey({ leagueId, memberPrincipal: callerText }),
+			caller
+		});
+
+		if (isNullish(memberDoc)) {
+			return false;
+		}
+
+		try {
+			return decodeDocData<LeagueMemberDoc>(memberDoc.data).role === 'admin';
+		} catch {
+			return false;
+		}
+	};
+
+	// Battle command authority for a side. League battles widen to
+	// owner-or-admin (the delegated role can initiate and respond);
+	// duels stay a bare-principal compare.
 	const isSideOwner = (side: string): boolean =>
-		proposedDoc.kind === 'league' ? isOwnerOfLeague(side) : side === callerText;
+		proposedDoc.kind === 'league' ? isOwnerOrAdminOfLeague(side) : side === callerText;
 
 	const isMemberOfLeague = (leagueId: string): boolean =>
 		nonNullish(
@@ -298,7 +334,7 @@ export const assertSetBattle = ({
 
 		if (!isSideOwner(proposedDoc.sideA)) {
 			throw new Error(
-				'battles proposer must be the owner of sideA (league owner for kind="league", sideA principal for kind="duel").'
+				'battles proposer must be the owner or admin of sideA (league owner/admin for kind="league", sideA principal for kind="duel").'
 			);
 		}
 
@@ -343,12 +379,28 @@ export const assertSetBattle = ({
 	// `kickoffMs` / `settleMs` exactly as proposed.
 	const isAcceptKickoff = currentDoc.state === 'proposed' && proposedDoc.state === 'in_flight';
 
+	// A league battle accepted before kickoff baselines existed (#912) carries
+	// no snapshot to score against, so it can neither show live standings nor
+	// resolve — it hangs in `in_flight` forever. A re-kick restarts its window
+	// from now with a fresh baseline, leaving every identity field (proposer,
+	// scope, wager, original duration) intact. Only valid while the row still
+	// lacks baselines; once stamped it rejoins the normal scoring path.
+	const isRekick =
+		currentDoc.state === 'in_flight' &&
+		proposedDoc.state === 'in_flight' &&
+		currentDoc.kind === 'league' &&
+		isNullish(currentDoc.baselineA) &&
+		isNullish(currentDoc.baselineB) &&
+		nonNullish(proposedDoc.baselineA) &&
+		nonNullish(proposedDoc.baselineB);
+
 	if (
 		!isAcceptKickoff &&
+		!isRekick &&
 		(currentDoc.kickoffMs !== proposedDoc.kickoffMs || currentDoc.settleMs !== proposedDoc.settleMs)
 	) {
 		throw new Error(
-			'battles kickoffMs / settleMs may only change when a league proposal is accepted.'
+			'battles kickoffMs / settleMs may only change when a league proposal is accepted or a baseline-less battle is restarted.'
 		);
 	}
 
@@ -370,7 +422,7 @@ export const assertSetBattle = ({
 	// accept-fuses-kickoff `proposed → in_flight` (same `isAcceptKickoff`
 	// transition that opens the window). Outside those, baselines may not
 	// appear or change.
-	const stampsBaseline = currentDoc.state === 'accepted' || isAcceptKickoff;
+	const stampsBaseline = currentDoc.state === 'accepted' || isAcceptKickoff || isRekick;
 
 	if (
 		!stampsBaseline &&
@@ -412,7 +464,7 @@ export const assertSetBattle = ({
 		}
 
 		if (!isSideOwner(currentDoc.sideB)) {
-			throw new Error('battles accept requires sideB owner.');
+			throw new Error('battles accept requires a sideB owner or admin.');
 		}
 
 		if (hasResultFields) {
@@ -450,7 +502,9 @@ export const assertSetBattle = ({
 	} else if (transition === 'proposed->declined') {
 		// The challenged side declines the proposal.
 		if (!isSideOwner(currentDoc.sideB)) {
-			throw new Error('battles decline requires sideB owner.');
+			throw new Error(
+				'battles decline requires the sideB owner or admin (league) / principal (duel).'
+			);
 		}
 
 		if (hasResultFields || hasBaselineFields) {
@@ -462,11 +516,11 @@ export const assertSetBattle = ({
 		}
 	} else if (transition === 'proposed->expired') {
 		// Lazy expiry once the respond-by deadline passes — written by a
-		// side owner the first time they open the league/battle (Juno has
-		// no scheduler). Legacy rows without respondByMs fall back to
-		// kickoffMs.
+		// side owner or admin the first time they open the league/battle
+		// (Juno has no scheduler). Legacy rows without respondByMs fall
+		// back to kickoffMs.
 		if (!isSideOwner(currentDoc.sideA) && !isSideOwner(currentDoc.sideB)) {
-			throw new Error('battles expire requires sideA or sideB owner.');
+			throw new Error('battles expire requires a sideA or sideB owner or admin.');
 		}
 
 		const respondByMs = currentDoc.respondByMs ?? currentDoc.kickoffMs;
@@ -508,22 +562,6 @@ export const assertSetBattle = ({
 			throw new Error('duel battles must not carry baselines.');
 		}
 	} else if (transition === 'in_flight->resolved') {
-		// Resolution is trustless: the integrity check below re-derives every
-		// score field from the frozen baselines and the current league_stats,
-		// so the writer's identity can't change the outcome. We therefore let
-		// any member of either side trigger it, not just owners — many more
-		// people can finalize a settled battle just by viewing it, which is
-		// the only liveness available without a scheduler. Duels carry no
-		// members, so they stay principal-only.
-		const canResolveSide =
-			proposedDoc.kind === 'league'
-				? isMemberOfLeague(currentDoc.sideA) || isMemberOfLeague(currentDoc.sideB)
-				: isSideOwner(currentDoc.sideA) || isSideOwner(currentDoc.sideB);
-
-		if (!canResolveSide) {
-			throw new Error('battles resolve requires a sideA or sideB member.');
-		}
-
 		if (nowMs < currentDoc.settleMs) {
 			throw new Error('battles cannot resolve before settleMs.');
 		}
@@ -533,45 +571,60 @@ export const assertSetBattle = ({
 		}
 
 		if (proposedDoc.kind === 'league') {
-			// Re-derive the windowed result from the frozen baselines and the
-			// current league_stats. Any score the writer didn't compute from
-			// real data is rejected — this is the integrity guarantee.
-			if (isNullish(currentDoc.baselineA) || isNullish(currentDoc.baselineB)) {
-				throw new Error('league battles cannot resolve without kickoff baselines.');
+			// Controller-trusted resolution. Each side's score is its members'
+			// settled-call accuracy over the window, read from the clearing
+			// canister's settlement history by the resolution endpoint (running
+			// as the satellite). An assert cannot make that inter-canister call
+			// to re-derive the figure, so it accepts an `in_flight → resolved`
+			// league write only from a controller — the endpoint writes the
+			// resolved doc as one — and verifies the result is internally
+			// consistent. A client write is not a controller, so a user cannot
+			// forge a result. Membership + the settle-time liveness gate are
+			// enforced by the endpoint, not here. Baselines are no longer read:
+			// a legacy row that never got a kickoff snapshot resolves fine.
+			if (!isControllerText(callerText)) {
+				throw new Error(
+					'league battles resolve only via the controller-trusted resolution endpoint.'
+				);
 			}
 
 			if (isNullish(proposedDoc.callsA) || isNullish(proposedDoc.callsB)) {
 				throw new Error('league battles state="resolved" requires callsA and callsB.');
 			}
 
-			const deltaA = deltaBucket({
-				baseline: currentDoc.baselineA,
-				current: readLeagueStatsBucket(currentDoc.sideA)
-			});
-			const deltaB = deltaBucket({
-				baseline: currentDoc.baselineB,
-				current: readLeagueStatsBucket(currentDoc.sideB)
-			});
-			const expectedScoreA = battleAccuracyPct(deltaA);
-			const expectedScoreB = battleAccuracyPct(deltaB);
 			const expectedWinner = deriveBattleWinner({
-				scoreA: expectedScoreA,
-				scoreB: expectedScoreB,
-				callsA: deltaA.calls,
-				callsB: deltaB.calls
+				scoreA: proposedDoc.scoreA,
+				scoreB: proposedDoc.scoreB,
+				callsA: proposedDoc.callsA,
+				callsB: proposedDoc.callsB
 			});
 
+			// `Number.isInteger` also rejects NaN / ±Infinity, which would slip
+			// through the bare `< 0` / `> 100` range checks (every comparison is
+			// false for NaN). Scores are integer percentages; call counts are
+			// non-negative integers.
 			if (
-				proposedDoc.scoreA !== expectedScoreA ||
-				proposedDoc.scoreB !== expectedScoreB ||
-				proposedDoc.callsA !== deltaA.calls ||
-				proposedDoc.callsB !== deltaB.calls ||
+				!Number.isInteger(proposedDoc.scoreA) ||
+				proposedDoc.scoreA < 0 ||
+				proposedDoc.scoreA > 100 ||
+				!Number.isInteger(proposedDoc.scoreB) ||
+				proposedDoc.scoreB < 0 ||
+				proposedDoc.scoreB > 100 ||
+				!Number.isInteger(proposedDoc.callsA) ||
+				proposedDoc.callsA < 0 ||
+				!Number.isInteger(proposedDoc.callsB) ||
+				proposedDoc.callsB < 0 ||
 				proposedDoc.winner !== expectedWinner
 			) {
-				throw new Error('battles resolution must match the league_stats window delta.');
+				throw new Error('league battles resolution fields are inconsistent.');
 			}
 		} else {
-			// Duel — manual scores, winner from arithmetic (no league_stats).
+			// Duel — a side owner resolves with manual scores; winner from
+			// arithmetic (no league_stats / settlement history to read).
+			if (!isSideOwner(currentDoc.sideA) && !isSideOwner(currentDoc.sideB)) {
+				throw new Error('duel battles resolve requires a sideA or sideB owner.');
+			}
+
 			if (nonNullish(proposedDoc.callsA) || nonNullish(proposedDoc.callsB)) {
 				throw new Error('duel battles must not carry callsA / callsB.');
 			}
@@ -588,6 +641,43 @@ export const assertSetBattle = ({
 					`battles winner must match score arithmetic (expected ${derivedWinner}, got ${proposedDoc.winner ?? 'undefined'}).`
 				);
 			}
+		}
+	} else if (isRekick) {
+		// Restart a baseline-less legacy battle's window. Trustless: the assert
+		// re-reads `league_stats` for the new baseline below, so the writer
+		// can't fake it — we therefore let any member of either side trigger it,
+		// the same liveness model resolution uses (a settled battle finalizes
+		// the first time any member opens it; a legacy one heals the same way).
+		if (!isMemberOfLeague(currentDoc.sideA) && !isMemberOfLeague(currentDoc.sideB)) {
+			throw new Error('battles restart requires a sideA or sideB member.');
+		}
+
+		if (hasResultFields) {
+			throw new Error('battles restart must not carry scoreA / scoreB / callsA / callsB / winner.');
+		}
+
+		if (isNullish(proposedDoc.baselineA) || isNullish(proposedDoc.baselineB)) {
+			throw new Error('battles restart requires baselineA and baselineB.');
+		}
+
+		// The window reopens at now, the original duration preserved.
+		if (Math.abs(proposedDoc.kickoffMs - nowMs) > BATTLE_ACCEPT_CLOCK_TOLERANCE_MS) {
+			throw new Error('battles restart must set kickoffMs to ~now.');
+		}
+
+		const durationMs = currentDoc.settleMs - currentDoc.kickoffMs;
+
+		if (proposedDoc.settleMs !== proposedDoc.kickoffMs + durationMs) {
+			throw new Error('battles restart must preserve the original window length.');
+		}
+
+		// Re-read each side's `league_stats` bucket so the fresh baseline can't
+		// be faked — identical to the kickoff snapshot check.
+		if (
+			!bucketsEqual(proposedDoc.baselineA, readLeagueStatsBucket(currentDoc.sideA)) ||
+			!bucketsEqual(proposedDoc.baselineB, readLeagueStatsBucket(currentDoc.sideB))
+		) {
+			throw new Error('battles restart baselines must equal the current league_stats snapshot.');
 		}
 	} else if (currentDoc.state === proposedDoc.state) {
 		// Same-state writes (e.g. fix a typo before accept) require

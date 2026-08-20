@@ -1,13 +1,20 @@
 <script lang="ts">
 	import FlowArtFrame from '$lib/components/artwork/FlowArtFrame.svelte';
-	import type { FlowArtCategory, FlowArtState } from '$lib/utils/flow-art.utils';
+	import { isMacroId } from '$lib/constants/market-taxonomy.constants';
+	import {
+		MACRO_ART_BUCKET,
+		type FlowArtCategory,
+		type FlowArtState
+	} from '$lib/utils/flow-art.utils';
 
 	/**
 	 * Thin wrapper around {@link FlowArtFrame} that adds the
-	 * `art-{category}` class on the host so the per-category
+	 * `art-{bucket}` class on the host so the per-category
 	 * "breather" keyframes (`macro-breathe`, `crypto-pulse`,
 	 * `sports-drift`, `politics-glow`, `tech-ripple`, `culture-morph`)
-	 * bind directly. The underlying SVG renderer already emits
+	 * bind directly. Macros fold onto their render bucket via
+	 * `MACRO_ART_BUCKET` so all seven share the six breather envelopes.
+	 * The underlying SVG renderer already emits
 	 * `<g class="art art-{cat} art-seed-{id}">` for WC figures; this
 	 * wrapper extends the same naming convention to the surface that
 	 * hosts the art, so the breath rides on the frame even when the
@@ -22,6 +29,7 @@
 		state?: FlowArtState;
 		size?: number;
 		bleed?: boolean;
+		title?: string;
 		// When true, the art frame fills its host (100% × 100%) instead
 		// of the fixed `size`, cropping via the `slice` viewBox. Use for
 		// tall bleed bands (e.g. the onboarding first-call card) where a
@@ -36,11 +44,17 @@
 		state = 'neutral',
 		size = 420,
 		bleed = false,
+		title,
 		fill = false,
 		class: extraClass = ''
 	}: Props = $props();
 
-	const artClass = $derived(`art-${category}`);
+	// Fold the macro onto its render bucket so the six breather keyframes
+	// cover all seven macros; `wc` keeps its own `art-wc` host (its breath
+	// rides the `.wc-figure` sub-tree, not a host keyframe).
+	const artClass = $derived(
+		`art-${category === 'wc' ? 'wc' : isMacroId(category) ? MACRO_ART_BUCKET[category] : category}`
+	);
 	const seedSlug = $derived(
 		String(seed)
 			.replace(/[^a-z0-9-]/gi, '-')
@@ -65,7 +79,7 @@
 </script>
 
 <div class="market-artwork {artClass} {seedClass} {extraClass}" class:is-bleed={bleed}>
-	<FlowArtFrame class="flow-art" {category} {fill} {seed} {size} {state} />
+	<FlowArtFrame class="flow-art" {category} {fill} {seed} {size} {state} {title} />
 </div>
 
 <style lang="postcss">

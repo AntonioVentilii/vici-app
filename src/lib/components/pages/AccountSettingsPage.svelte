@@ -10,6 +10,7 @@
 	import IconPasskey from '$lib/components/icons/IconPasskey.svelte';
 	import ScreenHeader from '$lib/components/layout/ScreenHeader.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { flushEvents, track } from '$lib/services/analytics.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -43,7 +44,9 @@
 
 	const EMAIL_CHANGE_ENABLED = false;
 
-	const email = $derived($userStore.profile?.email ?? '');
+	// The address lives on the owner-private `profile_private` doc (hydrated
+	// into the store at sign-in), never on the public profile.
+	const email = $derived($userStore.email);
 	const hasEmail = $derived(email.length > 0);
 
 	const method = $derived(resolveSignInMethod({ user: $userStore.user, hasEmail }));
@@ -93,6 +96,11 @@
 		}
 
 		switchingMethod = true;
+
+		// Emit + flush before the auth drop so the principal is still
+		// stitched onto the event; fire-and-forget, never blocks sign-out.
+		track({ name: 'signed_out', source: 'account_settings', label: 'switch_method' });
+		void flushEvents();
 
 		try {
 			await signOut();

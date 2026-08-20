@@ -1,15 +1,18 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import type { ClearingDid } from '$declarations';
+	import MarketTitleSkeleton from '$lib/components/market/MarketTitleSkeleton.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
-	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
+	import { primaryMicro } from '$lib/constants/market-taxonomy.constants';
 	import {
 		PORTFOLIO_DEFAULT_DECIMALS,
 		PORTFOLIO_PAGE_SIZE
 	} from '$lib/constants/portfolio.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
+	import { marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { cancelLimitOrder } from '$lib/services/order.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId } from '$lib/types/market';
@@ -47,15 +50,15 @@
 
 	/** Category accent color for the row tag chip; mirrors PortfolioPage. */
 	const categoryAccent = (marketId: MarketId): string => {
-		const tag = primaryMarketTag($marketTags[marketId]);
+		const micro = primaryMicro($marketTags[marketId] ?? []);
 
-		return tagColor(tag ?? '');
+		return tagColor(micro ?? '');
 	};
 
 	const categoryLabel = (marketId: MarketId): string | null => {
-		const tag = primaryMarketTag($marketTags[marketId]);
+		const micro = primaryMicro($marketTags[marketId] ?? []);
 
-		return tag ? tag.toUpperCase() : null;
+		return nonNullish(micro) ? micro.toUpperCase() : null;
 	};
 
 	const handleCancel = async ({
@@ -96,7 +99,9 @@
 			<li>
 				<a
 					class="portfolio-row portfolio-row-card"
-					aria-label={market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+					aria-label={$marketsNotInitialized && isNullish(market)
+						? t({ locale: $localeStore, key: 'ui.loading' })
+						: (market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' }))}
 					href="{AppPath.Markets}/{marketId}"
 				>
 					<div class="portfolio-row-tags">
@@ -112,7 +117,11 @@
 						</span>
 					</div>
 					<div class="portfolio-row-title">
-						{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+						{#if $marketsNotInitialized && isNullish(market)}
+							<MarketTitleSkeleton />
+						{:else}
+							{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+						{/if}
 					</div>
 					<div class="portfolio-row-meta">
 						<span class="num portfolio-row-prob">

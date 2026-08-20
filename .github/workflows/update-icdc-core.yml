@@ -1,0 +1,75 @@
+name: Update icdc-core
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'
+
+concurrency:
+  group: update-icdc-core
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-icdc-core:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare
+        uses: ./.github/actions/prepare
+
+      - name: Bump ICDC_CORE_VERSION to latest release
+        id: bump
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          common="scripts/build/download.icdc.common.sh"
+
+          latest="$(curl -sSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/AntonioVentilii/icdc-core/releases/latest \
+            | jq -r '.tag_name')"
+
+          if [[ -z "$latest" || "$latest" == "null" ]]; then
+            echo "::error::Could not resolve the latest icdc-core release tag."
+            exit 1
+          fi
+
+          current="$(grep -oE 'ICDC_CORE_VERSION="[^"]+"' "$common" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+          echo "Current: $current — Latest: $latest"
+
+          sed -i -E "s|^ICDC_CORE_VERSION=\"[^\"]*\"|ICDC_CORE_VERSION=\"$latest\"|" "$common"
+
+          echo "version=$latest" >> "$GITHUB_OUTPUT"
+
+      - name: Regenerate Candid bindings
+        run: npm run did
+
+      - name: Mint app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.PR_AUTOMATION_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Create Pull Request
+        uses: ./.github/actions/create-pr
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: bot-update-icdc-core
+          title: 'chore(icdc-core): sync bindings and bump version to ${{ steps.bump.outputs.version }}'
+          body: |
+            Automated sync with upstream [`AntonioVentilii/icdc-core`](https://github.com/AntonioVentilii/icdc-core).
+
+            - Bumped `ICDC_CORE_VERSION` in `scripts/build/download.icdc.common.sh` to the latest release (`${{ steps.bump.outputs.version }}`).
+            - Regenerated the Candid bindings under `src/declarations/**` via `npm run did` (which also runs format + lint).
+
+            Opened automatically by the `Update icdc-core` workflow. Review the regenerated `.did` surface before merging.

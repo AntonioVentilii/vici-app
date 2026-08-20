@@ -11,6 +11,7 @@ import type { UserProfile } from '$lib/types/profile';
 import type { ReferralCodeDoc, ReferralDoc } from '$lib/types/referral';
 import type { Relation } from '$lib/types/relation';
 import { isAdmin } from '$satellite/services/_authz';
+import { captureServerEvents, type ServerEventInput } from '$satellite/services/analytics.services';
 import { deleteLeagueFn, transferLeagueOwnershipFn } from '$satellite/services/league.services';
 import { isHibernated, isSoftDeleted } from '$satellite/services/profile.services';
 import { logError } from '$satellite/utils/logger.utils';
@@ -107,9 +108,7 @@ export const ACCOUNT_RECOVERY_WINDOW_MS = 30 * 86_400_000;
  */
 
 export type DeleteMyAccountRefusalReason =
-	| 'owns_non_empty_league'
-	| 'league_resolution_failed'
-	| 'invalid_input';
+	'owns_non_empty_league' | 'league_resolution_failed' | 'invalid_input';
 
 /**
  * One owner-league resolution the caller applies as part of deletion.
@@ -154,8 +153,7 @@ export interface DeleteMyAccountResult {
 
 /** Result of {@link recoverMyAccountFn}, discriminated by `ok`. */
 export type RecoverMyAccountResult =
-	| { ok: true; recovered: boolean }
-	| { ok: false; reason: 'expired' };
+	{ ok: true; recovered: boolean } | { ok: false; reason: 'expired' };
 
 /**
  * Result of {@link sweepExpiredDeletionsFn} — count of accounts purged.
@@ -185,8 +183,7 @@ export interface SweepExpiredDeletionsResult {
  *    states, so we refuse cleanly rather than stacking the two markers.
  */
 export type HibernateMyAccountResult =
-	| { ok: true }
-	| { ok: false; reason: 'no_profile' | 'deleted' };
+	{ ok: true } | { ok: false; reason: 'no_profile' | 'deleted' };
 
 /**
  * Result of {@link resumeMyAccountFn}, discriminated by `ok`. `resumed` is
@@ -274,6 +271,22 @@ const mutateOwnProfile = ({
 	});
 
 	return { status: 'written', profile };
+};
+
+/**
+ * Best-effort server-side capture for the churn funnel. Analytics must
+ * never block or fail an account write, so any capture error is logged
+ * and swallowed here rather than bubbling into the deletion result.
+ */
+const captureDeleteEvents = (events: ServerEventInput[]): void => {
+	try {
+		captureServerEvents({ events });
+	} catch (err) {
+		logError({
+			message: 'account delete analytics capture failed (deletion unaffected)',
+			detail: { error: err instanceof Error ? err.message : `${err}` }
+		});
+	}
 };
 
 const validateInput = ({
@@ -429,6 +442,39 @@ const deleteOwnProfile = ({
 		callerText,
 		callerBytes
 	});
+
+/**
+ * Drop the caller's owner-private `profile_private` doc (the account
+ * email). Exactly one doc keyed by the principal, so this is a direct
+ * versioned read + delete — no collection scan. Silently no-ops when the
+ * account never stored one.
+ */
+const deleteOwnPrivateProfile = ({
+	callerText,
+	callerBytes
+}: {
+	callerText: string;
+	callerBytes: Uint8Array;
+}): number => {
+	const doc = getDocStore({
+		collection: Collection.PROFILE_PRIVATE,
+		key: callerText,
+		caller: callerBytes
+	});
+
+	if (isNullish(doc)) {
+		return 0;
+	}
+
+	deleteDocStore({
+		collection: Collection.PROFILE_PRIVATE,
+		key: callerText,
+		caller: callerBytes,
+		doc: { version: doc.version }
+	});
+
+	return 1;
+};
 
 /**
  * Drop the caller's relations (friend / follow rows) — keyed by
@@ -805,6 +851,7 @@ export const hardDeleteAccountFn = ({
 	let docsDeleted = 0;
 
 	docsDeleted += deleteOwnProfile({ callerText, callerBytes });
+	docsDeleted += deleteOwnPrivateProfile({ callerText, callerBytes });
 	docsDeleted += deletePrefixedDocs({
 		collection: Collection.VXP_AWARDS,
 		callerText,
@@ -936,6 +983,12 @@ export const deleteMyAccountFn = ({
 	const callerText = caller.toText();
 	const callerBytes = caller.toUint8Array();
 
+	// Churn funnel: reaching this endpoint with valid input means the
+	// type-to-confirm gate passed (the FE only calls after the handle
+	// matched), so this call IS the `delete_confirmed` moment — including
+	// a re-confirm after a refusal bounce, which is a genuine new attempt.
+	captureDeleteEvents([{ name: 'delete_confirmed', principal: callerText }]);
+
 	// Step 1 — league resolution. Apply each transfer / delete the
 	// caller chose, BEFORE the blocking guard. A failed resolution
 	// aborts the whole delete (resolutions are applied immediately, so
@@ -1000,6 +1053,15 @@ export const deleteMyAccountFn = ({
 				data: encodeDocData(signalDoc)
 			}
 		});
+
+		// Churn funnel tail, once per departure (the `alreadyDeleted` guard
+		// mirrors the exit-signal idempotency above). `exit_signal` carries
+		// only the bounded reason bucket and — like the exit-signal doc — no
+		// principal; the free-text note never leaves the doc.
+		captureDeleteEvents([
+			{ name: 'delete_succeeded', principal: callerText },
+			{ name: 'exit_signal', props: { label: validated.reason } }
+		]);
 	}
 
 	return {

@@ -46,9 +46,27 @@ export interface Market {
 	resolution: string;
 	creator: PrincipalText;
 	expiryDate: bigint; // timestamp in ms
+	/**
+	 * When trading opens, in ms — `undefined` when the market is live from
+	 * registration (on-chain `start_ns: None`). When set and still in the future,
+	 * the market is scheduled: discoverable on-chain but not yet tradeable. The
+	 * feed gate withholds ANY scheduled market until this instant, whatever its
+	 * tags (see `wc-schedule.utils`).
+	 */
+	startDate?: bigint; // timestamp in ms
 	createdAt: bigint; // timestamp in ms
 	status: MarketStatus;
 	outcome?: Outcome;
+	/**
+	 * When settlement happened, in ms — `undefined` for an unresolved market, and
+	 * also for a resolved one whose settlement carries no timestamp (a
+	 * categorical `Outcome` input, or a price input settled without one). Sourced
+	 * from clearing's on-chain `SettlementInput` where present, otherwise from the
+	 * `SETTLEMENT` activity row. The only recency key a resolved market has:
+	 * `createdAt` / `expiryDate` say nothing about *when it was called*, so any
+	 * "most recently resolved" ordering must sort on this.
+	 */
+	resolvedAt?: bigint;
 	outcomes?: {
 		id: OutcomeId;
 		title: string;

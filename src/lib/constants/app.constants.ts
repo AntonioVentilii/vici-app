@@ -44,6 +44,20 @@ export const DAY_IN_NANOSECONDS = DAY_IN_SECONDS * SECOND_IN_NANOSECONDS;
 export const WEEK_IN_SECONDS = 7n * DAY_IN_SECONDS;
 export const WEEK_IN_NANOSECONDS = WEEK_IN_SECONDS * SECOND_IN_NANOSECONDS;
 
+/**
+ * Retention horizon for the `resolved_results` collection, in milliseconds.
+ *
+ * The friend-readable results feed accrues one row per participant of every
+ * resolved market and would grow unbounded without a cap, so the satellite's
+ * controllers-only cleanup prunes rows whose `resolvedAtMs` is older than this.
+ * The horizon must not be shorter than the digest's active `StandingsWindow`
+ * (the longest bounded window the consumer reads is `'month'`); it is sized at
+ * 45 days — a calendar month plus a ~2-week grace margin — so a row stays
+ * readable for the whole window even at the month boundary, and a slightly
+ * delayed prune never drops a row the digest still needs.
+ */
+export const RESOLVED_RESULTS_RETENTION_MS = 45 * DAY_IN_MS;
+
 export const II_MAX_TIME_TO_LIVE_NS = WEEK_IN_NANOSECONDS;
 
 export const WALLET_PAGINATION = 10n;

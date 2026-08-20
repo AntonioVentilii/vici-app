@@ -5,6 +5,7 @@ import {
 	type AppLocale
 } from '$lib/constants/locale.constants';
 import { initStorageStore } from '$lib/stores/storage.store';
+import { ensureLocaleCatalogs } from '$lib/utils/i18n.utils';
 import { detectBrowserLocale } from '$lib/utils/locale.utils';
 import {
 	del as delStorage,
@@ -54,14 +55,45 @@ if (browser && !hasStorage({ key: LOCALE_STORAGE_KEY })) {
 	setStorage({ key: LOCALE_STORAGE_KEY, value: detectedLocale });
 }
 
+// Monotonic pick token: catalogs load async before a switch applies, so two
+// rapid picks could otherwise resolve out of order and land the app on the
+// earlier (slower-loading) locale. Only the latest pick may commit.
+let localeSwitchToken = 0;
+
+const switchLocale = ({ locale, commit }: { locale: AppLocale; commit: () => void }): void => {
+	const token = ++localeSwitchToken;
+
+	// Load the catalog chain BEFORE flipping the store — the flip is what
+	// re-renders every `t()` consumer, and a flip that beats the chunk fetch
+	// would paint the `en` fallback with no later re-render to correct it.
+	// (`ensureLocaleCatalogs` resolves even when a chunk fetch fails — the
+	// switch still commits and renders `en` copy until a later retry — but
+	// that trades a wrong-language paint on a flaky network for never
+	// wedging the picker.)
+	void ensureLocaleCatalogs(locale).then(() => {
+		if (token === localeSwitchToken) {
+			commit();
+		}
+	});
+};
+
 /**
  * Apply an explicit locale choice from the picker: persist the locale and mark
  * it as a deliberate pick so the "Use automatic" reset becomes available.
+ * The switch commits once `ensureLocaleCatalogs` settles, so on a healthy
+ * network the UI never paints the fallback copy mid-switch; if a catalog
+ * chunk fails to fetch, the switch still commits and `t()` renders `en`
+ * until a later load retries.
  */
 export const setLocale = (locale: AppLocale): void => {
-	localeStore.set({ key: LOCALE_STORAGE_KEY, value: locale });
-	setStorage({ key: LOCALE_EXPLICIT_KEY, value: true });
-	explicitChoice.set(true);
+	switchLocale({
+		locale,
+		commit: () => {
+			localeStore.set({ key: LOCALE_STORAGE_KEY, value: locale });
+			setStorage({ key: LOCALE_EXPLICIT_KEY, value: true });
+			explicitChoice.set(true);
+		}
+	});
 };
 
 /**
@@ -78,7 +110,12 @@ export const clearLocaleChoice = (): void => {
 	// later visit re-detect from a clean slate — the first-visit catch above
 	// re-persists a fresh detection on next load. Overwriting with the current
 	// `detectedLocale` would instead leave a stored value that pins the locale.
-	localeStore.reset({ key: LOCALE_STORAGE_KEY });
+	switchLocale({
+		locale: detectedLocale,
+		commit: () => {
+			localeStore.reset({ key: LOCALE_STORAGE_KEY });
+		}
+	});
 };
 
 const isRegisteredLocale = (value: unknown): value is AppLocale =>
@@ -130,7 +167,12 @@ if (browser) {
 			// unparseable / unregistered value is ignored rather than reset: no
 			// code path writes one, so treat it as noise instead of a choice.
 			if (isNullish(event.newValue)) {
-				localeStore.update(() => detectedLocale);
+				switchLocale({
+					locale: detectedLocale,
+					commit: () => {
+						localeStore.update(() => detectedLocale);
+					}
+				});
 
 				return;
 			}
@@ -138,7 +180,12 @@ if (browser) {
 			const next = parseStoredLocale(event.newValue);
 
 			if (nonNullish(next)) {
-				localeStore.update(() => next);
+				switchLocale({
+					locale: next,
+					commit: () => {
+						localeStore.update(() => next);
+					}
+				});
 			}
 
 			return;

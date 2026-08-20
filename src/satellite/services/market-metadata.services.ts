@@ -1,7 +1,8 @@
 import { Collection } from '$lib/constants/collections.constants';
-import { normalizeMarketTags } from '$lib/constants/market-tags.constants';
+import { normalizeStoredTags } from '$lib/constants/market-taxonomy.constants';
 import type { MarketMetadata, MarketMetadataInput } from '$lib/types/market-metadata';
 import { isAdmin, isCreatorOrAdmin } from '$satellite/services/_authz';
+import { updateMarketTagIndex } from '$satellite/services/market-tag-index.services';
 import { isNullish } from '@dfinity/utils';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobuild/functions/sdk';
@@ -59,7 +60,7 @@ export const upsertMarketMetadata = async ({
 		seriesId,
 		whyNow: data.whyNow,
 		events: data.events ?? [],
-		tags: normalizeMarketTags(data.tags ?? []),
+		tags: normalizeStoredTags(data.tags ?? []),
 		suggested,
 		subtitle: data.subtitle,
 		updatedAt: Number(time() / 1_000_000n),
@@ -74,6 +75,16 @@ export const upsertMarketMetadata = async ({
 			data: encodeDocData(metadata)
 		},
 		caller
+	});
+
+	// Keep the reverse index in sync inline — Juno hooks don't fire on
+	// serverless `setDocStore`, so this is the only place a metadata write can
+	// update it. The index maintains a bucket per micro AND per derived macro;
+	// it re-derives those bucket keys from each tag set itself.
+	updateMarketTagIndex({
+		seriesId,
+		oldTags: currentData?.tags ?? [],
+		newTags: metadata.tags
 	});
 
 	return metadata;

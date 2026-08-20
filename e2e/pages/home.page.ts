@@ -1,6 +1,52 @@
-import { isNullish } from '@dfinity/utils';
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { TestId } from '../../src/lib/constants/test-ids.constants';
+
+/**
+ * The Arena referral link (`FriendsTab`). Rendered only once the invite code
+ * resolves, which makes it both the thing to pin (see
+ * {@link PINNED_SNAPSHOT_TEXT}) and the signal that the tab's profile-derived
+ * content has hydrated — see {@link HomePage.arenaInviteLink}.
+ */
+const ARENA_INVITE_LINK_SELECTOR = '.invite-copyurl';
+
+/** How long the DOM must stay unmutated to count as settled. */
+const DOM_QUIET_MS = 500;
+/** Upper bound on the quiet wait — see {@link HomePage.waitForRenderSettled}. */
+const DOM_QUIET_TIMEOUT_MS = 10_000;
+
+/**
+ * Text that is genuinely different on every CI run and therefore rewrites its
+ * own baseline whenever it lands in a screenshot. Pinned (not masked) for the
+ * reason spelled out in {@link HomePage.stabilizeForSnapshot}: a mask is sized
+ * from the element box, so variable-width text drifts even behind one.
+ *
+ * Each entry was confirmed by diffing the baselines two consecutive CI runs of
+ * the same commit produced:
+ *
+ * - `.profile-hero-handle` — the signed-in principal's handle. Every run signs
+ *   in as a fresh dev principal, and the handle is either its shortened
+ *   principal default or a handle an earlier spec claimed for it, so it reads
+ *   e.g. `@e2ems32iwxz` then `@e2ems33k1re`.
+ * - `.invite-copyurl` — the referral link. Its code is minted per profile by
+ *   the satellite hook, so a fresh principal always gets a new one
+ *   (`/i/JH3T2JAF` then `/i/5PBJ6STF`).
+ * - `.portfolio-hero-stat dd.num` — the Portfolio hero stat figures (unrealized
+ *   PnL, accuracy, rank). Accuracy is the observed offender: it reads `0.0%`
+ *   until the profile hydrates and `100.0%` after, because `displayAccuracyPct`
+ *   shows an optimistic 100% for a user with no settled predictions — so it
+ *   flips on a hydration race. Its siblings are pinned with it because they
+ *   derive from the same per-run trading state and would drift the same way
+ *   once the seeded state stops being empty.
+ *
+ * Pinning trades away pixel-level regression cover on these specific values.
+ * That cover was never real: the values are non-deterministic in CI, which is
+ * exactly why the gate could not stay green.
+ */
+const PINNED_SNAPSHOT_TEXT: { selector: string; text: string }[] = [
+	{ selector: '.profile-hero-handle', text: '@xxxxxxxxxxx' },
+	{ selector: ARENA_INVITE_LINK_SELECTOR, text: 'xxxxxxxxxxxxxxxxx/i/XXXXXXXX' },
+	{ selector: '.portfolio-hero-stat dd.num', text: '000' }
+];
 
 /**
  * Page object for the Vici signed-in surfaces and the auth / onboarding
@@ -8,8 +54,8 @@ import { TestId } from '../../src/lib/constants/test-ids.constants';
  *
  * The (app) layout gates every route on a resolved session — anonymous
  * visits to `/app`, `/portfolio`, etc. redirect to `/signin`. Sign-in
- * itself routes a brand-new principal through the `/signup` onboarding
- * beats before the app shell, so the helpers below drive that flow
+ * itself routes a brand-new principal through the `/signup` one-screen
+ * onboarding before the app shell, so the helpers below drive that flow
  * end-to-end rather than expecting a bare sign-in to land in the app.
  *
  * Tests should prefer this object over reaching into selectors so that
@@ -33,9 +79,16 @@ export class HomePage {
 	readonly userMenu: Locator;
 	readonly signOutButton: Locator;
 	readonly logoutButton: Locator;
-	readonly onboardingFlow: Locator;
-	readonly onboardingTeamSkip: Locator;
-	readonly onboardingCard: Locator;
+	/**
+	 * The Arena referral link. Present only after the invite code resolves, so
+	 * awaiting it is how an Arena snapshot avoids capturing the tab
+	 * mid-hydration — the state where the whole invite copyfield (and the
+	 * friends-rank row beneath it) is still missing, which is what made the
+	 * Arena baseline rewrite itself on consecutive runs.
+	 */
+	readonly arenaInviteLink: Locator;
+	readonly onboarding: Locator;
+	readonly onboardingHandleInput: Locator;
 	readonly onboardingHandleSkip: Locator;
 	readonly onboardingPrimary: Locator;
 
@@ -50,15 +103,78 @@ export class HomePage {
 		this.userMenu = page.locator(`[data-tid="${TestId.UserMenu}"]:visible`);
 		this.signOutButton = page.getByTestId(TestId.SignOutButton);
 		this.logoutButton = page.getByTestId(TestId.Logout);
-		this.onboardingFlow = page.getByTestId(TestId.OnboardingFlow);
-		this.onboardingTeamSkip = page.getByTestId(TestId.OnboardingTeamSkip);
-		this.onboardingCard = page.getByTestId(TestId.OnboardingCard);
+		this.arenaInviteLink = page.locator(ARENA_INVITE_LINK_SELECTOR);
+		this.onboarding = page.getByTestId(TestId.Onboarding);
+		this.onboardingHandleInput = page.getByTestId(TestId.OnboardingHandleInput);
 		this.onboardingHandleSkip = page.getByTestId(TestId.OnboardingHandleSkip);
 		this.onboardingPrimary = page.getByTestId(TestId.OnboardingPrimary);
 	}
 
 	async goto(): Promise<void> {
 		await this.page.goto('/');
+	}
+
+	/**
+	 * Wait until the page has stopped rendering, so a screenshot can't catch a
+	 * surface mid-hydration.
+	 *
+	 * `networkidle` is not sufficient on the signed-in pages: several sections
+	 * (Arena's friends-rank list, the Portfolio positions list, the Profile
+	 * header) paint from state that resolves after the last response lands, so
+	 * consecutive runs captured different mixes of skeleton / loaded / absent
+	 * blocks and each rewrote the baseline. Two conditions close that window:
+	 *
+	 * 1. No placeholder is left in the DOM. This is the load-bearing one: a page
+	 *    waiting on a response is perfectly quiet, so condition 2 alone happily
+	 *    photographs a half-loaded screen. Placeholder class names are
+	 *    per-component and abbreviate inconsistently — `portfolio-skeleton` and
+	 *    `detail-skeleton-block`, but `ar-skel-block` on the Arena hero — so the
+	 *    match is on `skel`, the longest shared prefix. Matching only `skeleton`
+	 *    silently skipped the Arena hero and left it drifting.
+	 * 2. No DOM mutation for {@link DOM_QUIET_MS}, which catches blocks that
+	 *    have no placeholder at all and simply appear late. Naming each one
+	 *    would be endless and would rot as the UI changes.
+	 *
+	 * The quiet wait is bounded and its timeout swallowed: a surface with a
+	 * permanent ticker (a countdown, a poll) would never go quiet, and hanging
+	 * the spec is worse than the drift this reduces. The placeholder check is a
+	 * real assertion — one still present after the wait means the page genuinely
+	 * never finished loading, which should fail loudly.
+	 */
+	async waitForRenderSettled(): Promise<void> {
+		await expect(this.page.locator('[class*="skel"]')).toHaveCount(0);
+
+		try {
+			await this.page.waitForFunction(
+				(quietMs) => {
+					const marker = window as unknown as {
+						__viciDomSettleLast?: number;
+						__viciDomSettleObserver?: MutationObserver;
+					};
+
+					if (!marker.__viciDomSettleObserver) {
+						marker.__viciDomSettleLast = performance.now();
+						marker.__viciDomSettleObserver = new MutationObserver(() => {
+							marker.__viciDomSettleLast = performance.now();
+						});
+						marker.__viciDomSettleObserver.observe(document.body, {
+							attributes: true,
+							characterData: true,
+							childList: true,
+							subtree: true
+						});
+					}
+
+					return performance.now() - (marker.__viciDomSettleLast ?? 0) >= quietMs;
+				},
+				DOM_QUIET_MS,
+				{ timeout: DOM_QUIET_TIMEOUT_MS }
+			);
+		} catch (err: unknown) {
+			if (!(err instanceof Error) || err.name !== 'TimeoutError') {
+				throw err;
+			}
+		}
 	}
 
 	/**
@@ -99,6 +215,9 @@ export class HomePage {
 	 *   the profile page body. Same byte-stability rationale as the time
 	 *   chip: pinning the text is the only fix that doesn't trade one
 	 *   variable-width drift for another.
+	 * - Replaces the remaining per-run identities and figures listed in
+	 *   {@link PINNED_SNAPSHOT_TEXT}, each of which was observed rewriting its
+	 *   baseline on consecutive CI runs of the same commit.
 	 *
 	 * Call this immediately before any `toHaveScreenshot` in a spec that
 	 * renders market cards or signed-in profile content.
@@ -109,7 +228,7 @@ export class HomePage {
 		});
 
 		await this.page.evaluate(
-			({ timeRemainingSel, principalSel }) => {
+			({ timeRemainingSel, principalSel, pinned }) => {
 				for (const el of document.querySelectorAll<HTMLElement>(timeRemainingSel)) {
 					el.textContent = '-- remaining';
 				}
@@ -117,62 +236,33 @@ export class HomePage {
 				for (const el of document.querySelectorAll<HTMLElement>(principalSel)) {
 					el.textContent = 'xxxxxxx…xxxxxxx';
 				}
+
+				for (const { selector, text } of pinned) {
+					for (const el of document.querySelectorAll<HTMLElement>(selector)) {
+						el.textContent = text;
+					}
+				}
 			},
 			{
 				timeRemainingSel: `[data-tid="${TestId.MarketTimeRemaining}"]`,
-				principalSel: `[data-tid="${TestId.PrincipalDisplay}"]`
+				principalSel: `[data-tid="${TestId.PrincipalDisplay}"]`,
+				pinned: PINNED_SNAPSHOT_TEXT
 			}
 		);
 	}
 
 	/**
-	 * Swipe the Beat 1.b first-call card to the right to commit a YES call.
-	 * The card has no button — the only way to advance is a pointer drag
-	 * past the component's 80px commit threshold — so we drive a mouse
-	 * gesture from the card centre well past it.
-	 */
-	async commitFirstCall(): Promise<void> {
-		await this.onboardingCard.waitFor({ state: 'visible' });
-
-		// Dismiss the one-time gesture coach (`FlowCoach`) up front. Its
-		// overlay is `pointer-events: none`, but its centred caption is
-		// `pointer-events: auto` and sits exactly over the card centre, so a
-		// centre-anchored pointer-down would land on the caption instead of
-		// the card. Escape dismisses it; it's a no-op once already gone.
-		await this.page.keyboard.press('Escape');
-
-		const box = await this.onboardingCard.boundingBox();
-
-		if (isNullish(box)) {
-			throw new Error('Onboarding first-call card has no bounding box to swipe.');
-		}
-
-		// Anchor the swipe in the lower third — clear of the (centred) coach
-		// caption and of any interactive target, on the card's plain body —
-		// then drag right well past the component's 80px commit threshold.
-		const startX = box.x + box.width / 2;
-		const startY = box.y + box.height * 0.72;
-
-		await this.page.mouse.move(startX, startY);
-		await this.page.mouse.down();
-		await this.page.mouse.move(startX + 220, startY, { steps: 12 });
-		await this.page.mouse.up();
-	}
-
-	/**
-	 * Walk the `/signup` onboarding beats up to (but not including) the auth
-	 * step, taking the fastest path: skip the team picker (Beat 1.a), swipe
-	 * the derived first-call card (Beat 1.b), then skip the handle picker
-	 * (Beat 2). Leaves the flow on Beat 3 with the provider stack mounted.
+	 * Bring the `/signup` one-screen onboarding to the point where auth can
+	 * start. The empty handle field auto-claims its pool suggestion, so the
+	 * provider stack ungates (the dev button becomes enabled) without any
+	 * interaction — leaving the flow ready for the dev sign-in click. The
+	 * "Skip" affordance is deliberately untouched: it starts guest mode, not
+	 * the auth path.
 	 */
 	async advanceOnboardingToAuth(): Promise<void> {
-		await this.onboardingFlow.waitFor({ state: 'visible' });
+		await this.onboarding.waitFor({ state: 'visible' });
 
-		await this.onboardingTeamSkip.click();
-		await this.commitFirstCall();
-		await this.onboardingHandleSkip.click();
-
-		await this.signInDevButton.waitFor({ state: 'visible' });
+		await expect(this.signInDevButton).toBeEnabled();
 	}
 
 	/**
@@ -200,8 +290,8 @@ export class HomePage {
 	}
 
 	/**
-	 * High-level helper: opens `/signup`, walks the onboarding beats, signs
-	 * in via the dev mock identity at Beat 3, and lands on a fully-
+	 * High-level helper: opens `/signup`, brings the one-screen onboarding to
+	 * the auth step, signs in via the dev mock identity, and lands on a fully-
 	 * interactive signed-in shell (`/flow`). A fresh dev principal has no
 	 * profile, so this new-user path is the canonical way into the app — a
 	 * bare sign-in on `/signin` would itself bounce here.
@@ -224,7 +314,7 @@ export class HomePage {
 
 			await this.advanceOnboardingToAuth();
 
-			// Beat 3's dev provider drives the same `signIn({ dev: {} })` →
+			// The dev provider drives the same `signIn({ dev: {} })` →
 			// `onAuthStateChange` pipeline as the /signin gate; on success the
 			// onboarding handoff is drained and the app hard-loads `/flow`.
 			await this.signInDevButton.click();
@@ -248,10 +338,78 @@ export class HomePage {
 						`First attempt: ${(firstError as Error).message}. ` +
 						`Second attempt (after page reload): ${(secondError as Error).message}. ` +
 						`This typically indicates the Vite-↔-PocketIC proxy has entered a ` +
-						`sticky error state — see docs/ai/frontend/testing.md.`
+						`sticky error state — see docs/ai/frontend/testing.md.`,
+					{ cause: secondError }
 				);
 			}
 		}
+	}
+
+	/**
+	 * Hard-delete the signed-in dev principal's profile via the dev-only
+	 * reset hook (`window.__viciE2E.resetMyProfile`, installed by the `(app)`
+	 * layout when `isDev()`).
+	 *
+	 * The dev mock identity resolves to ONE principal for the whole CI run,
+	 * and every prior `signInAsDevUser` auto-claims the handle field's pool
+	 * suggestion and completes onboarding for it — so by the time a spec needs
+	 * a brand-new user, that principal is already a fully-onboarded returning
+	 * user. Delete its profile so the next sign-in bootstraps fresh, restoring
+	 * the genuine new-user path.
+	 *
+	 * IMPORTANT: follow this with {@link signOutDev}, NOT {@link logout}. The
+	 * delete must be the last signed-in action before sign-out — a signed-in
+	 * page load in between (navigating to the Settings sign-out surface) re-runs
+	 * `ensureProfile`, which finds no doc and immediately re-bootstraps one,
+	 * resurrecting exactly what this deleted. `signOutDev` signs out in place
+	 * with no navigation, so nothing re-bootstraps it.
+	 */
+	async resetDevProfile(): Promise<void> {
+		await this.page.evaluate(async () => {
+			const hooks = (window as unknown as { __viciE2E?: { resetMyProfile: () => Promise<void> } })
+				.__viciE2E;
+
+			if (!hooks) {
+				throw new Error(
+					'Dev-only e2e reset hook (window.__viciE2E) is not installed — expected isDev() on the dev server.'
+				);
+			}
+
+			await hooks.resetMyProfile();
+		});
+	}
+
+	/**
+	 * Durably wipe the persisted session via the dev-only hook so the NEXT full
+	 * page load is signed-out. Deliberately does NOT call Juno `signOut()`.
+	 *
+	 * Juno persists the dev mock identity in `juno-dev-identifiers`, and its
+	 * `signOut()` RE-SAVES that identity (for next-time convenience) — so clearing
+	 * and then signing out just puts the identity back, and the following
+	 * `/signin` reload auto-restores the session and bounces to `/flow`, racing
+	 * the caller's `goto('/signup')`. Skipping `signOut()` avoids that re-persist
+	 * entirely: we wipe every persisted store while still on `/flow` (where the
+	 * hook, installed by the `(app)` layout, exists and the page is stable), and
+	 * the caller's full `goto('/signup')` then tears down the in-memory session
+	 * and cold-loads signed-out.
+	 *
+	 * Pairs with {@link resetDevProfile}: no signed-in page LOAD happens between
+	 * the delete and the signed-out `/signup`, so `ensureProfile` can't
+	 * re-bootstrap the deleted profile.
+	 */
+	async clearDevSession(): Promise<void> {
+		await this.page.evaluate(async () => {
+			const hooks = (window as unknown as { __viciE2E?: { clearSession: () => Promise<void> } })
+				.__viciE2E;
+
+			if (!hooks) {
+				throw new Error(
+					'Dev-only e2e reset hook (window.__viciE2E) is not installed — expected isDev() on the dev server.'
+				);
+			}
+
+			await hooks.clearSession();
+		});
 	}
 
 	/**

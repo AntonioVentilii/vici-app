@@ -15,7 +15,7 @@
 
 	const { sessionXp = 0 }: Props = $props();
 
-	const INVITE_TOAST_MS = 1_600;
+	const INVITE_TOAST_MS = 2_200;
 
 	let toast = $state('');
 

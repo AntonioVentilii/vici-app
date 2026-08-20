@@ -1033,7 +1033,11 @@
 	display: block;
 }
 .lp-nav .lp-nav-inner {
-	padding: 14px clamp(20px, 4vw, 32px);
+	/* Standalone PWA (Home-Screen icon) renders fullscreen under the
+	   translucent iOS status bar, so the pill must clear the top safe-area
+	   inset or the wordmark collides with the clock. `env()` is 0 in a normal
+	   browser tab, where the chrome already sits above the viewport. */
+	padding: calc(14px + env(safe-area-inset-top, 0px)) clamp(20px, 4vw, 32px) 14px;
 	max-width: 1280px;
 	margin: 0 auto;
 	display: flex;
@@ -1629,7 +1633,9 @@ html[data-ios][data-theme='peach'] .dnav.is-scrolled {
 .dnav-inner {
 	max-width: 1280px;
 	margin: 0 auto;
-	padding: 14px clamp(20px, 4vw, 32px);
+	/* See `.lp-nav-inner`: clear the top safe-area inset so the standalone
+	   PWA bar doesn't tuck under the iOS status bar. */
+	padding: calc(14px + env(safe-area-inset-top, 0px)) clamp(20px, 4vw, 32px) 14px;
 	display: flex;
 	align-items: center;
 	gap: 32px;

@@ -40,6 +40,25 @@ export const MarketMetadataSchema = j.strictObject({
 	updatedBy: PrincipalTextSchema
 });
 
+// One bucket of the `market tag → seriesId[]` reverse index. The doc key is
+// the tag id; `seriesIds` is the de-duplicated set of series carrying that tag.
+export const MarketTagIndexSchema = j.strictObject({
+	tag: j.string(),
+	seriesIds: j.array(j.string()).default([]),
+	updatedAtMs: j.number()
+});
+
+/** Result of `getMarketTags` — every tag bucket of the reverse index, for the
+ * cockpit's market classification (admin-gated; see `getMarketTagsFn`). */
+export const GetMarketTagsResultSchema = j.strictObject({
+	buckets: j.array(
+		j.strictObject({
+			tag: j.string(),
+			seriesIds: j.array(j.string()).default([])
+		})
+	)
+});
+
 export const UpsertMarketMetadataArgsSchema = j.strictObject({
 	seriesId: j.string(),
 	data: MarketMetadataInputSchema

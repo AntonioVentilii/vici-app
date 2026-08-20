@@ -1,5 +1,6 @@
 import {
 	INBOX_DISMISSED_STORAGE_KEY,
+	INBOX_PROGRESS_STORAGE_KEY,
 	INBOX_READ_STORAGE_KEY,
 	INBOX_SETTLED_READ_STORAGE_KEY
 } from '$lib/constants/inbox.constants';
@@ -67,6 +68,7 @@ export const reconcileIdentityScopedStorage = ({
 	del({ key: INBOX_SETTLED_READ_STORAGE_KEY });
 	del({ key: INBOX_READ_STORAGE_KEY });
 	del({ key: INBOX_DISMISSED_STORAGE_KEY });
+	del({ key: INBOX_PROGRESS_STORAGE_KEY });
 
 	set({ key: STORAGE_OWNER_KEY, value: ownerKey });
 };

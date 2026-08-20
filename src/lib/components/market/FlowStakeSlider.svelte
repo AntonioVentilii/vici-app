@@ -15,6 +15,10 @@
 		stakeNoWin: number;
 		onStakeRangeChange: (e: Event) => void;
 		onSelectStake: (rung: VxpStake) => void;
+		// Proactive stake warning resolved by FlowMode. `'unaffordable'` = the
+		// size exceeds spendable VXP; `'wont-finish'` = it would leave too
+		// little to finish the sitting. `'none'` renders no row.
+		stakeWarning?: 'none' | 'unaffordable' | 'wont-finish';
 	}
 
 	let {
@@ -27,7 +31,8 @@
 		stakeYesWin,
 		stakeNoWin,
 		onStakeRangeChange,
-		onSelectStake
+		onSelectStake,
+		stakeWarning = 'none'
 	}: Props = $props();
 
 	// Each peg label is centred on the slider stop it selects, so the
@@ -105,6 +110,13 @@
 			<span class="num text-no">−{currentStake} VXP</span>
 		</div>
 	</div>
+	{#if stakeWarning !== 'none'}
+		<p class="flow-stake-warning" aria-live="polite" role="status">
+			{stakeWarning === 'unaffordable'
+				? t({ locale: $localeStore, key: 'flow.stake.warning.unaffordable' })
+				: t({ locale: $localeStore, key: 'flow.stake.warning.wont_finish' })}
+		</p>
+	{/if}
 </section>
 
 <style lang="postcss">
@@ -297,6 +309,19 @@
 		font-family: var(--font-mono);
 		font-size: var(--t-10);
 		letter-spacing: 0.1em;
+	}
+
+	/* Proactive size warning — reuses the cap's red tint so a problematic
+	   size reads as a soft warning, not an error banner. One dense line. */
+	.flow-stake-warning {
+		margin: 0.5rem 0 0;
+		padding: 0.4rem 0.5rem;
+		border-radius: var(--r-8);
+		border: 1px solid rgba(255, 107, 107, 0.3);
+		background: rgba(255, 107, 107, 0.08);
+		color: var(--no);
+		font-size: var(--t-12);
+		line-height: 1.3;
 	}
 
 	/* The handle glides and the fill grows toward a newly selected rung;

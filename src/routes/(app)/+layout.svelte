@@ -6,23 +6,28 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import GuestSaveHost from '$lib/components/guest/GuestSaveHost.svelte';
 	import DesktopAppNav from '$lib/components/layout/DesktopAppNav.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import MenagerieCelebrationHost from '$lib/components/menagerie/MenagerieCelebrationHost.svelte';
+	import SurfaceTipHost from '$lib/components/onboarding/SurfaceTipHost.svelte';
 	import AccountReturnGate from '$lib/components/settings/AccountReturnGate.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import NotifToastHost from '$lib/components/ui/NotifToastHost.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
-	import { PublicPath } from '$lib/constants/routes.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
+	import { guestMode } from '$lib/derived/guest.derived';
 	import { authBusy, userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
+	import { installE2eResetHook } from '$lib/dev/e2e-reset';
 	import {
 		drainPendingOnboarding,
 		hasPendingOnboarding
 	} from '$lib/services/onboarding-handoff.services';
+	import { initA2hs } from '$lib/stores/a2hs.store';
 	import { initFlowPrewarm } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -61,6 +66,15 @@
 	onMount(() => {
 		document.documentElement.dataset.app = '1';
 
+		// Capture Chrome's `beforeinstallprompt` before any child mounts — the
+		// browser fires it once, early, on a cold load. Idempotent and
+		// browser-only (see `a2hs.store`).
+		initA2hs();
+
+		// Dev-only: expose the e2e profile-reset hook so the onboarding spec can
+		// escape the shared dev mock identity. No-op in production.
+		installE2eResetHook();
+
 		return () => {
 			delete document.documentElement.dataset.app;
 		};
@@ -81,9 +95,18 @@
 	// Info / legal docs (`/info/[slug]`) sit inside the (app) shell so
 	// signed-in users get the navpill while reading them, but they
 	// must also stay reachable from pre-auth surfaces (the signup
-	// terms / privacy links in `OnboardingBeat3`). Treat them as a
+	// terms / privacy links in onboarding). Treat them as a
 	// public route alongside the markets exemption above.
 	const isPublicInfoRoute = $derived(page.url.pathname.startsWith('/info/'));
+
+	// Guest preview surface — an active guest session (the onboarding Skip path)
+	// may reach Flow to predict freely with no account. Scoped to Flow: that is
+	// all the preview funnel needs, and it keeps a plain signed-out visitor (no
+	// guest session) bounced to /signin everywhere as before. A guest never has
+	// a real principal, so every auth-requiring path past Flow stays gated.
+	const isGuestAllowedRoute = $derived(
+		$guestMode && page.url.pathname.startsWith(resolve(AppPath.Flow))
+	);
 
 	// Auth-hydration window. After a provider resolves (notably the
 	// Internet Identity multi-account path), `goto(Flow)` can mount this
@@ -194,7 +217,7 @@
 			return;
 		}
 
-		if (isPublicMarketsRoute || isPublicInfoRoute) {
+		if (isPublicMarketsRoute || isPublicInfoRoute || isGuestAllowedRoute) {
 			return;
 		}
 
@@ -345,13 +368,13 @@
 				blank shell, and the redirect effects above are held off too.
 			-->
 			<div
-				class="flex min-h-[calc(100vh-10rem)] items-center justify-center"
+				class="flex min-h-full items-center justify-center"
 				aria-label={t({ locale: $localeStore, key: 'authn.checking.aria' })}
 				aria-live="polite"
 				data-tid={TestId.AppMain}
 				role="status"
 			>
-				<LoadingSpinner size="md" />
+				<LoadingSpinner size="lg" />
 			</div>
 		{:else}
 			{#key page.url.pathname}
@@ -394,12 +417,30 @@
 	{/if}
 
 	<!--
+		First-run surface tips — layer 2 of the tutorial system. The first time an
+		early user (`totalTrades < 5`) lands on Dash / Arena / Profile, a single
+		non-blocking tip slides in above the pillnav, shown at most once per
+		surface per device. Distinct from the in-flow `FlowCoach` (layer 1).
+	-->
+	{#if $userSignedIn}
+		<SurfaceTipHost />
+	{/if}
+
+	<!--
 		Slide-in notification toast. Mounted at the shell level so it
 		surfaces on any signed-in surface the moment a genuinely new inbox
 		item arrives (see `inbox.store.ts`'s `latestInboxToast`). Pinned to
 		the top of the viewport, above the content.
 	-->
 	<NotifToastHost />
+
+	<!--
+		Guest conversion funnel. For a signed-out guest previewing Flow it
+		mounts the standing "start for real" inline CTA and the soft / remind
+		save sheet, gated so they never stack on a menagerie reveal or a Flow
+		beat. Inert (renders nothing) for members and plain signed-out visitors.
+	-->
+	<GuestSaveHost />
 
 	<!--
 		Recovery-on-return gate. Self-hides when the profile is active, so

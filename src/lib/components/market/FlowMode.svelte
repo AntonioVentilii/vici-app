@@ -14,6 +14,7 @@
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
 	import FlowEntry from '$lib/components/market/FlowEntry.svelte';
+	import FlowOutOfFunds from '$lib/components/market/FlowOutOfFunds.svelte';
 	import FlowStreakBreakBanner from '$lib/components/market/FlowStreakBreakBanner.svelte';
 	import FlowTopBar from '$lib/components/market/FlowTopBar.svelte';
 	import FlowXpPops from '$lib/components/market/FlowXpPops.svelte';
@@ -21,12 +22,14 @@
 	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
 	import XpToast from '$lib/components/market/XpToast.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
+	import A2hsSheet from '$lib/components/pwa/A2hsSheet.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
+	import { guestMode } from '$lib/derived/guest.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { minuteTick_ms } from '$lib/derived/time.derived';
 	import { vxpSpendable } from '$lib/derived/vxp-holdings.derived';
@@ -35,10 +38,12 @@
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { persistDailyStreak, recordFlowSwipe } from '$lib/services/profile.services';
 	import { loadMarketPriceCandles } from '$lib/services/trade.services';
+	import { canInstall, shouldAutoPrompt } from '$lib/stores/a2hs.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { setFlowBeatActive } from '$lib/stores/flow-beat.store';
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
+	import { recordGuestPick } from '$lib/stores/guest.store';
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketLanguagePreference } from '$lib/stores/market-language.store';
@@ -61,11 +66,7 @@
 		rolloverDailyGoal,
 		writeDailyGoalMirror
 	} from '$lib/utils/daily-goal.utils';
-	import {
-		FLOW_ART_CATEGORY_SET,
-		resolveFlowArtCategory,
-		type FlowArtCategory
-	} from '$lib/utils/flow-art.utils';
+	import { resolveFlowArtCategory } from '$lib/utils/flow-art.utils';
 	import { consumePinnedFlowMarket } from '$lib/utils/flow-pin.utils';
 	import {
 		canExtendSession,
@@ -86,7 +87,7 @@
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import type { MarketPriceSeries } from '$lib/utils/market-price-history.utils';
-	import { translatedLanguageLabel } from '$lib/utils/market-translation.utils';
+	import { marketDisplayText, translatedLanguageLabel } from '$lib/utils/market-translation.utils';
 	import {
 		DAILY_HARD_CAP,
 		recordMotionSwipe,
@@ -124,20 +125,6 @@
 	// re-entered today. See `flow-session.utils` for the arithmetic.
 	const sittingGoal = $derived(sittingGoalFor({ baseline: sessionBaseline, pushedToOvertime }));
 	const maxBets = $derived(maxBetsFor({ sittingGoal, baseline: sessionBaseline }));
-
-	const resolveFlowCategory = ({
-		categoryId,
-		marketId
-	}: {
-		categoryId: string | undefined;
-		marketId: string;
-	}): FlowArtCategory => {
-		if (categoryId && FLOW_ART_CATEGORY_SET.has(categoryId)) {
-			return categoryId as FlowArtCategory;
-		}
-
-		return resolveFlowArtCategory({ categoryId, seed: marketId });
-	};
 
 	let markets = $state<Market[]>([]);
 	let currentIndex = $state(0);
@@ -189,6 +176,17 @@
 	// first call. A failed call subtracts itself back out.
 	let sessionCommittedUsd = $state(ZERO);
 	let completed = $state(false);
+
+	// Install nudge on the summary. The FlowEnd row shows only when the app
+	// can be installed AND the trigger thresholds hold for the user's lifetime
+	// call count (`totalTrades`) — primary at >= 15, fallback at >= 10 on a
+	// 2nd+ session, never in cool-off / installed / already-shown. `a2hsSheetOpen`
+	// owns the shared install sheet, opened from the row.
+	let a2hsSheetOpen = $state(false);
+	const showInstallNudge = $derived(
+		$canInstall && shouldAutoPrompt($userStore.profile?.totalTrades ?? 0)
+	);
+
 	// `nowMs` tracks the shared one-minute heartbeat while the session is in
 	// flight (minute precision is plenty for a day rollover), but freezes once
 	// `completed` flips true so the FlowEnd takeover's Push-to-15 eligibility
@@ -202,9 +200,9 @@
 
 		nowMs = $minuteTick_ms;
 	});
-	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
-	// the FlowCard render loop to drive the per-card generative artwork
-	// (which uses the *primary* tag — see `primaryMarketTag`).
+	// `seriesId → stored tags` lookup loaded once on mount; consumed by the
+	// FlowCard render loop to drive the per-card generative artwork (which
+	// resolves the primary macro — see `resolveFlowArtCategory`).
 	let marketTagMap = $state<Record<string, string[]>>({});
 	let marketMetadataMap = $state<Map<MarketId, MarketMetadata>>(new Map());
 	// Real, market-wide 7d price history (0–100 YES series + time-axis
@@ -259,13 +257,6 @@
 	// rolls over.
 	let dailyGoalCount = $state(0);
 	let dailyGoalDate = $state<string | undefined>(undefined);
-	// Last count the server confirmed for `dailyGoalDate`. The satellite is
-	// authoritative for the daily cap (`recordFlowSwipe`); this tracks the
-	// freshest server value so the error path can clamp the optimistic local
-	// count back down to it — a dropped record must never let the session
-	// climb past what the server actually counted (don't reintroduce the
-	// honest-reset leak via the failure branch).
-	let lastServerDailyGoalDone = $state(0);
 	let hasMarkedActiveThisSession = false;
 	// Set on the first swipe of a session that resumes after a broken
 	// streak. Drives the no-shame "comeback" opener (distinct from the
@@ -301,7 +292,7 @@
 		key: number;
 	}
 	let commitToast = $state<CommitToast | null>(null);
-	let commitToastKeySeq = 0;
+	let commitToastKeySeq = $state(0);
 
 	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
 
@@ -350,6 +341,88 @@
 	// (not a fresh deck) so the 15/day model holds. Suppressed mid-session
 	// (`betsCount === 0` means this run hasn't placed a call yet).
 	const dailyCapReached = $derived(isDailyCapReached(dailyGoalDone));
+
+	// Per-swipe count records are serialised through this FIFO chain. Firing
+	// them concurrently (fast swiping) let out-of-order replies overwrite the
+	// optimistic count — the visible dip — and let a session that left Flow
+	// mid-flight re-read a stale-low count and re-open the daily cap. Chaining
+	// keeps replies ordered; reconciliation only ever raises today's count.
+	let dailyGoalRecordChain: Promise<void> = Promise.resolve();
+
+	const enqueueDailyGoalRecord = (dayKey: string): void => {
+		dailyGoalRecordChain = dailyGoalRecordChain
+			.catch(() => undefined)
+			.then(() => recordFlowSwipe({ dayKey }))
+			.then(({ dailyGoalDone: serverDone, dailyGoalDate: serverDate }) => {
+				// Mirror the authoritative server field regardless of day: the
+				// FIFO chain resolves replies in enqueue order, so the profile
+				// write stays monotonic in time and reflects the latest record.
+				userStore.update((s) =>
+					s.profile
+						? {
+								...s,
+								profile: {
+									...s.profile,
+									dailyGoalDone: serverDone,
+									dailyGoalDate: serverDate
+								}
+							}
+						: s
+				);
+
+				// Reconcile the live count / mirror against this record's OWN
+				// day, not the live `dailyGoalDate`. If the session swiped
+				// across local midnight while this call was in flight,
+				// `dailyGoalDate` has already advanced to the new day; a reply
+				// for the elapsed day is stale and must not clobber it.
+				if (dayKey !== dailyGoalDate) {
+					return;
+				}
+
+				// Monotonic: a reply can only raise today's count, never fall
+				// below the optimistic value the user already sees.
+				dailyGoalCount = Math.max(dailyGoalCount, serverDone);
+				writeDailyGoalMirror({ done: dailyGoalCount, date: dailyGoalDate });
+			})
+			.catch((e: unknown) => {
+				// Non-fatal: the optimistic bump (capped at the hard cap) stands,
+				// so a dropped record only ever leaves the count too HIGH — the
+				// safe direction for the cap — and the next successful record
+				// reconciles it. Never clamp DOWN: that was the dip, and it
+				// briefly re-opened the cap.
+				console.warn('Flow swipe record failed (non-fatal):', e);
+			});
+	};
+
+	// Clearing-margin base units of the cheapest possible call — the smallest
+	// VXP ladder rung. A user whose spendable margin can't cover even this can
+	// afford NO further prediction this session, so the per-card funds gate
+	// would block every YES / NO from here on (see `handleAction`). Computed
+	// once: the floor is fixed, only the spendable side moves.
+	const MIN_STAKE_MARGIN_USD = tokenBaseUnitsToUsdBaseUnits({
+		amount: parseToken({ value: String(VXP_MIN_STAKE), unitName: VXP_TOKEN.decimals }),
+		tokenDecimals: VXP_TOKEN.decimals
+	});
+
+	// Out-of-funds takeover gate — the user has entered the deck but every
+	// spendable VXP is already committed to open predictions, so no further
+	// call this session can be funded (the same shortfall the per-card funds
+	// gate catches, generalised to the cheapest stake). Rather than strand the
+	// user on cards they can't act on — whether they hit the wall on entry or
+	// part-way through — surface a takeover with explicit exits.
+	// Scoped to the VXP domain: `collateralsStore` presence is the signed-in /
+	// loaded check (see the funds gate), the playground domains (USD / ICP) use
+	// fractional sub-rung stakes the VXP floor doesn't model. Held off while
+	// `completed` (a run that met its goal earns FlowEnd, not this) and while a
+	// gating beat plays (`flowPaused`) so it never flashes between cards.
+	const outOfFunds = $derived(
+		entered &&
+			!completed &&
+			!flowPaused &&
+			isViciXp($balanceDomain) &&
+			nonNullish($collateralsStore) &&
+			$vxpSpendable - sessionCommittedUsd < MIN_STAKE_MARGIN_USD
+	);
 
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
@@ -407,25 +480,19 @@
 				({ lastActiveDay } = profile);
 			}
 
-			// Seed the daily-goal count. The profile count is the
-			// authoritative server value (set by `recordFlowSwipe`); it
-			// wins outright when hydrated so a cleared / stale client can't
-			// re-open the daily hard cap. The localStorage mirror only
-			// gates a signed-out / not-yet-loaded session.
+			// Seed the daily-goal count from the higher of the server value
+			// and the localStorage mirror (see `reconcileDailyGoalOnEntry`):
+			// the server count is authoritative, but a fast-swiping session
+			// can leave Flow with per-swipe records still in flight, so the
+			// freshly-read profile may lag the optimistic mirror. Taking the
+			// max never lets a re-entry read below what the user committed,
+			// so bouncing in and out of Flow can't re-open the hard cap.
 			const reconciledGoal = reconcileDailyGoalOnEntry({
-				done: profile?.dailyGoalDone ?? 0,
-				date: profile?.dailyGoalDate,
-				hasProfile: nonNullish(profile)
-			});
-			dailyGoalCount = reconciledGoal.done;
-			dailyGoalDate = reconciledGoal.date;
-			// The hydrated profile count is the last value the server
-			// confirmed for today; the optimistic commit path never lets the
-			// session fall below it on a record failure.
-			lastServerDailyGoalDone = rolloverDailyGoal({
 				done: profile?.dailyGoalDone ?? 0,
 				date: profile?.dailyGoalDate
 			});
+			dailyGoalCount = reconciledGoal.done;
+			dailyGoalDate = reconciledGoal.date;
 
 			// Snapshot the cumulative daily count this sitting resumes from.
 			// Rolled over against the current day so a stale stored date reads
@@ -523,7 +590,7 @@
 		// Bonus pops linger (paired copy needs to read).
 		setTimeout(() => {
 			xpPops = xpPops.filter((p) => p.id !== id);
-		}, 1800);
+		}, 2600);
 	};
 
 	const finishCommitAdvance = () => {
@@ -678,7 +745,7 @@
 				vibrate('low-thud');
 				setTimeout(() => {
 					streakBreakBanner = null;
-				}, 2200);
+				}, 3200);
 			}
 		}
 
@@ -702,6 +769,37 @@
 
 		const stakeHuman = Number(tradeAmount) || 0;
 		const stakeUsd = stakeMarginUsd(currentMarket);
+
+		// Guest preview branch — a guest pick never reaches the engine. We
+		// record it as an in-session preview pick (marketId / side only, no
+		// stake) purely to power the conversion cadence, and skip `placeOrder`
+		// / the identity call entirely. Free guest play therefore can't move
+		// market prices. The session-stake accounting and the funds gate are
+		// member-only (the guest has no balance), so they are bypassed here.
+		if ($guestMode) {
+			const guestPickNumber = recordGuestPick({ marketId: currentMarket.id, side: action });
+
+			// `position_taken` with `source: 'guest_flow'` separates guest
+			// activity from member activity without a new event; `count` is the
+			// persisted session pick number (the cadence counter), so it stays
+			// consistent across a reload rather than tracking this sitting's
+			// in-memory `betsCount`.
+			track({
+				name: 'position_taken',
+				source: 'guest_flow',
+				marketId: currentMarket.id,
+				label: action,
+				count: guestPickNumber
+			});
+
+			betsCount += 1;
+			streak += 1;
+			flowTick();
+			finishCommitAdvance();
+
+			return;
+		}
+
 		sessionCommittedUsd += stakeUsd;
 
 		const executeTrade = async () => {
@@ -731,7 +829,11 @@
 						locale: $localeStore,
 						key: 'flow.notification.trade_failed_message',
 						params: {
-							title: currentMarket.title.slice(0, 30),
+							title: marketDisplayText({
+								market: currentMarket,
+								translation: $marketTranslations.get(currentMarket.id),
+								showOriginal: flowShowOriginal
+							}).title.slice(0, 30),
 							error: t({ locale: $localeStore, key, params })
 						}
 					}),
@@ -766,56 +868,18 @@
 
 		// Synchronous, offline-safe mirror — written before the server
 		// round-trip below so the daily hard cap survives a refresh that
-		// races the record. The mirror is only an offline hint; it can never
-		// raise the count above the authoritative server value on entry.
+		// races the record, and so a re-entry mid-flight reads the optimistic
+		// high-water rather than a lagging server count (see
+		// `reconcileDailyGoalOnEntry`).
 		writeDailyGoalMirror(goalBump);
 
-		const goalDayKey = goalBump.date;
 		const goalPrincipal = $userStore.user?.key;
 
-		// Record the swipe SERVER-side — the satellite owns the count. We send
-		// only our local-day key as the rollover boundary; the server reads
-		// the profile, rolls over, and writes the capped increment itself, so
-		// a cleared / signed-out client can no longer reset the cap. The
-		// authoritative count it returns reconciles the local state + mirror.
-		// On a transport failure the optimistic bump stands but is clamped so
-		// the session can never exceed the last count the server confirmed.
+		// Record the swipe SERVER-side — the satellite owns the count. Chained
+		// through the FIFO queue so fast swiping can't fire records
+		// concurrently; the reply only ever raises today's count.
 		if (nonNullish(goalPrincipal)) {
-			void recordFlowSwipe({ dayKey: goalDayKey })
-				.then(({ dailyGoalDone: serverDone, dailyGoalDate: serverDate }) => {
-					lastServerDailyGoalDone = serverDone;
-					dailyGoalCount = serverDone;
-					dailyGoalDate = serverDate;
-					writeDailyGoalMirror({ done: serverDone, date: serverDate });
-
-					userStore.update((s) =>
-						s.profile
-							? {
-									...s,
-									profile: {
-										...s.profile,
-										dailyGoalDone: serverDone,
-										dailyGoalDate: serverDate
-									}
-								}
-							: s
-					);
-				})
-				.catch((e: unknown) => {
-					console.warn('Flow swipe record failed (non-fatal):', e);
-
-					// Degrade gracefully: never let the dropped record leave the
-					// session above the last server-confirmed count for this day.
-					const clamped = rolloverDailyGoal({
-						done: lastServerDailyGoalDone,
-						date: goalDayKey
-					});
-
-					if (dailyGoalCount > clamped && clamped > 0) {
-						dailyGoalCount = clamped;
-						writeDailyGoalMirror({ done: clamped, date: goalDayKey });
-					}
-				});
+			enqueueDailyGoalRecord(goalBump.date);
 		}
 
 		// Per-swipe sound cue — one tick per committed call (YES / NO).
@@ -832,7 +896,7 @@
 				if (lastStreakShown === shown) {
 					lastStreakShown = 0;
 				}
-			}, 1600);
+			}, 2400);
 		}
 
 		// A call is "contrarian" only against a known crowd consensus. With an
@@ -1100,6 +1164,56 @@
 
 	const currentCard = $derived(markets[currentIndex]);
 
+	// Spendable margin left for THIS card once the session's in-flight
+	// commitments are subtracted (store refreshes are batched to session end,
+	// so `$vxpSpendable` alone goes stale after the first call).
+	const spendableNow = $derived($vxpSpendable - sessionCommittedUsd);
+
+	// Proactive stake warning surfaced at amount-selection time on the
+	// back-face slider — distinct from the block-on-swipe funds gate, which
+	// only fires once the user throws the card. Resolved to a single state so
+	// the slider renders one line. Scoped to a signed-in, loaded, VXP-domain
+	// run with a card on screen (the playground domains use sub-rung stakes the
+	// VXP floor doesn't model; `collateralsStore` presence is the signed-in /
+	// loaded check, mirroring the funds gate).
+	const stakeWarning = $derived.by<'none' | 'unaffordable' | 'wont-finish'>(() => {
+		if (isNullish($collateralsStore) || !isViciXp($balanceDomain) || isNullish(currentCard)) {
+			return 'none';
+		}
+
+		const thisStake = stakeMarginUsd(currentCard);
+
+		// The selected size already exceeds what's spendable — the swipe would
+		// be rejected by the funds gate. Warn before they throw it.
+		if (thisStake > spendableNow) {
+			return 'unaffordable';
+		}
+
+		// Affordable now, but committing it would leave too little to fund the
+		// predictions still needed to finish the sitting (min stake each).
+		const remainingAfterThis = Math.max(0, maxBets - betsCount - 1);
+
+		if (
+			remainingAfterThis > 0 &&
+			spendableNow - thisStake < BigInt(remainingAfterThis) * MIN_STAKE_MARGIN_USD
+		) {
+			return 'wont-finish';
+		}
+
+		return 'none';
+	});
+
+	// Defensive: the active-deck branch renders `currentCard` (markets[currentIndex]).
+	// If `currentIndex` ever overruns the deck while the session is still live
+	// (entered, not completed, deck non-empty), `currentCard` is nullish and the
+	// card slot would paint an empty / black stage with no way forward. Fall the
+	// session through to the FlowEnd takeover instead so the user always has an
+	// exit. This is a safety net for an index-overflow we don't expect to hit,
+	// not the root fix.
+	const activeDeckStranded = $derived(
+		entered && !completed && markets.length > 0 && isNullish(currentCard)
+	);
+
 	// Resolved translation overlay for the focused card (or undefined when the
 	// market has no translation for the active locale) — gates the card's quick
 	// toggle and feeds its display text.
@@ -1233,17 +1347,27 @@
 		<!-- Daily hard cap already met today (across sessions). Opening Flow
 		     shows the "come back tomorrow" takeover, not a fresh deck. -->
 		<FlowDailyCap hardCap={DAILY_HARD_CAP} onClose={handleClose} />
-	{:else if completed}
+	{:else if outOfFunds}
+		<!-- Every spendable VXP is already in play on open predictions, so no
+		     further call this session can be funded. Surface the out-of-funds
+		     takeover with explicit exits instead of stranding the user on cards
+		     the funds gate would block. -->
+		<FlowOutOfFunds onBackToMarkets={backToMarkets} onClose={handleClose} />
+	{:else if completed || activeDeckStranded}
 		<FlowEnd
 			{canExtend}
 			comeback={isComeback}
 			onClose={handleClose}
 			onExtend={handleExtend}
+			onInstallPrompt={() => (a2hsSheetOpen = true)}
 			overtime={overtimeSession}
 			pending={betsCount}
+			{showInstallNudge}
 			staked={sessionStaked}
 			streak={dailyStreak}
 		/>
+
+		<A2hsSheet isOpen={a2hsSheetOpen} onClose={() => (a2hsSheetOpen = false)} source="flow_end" />
 	{:else if entered}
 		<!-- Persistent Flow header: VICI wordmark + deck-scope chip +
 		     bolt streak chip on the left; bell on the right. Secondary
@@ -1280,12 +1404,9 @@
 				     empty slot; that removal also triggers the `out:fly` throw of
 				     the just-committed card. -->
 				{#if currentCard}
-					{@const primaryTag = primaryMarketTag(
-						(marketTagMap[currentCard.id] ?? []) as ReadonlyArray<MarketTag>
-					)}
-					{@const flowCategory = resolveFlowCategory({
-						categoryId: primaryTag,
-						marketId: currentCard.id
+					{@const flowCategory = resolveFlowArtCategory({
+						tags: marketTagMap[currentCard.id] ?? [],
+						seed: currentCard.id
 					})}
 					{@const metadata = marketMetadataMap.get(currentCard.id)}
 					{@const priceSeries = priceHistoryById.get(currentCard.id)}
@@ -1324,6 +1445,7 @@
 										{priorCall}
 										showOriginal={flowShowOriginal}
 										signedIn={nonNullish($userStore.user)}
+										{stakeWarning}
 										{tradeAmount}
 										translatedLanguageLabel={nonNullish(currentTranslation)
 											? translatedLanguageLabel(currentTranslation.locale)
@@ -1339,12 +1461,12 @@
 
 			<FlowXpPops pops={xpPops} />
 
-			<!-- Gesture coach — first-run only. Cycles through NO / YES /
-			     SKIP / TAP / IDLE phases while the cards drift in
-			     sympathy via the `data-coach-phase` CSS in app.css.
-			     Self-dismisses on any pointer-down; persists dismissal
-			     in localStorage. -->
-			<FlowCoach />
+			<!-- Gesture coach — first-run only. A non-blocking map of the
+			     swipe gestures over the live card; it teaches by doing and
+			     clears itself on the first committed YES / NO, signalled by
+			     the `commitToastKeySeq` counter. Persists dismissal in
+			     localStorage so it shows at most once. -->
+			<FlowCoach commitSignal={commitToastKeySeq} />
 
 			<!-- Per-swipe commit pop — "CALLED YES · {stake} IN PLAY". Rises
 			     from the exit edge (is-yes → right, is-no → left) on every

@@ -579,7 +579,7 @@ state). The pattern, as built for school-email verification
   receiving relay also dedupes on an `idempotency-key` header for the
   belt-and-braces case.
 - **Outcall a thin off-chain relay, not the vendor.** The relay
-  ([`vici-courier`](https://github.com/AntonioVentilii/vici-courier), a
+  ([`vici-courier`](https://github.com/ViciApp/vici-courier), a
   Bun/Elysia app on Fly.io) holds the real vendor key and is
   IPv6-reachable (IC outcalls are IPv6-only; many vendor APIs are not).
   The satellite holds only a **rotatable bearer token**, read at call
@@ -598,6 +598,41 @@ state). The pattern, as built for school-email verification
   code is never persisted — only an `FNV(code|raw_rand_salt)` digest,
   with the attempt cap + TTL + per-principal/email rate limit as the real
   guessing defense.
+
+## Owner-private per-user data — `managed` collection + caller-bound assert
+
+Anything a user stores that must not be world-readable (the reference is
+the account `email` in `profile_private`) can NOT live on a
+`read: 'public'` collection — public read means any anonymous caller can
+`list_docs` the whole collection, and principals are enumerable (the
+collection keys themselves, plus the clearing leaderboard). The pattern:
+
+- **A dedicated collection, `read/write: 'managed'`** (owner +
+  controllers), keyed by the owner's principal. The owner reads/writes
+  their own doc via plain Juno `getDoc`/`setDoc`; server-side consumers
+  (admin endpoints, exports) read it via `getDocStore`.
+- **Bind key + embedded owner to the caller in an assert.** `managed`
+  still lets any authenticated user CREATE a doc under a free key, so
+  without `assertSetProfilePrivate`-style binding a third party could
+  squat another user's principal key before their first write (blocking
+  or forging the value server-side consumers read by key).
+- **Never put the field on a public doc "for convenience".** Typed
+  queries don't help — anything carried by `withProfileDefaults` /
+  `toWireProfile` goes to ANY caller, and the raw doc is readable
+  regardless. Strip the field from the doc schema, the wire schemas, and
+  the read projections in the same PR.
+- **Serverless writes on behalf of the owner pass the OWNER's principal
+  as the store `caller`** (the one-time email migration that populated
+  `profile_private` worked this way), so the doc lands owner-owned and
+  the caller-binding assert still holds — asserts run on `setDocStore`
+  too. Budget warning for such bulk rewrites: serverless `setDocStore`
+  writes cost multiple BILLION instructions each on the Sputnik
+  satellite (a 100-doc read-only query fits the 5B query budget, but
+  ~10 writes exceed the 40B update limit), so any admin endpoint that
+  rewrites docs in bulk MUST be keyset-paged with a page size tunable
+  down to a single doc.
+- **Add the collection to the hard-delete cascade**
+  (`hardDeleteAccountFn`) — a private doc must not outlive its account.
 
 ## Logging
 

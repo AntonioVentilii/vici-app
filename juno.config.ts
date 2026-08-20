@@ -13,14 +13,17 @@ import { defineConfig } from '@junobuild/config';
 enum JunoDatastoreCollection {
 	ROLES = 'roles',
 	PROFILES = 'profiles',
+	PROFILE_PRIVATE = 'profile_private',
 	RELATIONS = 'relations',
 	CHATS = 'chats',
 	COMMENTS = 'comments',
 	MARKET_METADATA = 'market_metadata',
+	MARKET_TAG_INDEX = 'market_tag_index',
 	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
 	ACTIVITY_REACTIONS = 'activity_reactions',
 	ACTIVITY_REACTION_COUNTS = 'activity_reaction_counts',
+	RESOLVED_RESULTS = 'resolved_results',
 	VXP_ONBOARDING = 'vxp_onboarding',
 	VXP_AWARDS = 'vxp_awards',
 	REFERRAL_CODES = 'referral_codes',
@@ -81,7 +84,11 @@ export default defineConfig(({ mode }) => ({
 		},
 		hosting: {
 			source: 'build',
-			predeploy: ['npm run build']
+			// `seo:assets` rewrites the built shell into per-market crawler pages
+			// (+ sitemap) — see `scripts/build/generate-seo-assets.ts`. It must run
+			// on EVERY hosting deploy: `--prune` deletes any asset missing from
+			// `build/`, so skipping it would wipe the deployed SEO surface.
+			predeploy: ['npm run build', 'npm run seo:assets']
 		},
 		authentication: {
 			google: {
@@ -106,6 +113,19 @@ export default defineConfig(({ mode }) => ({
 					read: 'public',
 					write: 'public'
 				},
+				// Owner-private profile data (the account email). `managed` on
+				// both sides: the owner reads/writes their own doc, controllers
+				// (satellite endpoints, admin tooling) can read for server-side
+				// flows — but the doc is NEVER publicly readable, unlike the
+				// `profiles` doc it splits from. `assertSetProfilePrivate`
+				// additionally binds key + embedded owner to the caller so
+				// another user can't squat or forge someone else's doc.
+				{
+					collection: JunoDatastoreCollection.PROFILE_PRIVATE,
+					memory: 'stable',
+					read: 'managed',
+					write: 'managed'
+				},
 				{
 					collection: JunoDatastoreCollection.RELATIONS,
 					memory: 'stable',
@@ -129,6 +149,18 @@ export default defineConfig(({ mode }) => ({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				// Reverse index `market tag → seriesId[]` (one doc per tag).
+				// Maintained inline by `upsertMarketMetadata` so battle scoping
+				// reads a single bucket instead of scanning `market_metadata`.
+				// Public read (battle resolution reads it as the caller);
+				// controllers-only write — only the satellite upsert / rebuild
+				// endpoints write it (as admin), so a client can't forge a tag set.
+				{
+					collection: JunoDatastoreCollection.MARKET_TAG_INDEX,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
 				},
 				{
 					collection: JunoDatastoreCollection.MARKET_TRANSLATIONS,
@@ -162,6 +194,18 @@ export default defineConfig(({ mode }) => ({
 				// counts from `activity_reactions` on demand.
 				{
 					collection: JunoDatastoreCollection.ACTIVITY_REACTION_COUNTS,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
+				},
+				// Per-participant resolved-result rows for the friend-readable
+				// results feed. Public read (the friend-scoped digest reads
+				// them); controllers write so only the satellite resolution hook
+				// (writing as admin, derived from the clearing settlement plan)
+				// can record a result — a client can't forge a win. Rows past the
+				// retention horizon are pruned by the controllers-only cleanup.
+				{
+					collection: JunoDatastoreCollection.RESOLVED_RESULTS,
 					memory: 'stable',
 					read: 'public',
 					write: 'controllers'
@@ -214,11 +258,19 @@ export default defineConfig(({ mode }) => ({
 					read: 'public',
 					write: 'public'
 				},
+				// Frozen monthly Worlds snapshots only — one immutable doc per
+				// `${kind}/${affiliationIdentifier}/${monthAnchor}`, written by the
+				// podium freeze (writing as a controller) the first time a closed
+				// month is claimed. Public read (standings surfaces render them);
+				// controllers write so a client can't forge a frozen ranking. The
+				// live windows (all-time, current month) are recomputed on read from
+				// the roster and never persisted here. `assertSetAffiliationStats`
+				// enforces snapshot-key-only + write-once as defence in depth.
 				{
 					collection: JunoDatastoreCollection.AFFILIATION_STATS,
 					memory: 'stable',
 					read: 'public',
-					write: 'public'
+					write: 'controllers'
 				},
 				{
 					collection: JunoDatastoreCollection.EXIT_SIGNALS,

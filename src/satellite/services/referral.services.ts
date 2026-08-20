@@ -861,7 +861,8 @@ const driveSidePayout = async ({
 					}
 				});
 				throw new Error(
-					`Failed to persist referral ${side} payout (referee=${refereeKey}, ok=${result.ok})`
+					`Failed to persist referral ${side} payout (referee=${refereeKey}, ok=${result.ok})`,
+					{ cause: e }
 				);
 			}
 

@@ -35,8 +35,7 @@ export type InfoDocBlock =
 	| ({ kind: 'lede' } & ({ key: MessageKey } | { text: string }))
 	| ({ kind: 'h' } & ({ key: MessageKey } | { text: string }))
 	| ({ kind: 'p' } & (
-			| { key: MessageKey; params?: Record<string, string | number> }
-			| { text: string }
+			{ key: MessageKey; params?: Record<string, string | number> } | { text: string }
 	  ))
 	| { kind: 'list'; itemKeys: MessageKey[] }
 	| { kind: 'list'; items: string[] }

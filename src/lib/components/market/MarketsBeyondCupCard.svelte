@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { Check, ChevronDown, ChevronRight, Lock } from '@lucide/svelte';
 	import { slide } from 'svelte/transition';
-	import { MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
+	import {
+		classificationTags,
+		MACRO_IDS,
+		type MacroId
+	} from '$lib/constants/market-taxonomy.constants';
 	import { decisiveSettledCount } from '$lib/derived/resolved-positions.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -30,15 +34,17 @@
 	 * display constant exists — the leaderboard's `MIN_CALLS_FOR_RANK` is 50 and
 	 * the monthly award's `MONTHLY_MIN_CALLS` is month-scoped, both wrong here).
 	 *
-	 * Locked categories = the closed `MARKET_TAGS` taxonomy minus `wc`. There is
-	 * no buy path here — the gate only previews what unlocking opens.
+	 * Locked categories = the taxonomy macro board. World Cup lives under the
+	 * `sports` macro with a `world-cup` free tag; the board's WC focus surfaces
+	 * only markets carrying that free tag, and this gate previews the full macro
+	 * board that unlocking opens.
 	 */
 
 	interface Props {
 		/** All known markets, used to count the open non-World-Cup lines. */
 		markets: Market[];
-		/** Per-market tag lookup (`market.id` → tags), from `$marketTags`. */
-		tagsByMarket: Record<string, MarketTag[]>;
+		/** Per-market tag lookup (`market.id` → stored tags), from `$marketTags`. */
+		tagsByMarket: Record<string, string[]>;
 		/** Whether tag metadata has loaded — the count is `0` until it has. */
 		tagsInitialized: boolean;
 	}
@@ -75,16 +81,18 @@
 	const progress = $derived(Math.max(0, Math.min(1, accuracyPctRaw / 100 / UNLOCK_ACC)));
 	const remaining = $derived(Math.max(0, target - pct));
 
-	// Locked categories: the closed taxonomy minus the World-Cup category.
-	const lockedCategories = $derived<MarketTag[]>(MARKET_TAGS.filter((tag) => tag !== 'wc'));
+	// Locked categories: the full macro board that unlocking opens.
+	const lockedCategories = $derived<MacroId[]>([...MACRO_IDS]);
 
 	// What unlocking opens, counted in MARKETS (not categories): open lines that
-	// aren't World-Cup. `0` until tags load so the headline never overcounts.
+	// aren't World-Cup (no `world-cup` free tag). `0` until tags load so the
+	// headline never overcounts.
 	const nonWcOpenMarketsCount = $derived(
 		tagsInitialized
 			? markets.filter(
 					(market) =>
-						market.status === 'Open' && !(tagsByMarket[market.id]?.includes('wc') ?? false)
+						market.status === 'Open' &&
+						!classificationTags(tagsByMarket[market.id] ?? []).includes('world-cup')
 				).length
 			: 0
 	);

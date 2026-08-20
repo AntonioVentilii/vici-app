@@ -43,3 +43,24 @@ export interface ActivityReactionCount {
 	count: number;
 	updatedAtMs: number;
 }
+
+/**
+ * Per-participant resolved-result row (collection `resolved_results`), one per `(owner, market)`
+ * resolved call, keyed `${owner}#${marketId}`. Written server-side at resolution time by the
+ * satellite hook from the clearing settlement plan (controllers-write), so a user cannot forge it.
+ * Read friend-scoped by the digest consumer over an owner-prefix scan.
+ *
+ * `netVxp` is the participant's realized net cashflow in `USD_DECIMALS` base units, signed (negative
+ * for a loss); `outcome` mirrors its sign. `side` is the market outcome the participant held (the
+ * settlement outcome id, or `YES`/`NO` derived from a binary net position). `resolvedAtMs` is the
+ * resolution time in epoch milliseconds — the retention cleanup prunes on it.
+ */
+export interface ResolvedResult {
+	owner: PrincipalText;
+	marketId: string;
+	title: string;
+	side: string;
+	outcome: 'win' | 'loss';
+	netVxp: number;
+	resolvedAtMs: number;
+}

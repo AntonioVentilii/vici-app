@@ -65,8 +65,7 @@ export const compareBalanceDomains = (
 
 export const filterByBalanceDomain = <
 	T extends
-		| { balanceDomain: ClearingDid.BalanceDomain }
-		| { balance_domain: ClearingDid.BalanceDomain }
+		{ balanceDomain: ClearingDid.BalanceDomain } | { balance_domain: ClearingDid.BalanceDomain }
 >({
 	items,
 	targetDomain
@@ -86,8 +85,7 @@ export const filterByBalanceDomain = <
  */
 export const filterByPlaygroundExpandedDomain = <
 	T extends
-		| { balanceDomain: ClearingDid.BalanceDomain }
-		| { balance_domain: ClearingDid.BalanceDomain }
+		{ balanceDomain: ClearingDid.BalanceDomain } | { balance_domain: ClearingDid.BalanceDomain }
 >({
 	items,
 	targetDomain

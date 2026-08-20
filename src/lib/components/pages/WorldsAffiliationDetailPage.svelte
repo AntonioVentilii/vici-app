@@ -36,6 +36,7 @@
 	} from '$lib/utils/affiliation-stats.utils';
 	import { formatMonthAnchorLabel } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Worlds affiliation detail — drill-down from `WorldsPage` and the
@@ -231,7 +232,7 @@
 	);
 
 	const backToWorlds = () => {
-		void goto(`${resolve('/arena')}/worlds`);
+		goBack(`${resolve('/arena')}/worlds`);
 	};
 
 	const openStandings = () => {

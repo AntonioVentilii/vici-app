@@ -22,7 +22,7 @@ import { computeUserStatsSnapshot, persistMyUserStats } from '$lib/services/user
 import { marketMetadataStore } from '$lib/stores/market-metadata.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { userStore } from '$lib/stores/user.store';
-import type { Nickname, UserProfile } from '$lib/types/profile';
+import type { Nickname, ProfilePrivate, UserProfile } from '$lib/types/profile';
 import type { UserStatsDoc } from '$lib/types/user-stats';
 import {
 	CONTRARIAN_PRICE_THRESHOLD,
@@ -40,6 +40,16 @@ import {
 } from '$lib/utils/resolved-position.utils';
 import { applyDailyStreakBump, todayKey } from '$lib/utils/streak.utils';
 import { visibilityFromProfile } from '$lib/utils/visibility.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	checkFriendship as checkFriendshipWeb2,
+	checkNicknameAvailability as checkNicknameAvailabilityWeb2,
+	getMyProfile as getMyProfileWeb2,
+	getProfileById as getProfileWeb2,
+	recordFlowSwipe as recordFlowSwipeWeb2,
+	searchProfiles as searchProfilesWeb2,
+	upsertMyProfile as upsertMyProfileWeb2
+} from '$lib/web2/client';
 import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
@@ -48,79 +58,108 @@ import type { PrincipalText } from '@junobuild/schema';
 import { get } from 'svelte/store';
 
 /**
- * Loads a user profile from Juno or returns a default shell; merges role from the satellite query.
+ * The default profile shell for an owner with no stored doc yet. Shared by the
+ * on-chain and web2 read paths and the web2 app-shell hydration so a
+ * never-written account renders identically on both backends.
+ */
+export const emptyProfile = (owner: PrincipalText): UserProfile => ({
+	owner,
+	nickname: shortenWithMiddleEllipsis({ text: owner, splitLength: 5 }),
+	avatar: '',
+	avatarParts: '',
+	pnl: 0,
+	visibility: ProfileVisibility.FRIENDS_ONLY,
+	totalTrades: 0,
+	winRate: 0,
+	dailyStreak: 0,
+	longestStreak: 0,
+	dailyGoalDone: 0,
+	streak: 0,
+	onFireStreak: 0,
+	comebacks: 0,
+	winningCategories: 0,
+	leaguesJoined: 0,
+	boutsWon: 0,
+	leaguesFounded: 0,
+	accuracy: 0,
+	points: 0,
+	level: 1,
+	archetype: '',
+	interests: [],
+	unlockedAchievements: [],
+	contrarianWins: 0,
+	topDecileStreak: 0,
+	preferences: {
+		defaultAmount: {
+			flow: '1.0',
+			manual: '1.0'
+		},
+		notify: {
+			streakReminder: true,
+			marketAlerts: true,
+			friendActivity: false,
+			weeklyDigest: true
+		},
+		flowSessionLength: 10,
+		hapticsEnabled: true,
+		soundEnabled: true,
+		sharing: {
+			// Mirror the top-level `visibility` default
+			// (FRIENDS_ONLY → 'private'); opt-ins default on.
+			profileVisibility: visibilityFromProfile(ProfileVisibility.FRIENDS_ONLY),
+			callsPublic: true,
+			leaderboardOptIn: true,
+			worldsOptIn: true
+		},
+		flowTags: [],
+		worldCupMode: false,
+		savedMarketIds: [],
+		favoriteParticipantId: '',
+		favoriteSide: '',
+		onboardingCompleted: false
+	}
+});
+
+/**
+ * Loads a user profile from the backend or returns a default shell. web2 reads
+ * the HTTP API (`owner` is the account id there); the default on-chain path
+ * merges role from the satellite query. Both branches return the same
+ * `Doc<UserProfile>` shape so every caller stays backend-agnostic.
  */
 export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProfile>> => {
+	if (isWeb2Backend()) {
+		const profile = await getProfileWeb2(principal);
+
+		return { key: principal, data: profile ?? emptyProfile(principal) };
+	}
+
 	const { profile } = await functions.getProfile({ principalStr: principal });
 
 	if (isNullish(profile)) {
-		return {
-			key: principal,
-			data: {
-				owner: principal,
-				nickname: shortenWithMiddleEllipsis({ text: principal, splitLength: 5 }),
-				avatar: '',
-				avatarParts: '',
-				email: '',
-				pnl: 0,
-				visibility: ProfileVisibility.FRIENDS_ONLY,
-				totalTrades: 0,
-				winRate: 0,
-				dailyStreak: 0,
-				longestStreak: 0,
-				dailyGoalDone: 0,
-				streak: 0,
-				onFireStreak: 0,
-				comebacks: 0,
-				winningCategories: 0,
-				leaguesJoined: 0,
-				boutsWon: 0,
-				leaguesFounded: 0,
-				accuracy: 0,
-				points: 0,
-				level: 1,
-				archetype: '',
-				interests: [],
-				unlockedAchievements: [],
-				contrarianWins: 0,
-				topDecileStreak: 0,
-				preferences: {
-					defaultAmount: {
-						flow: '1.0',
-						manual: '1.0'
-					},
-					notify: {
-						streakReminder: true,
-						marketAlerts: true,
-						friendActivity: false,
-						weeklyDigest: true
-					},
-					flowSessionLength: 10,
-					hapticsEnabled: true,
-					soundEnabled: true,
-					sharing: {
-						// Mirror the top-level `visibility` default
-						// (FRIENDS_ONLY → 'private'); opt-ins default on.
-						profileVisibility: visibilityFromProfile(ProfileVisibility.FRIENDS_ONLY),
-						callsPublic: true,
-						leaderboardOptIn: true,
-						worldsOptIn: true
-					},
-					flowTags: [],
-					worldCupMode: false,
-					savedMarketIds: [],
-					favoriteParticipantId: '',
-					favoriteSide: '',
-					onboardingCompleted: false
-				}
-			}
-		};
+		return { key: principal, data: emptyProfile(principal) };
 	}
 
 	return {
 		key: principal,
 		data: profile as UserProfile
 	};
+};
+
+/**
+ * The signed-in user's own profile for the web2 app-shell hydration. Returns
+ * the default shell (with `existed: false`) for a freshly created account that
+ * has no stored profile yet, so the onboarding drain runs exactly as it does
+ * for a new on-chain user. web2 only; the on-chain path hydrates via
+ * {@link ensureProfile}.
+ */
+export const loadWeb2ProfileShell = async (
+	owner: PrincipalText
+): Promise<{ profile: UserProfile; existed: boolean }> => {
+	const profile = await getMyProfileWeb2();
+
+	return isNullish(profile)
+		? { profile: emptyProfile(owner), existed: false }
+		: { profile, existed: true };
 };
 
 /**
@@ -336,7 +375,7 @@ export const recordFlowSwipe = ({
 }: {
 	dayKey: string;
 }): Promise<{ dailyGoalDone: number; dailyGoalDate: string; capReached: boolean }> =>
-	functions.recordFlowSwipe({ dayKey });
+	isWeb2Backend() ? recordFlowSwipeWeb2({ dayKey }) : functions.recordFlowSwipe({ dayKey });
 
 /**
  * Persist the Menagerie celebration ledger — the set of `${slug}:${tier}` keys
@@ -374,6 +413,17 @@ export const persistEarnedMenagerie = async ({
 export const upsertProfile = async (
 	profileDoc: Doc<UserProfile> | { key: string; data: UserProfile }
 ): Promise<void> => {
+	// web2 is a full-doc PUT: the server locks the caller's row, applies the
+	// same nickname / handle-cooldown / daily-goal guards, and returns the
+	// stored result. The caller's session identifies the row, so `owner` / role
+	// in the body are ignored; the account email lives on the auth identity in
+	// this mode, not the profile doc, so it is intentionally not sent here.
+	if (isWeb2Backend()) {
+		await upsertMyProfileWeb2(profileDoc.data);
+
+		return;
+	}
+
 	const { key } = profileDoc;
 	const existing = await getDoc<UserProfile>({
 		collection: Collection.PROFILES,
@@ -381,7 +431,13 @@ export const upsertProfile = async (
 	});
 
 	const base = existing?.data ?? profileDoc.data;
-	const data: UserProfile = {
+	// Strip the legacy `email` field AFTER the merge: both the stored doc and
+	// the caller's payload can still carry it at runtime (pre-migration rows,
+	// snapshots built from raw `getDoc` reads) even though the schema no
+	// longer declares it, and re-spreading it would re-persist the address
+	// onto the public doc. Every write from here on leaves the profile clean —
+	// the address lives in `profile_private`.
+	const { email: _legacyEmail, ...data } = {
 		...base,
 		...profileDoc.data,
 		// Leaf-merge `preferences` onto the freshest stored slice rather than
@@ -391,7 +447,7 @@ export const upsertProfile = async (
 		// after onboarding would replace `preferences` and drop the just-picked
 		// `favoriteParticipantId`.
 		preferences: { ...base.preferences, ...profileDoc.data.preferences }
-	};
+	} as UserProfile & { email?: string };
 
 	if (isNullish(existing)) {
 		await setDoc({
@@ -444,7 +500,6 @@ export const applyOnboardingPicks = async ({
 	handle,
 	setHandle,
 	interests,
-	email,
 	favoriteParticipantId,
 	favoriteSide
 }: {
@@ -452,7 +507,6 @@ export const applyOnboardingPicks = async ({
 	handle: string | null;
 	setHandle: boolean;
 	interests?: string[];
-	email?: string;
 	favoriteParticipantId: string;
 	favoriteSide: string;
 }): Promise<{ profile: UserProfile; handleApplied: boolean }> => {
@@ -472,10 +526,6 @@ export const applyOnboardingPicks = async ({
 
 			if (nonNullish(interests)) {
 				patch.interests = interests;
-			}
-
-			if (nonNullish(email) && email.length > 0) {
-				patch.email = email;
 			}
 
 			if (includeHandle && nonNullish(handle)) {
@@ -525,6 +575,10 @@ export const applyOnboardingPicks = async ({
  * Case-insensitive search over nickname, owner, and document key via secure satellite query.
  */
 export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
+	if (isWeb2Backend()) {
+		return searchProfilesWeb2(query);
+	}
+
 	const { items } = await functions.searchProfiles({ queryStr: query });
 
 	return items.map(fromWireProfile);
@@ -555,16 +609,102 @@ export const checkNicknameAvailability = async ({
 	nickname: string;
 	principal?: PrincipalText;
 }): Promise<NicknameAvailability> => {
-	const result = await functions.checkNicknameAvailability({
-		nickname,
-		excludePrincipalStr: principal ?? ''
-	});
+	// web2 excludes the caller's own current nickname via the session, so the
+	// `principal` hint is not needed on that transport.
+	const result = isWeb2Backend()
+		? await checkNicknameAvailabilityWeb2(nickname)
+		: await functions.checkNicknameAvailability({
+				nickname,
+				excludePrincipalStr: principal ?? ''
+			});
 
 	if (result.available) {
 		return { available: true };
 	}
 
-	return { available: false, reason: result.reason ?? 'taken' };
+	// The web2 validator can report `too_long`, which the shared FE outcome
+	// folds into `invalid` (the charset/format bucket) so both transports
+	// surface the same set of inline reasons.
+	const reason = result.reason === 'too_long' ? 'invalid' : (result.reason ?? 'taken');
+
+	return { available: false, reason };
+};
+
+/**
+ * Reads the signed-in user's own on-file email from the owner-private
+ * `profile_private` doc. The collection is `managed` (owner +
+ * controllers), so this only resolves for the caller's own principal —
+ * never call it for a counterpart. Returns the empty string when no doc
+ * (or no address) is stored.
+ */
+export const getMyEmail = async (principal: PrincipalText): Promise<string> => {
+	const doc = await getDoc<ProfilePrivate>({
+		collection: Collection.PROFILE_PRIVATE,
+		key: principal
+	});
+
+	return doc?.data.email.trim() ?? '';
+};
+
+/**
+ * Persists the signed-in user's email onto their owner-private
+ * `profile_private` doc (version-safe upsert). The satellite assert
+ * binds both the doc key and the embedded `owner` to the caller, so
+ * this can only ever write the caller's own doc.
+ */
+export const saveMyEmail = async ({
+	principal,
+	email
+}: {
+	principal: PrincipalText;
+	email: string;
+}): Promise<void> => {
+	const existing = await getDoc<ProfilePrivate>({
+		collection: Collection.PROFILE_PRIVATE,
+		key: principal
+	});
+
+	await setDoc({
+		collection: Collection.PROFILE_PRIVATE,
+		doc: {
+			key: principal,
+			...(nonNullish(existing?.version) && { version: existing.version }),
+			data: { owner: principal, email }
+		}
+	});
+};
+
+/**
+ * Post-sign-in email hydration + provider backfill. Reads the stored
+ * private address; when there is none and the IdP shared one this
+ * sign-in, captures it onto the private doc. Never overwrites an
+ * address already on file (a manually-entered one, or one from an
+ * earlier provider), so switching IdPs can't silently replace it.
+ * Best-effort — a failed read/write never blocks sign-in; the resolved
+ * on-file address (possibly '') is returned for the user store.
+ */
+const hydrateMyEmail = async ({
+	principal,
+	providerEmail
+}: {
+	principal: PrincipalText;
+	providerEmail: string;
+}): Promise<string> => {
+	try {
+		const stored = await getMyEmail(principal);
+
+		if (stored.length > 0 || providerEmail.length === 0) {
+			return stored;
+		}
+
+		await saveMyEmail({ principal, email: providerEmail });
+
+		return providerEmail;
+	} catch (err: unknown) {
+		console.warn('profile email hydration failed', err);
+
+		return '';
+	}
 };
 
 /**
@@ -572,11 +712,15 @@ export const checkNicknameAvailability = async ({
  * already held a profile doc for this principal at sign-in time. The
  * post-sign-in handoff in `(app)/+layout.svelte` uses this to decide
  * whether to apply a pending pre-auth onboarding payload (new user)
- * or preserve the existing profile (returning user).
+ * or preserve the existing profile (returning user). `email` is the
+ * user's own on-file address from the owner-private `profile_private`
+ * doc (possibly just backfilled from the IdP), hydrated here so the
+ * user store never has to read it from the public profile.
  */
 export interface EnsureProfileResult {
 	profile: UserProfile;
 	existed: boolean;
+	email: string;
 }
 
 /**
@@ -663,34 +807,12 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	});
 
 	if (nonNullish(existing) && nonNullish(existing.version)) {
-		// Backfill the provider email onto a returning user whose profile
-		// has none yet — e.g. they signed up before we captured it, or via a
-		// provider that didn't expose one then. Only when currently empty:
-		// never overwrite an address the user already has (a manually-entered
-		// one, or one from an earlier provider), so switching IdPs can't
-		// silently replace it. Best-effort — a failed backfill never blocks
-		// sign-in.
-		if (providerEmail.length > 0 && (existing.data.email ?? '').trim().length === 0) {
-			const backfilled: UserProfile = { ...existing.data, email: providerEmail };
+		// The address lives on the owner-private `profile_private` doc, never
+		// on the public profile — hydrate it (and backfill the provider email
+		// when nothing is on file yet) without touching the profile doc.
+		const email = await hydrateMyEmail({ principal, providerEmail });
 
-			try {
-				// Write against the version we just read (optimistic concurrency)
-				// rather than via `upsertProfile`, which re-reads and overlays this
-				// full snapshot onto the latest doc — that would clobber any other
-				// field changed in between. A stale version makes `setDoc` fail, so
-				// a concurrent write wins; this best-effort backfill just no-ops.
-				await setDoc({
-					collection: Collection.PROFILES,
-					doc: { key: principal, version: existing.version, data: backfilled }
-				});
-
-				return { profile: backfilled, existed: true };
-			} catch (err: unknown) {
-				console.warn('profile email backfill failed', err);
-			}
-		}
-
-		return { profile: existing.data, existed: true };
+		return { profile: existing.data, existed: true, email };
 	}
 
 	const fullName = nonNullish(openid)
@@ -709,41 +831,51 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 	const sanitizedSeed = sanitizeNickname(seedSource);
 	const nickname = sanitizedSeed.length >= MIN_NICKNAME_LENGTH ? sanitizedSeed : principal;
 
-	const data: UserProfile = {
-		...profileDoc.data,
-		nickname,
-		// Seed the provider email on first touch; the pending-onboarding drain
-		// in `(app)/+layout.svelte` preserves it (it only sets `email` when its
-		// own payload carries one — the email-passkey flow).
-		...(providerEmail.length > 0 && { email: providerEmail })
-	};
+	// First-touch bootstrap. Seed the nickname through the SAME serialized
+	// `patchProfile` queue that `calculateAndSyncStats`
+	// — awaited right after sign-in on this finishing login — and the onboarding
+	// drain use. A direct full-snapshot `upsertProfile` here is NOT serialized
+	// against that concurrent stats write, so its read-then-write loses the
+	// optimistic-version race and throws ("set doc version"), stranding the user
+	// on signup even though auth already succeeded (a refresh then shows them
+	// signed in). Going through the queue orders the create against the stats
+	// write instead, so whichever runs first, the other reads its version.
+	//
+	// The default nickname is the user's shortened principal, which can collide
+	// with another provider's shortened principal — fall back to the unshortened
+	// principal so the assertion cannot veto this implicit write. The user can
+	// change it later from the profile dashboard.
+	const seedPatch: ProfilePatch = { nickname };
 
-	// First-touch bootstrap. The default nickname is the user's
-	// shortened principal, which can occasionally collide with another
-	// shortened principal from a different identity provider — fall
-	// back to the unshortened principal so the assertion cannot veto
-	// this implicit write. The user can then change it from the
-	// profile dashboard.
+	// Record the bootstrap BEFORE the write awaits. A fresh sign-in can fire a
+	// second `onAuthStateChange` pass whose profile read resolves after the
+	// create lands but before control returns here; if the mark lagged behind the
+	// await, that pass would see the doc as pre-existing while
+	// `wasBootstrappedThisSession` was still false, misclassify a brand-new user
+	// as returning, and drop their onboarding handle. Marking up front is safe: a
+	// throwing write errors the caller out, and a principal with no doc reads as
+	// `existed: false` (the new-user path) on any retry.
+	bootstrappedThisSession.add(principal);
+
+	// Capture the provider email (when shared) onto the owner-private doc —
+	// same best-effort semantics as the returning-user hydration above.
+	const email = await hydrateMyEmail({ principal, providerEmail });
+
 	try {
-		await upsertProfile({ ...profileDoc, data });
+		return { profile: await patchProfile({ principal, patch: seedPatch }), existed: false, email };
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : '';
 
 		if (message.includes('already taken')) {
-			const fallback: UserProfile = { ...data, nickname: principal };
-			await upsertProfile({ ...profileDoc, data: fallback });
-
-			bootstrappedThisSession.add(principal);
-
-			return { profile: fallback, existed: false };
+			return {
+				profile: await patchProfile({ principal, patch: { ...seedPatch, nickname: principal } }),
+				existed: false,
+				email
+			};
 		}
 
 		throw err;
 	}
-
-	bootstrappedThisSession.add(principal);
-
-	return { profile: data, existed: false };
 };
 
 /**
@@ -779,6 +911,10 @@ export const checkFriendship = async ({
 	userA: PrincipalText;
 	userB: PrincipalText;
 }): Promise<boolean> => {
+	if (isWeb2Backend()) {
+		return checkFriendshipWeb2({ userA, userB });
+	}
+
 	const { isFriend } = await functions.checkFriendship({ userA, userB });
 
 	return isFriend;

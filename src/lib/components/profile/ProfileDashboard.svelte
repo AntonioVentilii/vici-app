@@ -19,7 +19,6 @@
 	import { SCHOOL_PASS2_ENABLED } from '$lib/constants/school-picker.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
-	import { marketById } from '$lib/derived/market-by-id.derived';
 	import { myMenagerieLoading, myMenagerieRows } from '$lib/derived/menagerie.derived';
 	import { userIsAdmin } from '$lib/derived/user.derived';
 	import { loadMyMenagerieSignals } from '$lib/services/menagerie.services';
@@ -29,11 +28,11 @@
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { myAvatarParts } from '$lib/stores/avatar.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { displayMarkets } from '$lib/stores/market-translations.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { globalStandingsStore } from '$lib/stores/standings.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
-	import type { MarketId } from '$lib/types/market';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
 	import { affiliationChipStyle } from '$lib/utils/affiliation-chip.utils';
@@ -407,8 +406,9 @@
 	// record card: a win reads "You called it — '{q}?'", a loss reads "The
 	// market went the other way — '{q}?'". `recentSettlements` is newest-first,
 	// so the head is the latest resolution. The market title (the question) is
-	// resolved live from the shared `marketById` map; it falls back to the
-	// market id only when the market hasn't loaded.
+	// resolved live from the shared `displayMarkets` map so it shows the
+	// reader's locale; it falls back to the market id only when the market
+	// hasn't loaded.
 	const latestSettlement = $derived(recentSettlements.at(0));
 
 	interface OracleRecord {
@@ -422,7 +422,7 @@
 		}
 
 		const title =
-			$marketById.get(latestSettlement.marketId as MarketId)?.title ?? latestSettlement.marketId;
+			$displayMarkets.get(latestSettlement.marketId)?.title ?? latestSettlement.marketId;
 		// Drop a trailing "?" so the copy can re-add a single one inside the
 		// quotes ("…'{q}?'") regardless of how the title is punctuated.
 		const question = title.replace(/\?\s*$/, '');

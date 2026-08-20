@@ -6,10 +6,6 @@ export interface NavItem {
 	labelKey: MessageKey;
 	path: AppPath;
 	mobileIcon:
-		| typeof House
-		| typeof Zap
-		| typeof LayoutDashboard
-		| typeof Briefcase
-		| typeof CircleUserRound;
+		typeof House | typeof Zap | typeof LayoutDashboard | typeof Briefcase | typeof CircleUserRound;
 	icon?: typeof Zap;
 }

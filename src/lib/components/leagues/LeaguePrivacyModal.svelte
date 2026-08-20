@@ -18,10 +18,9 @@
 
 	const { isOpen, onClose, onSaved, leagueId, currentPrivacy }: Props = $props();
 
-	// Same order the create sheet uses — most → least restrictive
-	// (Private / Invite-only / Open) — so the picker reads identically
-	// across both surfaces.
-	const OPTIONS = [LeaguePrivacy.PRIVATE, LeaguePrivacy.INVITE, LeaguePrivacy.OPEN] as const;
+	// Same order the create sheet uses — Open / Private — so the picker
+	// reads identically across both surfaces.
+	const OPTIONS = [LeaguePrivacy.OPEN, LeaguePrivacy.PRIVATE] as const;
 
 	// Seeded from `currentPrivacy` every time the sheet opens (see the
 	// `$effect` below), so the initial value here is just a placeholder
@@ -133,23 +132,28 @@
 			</div>
 		{:else}
 			<header class="league-form-head">
-				<h2>{t({ locale: $localeStore, key: 'leagues.privacy.title' })}</h2>
+				<h2 id="league-privacy-title">
+					{t({ locale: $localeStore, key: 'leagues.privacy.title' })}
+				</h2>
 				<p>{t({ locale: $localeStore, key: 'leagues.privacy.sub' })}</p>
 			</header>
 
-			<ul class="league-privacy-list" role="radiogroup">
+			<ul class="league-privacy-list" aria-labelledby="league-privacy-title" role="radiogroup">
 				{#each OPTIONS as option (option)}
 					<li>
 						<button
-							class="league-privacy-row"
+							class="league-vis-card"
 							class:is-active={selected === option}
 							aria-checked={selected === option}
 							onclick={() => (selected = option)}
 							role="radio"
 							type="button"
 						>
-							<span class="league-privacy-row-label">{optionLabel(option)}</span>
-							<span class="league-privacy-row-desc">{optionDesc(option)}</span>
+							<span class="league-vis-radio" aria-hidden="true"></span>
+							<span class="league-vis-body">
+								<span class="league-vis-title">{optionLabel(option)}</span>
+								<span class="league-vis-sub">{optionDesc(option)}</span>
+							</span>
 						</button>
 					</li>
 				{/each}
@@ -205,14 +209,14 @@
 		margin: 0;
 	}
 
-	.league-privacy-row {
+	.league-vis-card {
 		display: flex;
-		flex-direction: column;
-		gap: 0.2rem;
+		align-items: center;
+		gap: 0.75rem;
 		width: 100%;
 		padding: 0.7rem 0.8rem;
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
+		border-radius: var(--r-12);
 		background: var(--bg-surface);
 		color: var(--text-base);
 		text-align: left;
@@ -222,17 +226,44 @@
 			background-color var(--d-hover) var(--ease-vici);
 	}
 
-	.league-privacy-row.is-active {
-		border-color: var(--color-primary);
-		background: color-mix(in srgb, var(--color-primary) 8%, var(--bg-surface));
+	.league-vis-card.is-active {
+		border-color: var(--color-accent);
+		background: color-mix(in srgb, var(--color-accent) 6%, var(--bg-surface));
 	}
 
-	.league-privacy-row-label {
+	.league-vis-radio {
+		flex: 0 0 auto;
+		width: 18px;
+		height: 18px;
+		border-radius: var(--r-pill);
+		border: 2px solid var(--border-base);
+		transition: border-color var(--d-hover) var(--ease-vici);
+	}
+
+	.league-vis-card.is-active .league-vis-radio {
+		border-color: var(--color-accent);
+		box-shadow:
+			inset 0 0 0 3px var(--bg-surface),
+			inset 0 0 0 9px var(--color-accent);
+	}
+
+	.league-vis-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		min-width: 0;
+	}
+
+	.league-vis-title {
 		font-size: var(--t-14);
 		font-weight: 600;
 	}
 
-	.league-privacy-row-desc {
+	.league-vis-card.is-active .league-vis-title {
+		color: var(--color-accent);
+	}
+
+	.league-vis-sub {
 		font-size: var(--t-12);
 		line-height: 1.45;
 		color: var(--text-muted);

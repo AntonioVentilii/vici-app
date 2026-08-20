@@ -7,7 +7,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
-	import { normalizeMarketTags, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { normalizeStoredTags } from '$lib/constants/market-taxonomy.constants';
 	import { userIsAdmin } from '$lib/derived/user.derived';
 	import { MarketEventDirection, MarketWhyNowKind } from '$lib/enums/market-metadata';
 	import { getMarketMetadata, upsertMarketMetadata } from '$lib/services/market-metadata.services';
@@ -37,7 +37,7 @@
 
 	let whyKind = $state<MarketWhyNowKind>(MarketWhyNowKind.CLOSING);
 	let whyText = $state('');
-	let tags = $state<MarketTag[]>([]);
+	let tags = $state<string[]>([]);
 	let suggested = $state(false);
 	let subtitle = $state('');
 	let eventOne = $state<EventRow>({ day: '', dir: MarketEventDirection.UP, label: '' });
@@ -119,7 +119,7 @@
 				data: buildInput()
 			});
 			({ updatedAt: savedAt, suggested } = metadata);
-			tags = normalizeMarketTags(metadata.tags ?? []);
+			tags = normalizeStoredTags(metadata.tags ?? []);
 			refreshMarketTags();
 			refreshMarketMetadata();
 		} catch (err: unknown) {
@@ -141,7 +141,7 @@
 
 			suggested = metadata?.suggested ?? false;
 			subtitle = metadata?.subtitle ?? '';
-			tags = normalizeMarketTags(metadata?.tags ?? []);
+			tags = normalizeStoredTags(metadata?.tags ?? []);
 
 			const [first, second] = metadata?.events ?? [];
 

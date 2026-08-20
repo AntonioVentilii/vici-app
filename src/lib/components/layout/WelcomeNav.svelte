@@ -194,9 +194,10 @@
 		}
 
 		const onDoc = (e: MouseEvent) => {
-			const target = e.target as Node | null;
+			const { target } = e;
 
-			if (dnavLangRef && target && !dnavLangRef.contains(target)) {
+			// `instanceof` narrowing (not a cast): `contains` needs a `Node`.
+			if (dnavLangRef && target instanceof Node && !dnavLangRef.contains(target)) {
 				dnavLangOpen = false;
 			}
 		};

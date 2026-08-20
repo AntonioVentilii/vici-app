@@ -1,95 +1,177 @@
 <script lang="ts">
 	/**
-	 * Stack breakdown sheet — opened from the holdings card. Breaks the stack
-	 * into lifetime earned, currently in-play, and referral earnings, then
-	 * offers an invite CTA into Arena. Pure presentation: all figures arrive
-	 * pre-formatted from the host; referral totals come from the real referral
-	 * list (credited redemptions summed over the tiered reward curve).
+	 * Holdings breakdown sheet — opened from the Dash holdings card. Leads with a
+	 * "Your VXP" hero equal to total holdings, then a two-segment split bar whose
+	 * widths track the available / in-play magnitudes, then two colour-keyed bucket
+	 * rows (Available, In play) that sum back to the hero. Pure presentation: the
+	 * formatted figures and bigint magnitudes arrive from the host. The invite CTA
+	 * opens a native share sheet (clipboard fallback) over the viewer's canonical
+	 * referral link rather than routing into Arena.
 	 */
-	import { ChevronRight, Gift, History } from '@lucide/svelte/icons';
-	import { goto } from '$app/navigation';
+	import { nonNullish } from '@dfinity/utils';
+	import { Check, ChevronRight, Gift, History } from '@lucide/svelte/icons';
 	import { resolve } from '$app/paths';
+	import DashHoldingsBreakdown from '$lib/components/dash/DashHoldingsBreakdown.svelte';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import { REFERRAL_VXP_BONUS_BASE_UNITS } from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { getMyReferralCode } from '$lib/services/referral.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { writeToClipboard } from '$lib/utils/clipboard.utils';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
 	interface Props {
 		isOpen: boolean;
 		onClose: () => void;
-		/** Total holdings, formatted whole-VXP — the sheet header figure. */
+		/** Total holdings, formatted — the sheet header figure (available + in play). */
 		holdingsDisplay: string;
-		/** Lifetime VXP earned (points accumulator), formatted. */
-		lifetimeDisplay: string;
-		/** Backed VXP currently in play, formatted. */
+		/** Spendable VXP, formatted — the Available bucket value. */
+		availableDisplay: string;
+		/** Backed VXP currently in play, formatted — the In play bucket value. */
 		inPlayDisplay: string;
-		/** VXP earned from referrals, formatted. */
-		referralVxpDisplay: string;
-		/** Number of credited referrals behind that VXP. */
-		referralCount: number;
-		/** Referral list not fetched yet — pulse a placeholder instead of "0". */
-		referralsLoading: boolean;
+		/** Spendable magnitude (base units) — drives the Available split segment width. */
+		availableValue: bigint;
+		/** Backed magnitude (base units) — drives the In play split segment width. */
+		inPlayValue: bigint;
+		/** Open calls behind the in-play stake — pluralises the In play sub-label. */
+		openCallCount: number;
 	}
 
 	let {
 		isOpen,
 		onClose,
 		holdingsDisplay,
-		lifetimeDisplay,
+		availableDisplay,
 		inPlayDisplay,
-		referralVxpDisplay,
-		referralCount,
-		referralsLoading
+		availableValue,
+		inPlayValue,
+		openCallCount
 	}: Props = $props();
 
-	const openInvite = (): void => {
-		onClose();
-		void goto(resolve(AppPath.Arena));
+	// Native share over the viewer's canonical `/i/{code}` referral link, with a
+	// clipboard-copy + "copied" fallback. Fetched lazily once the sheet opens so a
+	// closed sheet never pings the satellite; mirrors the Arena invite hero so the
+	// two surfaces share one link and one copy.
+	let inviteCode = $state<string | undefined>(undefined);
+	let copied = $state(false);
+	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
+
+	$effect(() => {
+		if (!isOpen || nonNullish(inviteCode)) {
+			return;
+		}
+
+		let alive = true;
+
+		void (async () => {
+			try {
+				const code = await getMyReferralCode();
+
+				if (alive) {
+					inviteCode = code;
+				}
+			} catch {
+				// Guard on `alive` so a late rejection after unmount can't reset
+				// state on a destroyed component.
+				if (alive) {
+					inviteCode = undefined;
+				}
+			}
+		})();
+
+		return () => {
+			alive = false;
+		};
+	});
+
+	const triggerCopyFeedback = (): void => {
+		copied = true;
+
+		if (copyResetTimer) {
+			clearTimeout(copyResetTimer);
+		}
+
+		copyResetTimer = setTimeout(() => {
+			copied = false;
+		}, 1800);
+	};
+
+	const copyInvite = async (url: string): Promise<void> => {
+		const ok = await writeToClipboard(url);
+
+		if (ok) {
+			triggerCopyFeedback();
+			haptic('light-tap');
+		}
+	};
+
+	// Resolve the referral code on-demand: the lazy `$effect` may not have
+	// resolved yet when the first tap lands, so fetch here too rather than
+	// no-op. Mirrors the lazy load and shares the same cached service call.
+	const resolveInviteCode = async (): Promise<string | undefined> => {
+		if (nonNullish(inviteCode)) {
+			return inviteCode;
+		}
+
+		try {
+			inviteCode = await getMyReferralCode();
+		} catch {
+			inviteCode = undefined;
+		}
+
+		return inviteCode;
+	};
+
+	const shareInvite = async (): Promise<void> => {
+		const code = await resolveInviteCode();
+
+		if (!code || typeof window === 'undefined') {
+			return;
+		}
+
+		const url = `${window.location.origin}/i/${code}`;
+
+		const shareText = t({
+			locale: $localeStore,
+			key: 'profile.dashboard.referrals.share_text',
+			params: {
+				code,
+				amount: formatVxpBalance({ value: REFERRAL_VXP_BONUS_BASE_UNITS })
+			}
+		});
+		const shareTitle = t({ locale: $localeStore, key: 'profile.dashboard.referrals.share_title' });
+
+		if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+			try {
+				await navigator.share({ title: shareTitle, text: shareText, url });
+
+				return;
+			} catch (err: unknown) {
+				const message = err instanceof Error ? err.message.toLowerCase() : '';
+
+				if (message.includes('abort')) {
+					return;
+				}
+			}
+		}
+
+		await copyInvite(url);
 	};
 </script>
 
 <BottomSheet {isOpen} {onClose}>
 	<div class="db-sheet">
-		<div class="db-sheet-h">
-			<span class="db-sheet-title">{t({ locale: $localeStore, key: 'dash.holdings.eyebrow' })}</span
-			>
-			<span class="db-sheet-bal num">{holdingsDisplay} <em>VXP</em></span>
-		</div>
-		<div class="db-hd-row">
-			<span class="db-hd-k">{t({ locale: $localeStore, key: 'dash.build.sheet_lifetime' })}</span>
-			<span class="db-hd-v num">{lifetimeDisplay}</span>
-		</div>
-		<div class="db-hd-row">
-			<span class="db-hd-k">{t({ locale: $localeStore, key: 'dash.build.sheet_in_play' })}</span>
-			<span class="db-hd-v num">{inPlayDisplay}</span>
-		</div>
-		<div class="db-hd-row">
-			<span class="db-hd-k">{t({ locale: $localeStore, key: 'dash.build.sheet_referrals' })}</span>
-			{#if referralsLoading}
-				<span class="db-hd-v db-hd-ph" aria-hidden="true">
-					<span class="db-hd-ph-bar"></span>
-					<span class="db-hd-ph-bar db-hd-ph-bar-sm"></span>
-				</span>
-			{:else}
-				<span class="db-hd-v num">
-					{referralVxpDisplay}
-					<em>
-						{t({
-							locale: $localeStore,
-							key:
-								referralCount === 1
-									? 'dash.build.sheet_referrals_one'
-									: 'dash.build.sheet_referrals_many',
-							params: { count: referralCount }
-						})}
-					</em>
-				</span>
-			{/if}
-		</div>
-		<button class="db-hd-cta" onclick={openInvite} type="button">
-			<Gift aria-hidden="true" size={15} strokeWidth={1.8} />
-			{t({ locale: $localeStore, key: 'dash.build.sheet_invite_cta' })}
-		</button>
+		<DashHoldingsBreakdown
+			{availableDisplay}
+			{availableValue}
+			{holdingsDisplay}
+			{inPlayDisplay}
+			{inPlayValue}
+			{openCallCount}
+		/>
+
 		<a
 			class="db-hd-link"
 			href={`${resolve(AppPath.DashTransactions)}?source=sheet`}
@@ -102,5 +184,14 @@
 			</span>
 			<ChevronRight aria-hidden="true" size={16} strokeWidth={1.8} />
 		</a>
+
+		<button class="db-hd-cta" onclick={() => void shareInvite()} type="button">
+			{#if copied}
+				<Check aria-hidden="true" size={15} strokeWidth={2.2} />
+			{:else}
+				<Gift aria-hidden="true" size={15} strokeWidth={1.8} />
+			{/if}
+			{t({ locale: $localeStore, key: 'dash.build.sheet_invite_cta' })}
+		</button>
 	</div>
 </BottomSheet>
