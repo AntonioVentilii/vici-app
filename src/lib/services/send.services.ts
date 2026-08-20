@@ -4,7 +4,7 @@ import type { IcSendParams } from '$lib/types/ic-send';
 import type { Token } from '$lib/types/token';
 import { isWeb2Backend } from '$lib/web2/backend-mode';
 import { listWalletAssets, requestWalletWithdrawal } from '$lib/web2/client';
-import { isNullish, nonNullish } from '@dfinity/utils';
+import { isNullish } from '@dfinity/utils';
 import { decodeIcrcAccount, type IcrcLedgerDid } from '@icp-sdk/canisters/ledger/icrc';
 
 export const sendIc = async (params: IcSendParams): Promise<void> => {
@@ -32,6 +32,31 @@ export const sendIcrc = ({
  * user hands over a destination and an amount and the tokens leave their
  * wallet balance.
  */
+
+/** Localizable send failure: the UI translates `messageKey` (with `params`)
+ * instead of showing service-built English, appending `detail` when the API
+ * reported a concrete reason. */
+export class SendTokenError extends Error {
+	readonly messageKey: 'wallet.send.unavailable' | 'wallet.send.failed';
+	readonly params?: Record<string, string>;
+	readonly detail?: string;
+
+	constructor({
+		messageKey,
+		params,
+		detail
+	}: {
+		messageKey: 'wallet.send.unavailable' | 'wallet.send.failed';
+		params?: Record<string, string>;
+		detail?: string;
+	}) {
+		super(messageKey);
+		this.messageKey = messageKey;
+		this.params = params;
+		this.detail = detail;
+	}
+}
+
 export const sendToken = async ({
 	token,
 	to,
@@ -51,7 +76,10 @@ export const sendToken = async ({
 		);
 
 		if (isNullish(asset)) {
-			throw new Error(`Sending ${token.symbol} is not available right now`);
+			throw new SendTokenError({
+				messageKey: 'wallet.send.unavailable',
+				params: { symbol: token.symbol }
+			});
 		}
 
 		const withdrawal = await requestWalletWithdrawal({
@@ -65,9 +93,10 @@ export const sendToken = async ({
 		// returned row (a failed execution refunds the hold), so a failure must
 		// surface to the caller like a rejected transfer would.
 		if (withdrawal.state === 'failed') {
-			throw new Error(
-				nonNullish(withdrawal.failureReason) ? withdrawal.failureReason : 'Withdrawal failed'
-			);
+			throw new SendTokenError({
+				messageKey: 'wallet.send.failed',
+				detail: withdrawal.failureReason ?? undefined
+			});
 		}
 
 		return;

@@ -28,7 +28,8 @@ import {
 	cancelEngineOrder as cancelEngineOrderWeb2,
 	listEngineOrders as listEngineOrdersWeb2,
 	submitEngineLimitOrder as submitEngineLimitOrderWeb2,
-	submitEngineMarketOrder as submitEngineMarketOrderWeb2
+	submitEngineMarketOrder as submitEngineMarketOrderWeb2,
+	Web2ApiError
 } from '$lib/web2/client';
 import { getWeb2User } from '$lib/web2/session';
 import { fromNullable, isNullish, nonNullish, toNullable, type Nullable } from '@dfinity/utils';
@@ -115,6 +116,18 @@ export const loadOrderBook = ({
 /**
  * Submits a limit order or matches a market order against the book; refreshes UI state and logs activity.
  */
+
+/** Map a web2 session miss onto the exact error text the web3 path throws
+ * from safeGetIdentityOnce, so the UI's auth-failure handling stays one
+ * message regardless of backend. */
+const rethrowWeb2Unauthenticated = (err: unknown): never => {
+	if (err instanceof Web2ApiError && err.status === 401) {
+		throw new Error('Not authenticated');
+	}
+
+	throw err;
+};
+
 export const placeOrder = async ({
 	marketId,
 	marketTitle,
@@ -175,15 +188,19 @@ export const placeOrder = async ({
 		const orderId = `ORD_${nanoid(8)}`;
 
 		if (isNullish(identity)) {
-			await submitEngineLimitOrderWeb2({
-				orderId,
-				seriesId: marketId,
-				side: normalizedSide === 'BUY' ? 'buy' : 'sell',
-				outcomeId: fromNullable(outcomeId),
-				priceValue: parseLimitOrderPriceValue(normalizedPrice),
-				priceDecimals: PRICE_DECIMALS,
-				qty
-			});
+			try {
+				await submitEngineLimitOrderWeb2({
+					orderId,
+					seriesId: marketId,
+					side: normalizedSide === 'BUY' ? 'buy' : 'sell',
+					outcomeId: fromNullable(outcomeId),
+					priceValue: parseLimitOrderPriceValue(normalizedPrice),
+					priceDecimals: PRICE_DECIMALS,
+					qty
+				});
+			} catch (err: unknown) {
+				rethrowWeb2Unauthenticated(err);
+			}
 		} else {
 			await submitLimitOrder({
 				identity,
@@ -279,11 +296,15 @@ export const placeOrder = async ({
 				const take = remaining < best.qty ? remaining : best.qty;
 
 				if (isNullish(identity)) {
-					await submitEngineMarketOrderWeb2({
-						tradeId: `TRD_${nanoid(8)}`,
-						matchingOrderId: best.order_id,
-						qty: take
-					});
+					try {
+						await submitEngineMarketOrderWeb2({
+							tradeId: `TRD_${nanoid(8)}`,
+							matchingOrderId: best.order_id,
+							qty: take
+						});
+					} catch (err: unknown) {
+						rethrowWeb2Unauthenticated(err);
+					}
 				} else {
 					await submitMarketOrder({
 						identity,
@@ -365,7 +386,11 @@ export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 	if (isWeb2Backend()) {
 		// The API signs the cancel with the caller's derived custodial identity;
 		// there is no local identity to fetch in this mode.
-		await cancelEngineOrderWeb2({ orderId });
+		try {
+			await cancelEngineOrderWeb2({ orderId });
+		} catch (err: unknown) {
+			rethrowWeb2Unauthenticated(err);
+		}
 	} else {
 		const identity = await safeGetIdentityOnce();
 
