@@ -32,13 +32,14 @@ Two files under `src/lib/web2/`:
 
 ## Swapped domains
 
-| Domain                        | Where the branch lives                                                                                                                                                                  | Notes                                                                                                                      |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Analytics                     | `analytics.services.ts` (flush call site)                                                                                                                                               | The reference for the per-service swap below.                                                                              |
-| Auth                          | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                                                                               | The identity layer, not a per-service swap. See "Auth" below.                                                              |
-| Profiles + social             | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts`                                                      | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below.                        |
-| Markets + public engine reads | `market.services.ts`, `market-metadata.services.ts`, `market-translation.services.ts`, `resolution.services.ts`, `trade.services.ts`, `standings.services.ts`, `collateral.services.ts` | Public reads only. See "Markets and public engine reads" below.                                                            |
-| Engine account ops + wallet   | `order.services.ts`, `position.services.ts`, `trade.services.ts`, `collateral.services.ts`, `wallet.service.ts`, `send.services.ts`                                                     | The session-gated engine surface and the custodial wallet. See "Engine account operations and the custodial wallet" below. |
+| Domain                                   | Where the branch lives                                                                                                                                                                  | Notes                                                                                                                      |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Analytics                                | `analytics.services.ts` (flush call site)                                                                                                                                               | The reference for the per-service swap below.                                                                              |
+| Auth                                     | `authn/SignInProviderStack.svelte`, `authn/Authn.svelte`, `Logout.svelte`                                                                                                               | The identity layer, not a per-service swap. See "Auth" below.                                                              |
+| Profiles + social                        | `profile.services.ts`, `user-stats.services.ts`, `relation.services.ts`, `relation-queries.services.ts`, `leaderboard.services.ts`                                                      | Per-service swaps. Plus the app-shell hydration in `Authn.svelte`. See "Profiles and social" below.                        |
+| Markets + public engine reads            | `market.services.ts`, `market-metadata.services.ts`, `market-translation.services.ts`, `resolution.services.ts`, `trade.services.ts`, `standings.services.ts`, `collateral.services.ts` | Public reads only. See "Markets and public engine reads" below.                                                            |
+| Engine account ops + wallet              | `order.services.ts`, `position.services.ts`, `trade.services.ts`, `collateral.services.ts`, `wallet.service.ts`, `send.services.ts`                                                     | The session-gated engine surface and the custodial wallet. See "Engine account operations and the custodial wallet" below. |
+| Leagues + battles + worlds + tournaments | `leagues.services.ts`, `worlds.services.ts`, `tournament.services.ts`, `storage.services.ts` (league cover), `standings.services.ts` (league slice)                                     | The social competition surfaces. See "Leagues, battles, worlds and tournaments" below.                                     |
 
 ## The swap pattern (exemplar: analytics flush)
 
@@ -216,8 +217,8 @@ apply them at the fetch boundary.
   drain. Callback flows deliver the bridge's single response as the final
   `certified: true` pass, since no query/update pair exists on HTTP.
 - `standings.services.ts`: the global leaderboard (`getStandings`).
-  `getLeagueStandings` stays on-chain: the bridge has no member filter
-  and rosters are keyed by engine identities (engine / wallet domain).
+  `getLeagueStandings` returns an empty result in web2 mode (see
+  "Leagues, battles, worlds and tournaments" below).
 - `collateral.services.ts`: the collateral-asset catalog, without the
   signed-identity gate in web2 mode (the bridge read is public).
 
@@ -316,6 +317,81 @@ the exact candid shapes.
 - Direct ICRC ledger / index reads and user-held ICRC transfers are
   web3-only by construction; web2 mode surfaces custodial balances and
   routes sends through withdrawals instead.
+
+## Leagues, battles, worlds and tournaments
+
+The social competition surfaces: leagues (CRUD, invites, membership,
+ownership transfer, cover images), battles (the full state machine plus
+settlement-history resolution), Worlds affiliations (the 90-day lock,
+standings, championships, the podium claim) and the monthly tournament
+(draw, round resolution, prize claim). All rides `/api/v1/leagues`,
+`/api/v1/battles`, `/api/v1/worlds` and `/api/v1/tournaments`.
+
+### The identity rename, continued
+
+Same pattern as profiles: the wire keys people by account id where the
+app shapes carry one string field. The `client.ts` mappers rename
+`ownerUserId` to `LeagueDoc.owner`, `memberUserId` to
+`LeagueMemberDoc.member` / `AffiliationDoc.member`, `proposerUserId` to
+`BattleDoc.proposer`, and `friendMemberUserIds` to `friendMembers`. Duel
+`sideA` / `sideB` hold account ids in web2 mode. Tournament and stats
+shapes are identity-free (league ids and aggregates) and pass through.
+
+### Service-layer branches
+
+- `leagues.services.ts`: every read (`listMyLeagues`, challengeable and
+  friend-recommended lists, members, invite lookup) and write
+  (`createLeague`, `updateLeague`, join / leave, `setMemberRole`,
+  `transferLeagueOwnership`) plus the whole battle surface (propose,
+  accept, decline, lazy expire, kickoff, retract, `resolveBattle`,
+  `readBattleLiveScore`, `getMyBattleStats`, the battle lists). Web2
+  notes: the invite code is minted server-side (the returned league
+  carries the definitive code); the API join is idempotent instead of
+  throwing on re-join; battle ids are uuids (the route caps ids at 64
+  chars); accept / kickoff baselines are stamped server-side, so the
+  client never reads `league_stats`; `loadLeaguesByIds` hydrates the
+  league directory from the caller's own list reads because no public
+  by-id league read exists yet; the share URL stays plain (no `?ref=`)
+  until referrals swap.
+- League cover images: `storage.services.ts` `uploadLeagueImage` posts
+  the (still client-downscaled) bytes as multipart to
+  `/leagues/:id/image`, which stores them and stamps the serving URL on
+  the league row; the caller's follow-up `updateLeague` write becomes a
+  read-back. `deleteLeagueImageByUrl` recovers the league id from the
+  canonical `/api/v1/leagues/{id}/image` URL and calls the delete
+  route. The stored-URL contract the components render is unchanged.
+- `worlds.services.ts`: affiliations (join / leave / switch under the
+  same 15s hang guard), the stats reads, member counts, championships,
+  and `claimWorldsPodiumPrize`.
+- `tournament.services.ts`: `getCurrentTournament` (the API already
+  emits the FE doc shapes with explicit nulls), `triggerTournamentDraw`,
+  `resolveTournamentRound`, `claimTournamentPrize`.
+
+### Lazy triggers stay, the worker joins
+
+On the default backend the FE fires the idempotent maintenance calls on
+page mount because the satellite has no scheduler: founder-award
+settlement (Leagues page), the tournament draw and round resolution
+(Tournament page), and the Worlds podium claim / month freeze (Worlds
+page). The web2 API also runs these as worker cron jobs, but the FE
+keeps firing the same triggers through the bridge: they are idempotent
+server-side (key collisions and month gates), so behavior parity holds
+whichever side gets there first.
+
+### Empty or deferred in this domain
+
+- `getLeagueStandings` (`standings.services.ts`) returns an empty
+  result in web2 mode: the bridge leaderboard has no member filter, and
+  swapped rosters carry account ids while the clearing ranking keys
+  principals. Member-scoped standings slices (league detail, Arena
+  hero, friends digest) render their empty states until a
+  member-filtered bridge read with the identity mapping exists.
+- `getLeagueById` is default-backend only; the web2 branch of
+  `loadLeaguesByIds` covers the directory from the caller-visible
+  lists, and an id outside them falls back to the shortened-id render.
+- Duel-only endpoints without a live FE caller (manual duel resolve,
+  battle restart) and the Worlds roster / month-list reads have API
+  routes but no `client.ts` wrapper yet, to avoid unused surface.
 
 ## Guardrails
 

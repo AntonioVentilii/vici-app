@@ -14,6 +14,17 @@ import {
 	type AffiliationStatsDoc
 } from '$lib/types/affiliation-stats';
 import { withTimeout } from '$lib/utils/async.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	claimWorldsPodiumPrize as claimWorldsPodiumPrizeWeb2,
+	getAffiliationStats as getAffiliationStatsWeb2,
+	getMyAffiliations as getMyAffiliationsWeb2,
+	listAffiliationChampionships as listAffiliationChampionshipsWeb2,
+	listAffiliationStats as listAffiliationStatsWeb2,
+	listWorldsMemberCounts as listWorldsMemberCountsWeb2,
+	removeAffiliation as removeAffiliationWeb2,
+	setAffiliation as setAffiliationWeb2
+} from '$lib/web2/client';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 
 /**
@@ -47,6 +58,10 @@ export const listMyAffiliations = async (): Promise<{
 	university?: AffiliationDoc;
 	country?: AffiliationDoc;
 }> => {
+	if (isWeb2Backend()) {
+		return await getMyAffiliationsWeb2();
+	}
+
 	// The endpoint emits camelCase keys (see `AffiliationWireSchema`),
 	// so the wire shape already matches `AffiliationDoc` and no
 	// snake-case → camel-case projection is needed.
@@ -70,6 +85,16 @@ export const joinAffiliation = async ({
 	kind: AffiliationKind;
 	affiliationIdentifier: string;
 }): Promise<AffiliationDoc> => {
+	// The lock window is server arithmetic on this transport; the same hang
+	// guard applies (the picker's spinner must never wait forever).
+	if (isWeb2Backend()) {
+		return await withTimeout({
+			operation: setAffiliationWeb2({ kind, affiliationIdentifier }),
+			timeoutMs: AFFILIATION_WRITE_TIMEOUT_MS,
+			label: 'joinAffiliation:web2'
+		});
+	}
+
 	const identity = await safeGetIdentityOnce();
 	const memberPrincipal = identity.getPrincipal().toText();
 	const joinedAtMs = Date.now();
@@ -127,6 +152,18 @@ export const leaveAffiliation = async ({
 	kind: AffiliationKind;
 	affiliationIdentifier: string;
 }): Promise<void> => {
+	// Idempotent server-side (a missing row is a clean success), with the same
+	// lock gate the satellite delete-assert enforces.
+	if (isWeb2Backend()) {
+		await withTimeout({
+			operation: removeAffiliationWeb2({ kind, affiliationIdentifier }),
+			timeoutMs: AFFILIATION_WRITE_TIMEOUT_MS,
+			label: 'leaveAffiliation:web2'
+		});
+
+		return;
+	}
+
 	const identity = await safeGetIdentityOnce();
 	const memberPrincipal = identity.getPrincipal().toText();
 	const key = affiliationKey({ memberPrincipal, kind, affiliationIdentifier });
@@ -259,6 +296,10 @@ export const getAffiliationStats = async ({
 	kind: AffiliationKind;
 	affiliationIdentifier: string;
 }): Promise<AffiliationStatsDoc | undefined> => {
+	if (isWeb2Backend()) {
+		return await getAffiliationStatsWeb2({ kind, affiliationIdentifier });
+	}
+
 	const { stats } = await functions.getAffiliationStats({ kind, affiliationIdentifier });
 
 	return stats;
@@ -277,6 +318,10 @@ export const listAffiliationStats = async ({
 	kind: AffiliationKind;
 	limit?: number;
 }): Promise<AffiliationStatsDoc[]> => {
+	if (isWeb2Backend()) {
+		return await listAffiliationStatsWeb2({ kind, limit });
+	}
+
 	const { items } = await functions.listAffiliationStats({ kind, limit });
 
 	return items.map(projectStatsWire);
@@ -293,7 +338,9 @@ export const listWorldsMemberCounts = async ({
 }: {
 	kind: AffiliationKind;
 }): Promise<Record<string, number>> => {
-	const { items } = await functions.listWorldsMemberCounts({ kind });
+	const items = isWeb2Backend()
+		? await listWorldsMemberCountsWeb2(kind)
+		: (await functions.listWorldsMemberCounts({ kind })).items;
 
 	return items.reduce<Record<string, number>>((acc, item) => {
 		acc[item.affiliationIdentifier] = item.memberCount;
@@ -315,6 +362,10 @@ export const listAffiliationChampionships = async ({
 	kind: AffiliationKind;
 	affiliationIdentifier: string;
 }): Promise<AffiliationChampionship[]> => {
+	if (isWeb2Backend()) {
+		return await listAffiliationChampionshipsWeb2({ kind, affiliationIdentifier });
+	}
+
 	const { items } = await functions.listAffiliationChampionships({ kind, affiliationIdentifier });
 
 	return items.map((item) => ({
@@ -348,7 +399,13 @@ export const claimWorldsPodiumPrize = ({
 	awardsCreated: number;
 	awardsAlreadyClaimed: number;
 	notEligible: boolean;
-}> => functions.claimWorldsPodiumPrize({ monthAnchor });
+}> =>
+	// The web2 API also freezes closed months from its worker; the lazy
+	// claim-on-visit stays because the per-user award grant is the claim
+	// itself, and both paths share the idempotent month gate.
+	isWeb2Backend()
+		? claimWorldsPodiumPrizeWeb2({ monthAnchor })
+		: functions.claimWorldsPodiumPrize({ monthAnchor });
 
 /**
  * Compute the YYYY-MM anchor for the calendar month immediately

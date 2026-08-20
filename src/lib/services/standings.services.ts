@@ -130,9 +130,12 @@ export const loadGlobalStandings = async ({
  * zeroed aggregate, so the slice covers the whole roster). Returns an empty
  * result when the roster is empty.
  *
- * On-chain only for now: the HTTP bridge's leaderboard read has no member
- * filter, and league rosters ride the engine identities this call scopes by,
- * so it swaps together with the engine / wallet domain.
+ * Empty on the web2 backend for now: the HTTP bridge's leaderboard read has
+ * no member filter, and with the leagues domain swapped the rosters carry
+ * account ids while this clearing query scopes by on-chain principals, so a
+ * member-filtered bridge read (with the identity mapping) has to exist before
+ * this can swap. Until then every member-scoped slice renders as "no
+ * standings yet", which each caller already handles.
  */
 export const getLeagueStandings = async ({
 	window,
@@ -141,7 +144,7 @@ export const getLeagueStandings = async ({
 	window: StandingsWindow;
 	members: PrincipalText[];
 }): Promise<StandingsResult> => {
-	if (members.length === 0) {
+	if (members.length === 0 || isWeb2Backend()) {
 		return { window, entries: [], total: 0 };
 	}
 

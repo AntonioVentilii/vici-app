@@ -4,6 +4,11 @@ import {
 	LEAGUE_IMAGES_COLLECTION
 } from '$lib/types/league';
 import { downscaleImageToSquareJpeg } from '$lib/utils/image.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import {
+	deleteLeagueImage as deleteLeagueImageWeb2,
+	uploadLeagueImage as uploadLeagueImageWeb2
+} from '$lib/web2/client';
 import { isNullish } from '@dfinity/utils';
 import { deleteAsset, uploadFile } from '@junobuild/core';
 
@@ -11,6 +16,11 @@ import { deleteAsset, uploadFile } from '@junobuild/core';
  * Juno Storage helpers. Uploads land binary assets in a Storage
  * collection and persist only the resolved download URL on the owning
  * Datastore doc — we never inline base64 data URLs into a record.
+ *
+ * On the web2 backend the bytes go to the API's league-image route
+ * instead (which stores them and stamps the serving URL on the league
+ * row itself); the stored-URL contract the components render is the
+ * same on both transports.
  */
 
 /**
@@ -44,6 +54,20 @@ export const uploadLeagueImage = async ({
 		throw new Error('Could not process the selected image.');
 	}
 
+	// The API route re-encodes to the canonical square cover server-side, but
+	// the client-side downscale still runs first so the upload stays tiny; the
+	// route also persists the URL on the league row, so the follow-up doc write
+	// the caller performs is a read-back rather than a second persist.
+	if (isWeb2Backend()) {
+		const { imageUrl } = await uploadLeagueImageWeb2({ leagueId, image: downscaled });
+
+		if (isNullish(imageUrl)) {
+			throw new Error('Could not process the selected image.');
+		}
+
+		return imageUrl;
+	}
+
 	const { downloadUrl } = await uploadFile({
 		collection: LEAGUE_IMAGES_COLLECTION,
 		data: new File([downscaled], `${leagueId}-${Date.now()}.jpg`, { type: 'image/jpeg' })
@@ -60,6 +84,35 @@ export const uploadLeagueImage = async ({
  * malformed URLs (e.g. a legacy value) are left untouched.
  */
 export const deleteLeagueImageByUrl = async (url: string): Promise<void> => {
+	// The API serves one canonical cover URL per league
+	// (`/api/v1/leagues/{id}/image`), so the league id is recovered from the
+	// path and the delete goes through the owner-gated route, which drops the
+	// asset and clears the row's URL. Same best-effort contract as below.
+	if (isWeb2Backend()) {
+		let pathname: string;
+
+		try {
+			({ pathname } = new URL(url));
+		} catch {
+			return;
+		}
+
+		const match = /^\/api\/v1\/leagues\/([^/]+)\/image$/.exec(pathname);
+		const [, leagueId] = match ?? [];
+
+		if (isNullish(leagueId)) {
+			return;
+		}
+
+		try {
+			await deleteLeagueImageWeb2(decodeURIComponent(leagueId));
+		} catch (err) {
+			console.warn('storage.services: deleteLeagueImageByUrl failed', err);
+		}
+
+		return;
+	}
+
 	const prefix = `/${LEAGUE_IMAGES_COLLECTION}/`;
 
 	let fullPath: string;
