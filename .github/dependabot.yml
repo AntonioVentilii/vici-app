@@ -59,4 +59,15 @@ updates:
       default-days: 7
     allow:
       - dependency-type: all
+    # The noble/scure crypto primitives version-lock each other and pin API
+    # shapes the custody code depends on; a lone major bump can resolve into a
+    # mixed v1/v2 tree that only breaks in the pruned production install.
+    # Majors here ride deliberate upgrade PRs instead.
+    ignore:
+      - dependency-name: '@noble/*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@scure/*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'micro-packed'
+        update-types: ['version-update:semver-major']
     open-pull-requests-limit: 10
