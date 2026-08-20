@@ -14,6 +14,8 @@ import { loadWithCertification } from '$lib/services/query-update.services';
 import { refreshAllBalances } from '$lib/utils/refresh.utils';
 import { resolveClearingAssetId } from '$lib/utils/tokens.utils';
 import { getIcrcAccount } from '$lib/utils/transactions.utils';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import { listEngineCollateralAssets as listEngineCollateralAssetsWeb2 } from '$lib/web2/client';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { getIdentityOnce } from '@junobuild/core';
@@ -192,6 +194,12 @@ const fetchCollateralAssets = ({
  * UI flows that benefit from the fast-then-certified render pattern.
  */
 export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAssetInfo[]> => {
+	// The asset catalog is a public engine read on the HTTP bridge, so web2
+	// needs no on-chain identity (none exists in that mode).
+	if (isWeb2Backend()) {
+		return await listEngineCollateralAssetsWeb2();
+	}
+
 	const identity = await getIdentityOnce();
 
 	if (isNullish(identity)) {
@@ -212,6 +220,19 @@ export const loadCollateralAssets = async ({
 	onLoad: (options: { certified: boolean; response: ClearingDid.CollateralAssetInfo[] }) => void;
 	onUpdateError?: (error: unknown) => void;
 }): Promise<void> => {
+	// web2 reads the public HTTP bridge once: no query/update pair exists on
+	// that transport, so the single response is delivered as the final
+	// (`certified: true`) pass.
+	if (isWeb2Backend()) {
+		try {
+			onLoad({ certified: true, response: await listEngineCollateralAssetsWeb2() });
+		} catch (err: unknown) {
+			onUpdateError?.(err);
+		}
+
+		return;
+	}
+
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {

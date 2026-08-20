@@ -3,6 +3,8 @@ import { listLeaderboard } from '$lib/api/clearing.api';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { setGlobalStandings } from '$lib/stores/standings.store';
 import type { StandingEntry, StandingsResult, StandingsWindow } from '$lib/types/standings';
+import { isWeb2Backend } from '$lib/web2/backend-mode';
+import { listEngineLeaderboard as listEngineLeaderboardWeb2 } from '$lib/web2/client';
 import { fromNullable, isNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { PrincipalText } from '@junobuild/schema';
@@ -73,6 +75,20 @@ export const getStandings = async ({
 }: {
 	window: StandingsWindow;
 }): Promise<StandingsResult> => {
+	// The global ranking is a public engine read on the HTTP bridge, so web2
+	// needs no signed identity. `owner` on each entry stays the on-chain
+	// principal from clearing (the ranking's native key) until the engine and
+	// wallet swap maps engine identities onto accounts. The bridge drains the
+	// ranking with its own page bound, which covers the same visible depth.
+	if (isWeb2Backend()) {
+		const { items, total } = await listEngineLeaderboardWeb2({
+			window: toWindow(window),
+			limit: STANDINGS_PAGE_LIMIT
+		});
+
+		return { window, entries: items.map(toEntry), total: Number(total) };
+	}
+
 	const identity = await safeGetIdentityOnce();
 
 	const { items, total } = await listLeaderboard({
@@ -113,6 +129,10 @@ export const loadGlobalStandings = async ({
  * supplied member set in isolation (inactive members are included with a
  * zeroed aggregate, so the slice covers the whole roster). Returns an empty
  * result when the roster is empty.
+ *
+ * On-chain only for now: the HTTP bridge's leaderboard read has no member
+ * filter, and league rosters ride the engine identities this call scopes by,
+ * so it swaps together with the engine / wallet domain.
  */
 export const getLeagueStandings = async ({
 	window,
