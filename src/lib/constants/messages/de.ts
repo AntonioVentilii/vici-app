@@ -2584,8 +2584,10 @@ export const deMessages = {
 	'wallet.send.empty':
 		'Sendeoptionen werden geladen… Wenn das bleibt, sind im aktuellen Netzwerk keine Token verfügbar.',
 	'wallet.send.error_title': 'Fehler',
+	'wallet.send.failed': 'Auszahlung fehlgeschlagen',
 	'wallet.send.recipient': 'Empfänger',
 	'wallet.send.recipient_placeholder': 'aaaaa-aa...',
+	'wallet.send.unavailable': '{symbol} kann gerade nicht gesendet werden',
 	'wallet.send.send_tokens': 'Tokens senden',
 	'wallet.send.sending': 'Wird gesendet...',
 	'wallet.send.success_message': 'Transaktion erfolgreich!',

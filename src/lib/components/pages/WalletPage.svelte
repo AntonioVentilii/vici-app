@@ -25,7 +25,7 @@
 	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
 	import { vxpBacked, vxpFree } from '$lib/derived/vxp-holdings.derived';
 	import { clearingTransactions } from '$lib/derived/wallet-feed.derived';
-	import { sendToken } from '$lib/services/send.services';
+	import { sendToken, SendTokenError } from '$lib/services/send.services';
 	import {
 		getTransactionsPage,
 		type WalletTransactionsCursors,
@@ -278,7 +278,10 @@
 		} catch (e: unknown) {
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'wallet.send.error_title' }),
-				message: (e as Error).message,
+				message:
+					e instanceof SendTokenError
+						? `${t({ locale: $localeStore, key: e.messageKey, params: e.params })}${nonNullish(e.detail) ? ` (${e.detail})` : ''}`
+						: (e as Error).message,
 				type: 'error'
 			});
 		} finally {
