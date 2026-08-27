@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.41](https://github.com/ViciApp/vici-app/compare/v1.8.40...v1.8.41) (2026-08-27)
+
+
+### Features
+
+* **backend:** beta access gate on web2 sign-in ([#1296](https://github.com/ViciApp/vici-app/issues/1296)) ([79e7cdc](https://github.com/ViciApp/vici-app/commit/79e7cdc25ba54dd24ad63d3a4113e382a3ca8da8))
+* **web2:** account claim flow with signed principal handoff ([#1297](https://github.com/ViciApp/vici-app/issues/1297)) ([5460a07](https://github.com/ViciApp/vici-app/commit/5460a07f5c82ab7abfa3b1348bb91025a7e2dcc2))
+
+
+### Miscellaneous Chores
+
+* **seo:** add Google Search Console verification file for vici.app ([#1298](https://github.com/ViciApp/vici-app/issues/1298)) ([c0016d7](https://github.com/ViciApp/vici-app/commit/c0016d7cb36c13bbc92f89b77b9d11398944ac48))
+
 ## [1.8.40](https://github.com/ViciApp/vici-app/compare/v1.8.39...v1.8.40) (2026-08-20)
 
 
